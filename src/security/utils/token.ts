@@ -1,6 +1,6 @@
 import { sign, verify } from 'jsonwebtoken';
-import {useSecurityKeyPair} from "../security";
-import {SecurityKeyPair} from "../security/type";
+import {useSecurityKeyPair} from "../security/key-pair";
+import {SecurityKeyPair} from "../security/key-pair/type";
 
 export async function createToken(payload: Record<string, any>, maxAge: number = 3600) {
     const keyPair : SecurityKeyPair = useSecurityKeyPair();

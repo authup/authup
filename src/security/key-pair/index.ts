@@ -4,7 +4,7 @@ import path from "path";
 import {SecurityKeyPair, SecurityKeyPairOptions} from "./type";
 
 const DEFAULT_ALIAS : string = 'default';
-let keyPairCache : Record<string, SecurityKeyPair> = {};
+const keyPairCache : Record<string, SecurityKeyPair> = {};
 
 function buildKeyFileName(type: 'private' |  'public', alias?: string) {
     alias = alias ?? DEFAULT_ALIAS;

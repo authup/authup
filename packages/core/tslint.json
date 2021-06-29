@@ -1,0 +1,21 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {},
+    "rules": {
+        "semicolon": [ false ],
+        "trailing-comma": [ false ],
+        "no-console": false,
+        "no-trailing-whitespace": false,
+        "no-empty-interface": false,
+        "variable-name": false,
+        "prefer-for-of": false,
+        "forin": false,
+        "max-classes-per-file": false,
+        "ban-types": false,
+        "no-shadowed-variable": false
+    },
+    "rulesDirectory": []
+}
