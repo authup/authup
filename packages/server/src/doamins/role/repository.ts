@@ -1,5 +1,5 @@
 import {In, ObjectLiteral, Repository} from "typeorm";
-import {OwnedPermission} from "../../permission/type";
+import {OwnedPermission} from "@typescript-auth/core";
 import {RolePermission} from "./permission";
 
 export abstract class AbstractRoleRepository<
@@ -7,7 +7,7 @@ export abstract class AbstractRoleRepository<
 > extends Repository<T> {
     async getOwnedPermissions(
         roleId: string | string[]
-    ) : Promise<OwnedPermission[]> {
+    ) : Promise<OwnedPermission<unknown>[]> {
         if(!Array.isArray(roleId)) {
             roleId = [roleId];
         }
@@ -21,7 +21,7 @@ export abstract class AbstractRoleRepository<
             role_id: In(roleId)
         });
 
-        const result : OwnedPermission[] = [];
+        const result : OwnedPermission<unknown>[] = [];
         for(let i=0; i<entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,

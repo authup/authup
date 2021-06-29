@@ -12,7 +12,7 @@ export * from './repository';
 
 export const ROLE_ENTITY_NAME = 'auth_role';
 
-export abstract class Role {
+export abstract class AbstractRole {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 

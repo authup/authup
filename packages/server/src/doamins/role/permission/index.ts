@@ -8,7 +8,7 @@ import {
 } from "typeorm";
 import {Permission} from "../../permission";
 import {PermissionRelation} from "../../permission/relation";
-import {Role, ROLE_ENTITY_NAME} from "../index";
+import {AbstractRole, ROLE_ENTITY_NAME} from "../index";
 
 @Entity()
 @Index(['permission_id', 'role_id'], {unique: true})
@@ -24,7 +24,7 @@ export class RolePermission extends PermissionRelation {
 
     @ManyToOne(ROLE_ENTITY_NAME, 'role_permissions', { onDelete: 'CASCADE' })
     @JoinColumn({name: 'role_id'})
-    role: Role;
+    role: AbstractRole;
 
     @ManyToOne(() => Permission, permission => permission.role_permissions, { onDelete: 'CASCADE' })
     @JoinColumn({name: 'permission_id'})

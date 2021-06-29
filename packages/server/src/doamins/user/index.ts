@@ -9,7 +9,7 @@ export * from './repository';
 
 export const USER_ENTITY_NAME = 'auth_user';
 
-export abstract class User {
+export abstract class AbstractUser {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
