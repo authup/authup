@@ -10,11 +10,15 @@ export type Oauth2ClientProtocolOptions = {
     authorizeRedirectURL: string
 }
 
-export type Oauth2ClientTokenResponse = {
+export type Oauth2TokenResponse = {
     accessToken: string,
     accessTokenPayload?: unknown,
     refreshToken?: string,
-    expiresIn: Date | string
+    expiresIn: number,
+    tokenType: string,
+    idToken?: string,
+    macKey?: string,
+    macAlgorithm?: string
 }
 
 export type Oauth2ClientPasswordGrantParameters = {
