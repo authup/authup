@@ -1,4 +1,4 @@
-import {AuthorizationHeaderValue, AuthorizationHeaderValueType} from "./type";
+import {AuthorizationHeaderValue} from "./type";
 import {AuthorizationHeaderError} from "../../error";
 
 export * from './type';
@@ -6,17 +6,15 @@ export * from './type';
 export function parseAuthorizationHeaderValue(value: string) : AuthorizationHeaderValue {
     const parts : string[] = value.split(" ");
 
-    const typeStr : string = parts[0].toLowerCase();
-
-    if(['bearer', 'basic'].indexOf(typeStr) === -1) {
+    if(parts.length < 2) {
         throw AuthorizationHeaderError.parseType();
     }
 
-    const type : AuthorizationHeaderValueType = typeStr as AuthorizationHeaderValueType;
+    const type : string = parts[0].toLowerCase();
     const id : string = parts[1];
 
     switch (type) {
-        case "Basic":
+        case "basic":
             const base64Decoded = Buffer.from(id).toString('utf-8');
             const base64Parts = base64Decoded.split(":");
 
@@ -29,11 +27,19 @@ export function parseAuthorizationHeaderValue(value: string) : AuthorizationHead
                 username: base64Parts[0],
                 password: base64Parts[1]
             }
-        case "Bearer":
+        case "bearer":
             return {
                 type: "Bearer",
                 token: id
             }
+        case "api-key":
+        case "x-api-key":
+            return {
+                type: type === 'api-key' ? 'API-Key' : 'X-API-Key',
+                key: id
+            }
+        default:
+            throw AuthorizationHeaderError.parseType();
     }
 }
 
@@ -47,5 +53,8 @@ export function buildAuthorizationHeaderValue(options: AuthorizationHeaderValue)
             return `Basic ${basicStr}`;
         case "Bearer":
             return `Bearer ${options.token}`;
+        case "X-API-Key":
+        case "API-Key":
+            return `${options.type} ${options.key}`;
     }
 }

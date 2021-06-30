@@ -1,7 +1,16 @@
 export type BearerAuthorizationHeaderValueType = 'Bearer';
 export type BasicAuthorizationHeaderValueType = 'Basic';
+export type APIKeyAuthorizationHeaderValueType = 'X-API-Key' | 'API-Key'
 
-export type AuthorizationHeaderValueType = BearerAuthorizationHeaderValueType | BasicAuthorizationHeaderValueType;
+export type AuthorizationHeaderValueType =
+    BearerAuthorizationHeaderValueType |
+    BasicAuthorizationHeaderValueType |
+    APIKeyAuthorizationHeaderValueType;
+
+export type BearerAuthorizationHeaderValue = {
+    type: BearerAuthorizationHeaderValueType,
+    token: string
+}
 
 export type BasicAuthorizationHeaderValue = {
     type: BasicAuthorizationHeaderValueType,
@@ -9,9 +18,12 @@ export type BasicAuthorizationHeaderValue = {
     password: string
 }
 
-export type BearerAuthorizationHeaderValue = {
-    type: BearerAuthorizationHeaderValueType,
-    token: string
+export type APIKeyAuthorizationHeaderValue = {
+    type: APIKeyAuthorizationHeaderValueType,
+    key: string
 }
 
-export type AuthorizationHeaderValue = BasicAuthorizationHeaderValue | BearerAuthorizationHeaderValue;
+export type AuthorizationHeaderValue =
+    BasicAuthorizationHeaderValue |
+    BearerAuthorizationHeaderValue |
+    APIKeyAuthorizationHeaderValue;
