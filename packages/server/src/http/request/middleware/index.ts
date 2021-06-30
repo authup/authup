@@ -10,6 +10,8 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {
         let { authorization } = request.headers;
 
+
+
         if(typeof middlewareOptions.getTokenFromCookie === 'function') {
             try {
                 const cookieToken: string | undefined = middlewareOptions.getTokenFromCookie(request);
