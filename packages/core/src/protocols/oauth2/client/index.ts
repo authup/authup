@@ -13,6 +13,8 @@ import {
 import {TokenResponseError} from "./error";
 import {AccessTokenPayload, Oauth2TokenResponse} from "../type";
 import {buildHTTPQuery} from "../../../http";
+import {parseResponseError} from "./utils";
+import {UserinfoResponseError} from "./error/userinfo-response";
 
 export * from './error';
 export * from './type';
@@ -63,8 +65,6 @@ export class Oauth2ClientProtocol {
     // ------------------------------------------------------------------
 
     /**
-     *
-     *
      * @throws TokenResponseError
      * @param parameters
      */
@@ -126,27 +126,18 @@ export class Oauth2ClientProtocol {
 
             return tokenResponse;
         } catch (e) {
-            let code : string | undefined;
-            let message : string | undefined = 'An unknown error occurred.';
+            const {code, statusCode, message} = parseResponseError(e);
 
-            if(typeof e.response.data?.code === 'string') {
-                code = e.response.data.code;
-            }
-
-            if(typeof e.response.data?.error_description === 'string') {
-                message = e.response.data.error_description;
-            }
-
-            if(typeof e.response.data?.message === 'string') {
-                message = e.result.data.message;
-            }
-
-            throw new TokenResponseError(message, code);
+            throw new TokenResponseError(message, code, statusCode);
         }
     }
 
     // ------------------------------------------------------------------
 
+    /**
+     * @throws UserinfoResponseError
+     * @param token
+     */
     async getUserInfo(token: string) {
         let url : string = this.protocolOptions.userInfoHost ?? this.protocolOptions.tokenHost;
 
@@ -156,16 +147,22 @@ export class Oauth2ClientProtocol {
             url += '/userinfo';
         }
 
-        const {data} = await axios.post(
-            url,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        try {
+            const {data} = await axios.get(
+                url,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 }
-            }
-        );
+            );
 
-        return data;
+            return data;
+        } catch (e) {
+            const {code, statusCode, message} = parseResponseError(e);
+
+            throw new UserinfoResponseError(message, code, statusCode);
+        }
     }
 
     // ------------------------------------------------------------------

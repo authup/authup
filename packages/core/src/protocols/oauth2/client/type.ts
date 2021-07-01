@@ -9,7 +9,7 @@ export type Oauth2ClientProtocolOptions = {
 
     authorizeHost?: string,
     authorizePath?: string,
-    authorizeRedirectURL: string,
+    authorizeRedirectURL?: string,
 
     userInfoHost?: string,
     userInfoPath?: string

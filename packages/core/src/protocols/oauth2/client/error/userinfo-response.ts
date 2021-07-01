@@ -1,4 +1,4 @@
-export class TokenResponseError extends Error {
+export class UserinfoResponseError extends Error {
     /**
      * @link https://www.tutorialspoint.com/oauth2.0/error_response_codes.htm
      */
