@@ -14,34 +14,38 @@ export type AuthMiddlewareOptions = {
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {
-        let { authorization: headerValue } = request.headers;
+        try {
+            let {authorization: headerValue} = request.headers;
 
-        if(typeof middlewareOptions.parseCookie === 'function') {
-            const cookie: unknown = middlewareOptions.parseCookie(request);
+            if (typeof middlewareOptions.parseCookie === 'function') {
+                const cookie: unknown = middlewareOptions.parseCookie(request);
 
-            if(typeof middlewareOptions.authenticateWithCookie === 'function') {
-                await middlewareOptions.authenticateWithCookie(request, cookie);
+                if (typeof middlewareOptions.authenticateWithCookie === 'function') {
+                    await middlewareOptions.authenticateWithCookie(request, cookie);
+                    next();
+                    return;
+                }
+
+                // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
+                if (typeof cookie === 'string') {
+                    headerValue = buildAuthorizationHeaderValue({type: "Bearer", token: cookie});
+                }
+            }
+
+            if (typeof headerValue !== 'string') {
                 next();
                 return;
             }
 
-            // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
-            if(typeof cookie === 'string') {
-                headerValue = buildAuthorizationHeaderValue({type: "Bearer", token: cookie});
+            const header = parseAuthorizationHeaderValue(headerValue);
+
+            if (typeof middlewareOptions.authenticateWithAuthorizationHeader === 'function') {
+                await middlewareOptions.authenticateWithAuthorizationHeader(request, header);
             }
-        }
 
-        if(typeof headerValue !== 'string') {
             next();
-            return;
+        } catch (e) {
+            next(e);
         }
-
-        const header = parseAuthorizationHeaderValue(headerValue);
-
-        if(typeof middlewareOptions.authenticateWithAuthorizationHeader === 'function') {
-            await middlewareOptions.authenticateWithAuthorizationHeader(request, header);
-        }
-
-        next();
     }
 }
