@@ -12,7 +12,7 @@ import {
 } from "./type";
 import {TokenResponseError} from "./error";
 import {AccessTokenPayload, Oauth2TokenResponse} from "../type";
-import {buildHTTPQuery} from "../../../http/utils";
+import {buildHTTPQuery} from "../../../http";
 
 export * from './error';
 export * from './type';
@@ -137,8 +137,35 @@ export class Oauth2ClientProtocol {
                 message = e.response.data.error_description;
             }
 
+            if(typeof e.response.data?.message === 'string') {
+                message = e.result.data.message;
+            }
+
             throw new TokenResponseError(message, code);
         }
+    }
+
+    // ------------------------------------------------------------------
+
+    async getUserInfo(token: string) {
+        let url : string = this.protocolOptions.userInfoHost ?? this.protocolOptions.tokenHost;
+
+        if(typeof this.protocolOptions.userInfoPath === 'string') {
+            url += this.protocolOptions.userInfoPath;
+        } else {
+            url += '/userinfo';
+        }
+
+        const {data} = await axios.post(
+            url,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+
+        return data;
     }
 
     // ------------------------------------------------------------------

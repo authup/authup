@@ -16,10 +16,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@typescript-auth/core": "^0.0.2",
+    "@typescript-auth/core": "^0.0.4",
     "bcrypt": "^5.0.1",
     "change-case": "^4.1.2",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "typeorm": "^0.2.34"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "@types/change-case": "^2.3.1",
     "@types/express": "^4.17.12",
     "@types/jest": "^26.0.23",
+    "@types/jsonwebtoken": "^8.5.2",
     "@types/node": "^15.12.4",
     "coveralls": "^3.1.0",
     "cross-env": "^7.0.3",

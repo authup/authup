@@ -6,13 +6,11 @@ import {OwnedPermission} from "../permission";
 export class AbilityManager {
     protected ability!: Ability;
 
-    protected permissions: OwnedPermission<unknown>[];
+    protected permissions!: OwnedPermission<unknown>[];
     protected abilityItems: OwnedAbility<unknown>[];
 
     constructor(permissions: OwnedPermission<unknown>[]) {
-        this.permissions = permissions;
-
-        this.build();
+        this.setPermissions(permissions);
     }
 
     // ----------------------------------------------
@@ -50,6 +48,14 @@ export class AbilityManager {
     }
 
     // ----------------------------------------------
+
+    setPermissions(permissions: OwnedPermission<any>[]) {
+        this.permissions = permissions;
+        this.build();
+    }
+    getPermissions() {
+        return this.permissions;
+    }
 
     getPermission(id: string) : OwnedPermission<unknown> | undefined {
         const index : number = this.permissions.findIndex(permission => permission.id === id);
@@ -89,7 +95,12 @@ export class AbilityManager {
         const items = this.transformPermissionsForAbilityBuilder();
 
         if (items.length === 0) {
-            this.ability = new Ability();
+            if(typeof this.ability === 'undefined') {
+                this.ability = new Ability();
+            } else {
+                this.ability.update([]);
+            }
+
             return;
         }
 
@@ -101,6 +112,10 @@ export class AbilityManager {
             can(ability.action, ability.subject, ability.fields, ability.condition);
         }
 
-        this.ability =  new Ability(rules);
+        if(typeof this.ability === 'undefined') {
+            this.ability = new Ability(rules);
+        } else {
+            this.ability.update(rules);
+        }
     }
 }
