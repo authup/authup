@@ -17,29 +17,31 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
         let { authorization: headerValue } = request.headers;
 
         if(typeof middlewareOptions.parseCookie === 'function') {
-            try {
-                const cookie: unknown = middlewareOptions.parseCookie(request);
+            const cookie: unknown = middlewareOptions.parseCookie(request);
 
-                if(typeof middlewareOptions.authenticateWithCookie === 'function') {
-                    await middlewareOptions.authenticateWithCookie(request, cookie);
-                    next();
-                }
+            if(typeof middlewareOptions.authenticateWithCookie === 'function') {
+                await middlewareOptions.authenticateWithCookie(request, cookie);
+                next();
+                return;
+            }
 
-                // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
-                if(typeof cookie === 'string') {
-                    headerValue = buildAuthorizationHeaderValue({type: "Bearer", token: cookie});
-                }
-            } catch (e) {
-                // do nothing
+            // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
+            if(typeof cookie === 'string') {
+                headerValue = buildAuthorizationHeaderValue({type: "Bearer", token: cookie});
             }
         }
 
         if(typeof headerValue !== 'string') {
             next();
+            return;
         }
 
         const header = parseAuthorizationHeaderValue(headerValue);
 
-        await middlewareOptions.authenticateWithAuthorizationHeader(request, header);
+        if(typeof middlewareOptions.authenticateWithAuthorizationHeader === 'function') {
+            await middlewareOptions.authenticateWithAuthorizationHeader(request, header);
+        }
+
+        next();
     }
 }

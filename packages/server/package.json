@@ -1,10 +1,10 @@
 {
   "name": "@typescript-auth/server",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Typescript auth server side module stack.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf ./dist && tsc --build",
     "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
     "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage --coverageReporters=text-lcov --coverageReporters=text --coverageDirectory=./test/coverage"
   },

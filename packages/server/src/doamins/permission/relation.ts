@@ -1,5 +1,5 @@
 import {Column, CreateDateColumn, UpdateDateColumn} from "typeorm";
-import {Condition} from "../../permission/type";
+import {Condition} from "@typescript-auth/core";
 
 export abstract class PermissionRelation {
     @Column({type: 'int', default: 999})
