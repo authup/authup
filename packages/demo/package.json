@@ -1,0 +1,26 @@
+{
+  "name": "demo",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@typescript-auth/core": "^0.0.10",
+    "@typescript-auth/server": "^0.0.12",
+    "dotenv": "^10.0.0",
+    "mysql": "^2.18.1",
+    "typeorm": "^0.2.34",
+    "typeorm-extension": "^0.2.6"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^15.14.0",
+    "nodemon": "^2.0.9",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.5"
+  },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "dev-watch": "nodemon --legacy-watch --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "build": "tsc"
+  }
+}

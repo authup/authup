@@ -1,6 +1,6 @@
 {
   "name": "@typescript-auth/server",
-  "version": "0.0.5",
+  "version": "0.0.12",
   "description": "Typescript auth server side module stack.",
   "main": "dist/index.js",
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@typescript-auth/core": "^0.0.4",
+    "@typescript-auth/core": "^0.0.10",
     "bcrypt": "^5.0.1",
     "change-case": "^4.1.2",
     "express": "^4.17.1",

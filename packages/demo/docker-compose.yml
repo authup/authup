@@ -1,0 +1,35 @@
+version: '3.5'
+services:
+    db:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        ports:
+            - '3306:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: start123
+            MYSQL_ROOT_HOST: '%'
+        volumes:
+            - db:/var/lib/mysql
+    adminer:
+        image: adminer
+        depends_on:
+            -   db
+        ports:
+            - 8080:8080
+    backend:
+        image: typescript-auth/demo
+        build: .
+        depends_on:
+            -  db
+        ports:
+            - '4000:3000'
+        restart: always
+        volumes:
+            - ./src:/usr/src/app/src
+        environment:
+            PORT: 3000
+            TYPEORM_HOST: db
+        env_file:
+            -   ./.env
+volumes:
+    db:
