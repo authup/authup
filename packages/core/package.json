@@ -1,7 +1,7 @@
 {
   "name": "@typescript-auth/core",
-  "version": "0.0.11",
-  "description": "Typescript auth core module.",
+  "version": "0.0.12",
+  "description": "Typescript auth core functions stack.",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc --build",

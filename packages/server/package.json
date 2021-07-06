@@ -1,7 +1,7 @@
 {
   "name": "@typescript-auth/server",
-  "version": "0.0.13",
-  "description": "Typescript auth server side module stack.",
+  "version": "0.0.14",
+  "description": "Typescript auth server side functions stack.",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc --build",
