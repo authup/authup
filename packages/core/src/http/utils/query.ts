@@ -42,5 +42,5 @@ export function buildHTTPQuery(data?: any, withQuestionMark: boolean = true) : s
     }
 
     // Join each item in the array with a `&` and return the resulting string
-    return (withQuestionMark ? '' : '?') + query.join('&');
+    return (withQuestionMark ? '?' : '') + query.join('&');
 }

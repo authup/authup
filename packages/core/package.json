@@ -1,6 +1,6 @@
 {
   "name": "@typescript-auth/core",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Typescript auth core module.",
   "main": "dist/index.js",
   "scripts": {

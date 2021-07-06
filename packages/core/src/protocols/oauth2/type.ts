@@ -1,13 +1,13 @@
 export type Oauth2TokenResponse = {
-    accessToken: string,
-    accessTokenPayload?: AccessTokenPayload,
-    refreshToken?: string,
-    expiresIn: number,
-    tokenType: string,
-    idToken?: string,
-    idTokenPayload?: Record<string, any>,
-    macKey?: string,
-    macAlgorithm?: string
+    access_token: string,
+    access_token_payload?: AccessTokenPayload,
+    refresh_token?: string,
+    expires_in: number,
+    token_type: string,
+    id_token?: string,
+    id_token_payload?: Record<string, any>,
+    mac_key?: string,
+    mac_algorithm?: string
 }
 
 

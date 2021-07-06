@@ -14,7 +14,7 @@ import {TokenResponseError} from "./error";
 import {AccessTokenPayload, Oauth2TokenResponse} from "../type";
 import {buildHTTPQuery} from "../../../http";
 import {parseResponseError} from "./utils";
-import {UserinfoResponseError} from "./error/userinfo-response";
+import {UserinfoResponseError} from "./error";
 
 export * from './error';
 export * from './type';
@@ -74,10 +74,10 @@ export class Oauth2ClientProtocol {
             urlSearchParams.append(key, (parameters as Record<string, any>)[key]);
         }
 
-        let url : string = this.protocolOptions.tokenHost;
+        let url : string = this.protocolOptions.token_host;
 
-        if(typeof this.protocolOptions.tokenPath === 'string') {
-            url += this.protocolOptions.tokenPath;
+        if(typeof this.protocolOptions.token_path === 'string') {
+            url += this.protocolOptions.token_path;
         } else {
             url += '/oauth/token';
         }
@@ -94,34 +94,34 @@ export class Oauth2ClientProtocol {
             );
 
             const tokenResponse: Oauth2TokenResponse = {
-                accessToken: data.access_token,
-                refreshToken: data.refresh_token,
-                expiresIn: data.expires_in,
-                tokenType: data.token_type ?? 'Bearer',
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
+                expires_in: data.expires_in,
+                token_type: data.token_type ?? 'Bearer',
             }
 
             if (typeof data.id_token === 'string') {
-                tokenResponse.idToken = data.id_token;
+                tokenResponse.id_token = data.id_token;
 
-                const idTokenPayload = decode(tokenResponse.idToken);
+                const idTokenPayload = decode(tokenResponse.id_token);
 
                 if (idTokenPayload && typeof idTokenPayload === 'object') {
-                    tokenResponse.idTokenPayload = idTokenPayload as Record<string, any>;
+                    tokenResponse.id_token_payload = idTokenPayload as Record<string, any>;
                 }
             }
 
             if (typeof data.mac_key === 'string') {
-                tokenResponse.macKey = data.mac_key;
+                tokenResponse.mac_key = data.mac_key;
             }
 
             if (typeof data.mac_algorithm === 'string') {
-                tokenResponse.macAlgorithm = data.mac_algorithm;
+                tokenResponse.mac_algorithm = data.mac_algorithm;
             }
 
-            const accessTokenPayload = decode(tokenResponse.accessToken);
+            const accessTokenPayload = decode(tokenResponse.access_token);
 
             if (accessTokenPayload && typeof accessTokenPayload === 'object') {
-                tokenResponse.accessTokenPayload = accessTokenPayload as AccessTokenPayload;
+                tokenResponse.access_token_payload = accessTokenPayload as AccessTokenPayload;
             }
 
             return tokenResponse;
@@ -139,10 +139,10 @@ export class Oauth2ClientProtocol {
      * @param token
      */
     async getUserInfo(token: string) {
-        let url : string = this.protocolOptions.userInfoHost ?? this.protocolOptions.tokenHost;
+        let url : string = this.protocolOptions.user_info_host ?? this.protocolOptions.token_host;
 
-        if(typeof this.protocolOptions.userInfoPath === 'string') {
-            url += this.protocolOptions.userInfoPath;
+        if(typeof this.protocolOptions.user_info_path === 'string') {
+            url += this.protocolOptions.user_info_path;
         } else {
             url += '/userinfo';
         }
@@ -168,14 +168,14 @@ export class Oauth2ClientProtocol {
     // ------------------------------------------------------------------
 
     buildTokenParameters(parameters: Oauth2GrantParameters) : Oauth2GrantParameters {
-        parameters.client_id = this.protocolOptions.clientId;
+        parameters.client_id = this.protocolOptions.client_id;
 
         if(
             parameters.grant_type !== 'authorization_code'
         ) {
             if(
                 typeof parameters.scope === 'undefined' &&
-                typeof this.protocolOptions.scope !== 'undefined'
+                this.protocolOptions.scope
             ) {
                 parameters.scope = this.protocolOptions.scope;
             }
@@ -189,26 +189,28 @@ export class Oauth2ClientProtocol {
             parameters.grant_type === 'authorization_code'
         ) {
             if(typeof parameters.redirect_uri === 'undefined') {
-                parameters.redirect_uri = this.protocolOptions.authorizeRedirectURL;
+                parameters.redirect_uri = this.protocolOptions.redirect_uri;
             }
         }
 
-        if(typeof this.protocolOptions.clientId === 'string') {
-            parameters.client_id = this.protocolOptions.clientId;
+        if(typeof this.protocolOptions.client_id === 'string') {
+            parameters.client_id = this.protocolOptions.client_id;
         }
 
-        if(typeof this.protocolOptions.clientSecret === 'string') {
-            parameters.client_secret = this.protocolOptions.clientSecret;
+        if(typeof this.protocolOptions.client_secret === 'string') {
+            parameters.client_secret = this.protocolOptions.client_secret;
         }
 
         return parameters;
     }
 
-    buildAuthorizeURL(parameters: Partial<Pick<Oauth2AuthorizeQueryParameters, 'redirect_uri' | 'scope'>>) {
+    buildAuthorizeURL(parameters?: Partial<Pick<Oauth2AuthorizeQueryParameters, 'redirect_uri' | 'scope'>>) {
+        parameters = parameters ?? {};
+
         const queryParameters : Oauth2AuthorizeQueryParameters = {
             response_type: 'code',
-            client_id: this.protocolOptions.clientId,
-            redirect_uri: this.protocolOptions.authorizeRedirectURL
+            client_id: this.protocolOptions.client_id,
+            redirect_uri: this.protocolOptions.redirect_uri
         }
 
         if(typeof parameters.redirect_uri === 'string') {
@@ -216,7 +218,7 @@ export class Oauth2ClientProtocol {
         }
 
         if(typeof parameters.scope === 'undefined') {
-            if(typeof this.protocolOptions.scope !== 'undefined') {
+            if(this.protocolOptions.scope) {
                 queryParameters.scope = this.protocolOptions.scope;
             }
         } else {
@@ -227,8 +229,8 @@ export class Oauth2ClientProtocol {
             queryParameters.scope = queryParameters.scope.join(" ");
         }
 
-        const host : string = this.protocolOptions.authorizeHost ?? this.protocolOptions.tokenHost;
-        const path : string = this.protocolOptions.authorizePath ?? '/oauth/authorize';
+        const host : string = this.protocolOptions.authorize_host ?? this.protocolOptions.token_host;
+        const path : string = this.protocolOptions.authorize_path ?? '/oauth/authorize';
 
         return host + path + buildHTTPQuery(queryParameters);
     }

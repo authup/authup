@@ -1,18 +1,19 @@
 export type Oauth2ClientProtocolOptions = {
+    client_id: string,
+    client_secret?: string,
+
     scope?: string | string[],
 
-    tokenHost: string,
-    tokenPath?: string,
+    redirect_uri?: string,
 
-    clientId: string,
-    clientSecret?: string,
+    token_host: string,
+    token_path?: string,
 
-    authorizeHost?: string,
-    authorizePath?: string,
-    authorizeRedirectURL?: string,
+    authorize_host?: string,
+    authorize_path?: string,
 
-    userInfoHost?: string,
-    userInfoPath?: string
+    user_info_host?: string,
+    user_info_path?: string
 }
 
 // ------------------------------------------------------------------
