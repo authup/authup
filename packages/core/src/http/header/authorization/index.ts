@@ -15,7 +15,7 @@ export function parseAuthorizationHeaderValue(value: string) : AuthorizationHead
 
     switch (type) {
         case "basic":
-            const base64Decoded = Buffer.from(id).toString('utf-8');
+            const base64Decoded = Buffer.from(id, 'base64').toString('utf-8');
             const base64Parts = base64Decoded.split(":");
 
             if(base64Parts.length !== 2) {

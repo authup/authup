@@ -6,7 +6,7 @@
     "scripts": {
         "build": "rm -rf ./dist && tsc --build",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
-        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage --coverageReporters=text-lcov --coverageReporters=text --coverageDirectory=./test/coverage"
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
     },
     "keywords": [],
     "author": {
@@ -27,7 +27,6 @@
         "@types/jest": "^26.0.23",
         "@types/jsonwebtoken": "^8.5.2",
         "@types/node": "^15.12.4",
-        "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
         "jest": "^27.0.5",
         "ts-jest": "^27.0.3",

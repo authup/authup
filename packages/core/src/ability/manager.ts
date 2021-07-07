@@ -9,7 +9,7 @@ export class AbilityManager {
     protected permissions!: OwnedPermission<unknown>[];
     protected abilityItems: OwnedAbility<unknown>[];
 
-    constructor(permissions: OwnedPermission<unknown>[]) {
+    constructor(permissions: OwnedPermission<unknown>[] = []) {
         this.setPermissions(permissions);
     }
 
@@ -40,7 +40,8 @@ export class AbilityManager {
 
         items = items.sort((a,b) => {
             if(a.power === b.power) return 0;
-            // desc order
+            // desc
+            /* istanbul ignore next */
             return a.power > b.power ? -1 : 1;
         });
 

@@ -9,10 +9,12 @@ export class AuthorizationHeaderError extends Error {
         }
     }
 
+    /* istanbul ignore next */
     static parse() {
         throw new AuthorizationHeaderError(`The authorization header value could not be parsed.`);
     }
 
+    /* istanbul ignore next */
     static parseType() {
         throw new AuthorizationHeaderError(`The authorization header value type must either be 'Bearer' or 'Basic'`);
     }
