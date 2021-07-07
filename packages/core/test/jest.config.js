@@ -23,6 +23,7 @@ module.exports = {
         '!src/http/error/index.ts',
         '!src/http/header/index.ts',
         '!src/protocols/**',
+        '!src/utils/index.ts',
         '!src/**/*.d.ts'
     ],
     coverageThreshold: {

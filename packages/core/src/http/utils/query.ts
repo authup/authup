@@ -17,12 +17,13 @@ export function buildHTTPQuery(
 
         let value = data[key];
 
-        if(value && typeof value === 'object') {
-            if(value.constructor === Array) {
+        const type : string = Object.prototype.toString.call(value);
+        switch (type) {
+            case "[object Array]":
                 value = value.join(',');
-            }
-
-            if(value.constructor === Object) {
+                query.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+                break;
+            case "[object Object]":
                 for(const k in value) {
                     /* istanbul ignore next */
                     if (!value.hasOwnProperty(k)) {
@@ -31,21 +32,30 @@ export function buildHTTPQuery(
 
                     let v : any = value[k];
 
-                    if(v && typeof v === 'object' && v.constructor === Array) {
-                        v = v.join(',');
+                    const nestedType : string = Object.prototype.toString.call(v);
+
+                    switch (nestedType) {
+                        case "[object Array]":
+                            v = v.join(',');
+                            query.push(encodeURIComponent(key+'['+k+']') + '=' + encodeURIComponent(v));
+                            break;
+                        case "[object Number]":
+                        case "[object String]":
+                        case "[object Boolean]":
+                            query.push(encodeURIComponent(key+'['+k+']') + '=' + encodeURIComponent(v));
+                            break;
                     }
-
-                    query.push(encodeURIComponent(key+'['+k+']') + '=' + encodeURIComponent(v));
                 }
-
-                continue;
-            }
+                break;
+            case "[object Number]":
+            case "[object String]":
+            case "[object Boolean]":
+                query.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+                break;
         }
-
-
-        // Encode each key and value, concatenate them into a string, and push them to the array
-        query.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
     }
+
+    if(query.length === 0) return '';
 
     // Join each item in the array with a `&` and return the resulting string
     return (withQuestionMark ? '?' : '') + query.join('&');
