@@ -1,5 +1,5 @@
 {
-    "name": "pht-central-ui",
+    "name": "typescript-auth",
     "author": {
         "name": "Peter Placzek",
         "email": "tadashi@animesu.net",
@@ -18,5 +18,8 @@
         "auth-template",
         "oauth2",
         "oauth2-client"
-    ]
+    ],
+    "engines": {
+        "node": ">=14.0.0"
+    }
 }
