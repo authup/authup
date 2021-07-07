@@ -1,0 +1,22 @@
+{
+    "name": "pht-central-ui",
+    "author": {
+        "name": "Peter Placzek",
+        "email": "tadashi@animesu.net",
+        "url": "https:/github.com/tada5hi"
+    },
+    "license": "MIT",
+    "version": "1.0.0",
+    "workspaces": [
+        "./packages/*"
+    ],
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client"
+    ]
+}

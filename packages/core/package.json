@@ -1,37 +1,37 @@
 {
-  "name": "@typescript-auth/core",
-  "version": "0.0.12",
-  "description": "Typescript auth core functions stack.",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "rm -rf ./dist && tsc --build",
-    "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
-    "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage --coverageReporters=text-lcov --coverageReporters=text --coverageDirectory=./test/coverage"
-  },
-  "keywords": [],
-  "author": {
-    "name": "Peter Placzek",
-    "email": "tadashi@animesu.net",
-    "url": "https:/github.com/tada5hi"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@casl/ability": "^5.3.1",
-    "axios": "^0.21.1",
-    "change-case": "^4.1.2",
-    "jsonwebtoken": "^8.5.1"
-  },
-  "devDependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/change-case": "^2.3.1",
-    "@types/jest": "^26.0.23",
-    "@types/jsonwebtoken": "^8.5.2",
-    "@types/node": "^15.12.4",
-    "coveralls": "^3.1.0",
-    "cross-env": "^7.0.3",
-    "jest": "^27.0.5",
-    "ts-jest": "^27.0.3",
-    "tslint": "^6.1.3",
-    "typescript": "^4.3.4"
-  }
+    "name": "@typescript-auth/core",
+    "version": "0.0.12",
+    "description": "Typescript auth core functions stack.",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "rm -rf ./dist && tsc --build",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage --coverageReporters=text-lcov --coverageReporters=text --coverageDirectory=./test/coverage"
+    },
+    "keywords": [],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "tadashi@animesu.net",
+        "url": "https:/github.com/tada5hi"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@casl/ability": "^5.3.1",
+        "axios": "^0.21.1",
+        "change-case": "^4.1.2",
+        "jsonwebtoken": "^8.5.1"
+    },
+    "devDependencies": {
+        "@types/axios": "^0.14.0",
+        "@types/change-case": "^2.3.1",
+        "@types/jest": "^26.0.23",
+        "@types/jsonwebtoken": "^8.5.2",
+        "@types/node": "^15.12.4",
+        "coveralls": "^3.1.0",
+        "cross-env": "^7.0.3",
+        "jest": "^27.0.5",
+        "ts-jest": "^27.0.3",
+        "tslint": "^6.1.3",
+        "typescript": "^4.3.4"
+    }
 }
