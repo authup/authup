@@ -13,13 +13,13 @@ import {
 import {TokenResponseError} from "./error";
 import {AccessTokenPayload, Oauth2TokenResponse} from "../type";
 import {buildHTTPQuery} from "../../../http";
-import {parseResponseError} from "./utils";
 import {UserinfoResponseError} from "./error";
+import {removeDuplicateForwardSlashes} from "../../../utils";
 
 export * from './error';
 export * from './type';
 
-export class Oauth2ClientProtocol {
+export class Oauth2Client {
     constructor(protected protocolOptions: Oauth2ClientProtocolOptions) {
 
     }
@@ -84,7 +84,7 @@ export class Oauth2ClientProtocol {
 
         try {
             const {data} = await axios.post(
-                url,
+                removeDuplicateForwardSlashes(url),
                 urlSearchParams,
                 {
                     headers: {
@@ -126,9 +126,8 @@ export class Oauth2ClientProtocol {
 
             return tokenResponse;
         } catch (e) {
-            const {code, statusCode, message} = parseResponseError(e);
-
-            throw new TokenResponseError(message, code, statusCode);
+            /* istanbul ignore next */
+            throw new TokenResponseError(e);
         }
     }
 
@@ -149,7 +148,7 @@ export class Oauth2ClientProtocol {
 
         try {
             const {data} = await axios.get(
-                url,
+                removeDuplicateForwardSlashes(url),
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -159,9 +158,8 @@ export class Oauth2ClientProtocol {
 
             return data;
         } catch (e) {
-            const {code, statusCode, message} = parseResponseError(e);
-
-            throw new UserinfoResponseError(message, code, statusCode);
+            /* istanbul ignore next */
+            throw new UserinfoResponseError(e);
         }
     }
 
@@ -232,6 +230,6 @@ export class Oauth2ClientProtocol {
         const host : string = this.protocolOptions.authorize_host ?? this.protocolOptions.token_host;
         const path : string = this.protocolOptions.authorize_path ?? '/oauth/authorize';
 
-        return host + path + buildHTTPQuery(queryParameters);
+        return removeDuplicateForwardSlashes(host + path) + buildHTTPQuery(queryParameters);
     }
 }

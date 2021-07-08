@@ -22,7 +22,7 @@ module.exports = {
         '!src/http/index.ts',
         '!src/http/error/index.ts',
         '!src/http/header/index.ts',
-        '!src/protocols/**',
+        '!src/protocols/oauth2/client/error/*.ts',
         '!src/utils/index.ts',
         '!src/**/*.d.ts'
     ],
