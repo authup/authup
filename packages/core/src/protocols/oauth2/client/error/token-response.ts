@@ -13,13 +13,8 @@ export class TokenResponseError extends Error {
 
         const {code, statusCode, message} = parseResponseError(e);
 
-        if(typeof code === 'string') {
-            this.code = code;
-        }
-
-        if(typeof statusCode === 'number') {
-            this.statusCode = statusCode;
-        }
+        if(typeof code === 'string') this.code = code;
+        if(typeof statusCode === 'number') this.statusCode = statusCode;
 
         this.message = message;
     }
