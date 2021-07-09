@@ -7,7 +7,7 @@ export type ParsedResponseError = {
 export function parseResponseError(e: any) : ParsedResponseError {
     let code : string | undefined;
     let statusCode : number | undefined;
-    let message : string = 'An network error occurred.';
+    let message : string = 'A network error occurred.';
 
     if(typeof e?.response?.data?.code === 'string') {
         code = e.response.data.code;

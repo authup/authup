@@ -14,7 +14,7 @@ import {TokenResponseError} from "./error";
 import {AccessTokenPayload, Oauth2TokenResponse} from "../type";
 import {buildHTTPQuery} from "../../../http";
 import {UserinfoResponseError} from "./error";
-import {removeDuplicateForwardSlashes} from "../../../utils";
+import {removeDuplicateForwardSlashesFromURL} from "../../../utils";
 
 export * from './error';
 export * from './type';
@@ -84,7 +84,7 @@ export class Oauth2Client {
 
         try {
             const {data} = await axios.post(
-                removeDuplicateForwardSlashes(url),
+                removeDuplicateForwardSlashesFromURL(url),
                 urlSearchParams,
                 {
                     headers: {
@@ -148,7 +148,7 @@ export class Oauth2Client {
 
         try {
             const {data} = await axios.get(
-                removeDuplicateForwardSlashes(url),
+                removeDuplicateForwardSlashesFromURL(url),
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -230,6 +230,6 @@ export class Oauth2Client {
         const host : string = this.protocolOptions.authorize_host ?? this.protocolOptions.token_host;
         const path : string = this.protocolOptions.authorize_path ?? '/oauth/authorize';
 
-        return removeDuplicateForwardSlashes(host + path) + buildHTTPQuery(queryParameters);
+        return removeDuplicateForwardSlashesFromURL(host + path) + buildHTTPQuery(queryParameters);
     }
 }
