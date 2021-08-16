@@ -16,7 +16,7 @@
     },
     "license": "MIT",
     "dependencies": {
-        "@casl/ability": "^5.3.1",
+        "@casl/ability": "^5.4.1",
         "axios": "^0.21.1",
         "change-case": "^4.1.2",
         "jsonwebtoken": "^8.5.1"
