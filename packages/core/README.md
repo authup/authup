@@ -35,7 +35,7 @@ It easily scales between a claim based and subject/attribute based authorization
 import {
     AbilityManager,
     buildAbilityMetaFromName,
-    Permission
+    PermissionItem
 } from "@typescript-auth/core";
 
 type User = {
@@ -44,7 +44,7 @@ type User = {
     age: number;
 }
 
-const permissions: Permission<User>[] = [
+const permissions: PermissionItem<User>[] = [
     {
         id: 'user_add', 
         condition: {

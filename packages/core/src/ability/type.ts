@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {Permission} from "../permission";
+import {PermissionItem} from "../permission";
 
-export type OwnedAbility<T extends {}> = {
+export type AbilityMeta = {
     action: string,
     subject: string
-} & Permission<T>;
+}
+
+export type AbilityItem<T extends {}> = AbilityMeta & PermissionItem<T>;
 
 // -------------------------------------------------------------------
 
@@ -62,9 +64,3 @@ export type Instruction =
     '$regex' |
     InstructionOnInstruction |
     BooleanInstruction;
-
-
-export type AbilityMeta = {
-    action: string,
-    subject: string
-}

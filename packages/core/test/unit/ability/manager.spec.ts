@@ -6,9 +6,9 @@
  */
 
 import {AbilityManager} from "../../../src/ability";
-import {Permission} from "../../../src/permission";
+import {PermissionItem} from "../../../src/permission";
 
-const testPermissions : Permission<unknown>[] = [
+const testPermissions : PermissionItem<unknown>[] = [
     {id: 'user_add', negation: false, power: 999},
     {id: 'user_add', negation: false, power: 999},
     {id: 'user_add', negation: false, power: 777},
