@@ -146,7 +146,7 @@ const oauth2Client = new Oauth2Client({
     client_id: 'client',
     client_secret: 'secret',
     token_host: 'https://example.com/',
-    redirect_uri: redirectUri,
+    redirect_uri: 'https://example.com/redirect',
     scope: ['email']
 });
 
@@ -154,7 +154,7 @@ let token = await oauth2Client.getTokenWithRefreshToken({refresh_token: 'refresh
 console.log(token);
 // {...}
 
-token = await oauth2Client.getTokenWithClientCredentials({});
+token = await oauth2Client.getTokenWithClientCredentials();
 token = await oauth2Client.getTokenWithPasswordGrant({username: 'admin', password: 'start123'});
 token = await oauth2Client.getTokenWithAuthorizeGrant({state: 'state', code: 'code'});
 

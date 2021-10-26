@@ -43,11 +43,11 @@ export class Oauth2Client {
     }
 
     async getTokenWithClientCredentials(
-        parameters: Pick<Oauth2ClientCredentialsGrantParameters, 'scope'>
+        parameters?: Pick<Oauth2ClientCredentialsGrantParameters, 'scope'>
     ) {
         return await this.getToken(this.buildTokenParameters({
             grant_type: 'client_credentials',
-            ...parameters
+            ...(parameters ? parameters : {})
         }));
     }
 
