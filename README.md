@@ -3,7 +3,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
 # @typescript-auth 🔒	
-This repository is under heavy development at the moment and not open for public usage.
+This monorepo provides different standalone packages for client and server side authentication.
 
 ## Packages
 The repository contains the following packages:

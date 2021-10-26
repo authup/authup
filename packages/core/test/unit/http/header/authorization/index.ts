@@ -1,7 +1,7 @@
 import {
     buildAuthorizationHeaderValue,
     parseAuthorizationHeaderValue
-} from "../../../../../src/http/header/authorization";
+} from "../../../../../src";
 
 describe('src/http/header/authorization/authorization-header.ts', () => {
     it('should throw error', () => {

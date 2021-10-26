@@ -1,4 +1,4 @@
-import {AuthorizationHeaderError} from "../../../../src/http/error";
+import {AuthorizationHeaderError} from "../../../../src";
 
 describe('src/http/error/authorization-header.ts', () => {
     it('should throw error', () => {
