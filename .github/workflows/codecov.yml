@@ -27,7 +27,7 @@ jobs:
               run: |
                   npm ci
                   npm run build
-                  npm run test:coverage
+                  npm run test:coverage --if-present
 
             - name: Upload Code coverage report
               uses: codecov/codecov-action@v2.0.3
