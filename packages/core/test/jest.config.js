@@ -15,7 +15,7 @@ module.exports = {
     testPathIgnorePatterns: [
         "dist"
     ],
-    coverageDirectory: 'writable/coverage',
+    coverageDirectory: 'coverage',
     collectCoverageFrom: [
         'src/**/*.{ts,tsx,js,jsx}',
         '!src/index.ts',
