@@ -26,7 +26,7 @@ npm install @typescript-auth/server --save
 ### Middleware
 
 The auth middleware targets `express` backend applications. 
-You can simply register, handlers for an `Authorization`-header or `cookie` value.
+You can simply register handlers for an `Authorization`-header or `cookie` value.
 ```typescript
 import express, {Request} from 'express';
 import {
@@ -42,12 +42,12 @@ const app = express();
 app.use(setupAuthMiddleware({
     authenticateWithCookie: (request: Request, value: unknown) => {
         // check if value is valid ...
-        // if not through exception
+        // if not throw exception
         return true;
     },
     authenticateWithAuthorizationHeader: (request: Request, value: AuthorizationHeader) => {
         // check if value is valid ...
-        // if not through exception
+        // if not throw exception
         console.log(value);
         // {type: 'Bearer', token: 'xxx'}
         // {type: 'Basic', username: 'xxx', password: 'xxx}
@@ -62,7 +62,7 @@ app.use(setupAuthMiddleware({
 #### KeyPair
 
 Create a private `pkcs8` key and `spki` public key.
-The `useSecurityKeyPair` method will automatically create, a key pair in the directory if it 
+The `useSecurityKeyPair` method will automatically create, a key pair in the specified directory if it 
 doesn't already exist.
 
 ```typescript

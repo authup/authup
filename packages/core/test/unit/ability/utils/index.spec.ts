@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {createAbilityKeysFromPermissionID} from "../../../../src";
+import {buildAbilityMetaFromName} from "../../../../src";
 
 describe('src/ability/utils/index.ts', () => {
     it('should throw error', () => {
-        const abilityKeys = createAbilityKeysFromPermissionID('user_add');
+        const abilityKeys = buildAbilityMetaFromName('user_add');
 
         expect(abilityKeys).toEqual({action: 'add', subject: 'user'});
 
-        expect(() => createAbilityKeysFromPermissionID('user')).toThrowError();
+        expect(() => buildAbilityMetaFromName('user')).toThrowError();
     });
 });

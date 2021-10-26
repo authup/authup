@@ -5,17 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { camelCase } from 'change-case';
+import {camelCase} from 'change-case';
+import {AbilityMeta} from "../type";
 
-export type AbilityKeys = {
-    action: string,
-    subject: string
-}
-
-export function createAbilityKeysFromPermissionID(name: string, delimiter: string = '_') : AbilityKeys {
+export function buildAbilityMetaFromName(
+    name: string,
+    delimiter: string = '_'
+) : AbilityMeta {
     const parts : string[] = name.split(delimiter);
     if(parts.length < 2) {
-        throw new Error('The ability keys cannot be created by the permission name.');
+        throw new Error('The ability meta cannot be built from name.');
     }
 
     const action : string | undefined = parts.pop();

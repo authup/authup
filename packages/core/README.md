@@ -34,8 +34,8 @@ It easily scales between a claim based and subject/attribute based authorization
 ```typescript
 import {
     AbilityManager,
-    createAbilityKeysFromPermissionID,
-    OwnedPermission
+    buildAbilityMetaFromName,
+    Permission
 } from "@typescript-auth/core";
 
 type User = {
@@ -44,7 +44,7 @@ type User = {
     age: number;
 }
 
-const permissions: OwnedPermission<User>[] = [
+const permissions: Permission<User>[] = [
     {
         id: 'user_add', 
         condition: {
@@ -68,15 +68,15 @@ console.log(manager.can('drop','user'));
 // true
 ```
 
-**createAbilityKeysFromPermissionID**
+**AbilityMeta**
 
 ```typescript
 import {
-    createAbilityKeysFromPermissionID
+    buildAbilityMetaFromName
 } from "@typescript-auth/core";
 
-const abilityKeys = createAbilityKeysFromPermissionID('user_add');
-console.log(abilityKeys);
+const meta = buildAbilityMetaFromName('user_add');
+console.log(meta);
 // {action: 'add', subject: 'user'}
 ```
 

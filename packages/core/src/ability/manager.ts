@@ -7,16 +7,16 @@
 
 import {OwnedAbility} from "./type";
 import {Ability, AbilityBuilder, Subject} from "@casl/ability";
-import {createAbilityKeysFromPermissionID} from "./utils";
-import {OwnedPermission} from "../permission";
+import {buildAbilityMetaFromName} from "./utils";
+import {Permission} from "../permission";
 
 export class AbilityManager {
     protected ability!: Ability;
 
-    protected permissions!: OwnedPermission<unknown>[];
+    protected permissions!: Permission<unknown>[];
     protected abilityItems: OwnedAbility<unknown>[];
 
-    constructor(permissions: OwnedPermission<unknown>[] = []) {
+    constructor(permissions: Permission<unknown>[] = []) {
         this.setPermissions(permissions);
     }
 
@@ -57,7 +57,7 @@ export class AbilityManager {
 
     // ----------------------------------------------
 
-    setPermissions(permissions: OwnedPermission<any>[]) {
+    setPermissions(permissions: Permission<any>[]) {
         this.permissions = permissions;
         this.build();
     }
@@ -65,7 +65,7 @@ export class AbilityManager {
         return this.permissions;
     }
 
-    getPermission(id: string) : OwnedPermission<unknown> | undefined {
+    getPermission(id: string) : Permission<unknown> | undefined {
         const index : number = this.permissions.findIndex(permission => permission.id === id);
         if(index === -1) {
             return undefined;
@@ -75,7 +75,7 @@ export class AbilityManager {
     }
 
     hasPermission(id: string) : boolean {
-        const permission : OwnedPermission<unknown> | undefined = this.getPermission(id);
+        const permission : Permission<unknown> | undefined = this.getPermission(id);
 
         return typeof permission !== 'undefined';
     }
@@ -88,7 +88,7 @@ export class AbilityManager {
         const items =  this.permissions.map(permission => {
             const ability: OwnedAbility<unknown> = {
                 ...permission,
-                ...createAbilityKeysFromPermissionID(permission.id)
+                ...buildAbilityMetaFromName(permission.id)
             };
 
             return ability;

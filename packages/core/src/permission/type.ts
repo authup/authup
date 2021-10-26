@@ -7,7 +7,7 @@
 
 import {Condition} from "../ability";
 
-export type OwnedPermission<T extends {}> = {
+export type Permission<T extends {}> = {
     id: string,
     negation?: boolean,
     condition?: Condition<T> | null,
