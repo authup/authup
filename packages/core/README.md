@@ -4,15 +4,17 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
 # @typescript-auth/core ☼
-It contains all core functions, which are also partially required by other modules of the @typescript-auth namespace.
+The main propose of this package, is to provide general utilities for authorization & authentication.
+It also contains core functions, for few other modules of the `@typescript-auth` namespace.
 
 **Table of Contents**
 
 - [Installation](#installation)
 - [Usage](#usage)
   - [Ability/Permissions](#abilitypermissions)
-  - [HTTP](#http)
+  - [HTTP Header](#http-header)
   - [Protocols](#protocols)
+    - [Oauth2](#oauth2)
 
 ## Installation
 
@@ -23,6 +25,9 @@ npm install @typescript-auth/core --save
 ## Usage
 
 ### Ability/Permissions
+The `AbilityManager` provides an easy way to group permissions for a session user 
+and allows sharing those permissions between UI, API and microservices.
+It easily scales between a claim based and subject/attribute based authorization.
 
 **AbilityManager**
 
@@ -75,7 +80,9 @@ console.log(abilityKeys);
 // {action: 'add', subject: 'user'}
 ```
 
-### HTTP
+### HTTP Header
+
+The http utilities turn around header parsing and building.
 
 **AuthorizationHeader**
 
@@ -113,7 +120,8 @@ console.log(headerValue);
 
 ### Protocols
 
-**Oauth2 - URL**
+#### Oauth2
+**URL**
 ```typescript
 import {Oauth2Client} from "@typescript-auth/core";
 
@@ -129,7 +137,7 @@ console.log(url);
 // https://example.com/oauth/authorize?response_type=code&client_id=client&redirect_uri=https://example.com/redirect
 ```
 
-**Oauth2 - Token**
+**Token**
 
 ```typescript
 import {Oauth2Client} from "@typescript-auth/core";

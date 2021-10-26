@@ -4,13 +4,139 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
 # @typescript-auth/server ☼
-This package is under heavy development at the moment and not open for public usage.
+This package should be used for server side applications like APIs or microservices.
 
-It can be used by server side applications and is used for example, in combination with:
-- express
+**Table of Contents**
 
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Middleware](#middleware)
+  - [Security](#security)
+    - [KeyPair](#keypair) 
+    - [Password](#password)
+    - [Token](#token)
 ## Installation
 
 ```bash
 npm install @typescript-auth/server --save
+```
+
+## Usage
+
+### Middleware
+
+The auth middleware targets `express` backend applications. 
+You can simply register, handlers for an `Authorization`-header or `cookie` value.
+```typescript
+import express, {Request} from 'express';
+import {
+    AuthorizationHeaderValue,
+    setupAuthMiddleware
+} from "@typescript-auth/server";
+
+
+const app = express();
+
+// register middleware
+
+app.use(setupAuthMiddleware({
+    authenticateWithCookie: (request: Request, value: unknown) => {
+        // check if value is valid ...
+        // if not through exception
+        return true;
+    },
+    authenticateWithAuthorizationHeader: (request: Request, value: AuthorizationHeaderValue) => {
+        // check if value is valid ...
+        // if not through exception
+        return true;
+    }
+}))
+```
+
+### Security
+
+#### KeyPair
+
+Create a private `pkcs8` key and `spki` public key.
+The `useSecurityKeyPair` method will automatically create, a key pair in the directory if it 
+doesn't already exist.
+
+```typescript
+import path from 'path';
+import {
+    createSecurityKeyPair,
+    useSecurityKeyPair,
+    SecurityKeyPairOptions
+} from "@typescript-auth/server";
+
+const keyPairOptions: SecurityKeyPairOptions = {
+    directory: path.join(__dirname, 'writable')
+}
+
+(async () => {
+    await createSecurityKeyPair(keyPairOptions);
+
+    const keyPair = await useSecurityKeyPair(keyPairOptions);
+    
+    console.log(keyPair);
+    // {privateKey: 'xxx', publicKey: 'xxx'}
+})();
+```
+
+#### Password
+
+The `hashPassword` and `verifyPassword` method make user password-
+generation & -verification easy.
+
+```typescript
+import {
+    hashPassword,
+    verifyPassword
+} from "@typescript-auth/server";
+
+
+(async () => {
+    const hashed = await hashPassword('start123', 10); // 10 rounds
+    let isPassword = await verifyPassword('start123', hashed);
+    console.log(isPassword);
+    // true
+    
+    isPassword = await verifyPassword('star1234', hashed);
+    console.log(isPassword);
+    // false
+})();
+```
+
+#### Token
+
+To create Bearer token for authentication and authorization, simply use the methods `createToken` and
+`verifyToken` like described below.
+
+```typescript
+import path from 'path';
+import {
+    createToken,
+    verifyToken,
+    SecurityKeyPairOptions
+} from "@typescript-auth/server";
+
+const keyPairOptions: SecurityKeyPairOptions = {
+    directory: path.join(__dirname, 'writable')
+}
+
+(async () => {
+    const token = await createToken(
+        {
+            userId: 'xxx',
+        },
+        3600, // 1 hour
+        keyPairOptions
+    );
+    console.log(token);
+    // xxxxxxxxxxxxxxxxx
+
+    const payload = await verifyToken(token, keyPairOptions);
+    console.log(payload);
+    // {userId: 'xxx'}
+})();
 ```
