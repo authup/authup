@@ -6,11 +6,11 @@
  */
 
 import {
-    AuthorizationHeaderValue,
-    AuthorizationHeaderValueType
+    AuthorizationHeader,
+    AuthorizationHeaderType
 } from "@typescript-auth/core";
 
 export {
-    AuthorizationHeaderValue,
-    AuthorizationHeaderValueType
+    AuthorizationHeader,
+    AuthorizationHeaderType
 }

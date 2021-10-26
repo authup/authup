@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {AuthorizationHeaderValue} from "./type";
+import {AuthorizationHeader, AuthorizationHeaderType} from "./type";
 import {AuthorizationHeaderError} from "../../error";
 
 export * from './type';
 
-export function parseAuthorizationHeaderValue(value: string) : AuthorizationHeaderValue {
+export function parseAuthorizationHeader(value: string) : AuthorizationHeader {
     const parts : string[] = value.split(" ");
 
     if(parts.length < 2) {
@@ -30,19 +30,21 @@ export function parseAuthorizationHeaderValue(value: string) : AuthorizationHead
             }
 
             return {
-                type: "Basic",
+                type: AuthorizationHeaderType.BASIC,
                 username: base64Parts[0],
                 password: base64Parts[1]
             }
         case "bearer":
             return {
-                type: "Bearer",
+                type: AuthorizationHeaderType.BEARER,
                 token: id
             }
         case "api-key":
         case "x-api-key":
             return {
-                type: type === 'api-key' ? 'API-Key' : 'X-API-Key',
+                type: type === 'api-key' ?
+                    AuthorizationHeaderType.API_KEY :
+                    AuthorizationHeaderType.X_API_KEY,
                 key: id
             }
         default:
@@ -50,18 +52,18 @@ export function parseAuthorizationHeaderValue(value: string) : AuthorizationHead
     }
 }
 
-export function buildAuthorizationHeaderValue(options: AuthorizationHeaderValue) : string {
-    switch (options.type) {
-        case "Basic":
+export function stringifyAuthorizationHeader(header: AuthorizationHeader) : string {
+    switch (header.type) {
+        case AuthorizationHeaderType.BASIC:
             const basicStr : string = Buffer
-                .from(options.username+':'+options.password)
+                .from(header.username+':'+header.password)
                 .toString("base64");
 
             return `Basic ${basicStr}`;
-        case "Bearer":
-            return `Bearer ${options.token}`;
-        case "X-API-Key":
-        case "API-Key":
-            return `${options.type} ${options.key}`;
+        case AuthorizationHeaderType.BEARER:
+            return `Bearer ${header.token}`;
+        case AuthorizationHeaderType.X_API_KEY:
+        case AuthorizationHeaderType.API_KEY:
+            return `${header.type} ${header.key}`;
     }
 }

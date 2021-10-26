@@ -25,7 +25,7 @@ npm install @typescript-auth/core --save
 ## Usage
 
 ### Ability/Permissions
-The `AbilityManager` provides an easy way to group permissions for a session user 
+The `AbilityManager` provides an easy way to group permissions for a client session 
 and allows sharing those permissions between UI, API and microservices.
 It easily scales between a claim based and subject/attribute based authorization.
 
@@ -88,29 +88,29 @@ The http utilities turn around header parsing and building.
 
 ```typescript
 import {
-    buildAuthorizationHeaderValue,
-    parseAuthorizationHeaderValue
+    parseAuthorizationHeader,
+    stringifyAuthorizationHeader
 } from "@typescript-auth/core";
 
 const basicValue = Buffer
     .from('admin:start123')
     .toString('base64');
 
-const value = parseAuthorizationHeaderValue(`Basic ${basicValue}`);
+const value = parseAuthorizationHeader(`Basic ${basicValue}`);
 console.log(value);
 // {type: 'Basic', username: 'admin', password: 'start123'}
 
 // -------------------------------------------------
 
-let headerValue = buildAuthorizationHeaderValue({
-    type: 'Basic', 
-    username: 'admin', 
+let headerValue = stringifyAuthorizationHeader({
+    type: 'Basic',
+    username: 'admin',
     password: 'start123'
 });
 console.log(headerValue);
 // Basic xxxxxxx
 
-headerValue = buildAuthorizationHeaderValue({
+headerValue = stringifyAuthorizationHeader({
     type: 'Bearer',
     token: 'start123'
 });

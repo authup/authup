@@ -30,7 +30,7 @@ You can simply register, handlers for an `Authorization`-header or `cookie` valu
 ```typescript
 import express, {Request} from 'express';
 import {
-    AuthorizationHeaderValue,
+    AuthorizationHeader,
     setupAuthMiddleware
 } from "@typescript-auth/server";
 
@@ -45,9 +45,13 @@ app.use(setupAuthMiddleware({
         // if not through exception
         return true;
     },
-    authenticateWithAuthorizationHeader: (request: Request, value: AuthorizationHeaderValue) => {
+    authenticateWithAuthorizationHeader: (request: Request, value: AuthorizationHeader) => {
         // check if value is valid ...
         // if not through exception
+        console.log(value);
+        // {type: 'Bearer', token: 'xxx'}
+        // {type: 'Basic', username: 'xxx', password: 'xxx}
+        // {type: 'X-API', key: 'xxx'}
         return true;
     }
 }))

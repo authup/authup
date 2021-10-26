@@ -5,32 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type BearerAuthorizationHeaderValueType = 'Bearer';
-export type BasicAuthorizationHeaderValueType = 'Basic';
-export type APIKeyAuthorizationHeaderValueType = 'X-API-Key' | 'API-Key'
+export enum AuthorizationHeaderType {
+    BEARER = 'Bearer',
+    BASIC = 'Basic',
+    X_API_KEY = 'X-API-Key',
+    API_KEY = 'API-Key'
+}
 
-export type AuthorizationHeaderValueType =
-    BearerAuthorizationHeaderValueType |
-    BasicAuthorizationHeaderValueType |
-    APIKeyAuthorizationHeaderValueType;
+export interface AbstractAuthorizationHeader {
+    type: `${AuthorizationHeaderType}`
+}
 
-export type BearerAuthorizationHeaderValue = {
-    type: BearerAuthorizationHeaderValueType,
+export interface BearerAuthorizationHeader extends AbstractAuthorizationHeader {
+    type: 'Bearer',
     token: string
 }
 
-export type BasicAuthorizationHeaderValue = {
-    type: BasicAuthorizationHeaderValueType,
+export interface BasicAuthorizationHeader extends AbstractAuthorizationHeader {
+    type: 'Basic',
     username: string,
     password: string
 }
 
-export type APIKeyAuthorizationHeaderValue = {
-    type: APIKeyAuthorizationHeaderValueType,
+export interface APIKeyAuthorizationHeader extends AbstractAuthorizationHeader {
+    type: 'API-Key' | 'X-API-Key',
     key: string
 }
 
-export type AuthorizationHeaderValue =
-    BasicAuthorizationHeaderValue |
-    BearerAuthorizationHeaderValue |
-    APIKeyAuthorizationHeaderValue;
+export type AuthorizationHeader =
+    BasicAuthorizationHeader |
+    BearerAuthorizationHeader |
+    APIKeyAuthorizationHeader;
