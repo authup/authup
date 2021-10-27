@@ -6,13 +6,33 @@
     "scripts": {
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client",
+        "middleware",
+        "key-pair",
+        "password",
+        "token"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
-        "url": "https:/github.com/tada5hi"
+        "url": "https://github.com/tada5hi"
     },
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/typescript-auth.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/typescript-auth/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
         "@typescript-auth/core": "^1.0.0",
         "bcrypt": "^5.0.1",

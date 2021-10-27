@@ -3,7 +3,7 @@
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
-        "url": "https:/github.com/tada5hi"
+        "url": "https://github.com/tada5hi"
     },
     "license": "MIT",
     "version": "1.0.0",
@@ -19,6 +19,14 @@
         "oauth2",
         "oauth2-client"
     ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/typescript-auth.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/typescript-auth/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "engines": {
         "node": ">=14.0.0"
     },

@@ -8,13 +8,34 @@
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
         "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client",
+        "ability",
+        "permission",
+        "header",
+        "bearer",
+        "basic"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
-        "url": "https:/github.com/tada5hi"
+        "url": "https://github.com/tada5hi"
     },
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/typescript-auth.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/typescript-auth/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
         "@casl/ability": "^5.3.1",
         "axios": "^0.24.0",
