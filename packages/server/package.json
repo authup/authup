@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Typescript auth server side functions stack.",
     "main": "dist/index.js",
     "scripts": {
@@ -34,7 +34,7 @@
     },
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
-        "@typescript-auth/core": "^1.0.1",
+        "@typescript-auth/core": "^1.0.2",
         "bcrypt": "^5.0.1",
         "change-case": "^4.1.2",
         "jsonwebtoken": "^8.5.1",
