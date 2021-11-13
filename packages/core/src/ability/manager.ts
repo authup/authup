@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {AbilityItem} from "./type";
+import {AbilityItem, AbilityMeta} from "./type";
 import {Ability, AbilityBuilder, Subject} from "@casl/ability";
 import {buildAbilityMetaFromName} from "./utils";
 import {PermissionItem} from "../permission";
@@ -13,18 +13,24 @@ import {PermissionItem} from "../permission";
 export class AbilityManager {
     protected ability!: Ability;
 
-    protected permissions!: PermissionItem<unknown>[];
-    protected abilityItems: AbilityItem<unknown>[];
+    protected permissions!: PermissionItem<any>[];
+    protected abilityItems: AbilityItem<any>[];
 
-    constructor(permissions: PermissionItem<unknown>[] = []) {
+    constructor(permissions: PermissionItem<any>[] = []) {
         this.setPermissions(permissions);
     }
 
     // ----------------------------------------------
 
-    can(action: string, subject: Subject, field?: string) {
+    can(action: string, subject: Subject, field?: string) : boolean {
         return this.ability.can(action, subject, field);
     }
+
+    hasAbility(meta: AbilityMeta) : boolean {
+        return this.ability.can(meta.action, meta.subject);
+    }
+
+    // ----------------------------------------------
 
     getPower(action: string, subject: Subject, field?: string) : undefined | number {
         if(typeof subject !== 'string') {
@@ -65,7 +71,7 @@ export class AbilityManager {
         return this.permissions;
     }
 
-    getPermission(id: string) : PermissionItem<unknown> | undefined {
+    getPermission(id: string) : PermissionItem<any> | undefined {
         const index : number = this.permissions.findIndex(permission => permission.id === id);
         if(index === -1) {
             return undefined;
@@ -75,7 +81,7 @@ export class AbilityManager {
     }
 
     hasPermission(id: string) : boolean {
-        const permission : PermissionItem<unknown> | undefined = this.getPermission(id);
+        const permission : PermissionItem<any> | undefined = this.getPermission(id);
 
         return typeof permission !== 'undefined';
     }
@@ -84,9 +90,9 @@ export class AbilityManager {
     // Ability
     // ----------------------------------------------
 
-    protected transformPermissionsForAbilityBuilder() : AbilityItem<unknown>[] {
+    protected transformPermissionsForAbilityBuilder() : AbilityItem<any>[] {
         const items =  this.permissions.map(permission => {
-            const ability: AbilityItem<unknown> = {
+            const ability: AbilityItem<any> = {
                 ...permission,
                 ...buildAbilityMetaFromName(permission.id)
             };
@@ -115,7 +121,7 @@ export class AbilityManager {
         const {can, rules} = new AbilityBuilder(Ability);
 
         for (let i = 0; i < items.length; i++) {
-            const ability: AbilityItem<unknown> = items[i];
+            const ability: AbilityItem<any> = items[i];
 
             can(ability.action, ability.subject, ability.fields, ability.condition);
         }
