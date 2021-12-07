@@ -27,7 +27,7 @@ export * from './error';
 export * from './type';
 
 export class Oauth2Client {
-    constructor(protected protocolOptions: Oauth2ClientProtocolOptions, protected httpConfig : AxiosRequestConfig) {
+    constructor(protected protocolOptions: Oauth2ClientProtocolOptions, protected httpConfig?: AxiosRequestConfig) {
 
     }
 
