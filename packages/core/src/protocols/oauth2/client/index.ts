@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import axios from 'axios';
+import axios, {AxiosRequestConfig} from 'axios';
 import {decode} from "jsonwebtoken";
 
 import {
@@ -27,7 +27,7 @@ export * from './error';
 export * from './type';
 
 export class Oauth2Client {
-    constructor(protected protocolOptions: Oauth2ClientProtocolOptions) {
+    constructor(protected protocolOptions: Oauth2ClientProtocolOptions, protected httpConfig : AxiosRequestConfig) {
 
     }
 
@@ -94,6 +94,7 @@ export class Oauth2Client {
                 removeDuplicateForwardSlashesFromURL(url),
                 urlSearchParams,
                 {
+                    ...(this.httpConfig ? this.httpConfig : {}),
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     }
