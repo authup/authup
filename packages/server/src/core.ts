@@ -7,10 +7,10 @@
 
 import {
     AuthorizationHeader,
-    AuthorizationHeaderType
-} from "@typescript-auth/core";
+    AuthorizationHeaderType,
+} from '@typescript-auth/core';
 
 export {
     AuthorizationHeader,
-    AuthorizationHeaderType
-}
+    AuthorizationHeaderType,
+};

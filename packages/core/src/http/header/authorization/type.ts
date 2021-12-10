@@ -9,7 +9,7 @@ export enum AuthorizationHeaderType {
     BEARER = 'Bearer',
     BASIC = 'Basic',
     X_API_KEY = 'X-API-Key',
-    API_KEY = 'API-Key'
+    API_KEY = 'API-Key',
 }
 
 export interface AbstractAuthorizationHeader {

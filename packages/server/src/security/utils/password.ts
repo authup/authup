@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {compare, hash} from "bcrypt";
+import { compare, hash } from 'bcrypt';
 
 export async function hashPassword(password: string, saltOrRounds: number | string = 10) : Promise<string> {
-    return hash(password,saltOrRounds);
+    return hash(password, saltOrRounds);
 }
 
-export async function verifyPassword(password: string, hash: string) : Promise<boolean> {
-    return compare(password, hash);
+export async function verifyPassword(password: string, encrypted: string) : Promise<boolean> {
+    return compare(password, encrypted);
 }
-

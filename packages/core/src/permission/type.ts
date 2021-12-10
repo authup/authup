@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {Condition} from "../ability";
+import { Condition } from '../ability';
 
-export type PermissionItem<T extends {}> = {
+export type PermissionItem<T extends Record<string, any>> = {
     id: string,
     negation?: boolean,
     condition?: Condition<T> | null,
     fields?: string[] | null,
     power?: number | null
-}
+};

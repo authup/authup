@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {camelCase} from 'change-case';
-import {AbilityMeta} from "../type";
+import { camelCase } from 'change-case';
+import { AbilityMeta } from '../type';
 
 export function buildAbilityMetaFromName(
     name: string,
-    delimiter: string = '_'
+    delimiter = '_',
 ) : AbilityMeta {
     const parts : string[] = name.split(delimiter);
-    if(parts.length < 2) {
+    if (parts.length < 2) {
         throw new Error('The ability meta cannot be built from name.');
     }
 
@@ -22,6 +22,6 @@ export function buildAbilityMetaFromName(
 
     return {
         action,
-        subject
-    }
+        subject,
+    };
 }

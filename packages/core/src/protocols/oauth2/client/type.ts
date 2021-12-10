@@ -21,7 +21,7 @@ export type Oauth2ClientProtocolOptions = {
 
     user_info_host?: string,
     user_info_path?: string
-}
+};
 
 // ------------------------------------------------------------------
 
@@ -30,25 +30,25 @@ export type Oauth2AuthorizeQueryParameters = {
     client_id: string,
     redirect_uri: string,
     scope?: string | string[]
-}
+};
 
 // ------------------------------------------------------------------
 
 export type Oauth2ClientAuthenticationParameters = {
     client_id?: string,
     client_secret?: string,
-}
+};
 
 export type Oauth2ClientCredentialsGrantParameters = {
     grant_type: 'client_credentials',
-    scope?: string  | string[]
+    scope?: string | string[]
 } & Oauth2ClientAuthenticationParameters;
 
 export type Oauth2PasswordGrantParameters = {
     grant_type: 'password',
     username: string,
     password: string,
-    scope?: string  | string[]
+    scope?: string | string[]
 } & Oauth2ClientAuthenticationParameters;
 
 export type Oauth2AuthorizationGrantParameters = {

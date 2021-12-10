@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {buildAbilityMetaFromName} from "../../../../src";
+import { buildAbilityMetaFromName } from '../../../../src';
 
 describe('src/ability/utils/index.ts', () => {
     it('should throw error', () => {
         const abilityKeys = buildAbilityMetaFromName('user_add');
 
-        expect(abilityKeys).toEqual({action: 'add', subject: 'user'});
+        expect(abilityKeys).toEqual({ action: 'add', subject: 'user' });
 
         expect(() => buildAbilityMetaFromName('user')).toThrowError();
     });

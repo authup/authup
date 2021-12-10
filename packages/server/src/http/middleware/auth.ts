@@ -5,24 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {Request, Response, NextFunction} from "express";
+import { NextFunction, Request, Response } from 'express';
 import {
     AuthorizationHeader,
+    parseAuthorizationHeader,
     stringifyAuthorizationHeader,
-    parseAuthorizationHeader
-} from "@typescript-auth/core";
+} from '@typescript-auth/core';
 
 export type AuthMiddlewareOptions = {
     parseCookie?: (request: Request) => string | undefined,
 
     authenticateWithCookie?: (request: Request, value: unknown) => Promise<void>,
     authenticateWithAuthorizationHeader?: (request: Request, value: AuthorizationHeader) => Promise<void>
-}
+};
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {
         try {
-            let {authorization: headerValue} = request.headers;
+            let { authorization: headerValue } = request.headers;
 
             if (typeof middlewareOptions.parseCookie === 'function') {
                 const cookie: unknown = middlewareOptions.parseCookie(request);
@@ -35,7 +35,7 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
 
                 // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
                 if (typeof cookie === 'string') {
-                    headerValue = stringifyAuthorizationHeader({type: "Bearer", token: cookie});
+                    headerValue = stringifyAuthorizationHeader({ type: 'Bearer', token: cookie });
                 }
             }
 
@@ -54,5 +54,5 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
         } catch (e) {
             next(e);
         }
-    }
+    };
 }

@@ -8,19 +8,19 @@
 module.exports = {
     testEnvironment: 'node',
     transform: {
-        "^.+\\.tsx?$": "ts-jest"
+        '^.+\\.tsx?$': 'ts-jest',
     },
     moduleFileExtensions: [
-        "ts",
-        "tsx",
-        "js",
-        "jsx",
-        "json",
-        "node",
+        'ts',
+        'tsx',
+        'js',
+        'jsx',
+        'json',
+        'node',
     ],
     testRegex: '(/unit/.*|(\\.|/)(test|spec))\\.(ts|js)x?$',
     testPathIgnorePatterns: [
-        "dist"
+        'dist',
     ],
     coverageDirectory: 'coverage',
     collectCoverageFrom: [
@@ -31,15 +31,15 @@ module.exports = {
         '!src/http/header/index.ts',
         '!src/protocols/oauth2/client/error/*.ts',
         '!src/utils/index.ts',
-        '!src/**/*.d.ts'
+        '!src/**/*.d.ts',
     ],
     coverageThreshold: {
         global: {
             branches: 59,
             functions: 77,
             lines: 73,
-            statements: 74
-        }
+            statements: 74,
+        },
     },
-    rootDir: '../'
+    rootDir: '../',
 };

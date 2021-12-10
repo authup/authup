@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {AuthorizationHeaderError} from "../../../../src";
+import { AuthorizationHeaderError } from '../../../../src';
 
 describe('src/http/error/authorization-header.ts', () => {
     it('should throw error', () => {
         const simpleError = new AuthorizationHeaderError('');
-        expect(() => {throw simpleError}).toThrowError();
+        expect(() => { throw simpleError; }).toThrowError();
         expect(simpleError.code).toEqual('invalid_header');
     });
 

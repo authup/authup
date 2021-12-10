@@ -15,8 +15,7 @@ export type Oauth2TokenResponse = {
     id_token_payload?: Record<string, any>,
     mac_key?: string,
     mac_algorithm?: string
-}
-
+};
 
 export type AccessTokenPayload = {
     /**
@@ -51,4 +50,4 @@ export type AccessTokenPayload = {
      * Additional parameters
      */
     [key: string]: any
-}
+};

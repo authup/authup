@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {PermissionItem} from "../permission";
+import { PermissionItem } from '../permission';
 
 export type AbilityMeta = {
     action: string,
     subject: string
-}
+};
 
 export type AbilityItem<T extends {}> = AbilityMeta & PermissionItem<T>;
 
@@ -21,14 +21,14 @@ type AllowedValue<T> = T extends Date ? (T | string) : T;
 
 export type Condition<T extends {}> = {
     [K in keyof T]?:
-        T[K] extends Record<string, any> ?
-            (T[K] extends Date ? (ConditionInstruction<T[K]> | AllowedValue<T[K]>) : Condition<T[K]>) :
-            (ConditionInstruction<T[K]> | AllowedValue<T[K]>)
-}
+    T[K] extends Record<string, any> ?
+        (T[K] extends Date ? (ConditionInstruction<T[K]> | AllowedValue<T[K]>) : Condition<T[K]>) :
+        (ConditionInstruction<T[K]> | AllowedValue<T[K]>)
+};
 
 export type ConditionInstruction<V> = {
     [I in Instruction]?: InstructionValue<I, V>
-}
+};
 
 type InstructionValue<I, V> =
     I extends ArrayInstruction ?
@@ -40,7 +40,7 @@ type InstructionValue<I, V> =
                     I extends BooleanInstruction ?
                         boolean :
                         AllowedValue<V>)
-            );
+        );
 
 type ArrayInstruction =
     '$in' |

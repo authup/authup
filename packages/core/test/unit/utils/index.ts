@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {removeDuplicateForwardSlashesFromURL} from "../../../src/utils";
+import { removeDuplicateForwardSlashesFromURL } from '../../../src/utils';
 
 describe('src/utils/index.ts', () => {
     it('should build safe url', () => {
@@ -22,5 +22,5 @@ describe('src/utils/index.ts', () => {
 
         url = removeDuplicateForwardSlashesFromURL('https://example.com/?id=1');
         expect(url).toEqual('https://example.com/?id=1');
-    })
-})
+    });
+});

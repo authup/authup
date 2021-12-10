@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {AbilityManager} from "../../../src/ability";
-import {PermissionItem} from "../../../src/permission";
+import { AbilityManager } from '../../../src/ability';
+import { PermissionItem } from '../../../src/permission';
 
 const testPermissions : PermissionItem<unknown>[] = [
-    {id: 'user_add', negation: false, power: 999},
-    {id: 'user_add', negation: false, power: 999},
-    {id: 'user_add', negation: false, power: 777},
-    {id: 'user_drop', negation: false, power: 777}
+    { id: 'user_add', negation: false, power: 999 },
+    { id: 'user_add', negation: false, power: 999 },
+    { id: 'user_add', negation: false, power: 777 },
+    { id: 'user_drop', negation: false, power: 777 },
 ];
 
 const manager = new AbilityManager();
@@ -22,7 +22,7 @@ describe('src/ability/manager.ts', () => {
         manager.setPermissions(testPermissions);
 
         expect(manager.getPermissions()).toBe(testPermissions);
-    })
+    });
 
     it('can and can not', () => {
         manager.setPermissions(testPermissions);
@@ -68,5 +68,5 @@ describe('src/ability/manager.ts', () => {
         const filledManager = new AbilityManager(testPermissions);
 
         expect(filledManager.getPermissions()).toEqual(testPermissions);
-    })
-})
+    });
+});
