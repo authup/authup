@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { decode } from 'jsonwebtoken';
 import {
     Oauth2AuthorizationGrantParameters,
@@ -21,9 +21,17 @@ import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 import { buildHTTPQuery } from '../../../http';
 
 export class Oauth2Client {
-    // eslint-disable-next-line no-useless-constructor
-    constructor(protected protocolOptions: Oauth2ClientProtocolOptions, protected httpConfig?: AxiosRequestConfig) {
+    public httpClient : AxiosInstance;
 
+    constructor(
+        protected protocolOptions: Oauth2ClientProtocolOptions,
+        protected httpConfig?: AxiosRequestConfig,
+    ) {
+        this.httpClient = process.env.NODE_ENV === 'test' ?
+            axios :
+            axios.create({
+                ...(httpConfig || {}),
+            });
     }
 
     // ------------------------------------------------------------------
@@ -86,11 +94,10 @@ export class Oauth2Client {
             url += '/oauth/token';
         }
 
-        const { data } = await axios.post(
+        const { data } = await this.httpClient.post(
             removeDuplicateForwardSlashesFromURL(url),
             urlSearchParams,
             {
-                ...(this.httpConfig ? this.httpConfig : {}),
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
@@ -146,7 +153,7 @@ export class Oauth2Client {
             url += '/userinfo';
         }
 
-        const { data } = await axios.get(
+        const { data } = await this.httpClient.get(
             removeDuplicateForwardSlashesFromURL(url),
             {
                 headers: {
