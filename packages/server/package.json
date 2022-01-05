@@ -44,7 +44,7 @@
         "@types/bcrypt": "^5.0.0",
         "@types/change-case": "^2.3.1",
         "@types/express": "^4.17.12",
-        "@types/jest": "^27.0.2",
+        "@types/jest": "^27.4.0",
         "@types/jsonwebtoken": "^8.5.2",
         "@types/mustache": "^4.1.1",
         "coveralls": "^3.1.0",
