@@ -1,0 +1,58 @@
+{
+    "name": "@typescript-auth/common",
+    "version": "1.0.5",
+    "description": "Typescript auth common package for client & server.",
+    "main": "dist/index.js",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
+    },
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client",
+        "ability",
+        "permission",
+        "header",
+        "bearer",
+        "basic"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/typescript-auth.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/typescript-auth/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
+    "dependencies": {
+        "@typescript-auth/core": "^1.0.5",
+        "@trapi/query": "^2.0.3",
+        "axios": "^0.24.0",
+        "nanoid": "^3.1.30"
+    },
+    "devDependencies": {
+        "@types/node": "^17.0.4",
+        "rimraf": "^3.0.2",
+        "typescript": "^4.5.2",
+        "typeorm": "^0.2.41"
+    },
+    "peerDependencies": {
+        "typeorm": "^0.x.x"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
