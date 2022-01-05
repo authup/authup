@@ -9,7 +9,7 @@ import { AxiosInstance } from 'axios';
 import { Client } from './entity';
 import { AuthClientType } from './type';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { SingleResourceResponse } from '../../http';
+import { SingleResourceResponse } from '../type';
 
 type AuthClientCreateContext = {
     type: AuthClientType,
