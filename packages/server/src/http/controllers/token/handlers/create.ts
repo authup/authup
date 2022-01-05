@@ -44,7 +44,7 @@ async function grantTokenWithMasterProvider(username: string, password: string) 
     return undefined;
 }
 
-async function createTokenRouteHandler(
+export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
     context: TokenRouteCreateContext,

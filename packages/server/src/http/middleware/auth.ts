@@ -6,6 +6,7 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
+import { Middleware } from '@decorators/express';
 import { getCustomRepository, getRepository } from 'typeorm';
 import {
     AbilityManager,
@@ -13,11 +14,11 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from '@typescript-auth/core';
-import { Client, MASTER_REALM_ID, TokenPayload } from '@typescript-auth/common';
+import { Client, TokenPayload } from '@typescript-auth/common';
 import { UnauthorizedError } from '@typescript-error/http';
-import { ExpressRequest } from '../type';
+import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { verifyToken } from '../../security';
-import { UserRepository } from '../../domains/user/repository';
+import { UserRepository } from '../../domains';
 
 export type AuthMiddlewareOptions = {
     parseCookie?: (request: Request) => string | undefined,
@@ -62,6 +63,24 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
             next(e);
         }
     };
+}
+
+export function forceLoggedIn(req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) {
+    if (
+        typeof req.userId === 'undefined' &&
+        typeof req.clientId === 'undefined'
+    ) {
+        throw new UnauthorizedError('You are not authenticated.');
+    }
+
+    next();
+}
+
+export class ForceLoggedInMiddleware implements Middleware {
+    // eslint-disable-next-line class-methods-use-this
+    public use(request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) {
+        return forceLoggedIn(request, response, next);
+    }
 }
 
 export async function authenticateWithAuthorizationHeader(

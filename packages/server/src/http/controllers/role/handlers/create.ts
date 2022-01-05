@@ -14,7 +14,7 @@ import {
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 
-async function addRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
         throw new ForbiddenError();
     }

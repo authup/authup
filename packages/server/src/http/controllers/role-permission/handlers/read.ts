@@ -17,7 +17,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
  * @param req
  * @param res
  */
-async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
     const rolePermissionRepository = getRepository(RolePermission);
@@ -52,7 +52,7 @@ async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: Expre
  * @param req
  * @param res
  */
-async function getOneRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getOneRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     const rolePermissionRepository = getRepository(RolePermission);

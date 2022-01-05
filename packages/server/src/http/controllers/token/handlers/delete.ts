@@ -1,6 +1,6 @@
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
-async function deleteTokenRouteHandler(
+export async function deleteTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
 ) : Promise<any> {

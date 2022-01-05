@@ -8,7 +8,7 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { AxiosInstance } from 'axios';
 import { RolePermission } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
+import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class RolePermissionAPI {
     protected client: AxiosInstance;

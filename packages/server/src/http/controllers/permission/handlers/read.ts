@@ -36,7 +36,7 @@ export async function getManyPermissionRouteHandler(req: ExpressRequest, res: Ex
     });
 }
 
-export async function getOnePermissionHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
+export async function getOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { id } = req.params;
 
     const repository = getRepository(Permission);

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type ServerSetupOptions = {
+export type ServerConfigurationOptions = {
     withBodyParserMiddleware?: boolean,
     withResponseMiddleware?: boolean,
     withAuthMiddleware?: boolean,

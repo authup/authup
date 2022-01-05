@@ -9,7 +9,7 @@ import { BuildInput, buildQuery } from '@trapi/query';
 import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { Role } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
+import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class RoleAPI {
     protected client: AxiosInstance;

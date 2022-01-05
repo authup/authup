@@ -5,7 +5,7 @@ import { PermissionID, Role } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 
-async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     if (!req.ability.hasPermission(PermissionID.ROLE_EDIT)) {

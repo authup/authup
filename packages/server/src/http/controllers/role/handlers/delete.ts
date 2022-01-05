@@ -3,7 +3,7 @@ import { ForbiddenError } from '@typescript-error/http';
 import { OAuth2Provider, PermissionID, Role } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
-async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     if (!req.ability.hasPermission(PermissionID.ROLE_DROP)) {

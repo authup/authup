@@ -9,7 +9,7 @@ import { BuildInput, buildQuery } from '@trapi/query';
 import { AxiosInstance } from 'axios';
 import { OAuth2Provider } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
+import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class Oauth2ProviderAPI {
     protected client: AxiosInstance;

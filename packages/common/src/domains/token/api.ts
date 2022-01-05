@@ -9,7 +9,7 @@ import { Oauth2TokenResponse } from '@typescript-auth/core';
 import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { TokenGrantPayload, TokenVerificationPayload } from './type';
-import { SingleResourceResponse } from '../../http';
+import { SingleResourceResponse } from '../type';
 
 export class TokenAPI {
     protected client: AxiosInstance;

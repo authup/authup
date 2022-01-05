@@ -5,4 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './api';
+export type Oauth2ProviderControllerOptions = {
+    selfUrl: string,
+    selfCallbackPath?: string,
+
+    rsaKeyPairPath: string,
+    maxAge?: number,
+
+    webUrl: string
+};

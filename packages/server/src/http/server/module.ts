@@ -8,15 +8,15 @@
 import { Application } from 'express';
 import bodyParser from 'body-parser';
 import { AuthorizationHeader } from '@typescript-auth/core';
-import { ServerSetupOptions } from './type';
+import { ServerConfigurationOptions } from './type';
 import {
     ExpressRequest,
     authenticateWithAuthorizationHeader, parseCookie, responseMiddleware, setupAuthMiddleware,
 } from '../index';
 
-export function setupHTTPServer(
+export function configureHTTPServer(
     router: Application,
-    options: ServerSetupOptions,
+    options: ServerConfigurationOptions,
 ) {
     if (options.withBodyParserMiddleware) {
         // Payload parser

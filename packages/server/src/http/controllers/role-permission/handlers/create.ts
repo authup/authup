@@ -18,7 +18,7 @@ import { ExpressValidationError } from '../../../error/validation';
  * @param req
  * @param res
  */
-async function createRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     await check('role_id')
         .exists()
         .isInt()

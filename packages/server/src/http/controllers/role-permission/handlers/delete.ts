@@ -9,7 +9,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
  * @param req
  * @param res
  */
-async function deleteRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     if (!req.ability.hasPermission(PermissionID.ROLE_PERMISSION_DROP)) {

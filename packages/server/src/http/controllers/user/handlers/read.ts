@@ -5,7 +5,7 @@ import {
 import { NotFoundError } from '@typescript-error/http';
 import { onlyRealmPermittedQueryResources } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { UserRepository } from '../../../../domains/user/repository';
+import { UserRepository } from '../../../../domains';
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {

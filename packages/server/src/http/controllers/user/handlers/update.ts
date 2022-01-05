@@ -14,7 +14,7 @@ import { runUserValidation } from './utils';
 import { ExpressValidationError } from '../../../error/validation';
 import { UserRepository } from '../../../../domains/user/repository';
 
-export async function editUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id: idStr } = req.params;
 
     const id : number = parseInt(idStr, 10);

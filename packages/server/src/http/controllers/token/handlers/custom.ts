@@ -13,7 +13,7 @@ import { verifyToken } from '../../../../security';
 import { TokenRouteVerifyContext } from './type';
 import { UserRepository } from '../../../../domains/user/repository';
 
-async function verifyTokenRouteHandler(
+export async function verifyTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
     context: TokenRouteVerifyContext,
