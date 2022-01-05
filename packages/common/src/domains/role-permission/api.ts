@@ -6,30 +6,37 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { RolePermission } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getRolePermissions(data?: BuildInput<RolePermission>) : Promise<CollectionResourceResponse<RolePermission>> {
-    const response = await useAPI(APIType.DEFAULT).get(`role-permissions${buildQuery(data)}`);
-    return response.data;
-}
+export class RolePermissionAPIClient {
+    protected client: AxiosInstance;
 
-export async function getRolePermission(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
-    const response = await useAPI(APIType.DEFAULT).get(`role-permissions/${id}`);
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-    return response.data;
-}
+    async getMany(data?: BuildInput<RolePermission>) : Promise<CollectionResourceResponse<RolePermission>> {
+        const response = await this.client.get(`role-permissions${buildQuery(data)}`);
+        return response.data;
+    }
 
-export async function dropRolePermission(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`role-permissions/${id}`);
+    async getOne(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
+        const response = await this.client.get(`role-permissions/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addRolePermission(data: Pick<RolePermission, 'role_id' | 'permission_id'>) : Promise<SingleResourceResponse<RolePermission>> {
-    const response = await useAPI(APIType.DEFAULT).post('role-permissions', data);
+    async delete(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
+        const response = await this.client.delete(`role-permissions/${id}`);
 
-    return response.data;
+        return response.data;
+    }
+
+    async create(data: Pick<RolePermission, 'role_id' | 'permission_id'>) : Promise<SingleResourceResponse<RolePermission>> {
+        const response = await this.client.post('role-permissions', data);
+
+        return response.data;
+    }
 }

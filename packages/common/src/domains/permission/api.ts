@@ -6,24 +6,31 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { Permission } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getAPIPermissions(data?: BuildInput<Permission>) : Promise<CollectionResourceResponse<Permission>> {
-    const response = await useAPI(APIType.DEFAULT).get(`permissions${buildQuery(data)}`);
-    return response.data;
-}
+export class PermissionAPIClient {
+    protected client: AxiosInstance;
 
-export async function addAPIPermission(data: Pick<Permission, 'id'>) : Promise<SingleResourceResponse<Permission>> {
-    const response = await useAPI(APIType.DEFAULT).post('permissions', data);
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-    return response.data;
-}
+    async getMany(data?: BuildInput<Permission>): Promise<CollectionResourceResponse<Permission>> {
+        const response = await this.client.get(`permissions${buildQuery(data)}`);
+        return response.data;
+    }
 
-export async function editAPIPermission(id: typeof Permission.prototype.id, data: Pick<Permission, 'id'>) : Promise<SingleResourceResponse<Permission>> {
-    const response = await useAPI(APIType.DEFAULT).post(`permissions/${id}`, data);
+    async create(data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
+        const response = await this.client.post('permissions', data);
 
-    return response.data;
+        return response.data;
+    }
+
+    async update(id: typeof Permission.prototype.id, data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
+        const response = await this.client.post(`permissions/${id}`, data);
+
+        return response.data;
+    }
 }

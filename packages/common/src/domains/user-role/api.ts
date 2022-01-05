@@ -6,31 +6,38 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { UserRole } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getApiUserRoles(data: BuildInput<UserRole>) : Promise<CollectionResourceResponse<UserRole>> {
-    const response = await useAPI(APIType.DEFAULT).get(`user-roles${buildQuery(data)}`);
+export class UserRoleAPIClient {
+    protected client: AxiosInstance;
 
-    return response.data;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getApiUserRole(id: typeof UserRole.prototype.id) : Promise<SingleResourceResponse<UserRole>> {
-    const response = await useAPI(APIType.DEFAULT).get(`user-roles/${id}`);
+    async getMany(data: BuildInput<UserRole>): Promise<CollectionResourceResponse<UserRole>> {
+        const response = await this.client.get(`user-roles${buildQuery(data)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function dropAPIUserRole(id: typeof UserRole.prototype.id) : Promise<SingleResourceResponse<UserRole>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`user-roles/${id}`);
+    async getOne(id: typeof UserRole.prototype.id): Promise<SingleResourceResponse<UserRole>> {
+        const response = await this.client.get(`user-roles/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addAPIUserRole(data: Partial<UserRole>) : Promise<SingleResourceResponse<UserRole>> {
-    const response = await useAPI(APIType.DEFAULT).post('user-roles', data);
+    async delete(id: typeof UserRole.prototype.id): Promise<SingleResourceResponse<UserRole>> {
+        const response = await this.client.delete(`user-roles/${id}`);
 
-    return response.data;
+        return response.data;
+    }
+
+    async create(data: Partial<UserRole>): Promise<SingleResourceResponse<UserRole>> {
+        const response = await this.client.post('user-roles', data);
+
+        return response.data;
+    }
 }

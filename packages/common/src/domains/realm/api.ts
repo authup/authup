@@ -6,38 +6,45 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { Realm } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getAPIRealms(data?: BuildInput<Realm>) : Promise<CollectionResourceResponse<Realm>> {
-    const response = await useAPI(APIType.DEFAULT).get(`realms${buildQuery(data)}`);
+export class RealmAPIClient {
+    protected client: AxiosInstance;
 
-    return response.data;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getAPIRealm(id: typeof Realm.prototype.id) : Promise<SingleResourceResponse<Realm>> {
-    const response = await useAPI(APIType.DEFAULT).get(`realms/${id}`);
+    async getMany(data?: BuildInput<Realm>): Promise<CollectionResourceResponse<Realm>> {
+        const response = await this.client.get(`realms${buildQuery(data)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function dropAPIRealm(id: typeof Realm.prototype.id) : Promise<SingleResourceResponse<Realm>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`realms/${id}`);
+    async getOne(id: typeof Realm.prototype.id): Promise<SingleResourceResponse<Realm>> {
+        const response = await this.client.get(`realms/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addAPIRealm(data: Partial<Realm>) : Promise<SingleResourceResponse<Realm>> {
-    const response = await useAPI(APIType.DEFAULT).post('realms', nullifyEmptyObjectProperties(data));
+    async delete(id: typeof Realm.prototype.id): Promise<SingleResourceResponse<Realm>> {
+        const response = await this.client.delete(`realms/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function editAPIRealm(realmId: typeof Realm.prototype.id, data: Partial<Realm>) : Promise<SingleResourceResponse<Realm>> {
-    const response = await useAPI(APIType.DEFAULT).post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
+    async create(data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
+        const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
 
-    return response.data;
+        return response.data;
+    }
+
+    async update(realmId: typeof Realm.prototype.id, data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
+        const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

@@ -6,54 +6,61 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { User } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getAPIUsers(
-    options?: BuildInput<User>,
-) : Promise<CollectionResourceResponse<User>> {
-    const response = await useAPI(APIType.DEFAULT)
-        .get(`users${buildQuery(options)}`);
+export class UserAPIClient {
+    protected client: AxiosInstance;
 
-    return response.data;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getAPIUser(
-    id: typeof User.prototype.id,
-    options?: BuildInput<User>,
-) : Promise<SingleResourceResponse<User>> {
-    const response = await useAPI(APIType.DEFAULT)
-        .get(`users/${id}${buildQuery(options)}`);
+    async getMany(
+        options?: BuildInput<User>,
+    ): Promise<CollectionResourceResponse<User>> {
+        const response = await this.client
+            .get(`users${buildQuery(options)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function dropAPIUser(
-    id: typeof User.prototype.id,
-) : Promise<SingleResourceResponse<User>> {
-    const response = await useAPI(APIType.DEFAULT)
-        .delete(`users/${id}`);
+    async getOne(
+        id: typeof User.prototype.id,
+        options?: BuildInput<User>,
+    ): Promise<SingleResourceResponse<User>> {
+        const response = await this.client
+            .get(`users/${id}${buildQuery(options)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addAPIUser(
-    data: Partial<User>,
-) : Promise<SingleResourceResponse<User>> {
-    const response = await useAPI(APIType.DEFAULT)
-        .post('users', nullifyEmptyObjectProperties(data));
+    async delete(
+        id: typeof User.prototype.id,
+    ): Promise<SingleResourceResponse<User>> {
+        const response = await this.client
+            .delete(`users/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function editAPIUser(
-    id: typeof User.prototype.id,
-    data: Partial<User> & {password_repeat: typeof User.prototype.password},
-) : Promise<SingleResourceResponse<User>> {
-    const response = await useAPI(APIType.DEFAULT).post(`users/${id}`, nullifyEmptyObjectProperties(data));
+    async create(
+        data: Partial<User>,
+    ): Promise<SingleResourceResponse<User>> {
+        const response = await this.client
+            .post('users', nullifyEmptyObjectProperties(data));
 
-    return response.data;
+        return response.data;
+    }
+
+    async update(
+        id: typeof User.prototype.id,
+        data: Partial<User> & { password_repeat: typeof User.prototype.password },
+    ): Promise<SingleResourceResponse<User>> {
+        const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

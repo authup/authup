@@ -6,41 +6,48 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { Oauth2ProviderRole } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getApiOauth2ProviderRoles(data: BuildInput<Oauth2ProviderRole>) : Promise<CollectionResourceResponse<Oauth2ProviderRole>> {
-    const response = await useAPI(APIType.DEFAULT).get(`provider-roles${buildQuery(data)}`);
+export class Oauth2ProviderRoleAPIClient {
+    protected client: AxiosInstance;
 
-    return response.data;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getApiOauth2ProviderRole(id: typeof Oauth2ProviderRole.prototype.id) : Promise<SingleResourceResponse<Oauth2ProviderRole>> {
-    const response = await useAPI(APIType.DEFAULT).get(`provider-roles/${id}`);
+    async getMany(data: BuildInput<Oauth2ProviderRole>): Promise<CollectionResourceResponse<Oauth2ProviderRole>> {
+        const response = await this.client.get(`provider-roles${buildQuery(data)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function dropAPIOauth2ProviderRole(id: typeof Oauth2ProviderRole.prototype.id) : Promise<SingleResourceResponse<Oauth2ProviderRole>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`provider-roles/${id}`);
+    async getOne(id: typeof Oauth2ProviderRole.prototype.id): Promise<SingleResourceResponse<Oauth2ProviderRole>> {
+        const response = await this.client.get(`provider-roles/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addAPIOauth2ProviderRole(data: Partial<Oauth2ProviderRole>) : Promise<SingleResourceResponse<Oauth2ProviderRole>> {
-    const response = await useAPI(APIType.DEFAULT).post('provider-roles', nullifyEmptyObjectProperties(data));
+    async delete(id: typeof Oauth2ProviderRole.prototype.id): Promise<SingleResourceResponse<Oauth2ProviderRole>> {
+        const response = await this.client.delete(`provider-roles/${id}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function editAPIOauth2ProviderRole(
-    id: typeof Oauth2ProviderRole.prototype.id,
-    data: Partial<Oauth2ProviderRole>,
-) : Promise<SingleResourceResponse<Oauth2ProviderRole>> {
-    const response = await useAPI(APIType.DEFAULT).post(`provider-roles/${id}`, data);
+    async create(data: Partial<Oauth2ProviderRole>): Promise<SingleResourceResponse<Oauth2ProviderRole>> {
+        const response = await this.client.post('provider-roles', nullifyEmptyObjectProperties(data));
 
-    return response.data;
+        return response.data;
+    }
+
+    async update(
+        id: typeof Oauth2ProviderRole.prototype.id,
+        data: Partial<Oauth2ProviderRole>,
+    ): Promise<SingleResourceResponse<Oauth2ProviderRole>> {
+        const response = await this.client.post(`provider-roles/${id}`, data);
+
+        return response.data;
+    }
 }

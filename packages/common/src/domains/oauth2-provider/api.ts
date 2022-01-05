@@ -6,47 +6,52 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
+import { AxiosInstance } from 'axios';
 import { OAuth2Provider } from './entity';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
 import { nullifyEmptyObjectProperties } from '../../utils';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export function getProviderAuthorizeUri(id: typeof OAuth2Provider.prototype.id) : string {
-    const baseUrl: string = useAPI(APIType.DEFAULT).config.baseURL ?? '';
+export class Oauth2ProviderAPIClient {
+    protected client: AxiosInstance;
 
-    return `${baseUrl}providers/${id}/authorize-url`;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getAPIProviders(record?: BuildInput<OAuth2Provider>) : Promise<CollectionResourceResponse<OAuth2Provider>> {
-    const response = await useAPI(APIType.DEFAULT).get(`providers${buildQuery(record)}`);
+    getAuthorizeUri(baseUrl: string, id: typeof OAuth2Provider.prototype.id): string {
+        return `${baseUrl}providers/${id}/authorize-url`;
+    }
 
-    return response.data;
-}
+    async getMany(record?: BuildInput<OAuth2Provider>): Promise<CollectionResourceResponse<OAuth2Provider>> {
+        const response = await this.client.get(`providers${buildQuery(record)}`);
 
-export async function getAPIProvider(
-    id: typeof OAuth2Provider.prototype.id,
-    record?: BuildInput<OAuth2Provider>,
-) : Promise<SingleResourceResponse<OAuth2Provider>> {
-    const response = await useAPI(APIType.DEFAULT).get(`providers/${id}${buildQuery(record)}`);
+        return response.data;
+    }
 
-    return response.data;
-}
+    async getOne(
+        id: typeof OAuth2Provider.prototype.id,
+        record?: BuildInput<OAuth2Provider>,
+    ): Promise<SingleResourceResponse<OAuth2Provider>> {
+        const response = await this.client.get(`providers/${id}${buildQuery(record)}`);
 
-export async function dropAPIProvider(id: typeof OAuth2Provider.prototype.id) : Promise<SingleResourceResponse<OAuth2Provider>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`providers/${id}`);
+        return response.data;
+    }
 
-    return response.data;
-}
+    async delete(id: typeof OAuth2Provider.prototype.id): Promise<SingleResourceResponse<OAuth2Provider>> {
+        const response = await this.client.delete(`providers/${id}`);
 
-export async function addAPIProvider(data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
-    const response = await useAPI(APIType.DEFAULT).post('providers', nullifyEmptyObjectProperties(data));
+        return response.data;
+    }
 
-    return response.data;
-}
+    async create(data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
+        const response = await this.client.post('providers', nullifyEmptyObjectProperties(data));
 
-export async function editAPIProvider(userId: number, data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
-    const response = await useAPI(APIType.DEFAULT).post(`providers/${userId}`, nullifyEmptyObjectProperties(data));
+        return response.data;
+    }
 
-    return response.data;
+    async update(userId: number, data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
+        const response = await this.client.post(`providers/${userId}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

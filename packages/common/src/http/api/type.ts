@@ -5,18 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
-
-export interface ApiRequestConfig extends AxiosRequestConfig {
-    token?: string | null,
-    alias?: string
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface ApiResponse<T = any> extends AxiosResponse {
-
-}
-
 export type SingleResourceResponse<R> = R;
 export type CollectionResourceResponse<R> = {
     data: R[],

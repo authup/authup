@@ -6,38 +6,45 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import {
-    APIType, CollectionResourceResponse, SingleResourceResponse, useAPI,
-} from '../../http';
+import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { Role } from './entity';
+import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export async function getAPIRoles(data?: BuildInput<Role>) : Promise<CollectionResourceResponse<Role>> {
-    const response = await useAPI(APIType.DEFAULT).get(`roles${buildQuery(data)}`);
+export class RoleAPIClient {
+    protected client: AxiosInstance;
 
-    return response.data;
-}
+    constructor(client: AxiosInstance) {
+        this.client = client;
+    }
 
-export async function getAPIRole(roleId: number) : Promise<SingleResourceResponse<Role>> {
-    const response = await useAPI(APIType.DEFAULT).get(`roles/${roleId}`);
+    async getMany(data?: BuildInput<Role>): Promise<CollectionResourceResponse<Role>> {
+        const response = await this.client.get(`roles${buildQuery(data)}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function dropAPIRole(roleId: number) : Promise<SingleResourceResponse<Role>> {
-    const response = await useAPI(APIType.DEFAULT).delete(`roles/${roleId}`);
+    async getOne(roleId: number): Promise<SingleResourceResponse<Role>> {
+        const response = await this.client.get(`roles/${roleId}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function addAPIRole(data: Pick<Role, 'name'>) : Promise<SingleResourceResponse<Role>> {
-    const response = await useAPI(APIType.DEFAULT).post('roles', nullifyEmptyObjectProperties(data));
+    async delete(roleId: number): Promise<SingleResourceResponse<Role>> {
+        const response = await this.client.delete(`roles/${roleId}`);
 
-    return response.data;
-}
+        return response.data;
+    }
 
-export async function editAPIRole(id: number, data: Pick<Role, 'name'>) : Promise<SingleResourceResponse<Role>> {
-    const response = await useAPI(APIType.DEFAULT).post(`roles/${id}`, nullifyEmptyObjectProperties(data));
+    async create(data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
+        const response = await this.client.post('roles', nullifyEmptyObjectProperties(data));
 
-    return response.data;
+        return response.data;
+    }
+
+    async update(id: number, data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
+        const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }
