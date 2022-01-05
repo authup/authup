@@ -11,7 +11,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { Realm } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export class RealmAPIClient {
+export class RealmAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

@@ -11,7 +11,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { Role } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export class RoleAPIClient {
+export class RoleAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

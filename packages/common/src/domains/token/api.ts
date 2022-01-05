@@ -11,7 +11,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { TokenGrantPayload, TokenVerificationPayload } from './type';
 import { SingleResourceResponse } from '../../http';
 
-export class TokenAPIClient {
+export class TokenAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

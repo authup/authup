@@ -16,7 +16,7 @@ type AuthClientCreateContext = {
     id: string | number
 };
 
-export class ClientAPIClient {
+export class ClientAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

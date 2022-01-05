@@ -11,7 +11,7 @@ import { OAuth2Provider } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export class Oauth2ProviderAPIClient {
+export class Oauth2ProviderAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

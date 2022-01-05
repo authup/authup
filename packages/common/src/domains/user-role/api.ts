@@ -10,7 +10,7 @@ import { AxiosInstance } from 'axios';
 import { UserRole } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export class UserRoleAPIClient {
+export class UserRoleAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {

@@ -11,7 +11,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { Oauth2ProviderRole } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../../http';
 
-export class Oauth2ProviderRoleAPIClient {
+export class Oauth2ProviderRoleAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {
