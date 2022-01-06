@@ -13,6 +13,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
 import { ExpressValidationError } from '../../../error/validation';
 import { UserRepository } from '../../../../domains/user/repository';
+import { hashPassword } from '../../../../security';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id: idStr } = req.params;
@@ -45,7 +46,7 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
 
     if (typeof data.password !== 'undefined') {
-        data.password = await userRepository.hashPassword(data.password);
+        data.password = await hashPassword(data.password);
     }
 
     let user = await userRepository.findOne(id);

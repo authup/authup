@@ -8,14 +8,11 @@
 import { EntityRepository, In, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
-import { Role, User, UserRole } from '@typescript-auth/common';
+import {
+    Role, User, UserRole,
+} from '@typescript-auth/common';
 import { RoleRepository } from '../role';
-import { hashPassword, verifyPassword } from '../../security';
-
-type PermissionOptions = {
-    selfOwned?: boolean,
-    roleOwned?: boolean
-};
+import { verifyPassword } from '../../security';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -47,36 +44,23 @@ export class UserRepository extends Repository<User> {
 
     // ------------------------------------------------------------------
 
-    async getOwnedPermissions(userId: string | number, options?: PermissionOptions) : Promise<PermissionItem<unknown>[]> {
-        options = options ?? {};
-        options.selfOwned = options.selfOwned ?? true;
-        options.roleOwned = options.roleOwned ?? true;
+    async getOwnedPermissions(userId: number) : Promise<PermissionItem<unknown>[]> {
+        let permissions : PermissionItem<unknown>[] = [...await this.getSelfOwnedPermissions(userId)];
 
-        let permissions : PermissionItem<unknown>[] = [];
+        const roles = await this.manager
+            .getRepository(UserRole)
+            .find({
+                user_id: userId,
+            });
 
-        if (options.selfOwned) {
-            permissions = [...await this.getSelfOwnedPermissions(userId)];
+        const roleIds: number[] = roles.map((userRole) => userRole.role_id);
+
+        if (roleIds.length === 0) {
+            return permissions;
         }
 
-        if (options.roleOwned) {
-            const entity = await this.manager
-                .getCustomRepository<UserRepository>(UserRepository)
-                .findOne(userId, { relations: ['user_roles'] });
-
-            if (typeof entity === 'undefined') {
-                return permissions;
-            }
-
-            const roleIds: number[] = entity.user_roles.map((userRole) => userRole.role_id);
-
-            if (roleIds.length === 0) {
-                return permissions;
-            }
-
-            const roleRepository = this.manager.getCustomRepository<RoleRepository>(RoleRepository);
-
-            permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
-        }
+        const roleRepository = this.manager.getCustomRepository<RoleRepository>(RoleRepository);
+        permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
 
         return permissions;
     }
@@ -87,16 +71,6 @@ export class UserRepository extends Repository<User> {
     }
 
     // ------------------------------------------------------------------
-
-    /**
-     * Hash user password.
-     *
-     * @param password
-     */
-    // eslint-disable-next-line class-methods-use-this
-    async hashPassword(password: string) : Promise<string> {
-        return hashPassword(password);
-    }
 
     /**
      * Find a user by name and password.

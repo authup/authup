@@ -7,18 +7,19 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { Middleware } from '@decorators/express';
-import { getCustomRepository, getRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import {
     AbilityManager,
     AuthorizationHeader,
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from '@typescript-auth/core';
-import { Client, TokenPayload } from '@typescript-auth/common';
+import { TokenPayload } from '@typescript-auth/common';
 import { UnauthorizedError } from '@typescript-error/http';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { verifyToken } from '../../security';
 import { UserRepository } from '../../domains';
+import { ClientRepository } from '../../domains/client';
 
 export type AuthMiddlewareOptions = {
     parseCookie?: (request: Request) => string | undefined,
@@ -130,16 +131,25 @@ export async function authenticateWithAuthorizationHeader(
             break;
         }
         case 'Basic': {
-            const clientRepository = getRepository(Client);
+            const clientRepository = getCustomRepository<ClientRepository>(ClientRepository);
             const client = await clientRepository.findOne({
                 id: value.username,
-                secret: value.password,
             });
 
             if (typeof client !== 'undefined') {
+                let permissions = [];
+
+                if (client.user_id) {
+                    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+                    permissions = await userRepository.getOwnedPermissions(client.user_id);
+                } else {
+                    permissions = await clientRepository.getOwnedPermissions(client.id);
+                }
+
                 request.clientId = client.id;
+                request.userId = client.user_id;
                 request.realmId = client.realm_id;
-                request.ability = new AbilityManager([]);
+                request.ability = new AbilityManager(permissions);
 
                 return;
             }

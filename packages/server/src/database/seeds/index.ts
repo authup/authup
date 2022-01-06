@@ -11,6 +11,7 @@ import {
     MASTER_REALM_ID, Permission, PermissionID, Realm, RolePermission, UserRole,
 } from '@typescript-auth/common';
 import { RoleRepository, UserRepository } from '../../domains';
+import { hashPassword } from '../../security';
 
 type DatabaseRootSeederOptions = {
     adminUsername: string,
@@ -70,7 +71,7 @@ export default class DatabaseRootSeeder implements Seeder {
         if (typeof user === 'undefined') {
             user = userRepository.create({
                 name: this.options.adminUsername,
-                password: await userRepository.hashPassword(this.options.adminPassword),
+                password: await hashPassword(this.options.adminPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
             });

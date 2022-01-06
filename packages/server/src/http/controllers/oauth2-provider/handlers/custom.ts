@@ -92,6 +92,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const expiresIn = context.maxAge;
 
     const tokenPayload : TokenPayload = {
+        type: 'client',
         iss: context.selfUrl,
         sub: account.user.id,
         remoteAddress: req.ip,

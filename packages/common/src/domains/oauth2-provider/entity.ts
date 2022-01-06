@@ -14,7 +14,6 @@ import {
     OneToMany,
     PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import { OAuth2ProviderAccount } from '../oauth2-provider-account';
 import { Realm } from '../realm';
 
 @Entity({ name: 'auth_oauth2_providers' })
@@ -87,7 +86,4 @@ export class OAuth2Provider {
     @ManyToOne(() => Realm, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
-
-    @OneToMany(() => OAuth2ProviderAccount, (userAccount) => userAccount.provider)
-        accounts: OAuth2ProviderAccount[];
 }

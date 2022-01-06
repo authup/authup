@@ -11,7 +11,8 @@ import { BadRequestError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { verifyToken } from '../../../../security';
 import { TokenRouteVerifyContext } from './type';
-import { UserRepository } from '../../../../domains/user/repository';
+import { UserRepository } from '../../../../domains';
+import { ClientRepository } from '../../../../domains/client';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
@@ -30,31 +31,63 @@ export async function verifyTokenRouteHandler(
         throw new BadRequestError('The token is not valid....');
     }
 
-    // todo: sub can also be client i.g.
+    const response : TokenVerificationPayload = {
+        token: tokenPayload,
+        target: {
+            type: tokenPayload.type,
+            data: undefined,
+        },
+    };
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
-    const userQuery = userRepository.createQueryBuilder('user')
-        .addSelect('user.email')
-        .where('user.id = :id', { id: tokenPayload.sub });
+    switch (tokenPayload.type) {
+        case 'client': {
+            const clientRepository = getCustomRepository<ClientRepository>(ClientRepository);
+            const clientQuery = clientRepository.createQueryBuilder('client')
+                .where('client.id := id', { id: tokenPayload.sub });
 
-    const user = await userQuery.getOne();
+            const client = await clientQuery.getOne();
 
-    if (typeof user === 'undefined') {
-        throw new UnauthorizedError();
+            if (typeof client === 'undefined') {
+                throw new UnauthorizedError();
+            }
+
+            let permissions = [];
+
+            if (client.user_id) {
+                const userRepository = getCustomRepository<UserRepository>(UserRepository);
+                permissions = await userRepository.getOwnedPermissions(client.user_id);
+            } else {
+                permissions = await clientRepository.getOwnedPermissions(client.id);
+            }
+
+            response.target.data = {
+                ...client,
+                permissions: [],
+            };
+            break;
+        }
+        case 'user': {
+            const userRepository = getCustomRepository<UserRepository>(UserRepository);
+            const userQuery = userRepository.createQueryBuilder('user')
+                .addSelect('user.email')
+                .where('user.id = :id', { id: tokenPayload.sub });
+
+            const user = await userQuery.getOne();
+
+            if (typeof user === 'undefined') {
+                throw new UnauthorizedError();
+            }
+
+            const permissions = await userRepository.getOwnedPermissions(user.id);
+
+            response.target.data = {
+                ...user,
+                permissions,
+            };
+        }
     }
 
-    const permissions = await userRepository.getOwnedPermissions(user.id);
-
     return res.respond({
-        data: {
-            token: tokenPayload,
-            target: {
-                type: 'user',
-                data: {
-                    ...user,
-                    permissions,
-                },
-            },
-        } as TokenVerificationPayload,
+        data: response,
     });
 }

@@ -8,11 +8,9 @@
 import {
     CreateDateColumn,
     Entity,
-    OneToMany,
     PrimaryColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { RolePermission } from '../role-permission';
 
 @Entity({ name: 'auth_permissions' })
 export class Permission {
@@ -24,7 +22,4 @@ export class Permission {
 
     @UpdateDateColumn()
         updated_at: Date;
-
-    @OneToMany(() => RolePermission, (rolePermission) => rolePermission.permission)
-        role_permissions: RolePermission[];
 }

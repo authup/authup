@@ -13,6 +13,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
 import { ExpressValidationError } from '../../../error/validation';
 import { UserRepository } from '../../../../domains';
+import { hashPassword } from '../../../../security';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.USER_ADD)) {
@@ -36,7 +37,7 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
     }
 
     if (user.password) {
-        user.password = await userRepository.hashPassword(user.password);
+        user.password = await hashPassword(user.password);
     }
 
     await userRepository.save(user);

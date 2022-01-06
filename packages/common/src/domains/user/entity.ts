@@ -57,12 +57,6 @@ export class User {
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
 
-    @OneToMany(() => UserRole, (userRole) => userRole.user)
-        user_roles: UserRole[];
-
-    @OneToMany(() => OAuth2ProviderAccount, (userAccount) => userAccount.user)
-        oauth2_provider_accounts: OAuth2ProviderAccount[];
-
     // ------------------------------------------------------------------
 
     @BeforeInsert()

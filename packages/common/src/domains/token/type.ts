@@ -5,50 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionItem } from '@typescript-auth/core';
+import { AccessTokenPayload, Oauth2TokenResponse, PermissionItem } from '@typescript-auth/core';
 import { User } from '../user';
+import { Client } from '../client';
+import { TokenGrant } from './constants';
 
-type AccessTokenPayload = {
-    /**
-     * Subject (user id)
-     */
-    sub: string | number;
-    /**
-     * Issuer (token endpoint, f.e "https://...")
-     */
-    iss: string;
-    /**
-     * client id
-     */
-    cid: string;
-    /**
-     * Issued At
-     */
-    iat: number;
-    /**
-     * Expires At
-     */
-    exp: number;
-    /**
-     * Scopes (f.e: "scope1 scope2")
-     */
-    scope: string;
-    /**
-     * Additional parameters
-     */
-    [key: string]: any;
-};
-
-export type Oauth2TokenResponse = {
-    access_token: string;
-    access_token_payload?: AccessTokenPayload;
-    refresh_token?: string;
-    expires_in: number;
-    token_type: string;
-    id_token?: string;
-    id_token_payload?: Record<string, any>;
-    mac_key?: string;
-    mac_algorithm?: string;
+export {
+    AccessTokenPayload,
+    Oauth2TokenResponse,
 };
 
 export type TokenPayload = Partial<AccessTokenPayload> & {
@@ -56,6 +20,11 @@ export type TokenPayload = Partial<AccessTokenPayload> & {
      * remote address
      */
     remoteAddress: string,
+
+    /**
+     * iss type
+     */
+    type: 'user' | 'client',
 
     /**
      * Issued at (readonly)
@@ -68,17 +37,28 @@ export type TokenPayload = Partial<AccessTokenPayload> & {
     exp?: number
 };
 
+type TokenTargetUser = {
+    type: 'user',
+    data: Partial<User> & {
+        permissions: PermissionItem<any>[]
+    }
+};
+
+type TokenTargetClient = {
+    type: 'client',
+    data: Partial<Client> & {
+        permissions: PermissionItem<any>[]
+    }
+};
+
 export type TokenVerificationPayload = {
     token: TokenPayload,
-    target: {
-        type: 'user',
-        data: User & {
-            permissions: PermissionItem<any>[]
-        }
-    }
+    target: TokenTargetUser | TokenTargetClient
 };
 
 export type TokenGrantPayload = {
     username: string,
     password: string
 };
+
+export type TokenGrantType = `${TokenGrant}`;

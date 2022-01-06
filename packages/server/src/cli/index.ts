@@ -9,11 +9,14 @@
 
 import 'reflect-metadata';
 import yargs from 'yargs';
+import dotenv from 'dotenv';
 import { CheckCommand } from './commands/check';
 import { ResetCommand } from './commands/reset';
 import { SetupCommand } from './commands/setup';
 import { UpgradeCommand } from './commands/upgrade';
 import { StartCommand } from './commands/start';
+
+dotenv.config();
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs

@@ -12,6 +12,7 @@ import {
     InternalServerError,
     ServerError, ServerErrorSettings,
 } from '@typescript-error/http';
+import * as console from 'console';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 
 export function errorMiddleware(
@@ -35,6 +36,8 @@ export function errorMiddleware(
             error = new InsufficientStorageError('No database operation possible, due the leak of free disk space.', { previous: error });
             break;
     }
+
+    console.log(error);
 
     const baseError : ServerError | ClientError = error instanceof ClientError || error instanceof ServerError ?
         error :

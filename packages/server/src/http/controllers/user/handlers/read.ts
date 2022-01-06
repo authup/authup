@@ -29,7 +29,7 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
 
     applyRelations(query, include, {
         defaultAlias: 'user',
-        allowed: ['realm', 'user_roles'],
+        allowed: ['realm'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
