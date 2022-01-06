@@ -63,7 +63,6 @@
         "swagger-ui-express": "^4.3.0",
         "typeorm": "^0.2.41",
         "typeorm-extension": "^1.0.3",
-        "typeorm-seeding": "^1.6.1",
         "yargs": "^17.0.1"
     },
     "devDependencies": {
