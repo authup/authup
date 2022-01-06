@@ -18,9 +18,9 @@ import {
 import { User } from '../user';
 import { OAuth2Provider } from '../oauth2-provider';
 
-@Entity({ name: 'oauth2_provider_accounts' })
+@Entity({ name: 'auth_oauth2_provider_accounts' })
 @Index(['provider_id', 'user_id'], { unique: true })
-export class Oauth2ProviderAccount {
+export class OAuth2ProviderAccount {
     @PrimaryGeneratedColumn()
         id: number;
 

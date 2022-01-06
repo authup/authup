@@ -14,11 +14,11 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Oauth2ProviderAccount } from '../oauth2-provider-account';
+import { OAuth2ProviderAccount } from '../oauth2-provider-account';
 import { Realm } from '../realm';
 import { UserRole } from '../user-role';
 
-@Entity({ name: 'users' })
+@Entity({ name: 'auth_users' })
 export class User {
     @PrimaryGeneratedColumn({ unsigned: true })
         id: number;
@@ -60,8 +60,8 @@ export class User {
     @OneToMany(() => UserRole, (userRole) => userRole.user)
         user_roles: UserRole[];
 
-    @OneToMany(() => Oauth2ProviderAccount, (userAccount) => userAccount.user)
-        oauth2_provider_accounts: Oauth2ProviderAccount[];
+    @OneToMany(() => OAuth2ProviderAccount, (userAccount) => userAccount.user)
+        oauth2_provider_accounts: OAuth2ProviderAccount[];
 
     // ------------------------------------------------------------------
 

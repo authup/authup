@@ -16,7 +16,7 @@ import {
 import { RolePermission } from '../role-permission';
 import { UserRole } from '../user-role';
 
-@Entity({ name: 'roles' })
+@Entity({ name: 'auth_roles' })
 export class Role {
     @PrimaryGeneratedColumn({ unsigned: true })
         id: number;

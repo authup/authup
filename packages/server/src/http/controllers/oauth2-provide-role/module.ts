@@ -9,7 +9,7 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Oauth2ProviderRole } from '@typescript-auth/common';
+import { OAuth2ProviderRole } from '@typescript-auth/common';
 import {
     createOauth2ProviderRoleRouteHandler,
     deleteOauth2ProvideRoleRouteHandler,
@@ -26,7 +26,7 @@ export class Oauth2ProviderRoleController {
     async getProviders(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<Oauth2ProviderRole[]> {
+    ): Promise<OAuth2ProviderRole[]> {
         return getManyOauth2ProviderRoleRouteHandler(req, res);
     }
 
@@ -35,17 +35,17 @@ export class Oauth2ProviderRoleController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Oauth2ProviderRole> {
+    ): Promise<OAuth2ProviderRole> {
         return getOneOauth2ProviderRoleRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @Params('id') id: string,
-            @Body() user: NonNullable<Oauth2ProviderRole>,
+            @Body() user: NonNullable<OAuth2ProviderRole>,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Oauth2ProviderRole> {
+    ): Promise<OAuth2ProviderRole> {
         return updateOauth2ProviderRoleRouteHandler(req, res);
     }
 
@@ -54,16 +54,16 @@ export class Oauth2ProviderRoleController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Oauth2ProviderRole> {
+    ): Promise<OAuth2ProviderRole> {
         return deleteOauth2ProvideRoleRouteHandler(req, res);
     }
 
     @Post('', [ForceLoggedInMiddleware])
     async addProvider(
-        @Body() user: NonNullable<Oauth2ProviderRole>,
+        @Body() user: NonNullable<OAuth2ProviderRole>,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Oauth2ProviderRole> {
+    ): Promise<OAuth2ProviderRole> {
         return createOauth2ProviderRoleRouteHandler(req, res);
     }
 }

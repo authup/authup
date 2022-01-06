@@ -10,7 +10,7 @@ import { getCustomRepository, getRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import { Oauth2Client } from '@typescript-auth/core';
 import {
-    MASTER_REALM_ID, OAuth2Provider, Oauth2ProviderAccount, Oauth2TokenResponse, TokenPayload,
+    MASTER_REALM_ID, OAuth2Provider, OAuth2ProviderAccount, Oauth2TokenResponse, TokenPayload,
 } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../security';
@@ -18,7 +18,7 @@ import { createOauth2ProviderAccountWithToken } from '../../../../domains/oauth2
 import { UserRepository } from '../../../../domains/user/repository';
 import { TokenRouteCreateContext } from './type';
 
-async function grantTokenWithMasterProvider(username: string, password: string) : Promise<Oauth2ProviderAccount | undefined> {
+async function grantTokenWithMasterProvider(username: string, password: string) : Promise<OAuth2ProviderAccount | undefined> {
     const providerRepository = getRepository(OAuth2Provider);
     const providers = await providerRepository.createQueryBuilder('provider')
         .leftJoinAndSelect('provider.realm', 'realm')

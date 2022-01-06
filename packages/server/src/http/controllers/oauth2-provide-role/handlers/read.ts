@@ -10,13 +10,13 @@ import {
     applyFilters, applyPagination,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { Oauth2ProviderRole } from '@typescript-auth/common';
+import { OAuth2ProviderRole } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { page, filter } = req.query;
 
-    const repository = getRepository(Oauth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRole);
 
     const query = repository.createQueryBuilder('providerRole');
 
@@ -45,7 +45,7 @@ export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest,
 export async function getOneOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(Oauth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRole);
 
     const query = repository.createQueryBuilder('providerRole')
         .where('providerRole.id = :id', { id });

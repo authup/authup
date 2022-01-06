@@ -14,9 +14,9 @@ import {
 } from 'typeorm';
 import { RolePermission } from '../role-permission';
 
-@Entity({ name: 'permissions' })
+@Entity({ name: 'auth_permissions' })
 export class Permission {
-    @PrimaryColumn({ type: 'varchar', length: 100, generated: false })
+    @PrimaryColumn({ type: 'varchar', length: 128, generated: false })
         id: string;
 
     @CreateDateColumn()

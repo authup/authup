@@ -17,7 +17,7 @@ import {
 import { Permission } from '../permission';
 import { Role } from '../role';
 
-@Entity({ name: 'role_permissions' })
+@Entity({ name: 'auth_role_permissions' })
 @Index(['permission_id', 'role_id'], { unique: true })
 export class RolePermission {
     @PrimaryGeneratedColumn()

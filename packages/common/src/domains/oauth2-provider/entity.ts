@@ -14,10 +14,10 @@ import {
     OneToMany,
     PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import { Oauth2ProviderAccount } from '../oauth2-provider-account';
+import { OAuth2ProviderAccount } from '../oauth2-provider-account';
 import { Realm } from '../realm';
 
-@Entity({ name: 'oauth2_providers' })
+@Entity({ name: 'auth_oauth2_providers' })
 @Index(['name', 'realm_id'], { unique: true })
 export class OAuth2Provider {
     @PrimaryGeneratedColumn('uuid')
@@ -88,6 +88,6 @@ export class OAuth2Provider {
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
 
-    @OneToMany(() => Oauth2ProviderAccount, (userAccount) => userAccount.provider)
-        accounts: Oauth2ProviderAccount[];
+    @OneToMany(() => OAuth2ProviderAccount, (userAccount) => userAccount.provider)
+        accounts: OAuth2ProviderAccount[];
 }

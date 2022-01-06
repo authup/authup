@@ -9,7 +9,7 @@ import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { matchedData, validationResult } from 'express-validator';
 import {
-    Oauth2ProviderRole, PermissionID,
+    OAuth2ProviderRole, PermissionID,
 } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
@@ -27,12 +27,12 @@ export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         throw new ExpressValidationError(validation);
     }
 
-    const data : Partial<Oauth2ProviderRole> = matchedData(req, { includeOptionals: true });
+    const data : Partial<OAuth2ProviderRole> = matchedData(req, { includeOptionals: true });
     if (!data) {
         return res.respondAccepted();
     }
 
-    const repository = getRepository(Oauth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRole);
 
     const entity = repository.create(data);
 

@@ -8,7 +8,7 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { matchedData, validationResult } from 'express-validator';
-import { OAuth2Provider, Oauth2ProviderRole, PermissionID } from '@typescript-auth/common';
+import { OAuth2Provider, OAuth2ProviderRole, PermissionID } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runOauth2ProviderRoleValidation } from './utils';
@@ -27,12 +27,12 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         throw new ExpressValidationError(validation);
     }
 
-    const data : Partial<Oauth2ProviderRole> = matchedData(req, { includeOptionals: true });
+    const data : Partial<OAuth2ProviderRole> = matchedData(req, { includeOptionals: true });
     if (!data) {
         return res.respondAccepted();
     }
 
-    const repository = getRepository(Oauth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRole);
 
     let provider = await repository.findOne(id);
     if (typeof provider === 'undefined') {

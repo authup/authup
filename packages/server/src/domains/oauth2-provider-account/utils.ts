@@ -8,15 +8,15 @@
 import { Oauth2TokenResponse } from '@typescript-auth/core';
 import { getCustomRepository, getRepository } from 'typeorm';
 import {
-    OAuth2Provider, Oauth2ProviderAccount, Oauth2ProviderRole,
+    OAuth2Provider, OAuth2ProviderAccount, OAuth2ProviderRole,
 } from '@typescript-auth/common';
 import { UserRepository } from '../user/repository';
 
 export async function createOauth2ProviderAccountWithToken(
     provider: OAuth2Provider,
     tokenResponse: Oauth2TokenResponse,
-) : Promise<Oauth2ProviderAccount> {
-    const accountRepository = getRepository(Oauth2ProviderAccount);
+) : Promise<OAuth2ProviderAccount> {
+    const accountRepository = getRepository(OAuth2ProviderAccount);
     let account = await accountRepository.findOne({
         provider_user_id: tokenResponse.access_token_payload.sub as string,
         provider_id: provider.id,
@@ -61,7 +61,7 @@ export async function createOauth2ProviderAccountWithToken(
     await accountRepository.save(account);
 
     if (typeof tokenResponse.access_token_payload?.realm_access?.roles !== 'undefined') {
-        const providerRoleRepository = getRepository(Oauth2ProviderRole);
+        const providerRoleRepository = getRepository(OAuth2ProviderRole);
 
         const providerRoles = await providerRoleRepository
             .createQueryBuilder('providerRole')

@@ -15,7 +15,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'realms' })
+@Entity({ name: 'auth_realms' })
 export class Realm {
     @PrimaryColumn({ type: 'varchar', length: 36 })
         id: string;

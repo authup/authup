@@ -18,7 +18,7 @@ import {
 import { Role } from '../role';
 import { User } from '../user';
 
-@Entity({ name: 'user_roles' })
+@Entity({ name: 'auth_user_roles' })
 @Index(['role_id', 'user_id'], { unique: true })
 export class UserRole {
     @PrimaryGeneratedColumn({ unsigned: true })
