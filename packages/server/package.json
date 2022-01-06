@@ -9,6 +9,9 @@
     "files": [
         "dist/"
     ],
+    "bin": {
+        "auth-server": "dist/cli/index.js"
+    },
     "keywords": [
         "auth",
         "module",
@@ -51,8 +54,12 @@
         "express-validator": "^6.14.0",
         "jsonwebtoken": "^8.5.1",
         "mustache": "^4.2.0",
+        "reflect-metadata": "^0.1.13",
         "swagger-ui-express": "^4.3.0",
-        "typeorm-extension": "^1.0.2"
+        "typeorm": "^0.2.41",
+        "typeorm-extension": "^1.0.2",
+        "typeorm-seeding": "^1.6.1",
+        "yargs": "^17.0.1"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",
@@ -63,15 +70,12 @@
         "@types/jsonwebtoken": "^8.5.2",
         "@types/mustache": "^4.1.1",
         "@types/nanoid": "^3.0.0",
+        "@types/yargs": "^17.0.8",
         "coveralls": "^3.1.0",
         "jest": "^27.4.6",
         "ts-jest": "^27.1.2",
         "ts-node": "^10.1.0",
-        "typeorm": "^0.2.41",
         "typescript": "^4.5.4"
-    },
-    "peerDependencies": {
-        "typeorm": "^0.x.x"
     },
     "publishConfig": {
         "access": "public"

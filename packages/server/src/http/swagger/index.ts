@@ -5,8 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config } from '../config';
-
-export type AuthServerStartContext = {
-    config: Config
-};
+export * from './module';
+export * from './type';

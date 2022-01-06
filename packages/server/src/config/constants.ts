@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2021.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config } from '../config';
-
-export type AuthServerStartContext = {
-    config: Config
-};
+// eslint-disable-next-line no-shadow
+export enum ConfigDefault {
+    PORT = 9000,
+    WRITABLE_DIRECTORY = 'writable',
+}
