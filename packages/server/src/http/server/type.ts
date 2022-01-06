@@ -5,10 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type ServerConfigurationOptions = {
-    withBodyParserMiddleware?: boolean,
-    withResponseMiddleware?: boolean,
-    withAuthMiddleware?: boolean,
+import { Server } from 'http';
+import { Express } from 'express';
 
-    rsaKeyPairPath?: string
-};
+export interface HttpServerContext {
+    expressApp: Express
+}
+
+export interface HttpServerInterface extends Server {
+
+}

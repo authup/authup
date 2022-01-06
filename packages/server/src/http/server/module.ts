@@ -5,38 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Application } from 'express';
-import bodyParser from 'body-parser';
-import { AuthorizationHeader } from '@typescript-auth/core';
-import { ServerConfigurationOptions } from './type';
-import {
-    ExpressRequest,
-    authenticateWithAuthorizationHeader, parseCookie, responseMiddleware, setupAuthMiddleware,
-} from '../index';
+import http from 'http';
+import { HttpServerContext, HttpServerInterface } from './type';
 
-export function configureHTTPServer(
-    router: Application,
-    options: ServerConfigurationOptions,
-) {
-    if (options.withBodyParserMiddleware) {
-        // Payload parser
-        router.use(bodyParser.urlencoded({ extended: false }));
-        router.use(bodyParser.json());
-    }
-
-    if (options.withResponseMiddleware) {
-        router.use(responseMiddleware);
-    }
-
-    if (options.withAuthMiddleware) {
-        router.use(setupAuthMiddleware({
-            parseCookie: (request: ExpressRequest) => parseCookie(request),
-            authenticateWithAuthorizationHeader: (
-                request: ExpressRequest,
-                value: AuthorizationHeader,
-            ) => authenticateWithAuthorizationHeader(request, value, {
-                rsaKeyPairPath: options.rsaKeyPairPath,
-            }),
-        }));
-    }
+export function createHttpServer({ expressApp } : HttpServerContext) : HttpServerInterface {
+    return new http.Server(expressApp);
 }

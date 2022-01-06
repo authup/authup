@@ -12,14 +12,13 @@ import { Oauth2Client, Oauth2TokenResponse } from '@typescript-auth/core';
 import { URL } from 'url';
 import {
     OAuth2Provider,
-    ProxyConnectionConfig,
     TokenPayload,
-    detectProxyConnectionConfig,
 } from '@typescript-auth/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../security';
-import { createOauth2ProviderAccountWithToken } from '../../../../domains/oauth2-provider-account/utils';
+import { createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
+import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 
 export async function authorizeOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -43,7 +42,7 @@ export async function authorizeOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
         authorize_path: provider.authorize_path,
-        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/providers/${provider.id}/authorize-callback`}`,
+        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/oauth2-providers/${provider.id}/authorize-callback`}`,
     });
 
     return res.redirect(oauth2Client.buildAuthorizeURL({}));
@@ -77,7 +76,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         token_path: provider.token_path,
 
-        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/providers/${provider.id}/authorize-callback`}`,
+        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/oauth2-providers/${provider.id}/authorize-callback`}`,
     }, proxyConfig ? { proxy: proxyConfig } : {});
 
     const tokenResponse : Oauth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({

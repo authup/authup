@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type TokenRouteContext = {
+export type AuthServerStartContext = {
+    port: number,
+    env: 'development' | 'production' | 'test',
+
     writableDirectoryPath: string,
+
+    swaggerDocumentation?: boolean
+
+    webUrl: string,
+    selfUrl: string
 };
-
-export type TokenRouteCreateContext = TokenRouteContext & {
-    selfUrl?: string,
-
-    maxAge?: number,
-};
-
-export type TokenRouteVerifyContext = TokenRouteContext;

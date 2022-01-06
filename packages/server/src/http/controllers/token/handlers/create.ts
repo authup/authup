@@ -81,7 +81,7 @@ export async function createTokenRouteHandler(
         remoteAddress: req.ip,
     };
 
-    const token = await createToken(tokenPayload, expiresIn, { directory: context.rsaKeyPairPath });
+    const token = await createToken(tokenPayload, expiresIn, { directory: context.writableDirectoryPath });
 
     return res.respond({
         data: {

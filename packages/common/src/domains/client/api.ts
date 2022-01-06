@@ -7,14 +7,8 @@
 
 import { AxiosInstance } from 'axios';
 import { Client } from './entity';
-import { AuthClientType } from './type';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { SingleResourceResponse } from '../type';
-
-type AuthClientCreateContext = {
-    type: AuthClientType,
-    id: string | number
-};
 
 export class ClientAPI {
     protected client: AxiosInstance;
@@ -34,7 +28,7 @@ export class ClientAPI {
         return resultData;
     }
 
-    async create(data: AuthClientCreateContext) {
+    async create(data: Partial<Client>) {
         const { data: resultData } = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
 

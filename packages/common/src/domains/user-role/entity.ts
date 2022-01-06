@@ -21,8 +21,8 @@ import { User } from '../user';
 @Entity({ name: 'user_roles' })
 @Index(['role_id', 'user_id'], { unique: true })
 export class UserRole {
-    @PrimaryGeneratedColumn()
-        id!: number;
+    @PrimaryGeneratedColumn({ unsigned: true })
+        id: number;
 
     @Column({ type: 'int', unsigned: true })
         user_id: number;

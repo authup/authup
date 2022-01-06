@@ -6,7 +6,7 @@
  */
 
 export type TokenControllerOptions = {
-    rsaKeyPairPath: string,
+    writableDirectoryPath: string,
     selfUrl?: string,
     maxAge?: number,
 };

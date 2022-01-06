@@ -9,7 +9,7 @@ export type Oauth2ProviderControllerOptions = {
     selfUrl: string,
     selfCallbackPath?: string,
 
-    rsaKeyPairPath: string,
+    writableDirectoryPath: string,
     maxAge?: number,
 
     webUrl: string

@@ -14,3 +14,5 @@ export * from './role-permission';
 export * from './token';
 export * from './user';
 export * from './user-role';
+export * from './type';
+export * from './utils';

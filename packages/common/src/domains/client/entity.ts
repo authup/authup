@@ -10,19 +10,21 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
+    ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { AuthClientType } from './type';
 import { createAuthClientSecret } from './utils';
-import { MASTER_REALM_ID } from '../realm';
+import { MASTER_REALM_ID, Realm } from '../realm';
+import { User } from '../user';
 
 @Entity({ name: 'auth_clients' })
 export class Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 100, select: false })
         secret: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
@@ -30,9 +32,6 @@ export class Client {
 
     @Column({ type: 'text', nullable: true })
         description: string;
-
-    @Column({ type: 'enum', enum: AuthClientType })
-        type: AuthClientType;
 
     // ------------------------------------------------------------------
 
@@ -47,13 +46,16 @@ export class Client {
     @Column({ type: 'int', nullable: true })
         user_id: number | null;
 
-    @Column({ type: 'varchar', default: MASTER_REALM_ID })
+    @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'realm_id' })
+        user: User | null;
+
+    @Column({ default: MASTER_REALM_ID })
         realm_id: string;
 
-    // ------------------------------------------------------------------
-
-    @Column({ type: 'boolean', default: false })
-        synced: boolean;
+    @ManyToOne(() => Realm, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
+        realm: Realm;
 
     // ------------------------------------------------------------------
 

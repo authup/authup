@@ -24,7 +24,7 @@ export async function verifyTokenRouteHandler(
 
     try {
         tokenPayload = await verifyToken(id, {
-            directory: context.rsaKeyPairPath,
+            directory: context.writableDirectoryPath,
         });
     } catch (e) {
         throw new BadRequestError('The token is not valid....');

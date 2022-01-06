@@ -87,7 +87,7 @@ export async function authenticateWithAuthorizationHeader(
     request: ExpressRequest,
     value: AuthorizationHeader,
     options: {
-        rsaKeyPairPath: string
+        writableDirectoryPath: string
     },
 ): Promise<void> {
     // eslint-disable-next-line default-case
@@ -97,7 +97,7 @@ export async function authenticateWithAuthorizationHeader(
 
             try {
                 tokenPayload = await verifyToken(value.token, {
-                    directory: options.rsaKeyPairPath,
+                    directory: options.writableDirectoryPath,
                 });
             } catch (e) {
                 return;

@@ -45,10 +45,13 @@
         "bcrypt": "^5.0.1",
         "body-parser": "^1.19.1",
         "change-case": "^4.1.2",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
         "express": "^4.17.2",
         "express-validator": "^6.14.0",
         "jsonwebtoken": "^8.5.1",
         "mustache": "^4.2.0",
+        "swagger-ui-express": "^4.3.0",
         "typeorm-extension": "^1.0.2"
     },
     "devDependencies": {
