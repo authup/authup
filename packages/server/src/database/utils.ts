@@ -39,11 +39,11 @@ export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWit
     return connectionOptions;
 }
 
-export function createDatabaseDefaultConnectionOptions(writableDirectoryPath: string) {
+export function createDatabaseDefaultConnectionOptions(config: Config) {
     return {
         name: 'default',
         type: 'sqlite',
-        database: path.join(writableDirectoryPath, 'db.sql'),
+        database: path.join(config.rootPath, config.writableDirectory, config.env === 'test' ? 'test.sql' : 'db.sql'),
         subscribers: [],
         migrations: [],
     };
@@ -57,7 +57,7 @@ export async function buildDatabaseConnectionOptions(config: Config) : Promise<C
             root: config.rootPath,
         });
     } catch (e) {
-        connectionOptions = createDatabaseDefaultConnectionOptions(path.join(config.rootPath, config.writableDirectory));
+        connectionOptions = createDatabaseDefaultConnectionOptions(config);
     }
 
     connectionOptions = extendDatabaseConnectionOptions(connectionOptions);

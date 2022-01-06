@@ -29,6 +29,14 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
         config.port = parseInt(requireFromEnv('PORT', ConfigDefault.PORT), 10);
     }
 
+    if (!config.adminUsername) {
+        config.adminUsername = requireFromEnv('ADMIN_USERNAME', 'admin');
+    }
+
+    if (!config.adminPassword) {
+        config.adminPassword = requireFromEnv('ADMIN_PASSWORD', 'start123');
+    }
+
     if (!config.selfUrl) {
         config.selfUrl = `http://127.0.0.1:${config.port}`;
     }

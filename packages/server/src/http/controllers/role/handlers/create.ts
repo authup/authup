@@ -22,7 +22,7 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     await check('name')
         .exists()
         .notEmpty()
-        .isLength({ min: 3, max: 30 })
+        .isLength({ min: 3, max: 128 })
         .run(req);
 
     const validation = validationResult(req);
@@ -38,8 +38,6 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     await roleRepository.save(role);
 
     return res.respondCreated({
-        data: {
-            id: role.id,
-        },
+        data: role,
     });
 }

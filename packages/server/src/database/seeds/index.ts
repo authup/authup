@@ -6,14 +6,25 @@
  */
 
 import { Connection, In } from 'typeorm';
-import { Factory, Seeder } from 'typeorm-seeding';
+import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID, Permission, PermissionID, Realm, RolePermission, UserRole,
 } from '@typescript-auth/common';
 import { RoleRepository, UserRepository } from '../../domains';
 
+type DatabaseRootSeederOptions = {
+    adminUsername: string,
+    adminPassword: string
+};
+
 export default class DatabaseRootSeeder implements Seeder {
-    public async run(factory: Factory, connection: Connection) : Promise<any> {
+    protected options: DatabaseRootSeederOptions;
+
+    constructor(options: DatabaseRootSeederOptions) {
+        this.options = options;
+    }
+
+    public async run(connection: Connection) : Promise<any> {
         /**
          * Create default realm
          */
@@ -53,13 +64,13 @@ export default class DatabaseRootSeeder implements Seeder {
          */
         const userRepository = connection.getCustomRepository(UserRepository);
         let user = await userRepository.findOne({
-            name: 'admin',
+            name: this.options.adminUsername,
         });
 
         if (typeof user === 'undefined') {
             user = userRepository.create({
-                name: 'admin',
-                password: await userRepository.hashPassword('start123'),
+                name: this.options.adminUsername,
+                password: await userRepository.hashPassword(this.options.adminPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
             });

@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { createDatabase, runSeeder } from 'typeorm-extension';
+import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
 import path from 'path';
 import { createSecurityKeyPair } from '../../security';
@@ -14,9 +14,8 @@ import { generateSwaggerDocumentation } from '../../http/swagger';
 import { useAuthServerConfig } from '../../config';
 import {
     buildDatabaseConnectionOptions,
-    createDatabaseDefaultConnectionOptions,
-    extendDatabaseConnectionOptions,
 } from '../../database/utils';
+import DatabaseRootSeeder from '../../database/seeds';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -109,7 +108,12 @@ export class SetupCommand implements CommandModule {
                 await connection.synchronize();
 
                 if (args.databaseSeeder) {
-                    await runSeeder(connection);
+                    const seeder = new DatabaseRootSeeder({
+                        adminPassword: config.adminPassword,
+                        adminUsername: config.adminUsername,
+                    });
+
+                    await seeder.run(connection);
                 }
             } catch (e) {
                 console.log(e);

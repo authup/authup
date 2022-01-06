@@ -9,6 +9,9 @@ export type Config = {
     env: string,
     port: number,
 
+    adminUsername: string,
+    adminPassword: string,
+
     rootPath: string,
     writableDirectory: string
 

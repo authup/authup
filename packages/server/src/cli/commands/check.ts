@@ -9,6 +9,7 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { createConnection } from 'typeorm';
 import { useAuthServerConfig } from '../../config';
 import { buildDatabaseConnectionOptions } from '../../database/utils';
+import DatabaseRootSeeder from '../../database/seeds';
 
 interface SeedCheckArguments extends Arguments {
     root: string;
@@ -37,10 +38,12 @@ export class CheckCommand implements CommandModule {
         try {
             await connection.synchronize();
 
-            const base = await import('../../database/seeds');
-            // eslint-disable-next-line new-cap
-            const baseSeeder = new base.default();
-            await baseSeeder.run(null, connection);
+            const seeder = new DatabaseRootSeeder({
+                adminPassword: config.adminPassword,
+                adminUsername: config.adminUsername,
+            });
+
+            await seeder.run(connection);
         } catch (e) {
             console.log(e);
             await connection.close();

@@ -9,7 +9,7 @@ import { EntityRepository, In, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
 import { Role, User, UserRole } from '@typescript-auth/common';
-import { RoleRepository } from '../role/repository';
+import { RoleRepository } from '../role';
 import { hashPassword, verifyPassword } from '../../security';
 
 type PermissionOptions = {
