@@ -13,6 +13,7 @@ import {
     generateDocumentation,
 } from '@trapi/swagger';
 import path from 'path';
+import { URL } from 'url';
 import { SwaggerDocumentationCreateContext } from './type';
 
 export async function generateSwaggerDocumentation(
@@ -21,10 +22,10 @@ export async function generateSwaggerDocumentation(
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
     const packageJson = require(path.join(context.rootDirectoryPath, 'package.json'));
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const tsConfig = require(path.join(__dirname, '..', 'tsconfig.json'));
+    const tsConfig = require(path.join(__dirname, '..', '..', '..', 'tsconfig.json'));
 
     const metadataConfig : MetadataConfig = {
-        entryFile: path.join(__dirname, '..', 'controllers'),
+        entryFile: path.join(__dirname, '..', 'controllers', '**', '*{.ts,.js}'),
         ignore: ['**/node_modules/**'],
         decorator: {
             internal: true,
@@ -52,7 +53,7 @@ export async function generateSwaggerDocumentation(
                 type: 'oauth2',
                 flows: {
                     password: {
-                        tokenUrl: `${context.selfUrl}token`,
+                        tokenUrl: `${new URL('token', context.selfUrl).href}`,
                     },
                 },
             },

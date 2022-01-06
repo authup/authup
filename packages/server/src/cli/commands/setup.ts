@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { buildConnectionOptions, createDatabase, runSeeder } from 'typeorm-extension';
+import { createDatabase, runSeeder } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
 import path from 'path';
 import { createSecurityKeyPair } from '../../security';

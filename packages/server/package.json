@@ -4,6 +4,7 @@
     "description": "Typescript auth server side functions stack.",
     "main": "dist/index.js",
     "scripts": {
+        "cli": "ts-node src/cli/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [
@@ -54,10 +55,12 @@
         "express-validator": "^6.14.0",
         "jsonwebtoken": "^8.5.1",
         "mustache": "^4.2.0",
+        "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
+        "sqlite3": "^5.0.2",
         "swagger-ui-express": "^4.3.0",
         "typeorm": "^0.2.41",
-        "typeorm-extension": "^1.0.2",
+        "typeorm-extension": "^1.0.3",
         "typeorm-seeding": "^1.6.1",
         "yargs": "^17.0.1"
     },

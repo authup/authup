@@ -9,11 +9,21 @@
 
 import 'reflect-metadata';
 import yargs from 'yargs';
+import { CheckCommand } from './commands/check';
+import { ResetCommand } from './commands/reset';
+import { SetupCommand } from './commands/setup';
+import { UpgradeCommand } from './commands/upgrade';
+import { StartCommand } from './commands/start';
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs
     .usage('Usage: $0 <command> [options]')
     .demandCommand(1)
+    .command(new CheckCommand())
+    .command(new ResetCommand())
+    .command(new SetupCommand())
+    .command(new StartCommand())
+    .command(new UpgradeCommand())
     .strict()
     .alias('v', 'version')
     .help('h')

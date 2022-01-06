@@ -26,10 +26,10 @@ export class RolePermission {
     @Column({ type: 'int', default: 999 })
         power: number;
 
-    @Column({ type: 'json', nullable: true, default: null })
+    @Column({ type: 'text', nullable: true, default: null })
         condition: any | null;
 
-    @Column({ type: 'json', nullable: true, default: null })
+    @Column({ type: 'text', nullable: true, default: null })
         fields: string[] | null;
 
     @Column({ type: 'boolean', default: false })

@@ -48,7 +48,7 @@ export class OAuth2ProviderAccount {
     })
         expires_in: number;
 
-    @Column({ type: 'timestamp', nullable: true, default: null })
+    @Column({ type: 'datetime', nullable: true, default: null })
         expires_at: Date;
 
     @CreateDateColumn()

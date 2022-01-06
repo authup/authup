@@ -10,7 +10,10 @@ import { ConnectionWithAdditionalOptions, buildConnectionOptions } from 'typeorm
 import { Config } from '../config';
 
 export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWithAdditionalOptions) {
-    if (!connectionOptions.entities) {
+    if (
+        !connectionOptions.entities ||
+        connectionOptions.entities.length === 0
+    ) {
         connectionOptions = {
             ...connectionOptions,
             entities: [
@@ -20,7 +23,10 @@ export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWit
         };
     }
 
-    if (!connectionOptions.migrations) {
+    if (
+        !connectionOptions.migrations ||
+        connectionOptions.migrations.length === 0
+    ) {
         connectionOptions = {
             ...connectionOptions,
             migrations: [
@@ -35,6 +41,7 @@ export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWit
 
 export function createDatabaseDefaultConnectionOptions(writableDirectoryPath: string) {
     return {
+        name: 'default',
         type: 'sqlite',
         database: path.join(writableDirectoryPath, 'db.sql'),
         subscribers: [],
@@ -52,6 +59,8 @@ export async function buildDatabaseConnectionOptions(config: Config) : Promise<C
     } catch (e) {
         connectionOptions = createDatabaseDefaultConnectionOptions(path.join(config.rootPath, config.writableDirectory));
     }
+
+    connectionOptions = extendDatabaseConnectionOptions(connectionOptions);
 
     return connectionOptions;
 }

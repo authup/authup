@@ -7,6 +7,6 @@
 
 // eslint-disable-next-line no-shadow
 export enum ConfigDefault {
-    PORT = 9000,
+    PORT = 3010,
     WRITABLE_DIRECTORY = 'writable',
 }

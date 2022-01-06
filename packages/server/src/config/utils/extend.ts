@@ -29,6 +29,14 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
         config.port = parseInt(requireFromEnv('PORT', ConfigDefault.PORT), 10);
     }
 
+    if (!config.selfUrl) {
+        config.selfUrl = `http://127.0.0.1:${config.port}`;
+    }
+
+    if (!config.webUrl) {
+        config.webUrl = 'http://127.0.0.1:3000';
+    }
+
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
             config.rootPath = path.join(directoryPath, config.rootPath);
@@ -49,7 +57,7 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
     }
 
     if (!config.swaggerDocumentation) {
-        config.swaggerDocumentation = requireFromEnv('SWAGGER_DOCUMENTATION', 'false') !== 'false';
+        config.swaggerDocumentation = requireFromEnv('SWAGGER_DOCUMENTATION', 'true') !== 'false';
     }
 
     return config as Config;
