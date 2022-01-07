@@ -2,7 +2,7 @@ import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
 import { matchedData, validationResult } from 'express-validator';
-import { PermissionID, Realm } from '@typescript-auth/common';
+import { PermissionID, Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runRealmValidation } from './utils';

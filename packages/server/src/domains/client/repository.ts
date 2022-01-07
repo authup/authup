@@ -10,7 +10,7 @@ import { PermissionItem } from '@typescript-auth/core';
 
 import {
     Client, ClientPermission, ClientRole,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../security';
 

@@ -10,7 +10,7 @@ import { getCustomRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import {
     Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../security';
 import { UserRepository } from '../../../../domains';

@@ -9,7 +9,7 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Role } from '@typescript-auth/common';
+import { Role } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createRoleRouteHandler, deleteRoleRouteHandler,

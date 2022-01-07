@@ -13,7 +13,7 @@ import { URL } from 'url';
 import {
     OAuth2Provider,
     TokenPayload,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../security';
 import { createOauth2ProviderAccountWithToken } from '../../../../domains';

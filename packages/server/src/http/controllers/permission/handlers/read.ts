@@ -8,7 +8,7 @@
 import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { Permission } from '@typescript-auth/common';
+import { Permission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function getManyPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {

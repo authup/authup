@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission, PermissionID } from '@typescript-auth/common';
+import { Permission, PermissionID } from '@typescript-auth/domains';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 

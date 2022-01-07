@@ -3,7 +3,7 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { onlyRealmPermittedQueryResources } from '@typescript-auth/common';
+import { onlyRealmPermittedQueryResources } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository } from '../../../../domains';
 

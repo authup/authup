@@ -8,7 +8,7 @@
 import {
     Express, NextFunction, Request, Response,
 } from 'express';
-import { Client, User } from '@typescript-auth/common';
+import { Client, User } from '@typescript-auth/domains';
 import { AbilityManager } from '@typescript-auth/core';
 
 export interface ExpressAppInterface extends Express {

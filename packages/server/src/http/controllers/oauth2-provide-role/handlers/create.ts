@@ -10,7 +10,7 @@ import { ForbiddenError } from '@typescript-error/http';
 import { matchedData, validationResult } from 'express-validator';
 import {
     OAuth2ProviderRole, PermissionID,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runOauth2ProviderRoleValidation } from './utils';

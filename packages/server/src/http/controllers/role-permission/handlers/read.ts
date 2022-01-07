@@ -8,7 +8,7 @@
 import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { RolePermission } from '@typescript-auth/common';
+import { RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 /**

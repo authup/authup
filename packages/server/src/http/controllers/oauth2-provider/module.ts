@@ -9,7 +9,7 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { OAuth2Provider } from '@typescript-auth/common';
+import { OAuth2Provider } from '@typescript-auth/domains';
 import { Application } from 'express';
 import {
     authorizeCallbackOauth2ProviderRouteHandler,

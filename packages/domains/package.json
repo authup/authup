@@ -1,5 +1,5 @@
 {
-    "name": "@typescript-auth/common",
+    "name": "@typescript-auth/domains",
     "version": "1.0.5",
     "description": "Typescript auth common package for client & server.",
     "main": "dist/index.js",

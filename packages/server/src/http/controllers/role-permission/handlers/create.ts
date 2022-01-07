@@ -8,7 +8,7 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { check, matchedData, validationResult } from 'express-validator';
-import { PermissionID, RolePermission } from '@typescript-auth/common';
+import { PermissionID, RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 

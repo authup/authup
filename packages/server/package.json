@@ -45,7 +45,7 @@
     "dependencies": {
         "@decorators/express": "^2.6.0",
         "@trapi/swagger": "^0.2.13",
-        "@typescript-auth/common": "^1.0.5",
+        "@typescript-auth/domains": "^1.0.5",
         "@typescript-auth/core": "^1.0.5",
         "@typescript-error/http": "^1.0.3",
         "bcrypt": "^5.0.1",

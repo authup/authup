@@ -7,7 +7,7 @@
 
 import { getCustomRepository, getRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/common';
+import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { matchedData, validationResult } from 'express-validator';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';

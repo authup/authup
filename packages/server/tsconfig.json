@@ -2,8 +2,9 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@typescript-auth/common": ["./packages/common/src"],
+            "@typescript-auth/domains": ["./packages/domains/src"],
             "@typescript-auth/core": ["./packages/core/src"]
         }
     }
 }
+

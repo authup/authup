@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, OAuth2Provider } from '@typescript-auth/common';
+import { MASTER_REALM_ID, OAuth2Provider } from '@typescript-auth/domains';
 import { Oauth2Client } from '@typescript-auth/core';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';

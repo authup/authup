@@ -7,7 +7,7 @@
 
 import { getRepository } from 'typeorm';
 import { check } from 'express-validator';
-import { PermissionID, Realm } from '@typescript-auth/common';
+import { PermissionID, Realm } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../../type';
 
 export async function runUserValidation(req: ExpressRequest, operation: 'create' | 'update') {

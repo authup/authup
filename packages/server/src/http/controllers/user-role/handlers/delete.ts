@@ -7,7 +7,7 @@
 
 import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { PermissionID, UserRole } from '@typescript-auth/common';
+import { PermissionID, UserRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

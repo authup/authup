@@ -6,7 +6,7 @@
  */
 
 import { MatchedDataOptions, matchedData } from 'express-validator';
-import { deleteUndefinedObjectProperties } from '@typescript-auth/common';
+import { deleteUndefinedObjectProperties } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../http';
 
 export function matchedValidationData(

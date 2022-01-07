@@ -1,6 +1,6 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
-import { PermissionID, RolePermission } from '@typescript-auth/common';
+import { PermissionID, RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 /**

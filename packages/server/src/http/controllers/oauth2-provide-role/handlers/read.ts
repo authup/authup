@@ -10,7 +10,7 @@ import {
     applyFilters, applyPagination,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { OAuth2ProviderRole } from '@typescript-auth/common';
+import { OAuth2ProviderRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

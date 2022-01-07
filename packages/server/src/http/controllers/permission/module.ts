@@ -9,7 +9,7 @@ import {
     Body, Controller, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Permission } from '@typescript-auth/common';
+import { Permission } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { createOnePermissionRouteHandler, getManyPermissionRouteHandler, getOnePermissionRouteHandler } from './handlers';
 

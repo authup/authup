@@ -6,7 +6,7 @@
  */
 
 import { getCustomRepository } from 'typeorm';
-import { TokenPayload, TokenVerificationPayload } from '@typescript-auth/common';
+import { TokenPayload, TokenVerificationPayload } from '@typescript-auth/domains';
 import { BadRequestError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { verifyToken } from '../../../../security';

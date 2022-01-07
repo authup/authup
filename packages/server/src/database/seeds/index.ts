@@ -9,7 +9,7 @@ import { Connection, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID, Permission, PermissionID, Realm, RolePermission, UserRole,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { RoleRepository, UserRepository } from '../../domains';
 import { hashPassword } from '../../security';
 

@@ -2,7 +2,7 @@ import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
     Client, PermissionID,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function deleteClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

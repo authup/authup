@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Role } from '@typescript-auth/common';
+import { Role } from '@typescript-auth/domains';
 import * as console from 'console';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';

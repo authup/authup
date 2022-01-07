@@ -8,7 +8,7 @@
 import { getRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 
-import { PermissionID, Realm } from '@typescript-auth/common';
+import { PermissionID, Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

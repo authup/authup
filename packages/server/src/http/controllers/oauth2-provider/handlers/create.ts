@@ -10,7 +10,7 @@ import { getRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError } from '@typescript-error/http';
 import {
     MASTER_REALM_ID, OAuth2Provider, PermissionID, Realm,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../modules/express-validator';

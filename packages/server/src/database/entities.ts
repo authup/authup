@@ -19,4 +19,4 @@ export {
     User,
     UserPermission,
     UserRole,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';

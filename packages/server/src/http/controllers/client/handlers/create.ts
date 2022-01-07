@@ -9,7 +9,7 @@ import { getRepository } from 'typeorm';
 import {
     Client,
     PermissionID,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
 

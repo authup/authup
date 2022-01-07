@@ -10,7 +10,7 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     Client, MASTER_REALM_ID, PermissionID,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

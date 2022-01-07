@@ -9,7 +9,7 @@ import { Oauth2TokenResponse } from '@typescript-auth/core';
 import { getCustomRepository, getRepository } from 'typeorm';
 import {
     OAuth2Provider, OAuth2ProviderAccount, OAuth2ProviderRole,
-} from '@typescript-auth/common';
+} from '@typescript-auth/domains';
 import { UserRepository } from '../user/repository';
 
 export async function createOauth2ProviderAccountWithToken(

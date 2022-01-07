@@ -1,6 +1,6 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { OAuth2ProviderRole, PermissionID } from '@typescript-auth/common';
+import { OAuth2ProviderRole, PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function deleteOauth2ProvideRoleRouteHandler(

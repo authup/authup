@@ -1,6 +1,6 @@
 import { getCustomRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, isPermittedForResourceRealm } from '@typescript-auth/common';
+import { PermissionID, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository } from '../../../../domains/user/repository';
 

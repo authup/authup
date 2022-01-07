@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { Client } from '@typescript-auth/common';
+import { Client } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../modules/express-validator';

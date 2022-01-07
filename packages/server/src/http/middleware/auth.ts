@@ -14,7 +14,7 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from '@typescript-auth/core';
-import { TokenPayload } from '@typescript-auth/common';
+import { TokenPayload } from '@typescript-auth/domains';
 import { UnauthorizedError } from '@typescript-error/http';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { verifyToken } from '../../security';
