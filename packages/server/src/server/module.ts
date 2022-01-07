@@ -22,13 +22,12 @@ export async function startAuthServer(context: AuthServerStartContext) {
     });
 
     spinner.info(`Environment: ${context.config.env}`);
-    spinner.info(`RootPath: ${context.config.rootPath}`);
-    spinner.info(`WritableDirectory: ${context.config.writableDirectory}`);
+    spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);
     spinner.info(`URL: ${context.config.selfUrl}`);
-    spinner.info(`Docs URL: ${new URL('docs', context.config.selfUrl).href}`);
+    spinner.info(`Docs-URL: ${new URL('docs', context.config.selfUrl).href}`);
     spinner.info(`Web-URL: ${context.config.webUrl}`);
 
-    spinner.start('Initialise controllers & middlewares');
+    spinner.start('Initialise controllers & middlewares.');
     /*
     HTTP Server & Express App
     */
@@ -39,12 +38,12 @@ export async function startAuthServer(context: AuthServerStartContext) {
         webUrl: context.config.webUrl,
     });
 
-    spinner.succeed('Initialised controllers & middlewares');
+    spinner.succeed('Initialised controllers & middlewares.');
 
     const httpServer = createHttpServer({ expressApp });
 
     function signalStart() {
-        spinner.succeed(`Startup on 127.0.0.1:${context.config.port} (${context.config.env}) completed`);
+        spinner.succeed('Startup completed.');
     }
 
     /*
@@ -54,7 +53,7 @@ export async function startAuthServer(context: AuthServerStartContext) {
         httpServer.listen(context.config.port, '0.0.0.0', signalStart);
     }
 
-    spinner.start('Initialise database connection');
+    spinner.start('Establish database connection.');
 
     const connectionOptions = await buildDatabaseConnectionOptions(context.config);
     const connection = await createConnection(connectionOptions);
@@ -62,7 +61,7 @@ export async function startAuthServer(context: AuthServerStartContext) {
         await connection.synchronize();
     }
 
-    spinner.succeed('Initialised database connection');
+    spinner.succeed('Established database connection.');
 
     start();
 }

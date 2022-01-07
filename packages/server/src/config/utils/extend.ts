@@ -38,11 +38,11 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
     }
 
     if (!config.selfUrl) {
-        config.selfUrl = `http://127.0.0.1:${config.port}`;
+        config.selfUrl = `http://127.0.0.1:${config.port}/`;
     }
 
     if (!config.webUrl) {
-        config.webUrl = 'http://127.0.0.1:3000';
+        config.webUrl = 'http://127.0.0.1:3000/';
     }
 
     if (config.rootPath) {

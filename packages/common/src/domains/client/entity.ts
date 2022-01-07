@@ -6,7 +6,6 @@
  */
 
 import {
-    BeforeInsert,
     Column,
     CreateDateColumn,
     Entity,
@@ -15,7 +14,6 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { createAuthClientSecret } from './utils';
 import { MASTER_REALM_ID, Realm } from '../realm';
 import { User } from '../user';
 
@@ -24,10 +22,10 @@ export class Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 100, select: false })
+    @Column({ type: 'varchar', length: 2048, select: false })
         secret: string;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column({ type: 'varchar', length: 256, nullable: true })
         name: string;
 
     @Column({ type: 'text', nullable: true })
@@ -56,17 +54,4 @@ export class Client {
     @ManyToOne(() => Realm, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
-
-    // ------------------------------------------------------------------
-
-    @BeforeInsert()
-    createSecret() {
-        if (typeof this.secret === 'undefined') {
-            this.secret = createAuthClientSecret();
-        }
-    }
-
-    refreshSecret() {
-        this.secret = createAuthClientSecret();
-    }
 }

@@ -8,6 +8,10 @@
 export enum PermissionID {
     PERMISSION_MANAGE = 'permission_manage',
 
+    CLIENT_ADD = 'client_add',
+    CLIENT_DROP = 'client_drop',
+    CLIENT_EDIT = 'client_edit',
+
     REALM_ADD = 'realm_add',
     REALM_DROP = 'realm_drop',
     REALM_EDIT = 'realm_edit',
