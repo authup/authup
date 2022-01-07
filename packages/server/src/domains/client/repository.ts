@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityRepository, In, Repository } from 'typeorm';
+import { EntityRepository, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
-import { Client, ClientRole } from '@typescript-auth/common';
+import {
+    Client, ClientPermission, ClientRole,
+} from '@typescript-auth/common';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../security';
 
@@ -17,7 +19,7 @@ export class ClientRepository extends Repository<Client> {
     // ------------------------------------------------------------------
 
     async getOwnedPermissions(clientId: string) : Promise<PermissionItem<unknown>[]> {
-        let permissions : PermissionItem<unknown>[] = [...await this.getSelfOwnedPermissions(clientId)];
+        let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(clientId);
 
         const roles = await this.manager
             .getRepository(ClientRole)
@@ -37,9 +39,25 @@ export class ClientRepository extends Repository<Client> {
         return permissions;
     }
 
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars,class-methods-use-this
     async getSelfOwnedPermissions(clientId: string) : Promise<PermissionItem<unknown>[]> {
-        return [];
+        const repository = this.manager.getRepository(ClientPermission);
+
+        const entities = await repository.find({
+            client_id: clientId,
+        });
+
+        const result : PermissionItem<unknown>[] = [];
+        for (let i = 0; i < entities.length; i++) {
+            result.push({
+                id: entities[i].permission_id,
+                condition: entities[i].condition,
+                power: entities[i].power,
+                fields: entities[i].fields,
+                negation: entities[i].negation,
+            });
+        }
+
+        return result;
     }
 
     /**

@@ -14,8 +14,6 @@ import { createExpressApp } from '../http/express';
 import { AuthServerStartContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database/utils';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-
 export async function startAuthServer(context: AuthServerStartContext) {
     const spinner = ora.default({
         spinner: 'dots',

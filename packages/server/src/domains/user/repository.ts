@@ -9,7 +9,7 @@ import { EntityRepository, In, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
 import {
-    Role, User, UserRole,
+    Role, User, UserPermission, UserRole,
 } from '@typescript-auth/common';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../security';
@@ -45,7 +45,7 @@ export class UserRepository extends Repository<User> {
     // ------------------------------------------------------------------
 
     async getOwnedPermissions(userId: number) : Promise<PermissionItem<unknown>[]> {
-        let permissions : PermissionItem<unknown>[] = [...await this.getSelfOwnedPermissions(userId)];
+        let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
             .getRepository(UserRole)
@@ -65,9 +65,25 @@ export class UserRepository extends Repository<User> {
         return permissions;
     }
 
-    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars,class-methods-use-this
-    async getSelfOwnedPermissions(userId: string | number) : Promise<PermissionItem<unknown>[]> {
-        return [];
+    async getSelfOwnedPermissions(userId: number) : Promise<PermissionItem<unknown>[]> {
+        const repository = this.manager.getRepository(UserPermission);
+
+        const entities = await repository.find({
+            user_id: userId,
+        });
+
+        const result : PermissionItem<unknown>[] = [];
+        for (let i = 0; i < entities.length; i++) {
+            result.push({
+                id: entities[i].permission_id,
+                condition: entities[i].condition,
+                power: entities[i].power,
+                fields: entities[i].fields,
+                negation: entities[i].negation,
+            });
+        }
+
+        return result;
     }
 
     // ------------------------------------------------------------------

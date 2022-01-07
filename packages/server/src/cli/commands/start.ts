@@ -5,16 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import {
-    buildConnectionOptions, dropDatabase,
-} from 'typeorm-extension';
-import {
-    buildDatabaseConnectionOptions,
-    createDatabaseDefaultConnectionOptions,
-    extendDatabaseConnectionOptions,
-} from '../../database/utils';
 import { useAuthServerConfig } from '../../config';
 import { startAuthServer } from '../../server';
 
