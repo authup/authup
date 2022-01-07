@@ -7,9 +7,9 @@
 
 import { customAlphabet } from 'nanoid';
 
-const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
-const nanoid = customAlphabet(alphabet, 21);
-
-export function createNanoID() : string {
-    return nanoid();
+export function createNanoID(alphabet?: string, len = 21) : string {
+    if (alphabet) {
+        return customAlphabet(alphabet, len)();
+    }
+    return customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', len)();
 }

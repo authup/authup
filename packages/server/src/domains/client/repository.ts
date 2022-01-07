@@ -38,7 +38,7 @@ export class ClientRepository extends Repository<Client> {
     }
 
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars,class-methods-use-this
-    async getSelfOwnedPermissions(clientId: string | number) : Promise<PermissionItem<unknown>[]> {
+    async getSelfOwnedPermissions(clientId: string) : Promise<PermissionItem<unknown>[]> {
         return [];
     }
 

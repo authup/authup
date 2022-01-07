@@ -6,6 +6,7 @@
  */
 
 export * from './client';
+export * from './client-permission';
 export * from './client-role';
 export * from './oauth2-provider';
 export * from './oauth2-provider-account';
@@ -16,4 +17,5 @@ export * from './role';
 export * from './role-permission';
 export * from './token';
 export * from './user';
+export * from './user-permission';
 export * from './user-role';

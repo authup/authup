@@ -7,6 +7,8 @@
 
 export {
     Client,
+    ClientPermission,
+    ClientRole,
     OAuth2Provider,
     OAuth2ProviderAccount,
     OAuth2ProviderRole,
@@ -15,5 +17,6 @@ export {
     Role,
     RolePermission,
     User,
+    UserPermission,
     UserRole,
 } from '@typescript-auth/common';

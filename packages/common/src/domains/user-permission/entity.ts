@@ -15,11 +15,11 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Permission } from '../permission';
-import { Role } from '../role';
+import { User } from '../user';
 
-@Entity({ name: 'auth_role_permissions' })
-@Index(['permission_id', 'role_id'], { unique: true })
-export class RolePermission {
+@Entity({ name: 'auth_user_permissions' })
+@Index(['permission_id', 'user_id'], { unique: true })
+export class UserPermission {
     @PrimaryGeneratedColumn({ unsigned: true })
         id: number;
 
@@ -46,11 +46,11 @@ export class RolePermission {
     // ------------------------------------------------------------------
 
     @Column({ unsigned: true })
-        role_id: number;
+        user_id: number;
 
-    @ManyToOne(() => Role, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'role_id' })
-        role: Role;
+    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
+        user: User;
 
     @Column({ type: 'varchar' })
         permission_id: string;

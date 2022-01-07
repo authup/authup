@@ -34,7 +34,7 @@ export class RolePermissionAPI {
         return response.data;
     }
 
-    async create(data: Pick<RolePermission, 'role_id' | 'permission_id'>) : Promise<SingleResourceResponse<RolePermission>> {
+    async create(data: Partial<RolePermission>) : Promise<SingleResourceResponse<RolePermission>> {
         const response = await this.client.post('role-permissions', data);
 
         return response.data;
