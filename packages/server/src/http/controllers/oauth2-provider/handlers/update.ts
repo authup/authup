@@ -11,7 +11,7 @@ import { validationResult } from 'express-validator';
 import { OAuth2Provider, PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
-import { matchedValidationData } from '../../../../modules/express-validator';
+import { matchedValidationData } from '../../../../utils/express-validator';
 import { runOauth2ProviderValidation } from './utils';
 
 export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

@@ -16,9 +16,12 @@ import { RolePermissionController } from './role-permission';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
 import { registerTokenController } from './token';
-import { ControllerRegisterContext } from './type';
+import { ControllerRegistrationContext } from './type';
 
-export function registerControllers(router: Application, context: ControllerRegisterContext) {
+export function registerControllers(
+    router: Application,
+    context: ControllerRegistrationContext,
+) {
     attachControllers(router, [
         Oauth2ProviderRoleController,
         Oauth2ProviderController,
@@ -30,6 +33,15 @@ export function registerControllers(router: Application, context: ControllerRegi
         UserRoleController,
     ]);
 
-    registerOauth2ProviderController(router, context.oauth2Provider);
-    registerTokenController(router, context.token);
+    registerOauth2ProviderController(router, {
+        selfUrl: context.selfUrl,
+        writableDirectoryPath: context.writableDirectoryPath,
+        ...context.controller.oauth2Provider,
+
+    });
+    registerTokenController(router, {
+        selfUrl: context.selfUrl,
+        writableDirectoryPath: context.writableDirectoryPath,
+        ...context.controller.token,
+    });
 }

@@ -12,7 +12,7 @@ import {
     Role, User, UserPermission, UserRole,
 } from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
-import { verifyPassword } from '../../security';
+import { verifyPassword } from '../../utils';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -89,36 +89,29 @@ export class UserRepository extends Repository<User> {
     // ------------------------------------------------------------------
 
     /**
-     * Find a user by name and password.
+     * Verify a user by name and password.
      *
      * @param name
      * @param password
      */
     async verifyCredentials(name: string, password: string) : Promise<User | undefined> {
-        let user : User | undefined;
+        const entity = await this.createQueryBuilder('user')
+            .addSelect('user.password')
+            .where('user.name LIKE :name', { name })
+            .getOne();
 
-        try {
-            user = await this.createQueryBuilder('user')
-                .addSelect('user.password')
-                .where('user.name LIKE :name', { name })
-                .getOne();
-
-            if (typeof user === 'undefined') {
-                return undefined;
-            }
-        } catch (e) {
+        if (
+            !entity ||
+            !entity.password
+        ) {
             return undefined;
         }
 
-        if (!user.password) {
-            return undefined;
-        }
-
-        const verified = await verifyPassword(password, user.password);
+        const verified = await verifyPassword(password, entity.password);
         if (!verified) {
             return undefined;
         }
 
-        return user;
+        return entity;
     }
 }

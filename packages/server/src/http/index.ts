@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './controllers';
+export * from './express';
 export * from './middleware';
 export * from './server';
 export * from './type';

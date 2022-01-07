@@ -8,7 +8,13 @@
 import { TokenControllerOptions } from './token';
 import { Oauth2ProviderControllerOptions } from './oauth2-provider';
 
-export type ControllerRegisterContext = {
-    token: TokenControllerOptions,
-    oauth2Provider: Oauth2ProviderControllerOptions
+export type ControllerRegistrationContext = {
+    controller: {
+        token: Omit<TokenControllerOptions, 'writableDirectoryPath' | 'selfUrl'> &
+        Partial<Pick<TokenControllerOptions, 'writableDirectoryPath' | 'selfUrl'>>,
+        oauth2Provider: Omit<Oauth2ProviderControllerOptions, 'writableDirectoryPath' | 'selfUrl'> &
+        Partial<Pick<Oauth2ProviderControllerOptions, 'writableDirectoryPath' | 'selfUrl'>>,
+    },
+    selfUrl: string,
+    writableDirectoryPath: string,
 };

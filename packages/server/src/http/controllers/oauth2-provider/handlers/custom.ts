@@ -15,10 +15,9 @@ import {
     TokenPayload,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { createToken } from '../../../../security';
 import { createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
-import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
+import { ProxyConnectionConfig, createToken, detectProxyConnectionConfig } from '../../../../utils';
 
 export async function authorizeOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -109,9 +108,9 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     res.cookie('auth_token', JSON.stringify(cookie), {
         maxAge: expiresIn * 1000,
         ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(context.webUrl).hostname,
+            domain: new URL(context.redirectUrl).hostname,
         } : {}),
     });
 
-    return res.redirect(context.webUrl);
+    return res.redirect(context.redirectUrl);
 }

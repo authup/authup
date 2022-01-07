@@ -8,12 +8,8 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 
-import path from 'path';
-import swaggerUi from 'swagger-ui-express';
-import { existsSync } from 'fs';
-import { setupExpressMiddlewares } from './utils';
+import { errorMiddleware, registerMiddlewares } from '../middleware';
 import { ExpressAppCreateContext } from './type';
-import { errorMiddleware } from '../middleware/error';
 import { registerControllers } from '../controllers';
 
 export function createExpressApp(context: ExpressAppCreateContext) : Express {
@@ -28,47 +24,32 @@ export function createExpressApp(context: ExpressAppCreateContext) : Express {
         credentials: true,
     }));
 
-    setupExpressMiddlewares(expressApp, {
+    registerMiddlewares(expressApp, {
         auth: {
             writableDirectoryPath: context.writableDirectoryPath,
         },
         cookieParser: true,
         bodyParser: true,
         response: true,
+        swaggerDocumentation: {
+            writableDirectoryPath: context.writableDirectoryPath,
+        },
     });
-
-    if (context.swaggerDocumentation) {
-        const swaggerDocumentPath: string = path.join(context.writableDirectoryPath, 'swagger.json');
-        if (existsSync(swaggerDocumentPath)) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
-            const swaggerDocument = require(swaggerDocumentPath);
-
-            expressApp.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-                swaggerOptions: {
-                    withCredentials: true,
-                    plugins: [
-                        () => ({
-                            components: { Topbar: (): any => null },
-                        }),
-                    ],
-                },
-            }));
-        }
-    }
 
     registerControllers(expressApp, {
-        oauth2Provider: {
-            selfUrl: context.selfUrl,
-            writableDirectoryPath: context.writableDirectoryPath,
-            webUrl: context.webUrl,
+        controller: {
+            oauth2Provider: {
+                redirectUrl: context.webUrl,
+            },
+            token: {
+                maxAge: context.tokenMaxAge,
+            },
         },
-        token: {
-            selfUrl: context.selfUrl,
-            writableDirectoryPath: context.writableDirectoryPath,
-            maxAge: 3600,
-        },
+        selfUrl: context.selfUrl,
+        writableDirectoryPath: context.writableDirectoryPath,
     });
 
+    // needs to be last :/
     expressApp.use(errorMiddleware);
 
     return expressApp;

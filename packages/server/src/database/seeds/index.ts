@@ -11,14 +11,14 @@ import {
     MASTER_REALM_ID, Permission, PermissionID, Realm, RolePermission, UserRole,
 } from '@typescript-auth/domains';
 import { RoleRepository, UserRepository } from '../../domains';
-import { hashPassword } from '../../security';
+import { hashPassword } from '../../utils';
 
 type DatabaseRootSeederOptions = {
     adminUsername: string,
     adminPassword: string
 };
 
-export default class DatabaseRootSeeder implements Seeder {
+class DatabaseRootSeeder implements Seeder {
     protected options: DatabaseRootSeederOptions;
 
     constructor(options: DatabaseRootSeederOptions) {
@@ -152,3 +152,10 @@ export default class DatabaseRootSeeder implements Seeder {
         await rolePermissionRepository.save(rolePermissions);
     }
 }
+
+export {
+    DatabaseRootSeeder,
+    DatabaseRootSeederOptions,
+};
+
+export default DatabaseRootSeeder;

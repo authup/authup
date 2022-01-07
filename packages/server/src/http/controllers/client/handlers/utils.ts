@@ -9,7 +9,7 @@ import { check, validationResult } from 'express-validator';
 import { Client } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
-import { matchedValidationData } from '../../../../modules/express-validator';
+import { matchedValidationData } from '../../../../utils';
 
 export async function runClientValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<Partial<Client>> {
     const secretChain = check('secret')

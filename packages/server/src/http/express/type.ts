@@ -10,14 +10,7 @@ export type ExpressAppCreateContext = {
     swaggerDocumentation?: boolean
 
     webUrl: string,
-    selfUrl: string
-};
+    selfUrl: string,
 
-export type ExpressAppMiddlewareOptions = {
-    bodyParser?: boolean,
-    cookieParser?: boolean,
-    response?: boolean,
-    auth?: boolean | {
-        writableDirectoryPath?: string
-    }
+    tokenMaxAge?: number
 };

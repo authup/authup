@@ -9,7 +9,7 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { createConnection } from 'typeorm';
 import { useAuthServerConfig } from '../../config';
 import { buildDatabaseConnectionOptions } from '../../database/utils';
-import DatabaseRootSeeder from '../../database/seeds';
+import { DatabaseRootSeeder } from '../../database/seeds';
 
 interface SeedCheckArguments extends Arguments {
     root: string;

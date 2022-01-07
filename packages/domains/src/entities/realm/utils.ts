@@ -6,18 +6,22 @@
  */
 
 import { Brackets, SelectQueryBuilder } from 'typeorm';
-import { MASTER_REALM_ID } from './index';
+import { MASTER_REALM_ID } from './constants';
 
-export function onlyRealmPermittedQueryResources<T>(query: SelectQueryBuilder<T>, realm: string, queryField: string | string[] = 'realm_id') : void {
-    if (realm === MASTER_REALM_ID) return;
+export function onlyRealmPermittedQueryResources<T>(
+    query: SelectQueryBuilder<T>,
+    realmId: string,
+    queryField: string | string[] = 'realm_id',
+) : void {
+    if (realmId === MASTER_REALM_ID) return;
 
     query.andWhere(new Brackets((qb) => {
         if (Array.isArray(queryField)) {
             for (let i = 0; i < queryField.length; i++) {
-                qb.orWhere(`${queryField[i]} = :realm${i}`, { [`realm${i}`]: realm });
+                qb.orWhere(`${queryField[i]} = :realm${i}`, { [`realm${i}`]: realmId });
             }
         } else {
-            qb.where(`${queryField} = :realm`, { realm });
+            qb.where(`${queryField} = :realm`, { realm: realmId });
         }
     }));
 }
@@ -28,8 +32,11 @@ export function onlyRealmPermittedQueryResources<T>(query: SelectQueryBuilder<T>
  * @param realmId
  * @param resourceRealmId
  */
-export function isPermittedForResourceRealm(realmId?: string, resourceRealmId?: string) : boolean {
-    if (typeof realmId === 'undefined') return false;
+export function isPermittedForResourceRealm(
+    realmId?: string,
+    resourceRealmId?: string,
+) : boolean {
+    if (!realmId) return false;
 
     if (realmId === MASTER_REALM_ID) return true;
 

@@ -7,11 +7,12 @@
 
 import { getRepository } from 'typeorm';
 import {
-    Client,
-    PermissionID,
+    Client, PermissionID,
+    createNanoID,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
+import { hashPassword } from '../../../../utils';
 
 export async function createClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const data = await runClientValidation(req, 'create');
@@ -25,12 +26,18 @@ export async function createClientRouteHandler(req: ExpressRequest, res: Express
         data.user_id = req.userId;
     }
 
-    const roleRepository = getRepository(Client);
-    const role = roleRepository.create(data);
+    const repository = getRepository(Client);
+    const entity = repository.create(data);
 
-    await roleRepository.save(role);
+    const secret = createNanoID(undefined, 36);
+    entity.secret = await hashPassword(secret);
+
+    await repository.save(entity);
+
+    // return unencrypted secret, so the creator can now the secret ;)
+    entity.secret = secret;
 
     return res.respondCreated({
-        data: role,
+        data: entity,
     });
 }

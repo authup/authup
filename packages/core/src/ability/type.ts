@@ -12,14 +12,14 @@ export type AbilityMeta = {
     subject: string
 };
 
-export type AbilityItem<T extends {}> = AbilityMeta & PermissionItem<T>;
+export type AbilityItem<T extends Record<string, any>> = AbilityMeta & PermissionItem<T>;
 
 // -------------------------------------------------------------------
 
 // Allow String in case of Date, to allow options like: TIME_NOW - 3600
 type AllowedValue<T> = T extends Date ? (T | string) : T;
 
-export type Condition<T extends {}> = {
+export type Condition<T extends Record<string, any>> = {
     [K in keyof T]?:
     T[K] extends Record<string, any> ?
         (T[K] extends Date ? (ConditionInstruction<T[K]> | AllowedValue<T[K]>) : Condition<T[K]>) :

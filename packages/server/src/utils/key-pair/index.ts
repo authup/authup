@@ -35,7 +35,7 @@ export * from './type';
 export async function createSecurityKeyPair(options?: SecurityKeyPairOptions) : Promise<SecurityKeyPair> {
     options = buildOptions(options);
 
-    if (keyPairCache.hasOwnProperty(options.alias)) {
+    if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {
         return keyPairCache[options.alias];
     }
 
@@ -68,7 +68,7 @@ export async function createSecurityKeyPair(options?: SecurityKeyPairOptions) : 
 export async function useSecurityKeyPair(options?: SecurityKeyPairOptions) : Promise<SecurityKeyPair> {
     options = buildOptions(options);
 
-    if (keyPairCache.hasOwnProperty(options.alias)) {
+    if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {
         return keyPairCache[options.alias];
     }
 

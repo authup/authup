@@ -19,7 +19,7 @@ export function parseAuthorizationHeader(value: string): AuthorizationHeader {
     const id: string = parts[1];
 
     switch (type) {
-        case 'basic':
+        case 'basic': {
             const base64Decoded = Buffer.from(id, 'base64').toString('utf-8');
             const base64Parts = base64Decoded.split(':');
 
@@ -32,6 +32,7 @@ export function parseAuthorizationHeader(value: string): AuthorizationHeader {
                 username: base64Parts[0],
                 password: base64Parts[1],
             };
+        }
         case 'bearer':
             return {
                 type: AuthorizationHeaderType.BEARER,
@@ -52,16 +53,19 @@ export function parseAuthorizationHeader(value: string): AuthorizationHeader {
 
 export function stringifyAuthorizationHeader(header: AuthorizationHeader): string {
     switch (header.type) {
-        case AuthorizationHeaderType.BASIC:
+        case AuthorizationHeaderType.BASIC: {
             const basicStr: string = Buffer
                 .from(`${header.username}:${header.password}`)
                 .toString('base64');
 
             return `Basic ${basicStr}`;
+        }
         case AuthorizationHeaderType.BEARER:
             return `Bearer ${header.token}`;
         case AuthorizationHeaderType.X_API_KEY:
         case AuthorizationHeaderType.API_KEY:
             return `${header.type} ${header.key}`;
     }
+
+    return '';
 }

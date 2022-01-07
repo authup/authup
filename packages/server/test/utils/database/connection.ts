@@ -9,7 +9,7 @@ import {
     ConnectionWithSeederOptions, createDatabase, dropDatabase,
 } from 'typeorm-extension';
 import { ConnectionOptions, createConnection, getConnection } from 'typeorm';
-import DatabaseRootSeeder from '../../../src/database/seeds';
+import { DatabaseRootSeeder } from '../../../src/database/seeds';
 import { Config, useAuthServerConfig } from '../../../src/config';
 import { buildDatabaseConnectionOptions } from '../../../src/database/utils';
 

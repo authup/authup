@@ -2,7 +2,7 @@ import { getCustomRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { UserRepository } from '../../../../domains/user/repository';
+import { UserRepository } from '../../../../domains';
 
 export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;

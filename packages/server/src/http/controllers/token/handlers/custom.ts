@@ -9,7 +9,7 @@ import { getCustomRepository } from 'typeorm';
 import { TokenPayload, TokenVerificationPayload } from '@typescript-auth/domains';
 import { BadRequestError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { verifyToken } from '../../../../security';
+import { verifyToken } from '../../../../utils';
 import { TokenRouteVerifyContext } from './type';
 import { UserRepository } from '../../../../domains';
 import { ClientRepository } from '../../../../domains/client';

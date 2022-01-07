@@ -3,7 +3,7 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { onlyRealmPermittedQueryResources } from '@typescript-auth/domains';
+import { Permission, PermissionID, onlyRealmPermittedQueryResources } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository } from '../../../../domains';
 
@@ -19,7 +19,12 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
 
     applyFields(query, fields, {
         defaultAlias: 'user',
-        allowed: ['id', 'name', 'display_name', 'email'],
+        allowed: [
+            'id',
+            'name',
+            'display_name',
+            ...(req.ability.hasPermission(PermissionID.USER_EDIT) ? ['email'] : []),
+        ],
     });
 
     applyFilters(query, filter, {
@@ -57,10 +62,15 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     onlyRealmPermittedQueryResources(query, req.realmId);
 
-    applyFields(query, fields, {
-        defaultAlias: 'user',
-        allowed: ['email'],
-    });
+    if (
+        req.ability.hasPermission(PermissionID.USER_EDIT) ||
+        parseInt(id, 10) === req.userId
+    ) {
+        applyFields(query, fields, {
+            defaultAlias: 'user',
+            allowed: ['email'],
+        });
+    }
 
     applyRelations(query, include, {
         defaultAlias: 'user',

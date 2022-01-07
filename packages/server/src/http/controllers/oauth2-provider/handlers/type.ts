@@ -16,5 +16,5 @@ export type Oauth2ProviderRouteAuthorizeCallbackContext = Oauth2ProviderRouteCon
     rsaKeyPairPath: string,
     maxAge?: number,
 
-    webUrl: string
+    redirectUrl: string
 };

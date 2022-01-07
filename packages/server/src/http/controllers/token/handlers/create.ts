@@ -12,7 +12,7 @@ import {
     Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { createToken } from '../../../../security';
+import { createToken } from '../../../../utils';
 import { UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
 import { ClientRepository } from '../../../../domains/client';

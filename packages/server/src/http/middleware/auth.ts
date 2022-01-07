@@ -17,7 +17,7 @@ import {
 import { TokenPayload } from '@typescript-auth/domains';
 import { UnauthorizedError } from '@typescript-error/http';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
-import { verifyToken } from '../../security';
+import { verifyToken } from '../../utils';
 import { UserRepository } from '../../domains';
 import { ClientRepository } from '../../domains/client';
 

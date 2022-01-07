@@ -12,8 +12,8 @@ import { matchedData, validationResult } from 'express-validator';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
 import { ExpressValidationError } from '../../../error/validation';
-import { UserRepository } from '../../../../domains/user/repository';
-import { hashPassword } from '../../../../security';
+import { UserRepository } from '../../../../domains';
+import { hashPassword } from '../../../../utils';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id: idStr } = req.params;

@@ -1,7 +1,7 @@
 {
     "name": "@typescript-auth/server",
     "version": "1.0.5",
-    "description": "Typescript auth server side functions stack.",
+    "description": "Auth server in standalone mode or as library extension.",
     "main": "dist/index.js",
     "scripts": {
         "cli": "ts-node src/cli/index.ts",
@@ -18,9 +18,8 @@
     "keywords": [
         "auth",
         "module",
+        "server",
         "typescript",
-        "template",
-        "auth-template",
         "oauth2",
         "oauth2-client",
         "middleware",
@@ -45,8 +44,8 @@
     "dependencies": {
         "@decorators/express": "^2.6.0",
         "@trapi/swagger": "^0.2.13",
-        "@typescript-auth/domains": "^1.0.5",
         "@typescript-auth/core": "^1.0.5",
+        "@typescript-auth/domains": "^0.0.0",
         "@typescript-error/http": "^1.0.3",
         "bcrypt": "^5.0.1",
         "body-parser": "^1.19.1",
@@ -76,6 +75,7 @@
         "@types/mustache": "^4.1.1",
         "@types/nanoid": "^3.0.0",
         "@types/supertest": "^2.0.11",
+        "@types/swagger-ui-express": "^4.1.3",
         "@types/yargs": "^17.0.8",
         "coveralls": "^3.1.0",
         "jest": "^27.4.6",

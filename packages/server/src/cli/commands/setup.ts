@@ -9,13 +9,13 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
 import path from 'path';
-import { createSecurityKeyPair } from '../../security';
 import { generateSwaggerDocumentation } from '../../http/swagger';
 import { useAuthServerConfig } from '../../config';
 import {
     buildDatabaseConnectionOptions,
 } from '../../database/utils';
-import DatabaseRootSeeder from '../../database/seeds';
+import { DatabaseRootSeeder } from '../../database/seeds';
+import { createSecurityKeyPair } from '../../utils';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -82,7 +82,9 @@ export class SetupCommand implements CommandModule {
          * Setup auth module
          */
         if (args.keyPair) {
-            await createSecurityKeyPair({ directory: writableDirectoryPath });
+            await createSecurityKeyPair({
+                directory: writableDirectoryPath,
+            });
         }
 
         if (args.documentation) {
@@ -116,6 +118,7 @@ export class SetupCommand implements CommandModule {
                     await seeder.run(connection);
                 }
             } catch (e) {
+                // eslint-disable-next-line no-console
                 console.log(e);
                 await connection.close();
                 process.exit(1);

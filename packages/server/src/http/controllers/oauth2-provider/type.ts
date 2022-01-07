@@ -12,5 +12,5 @@ export type Oauth2ProviderControllerOptions = {
     writableDirectoryPath: string,
     maxAge?: number,
 
-    webUrl: string
+    redirectUrl: string
 };

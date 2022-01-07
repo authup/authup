@@ -8,9 +8,8 @@
 import { URL } from 'url';
 import { createConnection } from 'typeorm';
 import * as ora from 'ora';
-import * as path from 'path';
-import { createHttpServer } from '../http';
-import { createExpressApp } from '../http/express';
+import path from 'path';
+import { createExpressApp, createHttpServer } from '../http';
 import { AuthServerStartContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database/utils';
 
@@ -34,22 +33,12 @@ export async function startAuthServer(context: AuthServerStartContext) {
         swaggerDocumentation: context.config.swaggerDocumentation,
         selfUrl: context.config.selfUrl,
         webUrl: context.config.webUrl,
+        tokenMaxAge: context.config.tokenMaxAge,
     });
 
     spinner.succeed('Initialised controllers & middlewares.');
 
     const httpServer = createHttpServer({ expressApp });
-
-    function signalStart() {
-        spinner.succeed('Startup completed.');
-    }
-
-    /*
-    Start Server
-    */
-    function start() {
-        httpServer.listen(context.config.port, '0.0.0.0', signalStart);
-    }
 
     spinner.start('Establish database connection.');
 
@@ -61,5 +50,7 @@ export async function startAuthServer(context: AuthServerStartContext) {
 
     spinner.succeed('Established database connection.');
 
-    start();
+    httpServer.listen(context.config.port, '0.0.0.0', () => {
+        spinner.succeed('Startup completed.');
+    });
 }

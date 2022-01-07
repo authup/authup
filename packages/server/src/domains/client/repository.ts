@@ -12,7 +12,7 @@ import {
     Client, ClientPermission, ClientRole,
 } from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
-import { verifyPassword } from '../../security';
+import { verifyPassword } from '../../utils';
 
 @EntityRepository(Client)
 export class ClientRepository extends Repository<Client> {
@@ -61,22 +61,21 @@ export class ClientRepository extends Repository<Client> {
     }
 
     /**
-     * Find a client by id and secret.
+     * Verify a client by id and secret.
      *
      * @param id
      * @param secret
      */
     async verifyCredentials(id: string, secret: string) : Promise<Client | undefined> {
-        const entity : Client | undefined = await this.createQueryBuilder('client')
+        const entity = await this.createQueryBuilder('client')
             .addSelect('client.secret')
             .where('client.id = :id', { id })
             .getOne();
 
-        if (typeof entity === 'undefined') {
-            return undefined;
-        }
-
-        if (!entity.secret) {
+        if (
+            !entity ||
+            !entity.secret
+        ) {
             return undefined;
         }
 
