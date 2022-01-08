@@ -9,7 +9,7 @@ import { MASTER_REALM_ID, OAuth2Provider } from '@typescript-auth/domains';
 import { Oauth2Client } from '@typescript-auth/core';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
-import { useAuthServerConfig } from '../../src/config';
+import { useConfig } from '../../src/config';
 
 describe('src/controllers/auth/provider', () => {
     const superTest = useSuperTest();
@@ -108,7 +108,7 @@ describe('src/controllers/auth/provider', () => {
         expect(response.status).toEqual(302);
         expect(response.header.location).toBeDefined();
 
-        const config = useAuthServerConfig();
+        const config = useConfig();
 
         const oauth2Client = new Oauth2Client({
             client_id: provider.client_id,

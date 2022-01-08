@@ -9,3 +9,8 @@ export enum TokenGrant {
     PASSWORD = 'password',
     CLIENT_CREDENTIALS = 'client_credentials',
 }
+
+export enum TokenSubKind {
+    USER = 'user',
+    CLIENT = 'client',
+}

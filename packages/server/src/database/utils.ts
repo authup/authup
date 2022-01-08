@@ -10,31 +10,21 @@ import { ConnectionWithAdditionalOptions, buildConnectionOptions } from 'typeorm
 import { Config } from '../config';
 
 export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWithAdditionalOptions) {
-    if (
-        !connectionOptions.entities ||
-        connectionOptions.entities.length === 0
-    ) {
-        connectionOptions = {
-            ...connectionOptions,
-            entities: [
-                ...(connectionOptions.entities ? connectionOptions.entities : []),
-                path.join(__dirname, 'entities{.ts,.js}'),
-            ],
-        };
-    }
+    connectionOptions = {
+        ...connectionOptions,
+        entities: [
+            ...(connectionOptions.entities ? connectionOptions.entities : []),
+            path.join(__dirname, 'entities{.ts,.js}'),
+        ],
+    };
 
-    if (
-        !connectionOptions.migrations ||
-        connectionOptions.migrations.length === 0
-    ) {
-        connectionOptions = {
-            ...connectionOptions,
-            migrations: [
-                ...(connectionOptions.migrations ? connectionOptions.migrations : []),
-                path.join(__dirname, 'migrations', '*{.ts,.js}'),
-            ],
-        };
-    }
+    connectionOptions = {
+        ...connectionOptions,
+        migrations: [
+            ...(connectionOptions.migrations ? connectionOptions.migrations : []),
+            path.join(__dirname, 'migrations', '*{.ts,.js}'),
+        ],
+    };
 
     return connectionOptions;
 }

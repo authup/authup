@@ -10,7 +10,7 @@ import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
 import path from 'path';
 import { generateSwaggerDocumentation } from '../../http/swagger';
-import { useAuthServerConfig } from '../../config';
+import { useConfig } from '../../config';
 import {
     buildDatabaseConnectionOptions,
 } from '../../database/utils';
@@ -65,7 +65,7 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = useAuthServerConfig(args.root);
+        const config = useConfig(args.root);
         const writableDirectoryPath = path.join(config.rootPath, config.writableDirectory);
 
         if (

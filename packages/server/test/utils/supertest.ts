@@ -8,10 +8,10 @@
 import path from 'path';
 import supertest, { SuperTest, Test } from 'supertest';
 import { createExpressApp } from '../../src/http/express';
-import { useAuthServerConfig } from '../../src/config';
+import { useConfig } from '../../src/config';
 
 export function useSuperTest() : SuperTest<Test> {
-    const config = useAuthServerConfig();
+    const config = useConfig();
 
     const expressApp = createExpressApp({
         writableDirectoryPath: path.join(config.rootPath, config.writableDirectory),

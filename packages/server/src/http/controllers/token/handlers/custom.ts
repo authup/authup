@@ -34,12 +34,12 @@ export async function verifyTokenRouteHandler(
     const response : TokenVerificationPayload = {
         token: tokenPayload,
         target: {
-            type: tokenPayload.type,
+            type: tokenPayload.subKind,
             data: undefined,
         },
     };
 
-    switch (tokenPayload.type) {
+    switch (tokenPayload.subKind) {
         case 'client': {
             const clientRepository = getCustomRepository<ClientRepository>(ClientRepository);
             const clientQuery = clientRepository.createQueryBuilder('client')

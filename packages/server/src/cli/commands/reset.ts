@@ -15,7 +15,7 @@ import {
     createDatabaseDefaultConnectionOptions,
     extendDatabaseConnectionOptions,
 } from '../../database/utils';
-import { useAuthServerConfig } from '../../config';
+import { useConfig } from '../../config';
 
 interface ResetArguments extends Arguments {
     root: string;
@@ -36,7 +36,7 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        const config = useAuthServerConfig(args.root);
+        const config = useConfig(args.root);
         const connectionOptions = await buildDatabaseConnectionOptions(config);
 
         await dropDatabase({ ifExist: true }, connectionOptions);

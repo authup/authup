@@ -7,7 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { createConnection } from 'typeorm';
-import { useAuthServerConfig } from '../../config';
+import { useConfig } from '../../config';
 import { buildDatabaseConnectionOptions } from '../../database/utils';
 import { DatabaseRootSeeder } from '../../database/seeds';
 
@@ -30,7 +30,7 @@ export class CheckCommand implements CommandModule {
     }
 
     async handler(args: SeedCheckArguments) {
-        const config = useAuthServerConfig(args.root);
+        const config = useConfig(args.root);
         const connectionOptions = await buildDatabaseConnectionOptions(config);
 
         const connection = await createConnection(connectionOptions);

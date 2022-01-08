@@ -12,7 +12,7 @@ import { Oauth2Client, Oauth2TokenResponse } from '@typescript-auth/core';
 import { URL } from 'url';
 import {
     OAuth2Provider,
-    TokenPayload,
+    TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createOauth2ProviderAccountWithToken } from '../../../../domains';
@@ -91,7 +91,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const expiresIn = context.maxAge;
 
     const tokenPayload : TokenPayload = {
-        type: 'client',
+        subKind: TokenSubKind.USER,
         iss: context.selfUrl,
         sub: account.user.id,
         remoteAddress: req.ip,

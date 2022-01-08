@@ -12,7 +12,7 @@ import { ConfigDefault } from '../constants';
 function requireFromEnv(key : string, alt?: any) {
     if (!process.env[key] && typeof alt === 'undefined') {
         // eslint-disable-next-line no-console
-        console.error(`[APP ERROR] Missing variable:${key}`);
+        console.error(`[APP ERROR] Missing variable: ${key}`);
 
         return process.exit(1);
     }
@@ -20,7 +20,10 @@ function requireFromEnv(key : string, alt?: any) {
     return process.env[key] ?? alt;
 }
 
-export function extendAuthServerConfig(config: Partial<Config>, directoryPath: string): Config {
+export function buildConfig(
+    config: Partial<Config>,
+    directoryPath?: string,
+): Config {
     if (!config.env) {
         config.env = requireFromEnv('NODE_ENV', 'development');
     }
@@ -38,12 +41,14 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
     }
 
     if (!config.selfUrl) {
-        config.selfUrl = `http://127.0.0.1:${config.port}/`;
+        config.selfUrl = requireFromEnv('SELF_URL', `http://127.0.0.1:${config.port}/`);
     }
 
     if (!config.webUrl) {
-        config.webUrl = 'http://127.0.0.1:3000/';
+        config.webUrl = requireFromEnv('WEB_URL', 'http://127.0.0.1:3000/');
     }
+
+    directoryPath ??= process.cwd();
 
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
@@ -54,7 +59,7 @@ export function extendAuthServerConfig(config: Partial<Config>, directoryPath: s
     }
 
     if (!config.writableDirectory) {
-        config.writableDirectory = ConfigDefault.WRITABLE_DIRECTORY;
+        config.writableDirectory = requireFromEnv('WRITABLE_DIRECTORY', ConfigDefault.WRITABLE_DIRECTORY);
     }
 
     config.writableDirectory = config.writableDirectory.replace(/\//g, path.sep);

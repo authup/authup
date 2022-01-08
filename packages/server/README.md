@@ -4,16 +4,15 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
 # @typescript-auth/server ⚔
-This package can be used as standalone server or as an extension to an existent REST-API and
+This package can be used as simple standalone `server` or as an `extension` to an existent express resource API and
 should therefore only be used for backend- applications & microservices.
 
 **Table of Contents**
 
 - [Installation](#installation)
-- [Server](#server)
-- [Library](#extension)
-  - [Controllers & Middlewares](#controllers--middlewares)
-  - [Domains](#domains)
+- [Usage](#usage)
+  - [Server](#server)
+  - [Extension](#extension)
 - [Utils](#utils)
   - [KeyPair](#keypair) 
   - [Middleware](#middleware)
@@ -25,9 +24,11 @@ should therefore only be used for backend- applications & microservices.
 npm install @typescript-auth/server --save
 ```
 
-## Server
+## Usage
 
-### Config
+### Server
+
+#### Config
 
 ---
 **NOTE**
@@ -37,8 +38,7 @@ All options have either default values or are generated automatically 🔥.
 
 ---
 
-Create a `server.config.js` file in the root directory with the following content,
-to customize the server:
+To overwrite the default (generated) config property values, create a `server.config.js` file in the root directory with the following content:
 
 ```typescript
 module.exports = {
@@ -58,10 +58,29 @@ module.exports = {
     tokenMaxAge: 3600,
 }
 ```
+The above example shows the (generated) property values if non are specified explicit.
 
+#### Setup
+If no option is specified, all options are by default `true` as long no
+other option is explicit specified.
+In the following shell snippet all options are manually set to `true`.
+```shell
+auth-server setup \
+  --keyPair=true \
+  --database=true \
+  --databaseSeeder=true \
+  --documentation=true
+```
 
-## Library
-### Controllers & Middlewares
+#### Start
+
+To start the authentication- & authorization-server simply execute the command: 
+
+```
+auth-server start
+```
+
+### Extension
 Controllers & middlewares can be configured like described for an existing express application.
 
 ```typescript
@@ -114,8 +133,6 @@ app.use(errorMiddleware);
 
 app.listen(3010);
 ```
-
-### Domains
 
 To register the domain entities for a typeorm connection, follow the following steps.
 

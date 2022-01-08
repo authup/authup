@@ -9,7 +9,7 @@ import path from 'path';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { buildConnectionOptions } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
-import { useAuthServerConfig } from '../../config';
+import { useConfig } from '../../config';
 import {
     buildDatabaseConnectionOptions,
     createDatabaseDefaultConnectionOptions,
@@ -37,7 +37,7 @@ export class UpgradeCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: UpgradeArguments) {
-        const config = useAuthServerConfig(args.root);
+        const config = useConfig(args.root);
         const connectionOptions = await buildDatabaseConnectionOptions(config);
 
         const connection = await createConnection(connectionOptions);

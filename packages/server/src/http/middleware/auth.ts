@@ -71,7 +71,7 @@ export function forceLoggedIn(req: ExpressRequest, res: ExpressResponse, next: E
         typeof req.userId === 'undefined' &&
         typeof req.clientId === 'undefined'
     ) {
-        throw new UnauthorizedError('You are not authenticated.');
+        throw new UnauthorizedError();
     }
 
     next();
@@ -104,7 +104,9 @@ export async function authenticateWithAuthorizationHeader(
                 return;
             }
 
-            const { sub: userId } = tokenPayload;
+            const { sub: userId, subKind } = tokenPayload;
+
+            // todo: handle client ;)
 
             if (typeof userId === 'undefined' || typeof tokenPayload.remoteAddress !== 'string') {
                 return;

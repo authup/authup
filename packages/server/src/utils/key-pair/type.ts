@@ -11,6 +11,6 @@ export type SecurityKeyPair = {
 };
 
 export type SecurityKeyPairOptions = {
-    directory?: string,
-    alias?: string
+    directory: string,
+    alias: string
 };

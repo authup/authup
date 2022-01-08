@@ -8,20 +8,20 @@
 import path from 'path';
 import fs from 'fs';
 import { Config } from './type';
-import { extendAuthServerConfig } from './utils';
+import { buildConfig } from './utils';
 
-export function useAuthServerConfig(directoryPath?: string) : Config {
+export function useConfig(directoryPath?: string) : Config {
     directoryPath ??= process.cwd();
 
     const filePath : string = path.join(directoryPath, 'server.config.js');
 
     if (!fs.existsSync(filePath)) {
-        return extendAuthServerConfig({}, directoryPath);
+        return buildConfig({}, directoryPath);
     }
 
     // todo: validation required
     // eslint-disable-next-line global-require,import/no-dynamic-require,@typescript-eslint/no-var-requires
     const config : Config = require(filePath);
 
-    return extendAuthServerConfig(config, directoryPath);
+    return buildConfig(config, directoryPath);
 }

@@ -10,7 +10,7 @@ import {
 } from 'typeorm-extension';
 import { ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { DatabaseRootSeeder } from '../../../src/database/seeds';
-import { Config, useAuthServerConfig } from '../../../src/config';
+import { Config, useConfig } from '../../../src/config';
 import { buildDatabaseConnectionOptions } from '../../../src/database/utils';
 
 async function createConnectionOptions(config: Config) {
@@ -26,7 +26,7 @@ async function createConnectionOptions(config: Config) {
 }
 
 export async function useTestDatabase() {
-    const config = useAuthServerConfig();
+    const config = useConfig();
 
     const connectionOptions = await createConnectionOptions(config);
     await createDatabase({ ifNotExist: true }, connectionOptions);
@@ -42,7 +42,7 @@ export async function useTestDatabase() {
 }
 
 export async function dropTestDatabase() {
-    const config = useAuthServerConfig();
+    const config = useConfig();
     const connectionOptions = await createConnectionOptions(config);
 
     await getConnection()

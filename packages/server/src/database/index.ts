@@ -6,3 +6,4 @@
  */
 
 export * from './seeds';
+export * from './utils';

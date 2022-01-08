@@ -8,12 +8,14 @@
 import { AccessTokenPayload, Oauth2TokenResponse, PermissionItem } from '@typescript-auth/core';
 import { User } from '../user';
 import { Client } from '../client';
-import { TokenGrant } from './constants';
+import { TokenGrant, TokenSubKind } from './constants';
 
 export {
     AccessTokenPayload,
     Oauth2TokenResponse,
 };
+
+export type TokenSubKindType = `${TokenSubKind}`;
 
 export type TokenPayload = Partial<AccessTokenPayload> & {
     /**
@@ -24,7 +26,7 @@ export type TokenPayload = Partial<AccessTokenPayload> & {
     /**
      * iss type
      */
-    type: 'user' | 'client',
+    subKind: TokenSubKindType,
 
     /**
      * Issued at (readonly)

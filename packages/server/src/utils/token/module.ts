@@ -11,7 +11,7 @@ import { SecurityKeyPair, SecurityKeyPairOptions, useSecurityKeyPair } from '../
 export async function createToken<T extends string | object | Buffer | Record<string, any>>(
     payload: T,
     maxAge?: number,
-    keyPairOptions?: SecurityKeyPairOptions,
+    keyPairOptions?: Partial<SecurityKeyPairOptions>,
 ) : Promise<string> {
     const keyPair : SecurityKeyPair = await useSecurityKeyPair(keyPairOptions);
 
@@ -23,7 +23,7 @@ export async function createToken<T extends string | object | Buffer | Record<st
 
 export async function verifyToken<T extends string | object | Buffer | Record<string, any>>(
     token: string,
-    keyPairOptions?: SecurityKeyPairOptions,
+    keyPairOptions?: Partial<SecurityKeyPairOptions>,
 ) : Promise<T> {
     const keyPair : SecurityKeyPair = await useSecurityKeyPair(keyPairOptions);
 

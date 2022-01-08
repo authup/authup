@@ -9,7 +9,7 @@
 import { getCustomRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import {
-    Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload,
+    Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../utils';
@@ -48,9 +48,9 @@ export async function createTokenRouteHandler(
             }
 
             const tokenPayload: TokenPayload = {
-                type: 'client',
                 iss: context.selfUrl,
                 sub: client.id,
+                subKind: TokenSubKind.CLIENT,
                 remoteAddress: req.ip,
             };
 
@@ -81,9 +81,9 @@ export async function createTokenRouteHandler(
             }
 
             const tokenPayload: TokenPayload = {
-                type: 'user',
                 iss: context.selfUrl,
                 sub: user.id,
+                subKind: TokenSubKind.USER,
                 remoteAddress: req.ip,
             };
 
