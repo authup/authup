@@ -25,7 +25,7 @@ export async function verifyUserForMiddlewareRequest(
     options: {
         writableDirectoryPath: string
     },
-) : Promise<User | undefined> {
+) : Promise<User> {
     const condition : Partial<User> = {};
 
     switch (header.type) {

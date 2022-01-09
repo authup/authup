@@ -15,12 +15,12 @@ import { ExpressValidationError } from '../../../error/validation';
 export async function createUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     await check('user_id')
         .exists()
-        .isInt()
+        .isUUID()
         .run(req);
 
     await check('role_id')
         .exists()
-        .isInt()
+        .isUUID()
         .run(req);
 
     if (!req.ability.hasPermission(PermissionID.USER_ROLE_ADD)) {

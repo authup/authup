@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
-import { ForbiddenError } from '@typescript-error/http';
-import { matchedData, validationResult } from 'express-validator';
-import { PermissionID, isPermittedForResourceRealm } from '@typescript-auth/domains';
+import { getCustomRepository, getRepository } from 'typeorm';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
-import { ExpressValidationError } from '../../../error/validation';
 import { UserRepository } from '../../../../domains';
 import { hashPassword } from '../../../../utils';
 
@@ -20,17 +18,17 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
-    await runUserValidation(req, 'create');
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: true });
+    const data = await runUserValidation(req, 'create');
 
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
     const user = await userRepository.create(data);
+
+    const realmRepository = getRepository(Realm);
+    const realm = await realmRepository.findOne(data.realm_id);
+
+    if (typeof realm === 'undefined') {
+        throw new NotFoundError('The referenced realm could not be found.');
+    }
 
     if (!isPermittedForResourceRealm(req.realmId, user.realm_id)) {
         throw new ForbiddenError(`You are not allowed to add users to the realm ${user.realm_id}`);

@@ -27,7 +27,7 @@ module.exports = {
     ],
     coverageDirectory: 'writable/coverage',
     collectCoverageFrom: [
-        'src/app/**/*.{ts,tsx,js,jsx}',
+        'src/http/controllers/**/*.{ts,tsx,js,jsx}',
         '!src/**/*.d.ts',
     ],
     coverageThreshold: {

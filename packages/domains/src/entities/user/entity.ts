@@ -18,8 +18,8 @@ import { Realm } from '../realm';
 
 @Entity({ name: 'auth_users' })
 export class User {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
     @Column({ type: 'varchar', length: 128 })
     @Index({ unique: true })
@@ -50,6 +50,35 @@ export class User {
     // ------------------------------------------------------------------
 
     @Column({
+        type: 'varchar', length: 256, nullable: true, default: true,
+    })
+        reset_hash: string | null;
+
+    @Column({
+        type: 'datetime', nullable: true, default: null,
+    })
+        reset_at: Date | null;
+
+    @Column({
+        type: 'datetime', nullable: true, default: null,
+    })
+        reset_expires: Date | null;
+
+    // ------------------------------------------------------------------
+
+    @Column({
+        type: 'varchar', length: 256, nullable: true, default: true,
+    })
+        status: string | null;
+
+    @Column({
+        type: 'varchar', length: 256, nullable: true, default: true,
+    })
+        status_message: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Column({
         type: 'boolean', default: false,
     })
         active: boolean;
@@ -57,7 +86,7 @@ export class User {
     @Column({
         type: 'varchar', length: 256, nullable: true, default: true,
     })
-        activate_hash: string;
+        activate_hash: string | null;
 
     // ------------------------------------------------------------------
 
@@ -81,7 +110,10 @@ export class User {
     @BeforeInsert()
     @BeforeUpdate()
     setDisplayName() {
-        if (typeof this.display_name !== 'string') {
+        if (
+            typeof this.display_name !== 'string' ||
+            this.display_name.length === 0
+        ) {
             this.display_name = this.name;
         }
     }

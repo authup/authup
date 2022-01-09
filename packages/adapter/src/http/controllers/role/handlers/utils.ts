@@ -5,20 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check } from 'express-validator';
+import { Role } from '@typescript-auth/domains';
+import { check, matchedData, validationResult } from 'express-validator';
+import { ExpressValidationError } from '../../../error/validation';
 import { ExpressRequest } from '../../../type';
 
-export async function runRealmValidation(req: ExpressRequest, operation: 'create' | 'update') {
-    if (operation === 'create') {
-        await check('id')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 36 })
-            .matches(/^[a-z0-9-_]*$/)
-            .run(req);
-    }
-
+export async function runRoleValidation(
+    req: ExpressRequest,
+    operation: 'create' | 'update',
+) : Promise<Partial<Role>> {
     const nameChain = await check('name')
         .exists()
         .notEmpty()
@@ -36,4 +31,11 @@ export async function runRealmValidation(req: ExpressRequest, operation: 'create
         .isLength({ min: 5, max: 4096 })
         .optional({ nullable: true })
         .run(req);
+
+    const validation = validationResult(req);
+    if (!validation.isEmpty()) {
+        throw new ExpressValidationError(validation);
+    }
+
+    return matchedData(req, { includeOptionals: true });
 }

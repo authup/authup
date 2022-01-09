@@ -21,14 +21,14 @@ import { Client } from '../client';
 @Entity({ name: 'auth_client_roles' })
 @Index(['role_id', 'client_id'], { unique: true })
 export class ClientRole {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn()
+        id: string;
 
     @Column()
         client_id: string;
 
-    @Column({ type: 'int', unsigned: true })
-        role_id: number;
+    @Column()
+        role_id: string;
 
     @CreateDateColumn()
         created_at: string;

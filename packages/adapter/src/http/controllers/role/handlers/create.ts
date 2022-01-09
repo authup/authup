@@ -7,30 +7,18 @@
 
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
-import { check, matchedData, validationResult } from 'express-validator';
 import {
     PermissionID, Role,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
+import { runRoleValidation } from './utils';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
         throw new ForbiddenError();
     }
 
-    await check('name')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 128 })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
+    const data = await runRoleValidation(req, 'create');
 
     const roleRepository = getRepository(Role);
     const role = roleRepository.create(data);

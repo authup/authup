@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, User } from '@typescript-auth/domains';
+import { Client, MASTER_REALM_ID } from '@typescript-auth/domains';
 import { expectPropertiesEqualToSrc } from '../utils/properties';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
-describe('src/controllers/auth/user', () => {
+describe('src/controllers/auth/client', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -21,26 +21,25 @@ describe('src/controllers/auth/user', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<User> = {
-        name: 'Test',
-        name_locked: false,
+    const details : Partial<Client> = {
+        name: 'foo',
         realm_id: MASTER_REALM_ID,
     };
 
     it('should get collection', async () => {
         const response = await superTest
-            .get('/users')
+            .get('/clients')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(1);
+        expect(response.body.data.length).toEqual(0);
     });
 
     it('should create, read, update, delete resource', async () => {
         let response = await superTest
-            .post('/users')
+            .post('/clients')
             .send(details)
             .auth('admin', 'start123');
 
@@ -52,7 +51,7 @@ describe('src/controllers/auth/user', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .get(`/users/${response.body.id}`)
+            .get(`/clients/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -60,10 +59,11 @@ describe('src/controllers/auth/user', () => {
 
         // ---------------------------------------------------------
 
-        details.name = 'TestA';
+        details.name = 'baz';
+        details.description = 'bar';
 
         response = await superTest
-            .post(`/users/${response.body.id}`)
+            .post(`/clients/${response.body.id}`)
             .send(details)
             .auth('admin', 'start123');
 
@@ -75,7 +75,7 @@ describe('src/controllers/auth/user', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .delete(`/users/${response.body.id}`)
+            .delete(`/clients/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);

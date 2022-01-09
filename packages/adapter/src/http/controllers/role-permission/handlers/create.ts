@@ -21,11 +21,12 @@ import { ExpressValidationError } from '../../../error/validation';
 export async function createRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     await check('role_id')
         .exists()
-        .isInt()
+        .isUUID()
         .run(req);
 
     await check('permission_id')
         .exists()
+        .notEmpty()
         .isString()
         .run(req);
 

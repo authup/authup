@@ -59,14 +59,14 @@ export class OAuth2ProviderAccount {
 
     // -----------------------------------------------
 
-    @Column({ type: 'int', unsigned: true })
-        user_id: number;
+    @Column()
+        user_id: string;
 
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
         user: User;
 
-    @Column({ type: 'uuid' })
+    @Column()
         provider_id: string;
 
     @ManyToOne(() => OAuth2Provider, { onDelete: 'CASCADE' })

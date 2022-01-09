@@ -8,7 +8,7 @@
 import {
     Express, NextFunction, Request, Response,
 } from 'express';
-import { Client, User } from '@typescript-auth/domains';
+import { Client, Realm, User } from '@typescript-auth/domains';
 import { AbilityManager } from '@typescript-auth/core';
 
 export interface ExpressAppInterface extends Express {
@@ -21,7 +21,7 @@ export interface ExpressRequest extends Request {
 
     clientId?: typeof Client.prototype.id,
 
-    realmId?: string,
+    realmId?: typeof Realm.prototype.id,
 
     token?: string,
 

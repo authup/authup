@@ -12,7 +12,7 @@ import { Role, RolePermission } from '@typescript-auth/domains';
 @EntityRepository(Role)
 export class RoleRepository extends Repository<Role> {
     async getOwnedPermissions(
-        roleId: number | number[],
+        roleId: typeof Role.prototype.id | typeof Role.prototype.id[],
     ) : Promise<PermissionItem<unknown>[]> {
         if (!Array.isArray(roleId)) {
             roleId = [roleId];

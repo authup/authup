@@ -20,8 +20,8 @@ import { Client } from '../client';
 @Entity({ name: 'auth_client_permissions' })
 @Index(['permission_id', 'client_id'], { unique: true })
 export class ClientPermission {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
     @Column({ type: 'int', default: 999 })
         power: number;

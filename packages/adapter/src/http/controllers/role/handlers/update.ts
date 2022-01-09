@@ -1,9 +1,8 @@
 import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { check, matchedData, validationResult } from 'express-validator';
 import { PermissionID, Role } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
+import { runRoleValidation } from './utils';
 
 export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -12,19 +11,7 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
-    await check('name')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 30 })
-        .optional()
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: true });
+    const data = await runRoleValidation(req, 'update');
     if (!data) {
         return res.respondAccepted();
     }

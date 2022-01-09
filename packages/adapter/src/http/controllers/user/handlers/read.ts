@@ -64,7 +64,7 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     if (
         req.ability.hasPermission(PermissionID.USER_EDIT) ||
-        parseInt(id, 10) === req.userId
+        id === req.userId
     ) {
         applyFields(query, fields, {
             defaultAlias: 'user',

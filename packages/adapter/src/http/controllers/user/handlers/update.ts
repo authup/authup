@@ -6,23 +6,15 @@
  */
 
 import { getCustomRepository, getRepository } from 'typeorm';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
-import { matchedData, validationResult } from 'express-validator';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
-import { ExpressValidationError } from '../../../error/validation';
 import { UserRepository } from '../../../../domains';
 import { hashPassword } from '../../../../utils';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id: idStr } = req.params;
-
-    const id : number = parseInt(idStr, 10);
-
-    if (Number.isNaN(id)) {
-        throw new BadRequestError('The user identifier is not valid.');
-    }
+    const { id } = req.params;
 
     if (
         !req.ability.hasPermission(PermissionID.USER_EDIT) &&
@@ -31,14 +23,7 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError('You are not authorized to modify a user.');
     }
 
-    await runUserValidation(req, 'update');
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
+    const data = await runUserValidation(req, 'update');
     if (!data) {
         return res.respondAccepted();
     }
@@ -64,13 +49,22 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         }
     }
 
+    if (
+        typeof data.name === 'string' &&
+        data.name !== user.name
+    ) {
+        if (typeof data.name_locked !== 'undefined') {
+            user.name_locked = data.name_locked;
+        }
+
+        if (user.name_locked) {
+            delete data.name;
+        }
+    }
+
     user = userRepository.merge(user, data);
 
     await userRepository.save(user);
-
-    if (typeof user.realm_id !== 'undefined') {
-        user.realm = await getRepository(Realm).findOne(user.realm_id);
-    }
 
     return res.respond({
         data: user,

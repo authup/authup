@@ -9,7 +9,7 @@ import { EntityRepository, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
 import {
-    Client, ClientPermission, ClientRole,
+    Client, ClientPermission, ClientRole, Role,
 } from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../utils';
@@ -18,7 +18,9 @@ import { verifyPassword } from '../../utils';
 export class ClientRepository extends Repository<Client> {
     // ------------------------------------------------------------------
 
-    async getOwnedPermissions(clientId: string) : Promise<PermissionItem<unknown>[]> {
+    async getOwnedPermissions(
+        clientId: typeof Client.prototype.id,
+    ) : Promise<PermissionItem<unknown>[]> {
         let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(clientId);
 
         const roles = await this.manager
@@ -27,7 +29,7 @@ export class ClientRepository extends Repository<Client> {
                 client_id: clientId,
             });
 
-        const roleIds: number[] = roles.map((userRole) => userRole.role_id);
+        const roleIds: typeof Role.prototype.id[] = roles.map((userRole) => userRole.role_id);
 
         if (roleIds.length === 0) {
             return permissions;

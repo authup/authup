@@ -20,8 +20,8 @@ import { Role } from '../role';
 @Entity({ name: 'auth_role_permissions' })
 @Index(['permission_id', 'role_id'], { unique: true })
 export class RolePermission {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
     @Column({ type: 'int', default: 999 })
         power: number;
@@ -45,14 +45,14 @@ export class RolePermission {
 
     // ------------------------------------------------------------------
 
-    @Column({ unsigned: true })
-        role_id: number;
+    @Column()
+        role_id: string;
 
     @ManyToOne(() => Role, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
         role: Role;
 
-    @Column({ type: 'varchar' })
+    @Column()
         permission_id: string;
 
     @ManyToOne(() => Permission, { onDelete: 'CASCADE' })

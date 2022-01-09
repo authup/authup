@@ -16,14 +16,17 @@ import { verifyPassword } from '../../utils';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-    async syncRoles(userId: number, roleIds: typeof Role.prototype.id[]) {
+    async syncRoles(
+        userId: typeof User.prototype.id,
+        roleIds: typeof Role.prototype.id[],
+    ) {
         const userRoleRepository = this.manager.getRepository(UserRole);
 
         const userRoles = await userRoleRepository.createQueryBuilder('userRole')
             .where('userRole.user_id = :userId', { userId })
             .getMany();
 
-        const userRoleIdsToDrop : number[] = userRoles
+        const userRoleIdsToDrop : typeof UserRole.prototype.id[] = userRoles
             .filter((userRole: UserRole) => roleIds.indexOf(userRole.role_id) === -1)
             .map((userRole: UserRole) => userRole.id);
 
@@ -44,7 +47,9 @@ export class UserRepository extends Repository<User> {
 
     // ------------------------------------------------------------------
 
-    async getOwnedPermissions(userId: number) : Promise<PermissionItem<unknown>[]> {
+    async getOwnedPermissions(
+        userId: typeof User.prototype.id,
+    ) : Promise<PermissionItem<unknown>[]> {
         let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
@@ -53,7 +58,7 @@ export class UserRepository extends Repository<User> {
                 user_id: userId,
             });
 
-        const roleIds: number[] = roles.map((userRole) => userRole.role_id);
+        const roleIds: typeof Role.prototype.id[] = roles.map((userRole) => userRole.role_id);
 
         if (roleIds.length === 0) {
             return permissions;
@@ -65,7 +70,7 @@ export class UserRepository extends Repository<User> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(userId: number) : Promise<PermissionItem<unknown>[]> {
+    async getSelfOwnedPermissions(userId: string) : Promise<PermissionItem<unknown>[]> {
         const repository = this.manager.getRepository(UserPermission);
 
         const entities = await repository.find({

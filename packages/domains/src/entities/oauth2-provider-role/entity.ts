@@ -36,14 +36,14 @@ export class OAuth2ProviderRole {
 
     // -----------------------------------------------
 
-    @Column({ type: 'int', unsigned: true })
-        role_id: number;
+    @Column()
+        role_id: string;
 
     @ManyToOne(() => Role, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
         role: Role;
 
-    @Column({ type: 'uuid' })
+    @Column()
         provider_id: string;
 
     @ManyToOne(() => OAuth2Provider, { onDelete: 'CASCADE' })

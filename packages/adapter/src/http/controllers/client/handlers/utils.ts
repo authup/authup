@@ -12,14 +12,16 @@ import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../utils';
 
 export async function runClientValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<Partial<Client>> {
-    const secretChain = check('secret')
+    await check('secret')
         .exists()
         .notEmpty()
-        .isLength({ min: 3, max: 256 });
+        .isLength({ min: 3, max: 256 })
+        .optional()
+        .run(req);
 
-    if (operation === 'update') secretChain.optional({ nullable: true });
-
-    await secretChain
+    await check('active')
+        .isBoolean()
+        .optional()
         .run(req);
 
     await check('name')
@@ -35,7 +37,8 @@ export async function runClientValidation(req: ExpressRequest, operation: 'creat
         .run(req);
 
     await check('user_id')
-        .isInt()
+        .exists()
+        .isUUID()
         .optional({ nullable: true })
         .run(req);
 

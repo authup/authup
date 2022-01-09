@@ -20,8 +20,8 @@ import { User } from '../user';
 @Entity({ name: 'auth_user_permissions' })
 @Index(['permission_id', 'user_id'], { unique: true })
 export class UserPermission {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
     @Column({ type: 'int', default: 999 })
         power: number;
@@ -45,8 +45,8 @@ export class UserPermission {
 
     // ------------------------------------------------------------------
 
-    @Column({ unsigned: true })
-        user_id: number;
+    @Column()
+        user_id: string;
 
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })

@@ -31,6 +31,9 @@ export class Client {
     @Column({ type: 'text', nullable: true })
         description: string;
 
+    @Column({ type: 'boolean', default: true })
+        active: boolean;
+
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
@@ -41,11 +44,11 @@ export class Client {
 
     // ------------------------------------------------------------------
 
-    @Column({ type: 'int', nullable: true })
-        user_id: number | null;
+    @Column({ nullable: true, default: null })
+        user_id: string | null;
 
     @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'realm_id' })
+    @JoinColumn({ name: 'user_id' })
         user: User | null;
 
     @Column({ default: MASTER_REALM_ID })

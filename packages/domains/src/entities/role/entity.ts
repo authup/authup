@@ -15,8 +15,8 @@ import {
 
 @Entity({ name: 'auth_roles' })
 export class Role {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
     @Column({ type: 'varchar', length: 30 })
     @Index({ unique: true })

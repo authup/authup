@@ -7,6 +7,13 @@
 This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
 should therefore only be used for backend- applications & microservices.
 
+---
+**Important NOTE**
+
+The `Readme.md` is under construction ☂ at the moment. So please stay patient, till it is available ⭐.
+
+---
+
 **Table of Contents**
 
 - [Installation](#installation)

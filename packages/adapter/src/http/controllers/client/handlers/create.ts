@@ -29,8 +29,9 @@ export async function createClientRouteHandler(req: ExpressRequest, res: Express
     const repository = getRepository(Client);
     const entity = repository.create(data);
 
-    const secret = createNanoID(undefined, 36);
+    const secret = entity.secret || createNanoID(undefined, 36);
     entity.secret = await hashPassword(secret);
+    entity.realm_id = req.realmId;
 
     await repository.save(entity);
 

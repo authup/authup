@@ -12,12 +12,12 @@ export async function runOauth2ProviderRoleValidation(req: ExpressRequest, opera
     if (operation === 'create') {
         await check('provider_id')
             .exists()
-            .isString()
+            .isUUID()
             .run(req);
 
         await check('role_id')
             .exists()
-            .isInt()
+            .isUUID()
             .run(req);
     }
 

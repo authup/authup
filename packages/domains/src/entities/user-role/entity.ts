@@ -21,14 +21,14 @@ import { User } from '../user';
 @Entity({ name: 'auth_user_roles' })
 @Index(['role_id', 'user_id'], { unique: true })
 export class UserRole {
-    @PrimaryGeneratedColumn({ unsigned: true })
-        id: number;
+    @PrimaryGeneratedColumn('uuid')
+        id: string;
 
-    @Column({ type: 'int', unsigned: true })
-        user_id: number;
+    @Column()
+        user_id: string;
 
-    @Column({ type: 'int', unsigned: true })
-        role_id: number;
+    @Column()
+        role_id: string;
 
     @CreateDateColumn()
         created_at: string;
