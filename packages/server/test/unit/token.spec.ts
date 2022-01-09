@@ -33,6 +33,18 @@ describe('src/controllers/auth/role', () => {
         expect(response.body.expires_in).toBeDefined();
     });
 
+    it('should not grant token', async () => {
+        const response = await superTest
+            .post('/token')
+            .send({
+                username: 'admin',
+                password: 'start1234',
+            });
+
+        expect(response.status).toEqual(400);
+        expect(response.body.code).toEqual('CREDENTIALS_INVALID');
+    });
+
     it('should revoke token', async () => {
         const response = await superTest
             .delete('/token');

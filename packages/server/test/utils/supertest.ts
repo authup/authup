@@ -18,6 +18,7 @@ export function useSuperTest() : SuperTest<Test> {
         swaggerDocumentation: false,
         selfUrl: config.selfUrl,
         webUrl: config.webUrl,
+        tokenMaxAge: 3600,
     });
     return supertest(expressApp);
 }

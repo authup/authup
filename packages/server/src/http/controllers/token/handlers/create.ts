@@ -16,6 +16,7 @@ import { createToken } from '../../../../utils';
 import { UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
 import { ClientRepository } from '../../../../domains/client';
+import { CredentialsInvalidError } from '../../../error/credentials-invalid';
 
 function determineGrantType(req: ExpressRequest) : TokenGrantType {
     const { grant_type: grantType } = req.body;
@@ -44,7 +45,7 @@ export async function createTokenRouteHandler(
             const client = await clientRepository.verifyCredentials(clientId, clientSecret);
 
             if (typeof client === 'undefined') {
-                throw new BadRequestError('The credentials are not valid.');
+                throw new CredentialsInvalidError();
             }
 
             const tokenPayload: TokenPayload = {
@@ -77,7 +78,7 @@ export async function createTokenRouteHandler(
             const user = await userRepository.verifyCredentials(username, password);
 
             if (typeof user === 'undefined') {
-                throw new BadRequestError('The credentials are not valid.');
+                throw new CredentialsInvalidError();
             }
 
             const tokenPayload: TokenPayload = {

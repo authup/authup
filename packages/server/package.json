@@ -46,7 +46,7 @@
         "@trapi/swagger": "^0.2.13",
         "@typescript-auth/core": "^1.0.5",
         "@typescript-auth/domains": "^0.0.0",
-        "@typescript-error/http": "^1.0.3",
+        "@typescript-error/http": "^1.1.2",
         "bcrypt": "^5.0.1",
         "body-parser": "^1.19.1",
         "change-case": "^4.1.2",
