@@ -22,7 +22,7 @@ export class Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 256, select: false })
+    @Column({ type: 'varchar', length: 512, select: false })
         secret: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })

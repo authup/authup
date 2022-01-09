@@ -10,13 +10,11 @@ import {
     Column,
     CreateDateColumn,
     Entity, Index, JoinColumn,
-    ManyToOne, OneToMany,
+    ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { OAuth2ProviderAccount } from '../oauth2-provider-account';
 import { Realm } from '../realm';
-import { UserRole } from '../user-role';
 
 @Entity({ name: 'auth_users' })
 export class User {
@@ -27,11 +25,20 @@ export class User {
     @Index({ unique: true })
         name: string;
 
+    @Column({ type: 'boolean', default: true })
+        name_locked: boolean;
+
+    @Column({ type: 'varchar', length: 128, nullable: true })
+        first_name: string;
+
+    @Column({ type: 'varchar', length: 128, nullable: true })
+        last_name: string;
+
     @Column({ type: 'varchar', length: 128 })
         display_name: string;
 
     @Column({
-        type: 'varchar', length: 255, default: null, nullable: true, select: false,
+        type: 'varchar', length: 256, default: null, nullable: true, select: false,
     })
         email: string;
 
@@ -39,6 +46,18 @@ export class User {
         type: 'varchar', length: 512, default: null, nullable: true, select: false,
     })
         password: string;
+
+    // ------------------------------------------------------------------
+
+    @Column({
+        type: 'boolean', default: false,
+    })
+        active: boolean;
+
+    @Column({
+        type: 'varchar', length: 256, nullable: true, default: true,
+    })
+        activate_hash: string;
 
     // ------------------------------------------------------------------
 
@@ -50,7 +69,7 @@ export class User {
 
     // ------------------------------------------------------------------
 
-    @Column({ type: 'varchar' })
+    @Column()
         realm_id: string;
 
     @ManyToOne(() => Realm, { onDelete: 'CASCADE' })

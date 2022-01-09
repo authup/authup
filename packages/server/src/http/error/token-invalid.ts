@@ -8,5 +8,9 @@
 import { BadRequestError } from '@typescript-error/http';
 
 export class TokenInvalidError extends BadRequestError {
-
+    constructor() {
+        super({
+            code: 'TOKEN_INVALID',
+        });
+    }
 }

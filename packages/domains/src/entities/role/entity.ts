@@ -9,12 +9,9 @@ import {
     Column,
     CreateDateColumn,
     Entity, Index,
-    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { RolePermission } from '../role-permission';
-import { UserRole } from '../user-role';
 
 @Entity({ name: 'auth_roles' })
 export class Role {
@@ -24,6 +21,9 @@ export class Role {
     @Column({ type: 'varchar', length: 30 })
     @Index({ unique: true })
         name: string;
+
+    @Column({ type: 'text', nullable: true })
+        description: string;
 
     @CreateDateColumn()
         created_at: string;
