@@ -1,7 +1,7 @@
 {
-    "name": "@typescript-auth/server",
-    "version": "1.0.5",
-    "description": "Auth server in standalone mode or as library extension.",
+    "name": "@typescript-auth/adapter",
+    "version": "0.0.0",
+    "description": "This package can be used as simple server in standalone mode or as an extension.",
     "main": "dist/index.js",
     "scripts": {
         "cli": "ts-node src/cli/index.ts",
