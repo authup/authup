@@ -8,24 +8,39 @@
 import { Connection, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
-    MASTER_REALM_ID, Permission, PermissionID, Realm, RolePermission, UserRole,
+    MASTER_REALM_ID,
+    Permission, PermissionID, Realm, Robot, RolePermission, User, UserRole, createNanoID,
 } from '@typescript-auth/domains';
 import { RoleRepository, UserRepository } from '../../domains';
 import { hashPassword } from '../../utils';
 
 type DatabaseRootSeederOptions = {
-    adminUsername: string,
-    adminPassword: string
+    user: {
+        name: string,
+        password: string,
+        resetPassword?: boolean
+    },
+    robot?: {
+        resetSecret?: boolean
+    }
+};
+
+type DatabaseRootSeederRunResponse = {
+    robot?: Partial<Robot>,
+    user?: Partial<User>
 };
 
 class DatabaseRootSeeder implements Seeder {
     protected options: DatabaseRootSeederOptions;
 
     constructor(options: DatabaseRootSeederOptions) {
+        options.robot ??= {};
         this.options = options;
     }
 
     public async run(connection: Connection) : Promise<any> {
+        const response : DatabaseRootSeederRunResponse = {};
+
         /**
          * Create default realm
          */
@@ -65,20 +80,23 @@ class DatabaseRootSeeder implements Seeder {
          */
         const userRepository = connection.getCustomRepository(UserRepository);
         let user = await userRepository.findOne({
-            name: this.options.adminUsername,
+            name: this.options.user.name,
         });
 
         if (typeof user === 'undefined') {
             user = userRepository.create({
-                name: this.options.adminUsername,
-                password: await hashPassword(this.options.adminPassword),
+                name: this.options.user.name,
+                password: await hashPassword(this.options.user.password),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
             });
+
+            response.user = user;
+        } else if (this.options.user.resetPassword) {
+            user.password = await hashPassword(this.options.user.password);
         }
 
         await userRepository.save(user);
-
         // -------------------------------------------------
 
         /**
@@ -150,6 +168,41 @@ class DatabaseRootSeeder implements Seeder {
         }
 
         await rolePermissionRepository.save(rolePermissions);
+
+        // -------------------------------------------------
+
+        /**
+         * Create default robot account
+         */
+        const robotRepository = connection.getRepository(Robot);
+        let robot = await robotRepository.findOne({
+            name: 'system',
+        });
+
+        if (typeof robot === 'undefined') {
+            robot = robotRepository.create({
+                name: 'system',
+                realm_id: MASTER_REALM_ID,
+            });
+
+            const secret = createNanoID(undefined, 36);
+            robot.secret = await hashPassword(secret);
+
+            await robotRepository.save(robot);
+
+            robot.secret = secret;
+            response.robot = robot;
+        } else if (this.options.robot.resetSecret) {
+            const secret = createNanoID(undefined, 36);
+            robot.secret = await hashPassword(secret);
+
+            await robotRepository.save(robot);
+
+            robot.secret = secret;
+            response.robot = robot;
+        }
+
+        return response;
     }
 }
 

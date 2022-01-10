@@ -69,9 +69,9 @@ export class RobotRepository extends Repository<Robot> {
      * @param secret
      */
     async verifyCredentials(id: string, secret: string) : Promise<Robot | undefined> {
-        const entity = await this.createQueryBuilder('client')
-            .addSelect('client.secret')
-            .where('client.id = :id', { id })
+        const entity = await this.createQueryBuilder('robot')
+            .addSelect('robot.secret')
+            .where('robot.id = :id', { id })
             .getOne();
 
         if (

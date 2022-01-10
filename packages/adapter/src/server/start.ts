@@ -10,10 +10,10 @@ import { createConnection } from 'typeorm';
 import * as ora from 'ora';
 import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
-import { AuthServerStartContext } from './type';
-import { buildDatabaseConnectionOptions } from '../database/utils';
+import { ServerStartContext } from './type';
+import { buildDatabaseConnectionOptions } from '../database';
 
-export async function startAuthServer(context: AuthServerStartContext) {
+export async function startServer(context: ServerStartContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });

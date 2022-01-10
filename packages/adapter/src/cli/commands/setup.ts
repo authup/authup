@@ -6,16 +6,8 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { createDatabase } from 'typeorm-extension';
-import { createConnection } from 'typeorm';
-import path from 'path';
-import { generateSwaggerDocumentation } from '../../http/swagger';
 import { useConfig } from '../../config';
-import {
-    buildDatabaseConnectionOptions,
-} from '../../database/utils';
-import { DatabaseRootSeeder } from '../../database/seeds';
-import { createSecurityKeyPair } from '../../utils';
+import { setupServer } from '../../server/setup';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -66,66 +58,15 @@ export class SetupCommand implements CommandModule {
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
         const config = useConfig(args.root);
-        const writableDirectoryPath = path.join(config.rootPath, config.writableDirectory);
 
-        if (
-            !args.keyPair &&
-            !args.database &&
-            !args.databaseSeeder &&
-            !args.documentation
-        ) {
-            // eslint-disable-next-line no-multi-assign
-            args.keyPair = args.database = args.databaseSeeder = args.documentation = true;
-        }
-
-        /**
-         * Setup auth module
-         */
-        if (args.keyPair) {
-            await createSecurityKeyPair({
-                directory: writableDirectoryPath,
+        try {
+            await setupServer({
+                config,
+                ...args,
             });
-        }
-
-        if (args.documentation) {
-            await generateSwaggerDocumentation({
-                rootDirectoryPath: config.rootPath,
-                writableDirectory: config.writableDirectory,
-                selfUrl: config.selfUrl,
-            });
-        }
-
-        if (args.database || args.databaseSeeder) {
-            /**
-             * Setup database with schema & seeder
-             */
-            const connectionOptions = await buildDatabaseConnectionOptions(config);
-
-            if (args.database) {
-                await createDatabase({ ifNotExist: true }, connectionOptions);
-            }
-
-            const connection = await createConnection(connectionOptions);
-            try {
-                await connection.synchronize();
-
-                if (args.databaseSeeder) {
-                    const seeder = new DatabaseRootSeeder({
-                        adminPassword: config.adminPassword,
-                        adminUsername: config.adminUsername,
-                    });
-
-                    await seeder.run(connection);
-                }
-            } catch (e) {
-                // eslint-disable-next-line no-console
-                console.log(e);
-                await connection.close();
-                process.exit(1);
-                throw e;
-            } finally {
-                await connection.close();
-            }
+        } catch (e) {
+            console.log(e);
+            process.exit(1);
         }
 
         process.exit(0);

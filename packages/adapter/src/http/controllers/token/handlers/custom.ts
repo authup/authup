@@ -6,8 +6,10 @@
  */
 
 import { getCustomRepository } from 'typeorm';
-import { TokenPayload, TokenVerificationPayload } from '@typescript-auth/domains';
-import { BadRequestError, UnauthorizedError } from '@typescript-error/http';
+import {
+    MASTER_REALM_ID, PermissionID, TokenPayload, TokenVerificationPayload,
+} from '@typescript-auth/domains';
+import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { verifyToken } from '../../../../utils';
 import { TokenRouteVerifyContext } from './type';
@@ -20,6 +22,17 @@ export async function verifyTokenRouteHandler(
     context: TokenRouteVerifyContext,
 ) : Promise<any> {
     const { id } = req.params;
+
+    // todo: this should be handled by a permission :)
+    if (
+        req.realmId !== MASTER_REALM_ID ||
+        !(
+            req.ability.hasPermission(PermissionID.USER_EDIT) ||
+            req.robotId
+        )
+    ) {
+        throw new ForbiddenError();
+    }
 
     let tokenPayload : TokenPayload;
 

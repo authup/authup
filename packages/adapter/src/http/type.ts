@@ -19,7 +19,7 @@ export interface ExpressRequest extends Request {
     user?: User,
     userId?: typeof User.prototype.id,
 
-    clientId?: typeof Robot.prototype.id,
+    robotId?: typeof Robot.prototype.id,
 
     realmId?: typeof Realm.prototype.id,
 

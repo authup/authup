@@ -6,9 +6,11 @@
  */
 
 import {
+    BeforeInsert,
+    BeforeUpdate,
     Column,
     CreateDateColumn,
-    Entity,
+    Entity, Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -16,6 +18,7 @@ import {
 } from 'typeorm';
 import { MASTER_REALM_ID, Realm } from '../realm';
 import { User } from '../user';
+import { createNanoID } from '../../utils';
 
 @Entity({ name: 'auth_clients' })
 export class Robot {
@@ -25,7 +28,8 @@ export class Robot {
     @Column({ type: 'varchar', length: 512, select: false })
         secret: string;
 
-    @Column({ type: 'varchar', length: 256, nullable: true })
+    @Index({ unique: true })
+    @Column({ type: 'varchar', length: 128 })
         name: string;
 
     @Column({ type: 'text', nullable: true })
@@ -57,4 +61,14 @@ export class Robot {
     @ManyToOne(() => Realm, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
+
+    // ------------------------------------------------------------------
+
+    @BeforeUpdate()
+    @BeforeInsert()
+    setName() {
+        if (!this.name || this.name.length === 0) {
+            this.name = createNanoID(undefined, 36);
+        }
+    }
 }

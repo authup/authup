@@ -32,7 +32,7 @@ export class UserController {
 
     @Post('', [ForceLoggedInMiddleware])
     async add(
-        @Body() user: NonNullable<User>/* Pick<User, 'name' | 'email' | 'password' | 'realm_id'> */,
+        @Body() user: NonNullable<User>,
             @Request() req: any,
             @Response() res: any,
     ): Promise<User | undefined> {

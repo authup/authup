@@ -16,7 +16,7 @@ export function forceLoggedIn(
 ) {
     if (
         typeof req.userId === 'undefined' &&
-        typeof req.clientId === 'undefined'
+        typeof req.robotId === 'undefined'
     ) {
         throw new UnauthorizedError();
     }

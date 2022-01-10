@@ -7,7 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
-import { startAuthServer } from '../../server';
+import { startServer } from '../../server';
 
 interface StartArguments extends Arguments {
     root: string;
@@ -30,7 +30,7 @@ export class StartCommand implements CommandModule {
     async handler(args: StartArguments) {
         const config = useConfig(args.root);
 
-        await startAuthServer({
+        await startServer({
             config,
         });
     }

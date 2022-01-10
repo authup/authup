@@ -78,7 +78,7 @@ export async function verifyClientForMiddlewareRequest(
         permissions = await repository.getOwnedPermissions(entity.id);
     }
 
-    request.clientId = entity.id;
+    request.robotId = entity.id;
     request.userId = entity.user_id;
     request.realmId = entity.realm_id;
     request.ability = new AbilityManager(permissions);

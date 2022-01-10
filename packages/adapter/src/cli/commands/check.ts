@@ -39,8 +39,10 @@ export class CheckCommand implements CommandModule {
             await connection.synchronize();
 
             const seeder = new DatabaseRootSeeder({
-                adminPassword: config.adminPassword,
-                adminUsername: config.adminUsername,
+                user: {
+                    password: config.adminPassword,
+                    name: config.adminUsername,
+                },
             });
 
             await seeder.run(connection);

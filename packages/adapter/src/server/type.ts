@@ -7,6 +7,14 @@
 
 import { Config } from '../config';
 
-export type AuthServerStartContext = {
+export type ServerStartContext = {
     config: Config
+};
+
+export type ServerSetupContext = {
+    config: Config,
+    keyPair: boolean,
+    database: boolean,
+    databaseSeeder: boolean,
+    documentation: boolean
 };

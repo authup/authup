@@ -61,6 +61,7 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
     }
 
     if (
+        req.robotId !== entity.id &&
         !req.ability.hasPermission(PermissionID.ROBOT_DROP) &&
         !req.ability.hasPermission(PermissionID.ROBOT_EDIT)
     ) {

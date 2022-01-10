@@ -10,7 +10,7 @@ import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHe
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { verifyUserForMiddlewareRequest } from './user';
-import { verifyClientForMiddlewareRequest } from './client';
+import { verifyClientForMiddlewareRequest } from './robot';
 import { AuthMiddlewareOptions } from './type';
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
