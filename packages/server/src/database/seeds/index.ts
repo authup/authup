@@ -208,7 +208,7 @@ class DatabaseRootSeeder implements Seeder {
         // -------------------------------------------------
 
         /**
-         * Assign all permissions to default role.
+         * Assign all permissions to default robot.
          */
         permissionIds = Object.values(PermissionID);
         const robotPermissionRepository = connection.getRepository(RobotPermission);

@@ -1,5 +1,5 @@
 {
-    "name": "@typescript-auth/adapter",
+    "name": "@typescript-auth/server",
     "version": "0.0.0",
     "description": "This package can be used as simple server in standalone mode or as an extension.",
     "main": "dist/index.js",

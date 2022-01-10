@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/Tada5hi/typescript-auth/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/typescript-auth)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
-# @typescript-auth/adapter ⚔
+# @typescript-auth/server ⚔
 This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
 should therefore only be used for backend- applications & microservices.
 
@@ -28,7 +28,7 @@ The `Readme.md` is under construction ☂ at the moment. So please stay patient,
 ## Installation
 
 ```sh
-npm install @typescript-auth/adapter --save
+npm install @typescript-auth/server --save
 ```
 
 ## Usage
@@ -95,7 +95,7 @@ import {
     errorMiddleware,
     registerControllers,
     registerMiddlewares
-} from "@typescript-auth/adapter";
+} from "@typescript-auth/server";
 
 import express from "express";
 import path from "path";
@@ -183,7 +183,7 @@ import {
     createSecurityKeyPair,
     useSecurityKeyPair,
     SecurityKeyPairOptions
-} from "@typescript-auth/adapter";
+} from "@typescript-auth/server";
 
 const keyPairOptions: SecurityKeyPairOptions = {
     directory: path.join(__dirname, 'writable')
@@ -208,7 +208,7 @@ import express, {Request} from 'express';
 import {
     AuthorizationHeader,
     setupAuthMiddleware
-} from "@typescript-auth/adapter";
+} from "@typescript-auth/server";
 
 
 const app = express();
@@ -248,7 +248,7 @@ generation & -verification easy.
 import {
     hashPassword,
     verifyPassword
-} from "@typescript-auth/adapter";
+} from "@typescript-auth/server";
 
 
 (async () => {
@@ -274,7 +274,7 @@ import {
     createToken,
     verifyToken,
     SecurityKeyPairOptions
-} from "@typescript-auth/adapter";
+} from "@typescript-auth/server";
 
 const keyPairOptions: SecurityKeyPairOptions = {
     directory: path.join(__dirname, 'writable')

@@ -11,7 +11,7 @@ import {
 import { ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { DatabaseRootSeeder } from '../../../src/database/seeds';
 import { Config, useConfig } from '../../../src/config';
-import { buildDatabaseConnectionOptions } from '../../../src/database/utils';
+import { buildDatabaseConnectionOptions } from '../../../src';
 
 async function createConnectionOptions(config: Config) {
     const options = await buildDatabaseConnectionOptions(config);
@@ -34,7 +34,12 @@ export async function useTestDatabase() {
     const connection = await createConnection(connectionOptions as ConnectionOptions);
     await connection.synchronize();
 
-    const core = new DatabaseRootSeeder(config);
+    const core = new DatabaseRootSeeder({
+        user: {
+            name: config.adminUsername,
+            password: config.adminPassword,
+        },
+    });
 
     await core.run(connection);
 

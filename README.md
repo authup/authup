@@ -13,8 +13,8 @@ This monorepo contains different auth packages for frontend and backend.
 
 This Package contains all core functions, which are also partially required by other modules of this repository.
   
-### @typescript-auth/adapter  
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fadapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fadapter)
+### @typescript-auth/server  
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)
 
 This Package contains all functions, which can be used by server side applications.
 
