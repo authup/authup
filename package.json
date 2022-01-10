@@ -45,6 +45,7 @@
         "test": "lerna run test",
         "pub": "lerna publish",
         "lint": "eslint --ext .ts ./packages/",
-        "lint:fix": "npm run lint -- --fix"
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
     }
 }
