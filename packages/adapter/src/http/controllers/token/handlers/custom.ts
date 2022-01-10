@@ -7,7 +7,7 @@
 
 import { getCustomRepository } from 'typeorm';
 import {
-    MASTER_REALM_ID, PermissionID, TokenPayload, TokenVerificationPayload,
+    MASTER_REALM_ID, PermissionID, TokenPayload, TokenSubKind, TokenVerificationPayload,
 } from '@typescript-auth/domains';
 import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -53,33 +53,30 @@ export async function verifyTokenRouteHandler(
     };
 
     switch (tokenPayload.subKind) {
-        case 'client': {
-            const clientRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const clientQuery = clientRepository.createQueryBuilder('client')
-                .where('client.id := id', { id: tokenPayload.sub });
+        case TokenSubKind.ROBOT: {
+            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+            const robot = await robotRepository.findOne(tokenPayload.sub);
 
-            const client = await clientQuery.getOne();
-
-            if (typeof client === 'undefined') {
+            if (typeof robot === 'undefined') {
                 throw new UnauthorizedError();
             }
 
             let permissions = [];
 
-            if (client.user_id) {
+            if (robot.user_id) {
                 const userRepository = getCustomRepository<UserRepository>(UserRepository);
-                permissions = await userRepository.getOwnedPermissions(client.user_id);
+                permissions = await userRepository.getOwnedPermissions(robot.user_id);
             } else {
-                permissions = await clientRepository.getOwnedPermissions(client.id);
+                permissions = await robotRepository.getOwnedPermissions(robot.id);
             }
 
             response.target.data = {
-                ...client,
-                permissions: [],
+                ...robot,
+                permissions,
             };
             break;
         }
-        case 'user': {
+        case TokenSubKind.USER: {
             const userRepository = getCustomRepository<UserRepository>(UserRepository);
             const userQuery = userRepository.createQueryBuilder('user')
                 .addSelect('user.email')

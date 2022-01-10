@@ -7,10 +7,10 @@
 
 export enum TokenGrant {
     PASSWORD = 'password',
-    CLIENT_CREDENTIALS = 'client_credentials',
+    ROBOT_CREDENTIALS = 'robot_credentials',
 }
 
 export enum TokenSubKind {
     USER = 'user',
-    CLIENT = 'client',
+    ROBOT = 'robot',
 }

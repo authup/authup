@@ -38,8 +38,10 @@ export async function verifyUserForMiddlewareRequest(
                     directory: options.writableDirectoryPath,
                 });
 
-                if (tokenPayload.subKind === TokenSubKind.CLIENT) {
+                if (tokenPayload.subKind === TokenSubKind.ROBOT) {
                     condition.id = tokenPayload.sub as typeof User.prototype.id;
+                } else {
+                    throw new TokenInvalidError();
                 }
             } catch (e) {
                 throw new TokenInvalidError();

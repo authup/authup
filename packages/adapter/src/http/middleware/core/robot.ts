@@ -13,7 +13,7 @@ import { getCustomRepository } from 'typeorm';
 import {
     Robot, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
-import { NotFoundError } from '@typescript-error/http';
+import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { RobotRepository } from '../../../domains/robot';
 import { UserRepository } from '../../../domains';
@@ -41,8 +41,10 @@ export async function verifyClientForMiddlewareRequest(
                     directory: options.writableDirectoryPath,
                 });
 
-                if (tokenPayload.subKind === TokenSubKind.CLIENT) {
+                if (tokenPayload.subKind === TokenSubKind.ROBOT) {
                     condition.id = tokenPayload.sub as typeof Robot.prototype.id;
+                } else {
+                    throw new TokenInvalidError();
                 }
             } catch (e) {
                 throw new TokenInvalidError();

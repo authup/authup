@@ -20,7 +20,7 @@ import { MASTER_REALM_ID, Realm } from '../realm';
 import { User } from '../user';
 import { createNanoID } from '../../utils';
 
-@Entity({ name: 'auth_clients' })
+@Entity({ name: 'auth_robots' })
 export class Robot {
     @PrimaryGeneratedColumn('uuid')
         id: string;

@@ -9,7 +9,7 @@ import { Connection, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID,
-    Permission, PermissionID, Realm, Robot, RolePermission, User, UserRole, createNanoID,
+    Permission, PermissionID, Realm, Robot, RobotPermission, RolePermission, User, UserRole, createNanoID,
 } from '@typescript-auth/domains';
 import { RoleRepository, UserRepository } from '../../domains';
 import { hashPassword } from '../../utils';
@@ -121,21 +121,21 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Create all permissions
          */
+        let permissionIds : string[] = Object.values(PermissionID);
         const permissionRepository = connection.getRepository(Permission);
-        const ids : string[] = Object.values(PermissionID);
 
         const existingPermissions = await permissionRepository.find({
-            id: In(ids),
+            id: In(permissionIds),
         });
 
         for (let i = 0; i < existingPermissions.length; i++) {
-            const index = ids.indexOf(existingPermissions[i].id);
+            const index = permissionIds.indexOf(existingPermissions[i].id);
             if (index !== -1) {
-                ids.splice(index, 1);
+                permissionIds.splice(index, 1);
             }
         }
 
-        const permissions : Permission[] = ids.map((id: string) => permissionRepository.create({ id }));
+        const permissions : Permission[] = permissionIds.map((id: string) => permissionRepository.create({ id }));
         if (permissions.length > 0) {
             await permissionRepository.save(permissions);
         }
@@ -145,29 +145,32 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Assign all permissions to default role.
          */
+        permissionIds = Object.values(PermissionID);
         const rolePermissionRepository = connection.getRepository(RolePermission);
 
         const existingRolePermissions = await rolePermissionRepository.find({
-            permission_id: In(ids),
+            permission_id: In(permissionIds),
             role_id: role.id,
         });
 
         for (let i = 0; i < existingRolePermissions.length; i++) {
-            const index = ids.indexOf(existingRolePermissions[i].permission_id);
+            const index = permissionIds.indexOf(existingRolePermissions[i].permission_id);
             if (index !== -1) {
-                ids.splice(index, 1);
+                permissionIds.splice(index, 1);
             }
         }
 
         const rolePermissions : RolePermission[] = [];
-        for (let j = 0; j < ids.length; j++) {
+        for (let j = 0; j < permissionIds.length; j++) {
             rolePermissions.push(rolePermissionRepository.create({
                 role_id: role.id,
-                permission_id: ids[j],
+                permission_id: permissionIds[j],
             }));
         }
 
-        await rolePermissionRepository.save(rolePermissions);
+        if (rolePermissions.length > 0) {
+            await rolePermissionRepository.save(rolePermissions);
+        }
 
         // -------------------------------------------------
 
@@ -200,6 +203,38 @@ class DatabaseRootSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
+        }
+
+        // -------------------------------------------------
+
+        /**
+         * Assign all permissions to default role.
+         */
+        permissionIds = Object.values(PermissionID);
+        const robotPermissionRepository = connection.getRepository(RobotPermission);
+
+        const existingRobotPermissions = await robotPermissionRepository.find({
+            permission_id: In(permissionIds),
+            robot_id: robot.id,
+        });
+
+        for (let i = 0; i < existingRobotPermissions.length; i++) {
+            const index = permissionIds.indexOf(existingRobotPermissions[i].permission_id);
+            if (index !== -1) {
+                permissionIds.splice(index, 1);
+            }
+        }
+
+        const robotPermissions : RobotPermission[] = [];
+        for (let j = 0; j < permissionIds.length; j++) {
+            robotPermissions.push(robotPermissionRepository.create({
+                robot_id: robot.id,
+                permission_id: permissionIds[j],
+            }));
+        }
+
+        if (robotPermissions.length > 0) {
+            await robotPermissionRepository.save(robotPermissions);
         }
 
         return response;

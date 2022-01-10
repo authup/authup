@@ -7,7 +7,6 @@
 
 /* istanbul ignore next */
 import { getCustomRepository } from 'typeorm';
-import { BadRequestError } from '@typescript-error/http';
 import {
     Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
@@ -38,11 +37,11 @@ export async function createTokenRouteHandler(
 
     const grantType = determineGrantType(req);
     switch (grantType) {
-        case TokenGrant.CLIENT_CREDENTIALS: {
-            const { client_id: clientId, client_secret: clientSecret } = req.body;
+        case TokenGrant.ROBOT_CREDENTIALS: {
+            const { id, secret } = req.body;
 
             const clientRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const client = await clientRepository.verifyCredentials(clientId, clientSecret);
+            const client = await clientRepository.verifyCredentials(id, secret);
 
             if (typeof client === 'undefined') {
                 throw new CredentialsInvalidError();
@@ -51,7 +50,7 @@ export async function createTokenRouteHandler(
             const tokenPayload: TokenPayload = {
                 iss: context.selfUrl,
                 sub: client.id,
-                subKind: TokenSubKind.CLIENT,
+                subKind: TokenSubKind.ROBOT,
                 remoteAddress: req.ip,
             };
 

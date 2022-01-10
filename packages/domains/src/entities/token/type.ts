@@ -40,14 +40,14 @@ export type TokenPayload = Partial<AccessTokenPayload> & {
 };
 
 type TokenTargetUser = {
-    type: 'user',
+    type: `${TokenSubKind.ROBOT}`,
     data: Partial<User> & {
         permissions: PermissionItem<any>[]
     }
 };
 
 type TokenTargetClient = {
-    type: 'client',
+    type: `${TokenSubKind.USER}`,
     data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
     }

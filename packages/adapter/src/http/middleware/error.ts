@@ -37,6 +37,8 @@ export function errorMiddleware(
             break;
     }
 
+    console.log(error);
+
     const baseError : ServerError | ClientError = error instanceof ClientError || error instanceof ServerError ?
         error :
         new InternalServerError(error, { decorateMessage: true });
