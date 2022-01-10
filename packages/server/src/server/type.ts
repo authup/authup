@@ -12,7 +12,7 @@ export type ServerStartContext = {
 };
 
 export type ServerSetupContext = {
-    config: Config,
+    config?: Config,
     keyPair: boolean,
     database: boolean,
     databaseSeeder: boolean,

@@ -116,7 +116,7 @@ registerMiddlewares(app, {
     },
     // optional :)
     swaggerDocumentation: {
-        docsPath: '/docs',
+        path: '/docs',
         writableDirectoryPath: path.join(process.cwd(), 'writable'),
     }
 });

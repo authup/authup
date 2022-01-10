@@ -13,8 +13,11 @@ import { ServerSetupContext } from './type';
 import { createSecurityKeyPair } from '../utils';
 import { generateSwaggerDocumentation } from '../http/swagger';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
+import { useConfig } from '../config';
 
 export async function setupServer(context: ServerSetupContext) {
+    context.config ??= useConfig();
+
     const writableDirectoryPath = path.join(
         context.config.rootPath,
         context.config.writableDirectory,
