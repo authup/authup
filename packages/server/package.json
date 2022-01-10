@@ -44,7 +44,7 @@
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
         "@decorators/express": "^2.6.0",
-        "@trapi/swagger": "^0.2.13",
+        "@trapi/swagger": "^0.2.14",
         "@typescript-auth/core": "^1.1.0",
         "@typescript-auth/domains": "^0.0.1",
         "@typescript-error/http": "^1.1.2",
