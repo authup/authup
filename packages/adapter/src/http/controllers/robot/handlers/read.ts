@@ -9,14 +9,14 @@ import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
-    Client, MASTER_REALM_ID, PermissionID,
+    MASTER_REALM_ID, PermissionID, Robot,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
-export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(Client);
+    const repository = getRepository(Robot);
     const query = repository.createQueryBuilder('client');
 
     applyFilters(query, filter, {
@@ -25,8 +25,8 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
     });
 
     if (
-        !req.ability.hasPermission(PermissionID.CLIENT_EDIT) &&
-        !req.ability.hasPermission(PermissionID.CLIENT_DROP)
+        !req.ability.hasPermission(PermissionID.ROBOT_EDIT) &&
+        !req.ability.hasPermission(PermissionID.ROBOT_DROP)
     ) {
         query.andWhere('client.user_id = :userId', { userId: req.userId });
     }
@@ -50,10 +50,10 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
     });
 }
 
-export async function getOneClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const clientRepository = getRepository(Client);
+    const clientRepository = getRepository(Robot);
     const entity = await clientRepository.findOne(id);
 
     if (typeof entity === 'undefined') {
@@ -61,8 +61,8 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
     }
 
     if (
-        !req.ability.hasPermission(PermissionID.CLIENT_DROP) &&
-        !req.ability.hasPermission(PermissionID.CLIENT_EDIT)
+        !req.ability.hasPermission(PermissionID.ROBOT_DROP) &&
+        !req.ability.hasPermission(PermissionID.ROBOT_EDIT)
     ) {
         if (
             !entity.user_id

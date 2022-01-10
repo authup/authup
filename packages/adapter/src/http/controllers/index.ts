@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './client';
+export * from './robot';
 export * from './permission';
 export * from './oauth2-provider';
 export * from './oauth2-provide-role';

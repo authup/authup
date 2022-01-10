@@ -18,7 +18,7 @@ import { MASTER_REALM_ID, Realm } from '../realm';
 import { User } from '../user';
 
 @Entity({ name: 'auth_clients' })
-export class Client {
+export class Robot {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 

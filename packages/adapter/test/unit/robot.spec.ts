@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, MASTER_REALM_ID } from '@typescript-auth/domains';
+import { MASTER_REALM_ID, Robot } from '@typescript-auth/domains';
 import { expectPropertiesEqualToSrc } from '../utils/properties';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
-describe('src/controllers/auth/client', () => {
+describe('src/http/controllers/robot', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -21,14 +21,14 @@ describe('src/controllers/auth/client', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Client> = {
+    const details : Partial<Robot> = {
         name: 'foo',
         realm_id: MASTER_REALM_ID,
     };
 
     it('should get collection', async () => {
         const response = await superTest
-            .get('/clients')
+            .get('/robots')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -39,7 +39,7 @@ describe('src/controllers/auth/client', () => {
 
     it('should create, read, update, delete resource', async () => {
         let response = await superTest
-            .post('/clients')
+            .post('/robots')
             .send(details)
             .auth('admin', 'start123');
 
@@ -51,7 +51,7 @@ describe('src/controllers/auth/client', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .get(`/clients/${response.body.id}`)
+            .get(`/robots/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -63,7 +63,7 @@ describe('src/controllers/auth/client', () => {
         details.description = 'bar';
 
         response = await superTest
-            .post(`/clients/${response.body.id}`)
+            .post(`/robots/${response.body.id}`)
             .send(details)
             .auth('admin', 'start123');
 
@@ -75,7 +75,7 @@ describe('src/controllers/auth/client', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .delete(`/clients/${response.body.id}`)
+            .delete(`/robots/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);

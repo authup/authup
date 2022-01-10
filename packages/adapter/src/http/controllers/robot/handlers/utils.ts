@@ -6,12 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { Client } from '@typescript-auth/domains';
+import { Robot } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../utils';
 
-export async function runClientValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<Partial<Client>> {
+export async function runClientValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<Partial<Robot>> {
     await check('secret')
         .exists()
         .notEmpty()

@@ -6,14 +6,14 @@
  */
 
 export {
-    Client,
-    ClientPermission,
-    ClientRole,
     OAuth2Provider,
     OAuth2ProviderAccount,
     OAuth2ProviderRole,
     Permission,
     Realm,
+    Robot,
+    RobotPermission,
+    RobotRole,
     Role,
     RolePermission,
     User,

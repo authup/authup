@@ -7,7 +7,7 @@
 
 import { Application } from 'express';
 import { attachControllers } from '@decorators/express';
-import { ClientController } from './client';
+import { RobotController } from './robot';
 import { Oauth2ProviderRoleController } from './oauth2-provide-role';
 import { Oauth2ProviderController, registerOauth2ProviderController } from './oauth2-provider';
 import { PermissionController } from './permission';
@@ -24,7 +24,7 @@ export function registerControllers(
     context: ControllerRegistrationContext,
 ) {
     attachControllers(router, [
-        ClientController,
+        RobotController,
         Oauth2ProviderRoleController,
         Oauth2ProviderController,
         PermissionController,

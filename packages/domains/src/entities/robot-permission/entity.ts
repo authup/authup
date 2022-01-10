@@ -15,11 +15,11 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Permission } from '../permission';
-import { Client } from '../client';
+import { Robot } from '../robot';
 
-@Entity({ name: 'auth_client_permissions' })
-@Index(['permission_id', 'client_id'], { unique: true })
-export class ClientPermission {
+@Entity({ name: 'auth_robot_permissions' })
+@Index(['permission_id', 'robot_id'], { unique: true })
+export class RobotPermission {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
@@ -46,11 +46,11 @@ export class ClientPermission {
     // ------------------------------------------------------------------
 
     @Column()
-        client_id: string;
+        robot_id: string;
 
-    @ManyToOne(() => Client, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'client_id' })
-        client: Client;
+    @ManyToOne(() => Robot, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'robot_id' })
+        robot: Robot;
 
     @Column({ type: 'varchar' })
         permission_id: string;

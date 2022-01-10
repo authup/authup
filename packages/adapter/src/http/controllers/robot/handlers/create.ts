@@ -7,17 +7,17 @@
 
 import { getRepository } from 'typeorm';
 import {
-    Client, PermissionID,
+    PermissionID, Robot,
     createNanoID,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
 import { hashPassword } from '../../../../utils';
 
-export async function createClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const data = await runClientValidation(req, 'create');
 
-    if (!req.ability.hasPermission(PermissionID.CLIENT_ADD)) {
+    if (!req.ability.hasPermission(PermissionID.ROBOT_ADD)) {
         data.user_id = req.userId;
     } else if (
         data.user_id &&
@@ -26,7 +26,7 @@ export async function createClientRouteHandler(req: ExpressRequest, res: Express
         data.user_id = req.userId;
     }
 
-    const repository = getRepository(Client);
+    const repository = getRepository(Robot);
     const entity = repository.create(data);
 
     const secret = entity.secret || createNanoID(undefined, 36);

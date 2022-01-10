@@ -15,7 +15,7 @@ import { ExpressValidationError } from '../../../error/validation';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function createOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.PERMISSION_MANAGE)) {
+    if (!req.ability.hasPermission(PermissionID.PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

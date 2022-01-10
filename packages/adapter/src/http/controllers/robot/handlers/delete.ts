@@ -1,17 +1,17 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
-    Client, PermissionID,
+    PermissionID, Robot,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 
 export async function deleteClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(Client);
+    const repository = getRepository(Robot);
     const entity = await repository.findOne(id);
 
-    if (!req.ability.hasPermission(PermissionID.CLIENT_DROP)) {
+    if (!req.ability.hasPermission(PermissionID.ROBOT_DROP)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

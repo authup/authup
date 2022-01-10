@@ -15,7 +15,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../utils';
 import { UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
-import { ClientRepository } from '../../../../domains/client';
+import { RobotRepository } from '../../../../domains/robot';
 import { CredentialsInvalidError } from '../../../error/credentials-invalid';
 
 function determineGrantType(req: ExpressRequest) : TokenGrantType {
@@ -41,7 +41,7 @@ export async function createTokenRouteHandler(
         case TokenGrant.CLIENT_CREDENTIALS: {
             const { client_id: clientId, client_secret: clientSecret } = req.body;
 
-            const clientRepository = getCustomRepository<ClientRepository>(ClientRepository);
+            const clientRepository = getCustomRepository<RobotRepository>(RobotRepository);
             const client = await clientRepository.verifyCredentials(clientId, clientSecret);
 
             if (typeof client === 'undefined') {

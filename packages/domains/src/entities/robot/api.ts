@@ -6,7 +6,7 @@
  */
 
 import { AxiosInstance } from 'axios';
-import { Client } from './entity';
+import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { SingleResourceResponse } from '../type';
 
@@ -18,17 +18,17 @@ export class ClientAPI {
     }
 
     async executeCommand(
-        id: typeof Client.prototype.id,
+        id: typeof Robot.prototype.id,
         command: string,
         data: Record<string, any>,
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<SingleResourceResponse<Robot>> {
         const { data: resultData } = await this.client
             .post(`clients/${id}/command`, { command, ...data });
 
         return resultData;
     }
 
-    async create(data: Partial<Client>) {
+    async create(data: Partial<Robot>) {
         const { data: resultData } = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
 

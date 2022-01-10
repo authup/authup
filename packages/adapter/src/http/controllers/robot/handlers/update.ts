@@ -1,11 +1,11 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { Client, PermissionID } from '@typescript-auth/domains';
+import { PermissionID, Robot } from '@typescript-auth/domains';
 import { hashPassword } from '../../../../utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
 
-export async function updateClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     const data = await runClientValidation(req, 'update');
@@ -17,14 +17,14 @@ export async function updateClientRouteHandler(req: ExpressRequest, res: Express
         data.secret = await hashPassword(data.secret);
     }
 
-    const repository = getRepository(Client);
+    const repository = getRepository(Robot);
     let entity = await repository.findOne(id);
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    if (!req.ability.hasPermission(PermissionID.CLIENT_EDIT)) {
+    if (!req.ability.hasPermission(PermissionID.ROBOT_EDIT)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

@@ -9,34 +9,34 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Client } from '@typescript-auth/domains';
+import { Robot } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createClientRouteHandler,
+    createRobotRouteHandler,
     deleteClientRouteHandler,
-    getManyClientRouteHandler,
-    getOneClientRouteHandler,
-    updateClientRouteHandler,
+    getManyRobotRouteHandler,
+    getOneRobotRouteHandler,
+    updateRobotRouteHandler,
 } from './handlers';
 
 @SwaggerTags('auth')
-@Controller('/clients')
-export class ClientController {
+@Controller('/robots')
+export class RobotController {
     @Get('', [ForceLoggedInMiddleware])
     async getMany(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<Client[]> {
-        return getManyClientRouteHandler(req, res);
+    ): Promise<Robot[]> {
+        return getManyRobotRouteHandler(req, res);
     }
 
     @Post('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Client,
+        @Body() data: Robot,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Client> {
-        return createClientRouteHandler(req, res);
+    ): Promise<Robot> {
+        return createRobotRouteHandler(req, res);
     }
 
     @Get('/:id', [ForceLoggedInMiddleware])
@@ -44,18 +44,18 @@ export class ClientController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Client> {
-        return getOneClientRouteHandler(req, res);
+    ): Promise<Robot> {
+        return getOneRobotRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])
     async edit(
         @Params('id') id: string,
-            @Body() data: Pick<Client, 'name'>,
+            @Body() data: Pick<Robot, 'name'>,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Client> {
-        return updateClientRouteHandler(req, res);
+    ): Promise<Robot> {
+        return updateRobotRouteHandler(req, res);
     }
 
     @Delete('/:id', [ForceLoggedInMiddleware])
@@ -63,7 +63,7 @@ export class ClientController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Client> {
+    ): Promise<Robot> {
         return deleteClientRouteHandler(req, res);
     }
 }

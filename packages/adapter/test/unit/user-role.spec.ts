@@ -11,7 +11,7 @@ import {
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
-describe('src/controllers/auth/user', () => {
+describe('src/http/controllers/user-role', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {

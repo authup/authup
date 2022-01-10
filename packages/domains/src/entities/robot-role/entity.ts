@@ -16,16 +16,16 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Role } from '../role';
-import { Client } from '../client';
+import { Robot } from '../robot';
 
-@Entity({ name: 'auth_client_roles' })
-@Index(['role_id', 'client_id'], { unique: true })
-export class ClientRole {
+@Entity({ name: 'auth_robot_roles' })
+@Index(['role_id', 'robot_id'], { unique: true })
+export class RobotRole {
     @PrimaryGeneratedColumn()
         id: string;
 
     @Column()
-        client_id: string;
+        robot_id: string;
 
     @Column()
         role_id: string;
@@ -40,7 +40,7 @@ export class ClientRole {
     @JoinColumn({ name: 'role_id' })
         role: Role;
 
-    @ManyToOne(() => Client, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Robot, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
-        client: Client;
+        robot: Robot;
 }

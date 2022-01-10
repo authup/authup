@@ -7,7 +7,7 @@
 
 import { AccessTokenPayload, Oauth2TokenResponse, PermissionItem } from '@typescript-auth/core';
 import { User } from '../user';
-import { Client } from '../client';
+import { Robot } from '../robot';
 import { TokenGrant, TokenSubKind } from './constants';
 
 export {
@@ -48,7 +48,7 @@ type TokenTargetUser = {
 
 type TokenTargetClient = {
     type: 'client',
-    data: Partial<Client> & {
+    data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
     }
 };

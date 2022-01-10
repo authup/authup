@@ -11,11 +11,11 @@ import {
 } from '@typescript-auth/core';
 import { getCustomRepository } from 'typeorm';
 import {
-    Client, TokenPayload, TokenSubKind,
+    Robot, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { ClientRepository } from '../../../domains/client';
+import { RobotRepository } from '../../../domains/robot';
 import { UserRepository } from '../../../domains';
 import { verifyToken } from '../../../utils';
 import { CredentialsInvalidError } from '../../error/credentials-invalid';
@@ -28,8 +28,8 @@ export async function verifyClientForMiddlewareRequest(
     options: {
         writableDirectoryPath: string
     },
-) : Promise<Client> {
-    const condition : Partial<Client> = {};
+) : Promise<Robot> {
+    const condition : Partial<Robot> = {};
 
     switch (header.type) {
         case 'Basic':
@@ -42,7 +42,7 @@ export async function verifyClientForMiddlewareRequest(
                 });
 
                 if (tokenPayload.subKind === TokenSubKind.CLIENT) {
-                    condition.id = tokenPayload.sub as typeof Client.prototype.id;
+                    condition.id = tokenPayload.sub as typeof Robot.prototype.id;
                 }
             } catch (e) {
                 throw new TokenInvalidError();
@@ -53,7 +53,7 @@ export async function verifyClientForMiddlewareRequest(
             throw new AuthHeaderTypeUnsupported(header.type);
     }
 
-    const repository = getCustomRepository<ClientRepository>(ClientRepository);
+    const repository = getCustomRepository<RobotRepository>(RobotRepository);
     const entity = await repository.findOne({
         ...condition,
     });

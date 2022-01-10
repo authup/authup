@@ -12,7 +12,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { verifyToken } from '../../../../utils';
 import { TokenRouteVerifyContext } from './type';
 import { UserRepository } from '../../../../domains';
-import { ClientRepository } from '../../../../domains/client';
+import { RobotRepository } from '../../../../domains/robot';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
@@ -41,7 +41,7 @@ export async function verifyTokenRouteHandler(
 
     switch (tokenPayload.subKind) {
         case 'client': {
-            const clientRepository = getCustomRepository<ClientRepository>(ClientRepository);
+            const clientRepository = getCustomRepository<RobotRepository>(RobotRepository);
             const clientQuery = clientRepository.createQueryBuilder('client')
                 .where('client.id := id', { id: tokenPayload.sub });
 

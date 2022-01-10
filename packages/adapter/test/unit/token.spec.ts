@@ -8,7 +8,7 @@
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
-describe('src/controllers/auth/role', () => {
+describe('src/http/controllers/role', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
