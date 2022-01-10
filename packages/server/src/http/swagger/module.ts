@@ -21,8 +21,6 @@ export async function generateSwaggerDocumentation(
 ) : Promise<Record<SwaggerDocFormatType, SwaggerDocFormatData>> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
     const packageJson = require(path.join(context.rootDirectoryPath, 'package.json'));
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const tsConfig = require(path.join(__dirname, '..', '..', '..', 'tsconfig.json'));
 
     const metadataConfig : MetadataConfig = {
         entryFile: path.join(__dirname, '..', 'controllers', '**', '*{.ts,.js}'),
@@ -69,5 +67,5 @@ export async function generateSwaggerDocumentation(
     return generateDocumentation({
         metadata: metadataConfig,
         swagger: swaggerConfig,
-    }, tsConfig);
+    });
 }

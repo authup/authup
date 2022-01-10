@@ -10,7 +10,8 @@
         "test:coverage": "npm run test -- --coverage"
     },
     "files": [
-        "dist/"
+        "dist/",
+        "tsconfig.json"
     ],
     "bin": {
         "auth-server": "dist/cli/index.js"
