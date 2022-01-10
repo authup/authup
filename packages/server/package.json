@@ -11,7 +11,7 @@
     },
     "files": [
         "dist/",
-        "tsconfig.json"
+        "src/http/controllers/"
     ],
     "bin": {
         "auth-server": "dist/cli/index.js"

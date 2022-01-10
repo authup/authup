@@ -23,7 +23,7 @@ export async function generateSwaggerDocumentation(
     const packageJson = require(path.join(context.rootDirectoryPath, 'package.json'));
 
     const metadataConfig : MetadataConfig = {
-        entryFile: path.join(__dirname, '..', 'controllers', '**', '*{.ts,.js}'),
+        entryFile: path.join(__dirname, '..', '..', '..', 'src', 'http', 'controllers', '**', '*{.ts,.js}'),
         ignore: ['**/node_modules/**'],
         allow: ['**/@typescript-auth/**'],
         decorator: {
