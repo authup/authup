@@ -50,7 +50,7 @@ export class User {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: true,
+        type: 'varchar', length: 256, nullable: true, default: null,
     })
         reset_hash: string | null;
 
@@ -67,12 +67,12 @@ export class User {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: true,
+        type: 'varchar', length: 256, nullable: true, default: null,
     })
         status: string | null;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: true,
+        type: 'varchar', length: 256, nullable: true, default: null,
     })
         status_message: string | null;
 
@@ -84,7 +84,7 @@ export class User {
         active: boolean;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: true,
+        type: 'varchar', length: 256, nullable: true, default: null,
     })
         activate_hash: string | null;
 
