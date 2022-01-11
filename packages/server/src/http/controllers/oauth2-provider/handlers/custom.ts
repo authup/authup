@@ -15,7 +15,7 @@ import {
     TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { createOauth2ProviderAccountWithToken } from '../../../../domains';
+import { OAuth2ProviderEntity, createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
 import { ProxyConnectionConfig, createToken, detectProxyConnectionConfig } from '../../../../utils';
 
@@ -26,7 +26,7 @@ export async function authorizeOauth2ProviderRouteHandler(
 ) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
     const provider = await repository.createQueryBuilder('provider')
         .leftJoinAndSelect('provider.realm', 'realm')
         .where('provider.id = :id', { id })
@@ -56,7 +56,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const { id } = req.params;
     const { code, state } = req.query;
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
     const provider = await repository.createQueryBuilder('provider')
         .addSelect('provider.client_secret')
         .leftJoinAndSelect('provider.realm', 'realm')

@@ -15,6 +15,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../utils/express-validator';
 import { runOauth2ProviderValidation } from './utils';
+import { OAuth2ProviderEntity, RealmEntity } from '../../../../domains';
 
 export async function createOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.PROVIDER_ADD)) {
@@ -34,7 +35,7 @@ export async function createOauth2ProviderRouteHandler(req: ExpressRequest, res:
     }
 
     if (data.realm_id) {
-        const realmRepository = getRepository(Realm);
+        const realmRepository = getRepository(RealmEntity);
         const realm = await realmRepository.findOne(data.realm_id);
 
         if (typeof realm === 'undefined') {
@@ -49,7 +50,7 @@ export async function createOauth2ProviderRouteHandler(req: ExpressRequest, res:
         }
     }
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
 
     const provider = repository.create(data);
 

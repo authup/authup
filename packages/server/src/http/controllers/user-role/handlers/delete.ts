@@ -9,6 +9,7 @@ import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { PermissionID, UserRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { UserRoleEntity } from '../../../../domains';
 
 export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -17,7 +18,7 @@ export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: Expre
         throw new NotFoundError();
     }
 
-    const repository = getRepository(UserRole);
+    const repository = getRepository(UserRoleEntity);
 
     const entity : UserRole | undefined = await repository.findOne(id);
 

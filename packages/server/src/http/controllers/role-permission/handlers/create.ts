@@ -11,6 +11,7 @@ import { check, matchedData, validationResult } from 'express-validator';
 import { PermissionID, RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
+import { RolePermissionEntity } from '../../../../domains';
 
 /**
  * Add an permission by id to a specific user.
@@ -41,7 +42,7 @@ export async function createRolePermissionRouteHandler(req: ExpressRequest, res:
 
     const data = matchedData(req, { includeOptionals: false });
 
-    const repository = getRepository(RolePermission);
+    const repository = getRepository(RolePermissionEntity);
     let rolePermission = repository.create(data);
 
     rolePermission = await repository.save(rolePermission);

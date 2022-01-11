@@ -42,7 +42,7 @@ export async function verifyClientForMiddlewareRequest(
                 });
 
                 if (tokenPayload.subKind === TokenSubKind.ROBOT) {
-                    condition.id = tokenPayload.sub as typeof Robot.prototype.id;
+                    condition.id = tokenPayload.sub as Robot['id'];
                 } else {
                     throw new TokenInvalidError();
                 }

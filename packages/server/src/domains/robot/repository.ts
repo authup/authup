@@ -9,27 +9,30 @@ import { EntityRepository, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
 import {
-    Robot, RobotPermission, RobotRole, Role,
+    Robot, Role,
 } from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../utils';
+import { RobotEntity } from './entity';
+import { RobotRoleEntity } from '../robot-role';
+import { RobotPermissionEntity } from '../robot-permission';
 
-@EntityRepository(Robot)
-export class RobotRepository extends Repository<Robot> {
+@EntityRepository(RobotEntity)
+export class RobotRepository extends Repository<RobotEntity> {
     // ------------------------------------------------------------------
 
     async getOwnedPermissions(
-        id: typeof Robot.prototype.id,
+        id: Robot['id'],
     ) : Promise<PermissionItem<unknown>[]> {
         let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
-            .getRepository(RobotRole)
+            .getRepository(RobotRoleEntity)
             .find({
                 robot_id: id,
             });
 
-        const roleIds: typeof Role.prototype.id[] = roles.map((userRole) => userRole.role_id);
+        const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
 
         if (roleIds.length === 0) {
             return permissions;
@@ -42,7 +45,7 @@ export class RobotRepository extends Repository<Robot> {
     }
 
     async getSelfOwnedPermissions(id: string) : Promise<PermissionItem<unknown>[]> {
-        const repository = this.manager.getRepository(RobotPermission);
+        const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
             robot_id: id,
@@ -68,7 +71,7 @@ export class RobotRepository extends Repository<Robot> {
      * @param id
      * @param secret
      */
-    async verifyCredentials(id: string, secret: string) : Promise<Robot | undefined> {
+    async verifyCredentials(id: string, secret: string) : Promise<RobotEntity | undefined> {
         const entity = await this.createQueryBuilder('robot')
             .addSelect('robot.secret')
             .where('robot.id = :id', { id })

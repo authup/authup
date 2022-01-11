@@ -5,34 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    Index,
-    OneToMany,
-    PrimaryColumn,
-    UpdateDateColumn,
-} from 'typeorm';
+export interface Realm {
+    id: string;
 
-@Entity({ name: 'auth_realms' })
-export class Realm {
-    @PrimaryColumn({ type: 'varchar', length: 36 })
-        id: string;
+    name: string;
 
-    @Column({ type: 'varchar', length: 128 })
-    @Index({ unique: true })
-        name: string;
+    description: string | null;
 
-    @Column({ type: 'text', nullable: true, default: null })
-        description: string | null;
+    drop_able: boolean;
 
-    @Column({ default: true })
-        drop_able: boolean;
+    created_at: string;
 
-    @CreateDateColumn()
-        created_at: string;
-
-    @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

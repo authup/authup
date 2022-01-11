@@ -11,6 +11,7 @@ import { check, matchedData, validationResult } from 'express-validator';
 import { PermissionID, UserRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
+import { UserRoleEntity } from '../../../../domains';
 
 export async function createUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     await check('user_id')
@@ -34,7 +35,7 @@ export async function createUserRoleRouteHandler(req: ExpressRequest, res: Expre
 
     const data = matchedData(req, { includeOptionals: false });
 
-    const repository = getRepository(UserRole);
+    const repository = getRepository(UserRoleEntity);
     let entity = repository.create(data);
 
     entity = await repository.save(entity);

@@ -23,13 +23,13 @@ export class UserPermissionAPI {
         return response.data;
     }
 
-    async getOne(id: typeof UserPermission.prototype.id) : Promise<SingleResourceResponse<UserPermission>> {
+    async getOne(id: UserPermission['id']) : Promise<SingleResourceResponse<UserPermission>> {
         const response = await this.client.get(`user-permissions/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof UserPermission.prototype.id) : Promise<SingleResourceResponse<UserPermission>> {
+    async delete(id: UserPermission['id']) : Promise<SingleResourceResponse<UserPermission>> {
         const response = await this.client.delete(`user-permissions/${id}`);
 
         return response.data;

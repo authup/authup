@@ -22,13 +22,13 @@ export class RobotPermissionAPI {
         return response.data;
     }
 
-    async getOne(id: typeof RobotPermission.prototype.id) : Promise<SingleResourceResponse<RobotPermission>> {
+    async getOne(id: RobotPermission['id']) : Promise<SingleResourceResponse<RobotPermission>> {
         const response = await this.client.get(`robot-permissions/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof RobotPermission.prototype.id) : Promise<SingleResourceResponse<RobotPermission>> {
+    async delete(id: RobotPermission['id']) : Promise<SingleResourceResponse<RobotPermission>> {
         const response = await this.client.delete(`robot-permissions/${id}`);
 
         return response.data;

@@ -1,7 +1,8 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { OAuth2ProviderRole, PermissionID } from '@typescript-auth/domains';
+import { PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { OAuth2ProviderRoleEntity } from '../../../../domains';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
     req: ExpressRequest,
@@ -13,7 +14,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(OAuth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRoleEntity);
     const entity = await repository.findOne(id);
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

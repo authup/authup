@@ -10,11 +10,12 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { Permission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { PermissionEntity } from '../../../../domains';
 
 export async function getManyPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(Permission);
+    const repository = getRepository(PermissionEntity);
     const query = repository.createQueryBuilder('permission');
 
     applyFilters(query, filter, {
@@ -39,7 +40,7 @@ export async function getManyPermissionRouteHandler(req: ExpressRequest, res: Ex
 export async function getOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(Permission);
+    const repository = getRepository(PermissionEntity);
     const result = await repository.createQueryBuilder('permission')
         .where('id = :id', { id })
         .getOne();

@@ -13,6 +13,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { matchedValidationData } from '../../../../utils/express-validator';
 import { runOauth2ProviderValidation } from './utils';
+import { OAuth2ProviderEntity } from '../../../../domains';
 
 export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -33,7 +34,7 @@ export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res:
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
 
     let entity = await repository.findOne(id);
     if (typeof entity === 'undefined') {

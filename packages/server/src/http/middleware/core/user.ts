@@ -39,7 +39,7 @@ export async function verifyUserForMiddlewareRequest(
                 });
 
                 if (tokenPayload.subKind === TokenSubKind.USER) {
-                    condition.id = tokenPayload.sub as typeof User.prototype.id;
+                    condition.id = tokenPayload.sub as User['id'];
                 } else {
                     throw new TokenInvalidError();
                 }

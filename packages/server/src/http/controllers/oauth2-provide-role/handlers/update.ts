@@ -12,6 +12,7 @@ import { OAuth2Provider, OAuth2ProviderRole, PermissionID } from '@typescript-au
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runOauth2ProviderRoleValidation } from './utils';
+import { OAuth2ProviderRoleEntity } from '../../../../domains';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -32,7 +33,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRoleEntity);
 
     let provider = await repository.findOne(id);
     if (typeof provider === 'undefined') {

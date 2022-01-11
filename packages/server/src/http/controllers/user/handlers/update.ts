@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository, getRepository } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';

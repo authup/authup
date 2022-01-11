@@ -12,11 +12,12 @@ import {
     MASTER_REALM_ID, PermissionID, Robot,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RobotEntity } from '../../../../domains';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(Robot);
+    const repository = getRepository(RobotEntity);
     const query = repository.createQueryBuilder('client');
 
     applyFilters(query, filter, {
@@ -53,7 +54,7 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const clientRepository = getRepository(Robot);
+    const clientRepository = getRepository(RobotEntity);
     const entity = await clientRepository.findOne(id);
 
     if (typeof entity === 'undefined') {

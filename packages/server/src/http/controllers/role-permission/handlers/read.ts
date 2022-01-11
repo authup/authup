@@ -10,6 +10,7 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RolePermissionEntity } from '../../../../domains';
 
 /**
  * Receive user permissions of a specific user.
@@ -20,7 +21,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const rolePermissionRepository = getRepository(RolePermission);
+    const rolePermissionRepository = getRepository(RolePermissionEntity);
     const query = rolePermissionRepository.createQueryBuilder('rolePermission')
         .leftJoinAndSelect('rolePermission.permission', 'permission');
 
@@ -55,7 +56,7 @@ export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res
 export async function getOneRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const rolePermissionRepository = getRepository(RolePermission);
+    const rolePermissionRepository = getRepository(RolePermissionEntity);
     const entity = await rolePermissionRepository.findOne(id);
 
     if (typeof entity === 'undefined') {

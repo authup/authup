@@ -12,13 +12,14 @@ import {
 import { NotFoundError } from '@typescript-error/http';
 import { OAuth2Provider, PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { OAuth2ProviderEntity } from '../../../../domains';
 
 export async function getManyOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
         page, filter, fields, include,
     } = req.query;
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
 
     const query = repository.createQueryBuilder('provider');
 
@@ -66,7 +67,7 @@ export async function getOneOauth2ProviderRouteHandler(req: ExpressRequest, res:
     const { fields, include } = req.query;
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
 
     const query = repository.createQueryBuilder('provider')
         .where('provider.id = :id', { id });

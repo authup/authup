@@ -9,24 +9,27 @@ import { EntityRepository, In, Repository } from 'typeorm';
 import { PermissionItem } from '@typescript-auth/core';
 
 import {
-    Role, User, UserPermission, UserRole,
+    Role, User, UserRole,
 } from '@typescript-auth/domains';
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../utils';
+import { UserRoleEntity } from '../user-role';
+import { UserPermissionEntity } from '../user-permission';
+import { UserEntity } from './entity';
 
-@EntityRepository(User)
-export class UserRepository extends Repository<User> {
+@EntityRepository(UserEntity)
+export class UserRepository extends Repository<UserEntity> {
     async syncRoles(
-        userId: typeof User.prototype.id,
-        roleIds: typeof Role.prototype.id[],
+        userId: User['id'],
+        roleIds: Role['id'][],
     ) {
-        const userRoleRepository = this.manager.getRepository(UserRole);
+        const userRoleRepository = this.manager.getRepository(UserRoleEntity);
 
         const userRoles = await userRoleRepository.createQueryBuilder('userRole')
             .where('userRole.user_id = :userId', { userId })
             .getMany();
 
-        const userRoleIdsToDrop : typeof UserRole.prototype.id[] = userRoles
+        const userRoleIdsToDrop : UserRole['id'][] = userRoles
             .filter((userRole: UserRole) => roleIds.indexOf(userRole.role_id) === -1)
             .map((userRole: UserRole) => userRole.id);
 
@@ -48,17 +51,17 @@ export class UserRepository extends Repository<User> {
     // ------------------------------------------------------------------
 
     async getOwnedPermissions(
-        userId: typeof User.prototype.id,
+        userId: User['id'],
     ) : Promise<PermissionItem<unknown>[]> {
         let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
-            .getRepository(UserRole)
+            .getRepository(UserRoleEntity)
             .find({
                 user_id: userId,
             });
 
-        const roleIds: typeof Role.prototype.id[] = roles.map((userRole) => userRole.role_id);
+        const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
 
         if (roleIds.length === 0) {
             return permissions;
@@ -71,7 +74,7 @@ export class UserRepository extends Repository<User> {
     }
 
     async getSelfOwnedPermissions(userId: string) : Promise<PermissionItem<unknown>[]> {
-        const repository = this.manager.getRepository(UserPermission);
+        const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
             user_id: userId,

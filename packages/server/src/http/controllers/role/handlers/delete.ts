@@ -1,7 +1,8 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
-import { OAuth2Provider, PermissionID, Role } from '@typescript-auth/domains';
+import { PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RoleEntity } from '../../../../domains';
 
 export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -10,7 +11,7 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(Role);
+    const repository = getRepository(RoleEntity);
     const entity = await repository.findOne(id);
 
     await repository.remove(entity);

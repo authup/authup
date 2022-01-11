@@ -10,11 +10,12 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { Role } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RoleEntity } from '../../../../domains';
 
 export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const roleRepository = getRepository(Role);
+    const roleRepository = getRepository(RoleEntity);
     const query = roleRepository.createQueryBuilder('role');
 
     applyFilters(query, filter, {
@@ -40,7 +41,7 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
 export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const roleRepository = getRepository(Role);
+    const roleRepository = getRepository(RoleEntity);
     const result = await roleRepository.findOne(id);
 
     if (typeof result === 'undefined') {

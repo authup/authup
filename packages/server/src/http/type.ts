@@ -10,18 +10,19 @@ import {
 } from 'express';
 import { Realm, Robot, User } from '@typescript-auth/domains';
 import { AbilityManager } from '@typescript-auth/core';
+import { UserEntity } from '../domains';
 
 export interface ExpressAppInterface extends Express {
 
 }
 
 export interface ExpressRequest extends Request {
-    user?: User,
-    userId?: typeof User.prototype.id,
+    user?: UserEntity,
+    userId?: User['id'],
 
-    robotId?: typeof Robot.prototype.id,
+    robotId?: Robot['id'],
 
-    realmId?: typeof Realm.prototype.id,
+    realmId?: Realm['id'],
 
     token?: string,
 

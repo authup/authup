@@ -8,10 +8,11 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
-    PermissionID, Role,
+    PermissionID,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runRoleValidation } from './utils';
+import { RoleEntity } from '../../../../domains';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
@@ -20,7 +21,7 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const data = await runRoleValidation(req, 'create');
 
-    const roleRepository = getRepository(Role);
+    const roleRepository = getRepository(RoleEntity);
     const role = roleRepository.create(data);
 
     await roleRepository.save(role);

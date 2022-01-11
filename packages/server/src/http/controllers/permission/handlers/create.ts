@@ -13,6 +13,7 @@ import {
 } from '@typescript-auth/domains';
 import { ExpressValidationError } from '../../../error/validation';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { PermissionEntity } from '../../../../domains';
 
 export async function createOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     if (!req.ability.hasPermission(PermissionID.PERMISSION_ADD)) {
@@ -32,7 +33,7 @@ export async function createOnePermissionRouteHandler(req: ExpressRequest, res: 
 
     const data = matchedData(req, { includeOptionals: false });
 
-    const repository = getRepository(Permission);
+    const repository = getRepository(PermissionEntity);
     const role = repository.create(data);
 
     await repository.save(role);

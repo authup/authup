@@ -28,7 +28,7 @@ export class UserAPI {
     }
 
     async getOne(
-        id: typeof User.prototype.id,
+        id: User['id'],
         options?: BuildInput<User>,
     ): Promise<SingleResourceResponse<User>> {
         const response = await this.client
@@ -38,7 +38,7 @@ export class UserAPI {
     }
 
     async delete(
-        id: typeof User.prototype.id,
+        id: User['id'],
     ): Promise<SingleResourceResponse<User>> {
         const response = await this.client
             .delete(`users/${id}`);
@@ -56,8 +56,8 @@ export class UserAPI {
     }
 
     async update(
-        id: typeof User.prototype.id,
-        data: Partial<User> & { password_repeat: typeof User.prototype.password },
+        id: User['id'],
+        data: Partial<User> & { password_repeat: User['password'] },
     ): Promise<SingleResourceResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 

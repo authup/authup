@@ -24,13 +24,13 @@ export class RealmAPI {
         return response.data;
     }
 
-    async getOne(id: typeof Realm.prototype.id): Promise<SingleResourceResponse<Realm>> {
+    async getOne(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
         const response = await this.client.get(`realms/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof Realm.prototype.id): Promise<SingleResourceResponse<Realm>> {
+    async delete(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
         const response = await this.client.delete(`realms/${id}`);
 
         return response.data;
@@ -42,7 +42,7 @@ export class RealmAPI {
         return response.data;
     }
 
-    async update(realmId: typeof Realm.prototype.id, data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
+    async update(realmId: Realm['id'], data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
         const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

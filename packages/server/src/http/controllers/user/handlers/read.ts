@@ -3,9 +3,9 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { Permission, PermissionID, onlyRealmPermittedQueryResources } from '@typescript-auth/domains';
+import { PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { UserRepository } from '../../../../domains';
+import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {

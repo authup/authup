@@ -10,10 +10,11 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RealmEntity } from '../../../../domains';
 
 export async function getManyRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
-    const realmRepository = getRepository(Realm);
+    const realmRepository = getRepository(RealmEntity);
 
     const query = realmRepository.createQueryBuilder('realm');
 
@@ -47,7 +48,7 @@ export async function getOneRealmRouteHandler(
         throw new BadRequestError();
     }
 
-    const realmRepository = getRepository(Realm);
+    const realmRepository = getRepository(RealmEntity);
 
     const result = await realmRepository.findOne(id);
 

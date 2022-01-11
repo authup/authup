@@ -14,6 +14,7 @@ import {
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runOauth2ProviderRoleValidation } from './utils';
+import { OAuth2ProviderRoleEntity } from '../../../../domains';
 
 export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
@@ -32,7 +33,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRoleEntity);
 
     const entity = repository.create(data);
 

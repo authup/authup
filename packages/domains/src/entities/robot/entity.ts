@@ -5,70 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    BeforeInsert,
-    BeforeUpdate,
-    Column,
-    CreateDateColumn,
-    Entity, Index,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
-import { MASTER_REALM_ID, Realm } from '../realm';
+import { Realm } from '../realm';
 import { User } from '../user';
-import { createNanoID } from '../../utils';
 
-@Entity({ name: 'auth_robots' })
-export class Robot {
-    @PrimaryGeneratedColumn('uuid')
-        id: string;
+export interface Robot {
+    id: string;
 
-    @Column({ type: 'varchar', length: 512, select: false })
-        secret: string;
+    secret: string;
 
-    @Index({ unique: true })
-    @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
-    @Column({ type: 'text', nullable: true })
-        description: string;
+    description: string;
 
-    @Column({ type: 'boolean', default: true })
-        active: boolean;
+    active: boolean;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
-        created_at: string;
+    created_at: Date;
 
-    @UpdateDateColumn()
-        updated_at: string;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true, default: null })
-        user_id: string | null;
+    user_id: string | null;
 
-    @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'user_id' })
-        user: User | null;
+    user: User | null;
 
-    @Column({ default: MASTER_REALM_ID })
-        realm_id: string;
+    realm_id: string;
 
-    @ManyToOne(() => Realm, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'realm_id' })
-        realm: Realm;
-
-    // ------------------------------------------------------------------
-
-    @BeforeUpdate()
-    @BeforeInsert()
-    setName() {
-        if (!this.name || this.name.length === 0) {
-            this.name = createNanoID(undefined, 36);
-        }
-    }
+    realm: Realm;
 }

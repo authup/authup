@@ -3,6 +3,7 @@ import { NotFoundError } from '@typescript-error/http';
 import { PermissionID, Role } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runRoleValidation } from './utils';
+import { RoleEntity } from '../../../../domains';
 
 export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -16,7 +17,7 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         return res.respondAccepted();
     }
 
-    const roleRepository = getRepository(Role);
+    const roleRepository = getRepository(RoleEntity);
     let role = await roleRepository.findOne(id);
 
     if (typeof role === 'undefined') {

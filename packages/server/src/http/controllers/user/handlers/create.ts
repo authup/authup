@@ -10,7 +10,7 @@ import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
-import { UserRepository } from '../../../../domains';
+import { RealmEntity, UserRepository } from '../../../../domains';
 import { hashPassword } from '../../../../utils';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
@@ -23,7 +23,7 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
     const user = await userRepository.create(data);
 
-    const realmRepository = getRepository(Realm);
+    const realmRepository = getRepository(RealmEntity);
     const realm = await realmRepository.findOne(data.realm_id);
 
     if (typeof realm === 'undefined') {

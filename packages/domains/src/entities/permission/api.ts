@@ -28,7 +28,7 @@ export class PermissionAPI {
         return response.data;
     }
 
-    async update(id: typeof Permission.prototype.id, data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
+    async update(id: Permission['id'], data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
         const response = await this.client.post(`permissions/${id}`, data);
 
         return response.data;

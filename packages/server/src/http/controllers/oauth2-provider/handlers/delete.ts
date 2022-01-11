@@ -9,6 +9,7 @@ import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { OAuth2Provider, PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { OAuth2ProviderEntity } from '../../../../domains';
 
 export async function deleteOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -20,7 +21,7 @@ export async function deleteOauth2ProviderRouteHandler(
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(OAuth2Provider);
+    const repository = getRepository(OAuth2ProviderEntity);
     const entity = await repository.findOne(id);
     await repository.remove(entity);
 

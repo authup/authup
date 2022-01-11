@@ -5,48 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    Index,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
 import { OAuth2Provider } from '../oauth2-provider';
 import { Role } from '../role';
 
-@Entity({ name: 'auth_oauth2_provider_roles' })
-@Index(['provider_id', 'role_id'], { unique: true })
-@Index(['provider_id', 'external_id'], { unique: true })
-export class OAuth2ProviderRole {
-    @PrimaryGeneratedColumn('uuid')
-        id: string;
+export interface OAuth2ProviderRole {
+    id: string;
 
-    @Column({ type: 'varchar', length: 36 })
-        external_id: string;
+    external_id: string;
 
-    @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
-    @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // -----------------------------------------------
 
-    @Column()
-        role_id: string;
+    role_id: string;
 
-    @ManyToOne(() => Role, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'role_id' })
-        role: Role;
+    role: Role;
 
-    @Column()
-        provider_id: string;
+    provider_id: string;
 
-    @ManyToOne(() => OAuth2Provider, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'provider_id' })
-        provider: OAuth2Provider;
+    provider: OAuth2Provider;
 }

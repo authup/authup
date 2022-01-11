@@ -5,57 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Column,
-    CreateDateColumn,
-    Entity, Index,
-    JoinColumn,
-    ManyToOne,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
 import { Permission } from '../permission';
 import { Robot } from '../robot';
 
-@Entity({ name: 'auth_robot_permissions' })
-@Index(['permission_id', 'robot_id'], { unique: true })
-export class RobotPermission {
-    @PrimaryGeneratedColumn('uuid')
-        id: string;
+export interface RobotPermission {
+    id: string;
 
-    @Column({ type: 'int', default: 999 })
-        power: number;
+    power: number;
 
-    @Column({ type: 'text', nullable: true, default: null })
-        condition: any | null;
+    condition: any | null;
 
-    @Column({ type: 'text', nullable: true, default: null })
-        fields: string[] | null;
+    fields: string[] | null;
 
-    @Column({ type: 'boolean', default: false })
-        negation: boolean;
+    negation: boolean;
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
-    @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
-    @Column()
-        robot_id: string;
+    robot_id: string;
 
-    @ManyToOne(() => Robot, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'robot_id' })
-        robot: Robot;
+    robot: Robot;
 
-    @Column({ type: 'varchar' })
-        permission_id: string;
+    permission_id: string;
 
-    @ManyToOne(() => Permission, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'permission_id' })
-        permission: Permission;
+    permission: Permission;
 }

@@ -5,29 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Column,
-    CreateDateColumn,
-    Entity, Index,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn,
-} from 'typeorm';
+export interface Role {
+    id: string;
 
-@Entity({ name: 'auth_roles' })
-export class Role {
-    @PrimaryGeneratedColumn('uuid')
-        id: string;
+    name: string;
 
-    @Column({ type: 'varchar', length: 30 })
-    @Index({ unique: true })
-        name: string;
+    description: string;
 
-    @Column({ type: 'text', nullable: true })
-        description: string;
+    created_at: string;
 
-    @CreateDateColumn()
-        created_at: string;
-
-    @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

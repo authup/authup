@@ -14,6 +14,7 @@ import {
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runRealmValidation } from './utils';
+import { RealmEntity } from '../../../../domains';
 
 export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.REALM_ADD)) {
@@ -32,7 +33,7 @@ export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    const realmRepository = getRepository(Realm);
+    const realmRepository = getRepository(RealmEntity);
 
     const realm = realmRepository.create(data);
 

@@ -24,13 +24,13 @@ export class RoleAPI {
         return response.data;
     }
 
-    async getOne(roleId: number): Promise<SingleResourceResponse<Role>> {
+    async getOne(roleId: Role['id']): Promise<SingleResourceResponse<Role>> {
         const response = await this.client.get(`roles/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: number): Promise<SingleResourceResponse<Role>> {
+    async delete(roleId: Role['id']): Promise<SingleResourceResponse<Role>> {
         const response = await this.client.delete(`roles/${roleId}`);
 
         return response.data;
@@ -42,7 +42,7 @@ export class RoleAPI {
         return response.data;
     }
 
-    async update(id: number, data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
+    async update(id: Role['id'], data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
         const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

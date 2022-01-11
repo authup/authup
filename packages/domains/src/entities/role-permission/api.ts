@@ -22,13 +22,13 @@ export class RolePermissionAPI {
         return response.data;
     }
 
-    async getOne(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
+    async getOne(id: RolePermission['id']) : Promise<SingleResourceResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof RolePermission.prototype.id) : Promise<SingleResourceResponse<RolePermission>> {
+    async delete(id: RolePermission['id']) : Promise<SingleResourceResponse<RolePermission>> {
         const response = await this.client.delete(`role-permissions/${id}`);
 
         return response.data;

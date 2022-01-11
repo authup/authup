@@ -3,11 +3,12 @@ import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { UserRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { UserRoleEntity } from '../../../../domains';
 
 export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(UserRole);
+    const repository = getRepository(UserRoleEntity);
     const query = await repository.createQueryBuilder('user_roles')
         .leftJoinAndSelect('user_roles.role', 'role')
         .leftJoinAndSelect('user_roles.user', 'user');
@@ -35,7 +36,7 @@ export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: Expr
 export async function getOneUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(UserRole);
+    const repository = getRepository(UserRoleEntity);
     const entities = await repository.findOne(id);
 
     if (typeof entities === 'undefined') {

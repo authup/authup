@@ -23,13 +23,13 @@ export class UserRoleAPI {
         return response.data;
     }
 
-    async getOne(id: typeof UserRole.prototype.id): Promise<SingleResourceResponse<UserRole>> {
+    async getOne(id: UserRole['id']): Promise<SingleResourceResponse<UserRole>> {
         const response = await this.client.get(`user-roles/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof UserRole.prototype.id): Promise<SingleResourceResponse<UserRole>> {
+    async delete(id: UserRole['id']): Promise<SingleResourceResponse<UserRole>> {
         const response = await this.client.delete(`user-roles/${id}`);
 
         return response.data;

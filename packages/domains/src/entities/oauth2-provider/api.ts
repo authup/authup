@@ -18,7 +18,7 @@ export class Oauth2ProviderAPI {
         this.client = client;
     }
 
-    getAuthorizeUri(baseUrl: string, id: typeof OAuth2Provider.prototype.id): string {
+    getAuthorizeUri(baseUrl: string, id: OAuth2Provider['id']): string {
         return `${baseUrl}providers/${id}/authorize-url`;
     }
 
@@ -29,7 +29,7 @@ export class Oauth2ProviderAPI {
     }
 
     async getOne(
-        id: typeof OAuth2Provider.prototype.id,
+        id: OAuth2Provider['id'],
         record?: BuildInput<OAuth2Provider>,
     ): Promise<SingleResourceResponse<OAuth2Provider>> {
         const response = await this.client.get(`providers/${id}${buildQuery(record)}`);
@@ -37,7 +37,7 @@ export class Oauth2ProviderAPI {
         return response.data;
     }
 
-    async delete(id: typeof OAuth2Provider.prototype.id): Promise<SingleResourceResponse<OAuth2Provider>> {
+    async delete(id: OAuth2Provider['id']): Promise<SingleResourceResponse<OAuth2Provider>> {
         const response = await this.client.delete(`providers/${id}`);
 
         return response.data;
@@ -49,8 +49,8 @@ export class Oauth2ProviderAPI {
         return response.data;
     }
 
-    async update(userId: number, data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
-        const response = await this.client.post(`providers/${userId}`, nullifyEmptyObjectProperties(data));
+    async update(id: OAuth2Provider['id'], data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
+        const response = await this.client.post(`providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

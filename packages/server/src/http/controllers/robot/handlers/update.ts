@@ -4,6 +4,7 @@ import { PermissionID, Robot } from '@typescript-auth/domains';
 import { hashPassword } from '../../../../utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
+import { RobotEntity } from '../../../../domains';
 
 export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -17,7 +18,7 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         data.secret = await hashPassword(data.secret);
     }
 
-    const repository = getRepository(Robot);
+    const repository = getRepository<Robot>(RobotEntity);
     let entity = await repository.findOne(id);
 
     if (typeof entity === 'undefined') {

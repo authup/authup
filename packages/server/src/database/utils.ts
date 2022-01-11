@@ -7,22 +7,22 @@
 
 import path from 'path';
 import { ConnectionWithAdditionalOptions, buildConnectionOptions } from 'typeorm-extension';
-import {
-    OAuth2Provider,
-    OAuth2ProviderAccount,
-    OAuth2ProviderRole,
-    Permission,
-    Realm,
-    Robot,
-    RobotPermission,
-    RobotRole,
-    Role,
-    RolePermission,
-    User,
-    UserPermission,
-    UserRole,
-} from '@typescript-auth/domains';
 import { Config } from '../config';
+import {
+    OAuth2ProviderAccountEntity,
+    OAuth2ProviderEntity,
+    OAuth2ProviderRoleEntity,
+    PermissionEntity,
+    RealmEntity,
+    RobotEntity,
+    RobotPermissionEntity,
+    RobotRoleEntity,
+    RoleEntity,
+    RolePermissionEntity,
+    UserEntity,
+    UserPermissionEntity,
+    UserRoleEntity,
+} from '../domains';
 
 export function modifyDatabaseConnectionOptions(
     connectionOptions: ConnectionWithAdditionalOptions,
@@ -31,19 +31,19 @@ export function modifyDatabaseConnectionOptions(
     connectionOptions = {
         ...connectionOptions,
         entities: [
-            OAuth2Provider,
-            OAuth2ProviderAccount,
-            OAuth2ProviderRole,
-            Permission,
-            Realm,
-            Robot,
-            RobotPermission,
-            RobotRole,
-            Role,
-            RolePermission,
-            User,
-            UserPermission,
-            UserRole,
+            OAuth2ProviderEntity,
+            OAuth2ProviderAccountEntity,
+            OAuth2ProviderRoleEntity,
+            PermissionEntity,
+            RealmEntity,
+            RobotEntity,
+            RobotPermissionEntity,
+            RobotRoleEntity,
+            RoleEntity,
+            RolePermissionEntity,
+            UserEntity,
+            UserPermissionEntity,
+            UserRoleEntity,
             ...(extend && connectionOptions.entities ? connectionOptions.entities : []),
         ],
     };

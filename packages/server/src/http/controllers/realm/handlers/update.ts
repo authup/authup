@@ -6,6 +6,7 @@ import { PermissionID, Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../error/validation';
 import { runRealmValidation } from './utils';
+import { RealmEntity } from '../../../../domains';
 
 export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -26,7 +27,7 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    const realmRepository = getRepository(Realm);
+    const realmRepository = getRepository(RealmEntity);
 
     let realm = await realmRepository.findOne(id);
     if (typeof realm === 'undefined') {

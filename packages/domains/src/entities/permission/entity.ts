@@ -5,21 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    CreateDateColumn,
-    Entity,
-    PrimaryColumn,
-    UpdateDateColumn,
-} from 'typeorm';
+export interface Permission {
+    id: string;
 
-@Entity({ name: 'auth_permissions' })
-export class Permission {
-    @PrimaryColumn({ type: 'varchar', length: 128, generated: false })
-        id: string;
+    created_at: Date;
 
-    @CreateDateColumn()
-        created_at: Date;
-
-    @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 }

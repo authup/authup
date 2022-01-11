@@ -18,7 +18,7 @@ export class ClientAPI {
     }
 
     async executeCommand(
-        id: typeof Robot.prototype.id,
+        id: Robot['id'],
         command: string,
         data: Record<string, any>,
     ): Promise<SingleResourceResponse<Robot>> {

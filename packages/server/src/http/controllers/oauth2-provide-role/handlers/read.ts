@@ -12,11 +12,12 @@ import {
 import { NotFoundError } from '@typescript-error/http';
 import { OAuth2ProviderRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { OAuth2ProviderRoleEntity } from '../../../../domains';
 
 export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { page, filter } = req.query;
 
-    const repository = getRepository(OAuth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRoleEntity);
 
     const query = repository.createQueryBuilder('providerRole');
 
@@ -45,7 +46,7 @@ export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest,
 export async function getOneOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2ProviderRole);
+    const repository = getRepository(OAuth2ProviderRoleEntity);
 
     const query = repository.createQueryBuilder('providerRole')
         .where('providerRole.id = :id', { id });

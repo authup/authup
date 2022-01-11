@@ -10,6 +10,7 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-erro
 
 import { PermissionID, Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RealmEntity } from '../../../../domains';
 
 export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -18,7 +19,7 @@ export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }
 
-    const repository = getRepository(Realm);
+    const repository = getRepository(RealmEntity);
 
     const entity = await repository.findOne(id);
 

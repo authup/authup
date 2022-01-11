@@ -24,13 +24,13 @@ export class Oauth2ProviderRoleAPI {
         return response.data;
     }
 
-    async getOne(id: typeof OAuth2ProviderRole.prototype.id): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
+    async getOne(id: OAuth2ProviderRole['id']): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
         const response = await this.client.get(`provider-roles/${id}`);
 
         return response.data;
     }
 
-    async delete(id: typeof OAuth2ProviderRole.prototype.id): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
+    async delete(id: OAuth2ProviderRole['id']): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
         const response = await this.client.delete(`provider-roles/${id}`);
 
         return response.data;
@@ -43,7 +43,7 @@ export class Oauth2ProviderRoleAPI {
     }
 
     async update(
-        id: typeof OAuth2ProviderRole.prototype.id,
+        id: OAuth2ProviderRole['id'],
         data: Partial<OAuth2ProviderRole>,
     ): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
         const response = await this.client.post(`provider-roles/${id}`, data);

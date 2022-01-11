@@ -2,6 +2,7 @@ import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID, RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
+import { RolePermissionEntity } from '../../../../domains';
 
 /**
  * Drop an permission by id of a specific user.
@@ -16,7 +17,7 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(RolePermission);
+    const repository = getRepository(RolePermissionEntity);
     await repository.delete(id);
 
     return res.respondDeleted();
