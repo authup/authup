@@ -50,17 +50,17 @@ export class User {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null,
+        type: 'varchar', length: 256, nullable: true, default: null, select: false,
     })
         reset_hash: string | null;
 
     @Column({
-        type: 'datetime', nullable: true, default: null,
+        type: 'datetime', nullable: true, default: null, select: false,
     })
         reset_at: Date | null;
 
     @Column({
-        type: 'datetime', nullable: true, default: null,
+        type: 'datetime', nullable: true, default: null, select: false,
     })
         reset_expires: Date | null;
 
@@ -84,7 +84,7 @@ export class User {
         active: boolean;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null,
+        type: 'varchar', length: 256, nullable: true, default: null, select: false,
     })
         activate_hash: string | null;
 

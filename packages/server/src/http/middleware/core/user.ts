@@ -38,7 +38,7 @@ export async function verifyUserForMiddlewareRequest(
                     directory: options.writableDirectoryPath,
                 });
 
-                if (tokenPayload.subKind === TokenSubKind.ROBOT) {
+                if (tokenPayload.subKind === TokenSubKind.USER) {
                     condition.id = tokenPayload.sub as typeof User.prototype.id;
                 } else {
                     throw new TokenInvalidError();
@@ -69,6 +69,10 @@ export async function verifyUserForMiddlewareRequest(
     }
 
     const permissions = await repository.getOwnedPermissions(entity.id);
+
+    if (header.type === 'Bearer') {
+        request.token = header.token;
+    }
 
     request.user = entity;
     request.userId = entity.id;

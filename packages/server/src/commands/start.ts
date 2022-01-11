@@ -10,10 +10,10 @@ import { createConnection } from 'typeorm';
 import * as ora from 'ora';
 import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
-import { ServerStartContext } from './type';
+import { StartCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
 
-export async function startCommand(context: ServerStartContext) {
+export async function startCommand(context: StartCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
@@ -42,7 +42,7 @@ export async function startCommand(context: ServerStartContext) {
 
     spinner.start('Establish database connection.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.extendDatabaseConnection);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
     const connection = await createConnection(connectionOptions);
     if (context.config.env === 'development') {
         await connection.synchronize();

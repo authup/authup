@@ -6,6 +6,6 @@
  */
 
 export * from './create';
-export * from './custom';
+export * from './verify';
 export * from './delete';
 export * from './type';

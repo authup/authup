@@ -9,16 +9,16 @@ import * as ora from 'ora';
 import { createConnection } from 'typeorm';
 import { dropDatabase } from 'typeorm-extension';
 import { buildDatabaseConnectionOptions } from '../database';
-import { ServerStartContext } from './type';
+import { StartCommandContext } from './type';
 
-export async function resetCommand(context: ServerStartContext) {
+export async function resetCommand(context: StartCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
 
     spinner.start('Executing database reset.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.extendDatabaseConnection);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
     await dropDatabase({ ifExist: true }, connectionOptions);
 
     spinner.succeed('Executed database reset.');

@@ -9,6 +9,7 @@ import { Application } from 'express';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { createTokenRouteHandler, deleteTokenRouteHandler, verifyTokenRouteHandler } from './handlers';
 import { TokenControllerOptions } from './type';
+import { forceLoggedIn } from '../../middleware';
 
 export function registerTokenController(router: Application, options: TokenControllerOptions) {
     router.post('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
@@ -28,6 +29,14 @@ export function registerTokenController(router: Application, options: TokenContr
     });
 
     router.get('/token/:id', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+        try {
+            await verifyTokenRouteHandler(req, res, options);
+        } catch (e) {
+            next(e);
+        }
+    });
+
+    router.get('/token', [forceLoggedIn], async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
             await verifyTokenRouteHandler(req, res, options);
         } catch (e) {

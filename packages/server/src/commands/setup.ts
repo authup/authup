@@ -9,13 +9,13 @@ import * as ora from 'ora';
 import path from 'path';
 import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
-import { ServerSetupContext } from './type';
+import { SetupCommandContext } from './type';
 import { createSecurityKeyPair } from '../utils';
 import { generateSwaggerDocumentation } from '../http/swagger';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
 import { useConfig } from '../config';
 
-export async function setupCommand(context: ServerSetupContext) {
+export async function setupCommand(context: SetupCommandContext) {
     context.config ??= useConfig();
 
     const writableDirectoryPath = path.join(
@@ -63,7 +63,7 @@ export async function setupCommand(context: ServerSetupContext) {
         /**
          * Setup database with schema & seeder
          */
-        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.extendDatabaseConnection);
+        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
 
         if (context.database) {
             spinner.start('Creating database.');
@@ -82,14 +82,13 @@ export async function setupCommand(context: ServerSetupContext) {
                 spinner.start('Seeding database.');
 
                 const seeder = new DatabaseRootSeeder({
-                    user: {
-                        resetPassword: true,
-                        name: context.config.adminUsername,
-                        password: context.config.adminPassword,
-                    },
-                    robot: {
-                        resetSecret: true,
-                    },
+                    userName: context.config.adminUsername,
+                    userPassword: context.config.adminPassword,
+                    userPasswordReset: true,
+
+                    robotSecretReset: true,
+
+                    ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
                 });
 
                 spinner.succeed('Seeded database.');

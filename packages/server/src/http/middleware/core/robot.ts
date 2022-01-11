@@ -80,6 +80,10 @@ export async function verifyClientForMiddlewareRequest(
         permissions = await repository.getOwnedPermissions(entity.id);
     }
 
+    if (header.type === 'Bearer') {
+        request.token = header.token;
+    }
+
     request.robotId = entity.id;
     request.userId = entity.user_id;
     request.realmId = entity.realm_id;

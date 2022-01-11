@@ -15,14 +15,13 @@ import { RoleRepository, UserRepository } from '../../domains';
 import { hashPassword } from '../../utils';
 
 type DatabaseRootSeederOptions = {
-    user: {
-        name: string,
-        password: string,
-        resetPassword?: boolean
-    },
-    robot?: {
-        resetSecret?: boolean
-    }
+    permissions?: string[],
+
+    userName: string,
+    userPassword: string,
+    userPasswordReset?: boolean,
+
+    robotSecretReset?: boolean
 };
 
 type DatabaseRootSeederRunResponse = {
@@ -34,7 +33,6 @@ class DatabaseRootSeeder implements Seeder {
     protected options: DatabaseRootSeederOptions;
 
     constructor(options: DatabaseRootSeederOptions) {
-        options.robot ??= {};
         this.options = options;
     }
 
@@ -80,20 +78,20 @@ class DatabaseRootSeeder implements Seeder {
          */
         const userRepository = connection.getCustomRepository(UserRepository);
         let user = await userRepository.findOne({
-            name: this.options.user.name,
+            name: this.options.userName,
         });
 
         if (typeof user === 'undefined') {
             user = userRepository.create({
-                name: this.options.user.name,
-                password: await hashPassword(this.options.user.password),
+                name: this.options.userName,
+                password: await hashPassword(this.options.userPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
             });
 
             response.user = user;
-        } else if (this.options.user.resetPassword) {
-            user.password = await hashPassword(this.options.user.password);
+        } else if (this.options.userPasswordReset) {
+            user.password = await hashPassword(this.options.userPassword);
         }
 
         await userRepository.save(user);
@@ -121,7 +119,10 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Create all permissions
          */
-        let permissionIds : string[] = Object.values(PermissionID);
+        let permissionIds : string[] = [
+            ...Object.values(PermissionID),
+            ...(this.options.permissions ? this.options.permissions : []),
+        ];
         const permissionRepository = connection.getRepository(Permission);
 
         const existingPermissions = await permissionRepository.find({
@@ -195,7 +196,7 @@ class DatabaseRootSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
-        } else if (this.options.robot.resetSecret) {
+        } else if (this.options.robotSecretReset) {
             const secret = createNanoID(undefined, 36);
             robot.secret = await hashPassword(secret);
 

@@ -6,21 +6,25 @@
  */
 
 import { Config } from '../config';
+import { DatabaseRootSeederOptions } from '../database';
 
-export type ServerContext = {
+export type CommandContext = {
     config?: Config,
-    extendDatabaseConnection?: boolean
+    databaseConnectionExtend?: boolean,
+    databaseSeederOptions?: DatabaseRootSeederOptions
 };
 
-export type ServerStartContext = ServerContext;
+export type StartCommandContext = CommandContext;
 
-export type ServerSetupContext = ServerContext & {
+export type SetupCommandContext = CommandContext & {
     keyPair: boolean,
     database: boolean,
     databaseSeeder: boolean,
     documentation: boolean
 };
 
-export type ServerUpgradeContext = ServerContext;
+export type UpgradeCommandContext = CommandContext;
 
-export type ServerResetContext = ServerContext;
+export type ResetCommandContext = CommandContext;
+
+export type CheckCommandContext = CommandContext;

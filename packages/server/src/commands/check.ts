@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createConnection } from 'typeorm';
 import * as ora from 'ora';
-import { UpgradeCommandContext } from './type';
-import { buildDatabaseConnectionOptions } from '../database';
+import { createConnection } from 'typeorm';
+import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
+import { CheckCommandContext } from './type';
 
-export async function upgradeCommand(context: UpgradeCommandContext) {
+export async function checkCommand(context: CheckCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
@@ -23,9 +23,17 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
     spinner.succeed('Established database connection.');
 
     try {
-        spinner.start('Execute migrations.');
-        await connection.runMigrations({ transaction: 'all' });
-        spinner.succeed('Executed migrations.');
+        spinner.start('Seeding database.');
+
+        const seeder = new DatabaseRootSeeder({
+            userName: context.config.adminUsername,
+            userPassword: context.config.adminPassword,
+
+            ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
+        });
+        await seeder.run(connection);
+
+        spinner.succeed('Seeded database.');
     } finally {
         await connection.close();
     }

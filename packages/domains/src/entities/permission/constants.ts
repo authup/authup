@@ -32,6 +32,8 @@ export enum PermissionID {
     ROLE_PERMISSION_ADD = 'role_permission_add',
     ROLE_PERMISSION_DROP = 'role_permission_drop',
 
+    TOKEN_VERIFY = 'verify_token',
+
     PROVIDER_ADD = 'provider_add',
     PROVIDER_DROP = 'provider_drop',
     PROVIDER_EDIT = 'provider_edit',

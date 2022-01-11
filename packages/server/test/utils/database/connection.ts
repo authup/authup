@@ -35,10 +35,8 @@ export async function useTestDatabase() {
     await connection.synchronize();
 
     const core = new DatabaseRootSeeder({
-        user: {
-            name: config.adminUsername,
-            password: config.adminPassword,
-        },
+        userName: config.adminUsername,
+        userPassword: config.adminPassword,
     });
 
     await core.run(connection);

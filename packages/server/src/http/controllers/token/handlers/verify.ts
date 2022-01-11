@@ -7,7 +7,7 @@
 
 import { getCustomRepository } from 'typeorm';
 import {
-    MASTER_REALM_ID, PermissionID, TokenPayload, TokenSubKind, TokenVerificationPayload,
+    PermissionID, TokenPayload, TokenSubKind, TokenVerificationPayload,
 } from '@typescript-auth/domains';
 import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -21,15 +21,18 @@ export async function verifyTokenRouteHandler(
     res: ExpressResponse,
     context: TokenRouteVerifyContext,
 ) : Promise<any> {
-    const { id } = req.params;
+    let { id } = req.params;
 
-    // todo: this should be handled by a permission :)
     if (
-        req.realmId !== MASTER_REALM_ID ||
-        !(
-            req.ability.hasPermission(PermissionID.USER_EDIT) ||
-            req.robotId
-        )
+        !id &&
+        typeof req.token === 'string'
+    ) {
+        id = req.token;
+    }
+
+    if (
+        req.token !== id ||
+        req.ability.hasPermission(PermissionID.TOKEN_VERIFY)
     ) {
         throw new ForbiddenError();
     }
