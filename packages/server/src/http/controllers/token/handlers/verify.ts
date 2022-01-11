@@ -31,8 +31,8 @@ export async function verifyTokenRouteHandler(
     }
 
     if (
-        req.token !== id ||
-        req.ability.hasPermission(PermissionID.TOKEN_VERIFY)
+        req.token !== id &&
+        !req.ability.hasPermission(PermissionID.TOKEN_VERIFY)
     ) {
         throw new ForbiddenError();
     }
