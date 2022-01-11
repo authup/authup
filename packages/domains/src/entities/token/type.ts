@@ -39,14 +39,14 @@ export type TokenPayload = Partial<AccessTokenPayload> & {
     exp?: number
 };
 
-type TokenTargetUser = {
+type TokeEntityUser = {
     type: `${TokenSubKind.ROBOT}`,
     data: Partial<User> & {
         permissions: PermissionItem<any>[]
     }
 };
 
-type TokenTargetClient = {
+type TokenEntityClient = {
     type: `${TokenSubKind.USER}`,
     data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
@@ -55,7 +55,7 @@ type TokenTargetClient = {
 
 export type TokenVerificationPayload = {
     token: TokenPayload,
-    target: TokenTargetUser | TokenTargetClient
+    entity: TokeEntityUser | TokenEntityClient
 };
 
 export type TokenGrantPayload = {

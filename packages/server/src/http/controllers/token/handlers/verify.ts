@@ -32,6 +32,7 @@ export async function verifyTokenRouteHandler(
 
     if (
         req.token !== id &&
+        !req.ability &&
         !req.ability.hasPermission(PermissionID.TOKEN_VERIFY)
     ) {
         throw new ForbiddenError();
@@ -49,7 +50,7 @@ export async function verifyTokenRouteHandler(
 
     const response : TokenVerificationPayload = {
         token: tokenPayload,
-        target: {
+        entity: {
             type: tokenPayload.subKind,
             data: undefined,
         },
@@ -73,7 +74,7 @@ export async function verifyTokenRouteHandler(
                 permissions = await robotRepository.getOwnedPermissions(robot.id);
             }
 
-            response.target.data = {
+            response.entity.data = {
                 ...robot,
                 permissions,
             };
@@ -93,7 +94,7 @@ export async function verifyTokenRouteHandler(
 
             const permissions = await userRepository.getOwnedPermissions(user.id);
 
-            response.target.data = {
+            response.entity.data = {
                 ...user,
                 permissions,
             };

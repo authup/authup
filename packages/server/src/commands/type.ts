@@ -11,7 +11,7 @@ import { DatabaseRootSeederOptions } from '../database';
 export type CommandContext = {
     config?: Config,
     databaseConnectionExtend?: boolean,
-    databaseSeederOptions?: DatabaseRootSeederOptions
+    databaseSeederOptions?: Partial<DatabaseRootSeederOptions>
 };
 
 export type StartCommandContext = CommandContext;
