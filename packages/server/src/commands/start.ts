@@ -13,7 +13,7 @@ import { createExpressApp, createHttpServer } from '../http';
 import { ServerStartContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
 
-export async function startServer(context: ServerStartContext) {
+export async function startCommand(context: ServerStartContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
@@ -42,7 +42,7 @@ export async function startServer(context: ServerStartContext) {
 
     spinner.start('Establish database connection.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.extendDatabaseConnection);
     const connection = await createConnection(connectionOptions);
     if (context.config.env === 'development') {
         await connection.synchronize();

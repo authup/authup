@@ -7,7 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
-import { setupServer } from '../../server/setup';
+import { setupCommand } from '../../commands/setup';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -60,7 +60,7 @@ export class SetupCommand implements CommandModule {
         const config = useConfig(args.root);
 
         try {
-            await setupServer({
+            await setupCommand({
                 config,
                 ...args,
             });

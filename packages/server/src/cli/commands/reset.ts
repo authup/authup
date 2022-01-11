@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import {
-    buildConnectionOptions, dropDatabase,
+    dropDatabase,
 } from 'typeorm-extension';
 import {
     buildDatabaseConnectionOptions,
-    createDatabaseDefaultConnectionOptions,
-    extendDatabaseConnectionOptions,
-} from '../../database/utils';
+} from '../../database';
 import { useConfig } from '../../config';
+import { resetCommand } from '../../commands/reset';
 
 interface ResetArguments extends Arguments {
     root: string;
@@ -37,9 +35,8 @@ export class ResetCommand implements CommandModule {
 
     async handler(args: ResetArguments) {
         const config = useConfig(args.root);
-        const connectionOptions = await buildDatabaseConnectionOptions(config);
 
-        await dropDatabase({ ifExist: true }, connectionOptions);
+        await resetCommand({ config });
 
         process.exit(0);
     }

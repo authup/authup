@@ -7,14 +7,20 @@
 
 import { Config } from '../config';
 
-export type ServerStartContext = {
-    config: Config
+export type ServerContext = {
+    config?: Config,
+    extendDatabaseConnection?: boolean
 };
 
-export type ServerSetupContext = {
-    config?: Config,
+export type ServerStartContext = ServerContext;
+
+export type ServerSetupContext = ServerContext & {
     keyPair: boolean,
     database: boolean,
     databaseSeeder: boolean,
     documentation: boolean
 };
+
+export type ServerUpgradeContext = ServerContext;
+
+export type ServerResetContext = ServerContext;

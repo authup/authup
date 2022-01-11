@@ -15,7 +15,7 @@ import { generateSwaggerDocumentation } from '../http/swagger';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
 import { useConfig } from '../config';
 
-export async function setupServer(context: ServerSetupContext) {
+export async function setupCommand(context: ServerSetupContext) {
     context.config ??= useConfig();
 
     const writableDirectoryPath = path.join(
@@ -63,7 +63,7 @@ export async function setupServer(context: ServerSetupContext) {
         /**
          * Setup database with schema & seeder
          */
-        const connectionOptions = await buildDatabaseConnectionOptions(context.config);
+        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.extendDatabaseConnection);
 
         if (context.database) {
             spinner.start('Creating database.');

@@ -5,4 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './reset';
+export * from './setup';
 export * from './start';
+export * from './type';
+export * from './upgrade';

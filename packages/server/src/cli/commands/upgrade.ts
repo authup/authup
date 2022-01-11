@@ -5,16 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { buildConnectionOptions } from 'typeorm-extension';
-import { createConnection } from 'typeorm';
+import { upgradeCommand } from '../../commands/upgrade';
 import { useConfig } from '../../config';
-import {
-    buildDatabaseConnectionOptions,
-    createDatabaseDefaultConnectionOptions,
-    extendDatabaseConnectionOptions,
-} from '../../database/utils';
 
 interface UpgradeArguments extends Arguments {
     root: string;
@@ -35,18 +28,19 @@ export class UpgradeCommand implements CommandModule {
             });
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async handler(args: UpgradeArguments) {
         const config = useConfig(args.root);
-        const connectionOptions = await buildDatabaseConnectionOptions(config);
-
-        const connection = await createConnection(connectionOptions);
 
         try {
-            await connection.runMigrations({ transaction: 'all' });
-            // eslint-disable-next-line no-useless-catch
-        } finally {
-            await connection.close();
+            await upgradeCommand({
+                config,
+            });
+
+            process.exit(0);
+        } catch (e) {
+            console.log(e);
+
+            process.exit(1);
         }
     }
 }

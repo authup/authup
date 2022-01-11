@@ -7,50 +7,80 @@
 
 import path from 'path';
 import { ConnectionWithAdditionalOptions, buildConnectionOptions } from 'typeorm-extension';
+import {
+    OAuth2Provider,
+    OAuth2ProviderAccount,
+    OAuth2ProviderRole,
+    Permission,
+    Realm,
+    Robot,
+    RobotPermission,
+    RobotRole,
+    Role,
+    RolePermission,
+    User,
+    UserPermission,
+    UserRole,
+} from '@typescript-auth/domains';
 import { Config } from '../config';
 
-export function extendDatabaseConnectionOptions(connectionOptions: ConnectionWithAdditionalOptions) {
+export function modifyDatabaseConnectionOptions(
+    connectionOptions: ConnectionWithAdditionalOptions,
+    extend?: boolean,
+) {
     connectionOptions = {
         ...connectionOptions,
         entities: [
-            ...(connectionOptions.entities ? connectionOptions.entities : []),
-            path.join(__dirname, 'entities{.ts,.js}'),
+            OAuth2Provider,
+            OAuth2ProviderAccount,
+            OAuth2ProviderRole,
+            Permission,
+            Realm,
+            Robot,
+            RobotPermission,
+            RobotRole,
+            Role,
+            RolePermission,
+            User,
+            UserPermission,
+            UserRole,
+            ...(extend && connectionOptions.entities ? connectionOptions.entities : []),
         ],
     };
 
     connectionOptions = {
         ...connectionOptions,
         migrations: [
-            ...(connectionOptions.migrations ? connectionOptions.migrations : []),
             path.join(__dirname, 'migrations', '*{.ts,.js}'),
+            ...(extend && connectionOptions.migrations ? connectionOptions.migrations : []),
         ],
     };
 
     return connectionOptions;
 }
 
-export function createDatabaseDefaultConnectionOptions(config: Config) {
-    return {
-        name: 'default',
-        type: 'sqlite',
-        database: path.join(config.rootPath, config.writableDirectory, config.env === 'test' ? 'test.sql' : 'db.sql'),
-        subscribers: [],
-        migrations: [],
-    };
-}
-
-export async function buildDatabaseConnectionOptions(config: Config) : Promise<ConnectionWithAdditionalOptions> {
+export async function buildDatabaseConnectionOptions(
+    config: Config,
+    extend?: boolean,
+) : Promise<ConnectionWithAdditionalOptions> {
     let connectionOptions;
 
     try {
         connectionOptions = await buildConnectionOptions({
             root: config.rootPath,
+            buildForCommand: true,
         });
     } catch (e) {
-        connectionOptions = createDatabaseDefaultConnectionOptions(config);
+        connectionOptions = {
+            name: 'default',
+            type: 'sqlite',
+            database: path.join(config.rootPath, config.writableDirectory, config.env === 'test' ? 'test.sql' : 'db.sql'),
+            subscribers: [],
+            migrations: [],
+        };
     }
 
-    connectionOptions = extendDatabaseConnectionOptions(connectionOptions);
+    connectionOptions = modifyDatabaseConnectionOptions(connectionOptions, extend);
 
     return connectionOptions;
 }

@@ -6,6 +6,8 @@
  */
 
 export * from './core';
+export * from './commands';
+export * from './config';
 export * from './database';
 export * from './domains';
 export * from './http';
