@@ -29,6 +29,13 @@ type DatabaseRootSeederRunResponse = {
     user?: Partial<User>
 };
 
+function getPermissions(options: DatabaseRootSeederOptions) {
+    return [
+        ...Object.values(PermissionID),
+        ...(options.permissions ? options.permissions : []),
+    ];
+}
+
 class DatabaseRootSeeder implements Seeder {
     protected options: DatabaseRootSeederOptions;
 
@@ -119,10 +126,8 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Create all permissions
          */
-        let permissionIds : string[] = [
-            ...Object.values(PermissionID),
-            ...(this.options.permissions ? this.options.permissions : []),
-        ];
+        let permissionIds : string[] = getPermissions(this.options);
+
         const permissionRepository = connection.getRepository(Permission);
 
         const existingPermissions = await permissionRepository.find({
@@ -146,7 +151,7 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Assign all permissions to default role.
          */
-        permissionIds = Object.values(PermissionID);
+        permissionIds = getPermissions(this.options);
         const rolePermissionRepository = connection.getRepository(RolePermission);
 
         const existingRolePermissions = await rolePermissionRepository.find({
@@ -211,7 +216,7 @@ class DatabaseRootSeeder implements Seeder {
         /**
          * Assign all permissions to default robot.
          */
-        permissionIds = Object.values(PermissionID);
+        permissionIds = getPermissions(this.options);
         const robotPermissionRepository = connection.getRepository(RobotPermission);
 
         const existingRobotPermissions = await robotPermissionRepository.find({
