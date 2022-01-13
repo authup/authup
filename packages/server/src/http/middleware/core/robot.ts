@@ -33,9 +33,10 @@ export async function verifyClientForMiddlewareRequest(
     const condition : Partial<Robot> = {};
 
     switch (header.type) {
-        case 'Basic':
+        case 'Basic': {
             condition.id = header.username;
             break;
+        }
         case 'Bearer': {
             let tokenPayload : TokenPayload;
 

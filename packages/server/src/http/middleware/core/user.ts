@@ -30,9 +30,10 @@ export async function verifyUserForMiddlewareRequest(
     const condition : Partial<User> = {};
 
     switch (header.type) {
-        case 'Basic':
+        case 'Basic': {
             condition.name = header.username;
             break;
+        }
         case 'Bearer': {
             let tokenPayload : TokenPayload;
 
