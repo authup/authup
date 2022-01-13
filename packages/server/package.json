@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server",
-    "version": "2.0.0-alpha.8",
+    "version": "2.0.0-alpha.9",
     "description": "This package can be used as simple server in standalone mode or as an extension.",
     "main": "dist/index.js",
     "scripts": {
