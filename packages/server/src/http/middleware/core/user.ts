@@ -34,18 +34,20 @@ export async function verifyUserForMiddlewareRequest(
             condition.name = header.username;
             break;
         case 'Bearer': {
+            let tokenPayload : TokenPayload;
+
             try {
-                const tokenPayload: TokenPayload = await verifyToken(header.token, {
+                tokenPayload = await verifyToken(header.token, {
                     directory: options.writableDirectoryPath,
                 });
-
-                if (tokenPayload.subKind === TokenSubKind.USER) {
-                    condition.id = tokenPayload.sub as User['id'];
-                } else {
-                    throw new TokenSubKindInvalidError();
-                }
             } catch (e) {
                 throw new TokenInvalidError();
+            }
+
+            if (tokenPayload.subKind === TokenSubKind.USER) {
+                condition.id = tokenPayload.sub as User['id'];
+            } else {
+                throw new TokenSubKindInvalidError();
             }
             break;
         }
