@@ -12,6 +12,8 @@ import { ExpressRequest } from '../../type';
 import { verifyUserForMiddlewareRequest } from './user';
 import { verifyClientForMiddlewareRequest } from './robot';
 import { AuthMiddlewareOptions } from './type';
+import { TokenInvalidError } from '../../error/token-invalid';
+import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {
@@ -61,7 +63,7 @@ export async function authenticateWithAuthorizationHeader(
     try {
         await verifyUserForMiddlewareRequest(request, value, options);
     } catch (e) {
-        if (e instanceof NotFoundError) {
+        if (e instanceof NotFoundError || e instanceof TokenSubKindInvalidError) {
             await verifyClientForMiddlewareRequest(request, value, options);
         } else {
             throw e;

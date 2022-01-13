@@ -18,6 +18,7 @@ import { UserRepository } from '../../../domains';
 import { CredentialsInvalidError } from '../../error/credentials-invalid';
 import { TokenInvalidError } from '../../error/token-invalid';
 import { AuthHeaderTypeUnsupported } from '../../error/auth-header-type-unsupported';
+import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
 
 export async function verifyUserForMiddlewareRequest(
     request: ExpressRequest,
@@ -41,7 +42,7 @@ export async function verifyUserForMiddlewareRequest(
                 if (tokenPayload.subKind === TokenSubKind.USER) {
                     condition.id = tokenPayload.sub as User['id'];
                 } else {
-                    throw new TokenInvalidError();
+                    throw new TokenSubKindInvalidError();
                 }
             } catch (e) {
                 throw new TokenInvalidError();

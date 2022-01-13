@@ -21,6 +21,7 @@ import { verifyToken } from '../../../utils';
 import { CredentialsInvalidError } from '../../error/credentials-invalid';
 import { TokenInvalidError } from '../../error/token-invalid';
 import { AuthHeaderTypeUnsupported } from '../../error/auth-header-type-unsupported';
+import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
 
 export async function verifyClientForMiddlewareRequest(
     request: ExpressRequest,
@@ -44,7 +45,7 @@ export async function verifyClientForMiddlewareRequest(
                 if (tokenPayload.subKind === TokenSubKind.ROBOT) {
                     condition.id = tokenPayload.sub as Robot['id'];
                 } else {
-                    throw new TokenInvalidError();
+                    throw new TokenSubKindInvalidError();
                 }
             } catch (e) {
                 throw new TokenInvalidError();
