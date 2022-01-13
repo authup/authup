@@ -41,7 +41,7 @@
         "@trapi/query": "^2.0.3",
         "@typescript-auth/core": "^1.1.0",
         "axios": "^0.24.0",
-        "nanoid": "^3.1.31"
+        "nanoid": "^3.1.32"
     },
     "devDependencies": {
         "@types/node": "^17.0.4",
