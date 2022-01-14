@@ -10,7 +10,7 @@ import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { SingleResourceResponse } from '../type';
 
-export class ClientAPI {
+export class RobotAPI {
     protected client: AxiosInstance;
 
     constructor(client: AxiosInstance) {
