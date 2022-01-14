@@ -13,8 +13,7 @@ import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { verifyToken } from '../../../../utils';
 import { TokenRouteVerifyContext } from './type';
-import { UserRepository } from '../../../../domains';
-import { RobotRepository } from '../../../../domains/robot';
+import { RobotRepository, UserRepository } from '../../../../domains';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
@@ -30,10 +29,12 @@ export async function verifyTokenRouteHandler(
         id = req.token;
     }
 
+    const hasPermission = req.ability &&
+        req.ability.hasPermission(PermissionID.TOKEN_VERIFY);
+
     if (
         req.token !== id &&
-        !req.ability &&
-        !req.ability.hasPermission(PermissionID.TOKEN_VERIFY)
+        !hasPermission
     ) {
         throw new ForbiddenError();
     }

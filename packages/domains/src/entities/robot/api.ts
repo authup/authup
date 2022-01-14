@@ -6,9 +6,10 @@
  */
 
 import { AxiosInstance } from 'axios';
+import { BuildInput, buildQuery } from '@trapi/query';
 import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class RobotAPI {
     protected client: AxiosInstance;
@@ -23,15 +24,54 @@ export class RobotAPI {
         data: Record<string, any>,
     ): Promise<SingleResourceResponse<Robot>> {
         const { data: resultData } = await this.client
-            .post(`clients/${id}/command`, { command, ...data });
+            .post(`robots/${id}/command`, { command, ...data });
 
         return resultData;
     }
 
-    async create(data: Partial<Robot>) {
-        const { data: resultData } = await this.client
-            .post('clients', nullifyEmptyObjectProperties(data));
+    async getMany(
+        options?: BuildInput<Robot>,
+    ): Promise<CollectionResourceResponse<Robot>> {
+        const response = await this.client
+            .get(`robots${buildQuery(options)}`);
 
-        return resultData;
+        return response.data;
+    }
+
+    async getOne(
+        id: Robot['id'],
+        options?: BuildInput<Robot>,
+    ): Promise<SingleResourceResponse<Robot>> {
+        const response = await this.client
+            .get(`robots/${id}${buildQuery(options)}`);
+
+        return response.data;
+    }
+
+    async delete(
+        id: Robot['id'],
+    ): Promise<SingleResourceResponse<Robot>> {
+        const response = await this.client
+            .delete(`robots/${id}`);
+
+        return response.data;
+    }
+
+    async create(
+        data: Partial<Robot>,
+    ): Promise<SingleResourceResponse<Robot>> {
+        const response = await this.client
+            .post('robots', nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async update(
+        id: Robot['id'],
+        data: Partial<Robot>,
+    ): Promise<SingleResourceResponse<Robot>> {
+        const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
     }
 }
