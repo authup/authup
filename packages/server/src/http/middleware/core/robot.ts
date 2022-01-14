@@ -13,10 +13,9 @@ import { getCustomRepository } from 'typeorm';
 import {
     Robot, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
-import { BadRequestError, NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { RobotRepository } from '../../../domains/robot';
-import { UserRepository } from '../../../domains';
+import { RobotRepository, UserRepository } from '../../../domains';
 import { verifyToken } from '../../../utils';
 import { CredentialsInvalidError } from '../../error/credentials-invalid';
 import { TokenInvalidError } from '../../error/token-invalid';
