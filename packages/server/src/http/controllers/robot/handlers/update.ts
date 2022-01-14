@@ -14,10 +14,6 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    if (data.secret) {
-        data.secret = await hashPassword(data.secret);
-    }
-
     const repository = getRepository<Robot>(RobotEntity);
     let entity = await repository.findOne(id);
 

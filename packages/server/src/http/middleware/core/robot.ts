@@ -70,7 +70,7 @@ export async function verifyClientForMiddlewareRequest(
 
     if (
         header.type === 'Basic' &&
-        !await repository.verifyCredentials(header.username, header.password)
+        header.password !== entity.secret
     ) {
         throw new CredentialsInvalidError();
     }

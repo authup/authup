@@ -12,9 +12,8 @@ import {
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../utils';
-import { UserRepository } from '../../../../domains';
+import { RobotRepository, UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
-import { RobotRepository } from '../../../../domains/robot';
 import { CredentialsInvalidError } from '../../../error/credentials-invalid';
 
 function determineGrantType(req: ExpressRequest) : TokenGrantType {
@@ -40,16 +39,16 @@ export async function createTokenRouteHandler(
         case TokenGrant.ROBOT_CREDENTIALS: {
             const { id, secret } = req.body;
 
-            const clientRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const client = await clientRepository.verifyCredentials(id, secret);
+            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+            const robotEntity = await robotRepository.verifyCredentials(id, secret);
 
-            if (typeof client === 'undefined') {
+            if (typeof robotEntity === 'undefined') {
                 throw new CredentialsInvalidError();
             }
 
             const tokenPayload: TokenPayload = {
                 iss: context.selfUrl,
-                sub: client.id,
+                sub: robotEntity.id,
                 subKind: TokenSubKind.ROBOT,
                 remoteAddress: req.ip,
             };

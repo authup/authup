@@ -9,7 +9,7 @@ import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
-    MASTER_REALM_ID, PermissionID, Robot,
+    MASTER_REALM_ID, PermissionID,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
@@ -18,22 +18,22 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
     const { filter, page } = req.query;
 
     const repository = getRepository(RobotEntity);
-    const query = repository.createQueryBuilder('client');
+    const query = repository.createQueryBuilder('robot');
 
     applyFilters(query, filter, {
         allowed: ['id', 'name'],
-        defaultAlias: 'client',
+        defaultAlias: 'robot',
     });
 
     if (
         !req.ability.hasPermission(PermissionID.ROBOT_EDIT) &&
         !req.ability.hasPermission(PermissionID.ROBOT_DROP)
     ) {
-        query.andWhere('client.user_id = :userId', { userId: req.userId });
+        query.andWhere('robot.user_id = :userId', { userId: req.userId });
     }
 
     if (req.realmId !== MASTER_REALM_ID) {
-        query.andWhere('client.realm_id = :realmId', { realmId: req.realmId });
+        query.andWhere('robot.realm_id = :realmId', { realmId: req.realmId });
     }
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
@@ -54,8 +54,8 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const clientRepository = getRepository(RobotEntity);
-    const entity = await clientRepository.findOne(id);
+    const robotRepository = getRepository(RobotEntity);
+    const entity = await robotRepository.findOne(id);
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
