@@ -13,7 +13,7 @@ import { Robot } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createRobotRouteHandler,
-    deleteClientRouteHandler,
+    deleteRobotRouteHandler,
     getManyRobotRouteHandler,
     getOneRobotRouteHandler,
     updateRobotRouteHandler,
@@ -64,6 +64,6 @@ export class RobotController {
             @Request() req: any,
             @Response() res: any,
     ): Promise<Robot> {
-        return deleteClientRouteHandler(req, res);
+        return deleteRobotRouteHandler(req, res);
     }
 }

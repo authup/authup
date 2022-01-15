@@ -1,5 +1,5 @@
 import { getRepository } from 'typeorm';
-import { ForbiddenError } from '@typescript-error/http';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
@@ -14,7 +14,13 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     const repository = getRepository(RoleEntity);
     const entity = await repository.findOne(id);
 
+    if (typeof entity === 'undefined') {
+        throw new NotFoundError();
+    }
+
     await repository.remove(entity);
 
-    return res.respondDeleted();
+    return res.respondDeleted({
+        data: entity,
+    });
 }

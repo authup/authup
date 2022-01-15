@@ -26,7 +26,7 @@ export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: Expre
         throw new NotFoundError();
     }
 
-    await repository.delete(entity.id);
+    await repository.remove(entity);
 
     return res.respondDeleted({ data: entity });
 }

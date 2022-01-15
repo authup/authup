@@ -15,18 +15,20 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new BadRequestError('The own user can not be deleted.');
     }
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
-    const user = await userRepository.findOne(id);
+    const repository = getCustomRepository<UserRepository>(UserRepository);
+    const entity = await repository.findOne(id);
 
-    if (typeof user === 'undefined') {
+    if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, user.realm_id)) {
-        throw new ForbiddenError(`You are not authorized to drop a user fo the realm ${user.realm_id}`);
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError(`You are not authorized to drop a user fo the realm ${entity.realm_id}`);
     }
 
-    await userRepository.remove(user);
+    await repository.remove(entity);
 
-    return res.respondDeleted();
+    return res.respondDeleted({
+        data: entity,
+    });
 }

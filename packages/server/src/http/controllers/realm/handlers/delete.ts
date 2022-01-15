@@ -31,7 +31,9 @@ export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new BadRequestError('The realm can not be deleted in general.');
     }
 
-    await repository.delete(id);
+    await repository.remove(entity);
 
-    return res.respondDeleted();
+    return res.respondDeleted({
+        data: entity,
+    });
 }
