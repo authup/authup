@@ -30,7 +30,7 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
     const repository = getRepository<Robot>(RobotEntity);
     const entity = repository.create(data);
 
-    entity.secret = entity.secret || createNanoID(undefined, 36);
+    entity.secret = entity.secret || createNanoID(undefined, 128);
     entity.realm_id = req.realmId;
 
     await repository.save(entity);

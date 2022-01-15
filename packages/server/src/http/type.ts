@@ -10,7 +10,7 @@ import {
 } from 'express';
 import { Realm, Robot, User } from '@typescript-auth/domains';
 import { AbilityManager } from '@typescript-auth/core';
-import { UserEntity } from '../domains';
+import { RobotEntity, UserEntity } from '../domains';
 
 export interface ExpressAppInterface extends Express {
 
@@ -20,6 +20,7 @@ export interface ExpressRequest extends Request {
     user?: UserEntity,
     userId?: User['id'],
 
+    robot?: RobotEntity,
     robotId?: Robot['id'],
 
     realmId?: Realm['id'],

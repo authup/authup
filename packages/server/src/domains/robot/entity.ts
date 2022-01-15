@@ -27,7 +27,7 @@ export class RobotEntity implements Robot {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 512, select: false })
+    @Column({ type: 'varchar', length: 256, select: false })
         secret: string;
 
     @Index({ unique: true })

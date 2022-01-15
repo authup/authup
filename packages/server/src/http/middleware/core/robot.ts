@@ -88,6 +88,7 @@ export async function verifyClientForMiddlewareRequest(
         request.token = header.token;
     }
 
+    request.robot = entity;
     request.robotId = entity.id;
     request.userId = entity.user_id;
     request.realmId = entity.realm_id;
