@@ -11,7 +11,6 @@ import { Oauth2Client, Oauth2TokenResponse } from '@typescript-auth/core';
 
 import { URL } from 'url';
 import {
-    OAuth2Provider,
     TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
