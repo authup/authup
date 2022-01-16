@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server-adapter",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Typescript auth http & socket server adapter package for server module.",
     "main": "dist/index.js",
     "files": [
@@ -37,10 +37,10 @@
     },
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
-        "@typescript-auth/core": "^1.1.0",
-        "@typescript-auth/domains": "^0.0.7",
-        "@typescript-error/http": "^1.1.2",
         "@trapi/client": "^1.0.4",
+        "@typescript-auth/core": "^1.1.0",
+        "@typescript-auth/domains": "^0.0.8",
+        "@typescript-error/http": "^1.1.2",
         "axios": "^0.24.0",
         "redis-extension": "^0.0.9"
     },
