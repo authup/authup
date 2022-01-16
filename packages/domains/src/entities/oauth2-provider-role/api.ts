@@ -19,25 +19,25 @@ export class Oauth2ProviderRoleAPI {
     }
 
     async getMany(data: BuildInput<OAuth2ProviderRole>): Promise<CollectionResourceResponse<OAuth2ProviderRole>> {
-        const response = await this.client.get(`provider-roles${buildQuery(data)}`);
+        const response = await this.client.get(`oauth2-provider-roles${buildQuery(data)}`);
 
         return response.data;
     }
 
     async getOne(id: OAuth2ProviderRole['id']): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
-        const response = await this.client.get(`provider-roles/${id}`);
+        const response = await this.client.get(`oauth2-provider-roles/${id}`);
 
         return response.data;
     }
 
     async delete(id: OAuth2ProviderRole['id']): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
-        const response = await this.client.delete(`provider-roles/${id}`);
+        const response = await this.client.delete(`oauth2-provider-roles/${id}`);
 
         return response.data;
     }
 
     async create(data: Partial<OAuth2ProviderRole>): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
-        const response = await this.client.post('provider-roles', nullifyEmptyObjectProperties(data));
+        const response = await this.client.post('oauth2-provider-roles', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
@@ -46,7 +46,7 @@ export class Oauth2ProviderRoleAPI {
         id: OAuth2ProviderRole['id'],
         data: Partial<OAuth2ProviderRole>,
     ): Promise<SingleResourceResponse<OAuth2ProviderRole>> {
-        const response = await this.client.post(`provider-roles/${id}`, data);
+        const response = await this.client.post(`oauth2-provider-roles/${id}`, data);
 
         return response.data;
     }
