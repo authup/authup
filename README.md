@@ -8,16 +8,26 @@ This monorepo contains different auth packages for frontend and backend.
 
 ## Packages
 
-### @typescript-auth/core
+### @typescript-auth/core ☀
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fcore.svg)](https://badge.fury.io/js/@typescript-auth%2Fcore)
 
 This Package contains all core functions, which are also partially required by other modules of this repository.
-  
-### @typescript-auth/server  
+
+### @typescript-auth/domains 🎉
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fdomains.svg)](https://badge.fury.io/js/@typescript-auth%2Fdomains)
+
+The main propose of this package, is to provide general classes, interfaces & types for authorization & authentication.
+
+### @typescript-auth/server ⚔
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)
 
-This Package contains all functions, which can be used by server side applications.
+This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
+should therefore only be used for backend- applications & microservices.
 
+### @typescript-auth/server-adapter 🌉
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
+
+The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
 ## Installation & Usage
 Please follow the `README.md` instructions in the respective package folder.
 

@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/Tada5hi/typescript-auth/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/typescript-auth)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
-# @typescript-auth/core ☼
+# @typescript-auth/core ☀
 The main propose of this package, is to provide general utilities for authorization & authentication.
 It also contains core functions, for few other modules of the `@typescript-auth` namespace.
 
