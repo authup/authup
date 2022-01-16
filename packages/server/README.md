@@ -143,12 +143,18 @@ app.listen(3010);
 ```
 
 #### Database
-To register the domain entities for the **typeorm** connection, simply modify the connection options,
-like the described in the following:
+To register the domain entities for the **typeorm** connection, there are two possible opportunities to do this 🔥.
+
+**First Opportunity**
+
+Simply modify the connection options, with a utility function.
 
 ```typescript
-import {modifyDatabaseConnectionOptions} from "@typescript-auth/server";
-import {createConnection, createConnectionOptions, buildConnectionOptions} from 'typeorm';
+import { modifyDatabaseConnectionOptions } from "@typescript-auth/server";
+import { 
+    createConnection, 
+    buildConnectionOptions
+} from 'typeorm';
 
 (async () => {
     const connectionOptions = await buildConnectionOptions();
@@ -159,7 +165,9 @@ import {createConnection, createConnectionOptions, buildConnectionOptions} from 
 })();
 ```
 
-Another way is to add the entities individually to the ConnectionOptions object:
+**Second Opportunity**
+
+The second opportunity, is to add the entities individually to the ConnectionOptions object:
 
 ```typescript
 import {
@@ -180,7 +188,6 @@ import {
 } from "@typescript-auth/server";
 import {
     createConnection,
-    createConnectionOptions,
     buildConnectionOptions
 } from 'typeorm';
 
@@ -208,6 +215,29 @@ import {
     };
 
     const connection = await createConnection(connectionOptions);
+})();
+```
+
+---
+
+Another important thing, is to seed the database. To do that, run the database seeder after
+registering the domain entities and creating a connection ⚡.
+
+```typescript
+import { DatabaseRootSeeder } from "@typescript-auth/server";
+import { createConnection } from 'typeorm';
+
+(async () => {
+    const connection = await createConnection();
+
+    const seeder = new DatabaseRootSeeder({
+        userName: 'admin',
+        userPassword: 'start123',
+    });
+    
+    await seeder.run(connection);
+
+    
 })();
 ```
 
