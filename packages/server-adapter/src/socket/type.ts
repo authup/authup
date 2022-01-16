@@ -12,7 +12,9 @@ export type SocketNextFunction = (err?: Error) => void;
 export type Socket = {
     data: Partial<any>,
 
-    handshake: Handshake
+    handshake: Handshake,
+
+    [key: string]: any
 };
 
 export interface Handshake {
