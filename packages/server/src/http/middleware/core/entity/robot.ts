@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -14,13 +14,13 @@ import {
     Robot, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { NotFoundError } from '@typescript-error/http';
-import { ExpressRequest } from '../../type';
-import { RobotRepository, UserRepository } from '../../../domains';
-import { verifyToken } from '../../../utils';
-import { CredentialsInvalidError } from '../../error/credentials-invalid';
-import { TokenInvalidError } from '../../error/token-invalid';
-import { AuthHeaderTypeUnsupported } from '../../error/auth-header-type-unsupported';
-import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
+import { ExpressRequest } from '../../../type';
+import { RobotRepository, UserRepository } from '../../../../domains';
+import { verifyToken } from '../../../../utils';
+import { CredentialsInvalidError } from '../../../error/credentials-invalid';
+import { TokenInvalidError } from '../../../error/token-invalid';
+import { AuthHeaderTypeUnsupported } from '../../../error/auth-header-type-unsupported';
+import { TokenSubKindInvalidError } from '../../../error/token-subkind-invalid';
 
 export async function verifyClientForMiddlewareRequest(
     request: ExpressRequest,

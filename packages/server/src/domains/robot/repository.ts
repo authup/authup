@@ -84,7 +84,8 @@ export class RobotRepository extends Repository<RobotEntity> {
             return undefined;
         }
 
-        if (secret !== entity.secret) {
+        const verified = await verifyPassword(secret, entity.secret);
+        if (!verified) {
             return undefined;
         }
 

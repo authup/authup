@@ -13,7 +13,7 @@ import {
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
 import { hashPassword } from '../../../../utils';
-import { RobotEntity } from '../../../../domains';
+import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
 
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const data = await runClientValidation(req, 'create');
@@ -30,10 +30,18 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
     const repository = getRepository<Robot>(RobotEntity);
     const entity = repository.create(data);
 
-    entity.secret = entity.secret || createNanoID(undefined, 128);
+    const secret = entity.secret || createNanoID(undefined, 64);
+    entity.secret = await hashPassword(secret);
     entity.realm_id = req.realmId;
 
     await repository.save(entity);
+
+    useRobotEventEmitter()
+        .emit('credentials', {
+            name: entity.name,
+            id: entity.id,
+            secret,
+        });
 
     return res.respondCreated({
         data: entity,

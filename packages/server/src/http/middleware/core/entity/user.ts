@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -12,13 +12,13 @@ import {
 import { TokenPayload, TokenSubKind, User } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { verifyToken } from '../../../utils';
-import { ExpressRequest } from '../../type';
-import { UserRepository } from '../../../domains';
-import { CredentialsInvalidError } from '../../error/credentials-invalid';
-import { TokenInvalidError } from '../../error/token-invalid';
-import { AuthHeaderTypeUnsupported } from '../../error/auth-header-type-unsupported';
-import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
+import { verifyToken } from '../../../../utils';
+import { ExpressRequest } from '../../../type';
+import { UserRepository } from '../../../../domains';
+import { CredentialsInvalidError } from '../../../error/credentials-invalid';
+import { TokenInvalidError } from '../../../error/token-invalid';
+import { AuthHeaderTypeUnsupported } from '../../../error/auth-header-type-unsupported';
+import { TokenSubKindInvalidError } from '../../../error/token-subkind-invalid';
 
 export async function verifyUserForMiddlewareRequest(
     request: ExpressRequest,

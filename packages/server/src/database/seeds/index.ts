@@ -18,10 +18,11 @@ import {
     RoleRepository,
     UserRepository,
     UserRoleEntity,
+    useRobotEventEmitter,
 } from '../../domains';
 import { hashPassword } from '../../utils';
 
-type DatabaseRootSeederOptions = {
+export type DatabaseRootSeederOptions = {
     permissions?: string[],
 
     userName: string,
@@ -31,7 +32,7 @@ type DatabaseRootSeederOptions = {
     robotSecretReset?: boolean
 };
 
-type DatabaseRootSeederRunResponse = {
+export type DatabaseRootSeederRunResponse = {
     robot?: Robot,
     user?: User
 };
@@ -43,7 +44,7 @@ function getPermissions(options: DatabaseRootSeederOptions) {
     ];
 }
 
-class DatabaseRootSeeder implements Seeder {
+export class DatabaseRootSeeder implements Seeder {
     protected options: DatabaseRootSeederOptions;
 
     constructor(options: DatabaseRootSeederOptions) {
@@ -192,24 +193,22 @@ class DatabaseRootSeeder implements Seeder {
          */
         const robotRepository = connection.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOne({
-            name: 'system',
+            name: 'SYSTEM',
         });
 
+        const secret = createNanoID(undefined, 64);
         if (typeof robot === 'undefined') {
             robot = robotRepository.create({
-                name: 'system',
+                name: 'SYSTEM',
                 realm_id: MASTER_REALM_ID,
+                secret: await hashPassword(secret),
             });
-
-            const secret = createNanoID(undefined, 36);
-            robot.secret = await hashPassword(secret);
 
             await robotRepository.save(robot);
 
             robot.secret = secret;
             response.robot = robot;
         } else if (this.options.robotSecretReset) {
-            const secret = createNanoID(undefined, 36);
             robot.secret = await hashPassword(secret);
 
             await robotRepository.save(robot);
@@ -217,6 +216,13 @@ class DatabaseRootSeeder implements Seeder {
             robot.secret = secret;
             response.robot = robot;
         }
+
+        useRobotEventEmitter()
+            .emit('credentials', {
+                name: robot.name,
+                id: robot.id,
+                secret,
+            });
 
         // -------------------------------------------------
 
@@ -253,10 +259,3 @@ class DatabaseRootSeeder implements Seeder {
         return response;
     }
 }
-
-export {
-    DatabaseRootSeeder,
-    DatabaseRootSeederOptions,
-};
-
-export default DatabaseRootSeeder;

@@ -9,10 +9,8 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@typescript-auth/core';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { verifyUserForMiddlewareRequest } from './user';
-import { verifyClientForMiddlewareRequest } from './robot';
+import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';
-import { TokenInvalidError } from '../../error/token-invalid';
 import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
