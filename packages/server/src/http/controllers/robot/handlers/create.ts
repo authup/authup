@@ -36,10 +36,11 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     await repository.save(entity);
 
+    entity.secret = secret; // expose secret one time ;)
+
     useRobotEventEmitter()
         .emit('credentials', {
-            name: entity.name,
-            id: entity.id,
+            ...entity,
             secret,
         });
 

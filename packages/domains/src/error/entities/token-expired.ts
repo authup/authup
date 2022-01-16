@@ -6,11 +6,13 @@
  */
 
 import { BadRequestError } from '@typescript-error/http';
+import { ErrorCode } from '../constants';
 
-export class TokenSubKindInvalidError extends BadRequestError {
+export class TokenExpiredError extends BadRequestError {
     constructor() {
         super({
-            code: 'TOKEN_SUB_KIND_INVALID',
+            code: ErrorCode.TOKEN_EXPIRED,
+            message: 'The token has been expired.',
         });
     }
 }

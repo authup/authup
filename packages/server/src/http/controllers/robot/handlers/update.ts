@@ -4,8 +4,7 @@ import { PermissionID, Robot } from '@typescript-auth/domains';
 import { hashPassword } from '../../../../utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
-import { RobotEntity } from '../../../../domains';
-import { useRobotEventEmitter } from '../../../../domains/robot/event';
+import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
 
 export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -41,18 +40,19 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         entity.secret = await hashPassword(data.secret);
     }
 
-    const result = await repository.save(entity);
+    entity = await repository.save(entity);
 
     if (data.secret) {
         useRobotEventEmitter()
             .emit('credentials', {
-                name: entity.name,
-                id: entity.id,
+                ...entity,
                 secret: data.secret,
             });
+
+        entity.secret = data.secret; // expose secret one time ;)
     }
 
     return res.respondAccepted({
-        data: result,
+        data: entity,
     });
 }

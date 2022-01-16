@@ -6,7 +6,9 @@
  */
 
 import { getRepository } from 'typeorm';
-import { applyFilters, applyPagination } from 'typeorm-extension';
+import {
+    applyFields, applyFilters, applyPagination, applyRelations,
+} from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     MASTER_REALM_ID, PermissionID,
@@ -15,7 +17,9 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page } = req.query;
+    const {
+        filter, fields, page, include,
+    } = req.query;
 
     const repository = getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
@@ -25,16 +29,34 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         defaultAlias: 'robot',
     });
 
+    applyRelations(query, include, {
+        allowed: ['realm', 'user'],
+        defaultAlias: 'robot',
+    });
+
     if (
         !req.ability.hasPermission(PermissionID.ROBOT_EDIT) &&
         !req.ability.hasPermission(PermissionID.ROBOT_DROP)
     ) {
-        query.andWhere('robot.user_id = :userId', { userId: req.userId });
+        if (req.userId) {
+            query.andWhere('robot.user_id = :userId', { userId: req.userId });
+        }
+
+        if (req.robotId) {
+            query.andWhere('robot.id = :id', { id: req.robotId });
+        }
     }
 
     if (req.realmId !== MASTER_REALM_ID) {
         query.andWhere('robot.realm_id = :realmId', { realmId: req.realmId });
     }
+
+    applyFields(query, fields, {
+        defaultAlias: 'robot',
+        allowed: [
+            'secret',
+        ],
+    });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 
@@ -54,8 +76,25 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const robotRepository = getRepository(RobotEntity);
-    const entity = await robotRepository.findOne(id);
+    const { fields, include } = req.query;
+
+    const repository = getRepository(RobotEntity);
+    const query = repository.createQueryBuilder('robot')
+        .where('robot.id = :id', { id });
+
+    applyFields(query, fields, {
+        defaultAlias: 'robot',
+        allowed: [
+            'secret',
+        ],
+    });
+
+    applyRelations(query, include, {
+        allowed: ['realm', 'user'],
+        defaultAlias: 'robot',
+    });
+
+    const entity = await query.getOne();
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

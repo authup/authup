@@ -9,16 +9,18 @@ import {
     AbilityManager,
     AuthorizationHeader,
 } from '@typescript-auth/core';
-import { TokenPayload, TokenSubKind, User } from '@typescript-auth/domains';
+import {
+    AuthHeaderTypeUnsupported,
+    CredentialsInvalidError, TokenInvalidError,
+    TokenPayload,
+    TokenSubKind, TokenSubKindInvalidError,
+    User,
+} from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { verifyToken } from '../../../../utils';
 import { ExpressRequest } from '../../../type';
 import { UserRepository } from '../../../../domains';
-import { CredentialsInvalidError } from '../../../error/credentials-invalid';
-import { TokenInvalidError } from '../../../error/token-invalid';
-import { AuthHeaderTypeUnsupported } from '../../../error/auth-header-type-unsupported';
-import { TokenSubKindInvalidError } from '../../../error/token-subkind-invalid';
 
 export async function verifyUserForMiddlewareRequest(
     request: ExpressRequest,

@@ -219,8 +219,7 @@ export class DatabaseRootSeeder implements Seeder {
 
         useRobotEventEmitter()
             .emit('credentials', {
-                name: robot.name,
-                id: robot.id,
+                ...robot,
                 secret,
             });
 

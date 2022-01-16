@@ -8,10 +8,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@typescript-auth/core';
 import { NotFoundError } from '@typescript-error/http';
+import { TokenSubKindInvalidError } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../type';
 import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';
-import { TokenSubKindInvalidError } from '../../error/token-subkind-invalid';
 
 export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {

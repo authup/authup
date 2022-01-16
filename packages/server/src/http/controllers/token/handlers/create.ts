@@ -8,13 +8,13 @@
 /* istanbul ignore next */
 import { getCustomRepository } from 'typeorm';
 import {
+    CredentialsInvalidError,
     Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload, TokenSubKind,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { createToken } from '../../../../utils';
 import { RobotRepository, UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
-import { CredentialsInvalidError } from '../../../error/credentials-invalid';
 
 function determineGrantType(req: ExpressRequest) : TokenGrantType {
     const { grant_type: grantType } = req.body;

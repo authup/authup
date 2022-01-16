@@ -18,7 +18,7 @@ export class TokenAPI {
         this.client = client;
     }
 
-    async verify(token: number): Promise<SingleResourceResponse<TokenVerificationPayload>> {
+    async verify(token: string): Promise<SingleResourceResponse<TokenVerificationPayload>> {
         const response = await this.client.get(`token/${token}`);
 
         return response.data;

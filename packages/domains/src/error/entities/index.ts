@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './api';
-export * from './entities';
-export * from './error';
-export * from './utils';
+export * from './auth-header-type-unsupported';
+export * from './credentials-invalid';
+export * from './token-invalid';
+export * from './token-subkind-invalid';

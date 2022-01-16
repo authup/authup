@@ -6,11 +6,13 @@
  */
 
 import { BadRequestError } from '@typescript-error/http';
+import { ErrorCode } from '../constants';
 
-export class TokenInvalidError extends BadRequestError {
+export class TokenSubKindInvalidError extends BadRequestError {
     constructor() {
         super({
-            code: 'TOKEN_INVALID',
+            code: ErrorCode.TOKEN_SUB_KIND_INVALID,
+            message: 'The token sub kind is not valid.',
         });
     }
 }
