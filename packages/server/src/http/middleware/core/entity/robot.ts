@@ -7,7 +7,7 @@
 
 import {
     AbilityManager,
-    AuthorizationHeader,
+    AuthorizationHeader, AuthorizationHeaderType, PermissionItem,
 } from '@typescript-auth/core';
 import { getCustomRepository } from 'typeorm';
 import {
@@ -29,11 +29,11 @@ export async function verifyClientForMiddlewareRequest(
     const condition : Partial<Robot> = {};
 
     switch (header.type) {
-        case 'Basic': {
+        case AuthorizationHeaderType.BASIC: {
             condition.id = header.username;
             break;
         }
-        case 'Bearer': {
+        case AuthorizationHeaderType.BEARER: {
             let tokenPayload : TokenPayload;
 
             try {
@@ -66,13 +66,13 @@ export async function verifyClientForMiddlewareRequest(
     }
 
     if (
-        header.type === 'Basic' &&
+        header.type === AuthorizationHeaderType.BASIC &&
         !(await repository.verifyCredentials(entity.id, header.password))
     ) {
         throw new CredentialsInvalidError();
     }
 
-    let permissions = [];
+    let permissions : PermissionItem<any>[];
 
     if (entity.user_id) {
         const userRepository = getCustomRepository<UserRepository>(UserRepository);
@@ -81,7 +81,7 @@ export async function verifyClientForMiddlewareRequest(
         permissions = await repository.getOwnedPermissions(entity.id);
     }
 
-    if (header.type === 'Bearer') {
+    if (header.type === AuthorizationHeaderType.BEARER) {
         request.token = header.token;
     }
 

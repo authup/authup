@@ -7,7 +7,7 @@
 
 import {
     AbilityManager,
-    AuthorizationHeader,
+    AuthorizationHeader, AuthorizationHeaderType,
 } from '@typescript-auth/core';
 import {
     AuthHeaderTypeUnsupported,
@@ -32,11 +32,11 @@ export async function verifyUserForMiddlewareRequest(
     const condition : Partial<User> = {};
 
     switch (header.type) {
-        case 'Basic': {
+        case AuthorizationHeaderType.BASIC: {
             condition.name = header.username;
             break;
         }
-        case 'Bearer': {
+        case AuthorizationHeaderType.BEARER: {
             let tokenPayload : TokenPayload;
 
             try {
@@ -68,7 +68,7 @@ export async function verifyUserForMiddlewareRequest(
     }
 
     if (
-        header.type === 'Basic' &&
+        header.type === AuthorizationHeaderType.BASIC &&
         !await repository.verifyCredentials(header.username, header.password)
     ) {
         throw new CredentialsInvalidError();
@@ -76,7 +76,7 @@ export async function verifyUserForMiddlewareRequest(
 
     const permissions = await repository.getOwnedPermissions(entity.id);
 
-    if (header.type === 'Bearer') {
+    if (header.type === AuthorizationHeaderType.BEARER) {
         request.token = header.token;
     }
 

@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthorizationHeader, AuthorizationHeaderType } from './type';
+import { AuthorizationHeader } from './type';
 import { AuthorizationHeaderError } from '../../error';
+import { AuthorizationHeaderType } from './constants';
 
 export function parseAuthorizationHeader(value: string): AuthorizationHeader {
     const parts: string[] = value.split(' ');

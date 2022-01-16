@@ -5,12 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum AuthorizationHeaderType {
-    BEARER = 'Bearer',
-    BASIC = 'Basic',
-    X_API_KEY = 'X-API-Key',
-    API_KEY = 'API-Key',
-}
+import { AuthorizationHeaderType } from './constants';
 
 export interface AbstractAuthorizationHeader {
     type: `${AuthorizationHeaderType}`

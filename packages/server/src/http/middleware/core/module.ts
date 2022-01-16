@@ -13,16 +13,16 @@ import { ExpressRequest } from '../../type';
 import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';
 
-export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
+export function setupAuthMiddleware(context: AuthMiddlewareOptions) {
     return async (request: Request, response: Response, next: NextFunction) => {
+        let { authorization: headerValue } = request.headers;
+
         try {
-            let { authorization: headerValue } = request.headers;
+            if (typeof context.parseCookie === 'function') {
+                const cookie: unknown = context.parseCookie(request);
 
-            if (typeof middlewareOptions.parseCookie === 'function') {
-                const cookie: unknown = middlewareOptions.parseCookie(request);
-
-                if (typeof middlewareOptions.authenticateWithCookie === 'function') {
-                    await middlewareOptions.authenticateWithCookie(request, cookie);
+                if (typeof context.authenticateWithCookie === 'function') {
+                    await context.authenticateWithCookie(request, cookie);
                     next();
                     return;
                 }
@@ -40,8 +40,8 @@ export function setupAuthMiddleware(middlewareOptions: AuthMiddlewareOptions) {
 
             const header = parseAuthorizationHeader(headerValue);
 
-            if (typeof middlewareOptions.authenticateWithAuthorizationHeader === 'function') {
-                await middlewareOptions.authenticateWithAuthorizationHeader(request, header);
+            if (typeof context.authenticateWithAuthorizationHeader === 'function') {
+                await context.authenticateWithAuthorizationHeader(request, header);
             }
 
             next();
