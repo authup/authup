@@ -90,6 +90,7 @@ auth-server start
 ### Extension
 Controllers & middlewares can be configured like described for an existing express application.
 
+#### HTTP
 ```typescript
 import {
     errorMiddleware,
@@ -141,32 +142,73 @@ app.use(errorMiddleware);
 app.listen(3010);
 ```
 
-To register the domain entities for a typeorm connection, follow the following steps.
-
-Therefore, install the package directly if not already happened with the following command:
-
-```shell
-npm install --save @typesript-auth/domains
-```
-After that, export the entity classes individually from the `@typescript-auth/domains` package.
+#### Database
+To register the domain entities for the **typeorm** connection, simply modify the connection options,
+like the described in the following:
 
 ```typescript
-export {
-    Client,
-    ClientPermission,
-    ClientRole,
-    OAuth2Provider,
-    OAuth2ProviderAccount,
-    OAuth2ProviderRole,
-    Permission,
-    Realm,
-    Role,
-    RolePermission,
-    Token,
-    User,
-    UserPermission,
-    UserRole
-} from '@typescript-auth/domains';
+import {modifyDatabaseConnectionOptions} from "@typescript-auth/server";
+import {createConnection, createConnectionOptions, buildConnectionOptions} from 'typeorm';
+
+(async () => {
+    const connectionOptions = await buildConnectionOptions();
+
+    modifyDatabaseConnectionOptions(connectionOptions);
+
+    const connection = await createConnection(connectionOptions);
+})();
+```
+
+Another way is to add the entities individually to the ConnectionOptions object:
+
+```typescript
+import {
+    modifyDatabaseConnectionOptions,
+    OAuth2ProviderEntity,
+    OAuth2ProviderAccountEntity,
+    OAuth2ProviderRoleEntity,
+    PermissionEntity,
+    RealmEntity,
+    RobotEntity,
+    RobotPermissionEntity,
+    RobotRoleEntity,
+    RoleEntity,
+    RolePermissionEntity,
+    UserEntity,
+    UserPermissionEntity,
+    UserRoleEntity,
+} from "@typescript-auth/server";
+import {
+    createConnection,
+    createConnectionOptions,
+    buildConnectionOptions
+} from 'typeorm';
+
+(async () => {
+    const connectionOptions = await buildConnectionOptions();
+
+    connectionOptions = {
+        ...connectionOptions,
+        entities: [
+            OAuth2ProviderEntity,
+            OAuth2ProviderAccountEntity,
+            OAuth2ProviderRoleEntity,
+            PermissionEntity,
+            RealmEntity,
+            RobotEntity,
+            RobotPermissionEntity,
+            RobotRoleEntity,
+            RoleEntity,
+            RolePermissionEntity,
+            UserEntity,
+            UserPermissionEntity,
+            UserRoleEntity,
+            ...(connectionOptions.entities ? connectionOptions.entities : []),
+        ],
+    };
+
+    const connection = await createConnection(connectionOptions);
+})();
 ```
 
 ## Utils
