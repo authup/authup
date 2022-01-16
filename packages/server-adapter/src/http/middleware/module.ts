@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RedisCache } from 'redis-extension';
+import { RedisCache, useRedisInstance } from 'redis-extension';
 import { AbilityManager, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@typescript-auth/core';
 import { BadRequestError } from '@typescript-error/http';
 import {
@@ -13,14 +13,18 @@ import {
 } from '@typescript-auth/domains';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { HTTPMiddlewareContext } from './type';
-import { verifyToken } from '../../utils/token-verify';
+import { verifyToken } from '../../utils';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
     let tokenCache : RedisCache<string>;
 
     if (context.redis) {
+        const redis = typeof context.redis === 'boolean' ?
+            useRedisInstance('default') :
+            context.redis;
+
         tokenCache = new RedisCache<string>({
-            redis: context.redis,
+            redis,
         }, {
             prefix: context.redisPrefix || 'token',
         });

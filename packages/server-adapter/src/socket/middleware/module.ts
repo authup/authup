@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RedisCache } from 'redis-extension';
+import { RedisCache, useRedisInstance } from 'redis-extension';
 import { AbilityManager } from '@typescript-auth/core';
 import { TokenAPI, TokenVerificationPayload } from '@typescript-auth/domains';
 import { Socket, SocketNextFunction } from '../type';
@@ -16,6 +16,10 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
     let tokenCache : RedisCache<string>;
 
     if (context.redis) {
+        const redis = typeof context.redis === 'boolean' ?
+            useRedisInstance('default') :
+            context.redis;
+
         tokenCache = new RedisCache<string>({
             redis: context.redis,
         }, {

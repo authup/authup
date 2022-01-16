@@ -10,7 +10,7 @@ import { Redis } from 'redis-extension';
 
 export type HTTPMiddlewareContext = {
     axios: AxiosInstance,
-    redis?: Redis
+    redis?: Redis | boolean
     redisPrefix?: string,
 
     cookieHandler?: (cookies: any) => string | undefined

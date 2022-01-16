@@ -9,6 +9,6 @@ import { Redis } from 'redis-extension';
 
 export type SocketMiddlewareContext = {
     axios: AxiosInstance,
-    redis?: Redis
+    redis?: Redis | boolean,
     redisPrefix?: string
 };
