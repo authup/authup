@@ -21,7 +21,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             context.redis;
 
         tokenCache = new RedisCache<string>({
-            redis: context.redis,
+            redis,
         }, {
             prefix: context.redisPrefix || 'token',
         });
