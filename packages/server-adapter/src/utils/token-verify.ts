@@ -6,8 +6,9 @@
  */
 
 import { RedisCache } from 'redis-extension';
-import { TokenAPI, TokenInvalidError, TokenVerificationPayload } from '@typescript-auth/domains';
-import { TokenExpiredError } from '@typescript-auth/domains/src/error/entities/token-expired';
+import {
+    TokenAPI, TokenExpiredError, TokenInvalidError, TokenVerificationPayload,
+} from '@typescript-auth/domains';
 
 export type TokenVerifyContext = {
     token: string,
