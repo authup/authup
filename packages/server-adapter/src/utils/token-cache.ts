@@ -5,20 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Redis, RedisCache, useRedisInstance } from 'redis-extension';
+import { Cache, Client, useClient } from 'redis-extension';
 
 export function initTokenCache(
-    redis: Redis | boolean,
+    redis: Client | boolean,
     redisPrefix?: string,
-) : RedisCache<string> | undefined {
-    let tokenCache : RedisCache<string> | undefined;
+) : Cache<string> | undefined {
+    let tokenCache : Cache<string> | undefined;
 
     if (redis) {
         redis = typeof redis === 'boolean' ?
-            useRedisInstance('default') :
+            useClient('default') :
             redis;
 
-        tokenCache = new RedisCache<string>({
+        tokenCache = new Cache<string>({
             redis,
         }, {
             prefix: redisPrefix || 'token',

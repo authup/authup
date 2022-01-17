@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { AxiosInstance } from 'axios';
-import { Redis } from 'redis-extension';
+import { Client } from 'redis-extension';
 
 export type SocketMiddlewareContext = {
     axios: AxiosInstance,
-    redis?: Redis | boolean,
+    redis?: Client | boolean,
     redisPrefix?: string
 };

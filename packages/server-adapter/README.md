@@ -25,17 +25,17 @@ npm install @typescript-auth/server-adapter --save
 ```typescript
 import express from 'express';
 import { setupHTTPMiddleware } from "@typescript-auth/server-adapter";
-import { setRedisConfig, useRedisInstance } from "redis-extension";
+import { setConfig, useClient } from "redis-extension";
 import axios from 'axios';
 
 // setup express server
 const server = expres();
 
 // setup redis connection
-setRedisConfig('default', {connectionString: 'redis://127.0.0.1'});
+setConfig('default', {connectionString: 'redis://127.0.0.1'});
 
 // retrieve redis instance
-const redis = useRedisInstance('default');
+const redis = useClient('default');
 
 // set bearer token or achieve it on another way e.g. response interceptor ;)
 axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';
@@ -53,17 +53,17 @@ server.use(setupHTTPMiddleware({
 ```typescript
 import { Server } from 'socket.io';
 import { setupSocketMiddleware } from "@typescript-auth/server-adapter";
-import { setRedisConfig, useRedisInstance } from "redis-extension";
+import { setConfig, useClient } from "redis-extension";
 import axios from 'axios';
 
 // setup socket.io server
 const server = new Server();
 
 // setup redis connection
-setRedisConfig('default', {connectionString: 'redis://127.0.0.1'});
+setConfig('default', {connectionString: 'redis://127.0.0.1'});
 
 // retrieve redis instance
-const redis = useRedisInstance('default');
+const redis = useClient('default');
 
 // set bearer token or achieve it on another way e.g. response interceptor ;)
 axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';

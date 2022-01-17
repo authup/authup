@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RedisCache } from 'redis-extension';
+import { Cache } from 'redis-extension';
 import {
     TokenAPI, TokenExpiredError, TokenInvalidError, TokenVerificationPayload,
 } from '@typescript-auth/domains';
@@ -13,7 +13,7 @@ import {
 export type TokenVerifyContext = {
     token: string,
     tokenAPIClient: TokenAPI,
-    tokenCache?: RedisCache<string>
+    tokenCache?: Cache<string>
 };
 
 export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVerificationPayload> {

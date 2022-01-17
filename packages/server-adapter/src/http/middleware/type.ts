@@ -6,11 +6,11 @@
  */
 
 import { AxiosInstance } from 'axios';
-import { Redis } from 'redis-extension';
+import { Client } from 'redis-extension';
 
 export type HTTPMiddlewareContext = {
     axios: AxiosInstance,
-    redis?: Redis | boolean
+    redis?: Client | boolean
     redisPrefix?: string,
 
     cookieHandler?: (cookies: any) => string | undefined
