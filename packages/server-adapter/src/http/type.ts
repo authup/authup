@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { NextFunction, Request } from 'express';
 import { Realm, Robot, User } from '@typescript-auth/domains';
 import { AbilityManager, PermissionItem } from '@typescript-auth/core';
 
-export type ExpressRequest = {
+export interface ExpressRequest extends Request {
     user?: User,
     userId?: User['id'],
 
@@ -21,18 +22,12 @@ export type ExpressRequest = {
 
     ability: AbilityManager,
     permissions: PermissionItem<any>[],
+}
 
-    // Express
-    headers: Record<string, any>,
-    [key: string]: any
-};
+export interface ExpressResponse extends Response {
 
-export type ExpressResponse = {
-    [key: string]: any
-};
+}
 
-export type ExpressNextFunction = {
-    (err?: any): void;
+export interface ExpressNextFunction extends NextFunction {
 
-    [key: string]: any;
-};
+}
