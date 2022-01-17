@@ -5,31 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RedisCache, useRedisInstance } from 'redis-extension';
 import { AbilityManager } from '@typescript-auth/core';
 import { TokenAPI, TokenVerificationPayload } from '@typescript-auth/domains';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
-import { verifyToken } from '../../utils';
+import { initTokenCache, verifyToken } from '../../utils';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
-    let tokenCache : RedisCache<string>;
-
-    if (context.redis) {
-        const redis = typeof context.redis === 'boolean' ?
-            useRedisInstance('default') :
-            context.redis;
-
-        tokenCache = new RedisCache<string>({
-            redis,
-        }, {
-            prefix: context.redisPrefix || 'token',
-        });
-
-        tokenCache.startScheduler();
-    }
-
-    const apiClient = new TokenAPI(context.axios);
+    const tokenCache = initTokenCache(context.redis, context.redisPrefix);
+    const tokenAPIClient = new TokenAPI(context.axios);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
@@ -44,7 +28,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             data = await verifyToken({
                 token,
                 tokenCache,
-                tokenAPIClient: apiClient,
+                tokenAPIClient,
             });
         } catch (e) {
             return next(e);
