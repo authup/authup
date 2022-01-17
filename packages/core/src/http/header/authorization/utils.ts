@@ -6,7 +6,7 @@
  */
 
 import { AuthorizationHeader } from './type';
-import { AuthorizationHeaderError } from '../../error';
+import { AuthorizationHeaderError } from '../../../error';
 import { AuthorizationHeaderType } from './constants';
 
 export function parseAuthorizationHeader(value: string): AuthorizationHeader {

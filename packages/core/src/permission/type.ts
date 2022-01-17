@@ -7,7 +7,7 @@
 
 import { Condition } from '../ability';
 
-export type PermissionItem<T extends Record<string, any>> = {
+export type PermissionItem<T extends Record<string, any> = Record<string, any>> = {
     id: string,
     negation?: boolean,
     condition?: Condition<T> | null,

@@ -6,6 +6,7 @@
  */
 
 export * from './ability';
+export * from './error';
 export * from './http';
 export * from './permission';
 export * from './protocols';
