@@ -42,7 +42,7 @@ export async function startCommand(context: StartCommandContext) {
 
     spinner.start('Establish database connection.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
     const connection = await createConnection(connectionOptions);
     if (context.config.env === 'development') {
         await connection.synchronize();

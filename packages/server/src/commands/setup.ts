@@ -63,7 +63,7 @@ export async function setupCommand(context: SetupCommandContext) {
         /**
          * Setup database with schema & seeder
          */
-        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
+        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
 
         if (context.database) {
             spinner.start('Creating database.');
@@ -86,6 +86,7 @@ export async function setupCommand(context: SetupCommandContext) {
                     userPassword: context.config.adminPassword,
                     userPasswordReset: true,
 
+                    robotSecret: context.config.robotSecret,
                     robotSecretReset: true,
 
                     ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),

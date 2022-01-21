@@ -26,7 +26,7 @@ import {
 
 export function modifyDatabaseConnectionOptions(
     connectionOptions: ConnectionWithAdditionalOptions,
-    extend?: boolean,
+    merge?: boolean,
 ) {
     connectionOptions = {
         ...connectionOptions,
@@ -44,15 +44,14 @@ export function modifyDatabaseConnectionOptions(
             UserEntity,
             UserPermissionEntity,
             UserRoleEntity,
-            ...(extend && connectionOptions.entities ? connectionOptions.entities : []),
+            ...(merge && connectionOptions.entities ? connectionOptions.entities : []),
         ],
     };
 
     connectionOptions = {
         ...connectionOptions,
         migrations: [
-            path.join(__dirname, 'migrations', '*{.ts,.js}'),
-            ...(extend && connectionOptions.migrations ? connectionOptions.migrations : []),
+            ...(merge && connectionOptions.migrations ? connectionOptions.migrations : []),
         ],
     };
 
@@ -61,7 +60,7 @@ export function modifyDatabaseConnectionOptions(
 
 export async function buildDatabaseConnectionOptions(
     config: Config,
-    extend?: boolean,
+    merge?: boolean,
 ) : Promise<ConnectionWithAdditionalOptions> {
     let connectionOptions;
 
@@ -70,6 +69,10 @@ export async function buildDatabaseConnectionOptions(
             root: config.rootPath,
             buildForCommand: true,
         });
+
+        connectionOptions.migrations = [
+            path.join(config.rootPath, config.writableDirectory, 'migrations', '*{.ts,.js}'),
+        ];
     } catch (e) {
         connectionOptions = {
             name: 'default',
@@ -80,7 +83,7 @@ export async function buildDatabaseConnectionOptions(
         };
     }
 
-    connectionOptions = modifyDatabaseConnectionOptions(connectionOptions, extend);
+    connectionOptions = modifyDatabaseConnectionOptions(connectionOptions, merge);
 
     return connectionOptions;
 }

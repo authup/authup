@@ -17,7 +17,7 @@ export async function checkCommand(context: CheckCommandContext) {
 
     spinner.start('Establish database connection.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
     const connection = await createConnection(connectionOptions);
 
     spinner.succeed('Established database connection.');
@@ -29,6 +29,7 @@ export async function checkCommand(context: CheckCommandContext) {
             userName: context.config.adminUsername,
             userPassword: context.config.adminPassword,
 
+            robotSecret: context.config.robotSecret,
             ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
         });
         await seeder.run(connection);

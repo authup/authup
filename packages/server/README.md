@@ -54,6 +54,8 @@ module.exports = {
 
     adminUsername: 'admin',
     adminPassword: 'start123',
+    
+    // robotSecret: '', // 
 
     root: process.cwd(),
     writableDirectory: 'writable',

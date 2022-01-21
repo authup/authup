@@ -40,6 +40,11 @@ export function buildConfig(
         config.adminPassword = requireFromEnv('ADMIN_PASSWORD', 'start123');
     }
 
+    if (!config.robotSecret) {
+        config.robotSecret = requireFromEnv('ROBOT_SECRET', null);
+        config.robotSecret = !config.robotSecret ? undefined : config.robotSecret;
+    }
+
     if (!config.selfUrl) {
         config.selfUrl = requireFromEnv('SELF_URL', `http://127.0.0.1:${config.port}/`);
     }

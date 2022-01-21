@@ -27,11 +27,11 @@ export interface Robot {
 
     // ------------------------------------------------------------------
 
-    user_id: string | null;
+    user_id: User['id'] | null;
 
     user: User | null;
 
-    realm_id: string;
+    realm_id: Realm['id'];
 
     realm: Realm;
 }
