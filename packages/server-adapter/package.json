@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server-adapter",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "Typescript auth http & socket server adapter package for server module.",
     "main": "dist/index.js",
     "files": [
@@ -39,8 +39,8 @@
     "dependencies": {
         "@trapi/client": "^1.0.4",
         "@types/express": "^4.17.13",
-        "@typescript-auth/core": "^1.1.1",
-        "@typescript-auth/domains": "^0.0.11",
+        "@typescript-auth/core": "^1.1.2",
+        "@typescript-auth/domains": "^0.0.12",
         "@typescript-error/http": "^1.1.2",
         "axios": "^0.24.0",
         "redis-extension": "^1.0.0-1"
