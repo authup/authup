@@ -29,6 +29,7 @@ export type DatabaseRootSeederOptions = {
     userPassword: string,
     userPasswordReset?: boolean,
 
+    robotSecret?: string,
     robotSecretReset?: boolean
 };
 
@@ -196,7 +197,7 @@ export class DatabaseRootSeeder implements Seeder {
             name: 'SYSTEM',
         });
 
-        const secret = createNanoID(undefined, 64);
+        const secret = this.options.robotSecret || createNanoID(undefined, 64);
         if (typeof robot === 'undefined') {
             robot = robotRepository.create({
                 name: 'SYSTEM',

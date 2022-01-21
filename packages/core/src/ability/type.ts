@@ -19,12 +19,12 @@ export type AbilityItem<T extends Record<string, any> = Record<any, any>> = Abil
 
 // -------------------------------------------------------------------
 
-// Allow String in case of Date, to allow options like: TIME_NOW - 3600
-type AllowedValue<T> = T extends Date ? (T | string) : T;
-
 export type ConditionInstruction<V> = {
     [I in InstructionType]?: InstructionValue<I, V>
 };
+
+// Allow String in case of Date, to allow options like: TIME_NOW - 3600
+type AllowedValue<T> = T extends Date ? (T | string) : T;
 
 type InstructionValue<I, V> =
     I extends ArrayInstructionType ?

@@ -12,6 +12,8 @@ export type Config = {
     adminUsername: string,
     adminPassword: string,
 
+    robotSecret?: string,
+
     rootPath: string,
     writableDirectory: string
 

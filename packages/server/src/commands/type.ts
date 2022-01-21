@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Connection } from 'typeorm';
 import { Config } from '../config';
 import { DatabaseRootSeederOptions } from '../database';
 
 export type CommandContext = {
     config?: Config,
-    databaseConnectionExtend?: boolean,
+    databaseConnectionMerge?: boolean,
     databaseSeederOptions?: Partial<DatabaseRootSeederOptions>
 };
 
@@ -23,8 +24,16 @@ export type SetupCommandContext = CommandContext & {
     documentation: boolean
 };
 
-export type UpgradeCommandContext = CommandContext;
+export type UpgradeCommandContext = CommandContext & {
+    migrationsGenerate?: boolean
+};
 
 export type ResetCommandContext = CommandContext;
 
 export type CheckCommandContext = CommandContext;
+
+export type MigrationGenerateCommandContext = CommandContext & {
+    name?: string,
+    directory?: string,
+    connection?: Connection
+};

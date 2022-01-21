@@ -18,7 +18,7 @@ export async function resetCommand(context: StartCommandContext) {
 
     spinner.start('Executing database reset.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
     await dropDatabase({ ifExist: true }, connectionOptions);
 
     spinner.succeed('Executed database reset.');

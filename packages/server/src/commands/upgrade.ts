@@ -9,6 +9,7 @@ import { createConnection } from 'typeorm';
 import * as ora from 'ora';
 import { UpgradeCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
+import { migrationGenerateCommand } from './migration';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     const spinner = ora.default({
@@ -17,7 +18,16 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
 
     spinner.start('Establish database connection.');
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionExtend);
+    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
+
+    Object.assign(connectionOptions, {
+        subscribers: [],
+        synchronize: false,
+        migrationsRun: false,
+        dropSchema: false,
+        logging: [],
+    });
+
     const connection = await createConnection(connectionOptions);
 
     spinner.succeed('Established database connection.');
@@ -26,6 +36,17 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         spinner.start('Execute migrations.');
         await connection.runMigrations({ transaction: 'all' });
         spinner.succeed('Executed migrations.');
+
+        if (context.migrationsGenerate) {
+            await migrationGenerateCommand({
+                ...context,
+                connection,
+            });
+
+            spinner.start('Execute migrations.');
+            await connection.runMigrations({ transaction: 'all' });
+            spinner.succeed('Executed migrations.');
+        }
     } finally {
         await connection.close();
     }
