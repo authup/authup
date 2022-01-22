@@ -23,6 +23,9 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../domains';
+import { OAuth2AccessTokenEntity } from '../domains/oauth2-access-token';
+import { OAuth2ClientEntity } from '../domains/oauth2-client';
+import { OAuth2RefreshTokenEntity } from '../domains/oauth2-refresh-token';
 
 export function modifyDatabaseConnectionOptions(
     connectionOptions: ConnectionWithAdditionalOptions,
@@ -31,6 +34,10 @@ export function modifyDatabaseConnectionOptions(
     connectionOptions = {
         ...connectionOptions,
         entities: [
+            OAuth2AccessTokenEntity,
+            OAuth2ClientEntity,
+            OAuth2RefreshTokenEntity,
+
             OAuth2ProviderEntity,
             OAuth2ProviderAccountEntity,
             OAuth2ProviderRoleEntity,
@@ -50,8 +57,8 @@ export function modifyDatabaseConnectionOptions(
 
     connectionOptions = {
         ...connectionOptions,
-        migrations: [
-            ...(merge && connectionOptions.migrations ? connectionOptions.migrations : []),
+        subscribers: [
+            ...(merge && connectionOptions.subscribers ? connectionOptions.subscribers : []),
         ],
     };
 

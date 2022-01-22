@@ -7,14 +7,13 @@
 
 import {
     AbilityManager,
-    AuthorizationHeader, AuthorizationHeaderType, PermissionItem,
-} from '@typescript-auth/core';
-import { getCustomRepository } from 'typeorm';
-import {
-    AuthHeaderTypeUnsupported, CredentialsInvalidError,
-    Robot, TokenInvalidError, TokenPayload, TokenSubKind, TokenSubKindInvalidError,
+    AuthHeaderTypeUnsupported,
+    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind,
+    PermissionItem, Robot, TokenInvalidError, TokenSubKindInvalidError,
 } from '@typescript-auth/domains';
+import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
+import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
 import { ExpressRequest } from '../../../type';
 import { RobotRepository, UserRepository } from '../../../../domains';
 import { verifyToken } from '../../../../utils';
@@ -34,7 +33,7 @@ export async function verifyClientForMiddlewareRequest(
             break;
         }
         case AuthorizationHeaderType.BEARER: {
-            let tokenPayload : TokenPayload;
+            let tokenPayload : OAuth2AccessTokenPayload;
 
             try {
                 tokenPayload = await verifyToken(header.token, {
@@ -44,7 +43,7 @@ export async function verifyClientForMiddlewareRequest(
                 throw new TokenInvalidError();
             }
 
-            if (tokenPayload.subKind === TokenSubKind.ROBOT) {
+            if (tokenPayload.sub_kind === OAuth2AccessTokenSubKind.ROBOT) {
                 condition.id = tokenPayload.sub as Robot['id'];
             } else {
                 throw new TokenSubKindInvalidError();

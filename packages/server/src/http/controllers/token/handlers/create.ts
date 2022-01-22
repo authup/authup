@@ -6,100 +6,55 @@
  */
 
 /* istanbul ignore next */
-import { getCustomRepository } from 'typeorm';
 import {
-    CredentialsInvalidError,
-    Oauth2TokenResponse, TokenGrant, TokenGrantType, TokenPayload, TokenSubKind,
+    OAuth2AccessTokenGrant,
+    OAuth2ServerError, Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { createToken } from '../../../../utils';
-import { RobotRepository, UserRepository } from '../../../../domains';
 import { TokenRouteCreateContext } from './type';
-
-function determineGrantType(req: ExpressRequest) : TokenGrantType {
-    const { grant_type: grantType } = req.body;
-
-    const allowed = Object.values(TokenGrant);
-    if (allowed.indexOf(grantType) !== -1) {
-        return grantType;
-    }
-
-    return TokenGrant.PASSWORD;
-}
+import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
+import { Grant, GrantContext } from '../../../oauth2/grant-types/type';
+import { PasswordGrantType, RobotCredentialsGrantType } from '../../../oauth2';
+import { RefreshTokenGrantType } from '../../../oauth2/grant-types/refresh-token';
 
 export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
     context: TokenRouteCreateContext,
 ) : Promise<any> {
-    const expiresIn: number = context.maxAge;
+    const grantType = determineRequestTokenGrantType(req);
+    if (!grantType) {
+        throw OAuth2ServerError.invalidGrant();
+    }
 
-    const grantType = determineGrantType(req);
+    let grant : Grant | undefined;
+
+    const grantContext : GrantContext = {
+        request: req,
+        selfUrl: context.selfUrl,
+        keyPairOptions: {
+            directory: context.writableDirectoryPath,
+        },
+
+    };
     switch (grantType) {
-        case TokenGrant.ROBOT_CREDENTIALS: {
-            const { id, secret } = req.body;
-
-            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const robotEntity = await robotRepository.verifyCredentials(id, secret);
-
-            if (typeof robotEntity === 'undefined') {
-                throw new CredentialsInvalidError();
-            }
-
-            const tokenPayload: TokenPayload = {
-                iss: context.selfUrl,
-                sub: robotEntity.id,
-                subKind: TokenSubKind.ROBOT,
-                remoteAddress: req.ip,
-            };
-
-            const token = await createToken(
-                tokenPayload,
-                expiresIn,
-                {
-                    directory: context.writableDirectoryPath,
-                },
-            );
-
-            return res.respond({
-                data: {
-                    access_token: token,
-                    expires_in: expiresIn,
-                } as Oauth2TokenResponse,
-            });
+        case OAuth2AccessTokenGrant.ROBOT_CREDENTIALS: {
+            grant = new RobotCredentialsGrantType(grantContext);
+            break;
         }
-        default: {
-            const { username, password } = req.body;
-
-            // try database authentication
-            const userRepository = getCustomRepository<UserRepository>(UserRepository);
-            const user = await userRepository.verifyCredentials(username, password);
-
-            if (typeof user === 'undefined') {
-                throw new CredentialsInvalidError();
-            }
-
-            const tokenPayload: TokenPayload = {
-                iss: context.selfUrl,
-                sub: user.id,
-                subKind: TokenSubKind.USER,
-                remoteAddress: req.ip,
-            };
-
-            const token = await createToken(
-                tokenPayload,
-                expiresIn,
-                {
-                    directory: context.writableDirectoryPath,
-                },
-            );
-
-            return res.respond({
-                data: {
-                    access_token: token,
-                    expires_in: expiresIn,
-                } as Oauth2TokenResponse,
-            });
+        case OAuth2AccessTokenGrant.PASSWORD: {
+            grant = new PasswordGrantType(grantContext);
+            break;
+        }
+        case OAuth2AccessTokenGrant.REFRESH_TOKEN: {
+            grant = new RefreshTokenGrantType(grantContext);
+            break;
         }
     }
+
+    const tokenResponse : Oauth2TokenResponse = await grant.run();
+
+    return res.respond({
+        data: tokenResponse,
+    });
 }

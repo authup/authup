@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { SecurityKeyPairOptions } from './type';
+import { KeyPairOptions } from './type';
 
 export function buildKeyFileName(
     type: 'private' | 'public',
@@ -16,13 +16,17 @@ export function buildKeyFileName(
 }
 
 export function buildKeyPairOptions(
-    options?: Partial<SecurityKeyPairOptions>,
-) : SecurityKeyPairOptions {
+    options?: Partial<KeyPairOptions>,
+) : KeyPairOptions {
     options = options ?? {};
     options.directory = options.directory ??
         process.cwd();
 
     return {
+        rsa: {
+            modulusLength: 2048,
+            ...(options.rsa ? options.rsa : {}),
+        },
         alias: options.alias ?? 'default',
         directory: path.isAbsolute(options.directory) ?
             options.directory :

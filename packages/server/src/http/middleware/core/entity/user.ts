@@ -7,17 +7,15 @@
 
 import {
     AbilityManager,
-    AuthorizationHeader, AuthorizationHeaderType,
-} from '@typescript-auth/core';
-import {
     AuthHeaderTypeUnsupported,
-    CredentialsInvalidError, TokenInvalidError,
-    TokenPayload,
-    TokenSubKind, TokenSubKindInvalidError,
+    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind,
+    TokenInvalidError,
+    TokenSubKindInvalidError,
     User,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
+import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
 import { verifyToken } from '../../../../utils';
 import { ExpressRequest } from '../../../type';
 import { UserRepository } from '../../../../domains';
@@ -37,7 +35,7 @@ export async function verifyUserForMiddlewareRequest(
             break;
         }
         case AuthorizationHeaderType.BEARER: {
-            let tokenPayload : TokenPayload;
+            let tokenPayload : OAuth2AccessTokenPayload;
 
             try {
                 tokenPayload = await verifyToken(header.token, {
@@ -47,7 +45,7 @@ export async function verifyUserForMiddlewareRequest(
                 throw new TokenInvalidError();
             }
 
-            if (tokenPayload.subKind === TokenSubKind.USER) {
+            if (tokenPayload.sub_kind === OAuth2AccessTokenSubKind.USER) {
                 condition.id = tokenPayload.sub as User['id'];
             } else {
                 throw new TokenSubKindInvalidError();

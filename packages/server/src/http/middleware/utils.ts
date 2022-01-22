@@ -9,7 +9,7 @@ import swaggerUi from 'swagger-ui-express';
 import { Application } from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import { AuthorizationHeader } from '@typescript-auth/core';
+import { AuthorizationHeader } from '@trapi/client';
 import path from 'path';
 import { existsSync } from 'fs';
 import {

@@ -6,9 +6,11 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@typescript-auth/core';
+import {
+    TokenSubKindInvalidError,
+} from '@typescript-auth/domains';
 import { NotFoundError } from '@typescript-error/http';
-import { TokenSubKindInvalidError } from '@typescript-auth/domains';
+import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
 import { ExpressRequest } from '../../type';
 import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';

@@ -25,7 +25,7 @@ export async function generateSwaggerDocumentation(
     const metadataConfig : MetadataConfig = {
         entryFile: path.join(__dirname, '..', '..', '..', 'src', 'http', 'controllers', '**', '*{.ts,.js}'),
         ignore: ['**/node_modules/**'],
-        allow: ['**/@typescript-auth/**'],
+        allow: [],
         decorator: {
             internal: true,
             library: [

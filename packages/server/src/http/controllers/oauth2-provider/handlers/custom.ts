@@ -7,16 +7,17 @@
 
 import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
-import { Oauth2Client, Oauth2TokenResponse } from '@typescript-auth/core';
+import {
+    OAuth2AccessTokenPayload,
+    OAuth2AccessTokenSubKind, OAuth2HTTPClient,
+    Oauth2TokenResponse,
+} from '@typescript-auth/domains';
 
 import { URL } from 'url';
-import {
-    TokenPayload, TokenSubKind,
-} from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
-import { ProxyConnectionConfig, createToken, detectProxyConnectionConfig } from '../../../../utils';
+import { ProxyConnectionConfig, detectProxyConnectionConfig, signToken } from '../../../../utils';
 
 export async function authorizeOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -35,7 +36,7 @@ export async function authorizeOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    const oauth2Client = new Oauth2Client({
+    const oauth2Client = new OAuth2HTTPClient({
         client_id: provider.client_id,
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
@@ -67,7 +68,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     }
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
-    const oauth2Client = new Oauth2Client({
+    const oauth2Client = new OAuth2HTTPClient({
         client_id: provider.client_id,
         client_secret: provider.client_secret,
 
@@ -89,14 +90,14 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const account = await createOauth2ProviderAccountWithToken(provider, tokenResponse);
     const expiresIn = context.maxAge;
 
-    const tokenPayload : TokenPayload = {
-        subKind: TokenSubKind.USER,
+    const tokenPayload : Partial<OAuth2AccessTokenPayload> = {
+        sub_kind: OAuth2AccessTokenSubKind.USER,
         iss: context.selfUrl,
         sub: account.user.id,
-        remoteAddress: req.ip,
+        remote_address: req.ip,
     };
 
-    const token = await createToken(tokenPayload, expiresIn, { directory: context.rsaKeyPairPath });
+    const token = await signToken(tokenPayload, expiresIn, { directory: context.rsaKeyPairPath });
 
     const cookie : Oauth2TokenResponse = {
         access_token: token,

@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager } from '@typescript-auth/core';
-import { TokenAPI, TokenVerificationPayload } from '@typescript-auth/domains';
+import { AbilityManager, TokenAPI, TokenVerificationPayload } from '@typescript-auth/domains';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
 import { initTokenCache, verifyToken } from '../../utils';

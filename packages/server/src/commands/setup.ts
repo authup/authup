@@ -10,7 +10,7 @@ import path from 'path';
 import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
 import { SetupCommandContext } from './type';
-import { createSecurityKeyPair } from '../utils';
+import { createKeyPair } from '../utils';
 import { generateSwaggerDocumentation } from '../http/swagger';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
 import { useConfig } from '../config';
@@ -40,7 +40,7 @@ export async function setupCommand(context: SetupCommandContext) {
     if (context.keyPair) {
         spinner.start('Generating rsa key-pair.');
 
-        await createSecurityKeyPair({
+        await createKeyPair({
             directory: writableDirectoryPath,
         });
 

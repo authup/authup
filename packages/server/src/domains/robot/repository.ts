@@ -6,11 +6,11 @@
  */
 
 import { EntityRepository, Repository } from 'typeorm';
-import { PermissionItem } from '@typescript-auth/core';
-
 import {
+    PermissionItem,
     Robot, Role,
 } from '@typescript-auth/domains';
+
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../utils';
 import { RobotEntity } from './entity';

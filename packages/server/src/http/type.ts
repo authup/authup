@@ -8,8 +8,9 @@
 import {
     Express, NextFunction, Request, Response,
 } from 'express';
-import { Realm, Robot, User } from '@typescript-auth/domains';
-import { AbilityManager } from '@typescript-auth/core';
+import {
+    AbilityManager, Realm, Robot, User,
+} from '@typescript-auth/domains';
 import { RobotEntity, UserEntity } from '../domains';
 
 export interface ExpressAppInterface extends Express {

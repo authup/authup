@@ -1,0 +1,198 @@
+/*
+ * Copyright (c) 2022-2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { randomUUID } from 'crypto';
+import {
+    OAuth2AccessToken, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind, Oauth2Client, Robot, User, hasOwnProperty,
+} from '@typescript-auth/domains';
+import { getRepository } from 'typeorm';
+import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
+import { signToken } from '../../../utils';
+import { AccessTokenBuilderContext } from './type';
+
+export class Oauth2AccessTokenBuilder {
+    static MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS = 10;
+
+    // -----------------------------------------------------
+
+    protected context: AccessTokenBuilderContext;
+
+    // -----------------------------------------------------
+
+    protected entity?: OAuth2AccessTokenEntity;
+
+    // -----------------------------------------------------
+
+    protected id?: OAuth2AccessToken['id'];
+
+    protected client?: Oauth2Client | Oauth2Client['id'];
+
+    protected robot?: Robot | Robot['id'];
+
+    protected user?: User | User['id'];
+
+    protected expires?: Date;
+
+    protected scope: string[] = [];
+
+    // -----------------------------------------------------
+
+    constructor(context: AccessTokenBuilderContext) {
+        this.context = context;
+    }
+
+    // -----------------------------------------------------
+
+    getId() {
+        if (!this.id) {
+            this.id = randomUUID();
+        }
+
+        return this.id;
+    }
+
+    resetId() {
+        this.id = undefined;
+    }
+
+    // -----------------------------------------------------
+
+    public async getToken() : Promise<string> {
+        const userId = this.getUserId();
+        const robotId = this.getRobotId();
+
+        if (!userId && !robotId) {
+            // todo: throw error
+        }
+
+        if (userId && robotId) {
+            // todo: throw error
+        }
+
+        const tokenPayload: Partial<OAuth2AccessTokenPayload> = {
+            iss: this.context.selfUrl,
+            sub: userId || robotId,
+            sub_kind: userId ?
+                OAuth2AccessTokenSubKind.USER :
+                OAuth2AccessTokenSubKind.ROBOT,
+            remote_address: this.context.request.ip,
+        };
+
+        const secondsDiff = Math.ceil((Date.now() - this.getExpireDate().getTime()) / 1000);
+
+        return signToken(
+            tokenPayload,
+            secondsDiff,
+            this.context.keyPairOptions,
+        );
+    }
+
+    public async create(data?: Partial<OAuth2AccessTokenEntity>) : Promise<OAuth2AccessTokenEntity> {
+        const repository = getRepository(OAuth2AccessTokenEntity);
+
+        const scope : string = this.scope.join(' ');
+
+        let entity = repository.create({
+            user_id: this.getUserId(),
+            robot_id: this.getRobotId(),
+            client_id: this.getClientId(),
+            expires: this.getExpireDate(),
+            scope,
+            token: await this.getToken(),
+        });
+
+        entity = repository.merge(entity, {
+            ...(data || {}),
+        });
+
+        let maxGenerationAttempts = Oauth2AccessTokenBuilder.MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS;
+
+        while (maxGenerationAttempts-- > 0) {
+            try {
+                entity.id = this.getId();
+                await repository.insert(entity);
+                break;
+            } catch (e) {
+                if (
+                    hasOwnProperty(e, 'code') &&
+                    e.code === 'ER_DUP_ENTRY'
+                ) {
+                    this.resetId();
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        this.entity = entity;
+
+        return entity;
+    }
+
+    // -----------------------------------------------------
+
+    getClientId() : Oauth2Client['id'] | undefined {
+        return typeof this.client === 'object' ? this.client.id : this.client;
+    }
+
+    getUserId() : User['id'] | undefined {
+        return typeof this.user === 'object' ? this.user.id : this.user;
+    }
+
+    getRobotId() : Robot['id'] | undefined {
+        return typeof this.robot === 'object' ? this.robot.id : this.robot;
+    }
+
+    getExpireDate() : Date {
+        return this.expires || new Date(Date.now() + (1000 * 3600));
+    }
+
+    // -----------------------------------------------------
+
+    setClient(id: Oauth2Client['id'] | Oauth2Client) {
+        this.client = id;
+
+        return this;
+    }
+
+    setUser(id: User['id'] | User) {
+        this.user = id;
+
+        return this;
+    }
+
+    setRobot(id: Robot['id'] | Robot) {
+        this.robot = id;
+
+        return this;
+    }
+
+    setExpireDate(time: Date) {
+        this.expires = time;
+
+        return this;
+    }
+
+    // -----------------------------------------------------
+
+    addScope(scope: string | string[]) {
+        if (Array.isArray(scope)) {
+            this.scope.push(...scope);
+        } else {
+            this.scope.push(scope);
+        }
+
+        return this;
+    }
+
+    dropScope(scope: string) {
+        const index = this.scope.indexOf(scope);
+        if (index !== -1) {
+            this.scope.splice(index, 1);
+        }
+    }
+}

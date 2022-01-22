@@ -6,11 +6,11 @@
  */
 
 import { EntityRepository, In, Repository } from 'typeorm';
-import { PermissionItem } from '@typescript-auth/core';
-
 import {
+    PermissionItem,
     Role, User, UserRole,
 } from '@typescript-auth/domains';
+
 import { RoleRepository } from '../role';
 import { verifyPassword } from '../../utils';
 import { UserRoleEntity } from '../user-role';
@@ -102,7 +102,7 @@ export class UserRepository extends Repository<UserEntity> {
      * @param name
      * @param password
      */
-    async verifyCredentials(name: string, password: string) : Promise<User | undefined> {
+    async verifyCredentials(name: string, password: string) : Promise<UserEntity | undefined> {
         const entity = await this.createQueryBuilder('user')
             .addSelect('user.password')
             .where('user.name LIKE :name', { name })

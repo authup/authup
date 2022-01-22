@@ -6,8 +6,7 @@
  */
 
 import { EntityRepository, In, Repository } from 'typeorm';
-import { PermissionItem } from '@typescript-auth/core';
-import { Role } from '@typescript-auth/domains';
+import { PermissionItem, Role } from '@typescript-auth/domains';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 

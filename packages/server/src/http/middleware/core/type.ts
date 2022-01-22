@@ -6,7 +6,7 @@
  */
 
 import { Request } from 'express';
-import { AuthorizationHeader } from '@typescript-auth/core';
+import { AuthorizationHeader } from '@trapi/client';
 
 export type AuthMiddlewareOptions = {
     parseCookie?: (request: Request) => string | undefined,

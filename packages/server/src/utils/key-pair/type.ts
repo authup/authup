@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RSAKeyPairKeyObjectOptions } from 'crypto';
+
 export type SecurityKeyPair = {
     privateKey: string,
     publicKey: string
 };
 
-export type SecurityKeyPairOptions = {
+export type KeyPairOptions = {
     directory: string,
-    alias: string
+    alias: string,
+    rsa: RSAKeyPairKeyObjectOptions
 };

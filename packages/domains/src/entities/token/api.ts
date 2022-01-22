@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Oauth2TokenResponse } from '@typescript-auth/core';
 import { AxiosInstance } from 'axios';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { TokenGrantPayload, TokenVerificationPayload } from './type';
 import { SingleResourceResponse } from '../type';
+import { Oauth2TokenResponse } from '../oauth2';
 
 export class TokenAPI {
     protected client: AxiosInstance;

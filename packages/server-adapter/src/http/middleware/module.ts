@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@typescript-auth/core';
-import { BadRequestError } from '@typescript-error/http';
 import {
-    Robot, TokenAPI, TokenVerificationPayload, User,
+    AbilityManager, Robot, TokenAPI,
+    TokenVerificationPayload, User,
 } from '@typescript-auth/domains';
+import { BadRequestError } from '@typescript-error/http';
+import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { HTTPMiddlewareContext } from './type';
 import { initTokenCache, verifyToken } from '../../utils';

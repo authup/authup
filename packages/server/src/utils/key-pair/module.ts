@@ -7,12 +7,12 @@
 import { generateKeyPair } from 'crypto';
 import path from 'path';
 import fs from 'fs';
-import { SecurityKeyPair, SecurityKeyPairOptions } from './type';
+import { KeyPairOptions, SecurityKeyPair } from './type';
 import { buildKeyFileName, buildKeyPairOptions } from './utils';
 
 const keyPairCache : Record<string, SecurityKeyPair> = {};
 
-export async function createSecurityKeyPair(options?: Partial<SecurityKeyPairOptions>) : Promise<SecurityKeyPair> {
+export async function createKeyPair(options?: Partial<KeyPairOptions>) : Promise<SecurityKeyPair> {
     options = buildKeyPairOptions(options);
 
     if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {
@@ -20,16 +20,18 @@ export async function createSecurityKeyPair(options?: Partial<SecurityKeyPairOpt
     }
 
     const securityKeyPair : SecurityKeyPair = await new Promise((resolve: (value: SecurityKeyPair) => void, reject) => {
-        generateKeyPair('rsa', {
-            modulusLength: 2048,
-        }, (err, publicKey, privateKey) => {
-            if (err) reject(err);
+        generateKeyPair(
+            'rsa',
+            options.rsa,
+            (err, publicKey, privateKey) => {
+                if (err) reject(err);
 
-            resolve({
-                privateKey: privateKey.export({ format: 'pem', type: 'pkcs8' }).toString(),
-                publicKey: publicKey.export({ format: 'pem', type: 'spki' }).toString(),
-            });
-        });
+                resolve({
+                    privateKey: privateKey.export({ format: 'pem', type: 'pkcs8' }).toString(),
+                    publicKey: publicKey.export({ format: 'pem', type: 'spki' }).toString(),
+                });
+            },
+        );
     });
 
     await Promise.all(
@@ -45,7 +47,7 @@ export async function createSecurityKeyPair(options?: Partial<SecurityKeyPairOpt
     return securityKeyPair;
 }
 
-export async function useSecurityKeyPair(options?: Partial<SecurityKeyPairOptions>) : Promise<SecurityKeyPair> {
+export async function useKeyPair(options?: Partial<KeyPairOptions>) : Promise<SecurityKeyPair> {
     options = buildKeyPairOptions(options);
 
     if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {
@@ -58,7 +60,7 @@ export async function useSecurityKeyPair(options?: Partial<SecurityKeyPairOption
     try {
         await Promise.all([privateKeyPath, publicKeyPath].map((filePath) => fs.promises.stat(filePath)));
     } catch (e) {
-        return createSecurityKeyPair(options);
+        return createKeyPair(options);
     }
 
     const filesContent : Buffer[] = await Promise.all([privateKeyPath, publicKeyPath].map((filePath) => fs.promises.readFile(filePath)));

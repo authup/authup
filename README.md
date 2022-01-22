@@ -8,11 +8,6 @@ This monorepo contains different auth packages for frontend and backend.
 
 ## Packages
 
-### @typescript-auth/core ☀
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fcore.svg)](https://badge.fury.io/js/@typescript-auth%2Fcore)
-
-This Package contains all core functions, which are also partially required by other modules of this repository.
-
 ### @typescript-auth/domains 🎉
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fdomains.svg)](https://badge.fury.io/js/@typescript-auth%2Fdomains)
 

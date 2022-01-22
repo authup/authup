@@ -6,14 +6,14 @@
  */
 
 import { sign, verify } from 'jsonwebtoken';
-import { SecurityKeyPair, SecurityKeyPairOptions, useSecurityKeyPair } from '../key-pair';
+import { KeyPairOptions, SecurityKeyPair, useKeyPair } from '../key-pair';
 
-export async function createToken<T extends string | object | Buffer | Record<string, any>>(
+export async function signToken<T extends string | object | Buffer | Record<string, any>>(
     payload: T,
     maxAge?: number,
-    keyPairOptions?: Partial<SecurityKeyPairOptions>,
+    keyPairOptions?: Partial<KeyPairOptions>,
 ) : Promise<string> {
-    const keyPair : SecurityKeyPair = await useSecurityKeyPair(keyPairOptions);
+    const keyPair : SecurityKeyPair = await useKeyPair(keyPairOptions);
 
     return sign(payload, keyPair.privateKey, {
         expiresIn: maxAge ?? 3600,
@@ -23,9 +23,9 @@ export async function createToken<T extends string | object | Buffer | Record<st
 
 export async function verifyToken<T extends string | object | Buffer | Record<string, any>>(
     token: string,
-    keyPairOptions?: Partial<SecurityKeyPairOptions>,
+    keyPairOptions?: Partial<KeyPairOptions>,
 ) : Promise<T> {
-    const keyPair : SecurityKeyPair = await useSecurityKeyPair(keyPairOptions);
+    const keyPair : SecurityKeyPair = await useKeyPair(keyPairOptions);
 
     return await verify(token, keyPair.publicKey, {
         algorithms: ['RS256'],

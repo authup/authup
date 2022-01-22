@@ -6,8 +6,9 @@
  */
 
 import { NextFunction, Request } from 'express';
-import { Realm, Robot, User } from '@typescript-auth/domains';
-import { AbilityManager, PermissionItem } from '@typescript-auth/core';
+import {
+    AbilityManager, PermissionItem, Realm, Robot, User,
+} from '@typescript-auth/domains';
 
 export interface ExpressRequest extends Request {
     user?: User,

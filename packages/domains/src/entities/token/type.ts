@@ -5,56 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AccessTokenPayload, Oauth2TokenResponse, PermissionItem } from '@typescript-auth/core';
 import { User } from '../user';
 import { Robot } from '../robot';
-import { TokenGrant, TokenSubKind } from './constants';
-
-export {
-    AccessTokenPayload,
-    Oauth2TokenResponse,
-};
-
-export type TokenSubKindType = `${TokenSubKind}`;
-
-export type TokenPayload = Partial<AccessTokenPayload> & {
-    /**
-     * remote address
-     */
-    remoteAddress: string,
-
-    /**
-     * iss type
-     */
-    subKind: TokenSubKindType,
-
-    /**
-     * Issued at (readonly)
-     */
-    iat?: number,
-
-    /**
-     * Expire at (readonly)
-     */
-    exp?: number
-};
+import { OAuth2AccessTokenGrant, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind } from '../oauth2-access-token';
+import { PermissionItem } from '../permission';
 
 type TokeEntityUser = {
-    type: `${TokenSubKind.ROBOT}`,
+    type: `${OAuth2AccessTokenSubKind.ROBOT}`,
     data: Partial<User> & {
         permissions: PermissionItem<any>[]
     }
 };
 
 type TokenEntityClient = {
-    type: `${TokenSubKind.USER}`,
+    type: `${OAuth2AccessTokenSubKind.USER}`,
     data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
     }
 };
 
 export type TokenVerificationPayload = {
-    token: TokenPayload,
+    token: OAuth2AccessTokenPayload,
     entity: TokeEntityUser | TokenEntityClient
 };
 
@@ -63,4 +34,4 @@ export type TokenGrantPayload = {
     password: string
 };
 
-export type TokenGrantType = `${TokenGrant}`;
+export type TokenGrantType = `${OAuth2AccessTokenGrant}`;

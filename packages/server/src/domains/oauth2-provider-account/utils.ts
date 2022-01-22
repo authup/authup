@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Oauth2TokenResponse } from '@typescript-auth/core';
-import { getCustomRepository, getRepository } from 'typeorm';
 import {
-    OAuth2Provider, OAuth2ProviderAccount,
+    OAuth2Provider,
+    OAuth2ProviderAccount, Oauth2TokenResponse,
 } from '@typescript-auth/domains';
+import { getCustomRepository, getRepository } from 'typeorm';
 import { UserRepository } from '../user';
 import { OAuth2ProviderAccountEntity } from './entity';
 import { OAuth2ProviderRoleEntity } from '../oauth2-provider-role';
