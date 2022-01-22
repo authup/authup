@@ -36,7 +36,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
             });
         }
 
-        let secondsDiff : number = payload.token.exp - (new Date().getTime() / 1000);
+        let secondsDiff : number = payload.token.expire_time - (new Date().getTime() / 1000);
         secondsDiff = parseInt(secondsDiff.toString(), 10);
 
         if (secondsDiff <= 0) {

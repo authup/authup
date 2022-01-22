@@ -8,7 +8,7 @@
 import { getCustomRepository } from 'typeorm';
 import {
     OAuth2AccessTokenPayload,
-    OAuth2AccessTokenSubKind, PermissionID, TokenVerificationPayload,
+    OAuth2AccessTokenSubKind, OAuth2RefreshTokenPayload, PermissionID, TokenVerificationPayload,
 } from '@typescript-auth/domains';
 import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -40,13 +40,14 @@ export async function verifyTokenRouteHandler(
         throw new ForbiddenError();
     }
 
-    let tokenPayload : OAuth2AccessTokenPayload;
+    let tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload;
 
     try {
         tokenPayload = await verifyToken(id, {
             directory: context.writableDirectoryPath,
         });
     } catch (e) {
+        console.log(e, id);
         throw new BadRequestError('The token is not valid....');
     }
 

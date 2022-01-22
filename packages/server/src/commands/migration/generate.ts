@@ -23,7 +23,7 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
     context.name = context.name || 'Auth';
 
     if (!context.directory) {
-        context.directory = connectionOptions.cli ?
+        context.directory = connectionOptions.cli && connectionOptions.cli.migrationsDir ?
             connectionOptions.cli.migrationsDir :
             path.join(context.config.writableDirectory, 'migrations');
     }

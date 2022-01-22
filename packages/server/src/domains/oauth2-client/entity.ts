@@ -11,7 +11,7 @@ import {
 import { Oauth2Client, User } from '@typescript-auth/domains';
 import { UserEntity } from '../user';
 
-@Entity({ name: 'auth_robots' })
+@Entity({ name: 'auth_clients' })
 export class OAuth2ClientEntity implements Oauth2Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;

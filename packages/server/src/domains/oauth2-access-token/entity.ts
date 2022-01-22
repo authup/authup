@@ -6,7 +6,7 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
+    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Oauth2Client, Robot, User } from '@typescript-auth/domains';
 import { OAuth2AccessToken } from '@typescript-auth/domains/src/entities/oauth2-access-token';
@@ -16,7 +16,7 @@ import { OAuth2ClientEntity } from '../oauth2-client';
 
 @Entity({ name: 'auth_access_tokens' })
 export class OAuth2AccessTokenEntity implements OAuth2AccessToken {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn({ type: 'uuid' })
         id: string;
 
     @Column({ type: 'varchar', length: 4096 })

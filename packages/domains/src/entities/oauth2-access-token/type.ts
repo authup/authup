@@ -9,6 +9,8 @@ import { User } from '../user';
 import { Oauth2Client } from '../oauth2-client';
 import { Robot } from '../robot';
 import { OAuth2AccessTokenSubKind } from './constants';
+import { OAuth2TokenKind, Oauth2TokenType } from '../oauth2';
+import { JWTPayload } from '../jwt';
 
 export interface OAuth2AccessToken {
     id: string,
@@ -34,47 +36,11 @@ export interface OAuth2AccessToken {
 
 export type OAuth2AccessTokenSubKindType = `${OAuth2AccessTokenSubKind}`;
 
-export type OAuth2AccessTokenPayload = {
+export type OAuth2AccessTokenPayload = JWTPayload & {
     /**
-     * Subject (user id)
+     * Specify this token as access token.
      */
-    sub: string | number,
-    /**
-     * Issuer (token endpoint, f.e "https://...")
-     */
-    iss: string,
-    /**
-     * client id
-     */
-    cid: string,
+    kind: OAuth2TokenKind.ACCESS,
 
-    /**
-     * Issued At
-     */
-    iat: number,
-
-    /**
-     * Expires At
-     */
-    exp: number,
-
-    /**
-     * Scopes (f.e: "scope1 scope2")
-     */
-    scope: string,
-
-    /**
-     * remote address
-     */
-    remote_address?: string,
-
-    /**
-     * iss type
-     */
-    sub_kind?: OAuth2AccessTokenSubKindType,
-
-    /**
-     * Additional parameters
-     */
-    [key: string]: any
+    access_token_id: OAuth2AccessToken['id'],
 };

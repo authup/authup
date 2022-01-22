@@ -6,6 +6,7 @@
  */
 
 import { OAuth2AccessTokenPayload } from '../oauth2-access-token';
+import { OAuth2TokenKind } from './constants';
 
 export type Oauth2TokenResponse = {
     access_token: string,
@@ -28,3 +29,5 @@ export type Oauth2TokenResponse = {
 
     scope?: string
 };
+
+export type Oauth2TokenType = `${OAuth2TokenKind}`;

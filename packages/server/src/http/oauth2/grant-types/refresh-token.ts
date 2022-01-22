@@ -51,7 +51,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const repository = getRepository(OAuth2RefreshTokenEntity);
 
-        const entity = await repository.findOne(refreshTokenPayload.refresh_token_id);
+        const entity = await repository.findOne(refreshTokenPayload.jti);
         if (typeof entity === 'undefined') {
             throw OAuth2ServerError.invalidRefreshToken();
         } else {

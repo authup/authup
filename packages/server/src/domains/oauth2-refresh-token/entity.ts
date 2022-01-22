@@ -6,7 +6,7 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
+    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
     OAuth2AccessToken, Oauth2Client, Oauth2RefreshToken,
@@ -16,7 +16,7 @@ import { OAuth2ClientEntity } from '../oauth2-client';
 
 @Entity({ name: 'auth_refresh_tokens' })
 export class OAuth2RefreshTokenEntity implements Oauth2RefreshToken {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryColumn({ type: 'uuid' })
         id: string;
 
     @Column({

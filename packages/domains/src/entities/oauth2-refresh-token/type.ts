@@ -9,6 +9,8 @@ import { OAuth2AccessToken, OAuth2AccessTokenSubKind } from '../oauth2-access-to
 import { Oauth2Client } from '../oauth2-client';
 import { Robot } from '../robot';
 import { User } from '../user';
+import { OAuth2TokenKind, Oauth2TokenType } from '../oauth2';
+import { JWTPayload } from '../jwt';
 
 export interface Oauth2RefreshToken {
     id: string;
@@ -28,18 +30,10 @@ export interface Oauth2RefreshToken {
     access_token: OAuth2AccessToken;
 }
 
-export type OAuth2RefreshTokenPayload = {
-    client_id?: Oauth2Client['id'],
-
-    refresh_token_id: Oauth2RefreshToken['id'],
+export type OAuth2RefreshTokenPayload = JWTPayload & {
+    kind: OAuth2TokenKind.REFRESH,
 
     access_token_id: OAuth2AccessToken['id'],
 
-    scope: OAuth2AccessToken['scope'],
-
-    expire_time: number,
-
-    sub_kind: OAuth2AccessTokenSubKind;
-
-    sub: User['id'] | Robot['id']
+    refresh_token_id: OAuth2AccessToken['id'],
 };

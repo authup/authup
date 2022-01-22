@@ -7,7 +7,14 @@
 
 import { randomUUID } from 'crypto';
 import {
-    OAuth2AccessToken, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind, Oauth2Client, Robot, User, hasOwnProperty,
+    OAuth2AccessToken,
+    OAuth2AccessTokenPayload,
+    OAuth2AccessTokenSubKind,
+    OAuth2TokenKind,
+    Oauth2Client,
+    Robot,
+    User,
+    hasOwnProperty,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
@@ -74,19 +81,19 @@ export class Oauth2AccessTokenBuilder {
         }
 
         const tokenPayload: Partial<OAuth2AccessTokenPayload> = {
+            access_token_id: this.getId(),
             iss: this.context.selfUrl,
             sub: userId || robotId,
             sub_kind: userId ?
                 OAuth2AccessTokenSubKind.USER :
                 OAuth2AccessTokenSubKind.ROBOT,
             remote_address: this.context.request.ip,
+            kind: OAuth2TokenKind.ACCESS,
         };
-
-        const secondsDiff = Math.ceil((Date.now() - this.getExpireDate().getTime()) / 1000);
 
         return signToken(
             tokenPayload,
-            secondsDiff,
+            this.context.maxAge,
             this.context.keyPairOptions,
         );
     }
@@ -102,7 +109,6 @@ export class Oauth2AccessTokenBuilder {
             client_id: this.getClientId(),
             expires: this.getExpireDate(),
             scope,
-            token: await this.getToken(),
         });
 
         entity = repository.merge(entity, {
@@ -114,6 +120,8 @@ export class Oauth2AccessTokenBuilder {
         while (maxGenerationAttempts-- > 0) {
             try {
                 entity.id = this.getId();
+                entity.token = await this.getToken();
+
                 await repository.insert(entity);
                 break;
             } catch (e) {

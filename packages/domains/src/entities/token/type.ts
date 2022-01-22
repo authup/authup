@@ -9,6 +9,7 @@ import { User } from '../user';
 import { Robot } from '../robot';
 import { OAuth2AccessTokenGrant, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind } from '../oauth2-access-token';
 import { PermissionItem } from '../permission';
+import { OAuth2RefreshTokenPayload } from '../oauth2-refresh-token';
 
 type TokeEntityUser = {
     type: `${OAuth2AccessTokenSubKind.ROBOT}`,
@@ -25,7 +26,7 @@ type TokenEntityClient = {
 };
 
 export type TokenVerificationPayload = {
-    token: OAuth2AccessTokenPayload,
+    token: OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload,
     entity: TokeEntityUser | TokenEntityClient
 };
 
