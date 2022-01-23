@@ -8,8 +8,8 @@
 import {
     AbilityManager,
     AuthHeaderTypeUnsupported,
-    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind,
-    PermissionItem, Robot, TokenInvalidError, TokenSubKindInvalidError,
+    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2RefreshTokenPayload, OAuth2TokenKind, OAuth2TokenSubKind,
+    PermissionItem, Robot, TokenError,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
@@ -33,20 +33,21 @@ export async function verifyClientForMiddlewareRequest(
             break;
         }
         case AuthorizationHeaderType.BEARER: {
-            let tokenPayload : OAuth2AccessTokenPayload;
-
-            try {
-                tokenPayload = await verifyToken(header.token, {
+            const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
+                header.token,
+                {
                     directory: options.writableDirectoryPath,
-                });
-            } catch (e) {
-                throw new TokenInvalidError();
+                },
+            );
+
+            if (tokenPayload.kind !== OAuth2TokenKind.ACCESS) {
+                throw TokenError.accessTokenRequired();
             }
 
-            if (tokenPayload.sub_kind === OAuth2AccessTokenSubKind.ROBOT) {
+            if (tokenPayload.sub_kind === OAuth2TokenSubKind.ROBOT) {
                 condition.id = tokenPayload.sub as Robot['id'];
             } else {
-                throw new TokenSubKindInvalidError();
+                throw TokenError.subKindInvalid();
             }
 
             break;

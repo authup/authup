@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2AccessTokenSubKind, OAuth2ServerError,
+    OAuth2ServerError, OAuth2TokenSubKind,
     Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
@@ -21,9 +21,10 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             entity: {
-                type: OAuth2AccessTokenSubKind.USER,
+                kind: OAuth2TokenSubKind.USER,
                 data: user,
             },
+            realm: user.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

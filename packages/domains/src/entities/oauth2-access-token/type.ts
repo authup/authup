@@ -8,9 +8,9 @@
 import { User } from '../user';
 import { Oauth2Client } from '../oauth2-client';
 import { Robot } from '../robot';
-import { OAuth2AccessTokenSubKind } from './constants';
-import { OAuth2TokenKind, Oauth2TokenType } from '../oauth2';
-import { JWTPayload } from '../jwt';
+import { OAuth2TokenKind } from '../oauth2';
+import { JWTPayload } from '../json-web-token';
+import { Realm } from '../realm';
 
 export interface OAuth2AccessToken {
     id: string,
@@ -29,18 +29,20 @@ export interface OAuth2AccessToken {
 
     robot: Robot | null,
 
+    realm_id: Realm['id'],
+
+    realm: Realm,
+
     expires: Date,
 
     scope: string | null
 }
 
-export type OAuth2AccessTokenSubKindType = `${OAuth2AccessTokenSubKind}`;
-
 export type OAuth2AccessTokenPayload = JWTPayload & {
     /**
      * Specify this token as access token.
      */
-    kind: OAuth2TokenKind.ACCESS,
+    kind: `${OAuth2TokenKind.ACCESS}`,
 
     access_token_id: OAuth2AccessToken['id'],
 };

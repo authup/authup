@@ -6,12 +6,11 @@
  */
 
 export enum ErrorCode {
-    AUTHORIZATION_HEADER_INVALID = 'auth_header_invalid',
-    AUTHORIZATION_HEADER_PARSE = 'auth_header_parse',
-    AUTHORIZATION_HEADER_TYPE_PARSE = 'auth_header_Type_parse',
     AUTH_HEADER_TYPE_UNSUPPORTED = 'auth_header_type_unsupported',
     CREDENTIALS_INVALID = 'invalid_credentials',
+
     TOKEN_INVALID = 'invalid_token',
-    TOKEN_EXPIRED = 'invalid_token',
-    TOKEN_SUB_KIND_INVALID = 'token_sub_kind_invalid',
+    TOKEN_INACTIVE = 'inactive_token',
+    TOKEN_EXPIRED = 'expired_token',
+    TOKEN_SUB_KIND_INVALID = 'invalid_token_sub_kind',
 }

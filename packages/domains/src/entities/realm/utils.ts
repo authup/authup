@@ -22,3 +22,7 @@ export function isPermittedForResourceRealm(
 
     return realmId === resourceRealmId;
 }
+
+export function isValidRealmName(name: string) : boolean {
+    return /^[a-z0-9-_]{3,36}$/.test(name);
+}

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessTokenSubKind } from '../oauth2-access-token';
+import { OAuth2TokenSubKind } from '../oauth2-access-token';
 import { User } from '../user';
 import { Robot } from '../robot';
 
@@ -16,10 +16,10 @@ export type JWTPayload = {
     sub?: User['id'] | Robot['id'],
 
     /**
-     * Subject type (robot | user)
+     * Self: Subject type (robot | user)
      */
-    sub_kind?: OAuth2AccessTokenSubKind.USER |
-    OAuth2AccessTokenSubKind.ROBOT,
+    sub_kind?: OAuth2TokenSubKind.USER |
+    OAuth2TokenSubKind.ROBOT,
 
     /**
      * Audience
@@ -62,12 +62,12 @@ export type JWTPayload = {
     client_id?: string,
 
     /**
-     * roles
+     * OpenID: roles
      */
     roles?: string[],
 
     /**
-     * sub active?
+     * OpenID: sub active?
      */
     active?: boolean;
 
@@ -92,7 +92,12 @@ export type JWTPayload = {
     nickname?: string
 
     /**
-     * remote address
+     * Self: realm_id
+     */
+    realm_id?: string,
+
+    /**
+     * Self: remote address
      */
     remote_address?: string
 

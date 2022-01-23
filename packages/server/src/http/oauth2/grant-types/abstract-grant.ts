@@ -6,8 +6,8 @@
  */
 
 import {
-    OAuth2AccessTokenSubKind,
     OAuth2ServerError,
+    OAuth2TokenSubKind,
 } from '@typescript-auth/domains';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
@@ -28,14 +28,21 @@ export abstract class AbstractGrant {
 
     protected async issueAccessToken(context: IssueAccessTokenContext) : Promise<OAuth2AccessTokenEntity> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            ...this.context,
+            request: this.context.request,
+            keyPairOptions: this.context.keyPairOptions,
+            selfUrl: this.context.selfUrl,
+            maxAge: typeof this.context.maxAge === 'number' ?
+                this.context.maxAge :
+                this.context.maxAge.access_token,
         });
 
-        switch (context.entity.type) {
-            case OAuth2AccessTokenSubKind.ROBOT:
+        tokenBuilder.setRealm(context.realm);
+
+        switch (context.entity.kind) {
+            case OAuth2TokenSubKind.ROBOT:
                 tokenBuilder.setRobot(context.entity.data);
                 break;
-            case OAuth2AccessTokenSubKind.USER:
+            case OAuth2TokenSubKind.USER:
                 tokenBuilder.setUser(context.entity.data);
                 break;
         }
@@ -46,17 +53,18 @@ export abstract class AbstractGrant {
             tokenBuilder.addScope(context.scope);
         }
 
-        const expireDate : Date = new Date(Date.now() + (1000 * this.context.maxAge));
-        tokenBuilder.setExpireDate(expireDate);
-
         return tokenBuilder.create();
     }
 
     protected async issueRefreshToken(data: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
-        const tokenBuilder = new Oauth2RefreshTokenBuilder(data);
-
-        const expireDate : Date = new Date(Date.now() + (1000 * this.context.maxAge));
-        tokenBuilder.setExpireDate(expireDate);
+        const tokenBuilder = new Oauth2RefreshTokenBuilder({
+            accessToken: data,
+            maxAge: typeof this.context.maxAge === 'number' ?
+                // refresh_token should always live 3x lifespan of access-token,
+                // if not specified otherwise
+                (this.context.maxAge * 3) :
+                this.context.maxAge.refresh_token,
+        });
 
         return tokenBuilder.create();
     }

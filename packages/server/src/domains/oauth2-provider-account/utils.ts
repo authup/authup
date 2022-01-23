@@ -7,10 +7,13 @@
 
 import {
     OAuth2Provider,
-    OAuth2ProviderAccount, Oauth2TokenResponse,
+    OAuth2ProviderAccount,
+    Oauth2TokenResponse, User, createNanoID, hasOwnProperty, isValidUserName,
 } from '@typescript-auth/domains';
 import { getCustomRepository, getRepository } from 'typeorm';
-import { UserRepository } from '../user';
+import { KeycloakJWTPayload } from '@typescript-auth/domains/src/entities/third-party';
+import { string } from 'yargs';
+import { UserEntity, UserRepository } from '../user';
 import { OAuth2ProviderAccountEntity } from './entity';
 import { OAuth2ProviderRoleEntity } from '../oauth2-provider-role';
 
@@ -20,40 +23,40 @@ export async function createOauth2ProviderAccountWithToken(
 ) : Promise<OAuth2ProviderAccount> {
     const accountRepository = getRepository(OAuth2ProviderAccountEntity);
     let account = await accountRepository.findOne({
-        provider_user_id: tokenResponse.access_token_payload.sub as string,
+        provider_user_id: tokenResponse.access_token_payload.sub,
         provider_id: provider.id,
     }, { relations: ['user'] });
 
-    const expiresIn : number = (tokenResponse.access_token_payload.exp - tokenResponse.access_token_payload.iat);
+    const accessTokenPayload : KeycloakJWTPayload = tokenResponse.access_token_payload;
 
-    const originalUsername : string | undefined = tokenResponse.access_token_payload.preferred_username ?? tokenResponse.access_token_payload.sub;
-    const destinationUsername = `${provider.realm_id}-${originalUsername}`;
-
-    const userRepository = getCustomRepository(UserRepository);
+    const expiresIn : number = (accessTokenPayload.exp - accessTokenPayload.iat);
+    const expireDate: Date = new Date((accessTokenPayload.iat * 1000) + (expiresIn * 1000));
 
     if (typeof account !== 'undefined') {
         account = accountRepository.merge(account, {
             access_token: tokenResponse.access_token,
             refresh_token: tokenResponse.refresh_token,
-            expires_at: new Date((tokenResponse.access_token_payload.iat * 1000) + (expiresIn * 1000)),
+            expires_at: expireDate,
             expires_in: expiresIn,
         });
     } else {
-        const user = userRepository.create({
-            name: destinationUsername,
-            display_name: originalUsername ?? destinationUsername,
-            realm_id: provider.realm_id,
-        });
+        const names : string[] = [
+            accessTokenPayload.preferred_username,
+            accessTokenPayload.nickname,
+            accessTokenPayload.sub,
+        ].filter((n) => n);
 
-        await userRepository.insert(user);
+        const user = await createUser({
+            realm_id: provider.realm_id,
+        }, [...names]);
 
         account = accountRepository.create({
             provider_id: provider.id,
-            provider_user_id: tokenResponse.access_token_payload.sub as string,
-            provider_user_name: originalUsername ?? destinationUsername,
+            provider_user_id: accessTokenPayload.sub,
+            provider_user_name: names.shift(),
             access_token: tokenResponse.access_token,
             refresh_token: tokenResponse.refresh_token,
-            expires_at: new Date((tokenResponse.access_token_payload.iat * 1000) + (expiresIn * 1000)),
+            expires_at: expireDate,
             expires_in: expiresIn,
             user_id: user.id,
             user,
@@ -62,20 +65,98 @@ export async function createOauth2ProviderAccountWithToken(
 
     await accountRepository.save(account);
 
-    if (typeof tokenResponse.access_token_payload?.realm_access?.roles !== 'undefined') {
+    const roles : string[] = [];
+
+    if (
+        accessTokenPayload.roles &&
+        Array.isArray(accessTokenPayload.roles)
+    ) {
+        accessTokenPayload.roles = accessTokenPayload.roles
+            .filter((n) => typeof n === 'string');
+
+        if (
+            accessTokenPayload.roles &&
+            accessTokenPayload.roles.length > 0
+        ) {
+            roles.push(...accessTokenPayload.roles);
+        }
+    }
+
+    if (
+        accessTokenPayload.realm_access?.roles &&
+        Array.isArray(accessTokenPayload.realm_access?.roles)
+    ) {
+        accessTokenPayload.realm_access.roles = accessTokenPayload.realm_access?.roles
+            .filter((n) => typeof n === 'string');
+
+        if (
+            accessTokenPayload.realm_access.roles &&
+            accessTokenPayload.realm_access.roles.length > 0
+        ) {
+            roles.push(...accessTokenPayload.realm_access.roles);
+        }
+    }
+
+    if (
+        roles &&
+        roles.length > 0
+    ) {
         const providerRoleRepository = getRepository(OAuth2ProviderRoleEntity);
 
         const providerRoles = await providerRoleRepository
             .createQueryBuilder('providerRole')
             .leftJoinAndSelect('providerRole.provider', 'provider')
-            .where('providerRole.external_id in (:...id)', { id: tokenResponse.access_token_payload?.realm_access?.roles })
+            .where('providerRole.external_id in (:...id)', { id: roles })
             .andWhere('provider.realm_id = :realmId', { realmId: provider.realm_id })
             .getMany();
 
-        if (providerRoles.length > 0) {
-            await userRepository.syncRoles(account.user.id, providerRoles.map((providerRole) => providerRole.role_id));
+        if (
+            providerRoles.length > 0
+        ) {
+            const userRepository = getCustomRepository(UserRepository);
+            await userRepository.syncRoles(
+                account.user.id,
+                providerRoles.map((providerRole) => providerRole.role_id),
+            );
         }
     }
 
     return account;
+}
+
+async function createUser(data: Partial<User>, names: string[]) : Promise<UserEntity> {
+    let name : string | undefined = names.shift();
+    let nameLocked = true;
+
+    if (!name) {
+        name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
+        nameLocked = false;
+    }
+
+    if (!isValidUserName(name)) {
+        return createUser(data, names);
+    }
+
+    try {
+        const userRepository = getCustomRepository(UserRepository);
+        const user = userRepository.create({
+            name,
+            name_locked: nameLocked,
+            display_name: name,
+            realm_id: data.realm_id,
+        });
+
+        await userRepository.insert(user);
+
+        return user;
+    } catch (e) {
+        if (
+            hasOwnProperty(e, 'code') &&
+            e.code === 'ER_DUP_ENTRY'
+        ) {
+            return createUser(data, names);
+        }
+
+        throw e;
+    }
 }

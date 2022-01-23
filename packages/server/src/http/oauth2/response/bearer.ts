@@ -6,9 +6,9 @@
  */
 
 import {
-    OAuth2AccessTokenSubKind,
     OAuth2RefreshTokenPayload,
     OAuth2TokenKind,
+    OAuth2TokenSubKind,
     Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { OAuth2BearerResponseContext } from './type';
@@ -29,20 +29,21 @@ export class OAuth2BearerTokenResponse {
         const response : Oauth2TokenResponse = {
             access_token: this.context.accessToken.token,
             expires_in: Math.ceil((this.context.accessToken.expires.getTime() - Date.now()) / 1000),
-            token_type: 'bearer',
+            token_type: 'Bearer',
             ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
         };
 
         if (this.context.refreshToken) {
             const refreshTokenPayload : Partial<OAuth2RefreshTokenPayload> = {
                 kind: OAuth2TokenKind.REFRESH,
-                client_id: this.context.accessToken.client_id,
+                realm_id: this.context.refreshToken.realm_id,
                 refresh_token_id: this.context.refreshToken.id,
                 access_token_id: this.context.accessToken.id,
                 sub: this.context.accessToken.user_id || this.context.accessToken.robot_id,
                 sub_kind: this.context.accessToken.user_id ?
-                    OAuth2AccessTokenSubKind.USER :
-                    OAuth2AccessTokenSubKind.ROBOT,
+                    OAuth2TokenSubKind.USER :
+                    OAuth2TokenSubKind.ROBOT,
+                ...(this.context.accessToken.client_id ? { client_id: this.context.accessToken.client_id } : {}),
                 ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
             };
 

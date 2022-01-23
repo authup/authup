@@ -24,9 +24,10 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             entity: {
-                type: refreshTokenPayload.sub_kind,
+                kind: refreshTokenPayload.sub_kind,
                 data: refreshTokenPayload.sub,
             },
+            realm: refreshTokenPayload.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

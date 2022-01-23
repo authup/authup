@@ -8,11 +8,14 @@
 import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Oauth2Client, Robot, User } from '@typescript-auth/domains';
+import {
+    Oauth2Client, Realm, Robot, User,
+} from '@typescript-auth/domains';
 import { OAuth2AccessToken } from '@typescript-auth/domains/src/entities/oauth2-access-token';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
 import { OAuth2ClientEntity } from '../oauth2-client';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_access_tokens' })
 export class OAuth2AccessTokenEntity implements OAuth2AccessToken {
@@ -54,4 +57,11 @@ export class OAuth2AccessTokenEntity implements OAuth2AccessToken {
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'robot_id' })
         robot: RobotEntity | null;
+
+    @Column()
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
+        realm: RealmEntity;
 }

@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Role } from '@typescript-auth/domains';
+import {
+    Role, isValidRoleName,
+} from '@typescript-auth/domains';
 import { check, matchedData, validationResult } from 'express-validator';
+import { BadRequestError } from '@typescript-error/http';
 import { ExpressValidationError } from '../../../error/validation';
 import { ExpressRequest } from '../../../type';
 
@@ -17,10 +20,16 @@ export async function runRoleValidation(
     const nameChain = await check('name')
         .exists()
         .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 128 });
+        .custom((value) => {
+            const isValid = isValidRoleName(value);
+            if (!isValid) {
+                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+            }
 
-    if (operation === 'update') nameChain.optional({ nullable: true });
+            return isValid;
+        });
+
+    if (operation === 'update') nameChain.optional();
 
     await nameChain.run(req);
 

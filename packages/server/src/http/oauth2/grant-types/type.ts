@@ -6,26 +6,30 @@
  */
 
 import {
-    OAuth2AccessTokenSubKind, Oauth2Client, Oauth2TokenResponse, Robot, User,
+    OAuth2TokenSubKind, Oauth2Client, Oauth2TokenResponse, Realm, Robot, User,
 } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../type';
 import { KeyPairOptions } from '../../../utils';
 
-export type IssueAccessTokenContextUserEntity = {
-    type: OAuth2AccessTokenSubKind.USER,
+export type AccessTokenContextUserEntity = {
+    kind: OAuth2TokenSubKind.USER,
     data: User | User['id']
 };
 
-export type IssueAccessTokenContextRobotEntity = {
-    type: OAuth2AccessTokenSubKind.ROBOT,
+export type AccessTokenContextRobotEntity = {
+    kind: OAuth2TokenSubKind.ROBOT,
     data: Robot | Robot['id']
 };
 
 export type IssueAccessTokenContext = {
-    entity: IssueAccessTokenContextUserEntity | IssueAccessTokenContextRobotEntity
+    entity: AccessTokenContextUserEntity | AccessTokenContextRobotEntity,
+    realm: Realm['id'] | Realm,
+
     scope?: string | string[],
-    client?: Oauth2Client['id'] | Oauth2Client
+    client?: Oauth2Client['id'] | Oauth2Client,
 };
+
+// -----------------------------------------------------
 
 export interface Grant {
     run() : Promise<Oauth2TokenResponse>;
@@ -33,7 +37,22 @@ export interface Grant {
 
 export type GrantContext = {
     request: ExpressRequest,
+
     keyPairOptions?: Partial<KeyPairOptions>,
-    maxAge?: number,
-    selfUrl: string
+
+    maxAge?: GrantContextMaxAge,
+
+    selfUrl: string,
+};
+
+export type GrantContextMaxAge = number | {
+    refresh_token?: number,
+    access_token?: number
+};
+
+// -----------------------------------------------------
+
+export type InternalGrantContext = GrantContext & {
+    realm: Realm | Realm['id'],
+    entity: AccessTokenContextUserEntity | AccessTokenContextRobotEntity
 };

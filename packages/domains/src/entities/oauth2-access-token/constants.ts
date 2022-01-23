@@ -11,7 +11,7 @@ export enum OAuth2AccessTokenGrant {
     REFRESH_TOKEN = 'refresh_token',
 }
 
-export enum OAuth2AccessTokenSubKind {
+export enum OAuth2TokenSubKind {
     USER = 'user',
     ROBOT = 'robot',
 }

@@ -6,11 +6,9 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import {
-    TokenSubKindInvalidError,
-} from '@typescript-auth/domains';
 import { NotFoundError } from '@typescript-error/http';
 import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
+import { ErrorCode, TokenError } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../type';
 import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';
@@ -63,7 +61,10 @@ export async function authenticateWithAuthorizationHeader(
     try {
         await verifyUserForMiddlewareRequest(request, value, options);
     } catch (e) {
-        if (e instanceof NotFoundError || e instanceof TokenSubKindInvalidError) {
+        if (
+            e instanceof NotFoundError ||
+            (e instanceof TokenError && e.getOption('code') === ErrorCode.TOKEN_SUB_KIND_INVALID)
+        ) {
             await verifyClientForMiddlewareRequest(request, value, options);
         } else {
             throw e;

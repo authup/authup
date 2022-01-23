@@ -9,6 +9,4 @@ export * from './ability-meta';
 export * from './auth-header-type-unsupported';
 export * from './oauth2';
 export * from './credentials-invalid';
-export * from './token-invalid';
-export * from './token-expired';
-export * from './token-subkind-invalid';
+export * from './token';

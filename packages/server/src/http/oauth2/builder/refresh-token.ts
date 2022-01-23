@@ -9,10 +9,14 @@ import { Oauth2RefreshToken, hasOwnProperty } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
+import { RefreshTokenBuilderContext } from './type';
 
 export class Oauth2RefreshTokenBuilder {
     static MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS = 10;
+
+    // -----------------------------------------------------
+
+    protected context : RefreshTokenBuilderContext;
 
     // -----------------------------------------------------
 
@@ -23,8 +27,6 @@ export class Oauth2RefreshTokenBuilder {
     protected id?: Oauth2RefreshToken['id'];
 
     protected expires?: Date;
-
-    protected accessToken : OAuth2AccessTokenEntity;
 
     // -----------------------------------------------------
 
@@ -42,18 +44,19 @@ export class Oauth2RefreshTokenBuilder {
 
     // -----------------------------------------------------
 
-    constructor(token: OAuth2AccessTokenEntity) {
-        this.accessToken = token;
+    constructor(context: RefreshTokenBuilderContext) {
+        this.context = context;
     }
 
     async create(data?: Partial<OAuth2RefreshTokenEntity>) : Promise<OAuth2RefreshTokenEntity> {
         const repository = getRepository(OAuth2RefreshTokenEntity);
 
         let entity = repository.create({
-            client_id: this.accessToken.client_id,
-            expires: this.expires || new Date(Date.now() + (1000 * 3600)),
-            scope: this.accessToken.scope,
-            access_token_id: this.accessToken.id,
+            client_id: this.context.accessToken.client_id,
+            expires: this.getExpireDate(),
+            scope: this.context.accessToken.scope,
+            access_token_id: this.context.accessToken.id,
+            realm_id: this.context.accessToken.realm_id,
         });
 
         entity = repository.merge(entity, {
@@ -88,5 +91,9 @@ export class Oauth2RefreshTokenBuilder {
         this.expires = time;
 
         return this;
+    }
+
+    getExpireDate() : Date {
+        return this.expires || new Date(Date.now() + (1000 * (this.context.maxAge | 3600)));
     }
 }

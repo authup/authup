@@ -8,9 +8,8 @@
 import {
     AbilityManager,
     AuthHeaderTypeUnsupported,
-    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind,
-    TokenInvalidError,
-    TokenSubKindInvalidError,
+    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2RefreshTokenPayload, OAuth2TokenKind, OAuth2TokenSubKind,
+    TokenError,
     User,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
@@ -35,20 +34,21 @@ export async function verifyUserForMiddlewareRequest(
             break;
         }
         case AuthorizationHeaderType.BEARER: {
-            let tokenPayload : OAuth2AccessTokenPayload;
-
-            try {
-                tokenPayload = await verifyToken(header.token, {
+            const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
+                header.token,
+                {
                     directory: options.writableDirectoryPath,
-                });
-            } catch (e) {
-                throw new TokenInvalidError();
+                },
+            );
+
+            if (tokenPayload.kind !== OAuth2TokenKind.ACCESS) {
+                throw TokenError.accessTokenRequired();
             }
 
-            if (tokenPayload.sub_kind === OAuth2AccessTokenSubKind.USER) {
+            if (tokenPayload.sub_kind === OAuth2TokenSubKind.USER) {
                 condition.id = tokenPayload.sub as User['id'];
             } else {
-                throw new TokenSubKindInvalidError();
+                throw TokenError.subKindInvalid();
             }
             break;
         }

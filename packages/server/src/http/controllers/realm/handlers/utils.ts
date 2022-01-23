@@ -6,6 +6,8 @@
  */
 
 import { check } from 'express-validator';
+import { isValidRealmName } from '@typescript-auth/domains';
+import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 
 export async function runRealmValidation(req: ExpressRequest, operation: 'create' | 'update') {
@@ -15,7 +17,14 @@ export async function runRealmValidation(req: ExpressRequest, operation: 'create
             .notEmpty()
             .isString()
             .isLength({ min: 3, max: 36 })
-            .matches(/^[a-z0-9-_]*$/)
+            .custom((value) => {
+                const isValid = isValidRealmName(value);
+                if (!isValid) {
+                    throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                }
+
+                return isValid;
+            })
             .run(req);
     }
 

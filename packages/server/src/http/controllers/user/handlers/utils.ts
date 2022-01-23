@@ -6,7 +6,10 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { PermissionID, Realm, User } from '@typescript-auth/domains';
+import {
+    PermissionID, User, isValidUserName,
+} from '@typescript-auth/domains';
+import { BadRequestError } from '@typescript-error/http';
 import { matchedValidationData } from '../../../../utils';
 import { ExpressValidationError } from '../../../error/validation';
 import { ExpressRequest } from '../../../type';
@@ -18,7 +21,14 @@ export async function runUserValidation(
     const nameChain = check('name')
         .exists()
         .notEmpty()
-        .isLength({ min: 3, max: 128 });
+        .custom((value) => {
+            const isValid = isValidUserName(value);
+            if (!isValid) {
+                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+            }
+
+            return isValid;
+        });
     if (operation === 'update') {
         nameChain.optional();
     }

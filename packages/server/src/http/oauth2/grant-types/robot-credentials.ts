@@ -6,8 +6,8 @@
  */
 
 import {
-    OAuth2AccessTokenSubKind,
     OAuth2ServerError,
+    OAuth2TokenSubKind,
     Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
@@ -22,9 +22,10 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             entity: {
-                type: OAuth2AccessTokenSubKind.ROBOT,
+                kind: OAuth2TokenSubKind.ROBOT,
                 data: entity,
             },
+            realm: entity.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

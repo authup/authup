@@ -9,10 +9,12 @@ import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2AccessToken, Oauth2Client, Oauth2RefreshToken,
+    OAuth2AccessToken, Oauth2Client, Oauth2RefreshToken, Realm,
 } from '@typescript-auth/domains';
 import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
 import { OAuth2ClientEntity } from '../oauth2-client';
+import { RobotEntity } from '../robot';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_refresh_tokens' })
 export class OAuth2RefreshTokenEntity implements Oauth2RefreshToken {
@@ -44,4 +46,11 @@ export class OAuth2RefreshTokenEntity implements Oauth2RefreshToken {
     @ManyToOne(() => OAuth2AccessTokenEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'access_token_id' })
         access_token: OAuth2AccessTokenEntity;
+
+    @Column()
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
+        realm: RealmEntity;
 }

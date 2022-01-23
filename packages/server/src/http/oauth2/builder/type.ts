@@ -5,12 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { OAuth2AccessToken } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../type';
 import { KeyPairOptions } from '../../../utils';
 
-export type AccessTokenBuilderContext = {
-    selfUrl: string,
-    request: ExpressRequest,
+export type TokenBuilderContext = {
     maxAge?: number,
+};
+
+export type AccessTokenBuilderContext = TokenBuilderContext & {
     keyPairOptions?: Partial<KeyPairOptions>
+    request: ExpressRequest,
+    selfUrl: string,
+};
+
+export type RefreshTokenBuilderContext = TokenBuilderContext & {
+    accessToken: OAuth2AccessToken
 };

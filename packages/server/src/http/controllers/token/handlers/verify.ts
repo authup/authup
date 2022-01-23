@@ -8,7 +8,7 @@
 import { getCustomRepository } from 'typeorm';
 import {
     OAuth2AccessTokenPayload,
-    OAuth2AccessTokenSubKind, OAuth2RefreshTokenPayload, PermissionID, TokenVerificationPayload,
+    OAuth2RefreshTokenPayload, OAuth2TokenSubKind, PermissionID, TokenVerificationPayload,
 } from '@typescript-auth/domains';
 import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -60,7 +60,7 @@ export async function verifyTokenRouteHandler(
     };
 
     switch (tokenPayload.sub_kind) {
-        case OAuth2AccessTokenSubKind.ROBOT: {
+        case OAuth2TokenSubKind.ROBOT: {
             const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
             const robot = await robotRepository.findOne(tokenPayload.sub);
 
@@ -83,7 +83,7 @@ export async function verifyTokenRouteHandler(
             };
             break;
         }
-        case OAuth2AccessTokenSubKind.USER: {
+        case OAuth2TokenSubKind.USER: {
             const userRepository = getCustomRepository<UserRepository>(UserRepository);
             const userQuery = userRepository.createQueryBuilder('user')
                 .addSelect('user.email')

@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessToken, OAuth2AccessTokenSubKind } from '../oauth2-access-token';
+import { OAuth2AccessToken } from '../oauth2-access-token';
 import { Oauth2Client } from '../oauth2-client';
-import { Robot } from '../robot';
-import { User } from '../user';
-import { OAuth2TokenKind, Oauth2TokenType } from '../oauth2';
-import { JWTPayload } from '../jwt';
+import { OAuth2TokenKind } from '../oauth2';
+import { JWTPayload } from '../json-web-token';
+import { Realm } from '../realm';
 
 export interface Oauth2RefreshToken {
     id: string;
@@ -28,10 +27,14 @@ export interface Oauth2RefreshToken {
     access_token_id: OAuth2AccessToken['id'];
 
     access_token: OAuth2AccessToken;
+
+    realm_id: Realm['id'];
+
+    realm: Realm;
 }
 
 export type OAuth2RefreshTokenPayload = JWTPayload & {
-    kind: OAuth2TokenKind.REFRESH,
+    kind: `${OAuth2TokenKind.REFRESH}`,
 
     access_token_id: OAuth2AccessToken['id'],
 

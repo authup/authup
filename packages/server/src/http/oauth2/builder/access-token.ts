@@ -9,12 +9,12 @@ import { randomUUID } from 'crypto';
 import {
     OAuth2AccessToken,
     OAuth2AccessTokenPayload,
-    OAuth2AccessTokenSubKind,
     OAuth2TokenKind,
+    OAuth2TokenSubKind,
     Oauth2Client,
+    Realm,
     Robot,
-    User,
-    hasOwnProperty,
+    User, hasOwnProperty,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
@@ -41,6 +41,8 @@ export class Oauth2AccessTokenBuilder {
     protected robot?: Robot | Robot['id'];
 
     protected user?: User | User['id'];
+
+    protected realm?: Realm | Realm['id'];
 
     protected expires?: Date;
 
@@ -72,23 +74,17 @@ export class Oauth2AccessTokenBuilder {
         const userId = this.getUserId();
         const robotId = this.getRobotId();
 
-        if (!userId && !robotId) {
-            // todo: throw error
-        }
-
-        if (userId && robotId) {
-            // todo: throw error
-        }
-
         const tokenPayload: Partial<OAuth2AccessTokenPayload> = {
             access_token_id: this.getId(),
             iss: this.context.selfUrl,
             sub: userId || robotId,
             sub_kind: userId ?
-                OAuth2AccessTokenSubKind.USER :
-                OAuth2AccessTokenSubKind.ROBOT,
+                OAuth2TokenSubKind.USER :
+                OAuth2TokenSubKind.ROBOT,
             remote_address: this.context.request.ip,
             kind: OAuth2TokenKind.ACCESS,
+            client_id: this.getClientId(),
+            realm_id: this.getRealmId(),
         };
 
         return signToken(
@@ -107,6 +103,7 @@ export class Oauth2AccessTokenBuilder {
             user_id: this.getUserId(),
             robot_id: this.getRobotId(),
             client_id: this.getClientId(),
+            realm_id: this.getRealmId(),
             expires: this.getExpireDate(),
             scope,
         });
@@ -155,8 +152,12 @@ export class Oauth2AccessTokenBuilder {
         return typeof this.robot === 'object' ? this.robot.id : this.robot;
     }
 
+    getRealmId() : Realm['id'] | undefined {
+        return typeof this.realm === 'object' ? this.realm.id : this.realm;
+    }
+
     getExpireDate() : Date {
-        return this.expires || new Date(Date.now() + (1000 * 3600));
+        return this.expires || new Date(Date.now() + (1000 * (this.context.maxAge | 3600)));
     }
 
     // -----------------------------------------------------
@@ -175,6 +176,12 @@ export class Oauth2AccessTokenBuilder {
 
     setRobot(id: Robot['id'] | Robot) {
         this.robot = id;
+
+        return this;
+    }
+
+    setRealm(id: Realm['id'] | Realm) {
+        this.realm = id;
 
         return this;
     }

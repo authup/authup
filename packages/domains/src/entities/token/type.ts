@@ -7,19 +7,19 @@
 
 import { User } from '../user';
 import { Robot } from '../robot';
-import { OAuth2AccessTokenGrant, OAuth2AccessTokenPayload, OAuth2AccessTokenSubKind } from '../oauth2-access-token';
+import { OAuth2AccessTokenGrant, OAuth2AccessTokenPayload, OAuth2TokenSubKind } from '../oauth2-access-token';
 import { PermissionItem } from '../permission';
 import { OAuth2RefreshTokenPayload } from '../oauth2-refresh-token';
 
 type TokeEntityUser = {
-    type: `${OAuth2AccessTokenSubKind.ROBOT}`,
+    type: `${OAuth2TokenSubKind.ROBOT}`,
     data: Partial<User> & {
         permissions: PermissionItem<any>[]
     }
 };
 
 type TokenEntityClient = {
-    type: `${OAuth2AccessTokenSubKind.USER}`,
+    type: `${OAuth2TokenSubKind.USER}`,
     data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
     }

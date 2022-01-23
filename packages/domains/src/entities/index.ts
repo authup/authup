@@ -6,7 +6,7 @@
  */
 
 export * from './ability';
-export * from './jwt';
+export * from './json-web-token';
 export * from './oauth2';
 export * from './oauth2-access-token';
 export * from './oauth2-client';

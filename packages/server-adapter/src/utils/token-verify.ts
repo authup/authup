@@ -7,7 +7,7 @@
 
 import { Cache } from 'redis-extension';
 import {
-    TokenAPI, TokenExpiredError, TokenInvalidError, TokenVerificationPayload,
+    TokenAPI, TokenError, TokenVerificationPayload,
 } from '@typescript-auth/domains';
 
 export type TokenVerifyContext = {
@@ -29,7 +29,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
         try {
             payload = await context.tokenAPIClient.verify(context.token);
         } catch (e) {
-            throw new TokenInvalidError({
+            throw new TokenError({
                 statusCode: e.response.status,
                 code: e.response.data.code,
                 message: e.response.data.message,
@@ -40,7 +40,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
         secondsDiff = parseInt(secondsDiff.toString(), 10);
 
         if (secondsDiff <= 0) {
-            throw new TokenExpiredError();
+            throw TokenError.expired();
         }
 
         if (context.tokenCache) {

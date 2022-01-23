@@ -80,6 +80,8 @@ export async function buildDatabaseConnectionOptions(
         connectionOptions.migrations = [
             path.join(config.rootPath, config.writableDirectory, 'migrations', '*{.ts,.js}'),
         ];
+
+        connectionOptions.logging = ['error'];
     } catch (e) {
         connectionOptions = {
             name: 'default',

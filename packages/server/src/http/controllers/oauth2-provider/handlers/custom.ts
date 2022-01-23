@@ -9,7 +9,8 @@ import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import {
     OAuth2AccessTokenPayload,
-    OAuth2AccessTokenSubKind, OAuth2HTTPClient,
+    OAuth2HTTPClient,
+    OAuth2TokenSubKind,
     Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 
@@ -18,6 +19,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
 import { ProxyConnectionConfig, detectProxyConnectionConfig, signToken } from '../../../../utils';
+import { InternalGrantType } from '../../../oauth2/grant-types/internal';
 
 export async function authorizeOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -90,18 +92,25 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const account = await createOauth2ProviderAccountWithToken(provider, tokenResponse);
     const expiresIn = context.maxAge;
 
-    const tokenPayload : Partial<OAuth2AccessTokenPayload> = {
-        sub_kind: OAuth2AccessTokenSubKind.USER,
-        iss: context.selfUrl,
-        sub: account.user.id,
-        remote_address: req.ip,
-    };
+    const grant = new InternalGrantType({
+        request: req,
+        maxAge: context.maxAge,
+        entity: {
+            kind: OAuth2TokenSubKind.USER,
+            data: account.user_id,
+        },
+        realm: provider.realm_id,
+        selfUrl: context.selfUrl,
+        keyPairOptions: {
+            directory: context.rsaKeyPairPath,
+        },
+    });
 
-    const token = await signToken(tokenPayload, expiresIn, { directory: context.rsaKeyPairPath });
+    const token = await grant.run();
 
     const cookie : Oauth2TokenResponse = {
-        access_token: token,
-        expires_in: expiresIn,
+        access_token: token.access_token,
+        expires_in: token.expires_in,
         token_type: 'Bearer',
     };
 
