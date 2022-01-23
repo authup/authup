@@ -8,10 +8,10 @@
 import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, Realm, isPermittedForResourceRealm } from '@typescript-auth/domains';
+import { hash } from '@typescript-auth/server-utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
 import { UserRepository } from '../../../../domains';
-import { hashPassword } from '../../../../utils';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -31,7 +31,7 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
 
     if (typeof data.password !== 'undefined') {
-        data.password = await hashPassword(data.password);
+        data.password = await hash(data.password);
     }
 
     let user = await userRepository.findOne(id);

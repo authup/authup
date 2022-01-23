@@ -17,8 +17,8 @@ import {
     User, hasOwnProperty,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
+import { signToken } from '@typescript-auth/server-utils';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { signToken } from '../../../utils';
 import { AccessTokenBuilderContext } from './type';
 
 export class Oauth2AccessTokenBuilder {
@@ -89,8 +89,12 @@ export class Oauth2AccessTokenBuilder {
 
         return signToken(
             tokenPayload,
-            this.context.maxAge,
-            this.context.keyPairOptions,
+            {
+                keyPairOptions: this.context.keyPairOptions,
+                options: {
+                    expiresIn: this.context.maxAge,
+                },
+            },
         );
     }
 

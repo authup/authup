@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './builder';
-export * from './grant-types';
-export * from './response';
-export * from './utils';
+export enum CookieName {
+    ACCESS_TOKEN = 'auth_access_token',
+    REFRESH_TOKEN = 'auth_refresh_token',
+}

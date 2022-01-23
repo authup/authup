@@ -11,8 +11,8 @@ import {
     Robot, Role,
 } from '@typescript-auth/domains';
 
+import { compare } from '@typescript-auth/server-utils';
 import { RoleRepository } from '../role';
-import { verifyPassword } from '../../utils';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
@@ -84,7 +84,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             return undefined;
         }
 
-        const verified = await verifyPassword(secret, entity.secret);
+        const verified = await compare(secret, entity.secret);
         if (!verified) {
             return undefined;
         }

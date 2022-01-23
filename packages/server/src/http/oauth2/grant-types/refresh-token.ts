@@ -6,28 +6,28 @@
  */
 
 import {
-    OAuth2RefreshTokenPayload,
-    OAuth2ServerError,
-    Oauth2TokenResponse,
+    OAuth2ServerError, OAuth2TokenKind,
+    Oauth2TokenResponse, TokenError,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
 import { OAuth2BearerTokenResponse } from '../response';
-import { verifyToken } from '../../../utils';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { Grant } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
+import { verifyOAuth2Token } from '../utils';
+import { OAuth2RefreshTokenVerifyResult } from '../utils/type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run() : Promise<Oauth2TokenResponse> {
-        const refreshTokenPayload = await this.validate();
+        const token = await this.validate();
 
         const accessToken = await this.issueAccessToken({
             entity: {
-                kind: refreshTokenPayload.sub_kind,
-                data: refreshTokenPayload.sub,
+                kind: token.payload.sub_kind,
+                data: token.payload.sub,
             },
-            realm: refreshTokenPayload.realm_id,
+            realm: token.entity.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);
@@ -41,18 +41,27 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate() : Promise<OAuth2RefreshTokenPayload> {
+    async validate() : Promise<OAuth2RefreshTokenVerifyResult> {
         const { refresh_token: refreshToken } = this.context.request.body;
 
-        const refreshTokenPayload : OAuth2RefreshTokenPayload = await verifyToken(refreshToken, this.context.keyPairOptions);
+        const token = await verifyOAuth2Token(
+            refreshToken,
+            {
+                keyPairOptions: this.context.keyPairOptions,
+            },
+        );
 
-        if (refreshTokenPayload.expire_time < Date.now()) {
+        if (token.kind !== OAuth2TokenKind.REFRESH) {
+            throw TokenError.kindInvalid();
+        }
+
+        if (token.payload.expire_time < Date.now()) {
             throw OAuth2ServerError.invalidRefreshToken();
         }
 
         const repository = getRepository(OAuth2RefreshTokenEntity);
+        const entity = await repository.findOne(token.payload.refresh_token_id);
 
-        const entity = await repository.findOne(refreshTokenPayload.jti);
         if (typeof entity === 'undefined') {
             throw OAuth2ServerError.invalidRefreshToken();
         } else {
@@ -62,12 +71,12 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         // -------------------------------------------------
 
         const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
-        const accessTokenEntity = await accessTokenRepository.findOne(refreshTokenPayload.access_token_id);
+        const accessTokenEntity = await accessTokenRepository.findOne(token.payload.access_token_id);
 
         if (typeof accessTokenEntity !== 'undefined') {
             await accessTokenRepository.remove(accessTokenEntity);
         }
 
-        return refreshTokenPayload;
+        return token;
     }
 }

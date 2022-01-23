@@ -8,10 +8,10 @@
 import { getCustomRepository, getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@typescript-auth/domains';
+import { hash } from '@typescript-auth/server-utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from './utils';
 import { RealmEntity, UserRepository } from '../../../../domains';
-import { hashPassword } from '../../../../utils';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.USER_ADD)) {
@@ -35,7 +35,7 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
     }
 
     if (user.password) {
-        user.password = await hashPassword(user.password);
+        user.password = await hash(user.password);
     }
 
     await userRepository.save(user);

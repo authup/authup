@@ -23,6 +23,14 @@ should therefore only be used for backend- applications & microservices.
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
 
 The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
+
+### @typescript-auth/server-utils 🛡
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-utils.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-utils)
+
+
+The main propose of this package, is to provide general utilities for authorization & authentication.
+
+
 ## Installation & Usage
 Please follow the `README.md` instructions in the respective package folder.
 

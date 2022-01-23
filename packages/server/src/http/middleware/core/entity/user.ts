@@ -8,16 +8,18 @@
 import {
     AbilityManager,
     AuthHeaderTypeUnsupported,
-    CredentialsInvalidError, OAuth2AccessTokenPayload, OAuth2RefreshTokenPayload, OAuth2TokenKind, OAuth2TokenSubKind,
+    CredentialsInvalidError,
+    OAuth2TokenKind,
+    OAuth2TokenSubKind,
     TokenError,
     User,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
-import { verifyToken } from '../../../../utils';
 import { ExpressRequest } from '../../../type';
 import { UserRepository } from '../../../../domains';
+import { verifyOAuth2Token } from '../../../oauth2';
 
 export async function verifyUserForMiddlewareRequest(
     request: ExpressRequest,
@@ -34,19 +36,21 @@ export async function verifyUserForMiddlewareRequest(
             break;
         }
         case AuthorizationHeaderType.BEARER: {
-            const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
+            const token = await verifyOAuth2Token(
                 header.token,
                 {
-                    directory: options.writableDirectoryPath,
+                    keyPairOptions: {
+                        directory: options.writableDirectoryPath,
+                    },
                 },
             );
 
-            if (tokenPayload.kind !== OAuth2TokenKind.ACCESS) {
+            if (token.kind !== OAuth2TokenKind.ACCESS) {
                 throw TokenError.accessTokenRequired();
             }
 
-            if (tokenPayload.sub_kind === OAuth2TokenSubKind.USER) {
-                condition.id = tokenPayload.sub as User['id'];
+            if (token.payload.sub_kind === OAuth2TokenSubKind.USER) {
+                condition.id = token.payload.sub as User['id'];
             } else {
                 throw TokenError.subKindInvalid();
             }

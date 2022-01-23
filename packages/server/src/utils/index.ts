@@ -7,6 +7,3 @@
 
 export * from './express-validator';
 export * from './proxy-connection-string';
-export * from './key-pair';
-export * from './password';
-export * from './token';

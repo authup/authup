@@ -6,5 +6,6 @@
  */
 
 export * from './api';
+export * from './cookies';
 export * from './oauth2';
 export * from './utils';

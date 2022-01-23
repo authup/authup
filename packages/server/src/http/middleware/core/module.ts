@@ -8,7 +8,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { NotFoundError } from '@typescript-error/http';
 import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
-import { ErrorCode, TokenError } from '@typescript-auth/domains';
+import { CookieName, ErrorCode, TokenError } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../type';
 import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
 import { AuthMiddlewareOptions } from './type';
@@ -72,16 +72,8 @@ export async function authenticateWithAuthorizationHeader(
     }
 }
 
-export function parseCookie(request: any): string | undefined {
-    try {
-        if (typeof request.cookies?.auth_token !== 'undefined') {
-            const { access_token: accessToken } = JSON.parse(request.cookies?.auth_token);
-
-            return accessToken;
-        }
-    } catch (e) {
-        // don't handle error, this is just fine :)
-    }
-
-    return undefined;
+export function parseAccessTokenCookie(request: ExpressRequest): string | undefined {
+    return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?
+        request.cookies?.[CookieName.ACCESS_TOKEN] :
+        undefined;
 }

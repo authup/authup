@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityManager, Robot, TokenAPI,
+    AbilityManager, CookieName, Robot, TokenAPI,
     TokenVerificationPayload, User,
 } from '@typescript-auth/domains';
 import { BadRequestError } from '@typescript-error/http';
@@ -19,15 +19,6 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
     const tokenCache = initTokenCache(context.redis, context.redisPrefix);
     const tokenAPIClient = new TokenAPI(context.axios);
 
-    const cookieHandler = (cookies: any) => {
-        if (cookies?.auth_token) {
-            const { access_token: accessToken } = JSON.parse(cookies?.auth_token);
-            return accessToken;
-        }
-
-        return undefined;
-    };
-
     return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = req.headers;
 
@@ -36,8 +27,11 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
                 let value;
                 if (context.cookieHandler) {
                     value = context.cookieHandler(req.cookies);
-                } else {
-                    value = cookieHandler(req.cookies);
+                } else if (
+                    req.cookies?.[CookieName.ACCESS_TOKEN] &&
+                        typeof req.cookies[CookieName.ACCESS_TOKEN] === 'string'
+                ) {
+                    value = req.cookies[CookieName.ACCESS_TOKEN];
                 }
 
                 if (value) {
@@ -73,9 +67,9 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             return;
         }
 
-        const { permissions, ...entity } = data.entity.data;
+        const { permissions, ...entity } = data.target.data;
 
-        switch (data.entity.type) {
+        switch (data.target.type) {
             case 'robot':
                 req.robotId = entity.id as Robot['id'];
                 req.robot = entity as Robot;

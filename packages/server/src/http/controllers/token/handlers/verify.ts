@@ -7,14 +7,15 @@
 
 import { getCustomRepository } from 'typeorm';
 import {
-    OAuth2AccessTokenPayload,
-    OAuth2RefreshTokenPayload, OAuth2TokenSubKind, PermissionID, TokenVerificationPayload,
+    OAuth2TokenSubKind, PermissionID, TokenVerificationPayload,
 } from '@typescript-auth/domains';
-import { BadRequestError, ForbiddenError, UnauthorizedError } from '@typescript-error/http';
+import {
+    ForbiddenError, NotFoundError, UnauthorizedError,
+} from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { verifyToken } from '../../../../utils';
 import { TokenRouteVerifyContext } from './type';
 import { RobotRepository, UserRepository } from '../../../../domains';
+import { verifyOAuth2Token } from '../../../oauth2';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
@@ -30,6 +31,10 @@ export async function verifyTokenRouteHandler(
         id = req.token;
     }
 
+    if (!id) {
+        throw new NotFoundError();
+    }
+
     const hasPermission = req.ability &&
         req.ability.hasPermission(PermissionID.TOKEN_VERIFY);
 
@@ -40,29 +45,28 @@ export async function verifyTokenRouteHandler(
         throw new ForbiddenError();
     }
 
-    let tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload;
-
-    try {
-        tokenPayload = await verifyToken(id, {
-            directory: context.writableDirectoryPath,
-        });
-    } catch (e) {
-        console.log(e, id);
-        throw new BadRequestError('The token is not valid....');
-    }
+    const token = await verifyOAuth2Token(
+        id,
+        {
+            keyPairOptions: {
+                directory: context.writableDirectoryPath,
+            },
+        },
+    );
 
     const response : TokenVerificationPayload = {
-        token: tokenPayload,
-        entity: {
-            type: tokenPayload.sub_kind,
+        payload: token.payload,
+        entity: token.entity,
+        target: {
+            type: token.payload.sub_kind,
             data: undefined,
         },
     };
 
-    switch (tokenPayload.sub_kind) {
+    switch (token.payload.sub_kind) {
         case OAuth2TokenSubKind.ROBOT: {
             const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const robot = await robotRepository.findOne(tokenPayload.sub);
+            const robot = await robotRepository.findOne(token.payload.sub);
 
             if (typeof robot === 'undefined') {
                 throw new UnauthorizedError();
@@ -77,7 +81,7 @@ export async function verifyTokenRouteHandler(
                 permissions = await robotRepository.getOwnedPermissions(robot.id);
             }
 
-            response.entity.data = {
+            response.target.data = {
                 ...robot,
                 permissions,
             };
@@ -87,7 +91,7 @@ export async function verifyTokenRouteHandler(
             const userRepository = getCustomRepository<UserRepository>(UserRepository);
             const userQuery = userRepository.createQueryBuilder('user')
                 .addSelect('user.email')
-                .where('user.id = :id', { id: tokenPayload.sub });
+                .where('user.id = :id', { id: token.payload.sub });
 
             const user = await userQuery.getOne();
 
@@ -97,7 +101,7 @@ export async function verifyTokenRouteHandler(
 
             const permissions = await userRepository.getOwnedPermissions(user.id);
 
-            response.entity.data = {
+            response.target.data = {
                 ...user,
                 permissions,
             };

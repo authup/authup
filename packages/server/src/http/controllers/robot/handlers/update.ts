@@ -1,7 +1,7 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, Robot } from '@typescript-auth/domains';
-import { hashPassword } from '../../../../utils';
+import { hash } from '@typescript-auth/server-utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
 import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
@@ -37,7 +37,7 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
     entity = repository.merge(entity, data);
 
     if (data.secret) {
-        entity.secret = await hashPassword(data.secret);
+        entity.secret = await hash(data.secret);
     }
 
     entity = await repository.save(entity);

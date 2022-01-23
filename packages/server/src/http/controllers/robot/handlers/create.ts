@@ -10,9 +10,9 @@ import {
     PermissionID, Robot,
     createNanoID,
 } from '@typescript-auth/domains';
+import { hash } from '@typescript-auth/server-utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
-import { hashPassword } from '../../../../utils';
 import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
 
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
@@ -31,7 +31,7 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
     const entity = repository.create(data);
 
     const secret = entity.secret || createNanoID(undefined, 64);
-    entity.secret = await hashPassword(secret);
+    entity.secret = await hash(secret);
     entity.realm_id = req.realmId;
 
     await repository.save(entity);

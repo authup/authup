@@ -33,9 +33,9 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        const { permissions, ...entity } = data.entity.data;
+        const { permissions, ...entity } = data.target.data;
 
-        switch (data.entity.type) {
+        switch (data.target.type) {
             case 'robot':
                 socket.data.robotId = entity.id;
                 socket.data.robot = entity;

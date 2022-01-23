@@ -7,18 +7,23 @@
 
 import { User } from '../user';
 import { Robot } from '../robot';
-import { OAuth2AccessTokenGrant, OAuth2AccessTokenPayload, OAuth2TokenSubKind } from '../oauth2-access-token';
+import {
+    OAuth2AccessToken,
+    OAuth2AccessTokenGrant,
+    OAuth2AccessTokenPayload,
+    OAuth2TokenSubKind,
+} from '../oauth2-access-token';
 import { PermissionItem } from '../permission';
-import { OAuth2RefreshTokenPayload } from '../oauth2-refresh-token';
+import { OAuth2RefreshToken, OAuth2RefreshTokenPayload } from '../oauth2-refresh-token';
 
-type TokeEntityUser = {
+type TokenTargetRobot = {
     type: `${OAuth2TokenSubKind.ROBOT}`,
     data: Partial<User> & {
         permissions: PermissionItem<any>[]
     }
 };
 
-type TokenEntityClient = {
+type TokenTargetUser = {
     type: `${OAuth2TokenSubKind.USER}`,
     data: Partial<Robot> & {
         permissions: PermissionItem<any>[]
@@ -26,8 +31,9 @@ type TokenEntityClient = {
 };
 
 export type TokenVerificationPayload = {
-    token: OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload,
-    entity: TokeEntityUser | TokenEntityClient
+    payload: OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload,
+    entity: OAuth2AccessToken | OAuth2RefreshToken,
+    target: TokenTargetRobot | TokenTargetUser
 };
 
 export type TokenGrantPayload = {

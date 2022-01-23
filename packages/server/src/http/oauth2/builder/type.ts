@@ -6,8 +6,8 @@
  */
 
 import { OAuth2AccessToken } from '@typescript-auth/domains';
+import { KeyPairOptions } from '@typescript-auth/server-utils';
 import { ExpressRequest } from '../../type';
-import { KeyPairOptions } from '../../../utils';
 
 export type TokenBuilderContext = {
     maxAge?: number,

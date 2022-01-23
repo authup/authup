@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@typescript-auth/domains';
+import { ErrorCode, Oauth2TokenResponse } from '@typescript-auth/domains';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
@@ -32,6 +32,7 @@ describe('src/http/controllers/role', () => {
         expect(response.body).toBeDefined();
         expect(response.body.access_token).toBeDefined();
         expect(response.body.expires_in).toBeDefined();
+        expect(response.body.refresh_token).toBeDefined();
     });
 
     it('should not grant token', async () => {
@@ -47,9 +48,49 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should revoke token', async () => {
-        const response = await superTest
-            .delete('/token');
+        let response = await superTest
+            .post('/token')
+            .send({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const tokenPayload : Oauth2TokenResponse = response.body;
+
+        response = await superTest
+            .delete('/token')
+            .auth(tokenPayload.access_token, { type: 'bearer' });
 
         expect(response.status).toEqual(200);
+    });
+
+    it('should refresh token', async () => {
+        let response = await superTest
+            .post('/token')
+            .send({
+                username: 'admin',
+                password: 'start123',
+            });
+
+        const tokenPayload : Oauth2TokenResponse = response.body;
+
+        response = await superTest
+            .post('/token')
+            .send({
+                refresh_token: tokenPayload.refresh_token,
+            });
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+        expect(response.body.access_token).toBeDefined();
+        expect(response.body.expires_in).toBeDefined();
+        expect(response.body.refresh_token).toBeDefined();
+
+        // original access-token should not be there anymore!
+        response = await superTest
+            .get('/token')
+            .auth(tokenPayload.access_token, { type: 'bearer' });
+
+        expect(response.status).toEqual(404);
     });
 });

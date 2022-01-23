@@ -5,41 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { sign, verify } from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { TokenError, hasOwnProperty } from '@typescript-auth/domains';
-import { KeyPairOptions, SecurityKeyPair, useKeyPair } from '../key-pair';
-
-export async function signToken<T extends string | object | Buffer | Record<string, any>>(
-    payload: T,
-    maxAge?: number,
-    keyPairOptions?: Partial<KeyPairOptions>,
-) : Promise<string> {
-    const keyPair : SecurityKeyPair = await useKeyPair(keyPairOptions);
-
-    return sign(payload, keyPair.privateKey, {
-        expiresIn: maxAge ?? 3600,
-        algorithm: 'RS256',
-    });
-}
+import { SecurityKeyPair, useKeyPair } from '../key-pair';
+import { TokenVerifyContext } from './type';
 
 /**
- * Verify and decrypt JWT.
+ * Verify JWT.
  *
  * @param token
- * @param keyPairOptions
+ * @param context
  *
  * @throws TokenError
  */
 export async function verifyToken<T extends string | object | Buffer | Record<string, any>>(
     token: string,
-    keyPairOptions?: Partial<KeyPairOptions>,
-) : Promise<T> {
-    const keyPair : SecurityKeyPair = await useKeyPair(keyPairOptions);
+    context?: TokenVerifyContext,
+): Promise<T> {
+    context ??= {};
+
+    const keyPair: SecurityKeyPair = await useKeyPair(context.keyPairOptions);
+
+    context.options ??= {};
+    context.options.algorithms = ['RS256'];
 
     try {
-        return await verify(token, keyPair.publicKey, {
-            algorithms: ['RS256'],
-        }) as T;
+        return await verify(token, keyPair.publicKey, context.options) as T;
     } catch (e) {
         if (
             e &&

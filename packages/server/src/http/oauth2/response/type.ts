@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { KeyPairOptions } from '@typescript-auth/server-utils';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { KeyPairOptions } from '../../../utils';
 
 export type OAuth2BearerResponseContext = {
     keyPairOptions?: Partial<KeyPairOptions>,

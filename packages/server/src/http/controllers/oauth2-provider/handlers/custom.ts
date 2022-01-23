@@ -8,17 +8,17 @@
 import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import {
-    OAuth2AccessTokenPayload,
+    CookieName,
     OAuth2HTTPClient,
-    OAuth2TokenSubKind,
-    Oauth2TokenResponse,
+    OAuth2TokenSubKind, Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 
 import { URL } from 'url';
+import { CookieOptions } from 'express';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccountWithToken } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
-import { ProxyConnectionConfig, detectProxyConnectionConfig, signToken } from '../../../../utils';
+import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
 
 export async function authorizeOauth2ProviderRouteHandler(
@@ -90,7 +90,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     }
 
     const account = await createOauth2ProviderAccountWithToken(provider, tokenResponse);
-    const expiresIn = context.maxAge;
+    const expiresIn = context.maxAge || 3600;
 
     const grant = new InternalGrantType({
         request: req,
@@ -108,17 +108,17 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
 
     const token = await grant.run();
 
-    const cookie : Oauth2TokenResponse = {
-        access_token: token.access_token,
-        expires_in: token.expires_in,
-        token_type: 'Bearer',
-    };
-
-    res.cookie('auth_token', JSON.stringify(cookie), {
+    const cookieOptions : CookieOptions = {
         maxAge: expiresIn * 1000,
         ...(process.env.NODE_ENV === 'production' ? {
             domain: new URL(context.redirectUrl).hostname,
         } : {}),
+    };
+
+    res.cookie(CookieName.ACCESS_TOKEN, token.access_token, cookieOptions);
+    res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
+        ...cookieOptions,
+        maxAge: expiresIn * 1000 * 3,
     });
 
     return res.redirect(context.redirectUrl);

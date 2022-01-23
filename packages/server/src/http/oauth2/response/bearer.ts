@@ -11,8 +11,8 @@ import {
     OAuth2TokenSubKind,
     Oauth2TokenResponse,
 } from '@typescript-auth/domains';
+import { signToken } from '@typescript-auth/server-utils';
 import { OAuth2BearerResponseContext } from './type';
-import { signToken } from '../../../utils';
 
 export class OAuth2BearerTokenResponse {
     protected context : OAuth2BearerResponseContext;
@@ -51,8 +51,12 @@ export class OAuth2BearerTokenResponse {
 
             response.refresh_token = await signToken(
                 refreshTokenPayload,
-                secondsDiff,
-                this.context.keyPairOptions,
+                {
+                    keyPairOptions: this.context.keyPairOptions,
+                    options: {
+                        expiresIn: secondsDiff,
+                    },
+                },
             );
         }
 

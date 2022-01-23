@@ -11,8 +11,8 @@ import {
     Role, User, UserRole,
 } from '@typescript-auth/domains';
 
+import { compare } from '@typescript-auth/server-utils';
 import { RoleRepository } from '../role';
-import { verifyPassword } from '../../utils';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
@@ -115,7 +115,7 @@ export class UserRepository extends Repository<UserEntity> {
             return undefined;
         }
 
-        const verified = await verifyPassword(password, entity.password);
+        const verified = await compare(password, entity.password);
         if (!verified) {
             return undefined;
         }

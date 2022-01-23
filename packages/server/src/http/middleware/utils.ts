@@ -14,7 +14,7 @@ import path from 'path';
 import { existsSync } from 'fs';
 import {
     ExpressRequest,
-    MiddlewareRegistrationOptions, authenticateWithAuthorizationHeader, parseCookie, responseMiddleware, setupAuthMiddleware,
+    MiddlewareRegistrationOptions, authenticateWithAuthorizationHeader, parseAccessTokenCookie, responseMiddleware, setupAuthMiddleware,
 } from '../index';
 
 export function registerMiddlewares(
@@ -43,7 +43,7 @@ export function registerMiddlewares(
         }
 
         router.use(setupAuthMiddleware({
-            parseCookie: (request: ExpressRequest) => parseCookie(request),
+            parseCookie: (request: ExpressRequest) => parseAccessTokenCookie(request),
             authenticateWithAuthorizationHeader: (
                 request: ExpressRequest,
                 value: AuthorizationHeader,

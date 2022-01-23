@@ -9,7 +9,7 @@ import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2AccessToken, Oauth2Client, Oauth2RefreshToken, Realm,
+    OAuth2AccessToken, OAuth2RefreshToken, Oauth2Client, Realm,
 } from '@typescript-auth/domains';
 import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
 import { OAuth2ClientEntity } from '../oauth2-client';
@@ -17,7 +17,7 @@ import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_refresh_tokens' })
-export class OAuth2RefreshTokenEntity implements Oauth2RefreshToken {
+export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     @PrimaryColumn({ type: 'uuid' })
         id: string;
 

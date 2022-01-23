@@ -8,8 +8,8 @@
 import {
     OAuth2TokenSubKind, Oauth2Client, Oauth2TokenResponse, Realm, Robot, User,
 } from '@typescript-auth/domains';
+import { KeyPairOptions } from '@typescript-auth/server-utils';
 import { ExpressRequest } from '../../type';
-import { KeyPairOptions } from '../../../utils';
 
 export type AccessTokenContextUserEntity = {
     kind: OAuth2TokenSubKind.USER,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Oauth2RefreshToken, hasOwnProperty } from '@typescript-auth/domains';
+import { OAuth2RefreshToken, hasOwnProperty } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
@@ -24,7 +24,7 @@ export class Oauth2RefreshTokenBuilder {
 
     // -----------------------------------------------------
 
-    protected id?: Oauth2RefreshToken['id'];
+    protected id?: OAuth2RefreshToken['id'];
 
     protected expires?: Date;
 

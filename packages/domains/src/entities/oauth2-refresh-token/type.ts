@@ -11,7 +11,7 @@ import { OAuth2TokenKind } from '../oauth2';
 import { JWTPayload } from '../json-web-token';
 import { Realm } from '../realm';
 
-export interface Oauth2RefreshToken {
+export interface OAuth2RefreshToken {
     id: string;
 
     expires: Date;

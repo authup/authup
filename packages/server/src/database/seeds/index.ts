@@ -11,6 +11,7 @@ import {
     MASTER_REALM_ID,
     Permission, PermissionID, Robot, RobotPermission, RolePermission, User, UserRole, createNanoID,
 } from '@typescript-auth/domains';
+import { hash } from '@typescript-auth/server-utils';
 import {
     PermissionEntity,
     RealmEntity, RobotEntity, RobotPermissionEntity,
@@ -20,7 +21,6 @@ import {
     UserRoleEntity,
     useRobotEventEmitter,
 } from '../../domains';
-import { hashPassword } from '../../utils';
 
 export type DatabaseRootSeederOptions = {
     permissions?: string[],
@@ -100,14 +100,14 @@ export class DatabaseRootSeeder implements Seeder {
         if (typeof user === 'undefined') {
             user = userRepository.create({
                 name: this.options.userName,
-                password: await hashPassword(this.options.userPassword),
+                password: await hash(this.options.userPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
             });
 
             response.user = user;
         } else if (this.options.userPasswordReset) {
-            user.password = await hashPassword(this.options.userPassword);
+            user.password = await hash(this.options.userPassword);
         }
 
         await userRepository.save(user);
@@ -202,7 +202,7 @@ export class DatabaseRootSeeder implements Seeder {
             robot = robotRepository.create({
                 name: 'SYSTEM',
                 realm_id: MASTER_REALM_ID,
-                secret: await hashPassword(secret),
+                secret: await hash(secret),
             });
 
             await robotRepository.save(robot);
@@ -210,7 +210,7 @@ export class DatabaseRootSeeder implements Seeder {
             robot.secret = secret;
             response.robot = robot;
         } else if (this.options.robotSecretReset) {
-            robot.secret = await hashPassword(secret);
+            robot.secret = await hash(secret);
 
             await robotRepository.save(robot);
 
