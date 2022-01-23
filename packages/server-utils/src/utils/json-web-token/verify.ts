@@ -7,7 +7,7 @@
 
 import { verify } from 'jsonwebtoken';
 import { TokenError, hasOwnProperty } from '@typescript-auth/domains';
-import { SecurityKeyPair, useKeyPair } from '../key-pair';
+import { KeyPair, useKeyPair } from '../key-pair';
 import { TokenVerifyContext } from './type';
 
 /**
@@ -24,7 +24,7 @@ export async function verifyToken<T extends string | object | Buffer | Record<st
 ): Promise<T> {
     context ??= {};
 
-    const keyPair: SecurityKeyPair = await useKeyPair(context.keyPairOptions);
+    const keyPair: KeyPair = await useKeyPair(context.keyPairOptions);
 
     context.options ??= {};
     context.options.algorithms = ['RS256'];

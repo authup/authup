@@ -25,25 +25,25 @@ npm install @typescript-auth/server-utils --save
 ### KeyPair
 
 Create a private `pkcs8` key and `spki` public key.
-The `useSecurityKeyPair` method will automatically create, a key pair in the specified directory if it
+The `useKeyPair` method will automatically create, a key pair in the specified directory if it
 doesn't already exist.
 
 ```typescript
 import path from 'path';
 import {
-    createSecurityKeyPair,
-    useSecurityKeyPair,
-    SecurityKeyPairOptions
+    createKeyPair,
+    useKeyPair,
+    KeyPairOptions
 } from "@typescript-auth/server";
 
-const keyPairOptions: SecurityKeyPairOptions = {
+const keyPairOptions: KeyPairOptions = {
     directory: path.join(__dirname, 'writable')
 }
 
 (async () => {
-    await createSecurityKeyPair(keyPairOptions);
+    await createKeyPair(keyPairOptions);
 
-    const keyPair = await useSecurityKeyPair(keyPairOptions);
+    const keyPair = await useKeyPair(keyPairOptions);
     
     console.log(keyPair);
     // {privateKey: 'xxx', publicKey: 'xxx'}

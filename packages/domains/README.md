@@ -72,7 +72,7 @@ console.log(manager.can('drop','user'));
 ```typescript
 import {
     buildAbilityMetaFromName
-} from "@typescript-auth/core";
+} from "@typescript-auth/domains";
 
 const meta = buildAbilityMetaFromName('user_add');
 console.log(meta);

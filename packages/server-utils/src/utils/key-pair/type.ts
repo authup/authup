@@ -7,7 +7,7 @@
 
 import { RSAKeyPairKeyObjectOptions } from 'crypto';
 
-export type SecurityKeyPair = {
+export type KeyPair = {
     privateKey: string,
     publicKey: string
 };

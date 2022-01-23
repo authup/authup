@@ -7,19 +7,19 @@
 import { generateKeyPair } from 'crypto';
 import path from 'path';
 import fs from 'fs';
-import { KeyPairOptions, SecurityKeyPair } from './type';
+import { KeyPair, KeyPairOptions } from './type';
 import { buildKeyFileName, buildKeyPairOptions } from './utils';
 
-const keyPairCache : Record<string, SecurityKeyPair> = {};
+const keyPairCache : Record<string, KeyPair> = {};
 
-export async function createKeyPair(options?: Partial<KeyPairOptions>) : Promise<SecurityKeyPair> {
+export async function createKeyPair(options?: Partial<KeyPairOptions>) : Promise<KeyPair> {
     options = buildKeyPairOptions(options);
 
     if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {
         return keyPairCache[options.alias];
     }
 
-    const securityKeyPair : SecurityKeyPair = await new Promise((resolve: (value: SecurityKeyPair) => void, reject) => {
+    const securityKeyPair : KeyPair = await new Promise((resolve: (value: KeyPair) => void, reject) => {
         generateKeyPair(
             'rsa',
             options.rsa,
@@ -47,7 +47,7 @@ export async function createKeyPair(options?: Partial<KeyPairOptions>) : Promise
     return securityKeyPair;
 }
 
-export async function useKeyPair(options?: Partial<KeyPairOptions>) : Promise<SecurityKeyPair> {
+export async function useKeyPair(options?: Partial<KeyPairOptions>) : Promise<KeyPair> {
     options = buildKeyPairOptions(options);
 
     if (Object.prototype.hasOwnProperty.call(keyPairCache, options.alias)) {

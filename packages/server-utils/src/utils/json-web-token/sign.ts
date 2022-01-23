@@ -6,7 +6,7 @@
  */
 
 import { sign } from 'jsonwebtoken';
-import { SecurityKeyPair, useKeyPair } from '../key-pair';
+import { KeyPair, useKeyPair } from '../key-pair';
 import { TokenSignContext } from './type';
 
 export async function signToken<T extends string | object | Buffer | Record<string, any>>(
@@ -15,7 +15,7 @@ export async function signToken<T extends string | object | Buffer | Record<stri
 ): Promise<string> {
     context ??= {};
 
-    const keyPair: SecurityKeyPair = await useKeyPair(context.keyPairOptions);
+    const keyPair: KeyPair = await useKeyPair(context.keyPairOptions);
 
     context.options ??= {};
     context.options.expiresIn = context.options.expiresIn || 3600;
