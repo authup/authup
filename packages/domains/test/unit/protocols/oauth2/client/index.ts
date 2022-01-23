@@ -9,7 +9,7 @@
 import { mocked } from 'ts-jest/utils';
 import axios from 'axios';
 import { decode, sign } from 'jsonwebtoken';
-import { OAuth2HTTPClient, Oauth2GrantParameters, Oauth2TokenResponse } from '../../../../../src';
+import { HTTPOAuth2Client, Oauth2GrantParameters, Oauth2TokenResponse } from '../../../../../src';
 
 jest.mock('axios');
 
@@ -42,7 +42,7 @@ const redirectUri = 'https://example.com/redirect';
 describe('src/protocols/oauth2/client/index.ts', () => {
     it('should build authorize url', () => {
         // redirect uri in method
-        let oauth2Client = new OAuth2HTTPClient({
+        let oauth2Client = new HTTPOAuth2Client({
             token_host: 'https://example.com/',
             client_id: 'client',
         });
@@ -54,7 +54,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
         expect(url).toEqual(`https://example.com/oauth/authorize?response_type=code&client_id=client&redirect_uri=${encodeURIComponent(redirectUri)}`);
 
         // redirect uri in constructor
-        oauth2Client = new OAuth2HTTPClient({
+        oauth2Client = new HTTPOAuth2Client({
             token_host: 'https://example.com/',
             client_id: 'client',
             redirect_uri: redirectUri,
@@ -64,7 +64,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
 
         expect(url).toEqual(`https://example.com/oauth/authorize?response_type=code&client_id=client&redirect_uri=${encodeURIComponent(redirectUri)}`);
 
-        oauth2Client = new OAuth2HTTPClient({
+        oauth2Client = new HTTPOAuth2Client({
             token_host: 'https://example.com/',
             client_id: 'client',
             redirect_uri: redirectUri,
@@ -81,7 +81,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should build authorize url with non default authorize path', () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             token_host: 'https://example.com/',
             client_id: 'client',
             authorize_path: 'authorize',
@@ -95,7 +95,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should build token parameters', () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             client_id: 'client',
             client_secret: 'secret',
             token_host: 'https://example.com/',
@@ -135,7 +135,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should get token', async () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             client_id: 'client',
             client_secret: 'secret',
             token_host: 'https://example.com/',
@@ -157,7 +157,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should get token with non default path', async () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             client_id: 'client',
             client_secret: 'secret',
             token_host: 'https://example.com/',
@@ -171,7 +171,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should get user info', async () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             client_id: 'client',
             client_secret: 'secret',
             token_host: 'https://example.com/',
@@ -182,7 +182,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
     });
 
     it('should get user info with non default path', async () => {
-        const oauth2Client = new OAuth2HTTPClient({
+        const oauth2Client = new HTTPOAuth2Client({
             client_id: 'client',
             client_secret: 'secret',
             token_host: 'https://example.com/',

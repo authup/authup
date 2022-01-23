@@ -8,24 +8,23 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { decode } from 'jsonwebtoken';
 import {
+    HTTPOAuth2ClientOptions,
     Oauth2AuthorizationGrantParameters,
     Oauth2AuthorizeQueryParameters,
     Oauth2ClientCredentialsGrantParameters,
-    Oauth2ClientProtocolOptions,
     Oauth2GrantParameters,
     Oauth2PasswordGrantParameters,
     Oauth2RefreshTokenGrantParameters,
 } from './type';
-import { Oauth2TokenResponse } from '../../../entities/oauth2/type';
-import { OAuth2AccessTokenPayload } from '../../../entities/oauth2-access-token';
+import { OAuth2AccessTokenPayload, Oauth2TokenResponse } from '../../../entities';
 import { buildHTTPQuery } from '../../utils';
 import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 
-export class OAuth2HTTPClient {
+export class HTTPOAuth2Client {
     public httpClient : AxiosInstance;
 
     constructor(
-        protected protocolOptions: Oauth2ClientProtocolOptions,
+        protected options: HTTPOAuth2ClientOptions,
         protected httpConfig?: AxiosRequestConfig,
     ) {
         this.httpClient = process.env.NODE_ENV === 'test' ?
@@ -87,16 +86,10 @@ export class OAuth2HTTPClient {
             urlSearchParams.append(parameterKeys[i], (parameters as Record<string, any>)[parameterKeys[i]]);
         }
 
-        let url: string = this.protocolOptions.token_host;
-
-        if (typeof this.protocolOptions.token_path === 'string') {
-            url += this.protocolOptions.token_path;
-        } else {
-            url += '/oauth/token';
-        }
+        const url: string = removeDuplicateForwardSlashesFromURL(this.options.token_host + (this.options.token_path || '/oauth/token'));
 
         const { data } = await this.httpClient.post(
-            removeDuplicateForwardSlashesFromURL(url),
+            url,
             urlSearchParams,
             {
                 headers: {
@@ -146,10 +139,10 @@ export class OAuth2HTTPClient {
      * @param token
      */
     async getUserInfo(token: string) {
-        let url: string = this.protocolOptions.user_info_host ?? this.protocolOptions.token_host;
+        let url: string = this.options.user_info_host ?? this.options.token_host;
 
-        if (typeof this.protocolOptions.user_info_path === 'string') {
-            url += this.protocolOptions.user_info_path;
+        if (typeof this.options.user_info_path === 'string') {
+            url += this.options.user_info_path;
         } else {
             url += '/userinfo';
         }
@@ -169,16 +162,16 @@ export class OAuth2HTTPClient {
     // ------------------------------------------------------------------
 
     buildTokenParameters(parameters: Oauth2GrantParameters): Oauth2GrantParameters {
-        parameters.client_id = this.protocolOptions.client_id;
+        parameters.client_id = this.options.client_id;
 
         if (
             parameters.grant_type !== 'authorization_code'
         ) {
             if (
                 typeof parameters.scope === 'undefined' &&
-                this.protocolOptions.scope
+                this.options.scope
             ) {
-                parameters.scope = this.protocolOptions.scope;
+                parameters.scope = this.options.scope;
             }
 
             if (Array.isArray(parameters.scope)) {
@@ -190,16 +183,16 @@ export class OAuth2HTTPClient {
             parameters.grant_type === 'authorization_code'
         ) {
             if (typeof parameters.redirect_uri === 'undefined') {
-                parameters.redirect_uri = this.protocolOptions.redirect_uri;
+                parameters.redirect_uri = this.options.redirect_uri;
             }
         }
 
-        if (typeof this.protocolOptions.client_id === 'string') {
-            parameters.client_id = this.protocolOptions.client_id;
+        if (typeof this.options.client_id === 'string') {
+            parameters.client_id = this.options.client_id;
         }
 
-        if (typeof this.protocolOptions.client_secret === 'string') {
-            parameters.client_secret = this.protocolOptions.client_secret;
+        if (typeof this.options.client_secret === 'string') {
+            parameters.client_secret = this.options.client_secret;
         }
 
         return parameters;
@@ -210,8 +203,8 @@ export class OAuth2HTTPClient {
 
         const queryParameters: Oauth2AuthorizeQueryParameters = {
             response_type: 'code',
-            client_id: this.protocolOptions.client_id,
-            redirect_uri: this.protocolOptions.redirect_uri,
+            client_id: this.options.client_id,
+            redirect_uri: this.options.redirect_uri,
         };
 
         if (typeof parameters.redirect_uri === 'string') {
@@ -219,8 +212,8 @@ export class OAuth2HTTPClient {
         }
 
         if (typeof parameters.scope === 'undefined') {
-            if (this.protocolOptions.scope) {
-                queryParameters.scope = this.protocolOptions.scope;
+            if (this.options.scope) {
+                queryParameters.scope = this.options.scope;
             }
         } else {
             queryParameters.scope = parameters.scope;
@@ -230,8 +223,8 @@ export class OAuth2HTTPClient {
             queryParameters.scope = queryParameters.scope.join(' ');
         }
 
-        const host: string = this.protocolOptions.authorize_host ?? this.protocolOptions.token_host;
-        const path: string = this.protocolOptions.authorize_path ?? '/oauth/authorize';
+        const host: string = this.options.authorize_host ?? this.options.token_host;
+        const path: string = this.options.authorize_path ?? '/oauth/authorize';
 
         return removeDuplicateForwardSlashesFromURL(host + path) + buildHTTPQuery(queryParameters);
     }

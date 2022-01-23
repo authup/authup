@@ -13,9 +13,9 @@ import {
     RealmAPI,
     RobotAPI,
     RobotPermissionAPI, RobotRoleAPI, RoleAPI, RolePermissionAPI, TokenAPI, UserAPI, UserPermissionAPI, UserRoleAPI,
-} from '../../../entities';
+} from '../../entities';
 
-export class APIClient extends Client {
+export class HTTPClient extends Client {
     public readonly oauth2Provider : Oauth2ProviderAPI;
 
     public readonly oauth2ProviderRole : Oauth2ProviderRoleAPI;

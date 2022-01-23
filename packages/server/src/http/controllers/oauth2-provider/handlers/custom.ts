@@ -9,7 +9,7 @@ import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
-    OAuth2HTTPClient,
+    HTTPOAuth2Client,
     OAuth2TokenSubKind, Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 
@@ -38,7 +38,7 @@ export async function authorizeOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    const oauth2Client = new OAuth2HTTPClient({
+    const oauth2Client = new HTTPOAuth2Client({
         client_id: provider.client_id,
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
@@ -70,7 +70,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     }
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
-    const oauth2Client = new OAuth2HTTPClient({
+    const oauth2Client = new HTTPOAuth2Client({
         client_id: provider.client_id,
         client_secret: provider.client_secret,
 

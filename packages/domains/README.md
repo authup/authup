@@ -11,8 +11,8 @@ The main propose of this package, is to provide general classes, interfaces & ty
 - [Installation](#installation)
 - [Usage](#usage)
   - [Ability & Permission](#abilitypermissions)
-  - [Clients](#clients)
-    - [Main](#main)
+  - [HTTP Clients](#http-clients)
+    - [General](#general)
     - [OAuth2](#oauth2)
 
 ## Installation
@@ -79,21 +79,46 @@ console.log(meta);
 // {action: 'add', subject: 'user'}
 ```
 
-### Clients
+### HTTP Clients
 
-#### Main
+#### General
+
+```typescript
+import {HTTPClient} from "@typescript-auth/domains";
+
+const client = new HTTPClient({
+    driver: {
+        baseURL: 'http://127.0.0.1:3010/'
+    }
+});
+
+(async () => {
+    const response = await client.role.getMany({
+        page: {
+            limit: 10,
+            offset: 0
+        }
+    });
+    
+    console.log(response);
+    // {
+    //      meta: {total: 1, limit: 10, offset: 0},
+    //      data: [{id: 'xxx', name: 'admin', description: null}], 
+    // }
+})();
+```
 
 #### OAuth2
 **URL**
 ```typescript
-import {Oauth2Client} from "@typescript-auth/domains";
+import {HTTPOAuth2Client} from "@typescript-auth/domains";
 
-let oauth2Client = new Oauth2Client({
+let client = new HTTPOAuth2Client({
     token_host: 'https://example.com/',
     client_id: 'client'
 });
 
-let url = oauth2Client.buildAuthorizeURL({
+let url = client.buildAuthorizeURL({
     redirect_uri: 'https://example.com/redirect'
 });
 console.log(url);
@@ -103,9 +128,9 @@ console.log(url);
 **Token**
 
 ```typescript
-import {Oauth2Client} from "@typescript-auth/domains";
+import {HTTPOAuth2Client} from "@typescript-auth/domains";
 
-const oauth2Client = new Oauth2Client({
+const client = new HTTPOAuth2Client({
     client_id: 'client',
     client_secret: 'secret',
     token_host: 'https://example.com/',
@@ -113,12 +138,12 @@ const oauth2Client = new Oauth2Client({
     scope: ['email']
 });
 
-let token = await oauth2Client.getTokenWithRefreshToken({refresh_token: 'refresh_token'});
+let token = await client.getTokenWithRefreshToken({refresh_token: 'refresh_token'});
 console.log(token);
 // {...}
 
-token = await oauth2Client.getTokenWithClientCredentials();
-token = await oauth2Client.getTokenWithPasswordGrant({username: 'admin', password: 'start123'});
-token = await oauth2Client.getTokenWithAuthorizeGrant({state: 'state', code: 'code'});
+token = await client.getTokenWithClientCredentials();
+token = await client.getTokenWithPasswordGrant({username: 'admin', password: 'start123'});
+token = await client.getTokenWithAuthorizeGrant({state: 'state', code: 'code'});
 
 ```

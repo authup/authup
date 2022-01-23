@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './api';
+export * from './client';
 export * from './cookies';
 export * from './oauth2';
 export * from './utils';
