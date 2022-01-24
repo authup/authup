@@ -22,8 +22,8 @@ export class OAuth2AccessTokenEntity implements OAuth2AccessToken {
     @PrimaryColumn({ type: 'uuid' })
         id: string;
 
-    @Column({ type: 'varchar', length: 4096 })
-        token: string;
+    @Column({ type: 'varchar', length: 4096, select: false })
+        content: string;
 
     @Column({
         type: 'datetime',

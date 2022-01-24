@@ -6,7 +6,7 @@
  */
 
 import { getRepository } from 'typeorm';
-import { BadRequestError, NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
     HTTPOAuth2Client,
@@ -16,7 +16,7 @@ import {
 import { URL } from 'url';
 import { CookieOptions } from 'express';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { OAuth2ProviderEntity, createOauth2ProviderAccountWithToken } from '../../../../domains';
+import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
@@ -78,18 +78,14 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         token_path: provider.token_path,
 
         redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/oauth2-providers/${provider.id}/authorize-callback`}`,
-    }, proxyConfig ? { proxy: proxyConfig } : {});
+    }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
     const tokenResponse : Oauth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
         code: code as string,
         state: state as string,
     });
 
-    if (typeof tokenResponse.access_token_payload === 'undefined') {
-        throw new BadRequestError('The accessToken could not be decoded.');
-    }
-
-    const account = await createOauth2ProviderAccountWithToken(provider, tokenResponse);
+    const account = await createOauth2ProviderAccount(provider, tokenResponse);
     const expiresIn = context.maxAge || 3600;
 
     const grant = new InternalGrantType({

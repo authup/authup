@@ -17,7 +17,7 @@ import { initTokenCache, verifyToken } from '../../utils';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
     const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new TokenAPI(context.axios);
+    const tokenAPIClient = new TokenAPI(context.http);
 
     return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = req.headers;

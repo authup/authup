@@ -109,7 +109,7 @@ export class Oauth2AccessTokenBuilder {
             client_id: this.getClientId(),
             realm_id: this.getRealmId(),
             expires: this.getExpireDate(),
-            scope,
+            scope: scope || null,
         });
 
         entity = repository.merge(entity, {
@@ -121,7 +121,7 @@ export class Oauth2AccessTokenBuilder {
         while (maxGenerationAttempts-- > 0) {
             try {
                 entity.id = this.getId();
-                entity.token = await this.getToken();
+                entity.content = await this.getToken();
 
                 await repository.insert(entity);
                 break;

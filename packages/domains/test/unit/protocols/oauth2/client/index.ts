@@ -5,28 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { mocked } from 'ts-jest/utils';
-import axios from 'axios';
-import { decode, sign } from 'jsonwebtoken';
+import { useClient } from '@trapi/client';
 import { HTTPOAuth2Client, Oauth2GrantParameters, Oauth2TokenResponse } from '../../../../../src';
 
-jest.mock('axios');
+const client = useClient('test');
 
-const mockedInstance = mocked(axios, true);
+const postFn = jest.fn();
+client.post = postFn;
 
-const demoPayload : Record<string, any> = { abc: 123 };
-const encodedDemoPayload = sign(demoPayload, 'secret');
-const decodedDemoPayload = decode(encodedDemoPayload);
+const getFn = jest.fn();
+client.get = getFn;
 
 const oauth2TokenResponse : Oauth2TokenResponse = {
     mac_key: 'mac_key',
     mac_algorithm: 'mac_algorithm',
     token_type: 'Bearer',
     expires_in: 3600,
-    access_token: encodedDemoPayload,
+    access_token: 'access_token',
     refresh_token: 'refresh_token',
-    id_token: encodedDemoPayload,
+    id_token: 'id_token',
 };
 
 const userInfoResponse : Record<string, any> = {
@@ -34,8 +31,8 @@ const userInfoResponse : Record<string, any> = {
     email: 'admin@example.com',
 };
 
-mockedInstance.post.mockResolvedValue({ data: oauth2TokenResponse });
-mockedInstance.get.mockResolvedValue({ data: userInfoResponse });
+postFn.mockResolvedValue({ data: oauth2TokenResponse });
+getFn.mockResolvedValue({ data: userInfoResponse });
 
 const redirectUri = 'https://example.com/redirect';
 
@@ -144,16 +141,16 @@ describe('src/protocols/oauth2/client/index.ts', () => {
         });
 
         let token = await oauth2Client.getTokenWithRefreshToken({ refresh_token: 'refresh_token' });
-        expect(token).toEqual({ ...oauth2TokenResponse, access_token_payload: decodedDemoPayload, id_token_payload: decodedDemoPayload });
+        expect(token).toEqual({ ...oauth2TokenResponse });
 
         token = await oauth2Client.getTokenWithClientCredentials({});
-        expect(token).toEqual({ ...oauth2TokenResponse, access_token_payload: decodedDemoPayload, id_token_payload: decodedDemoPayload });
+        expect(token).toEqual({ ...oauth2TokenResponse });
 
         token = await oauth2Client.getTokenWithPasswordGrant({ username: 'admin', password: 'start123' });
-        expect(token).toEqual({ ...oauth2TokenResponse, access_token_payload: decodedDemoPayload, id_token_payload: decodedDemoPayload });
+        expect(token).toEqual({ ...oauth2TokenResponse });
 
         token = await oauth2Client.getTokenWithAuthorizeGrant({ state: 'state', code: 'code' });
-        expect(token).toEqual({ ...oauth2TokenResponse, access_token_payload: decodedDemoPayload, id_token_payload: decodedDemoPayload });
+        expect(token).toEqual({ ...oauth2TokenResponse });
     });
 
     it('should get token with non default path', async () => {
@@ -167,7 +164,7 @@ describe('src/protocols/oauth2/client/index.ts', () => {
         });
 
         const token = await oauth2Client.getTokenWithPasswordGrant({ username: 'admin', password: 'start123' });
-        expect(token).toEqual({ ...oauth2TokenResponse, access_token_payload: decodedDemoPayload, id_token_payload: decodedDemoPayload });
+        expect(token).toEqual({ ...oauth2TokenResponse });
     });
 
     it('should get user info', async () => {

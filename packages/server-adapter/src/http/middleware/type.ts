@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AxiosInstance } from 'axios';
+import { ClientDriverInstance } from '@trapi/client';
 import { Client } from 'redis-extension';
 
 export type HTTPMiddlewareContext = {
-    axios: AxiosInstance,
+    http: ClientDriverInstance,
     redis?: Client | boolean
     redisPrefix?: string,
 

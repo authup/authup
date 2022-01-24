@@ -15,7 +15,7 @@ import { Realm } from '../realm';
 export interface OAuth2AccessToken {
     id: string,
 
-    token: string,
+    content: string,
 
     client_id: Oauth2Client['id'] | null,
 

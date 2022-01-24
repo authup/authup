@@ -5,14 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SignOptions, VerifyOptions } from 'jsonwebtoken';
+import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import { KeyPairOptions } from '../key-pair';
 
 type Context<T> = {
-    options?: T,
+    options?: T
+};
+
+export type TokenSignContext = Context<SignOptions> & {
     keyPairOptions?: Partial<KeyPairOptions>
 };
 
-export type TokenSignContext = Context<SignOptions>;
+export type TokenVerifyContext = Context<VerifyOptions> & {
+    keyPairOptions?: Partial<KeyPairOptions>
+};
 
-export type TokenVerifyContext = Context<VerifyOptions>;
+export type TokenDecodeContext = Context<DecodeOptions>;

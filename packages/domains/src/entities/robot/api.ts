@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AxiosInstance } from 'axios';
+import { ClientDriverInstance } from '@trapi/client';
 import { BuildInput, buildQuery } from '@trapi/query';
 import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class RobotAPI {
-    protected client: AxiosInstance;
+    protected client: ClientDriverInstance;
 
-    constructor(client: AxiosInstance) {
+    constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 

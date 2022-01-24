@@ -27,7 +27,7 @@ export class OAuth2BearerTokenResponse {
 
     async build() : Promise<Oauth2TokenResponse> {
         const response : Oauth2TokenResponse = {
-            access_token: this.context.accessToken.token,
+            access_token: this.context.accessToken.content,
             expires_in: Math.ceil((this.context.accessToken.expires.getTime() - Date.now()) / 1000),
             token_type: 'Bearer',
             ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),

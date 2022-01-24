@@ -6,15 +6,15 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import { AxiosInstance } from 'axios';
+import { ClientDriverInstance } from '@trapi/client';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { OAuth2ProviderRole } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class Oauth2ProviderRoleAPI {
-    protected client: AxiosInstance;
+    protected client: ClientDriverInstance;
 
-    constructor(client: AxiosInstance) {
+    constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 

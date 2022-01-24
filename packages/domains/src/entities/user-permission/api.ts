@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ClientDriverInstance } from '@trapi/client';
 import { BuildInput, buildQuery } from '@trapi/query';
-import { AxiosInstance } from 'axios';
 import { UserPermission } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class UserPermissionAPI {
-    protected client: AxiosInstance;
+    protected client: ClientDriverInstance;
 
-    constructor(client: AxiosInstance) {
+    constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 

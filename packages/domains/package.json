@@ -41,13 +41,11 @@
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
         "@casl/ability": "^5.4.3",
-        "@trapi/client": "^2.0.0-alpha.0",
+        "@trapi/client": "^2.0.1",
         "@trapi/query": "^2.0.3",
         "@typescript-error/core": "^1.1.1",
         "@typescript-error/http": "^1.1.2",
-        "axios": "^0.25.0",
         "change-case": "^4.1.2",
-        "jsonwebtoken": "^8.5.1",
         "nanoid": "^3.1.32"
     },
     "devDependencies": {

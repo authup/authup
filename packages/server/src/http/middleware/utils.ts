@@ -6,15 +6,18 @@
  */
 
 import swaggerUi from 'swagger-ui-express';
-import { Application } from 'express';
-import bodyParser from 'body-parser';
+import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import { AuthorizationHeader } from '@trapi/client';
 import path from 'path';
 import { existsSync } from 'fs';
 import {
     ExpressRequest,
-    MiddlewareRegistrationOptions, authenticateWithAuthorizationHeader, parseAccessTokenCookie, responseMiddleware, setupAuthMiddleware,
+    MiddlewareRegistrationOptions,
+    authenticateWithAuthorizationHeader,
+    parseAccessTokenCookie,
+    responseMiddleware,
+    setupAuthMiddleware,
 } from '../index';
 
 export function registerMiddlewares(
@@ -22,9 +25,8 @@ export function registerMiddlewares(
     options: MiddlewareRegistrationOptions,
 ) {
     if (options.bodyParser) {
-        // Payload parser
-        router.use(bodyParser.urlencoded({ extended: false }));
-        router.use(bodyParser.json());
+        router.use(urlencoded({ extended: false }));
+        router.use(json());
     }
 
     router.use(cookieParser());

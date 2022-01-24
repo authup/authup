@@ -6,14 +6,14 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import { AxiosInstance } from 'axios';
+import { ClientDriverInstance } from '@trapi/client';
 import { RobotRole } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
 export class RobotRoleAPI {
-    protected client: AxiosInstance;
+    protected client: ClientDriverInstance;
 
-    constructor(client: AxiosInstance) {
+    constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 

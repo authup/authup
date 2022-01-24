@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { decode } from 'jsonwebtoken';
+import {
+    Client, ClientConfig, createClient, useClient,
+} from '@trapi/client';
 import {
     HTTPOAuth2ClientOptions,
     Oauth2AuthorizationGrantParameters,
@@ -16,22 +17,24 @@ import {
     Oauth2PasswordGrantParameters,
     Oauth2RefreshTokenGrantParameters,
 } from './type';
-import { OAuth2AccessTokenPayload, Oauth2TokenResponse } from '../../../entities';
+import { Oauth2TokenResponse } from '../../../entities';
 import { buildHTTPQuery } from '../../utils';
 import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 
 export class HTTPOAuth2Client {
-    public httpClient : AxiosInstance;
+    public httpClient : Client;
 
     constructor(
         protected options: HTTPOAuth2ClientOptions,
-        protected httpConfig?: AxiosRequestConfig,
+        protected client?: ClientConfig | Client,
     ) {
-        this.httpClient = process.env.NODE_ENV === 'test' ?
-            axios :
-            axios.create({
-                ...(httpConfig || {}),
-            });
+        if (client instanceof Client) {
+            this.httpClient = client;
+        } else {
+            this.httpClient = process.env.NODE_ENV === 'test' ?
+                useClient('test') :
+                createClient(client);
+        }
     }
 
     // ------------------------------------------------------------------
@@ -100,19 +103,16 @@ export class HTTPOAuth2Client {
 
         const tokenResponse: Oauth2TokenResponse = {
             access_token: data.access_token,
-            refresh_token: data.refresh_token,
             expires_in: data.expires_in,
-            token_type: data.token_type ?? 'Bearer',
+            token_type: data.token_type || 'Bearer',
         };
+
+        if (data.refresh_token) {
+            tokenResponse.refresh_token = data.refresh_token;
+        }
 
         if (typeof data.id_token === 'string') {
             tokenResponse.id_token = data.id_token;
-
-            const idTokenPayload = decode(tokenResponse.id_token);
-
-            if (idTokenPayload && typeof idTokenPayload === 'object') {
-                tokenResponse.id_token_payload = idTokenPayload as Record<string, any>;
-            }
         }
 
         if (typeof data.mac_key === 'string') {
@@ -121,12 +121,6 @@ export class HTTPOAuth2Client {
 
         if (typeof data.mac_algorithm === 'string') {
             tokenResponse.mac_algorithm = data.mac_algorithm;
-        }
-
-        const accessTokenPayload = decode(tokenResponse.access_token);
-
-        if (accessTokenPayload && typeof accessTokenPayload === 'object') {
-            tokenResponse.access_token_payload = accessTokenPayload as OAuth2AccessTokenPayload;
         }
 
         return tokenResponse;

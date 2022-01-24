@@ -11,8 +11,6 @@ import { OAuth2TokenKind } from './constants';
 export type Oauth2TokenResponse = {
     access_token: string,
 
-    access_token_payload?: OAuth2AccessTokenPayload,
-
     refresh_token?: string,
 
     expires_in: number,
@@ -20,8 +18,6 @@ export type Oauth2TokenResponse = {
     token_type: string,
 
     id_token?: string,
-
-    id_token_payload?: Record<string, any>,
 
     mac_key?: string,
 

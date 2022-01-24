@@ -12,7 +12,7 @@ import { initTokenCache, verifyToken } from '../../utils';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
     const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new TokenAPI(context.axios);
+    const tokenAPIClient = new TokenAPI(context.http);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
