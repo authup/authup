@@ -5,15 +5,44 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RSAKeyPairKeyObjectOptions } from 'crypto';
+import {
+    DSAKeyPairKeyObjectOptions,
+    ECKeyPairKeyObjectOptions,
+    RSAKeyPairKeyObjectOptions, RSAPSSKeyPairKeyObjectOptions,
+} from 'crypto';
 
 export type KeyPair = {
     privateKey: string,
     publicKey: string
 };
 
+export type RSAKeyPairGenerator = {
+    type: 'rsa',
+    options?: RSAKeyPairKeyObjectOptions
+};
+
+export type RSAPSSKeyPairGenerator = {
+    type: 'rsa-pss',
+    options?: RSAPSSKeyPairKeyObjectOptions
+};
+
+export type DSAKeyPairGenerator = {
+    type: 'dsa',
+    options?: DSAKeyPairKeyObjectOptions
+};
+
+export type ECKeyPairGenerator = {
+    type: 'ec',
+    options?: ECKeyPairKeyObjectOptions,
+};
+
+export type KeyPairGenerator = DSAKeyPairGenerator |
+RSAKeyPairGenerator |
+RSAPSSKeyPairGenerator |
+ECKeyPairGenerator;
+
 export type KeyPairOptions = {
-    directory: string,
-    alias: string,
-    rsa: RSAKeyPairKeyObjectOptions
+    directory?: string,
+    alias?: string,
+    generator?: KeyPairGenerator
 };

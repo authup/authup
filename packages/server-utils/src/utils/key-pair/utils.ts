@@ -7,29 +7,33 @@
 
 import path from 'path';
 import { KeyPairOptions } from './type';
+import { KeyPairKind } from './constants';
 
 export function buildKeyFileName(
-    type: 'private' | 'public',
+    type: `${KeyPairKind}`,
     alias?: string,
 ) {
-    return `${(alias && alias.length > 0 ? `${alias}.` : '') + type}.key`;
+    return `${(alias || '') + type}.key`;
 }
 
 export function buildKeyPairOptions(
     options?: Partial<KeyPairOptions>,
 ) : KeyPairOptions {
     options = options ?? {};
-    options.directory = options.directory ??
-        process.cwd();
 
-    return {
-        rsa: {
+    options.alias = options.alias || '';
+
+    options.directory = options.directory || process.cwd();
+    options.directory = path.isAbsolute(options.directory) ?
+        options.directory :
+        path.resolve(process.cwd(), options.directory);
+
+    options.generator ??= {
+        type: 'rsa',
+        options: {
             modulusLength: 2048,
-            ...(options.rsa ? options.rsa : {}),
         },
-        alias: options.alias ?? 'default',
-        directory: path.isAbsolute(options.directory) ?
-            options.directory :
-            path.resolve(process.cwd(), options.directory),
     };
+
+    return options;
 }
