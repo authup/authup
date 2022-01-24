@@ -56,7 +56,7 @@
         "express": "^4.17.2",
         "express-validator": "^6.14.0",
         "mysql": "^2.18.1",
-        "ora": "^4.0.3",
+        "ora": "^6.0.1",
         "reflect-metadata": "^0.1.13",
         "sqlite3": "^5.0.2",
         "swagger-ui-express": "^4.3.0",
