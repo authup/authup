@@ -8,16 +8,13 @@
 import swaggerUi from 'swagger-ui-express';
 import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
-import { AuthorizationHeader } from '@trapi/client';
 import path from 'path';
 import { existsSync } from 'fs';
+import { Client } from 'redis-extension';
 import {
-    ExpressRequest,
     MiddlewareRegistrationOptions,
-    authenticateWithAuthorizationHeader,
-    parseAccessTokenCookie,
     responseMiddleware,
-    setupAuthMiddleware,
+    setupMiddleware,
 } from '../index';
 
 export function registerMiddlewares(
@@ -38,20 +35,19 @@ export function registerMiddlewares(
     if (options.auth) {
         let writableDirectoryPath = path.join(process.cwd(), 'writable');
 
+        let redis: Client | boolean | string | undefined;
+
         if (typeof options.auth !== 'boolean') {
             if (options.auth.writableDirectoryPath) {
                 writableDirectoryPath = options.auth.writableDirectoryPath;
             }
+
+            redis = options.auth.redis;
         }
 
-        router.use(setupAuthMiddleware({
-            parseCookie: (request: ExpressRequest) => parseAccessTokenCookie(request),
-            authenticateWithAuthorizationHeader: (
-                request: ExpressRequest,
-                value: AuthorizationHeader,
-            ) => authenticateWithAuthorizationHeader(request, value, {
-                writableDirectoryPath,
-            }),
+        router.use(setupMiddleware({
+            writableDirectoryPath,
+            redis,
         }));
     }
 

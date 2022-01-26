@@ -27,6 +27,7 @@ export function createExpressApp(context: ExpressAppCreateContext) : Express {
     registerMiddlewares(expressApp, {
         auth: {
             writableDirectoryPath: context.writableDirectoryPath,
+            redis: context.redis,
         },
         cookieParser: true,
         bodyParser: true,

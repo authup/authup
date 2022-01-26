@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Client } from 'redis-extension';
+
 export type Config = {
     env: string,
     port: number,
@@ -23,4 +25,6 @@ export type Config = {
     swaggerDocumentation: boolean,
 
     tokenMaxAge: number,
+
+    redis?: string | boolean | Client
 };

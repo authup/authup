@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Client } from 'redis-extension';
+
 export type ExpressAppCreateContext = {
     writableDirectoryPath?: string,
     swaggerDocumentation?: boolean
@@ -12,5 +14,7 @@ export type ExpressAppCreateContext = {
     webUrl: string,
     selfUrl: string,
 
-    tokenMaxAge?: number
+    tokenMaxAge?: number,
+
+    redis?: boolean | string | Client
 };

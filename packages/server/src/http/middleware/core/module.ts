@@ -5,32 +5,56 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NextFunction, Request, Response } from 'express';
-import { NotFoundError } from '@typescript-error/http';
-import { AuthorizationHeader, parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
-import { CookieName, ErrorCode, TokenError } from '@typescript-auth/domains';
-import { ExpressRequest } from '../../type';
-import { verifyClientForMiddlewareRequest, verifyUserForMiddlewareRequest } from './entity';
+import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
+import { CookieName, OAuth2TokenKind } from '@typescript-auth/domains';
+import {
+    Cache, Client, setConfig, useClient,
+} from 'redis-extension';
+import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { AuthMiddlewareOptions } from './type';
+import { verifyAuthorizationHeader } from './verify';
 
-export function setupAuthMiddleware(context: AuthMiddlewareOptions) {
-    return async (request: Request, response: Response, next: NextFunction) => {
+function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefined {
+    return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?
+        request.cookies?.[CookieName.ACCESS_TOKEN] :
+        undefined;
+}
+
+export function setupMiddleware(context: AuthMiddlewareOptions) {
+    let tokenCache : Cache<string> | undefined;
+
+    if (context.redis) {
+        let client : Client;
+
+        if (typeof context.redis === 'string') {
+            setConfig({
+                connectionString: context.redis,
+            });
+
+            context.redis = true;
+        }
+
+        if (typeof context.redis === 'boolean') {
+            client = useClient();
+        } else {
+            client = context.redis;
+        }
+
+        tokenCache = new Cache<string>({
+            redis: client,
+        }, {
+            prefix: OAuth2TokenKind.ACCESS,
+        });
+    }
+
+    return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
 
         try {
-            if (typeof context.parseCookie === 'function') {
-                const cookie: unknown = context.parseCookie(request);
+            const cookie = parseRequestAccessTokenCookie(request);
 
-                if (typeof context.authenticateWithCookie === 'function') {
-                    await context.authenticateWithCookie(request, cookie);
-                    next();
-                    return;
-                }
-
-                // if authenticateWithCookie function not defined, try to use cookie string as bearer token.
-                if (typeof cookie === 'string') {
-                    headerValue = stringifyAuthorizationHeader({ type: 'Bearer', token: cookie });
-                }
+            if (cookie) {
+                headerValue = stringifyAuthorizationHeader({ type: 'Bearer', token: cookie });
             }
 
             if (typeof headerValue !== 'string') {
@@ -40,40 +64,16 @@ export function setupAuthMiddleware(context: AuthMiddlewareOptions) {
 
             const header = parseAuthorizationHeader(headerValue);
 
-            if (typeof context.authenticateWithAuthorizationHeader === 'function') {
-                await context.authenticateWithAuthorizationHeader(request, header);
-            }
+            const writableDirectoryPath = context.writableDirectoryPath || process.cwd();
+
+            await verifyAuthorizationHeader(request, header, {
+                writableDirectoryPath,
+                tokenCache,
+            });
 
             next();
         } catch (e) {
             next(e);
         }
     };
-}
-
-export async function authenticateWithAuthorizationHeader(
-    request: ExpressRequest,
-    value: AuthorizationHeader,
-    options: {
-        writableDirectoryPath: string
-    },
-): Promise<void> {
-    try {
-        await verifyUserForMiddlewareRequest(request, value, options);
-    } catch (e) {
-        if (
-            e instanceof NotFoundError ||
-            (e instanceof TokenError && e.getOption('code') === ErrorCode.TOKEN_SUB_KIND_INVALID)
-        ) {
-            await verifyClientForMiddlewareRequest(request, value, options);
-        } else {
-            throw e;
-        }
-    }
-}
-
-export function parseAccessTokenCookie(request: ExpressRequest): string | undefined {
-    return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?
-        request.cookies?.[CookieName.ACCESS_TOKEN] :
-        undefined;
 }

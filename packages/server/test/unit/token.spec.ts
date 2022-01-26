@@ -9,7 +9,7 @@ import { ErrorCode, Oauth2TokenResponse } from '@typescript-auth/domains';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
-describe('src/http/controllers/role', () => {
+describe('src/http/controllers/token', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {

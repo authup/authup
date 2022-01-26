@@ -78,5 +78,18 @@ export function buildConfig(
         config.swaggerDocumentation = requireFromEnv('SWAGGER_DOCUMENTATION', 'true') !== 'false';
     }
 
+    if (typeof config.redis === 'undefined') {
+        const envRedis : string = requireFromEnv('REDIS', false);
+        if (envRedis) {
+            if (envRedis.toLowerCase() === 'true') {
+                config.redis = true;
+            } else if (envRedis.toLowerCase() === 'false') {
+                config.redis = false;
+            } else {
+                config.redis = envRedis;
+            }
+        }
+    }
+
     return config as Config;
 }

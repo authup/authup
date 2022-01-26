@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './builder';
+export * from './token';
 export * from './grant-types';
 export * from './response';
 export * from './utils';

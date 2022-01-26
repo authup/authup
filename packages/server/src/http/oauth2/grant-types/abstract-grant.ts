@@ -10,7 +10,7 @@ import {
     OAuth2TokenSubKind,
 } from '@typescript-auth/domains';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
-import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
+import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token/builder';
 import { GrantContext, IssueAccessTokenContext } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';

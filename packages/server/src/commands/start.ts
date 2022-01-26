@@ -34,6 +34,7 @@ export async function startCommand(context: StartCommandContext) {
         selfUrl: context.config.selfUrl,
         webUrl: context.config.webUrl,
         tokenMaxAge: context.config.tokenMaxAge,
+        redis: context.config.redis,
     });
 
     spinner.succeed('Initialised controllers & middlewares.');

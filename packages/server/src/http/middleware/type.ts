@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Client } from 'redis-extension';
+
 export type MiddlewareRegistrationOptions = {
     bodyParser?: boolean,
     cookieParser?: boolean,
     response?: boolean,
     auth?: boolean | {
-        writableDirectoryPath?: string
+        writableDirectoryPath?: string,
+        redis?: Client | boolean | string
     },
     swaggerDocumentation?: boolean | {
         writableDirectoryPath?: string,

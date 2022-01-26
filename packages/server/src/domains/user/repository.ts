@@ -52,7 +52,7 @@ export class UserRepository extends Repository<UserEntity> {
 
     async getOwnedPermissions(
         userId: User['id'],
-    ) : Promise<PermissionItem<unknown>[]> {
+    ) : Promise<PermissionItem[]> {
         let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
@@ -73,7 +73,7 @@ export class UserRepository extends Repository<UserEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(userId: string) : Promise<PermissionItem<unknown>[]> {
+    async getSelfOwnedPermissions(userId: string) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({

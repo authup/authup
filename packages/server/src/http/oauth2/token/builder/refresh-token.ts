@@ -8,7 +8,7 @@
 import { OAuth2RefreshToken, hasOwnProperty } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { randomUUID } from 'crypto';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { OAuth2RefreshTokenEntity } from '../../../../domains/oauth2-refresh-token';
 import { RefreshTokenBuilderContext } from './type';
 
 export class Oauth2RefreshTokenBuilder {

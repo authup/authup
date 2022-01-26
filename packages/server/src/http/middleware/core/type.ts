@@ -5,12 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from 'express';
-import { AuthorizationHeader } from '@trapi/client';
+import { Client } from 'redis-extension';
 
 export type AuthMiddlewareOptions = {
-    parseCookie?: (request: Request) => string | undefined,
-
-    authenticateWithCookie?: (request: Request, value: unknown) => Promise<void>,
-    authenticateWithAuthorizationHeader?: (request: Request, value: AuthorizationHeader) => Promise<void>
+    writableDirectoryPath?: string,
+    redis?: Client | boolean | string
 };

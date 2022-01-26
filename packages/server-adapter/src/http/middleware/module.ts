@@ -20,6 +20,11 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
     const tokenAPIClient = new TokenAPI(context.http);
 
     return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+        if (tokenCache) {
+            // Scheduler will only be started once ;)
+            await tokenCache.startScheduler();
+        }
+
         let { authorization: headerValue } = req.headers;
 
         if (!headerValue) {

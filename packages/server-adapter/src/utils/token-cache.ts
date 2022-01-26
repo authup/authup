@@ -23,8 +23,6 @@ export function initTokenCache(
         }, {
             prefix: redisPrefix || 'token',
         });
-
-        tokenCache.startScheduler();
     }
 
     return tokenCache;

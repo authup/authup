@@ -18,7 +18,7 @@ import {
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { signToken } from '@typescript-auth/server-utils';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
+import { OAuth2AccessTokenEntity } from '../../../../domains/oauth2-access-token';
 import { AccessTokenBuilderContext } from './type';
 
 export class Oauth2AccessTokenBuilder {
