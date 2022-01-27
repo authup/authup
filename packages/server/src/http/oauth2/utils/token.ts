@@ -45,7 +45,9 @@ export async function verifyOAuth2Token(
                 if (redis) {
                     const cache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.ACCESS });
                     entity = await cache.get(tokenPayload.access_token_id);
-                    entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                    if (entity) {
+                        entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                    }
                 }
 
                 if (!entity) {
@@ -76,7 +78,9 @@ export async function verifyOAuth2Token(
                 if (redis) {
                     const cache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.REFRESH });
                     entity = await cache.get(tokenPayload.refresh_token_id);
-                    entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                    if (entity) {
+                        entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                    }
                 }
 
                 if (!entity) {
