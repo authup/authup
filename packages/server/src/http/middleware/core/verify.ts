@@ -13,7 +13,7 @@ import {
     TokenError,
 } from '@typescript-auth/domains';
 import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
-import { Cache } from 'redis-extension';
+import { Client } from 'redis-extension';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
@@ -25,7 +25,7 @@ export async function verifyAuthorizationHeader(
     header: AuthorizationHeader,
     options: {
         writableDirectoryPath: string,
-        tokenCache?: Cache<string>
+        redis?: Client | string | boolean
     },
 ) : Promise<void> {
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
@@ -66,7 +66,7 @@ export async function verifyAuthorizationHeader(
             keyPairOptions: {
                 directory: options.writableDirectoryPath,
             },
-            tokenCache: options.tokenCache,
+            redis: options.redis,
         },
     );
 

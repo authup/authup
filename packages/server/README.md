@@ -54,7 +54,10 @@ module.exports = {
 
     swaggerDocumentation: true,
 
-    tokenMaxAge: 3600,
+    tokenMaxAge: {
+        accessToken: 3600, // 1 hour
+        refreshToken: 36000 // 10 hours
+    },
 }
 ```
 The above example shows the (generated) property values if non are specified explicit.
@@ -97,35 +100,40 @@ const app = express();
 
 // Setup middleware
 registerMiddlewares(app, {
+    // optional
+    writableDirectoryPath: path.join(
+        process.cwd(), 
+        'writable'
+    ),
     // required!
-    bodyParser: true,
+    bodyParserMiddleware: true,
     // required!
-    cookieParser: true,
+    cookieParserMiddleware: true,
     // required!
-    response: true,
-    // required!
-    auth: {
-        writableDirectoryPath: path.join(process.cwd(), 'writable'),
-    },
+    responseMiddleware: true,
     // optional :)
-    swaggerDocumentation: {
+    swaggerMiddleware: {
         path: '/docs',
-        writableDirectoryPath: path.join(process.cwd(), 'writable'),
+        writableDirectoryPath: path.join(
+            process.cwd(), 
+            'writable'
+        ),
     }
 });
 
 // Register client, role, user, ... controllers
 registerControllers(app, {
-    controller: {
-        oauth2Provider: {
-            redirectUrl: 'http://localhost:3000/',
-        },
-        token: {
-            maxAge: 3600, // 1hour
-        },
+    redis: true,
+    tokenMaxAge: {
+        accessToken: 3600, // 1 hour
+        refreshToken: 36000 // 10 hours
     },
     selfUrl: 'http://localhost:3010/',
-    writableDirectoryPath: path.join(process.cwd(), 'writable'),
+    selfAuthorizeRedirectUrl: 'http://localhost:3000/',
+    writableDirectoryPath: path.join(
+        process.cwd(), 
+        'writable'
+    ),
 });
 
 // This middleware is required, to handle thrown errors by controllers

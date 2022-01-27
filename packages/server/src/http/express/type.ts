@@ -6,6 +6,7 @@
  */
 
 import { Client } from 'redis-extension';
+import { TokenMaxAgeType } from '@typescript-auth/domains';
 
 export type ExpressAppCreateContext = {
     writableDirectoryPath?: string,
@@ -14,7 +15,7 @@ export type ExpressAppCreateContext = {
     webUrl: string,
     selfUrl: string,
 
-    tokenMaxAge?: number,
+    tokenMaxAge?: TokenMaxAgeType,
 
     redis?: boolean | string | Client
 };

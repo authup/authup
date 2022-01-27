@@ -10,21 +10,21 @@ import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
     HTTPOAuth2Client,
-    OAuth2TokenSubKind, Oauth2TokenResponse,
+    OAuth2TokenSubKind, Oauth2TokenResponse, determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
 } from '@typescript-auth/domains';
-
 import { URL } from 'url';
 import { CookieOptions } from 'express';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
-import { Oauth2ProviderRouteAuthorizeCallbackContext, Oauth2ProviderRouteAuthorizeContext } from './type';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
+import { ControllerOptions } from '../../type';
+import { buildProviderAuthorizeCallbackPath } from '../utils';
 
 export async function authorizeOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    context: Oauth2ProviderRouteAuthorizeContext,
+    options: ControllerOptions,
 ) : Promise<any> {
     const { id } = req.params;
 
@@ -43,7 +43,7 @@ export async function authorizeOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
         authorize_path: provider.authorize_path,
-        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/oauth2-providers/${provider.id}/authorize-callback`}`,
+        redirect_uri: `${options.selfUrl}${buildProviderAuthorizeCallbackPath(provider.id)}`,
     });
 
     return res.redirect(oauth2Client.buildAuthorizeURL({}));
@@ -53,7 +53,7 @@ export async function authorizeOauth2ProviderRouteHandler(
 export async function authorizeCallbackOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    context: Oauth2ProviderRouteAuthorizeCallbackContext,
+    options: ControllerOptions,
 ) : Promise<any> {
     const { id } = req.params;
     const { code, state } = req.query;
@@ -77,7 +77,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         token_path: provider.token_path,
 
-        redirect_uri: `${context.selfUrl}${context.selfCallbackPath ?? `/oauth2-providers/${provider.id}/authorize-callback`}`,
+        redirect_uri: `${options.selfUrl}${buildProviderAuthorizeCallbackPath(provider.id)}`,
     }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
     const tokenResponse : Oauth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
@@ -86,36 +86,38 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     });
 
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
-    const expiresIn = context.maxAge || 3600;
-
     const grant = new InternalGrantType({
         request: req,
-        maxAge: context.maxAge,
+        maxAge: options.tokenMaxAge,
         entity: {
             kind: OAuth2TokenSubKind.USER,
             data: account.user_id,
         },
         realm: provider.realm_id,
-        selfUrl: context.selfUrl,
+        selfUrl: options.selfUrl,
         keyPairOptions: {
-            directory: context.rsaKeyPairPath,
+            directory: options.writableDirectoryPath,
         },
     });
 
     const token = await grant.run();
 
     const cookieOptions : CookieOptions = {
-        maxAge: expiresIn * 1000,
+
         ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(context.redirectUrl).hostname,
+            domain: new URL(options.selfAuthorizeRedirectUrl).hostname,
         } : {}),
     };
 
-    res.cookie(CookieName.ACCESS_TOKEN, token.access_token, cookieOptions);
-    res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
+    res.cookie(CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
-        maxAge: expiresIn * 1000 * 3,
+        maxAge: determineAccessTokenMaxAge(options.tokenMaxAge),
     });
 
-    return res.redirect(context.redirectUrl);
+    res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
+        ...cookieOptions,
+        maxAge: determineRefreshTokenMaxAge(options.tokenMaxAge),
+    });
+
+    return res.redirect(options.selfAuthorizeRedirectUrl);
 }

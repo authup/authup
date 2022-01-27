@@ -13,14 +13,14 @@ import {
     ForbiddenError, NotFoundError, UnauthorizedError,
 } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { TokenRouteVerifyContext } from './type';
 import { RobotRepository, UserRepository } from '../../../../domains';
 import { verifyOAuth2Token } from '../../../oauth2';
+import { ControllerOptions } from '../../type';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    context: TokenRouteVerifyContext,
+    options: ControllerOptions,
 ) : Promise<any> {
     let { id } = req.params;
 
@@ -49,8 +49,9 @@ export async function verifyTokenRouteHandler(
         id,
         {
             keyPairOptions: {
-                directory: context.writableDirectoryPath,
+                directory: options.writableDirectoryPath,
             },
+            redis: options.redis,
         },
     );
 

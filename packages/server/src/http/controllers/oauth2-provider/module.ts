@@ -22,7 +22,8 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
-import { Oauth2ProviderControllerOptions } from './type';
+import { ControllerOptions } from '../type';
+import { buildProviderAuthorizeCallbackPath } from './utils';
 
 @SwaggerTags('auth')
 @Controller('/oauth2-providers')
@@ -73,16 +74,16 @@ export class Oauth2ProviderController {
     }
 }
 
-export function registerOauth2ProviderController(router: Application, options: Oauth2ProviderControllerOptions) {
+export function registerOauth2ProviderController(router: Application, options: ControllerOptions) {
     router.get('/oauth2-providers/:id/authorize-url', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            return await authorizeOauth2ProviderRouteHandler(req, res, options);
+            return await authorizeCallbackOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {
             return next(e);
         }
     });
 
-    router.get('/oauth2-providers/:id/authorize-callback', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+    router.get(buildProviderAuthorizeCallbackPath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
             return await authorizeOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {

@@ -6,10 +6,8 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
-import { CookieName, OAuth2TokenKind } from '@typescript-auth/domains';
-import {
-    Cache, Client, setConfig, useClient,
-} from 'redis-extension';
+import { CookieName } from '@typescript-auth/domains';
+import path from 'path';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { AuthMiddlewareOptions } from './type';
 import { verifyAuthorizationHeader } from './verify';
@@ -20,33 +18,7 @@ function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefi
         undefined;
 }
 
-export function setupMiddleware(context: AuthMiddlewareOptions) {
-    let tokenCache : Cache<string> | undefined;
-
-    if (context.redis) {
-        let client : Client;
-
-        if (typeof context.redis === 'string') {
-            setConfig({
-                connectionString: context.redis,
-            });
-
-            context.redis = true;
-        }
-
-        if (typeof context.redis === 'boolean') {
-            client = useClient();
-        } else {
-            client = context.redis;
-        }
-
-        tokenCache = new Cache<string>({
-            redis: client,
-        }, {
-            prefix: OAuth2TokenKind.ACCESS,
-        });
-    }
-
+export function createMiddleware(context: AuthMiddlewareOptions) {
     return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
 
@@ -64,11 +36,11 @@ export function setupMiddleware(context: AuthMiddlewareOptions) {
 
             const header = parseAuthorizationHeader(headerValue);
 
-            const writableDirectoryPath = context.writableDirectoryPath || process.cwd();
+            const writableDirectoryPath = context.writableDirectoryPath || path.join(process.cwd(), 'writable');
 
             await verifyAuthorizationHeader(request, header, {
                 writableDirectoryPath,
-                tokenCache,
+                redis: context.redis,
             });
 
             next();

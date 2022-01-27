@@ -6,6 +6,7 @@
  */
 
 import { Client } from 'redis-extension';
+import { TokenMaxAgeType } from '@typescript-auth/domains';
 
 export type Config = {
     env: string,
@@ -24,7 +25,7 @@ export type Config = {
 
     swaggerDocumentation: boolean,
 
-    tokenMaxAge: number,
+    tokenMaxAge: TokenMaxAgeType,
 
     redis?: string | boolean | Client
 };

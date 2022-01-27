@@ -7,3 +7,4 @@
 
 export * from './express-validator';
 export * from './proxy-connection-string';
+export * from './redis';

@@ -8,4 +8,3 @@
 export * from './create';
 export * from './verify';
 export * from './delete';
-export * from './type';

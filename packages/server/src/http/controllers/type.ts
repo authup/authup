@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenControllerOptions } from './token';
-import { Oauth2ProviderControllerOptions } from './oauth2-provider';
+import { Client } from 'redis-extension';
+import { TokenMaxAgeType } from '@typescript-auth/domains';
 
-export type ControllerRegistrationContext = {
-    controller: {
-        token: Omit<TokenControllerOptions, 'writableDirectoryPath' | 'selfUrl'> &
-        Partial<Pick<TokenControllerOptions, 'writableDirectoryPath' | 'selfUrl'>>,
-        oauth2Provider: Omit<Oauth2ProviderControllerOptions, 'writableDirectoryPath' | 'selfUrl'> &
-        Partial<Pick<Oauth2ProviderControllerOptions, 'writableDirectoryPath' | 'selfUrl'>>,
-    },
+export type ControllerOptions = {
+    tokenMaxAge?: TokenMaxAgeType,
+
     selfUrl: string,
+    selfAuthorizeRedirectUrl?: string,
+
     writableDirectoryPath: string,
+    redis?: Client | string | boolean
 };

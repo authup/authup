@@ -6,9 +6,10 @@
  */
 
 import {
-    OAuth2TokenSubKind, Oauth2Client, Oauth2TokenResponse, Realm, Robot, User,
+    OAuth2TokenSubKind, Oauth2Client, Oauth2TokenResponse, Realm, Robot, TokenMaxAgeType, User,
 } from '@typescript-auth/domains';
 import { KeyPairOptions } from '@typescript-auth/server-utils';
+import { Client } from 'redis-extension';
 import { ExpressRequest } from '../../type';
 
 export type AccessTokenContextUserEntity = {
@@ -37,17 +38,13 @@ export interface Grant {
 
 export type GrantContext = {
     request: ExpressRequest,
+    redis?: Client | string | boolean,
 
     keyPairOptions?: Partial<KeyPairOptions>,
 
-    maxAge?: GrantContextMaxAge,
+    maxAge?: TokenMaxAgeType,
 
     selfUrl: string,
-};
-
-export type GrantContextMaxAge = number | {
-    refresh_token?: number,
-    access_token?: number
 };
 
 // -----------------------------------------------------

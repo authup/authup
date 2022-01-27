@@ -17,11 +17,11 @@ import { RolePermissionController } from './role-permission';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
 import { registerTokenController } from './token';
-import { ControllerRegistrationContext } from './type';
+import { ControllerOptions } from './type';
 
 export function registerControllers(
     router: Application,
-    context: ControllerRegistrationContext,
+    options: ControllerOptions,
 ) {
     attachControllers(router, [
         RobotController,
@@ -35,15 +35,6 @@ export function registerControllers(
         UserRoleController,
     ]);
 
-    registerOauth2ProviderController(router, {
-        selfUrl: context.selfUrl,
-        writableDirectoryPath: context.writableDirectoryPath,
-        ...context.controller.oauth2Provider,
-
-    });
-    registerTokenController(router, {
-        selfUrl: context.selfUrl,
-        writableDirectoryPath: context.writableDirectoryPath,
-        ...context.controller.token,
-    });
+    registerOauth2ProviderController(router, options);
+    registerTokenController(router, options);
 }

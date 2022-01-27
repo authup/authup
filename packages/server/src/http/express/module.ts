@@ -25,28 +25,22 @@ export function createExpressApp(context: ExpressAppCreateContext) : Express {
     }));
 
     registerMiddlewares(expressApp, {
-        auth: {
-            writableDirectoryPath: context.writableDirectoryPath,
-            redis: context.redis,
-        },
-        cookieParser: true,
-        bodyParser: true,
-        response: true,
-        swaggerDocumentation: {
+        writableDirectoryPath: context.writableDirectoryPath,
+        redis: context.redis,
+
+        cookieParserMiddleware: true,
+        bodyParserMiddleware: true,
+        responseMiddleware: true,
+        swaggerMiddleware: {
             writableDirectoryPath: context.writableDirectoryPath,
         },
     });
 
     registerControllers(expressApp, {
-        controller: {
-            oauth2Provider: {
-                redirectUrl: context.webUrl,
-            },
-            token: {
-                maxAge: context.tokenMaxAge,
-            },
-        },
+        redis: context.redis,
+        tokenMaxAge: context.tokenMaxAge,
         selfUrl: context.selfUrl,
+        selfAuthorizeRedirectUrl: context.webUrl,
         writableDirectoryPath: context.writableDirectoryPath,
     });
 

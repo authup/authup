@@ -7,33 +7,52 @@
 
 import {
     OAuth2ServerError,
-    OAuth2TokenSubKind,
+    OAuth2TokenKind, OAuth2TokenSubKind,
+    determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
 } from '@typescript-auth/domains';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
-import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token/builder';
+import { Cache } from 'redis-extension';
+import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
 import { GrantContext, IssueAccessTokenContext } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { useRedisClient } from '../../../utils';
 
 export abstract class AbstractGrant {
     protected context : GrantContext;
 
-    constructor(context: GrantContext) {
-        context.maxAge = context.maxAge || 3600;
+    protected accessTokenCache : Cache<string> | undefined;
 
+    protected refreshTokenCache : Cache<string> | undefined;
+
+    constructor(context: GrantContext) {
         this.context = context;
+
+        this.initCache();
+    }
+
+    // -----------------------------------------------------
+
+    private initCache() {
+        if (!this.context.redis || this.accessTokenCache || this.refreshTokenCache) return;
+
+        const redis = useRedisClient(this.context.redis);
+        if (redis) {
+            this.accessTokenCache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.ACCESS });
+            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.REFRESH });
+        }
     }
 
     // -----------------------------------------------------
 
     protected async issueAccessToken(context: IssueAccessTokenContext) : Promise<OAuth2AccessTokenEntity> {
+        const maxAge = determineAccessTokenMaxAge(this.context.maxAge);
+
         const tokenBuilder = new Oauth2AccessTokenBuilder({
             request: this.context.request,
             keyPairOptions: this.context.keyPairOptions,
             selfUrl: this.context.selfUrl,
-            maxAge: typeof this.context.maxAge === 'number' ?
-                this.context.maxAge :
-                this.context.maxAge.access_token,
+            maxAge,
         });
 
         tokenBuilder.setRealm(context.realm);
@@ -53,20 +72,30 @@ export abstract class AbstractGrant {
             tokenBuilder.addScope(context.scope);
         }
 
-        return tokenBuilder.create();
+        const token = await tokenBuilder.create();
+
+        if (this.accessTokenCache) {
+            await this.accessTokenCache.set(token.id, token, { seconds: maxAge });
+        }
+
+        return token;
     }
 
     protected async issueRefreshToken(data: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
+        const maxAge : number = determineRefreshTokenMaxAge(this.context.maxAge);
+
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
             accessToken: data,
-            maxAge: typeof this.context.maxAge === 'number' ?
-                // refresh_token should always live 3x lifespan of access-token,
-                // if not specified otherwise
-                (this.context.maxAge * 3) :
-                this.context.maxAge.refresh_token,
+            maxAge,
         });
 
-        return tokenBuilder.create();
+        const token = await tokenBuilder.create();
+
+        if (this.refreshTokenCache) {
+            await this.refreshTokenCache.set(token.id, token, { seconds: maxAge });
+        }
+
+        return token;
     }
 
     // -----------------------------------------------------

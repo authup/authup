@@ -42,3 +42,8 @@ export type TokenGrantPayload = {
 };
 
 export type TokenGrantType = `${OAuth2AccessTokenGrant}`;
+
+export type TokenMaxAgeType = number | {
+    accessToken?: number,
+    refreshToken?: number
+};

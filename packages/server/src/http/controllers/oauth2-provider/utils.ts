@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type TokenControllerOptions = {
-    writableDirectoryPath: string,
-    selfUrl?: string,
-    maxAge?: number,
-};
+export function buildProviderAuthorizeCallbackPath(id: string | number) {
+    return `/oauth2-providers/${id}/authorize-callback`;
+}

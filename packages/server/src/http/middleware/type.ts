@@ -8,15 +8,14 @@
 import { Client } from 'redis-extension';
 
 export type MiddlewareRegistrationOptions = {
-    bodyParser?: boolean,
-    cookieParser?: boolean,
-    response?: boolean,
-    auth?: boolean | {
-        writableDirectoryPath?: string,
-        redis?: Client | boolean | string
-    },
-    swaggerDocumentation?: boolean | {
+    bodyParserMiddleware?: boolean,
+    cookieParserMiddleware?: boolean,
+    responseMiddleware?: boolean,
+    swaggerMiddleware?: boolean | {
         writableDirectoryPath?: string,
         path?: string
-    }
+    },
+
+    writableDirectoryPath?: string,
+    redis?: Client | boolean | string
 };

@@ -70,8 +70,27 @@ export function buildConfig(
     config.writableDirectory = config.writableDirectory.replace(/\//g, path.sep);
 
     if (!config.tokenMaxAge) {
-        const maxAge : number = parseInt(requireFromEnv('TOKEN_MAX_AGE', '3600'), 10);
-        config.tokenMaxAge = Number.isNaN(maxAge) ? 3600 : maxAge;
+        const refreshTokenMaxAge = parseInt(requireFromEnv('REFRESH_TOKEN_MAX_AGE', 0), 10);
+        const accessTokenMaxAge = parseInt(requireFromEnv('ACCESS_TOKEN_MAX_AGE', 0), 10);
+
+        if (accessTokenMaxAge || refreshTokenMaxAge) {
+            if (
+                !refreshTokenMaxAge &&
+                accessTokenMaxAge
+            ) {
+                config.tokenMaxAge = accessTokenMaxAge;
+            }
+
+            if (
+                accessTokenMaxAge &&
+                refreshTokenMaxAge
+            ) {
+                config.tokenMaxAge = {
+                    accessToken: accessTokenMaxAge,
+                    refreshToken: refreshTokenMaxAge,
+                };
+            }
+        }
     }
 
     if (!config.swaggerDocumentation) {

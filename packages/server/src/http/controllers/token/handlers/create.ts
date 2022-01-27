@@ -11,16 +11,16 @@ import {
     OAuth2ServerError, Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { TokenRouteCreateContext } from './type';
 import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
 import { Grant, GrantContext } from '../../../oauth2/grant-types/type';
 import { PasswordGrantType, RobotCredentialsGrantType } from '../../../oauth2';
 import { RefreshTokenGrantType } from '../../../oauth2/grant-types/refresh-token';
+import { ControllerOptions } from '../../type';
 
 export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    context: TokenRouteCreateContext,
+    context: ControllerOptions,
 ) : Promise<any> {
     const grantType = determineRequestTokenGrantType(req);
     if (!grantType) {
@@ -30,13 +30,15 @@ export async function createTokenRouteHandler(
     let grant : Grant | undefined;
 
     const grantContext : GrantContext = {
+        maxAge: context.tokenMaxAge,
         request: req,
         selfUrl: context.selfUrl,
         keyPairOptions: {
             directory: context.writableDirectoryPath,
         },
-
+        redis: context.redis,
     };
+
     switch (grantType) {
         case OAuth2AccessTokenGrant.ROBOT_CREDENTIALS: {
             grant = new RobotCredentialsGrantType(grantContext);

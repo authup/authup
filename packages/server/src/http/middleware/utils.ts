@@ -10,58 +10,49 @@ import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
-import { Client } from 'redis-extension';
 import {
     MiddlewareRegistrationOptions,
+    createMiddleware,
     responseMiddleware,
-    setupMiddleware,
 } from '../index';
 
 export function registerMiddlewares(
     router: Application,
     options: MiddlewareRegistrationOptions,
 ) {
-    if (options.bodyParser) {
+    if (options.bodyParserMiddleware) {
         router.use(urlencoded({ extended: false }));
         router.use(json());
     }
 
     router.use(cookieParser());
 
-    if (options.response) {
+    if (options.responseMiddleware) {
         router.use(responseMiddleware);
     }
 
-    if (options.auth) {
-        let writableDirectoryPath = path.join(process.cwd(), 'writable');
+    //--------------------------------------------------------------------
 
-        let redis: Client | boolean | string | undefined;
+    const writableDirectoryPath = options.writableDirectoryPath || path.join(process.cwd(), 'writable');
 
-        if (typeof options.auth !== 'boolean') {
-            if (options.auth.writableDirectoryPath) {
-                writableDirectoryPath = options.auth.writableDirectoryPath;
-            }
+    router.use(createMiddleware({
+        writableDirectoryPath,
+        redis: options.redis,
+    }));
 
-            redis = options.auth.redis;
-        }
+    //--------------------------------------------------------------------
 
-        router.use(setupMiddleware({
-            writableDirectoryPath,
-            redis,
-        }));
-    }
-
-    if (options.swaggerDocumentation) {
+    if (options.swaggerMiddleware) {
         let docsPath = '/docs';
         let writableDirectoryPath = path.join(process.cwd(), 'writable');
 
-        if (typeof options.swaggerDocumentation !== 'boolean') {
-            if (options.swaggerDocumentation.path) {
-                docsPath = options.swaggerDocumentation.path;
+        if (typeof options.swaggerMiddleware !== 'boolean') {
+            if (options.swaggerMiddleware.path) {
+                docsPath = options.swaggerMiddleware.path;
             }
 
-            if (options.swaggerDocumentation.writableDirectoryPath) {
-                writableDirectoryPath = options.swaggerDocumentation.writableDirectoryPath;
+            if (options.swaggerMiddleware.writableDirectoryPath) {
+                writableDirectoryPath = options.swaggerMiddleware.writableDirectoryPath;
             }
         }
 

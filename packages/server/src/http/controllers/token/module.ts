@@ -8,10 +8,10 @@
 import { Application } from 'express';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { createTokenRouteHandler, deleteTokenRouteHandler, verifyTokenRouteHandler } from './handlers';
-import { TokenControllerOptions } from './type';
 import { forceLoggedIn } from '../../middleware';
+import { ControllerOptions } from '../type';
 
-export function registerTokenController(router: Application, options: TokenControllerOptions) {
+export function registerTokenController(router: Application, options: ControllerOptions) {
     router.post('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
             await createTokenRouteHandler(req, res, options);
@@ -22,7 +22,7 @@ export function registerTokenController(router: Application, options: TokenContr
 
     router.delete('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await deleteTokenRouteHandler(req, res);
+            await deleteTokenRouteHandler(req, res, options);
         } catch (e) {
             next(e);
         }

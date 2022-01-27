@@ -15,11 +15,6 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
     const tokenAPIClient = new TokenAPI(context.http);
 
     return async (socket: Socket, next: SocketNextFunction) => {
-        if (tokenCache) {
-            // Scheduler will only be started once ;)
-            await tokenCache.startScheduler();
-        }
-
         const { token } = socket.handshake.auth;
 
         if (!token) {
