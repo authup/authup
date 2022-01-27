@@ -11,7 +11,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { OAuth2ProviderRole } from './entity';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 
-export class Oauth2ProviderRoleAPI {
+export class OAuth2ProviderRoleAPI {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

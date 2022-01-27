@@ -7,7 +7,7 @@
 
 import { User } from '../user';
 
-export interface Oauth2Client {
+export interface OAuth2Client {
     id: string,
 
     secret: string,

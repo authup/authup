@@ -6,7 +6,7 @@
  */
 
 import { OAuth2AccessToken } from '../oauth2-access-token';
-import { Oauth2Client } from '../oauth2-client';
+import { OAuth2Client } from '../oauth2-client';
 import { OAuth2TokenKind } from '../oauth2';
 import { JWTPayload } from '../json-web-token';
 import { Realm } from '../realm';
@@ -20,9 +20,9 @@ export interface OAuth2RefreshToken {
 
     // ------------------------------------------------------------------
 
-    client_id: Oauth2Client['id'] | null;
+    client_id: OAuth2Client['id'] | null;
 
-    client: Oauth2Client | null;
+    client: OAuth2Client | null;
 
     access_token_id: OAuth2AccessToken['id'];
 

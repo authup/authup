@@ -8,8 +8,8 @@
 import {
     OAuth2RefreshTokenPayload,
     OAuth2TokenKind,
+    OAuth2TokenResponse,
     OAuth2TokenSubKind,
-    Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { signToken } from '@typescript-auth/server-utils';
 import { OAuth2BearerResponseContext } from './type';
@@ -25,8 +25,8 @@ export class OAuth2BearerTokenResponse {
 
     // ------------------------------------------------
 
-    async build() : Promise<Oauth2TokenResponse> {
-        const response : Oauth2TokenResponse = {
+    async build() : Promise<OAuth2TokenResponse> {
+        const response : OAuth2TokenResponse = {
             access_token: this.context.accessToken.content,
             expires_in: Math.ceil((this.context.accessToken.expires.getTime() - Date.now()) / 1000),
             token_type: 'Bearer',

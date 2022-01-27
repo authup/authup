@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2TokenSubKind, Oauth2Client, Oauth2TokenResponse, Realm, Robot, TokenMaxAgeType, User,
+    OAuth2Client, OAuth2TokenResponse, OAuth2TokenSubKind, Realm, Robot, TokenMaxAgeType, User,
 } from '@typescript-auth/domains';
 import { KeyPairOptions } from '@typescript-auth/server-utils';
 import { Client } from 'redis-extension';
@@ -27,13 +27,13 @@ export type IssueAccessTokenContext = {
     realm: Realm['id'] | Realm,
 
     scope?: string | string[],
-    client?: Oauth2Client['id'] | Oauth2Client,
+    client?: OAuth2Client['id'] | OAuth2Client,
 };
 
 // -----------------------------------------------------
 
 export interface Grant {
-    run() : Promise<Oauth2TokenResponse>;
+    run() : Promise<OAuth2TokenResponse>;
 }
 
 export type GrantContext = {

@@ -12,7 +12,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
 import { buildOAuth2ProviderAuthorizePath } from './utils';
 
-export class Oauth2ProviderAPI {
+export class OAuth2ProviderAPI {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

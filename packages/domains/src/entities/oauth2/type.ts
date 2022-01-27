@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessTokenPayload } from '../oauth2-access-token';
 import { OAuth2TokenKind } from './constants';
 
-export type Oauth2TokenResponse = {
+export type OAuth2TokenResponse = {
     access_token: string,
 
     refresh_token?: string,

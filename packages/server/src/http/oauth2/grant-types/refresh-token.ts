@@ -7,7 +7,7 @@
 
 import {
     OAuth2ServerError, OAuth2TokenKind,
-    Oauth2TokenResponse, TokenError,
+    OAuth2TokenResponse, TokenError,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
@@ -19,7 +19,7 @@ import { verifyOAuth2Token } from '../utils';
 import { OAuth2RefreshTokenVerifyResult } from '../utils/type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<Oauth2TokenResponse> {
+    async run() : Promise<OAuth2TokenResponse> {
         const token = await this.validate();
 
         const accessToken = await this.issueAccessToken({

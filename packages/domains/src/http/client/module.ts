@@ -7,8 +7,8 @@
 
 import { Client, ClientConfig } from '@trapi/client';
 import {
-    Oauth2ProviderAPI,
-    Oauth2ProviderRoleAPI,
+    OAuth2ProviderAPI,
+    OAuth2ProviderRoleAPI,
     PermissionAPI,
     RealmAPI,
     RobotAPI,
@@ -16,9 +16,9 @@ import {
 } from '../../entities';
 
 export class HTTPClient extends Client {
-    public readonly oauth2Provider : Oauth2ProviderAPI;
+    public readonly oauth2Provider : OAuth2ProviderAPI;
 
-    public readonly oauth2ProviderRole : Oauth2ProviderRoleAPI;
+    public readonly oauth2ProviderRole : OAuth2ProviderRoleAPI;
 
     public readonly permission : PermissionAPI;
 
@@ -45,8 +45,8 @@ export class HTTPClient extends Client {
     constructor(config: ClientConfig) {
         super(config);
 
-        this.oauth2Provider = new Oauth2ProviderAPI(this.driver);
-        this.oauth2ProviderRole = new Oauth2ProviderRoleAPI(this.driver);
+        this.oauth2Provider = new OAuth2ProviderAPI(this.driver);
+        this.oauth2ProviderRole = new OAuth2ProviderRoleAPI(this.driver);
         this.permission = new PermissionAPI(this.driver);
         this.realm = new RealmAPI(this.driver);
         this.robot = new RobotAPI(this.driver);

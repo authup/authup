@@ -6,8 +6,8 @@
  */
 
 import {
-    OAuth2ServerError, OAuth2TokenSubKind,
-    Oauth2TokenResponse,
+    OAuth2ServerError, OAuth2TokenResponse,
+    OAuth2TokenSubKind,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
@@ -16,7 +16,7 @@ import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<Oauth2TokenResponse> {
+    async run() : Promise<OAuth2TokenResponse> {
         const user = await this.validate();
 
         const accessToken = await this.issueAccessToken({

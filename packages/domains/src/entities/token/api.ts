@@ -9,7 +9,7 @@ import { ClientDriverInstance } from '@trapi/client';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { TokenGrantPayload, TokenVerificationPayload } from './type';
 import { SingleResourceResponse } from '../type';
-import { Oauth2TokenResponse } from '../oauth2';
+import { OAuth2TokenResponse } from '../oauth2';
 
 export class TokenAPI {
     protected client: ClientDriverInstance;
@@ -30,7 +30,7 @@ export class TokenAPI {
         return response.data;
     }
 
-    async create(data: TokenGrantPayload): Promise<SingleResourceResponse<Oauth2TokenResponse>> {
+    async create(data: TokenGrantPayload): Promise<SingleResourceResponse<OAuth2TokenResponse>> {
         const response = await this.client.post('token', nullifyEmptyObjectProperties(data));
 
         return response.data;

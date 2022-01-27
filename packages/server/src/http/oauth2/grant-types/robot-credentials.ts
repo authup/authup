@@ -7,8 +7,8 @@
 
 import {
     OAuth2ServerError,
+    OAuth2TokenResponse,
     OAuth2TokenSubKind,
-    Oauth2TokenResponse,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
@@ -17,7 +17,7 @@ import { RobotEntity, RobotRepository } from '../../../domains';
 import { Grant } from './type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<Oauth2TokenResponse> {
+    async run() : Promise<OAuth2TokenResponse> {
         const entity = await this.validate();
 
         const accessToken = await this.issueAccessToken({

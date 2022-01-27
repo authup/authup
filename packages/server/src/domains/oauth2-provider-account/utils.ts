@@ -8,7 +8,7 @@
 import {
     OAuth2Provider,
     OAuth2ProviderAccount,
-    Oauth2TokenResponse,
+    OAuth2TokenResponse,
     User,
     createNanoID,
     hasOwnProperty,
@@ -24,7 +24,7 @@ import { OAuth2ProviderRoleEntity } from '../oauth2-provider-role';
 
 export async function createOauth2ProviderAccount(
     provider: OAuth2Provider,
-    tokenResponse: Oauth2TokenResponse,
+    tokenResponse: OAuth2TokenResponse,
 ) : Promise<OAuth2ProviderAccount> {
     const accessTokenPayload : KeycloakJWTPayload = await decodeToken(tokenResponse.access_token);
 

@@ -6,7 +6,7 @@
  */
 
 import { User } from '../user';
-import { Oauth2Client } from '../oauth2-client';
+import { OAuth2Client } from '../oauth2-client';
 import { Robot } from '../robot';
 import { OAuth2TokenKind } from '../oauth2';
 import { JWTPayload } from '../json-web-token';
@@ -17,9 +17,9 @@ export interface OAuth2AccessToken {
 
     content: string,
 
-    client_id: Oauth2Client['id'] | null,
+    client_id: OAuth2Client['id'] | null,
 
-    client: Oauth2Client | null,
+    client: OAuth2Client | null,
 
     user_id: User['id'] | null,
 

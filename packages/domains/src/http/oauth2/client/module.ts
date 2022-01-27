@@ -17,7 +17,7 @@ import {
     Oauth2PasswordGrantParameters,
     Oauth2RefreshTokenGrantParameters,
 } from './type';
-import { Oauth2TokenResponse } from '../../../entities';
+import { OAuth2TokenResponse } from '../../../entities';
 import { buildHTTPQuery } from '../../utils';
 import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 
@@ -68,7 +68,7 @@ export class HTTPOAuth2Client {
 
     async getTokenWithAuthorizeGrant(
         parameters: Pick<Oauth2AuthorizationGrantParameters, 'state' | 'code' | 'redirect_uri'>,
-    ): Promise<Oauth2TokenResponse> {
+    ): Promise<OAuth2TokenResponse> {
         return this.getToken(this.buildTokenParameters({
             grant_type: 'authorization_code',
             ...parameters,
@@ -81,7 +81,7 @@ export class HTTPOAuth2Client {
      * @throws Error
      * @param parameters
      */
-    async getToken(parameters: Oauth2GrantParameters): Promise<Oauth2TokenResponse> {
+    async getToken(parameters: Oauth2GrantParameters): Promise<OAuth2TokenResponse> {
         const urlSearchParams = new URLSearchParams();
         const parameterKeys = Object.keys(parameters);
 
@@ -101,7 +101,7 @@ export class HTTPOAuth2Client {
             },
         );
 
-        const tokenResponse: Oauth2TokenResponse = {
+        const tokenResponse: OAuth2TokenResponse = {
             access_token: data.access_token,
             expires_in: data.expires_in,
             token_type: data.token_type || 'Bearer',

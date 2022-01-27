@@ -9,9 +9,9 @@ import { randomUUID } from 'crypto';
 import {
     OAuth2AccessToken,
     OAuth2AccessTokenPayload,
+    OAuth2Client,
     OAuth2TokenKind,
     OAuth2TokenSubKind,
-    Oauth2Client,
     Realm,
     Robot,
     User, hasOwnProperty,
@@ -36,7 +36,7 @@ export class Oauth2AccessTokenBuilder {
 
     protected id?: OAuth2AccessToken['id'];
 
-    protected client?: Oauth2Client | Oauth2Client['id'];
+    protected client?: OAuth2Client | OAuth2Client['id'];
 
     protected robot?: Robot | Robot['id'];
 
@@ -144,7 +144,7 @@ export class Oauth2AccessTokenBuilder {
 
     // -----------------------------------------------------
 
-    getClientId() : Oauth2Client['id'] | undefined {
+    getClientId() : OAuth2Client['id'] | undefined {
         return typeof this.client === 'object' ? this.client.id : this.client;
     }
 
@@ -166,7 +166,7 @@ export class Oauth2AccessTokenBuilder {
 
     // -----------------------------------------------------
 
-    setClient(id: Oauth2Client['id'] | Oauth2Client) {
+    setClient(id: OAuth2Client['id'] | OAuth2Client) {
         this.client = id;
 
         return this;

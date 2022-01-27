@@ -6,7 +6,7 @@
  */
 
 import { useClient } from '@trapi/client';
-import { HTTPOAuth2Client, Oauth2GrantParameters, Oauth2TokenResponse } from '../../../../../src';
+import { HTTPOAuth2Client, OAuth2TokenResponse, Oauth2GrantParameters } from '../../../../../src';
 
 const client = useClient('test');
 
@@ -16,7 +16,7 @@ client.post = postFn;
 const getFn = jest.fn();
 client.get = getFn;
 
-const oauth2TokenResponse : Oauth2TokenResponse = {
+const oauth2TokenResponse : OAuth2TokenResponse = {
     mac_key: 'mac_key',
     mac_algorithm: 'mac_algorithm',
     token_type: 'Bearer',

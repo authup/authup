@@ -9,7 +9,7 @@ import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2AccessToken, OAuth2RefreshToken, Oauth2Client, Realm,
+    OAuth2AccessToken, OAuth2Client, OAuth2RefreshToken, Realm,
 } from '@typescript-auth/domains';
 import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
 import { OAuth2ClientEntity } from '../oauth2-client';
@@ -34,7 +34,7 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     // ------------------------------------------------------------------
 
     @Column({ nullable: true, default: null })
-        client_id: Oauth2Client['id'] | null;
+        client_id: OAuth2Client['id'] | null;
 
     @ManyToOne(() => OAuth2ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })

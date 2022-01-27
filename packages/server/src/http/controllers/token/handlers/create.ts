@@ -8,7 +8,7 @@
 /* istanbul ignore next */
 import {
     OAuth2AccessTokenGrant,
-    OAuth2ServerError, Oauth2TokenResponse,
+    OAuth2ServerError, OAuth2TokenResponse,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
@@ -54,7 +54,7 @@ export async function createTokenRouteHandler(
         }
     }
 
-    const tokenResponse : Oauth2TokenResponse = await grant.run();
+    const tokenResponse : OAuth2TokenResponse = await grant.run();
 
     return res.respond({
         data: tokenResponse,

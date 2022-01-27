@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Oauth2TokenResponse, Realm } from '@typescript-auth/domains';
+import { OAuth2TokenResponse, Realm } from '@typescript-auth/domains';
 import { AbstractGrant } from './abstract-grant';
 import {
     AccessTokenContextRobotEntity, AccessTokenContextUserEntity, Grant, InternalGrantContext,
@@ -24,7 +24,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
         this.realm = context.realm;
     }
 
-    async run(): Promise<Oauth2TokenResponse> {
+    async run(): Promise<OAuth2TokenResponse> {
         const accessToken = await this.issueAccessToken({
             entity: this.entity,
             realm: this.realm,

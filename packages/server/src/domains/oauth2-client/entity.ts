@@ -8,11 +8,11 @@
 import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Oauth2Client, User } from '@typescript-auth/domains';
+import { OAuth2Client, User } from '@typescript-auth/domains';
 import { UserEntity } from '../user';
 
 @Entity({ name: 'auth_clients' })
-export class OAuth2ClientEntity implements Oauth2Client {
+export class OAuth2ClientEntity implements OAuth2Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 

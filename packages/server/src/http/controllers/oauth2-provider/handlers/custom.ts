@@ -10,11 +10,14 @@ import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
     HTTPOAuth2Client,
-    OAuth2TokenSubKind, Oauth2TokenResponse, determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
+    OAuth2TokenResponse,
+    OAuth2TokenSubKind,
+    buildOAuth2ProviderAuthorizeCallbackPath,
+    determineAccessTokenMaxAge,
+    determineRefreshTokenMaxAge,
 } from '@typescript-auth/domains';
 import { URL } from 'url';
 import { CookieOptions } from 'express';
-import { buildOAuth2ProviderAuthorizeCallbackPath } from '@typescript-auth/domains/src/entities/oauth2-provider/utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
@@ -80,7 +83,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         redirect_uri: `${options.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
-    const tokenResponse : Oauth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
+    const tokenResponse : OAuth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
         code: code as string,
         state: state as string,
     });

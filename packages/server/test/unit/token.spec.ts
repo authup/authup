@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, Oauth2TokenResponse } from '@typescript-auth/domains';
+import { ErrorCode, OAuth2TokenResponse } from '@typescript-auth/domains';
 import { useSuperTest } from '../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
 
@@ -55,7 +55,7 @@ describe('src/http/controllers/token', () => {
                 password: 'start123',
             });
 
-        const tokenPayload : Oauth2TokenResponse = response.body;
+        const tokenPayload : OAuth2TokenResponse = response.body;
 
         response = await superTest
             .delete('/token')
@@ -72,7 +72,7 @@ describe('src/http/controllers/token', () => {
                 password: 'start123',
             });
 
-        const tokenPayload : Oauth2TokenResponse = response.body;
+        const tokenPayload : OAuth2TokenResponse = response.body;
 
         response = await superTest
             .post('/token')
