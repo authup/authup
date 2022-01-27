@@ -14,14 +14,14 @@ import {
 } from '@typescript-auth/domains';
 import { URL } from 'url';
 import { CookieOptions } from 'express';
+import { buildOAuth2ProviderAuthorizeCallbackPath } from '@typescript-auth/domains/src/entities/oauth2-provider/utils';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
 import { ControllerOptions } from '../../type';
-import { buildProviderAuthorizeCallbackPath } from '../utils';
 
-export async function authorizeOauth2ProviderRouteHandler(
+export async function authorizeURLOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
     options: ControllerOptions,
@@ -43,7 +43,7 @@ export async function authorizeOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
         authorize_path: provider.authorize_path,
-        redirect_uri: `${options.selfUrl}${buildProviderAuthorizeCallbackPath(provider.id)}`,
+        redirect_uri: `${options.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     });
 
     return res.redirect(oauth2Client.buildAuthorizeURL({}));
@@ -77,7 +77,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         token_path: provider.token_path,
 
-        redirect_uri: `${options.selfUrl}${buildProviderAuthorizeCallbackPath(provider.id)}`,
+        redirect_uri: `${options.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
     const tokenResponse : Oauth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({

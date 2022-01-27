@@ -10,6 +10,7 @@ import { ClientDriverInstance } from '@trapi/client';
 import { OAuth2Provider } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { buildOAuth2ProviderAuthorizePath } from './utils';
 
 export class Oauth2ProviderAPI {
     protected client: ClientDriverInstance;
@@ -19,7 +20,7 @@ export class Oauth2ProviderAPI {
     }
 
     getAuthorizeUri(baseUrl: string, id: OAuth2Provider['id']): string {
-        return new URL(`oauth2-providers/${id}/authorize-url`, baseUrl).href;
+        return new URL(buildOAuth2ProviderAuthorizePath(id), baseUrl).href;
     }
 
     async getMany(record?: BuildInput<OAuth2Provider>): Promise<CollectionResourceResponse<OAuth2Provider>> {

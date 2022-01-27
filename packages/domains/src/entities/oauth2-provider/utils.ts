@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function buildProviderAuthorizeCallbackPath(id: string | number) {
+export function buildOAuth2ProviderAuthorizeCallbackPath(id: string | number) {
     return `/oauth2-providers/${id}/authorize-callback`;
+}
+
+export function buildOAuth2ProviderAuthorizePath(id: string | number) {
+    return `/oauth2-providers/${id}/authorize-url`;
 }

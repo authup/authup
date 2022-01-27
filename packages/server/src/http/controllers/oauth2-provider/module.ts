@@ -12,8 +12,12 @@ import { SwaggerTags } from '@trapi/swagger';
 import { OAuth2Provider } from '@typescript-auth/domains';
 import { Application } from 'express';
 import {
+    buildOAuth2ProviderAuthorizeCallbackPath,
+    buildOAuth2ProviderAuthorizePath,
+} from '@typescript-auth/domains/src/entities/oauth2-provider/utils';
+import {
     authorizeCallbackOauth2ProviderRouteHandler,
-    authorizeOauth2ProviderRouteHandler,
+    authorizeURLOauth2ProviderRouteHandler,
     createOauth2ProviderRouteHandler,
     deleteOauth2ProviderRouteHandler,
     getManyOauth2ProviderRouteHandler,
@@ -23,7 +27,6 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { ControllerOptions } from '../type';
-import { buildProviderAuthorizeCallbackPath } from './utils';
 
 @SwaggerTags('auth')
 @Controller('/oauth2-providers')
@@ -75,17 +78,17 @@ export class Oauth2ProviderController {
 }
 
 export function registerOauth2ProviderController(router: Application, options: ControllerOptions) {
-    router.get('/oauth2-providers/:id/authorize-url', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+    router.get(buildOAuth2ProviderAuthorizePath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            return await authorizeCallbackOauth2ProviderRouteHandler(req, res, options);
+            return await authorizeURLOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {
             return next(e);
         }
     });
 
-    router.get(buildProviderAuthorizeCallbackPath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+    router.get(buildOAuth2ProviderAuthorizeCallbackPath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            return await authorizeOauth2ProviderRouteHandler(req, res, options);
+            return await authorizeCallbackOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {
             return next(e);
         }
