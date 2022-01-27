@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, ClientConfig } from '@trapi/client';
+import { Client, Config } from '@trapi/client';
 import {
     OAuth2ProviderAPI,
     OAuth2ProviderRoleAPI,
@@ -42,7 +42,7 @@ export class HTTPClient extends Client {
 
     public readonly userRole : UserRoleAPI;
 
-    constructor(config: ClientConfig) {
+    constructor(config: Config) {
         super(config);
 
         this.oauth2Provider = new OAuth2ProviderAPI(this.driver);

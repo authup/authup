@@ -3,7 +3,7 @@
 
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom", "ES6"]
+        "lib": ["dom"]
     },
 
     "include": [

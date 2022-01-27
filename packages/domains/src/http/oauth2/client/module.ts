@@ -6,8 +6,9 @@
  */
 
 import {
-    Client, ClientConfig, createClient, useClient,
+    Client, Config, createClient, useClient,
 } from '@trapi/client';
+
 import {
     HTTPOAuth2ClientOptions,
     Oauth2AuthorizationGrantParameters,
@@ -26,7 +27,7 @@ export class HTTPOAuth2Client {
 
     constructor(
         protected options: HTTPOAuth2ClientOptions,
-        protected client?: ClientConfig | Client,
+        protected client?: Config | Client,
     ) {
         if (client instanceof Client) {
             this.httpClient = client;
