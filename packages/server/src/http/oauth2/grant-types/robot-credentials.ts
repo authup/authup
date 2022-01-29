@@ -27,12 +27,9 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             realm: entity.realm_id,
         });
 
-        const refreshToken = await this.issueRefreshToken(accessToken);
-
         const response = new OAuth2BearerTokenResponse({
             keyPairOptions: this.context.keyPairOptions,
             accessToken,
-            refreshToken,
         });
 
         return response.build();
