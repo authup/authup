@@ -46,15 +46,16 @@ export async function verifyOAuth2Token(
                 const cache : Cache<string> = redis ?
                     new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS }) :
                     undefined;
+                let cacheHit = false;
 
                 if (cache) {
                     entity = await cache.get(tokenPayload.access_token_id);
-                    if (entity) {
-                        entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
-                    }
                 }
 
-                if (!entity) {
+                if (entity) {
+                    cacheHit = true;
+                    entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                } else {
                     entity = await repository.findOne(tokenPayload.access_token_id);
 
                     if (typeof entity === 'undefined') {
@@ -66,6 +67,14 @@ export async function verifyOAuth2Token(
                     await repository.remove(entity);
 
                     throw TokenError.expired();
+                }
+
+                if (
+                    cache &&
+                    !cacheHit
+                ) {
+                    const seconds = Math.ceil((entity.expires.getTime() - Date.now()) / 1000);
+                    await cache.set(tokenPayload.access_token_id, entity, { seconds });
                 }
 
                 result = {
@@ -82,15 +91,16 @@ export async function verifyOAuth2Token(
                 const cache : Cache<string> = redis ?
                     new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH }) :
                     undefined;
+                let cacheHit = false;
 
                 if (cache) {
                     entity = await cache.get(tokenPayload.refresh_token_id);
-                    if (entity) {
-                        entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
-                    }
                 }
 
-                if (!entity) {
+                if (entity) {
+                    cacheHit = true;
+                    entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+                } else {
                     entity = await repository.findOne(tokenPayload.refresh_token_id);
 
                     if (typeof entity === 'undefined') {
@@ -102,6 +112,14 @@ export async function verifyOAuth2Token(
                     await repository.remove(entity);
 
                     throw TokenError.expired();
+                }
+
+                if (
+                    cache &&
+                    !cacheHit
+                ) {
+                    const seconds = Math.ceil((entity.expires.getTime() - Date.now()) / 1000);
+                    await cache.set(tokenPayload.refresh_token_id, entity, { seconds });
                 }
 
                 result = {

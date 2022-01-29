@@ -7,7 +7,7 @@
 
 import {
     AbilityManager,
-    AuthHeaderTypeUnsupported,
+    HeaderError,
     OAuth2TokenKind,
     OAuth2TokenSubKind,
     PermissionItem,
@@ -60,7 +60,7 @@ export async function verifyAuthorizationHeader(
             return;
         }
 
-        throw new AuthHeaderTypeUnsupported(header.type);
+        throw HeaderError.unsupportedHeaderType(header.type);
     }
 
     const token = await verifyOAuth2Token(

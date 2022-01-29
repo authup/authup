@@ -6,7 +6,7 @@
  */
 import { camelCase } from 'change-case';
 import { AbilityMeta } from '../type';
-import { AbilityMetaError } from '../../../error';
+import { AbilityError } from '../../../error';
 
 /**
  * Build ability-meta object from permission name.
@@ -14,7 +14,7 @@ import { AbilityMetaError } from '../../../error';
  * @param name
  * @param delimiter
  *
- * @throws AbilityMetaError
+ * @throws AbilityError
  */
 export function buildAbilityMetaFromName(
     name: string,
@@ -22,7 +22,7 @@ export function buildAbilityMetaFromName(
 ) : AbilityMeta {
     const parts : string[] = name.split(delimiter);
     if (parts.length < 2) {
-        throw new AbilityMetaError();
+        throw AbilityError.buildMeta();
     }
 
     const action : string | undefined = parts.pop();

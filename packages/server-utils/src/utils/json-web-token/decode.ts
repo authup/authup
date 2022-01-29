@@ -36,7 +36,7 @@ export async function decodeToken<T extends string | object | Buffer | Record<st
                 case 'NotBeforeError':
                     throw TokenError.notActiveBefore(e.date);
                 case 'JsonWebTokenError':
-                    throw TokenError.jwtInvalid(e.message);
+                    throw TokenError.payloadInvalid(e.message);
             }
         }
 

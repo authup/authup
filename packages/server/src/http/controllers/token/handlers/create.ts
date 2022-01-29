@@ -7,8 +7,7 @@
 
 /* istanbul ignore next */
 import {
-    OAuth2ServerError,
-    OAuth2TokenGrant, OAuth2TokenResponse,
+    OAuth2TokenGrant, OAuth2TokenResponse, TokenError,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
@@ -17,6 +16,14 @@ import { PasswordGrantType, RobotCredentialsGrantType } from '../../../oauth2';
 import { RefreshTokenGrantType } from '../../../oauth2/grant-types/refresh-token';
 import { ControllerOptions } from '../../type';
 
+/**
+ *
+ * @param req
+ * @param res
+ * @param context
+ *
+ * @throws TokenError
+ */
 export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
@@ -24,7 +31,7 @@ export async function createTokenRouteHandler(
 ) : Promise<any> {
     const grantType = determineRequestTokenGrantType(req);
     if (!grantType) {
-        throw OAuth2ServerError.invalidGrant();
+        throw TokenError.grantInvalid();
     }
 
     let grant : Grant | undefined;

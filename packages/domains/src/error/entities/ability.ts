@@ -6,11 +6,18 @@
  */
 
 import { BaseError, ErrorOptions, mergeErrorOptions } from '@typescript-error/core';
+import { ErrorCode } from '../constants';
 
-export class AbilityMetaError extends BaseError {
+export class AbilityError extends BaseError {
     constructor(options?: ErrorOptions) {
         super(mergeErrorOptions({
-            message: 'The ability meta could not be built.',
+            code: ErrorCode.ABILITY_INVALID,
         }, (options || {})));
+    }
+
+    static buildMeta() {
+        return new AbilityError({
+            message: 'The ability meta could not be built.',
+        });
     }
 }

@@ -7,7 +7,7 @@
 
 import {
     OAuth2RefreshTokenVerification,
-    OAuth2ServerError, OAuth2TokenKind,
+    OAuth2TokenKind,
     OAuth2TokenResponse, TokenError,
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
@@ -56,14 +56,14 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         }
 
         if (token.payload.expire_time < Date.now()) {
-            throw OAuth2ServerError.invalidRefreshToken();
+            throw TokenError.refreshTokenInvalid();
         }
 
         const repository = getRepository(OAuth2RefreshTokenEntity);
         const entity = await repository.findOne(token.payload.refresh_token_id);
 
         if (typeof entity === 'undefined') {
-            throw OAuth2ServerError.invalidRefreshToken();
+            throw TokenError.refreshTokenInvalid();
         } else {
             await repository.remove(entity);
         }

@@ -6,9 +6,8 @@
  */
 
 import {
-    OAuth2ServerError,
     OAuth2TokenSubKind,
-    determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
+    TokenError, determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
 } from '@typescript-auth/domains';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
 import { Cache } from 'redis-extension';
@@ -113,7 +112,7 @@ export abstract class AbstractGrant {
             const header = parseAuthorizationHeader(headerValue);
 
             if (header.type !== AuthorizationHeaderType.BASIC) {
-                throw OAuth2ServerError.invalidRequest();
+                throw TokenError.requestInvalid();
             }
 
             clientId = header.username;

@@ -7,7 +7,12 @@
 
 import { Cache, Client } from 'redis-extension';
 import {
-    OAuth2TokenSubKind, OAuth2TokenVerification, Robot, TokenVerificationPayload, User,
+    OAuth2TokenSubKind,
+    OAuth2TokenVerification,
+    Robot,
+    TokenError,
+    TokenVerificationPayload,
+    User,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
@@ -17,6 +22,14 @@ import {
 } from '../../../domains';
 import { CachePrefix } from '../../../config/constants';
 
+/**
+ *
+ * @param token
+ * @param context
+ *
+ * @throws TokenError
+ * @throws NotFoundError
+ */
 export async function extendOAuth2TokenVerification(
     token: OAuth2TokenVerification,
     context?: {
@@ -67,6 +80,10 @@ export async function extendOAuth2TokenVerification(
                 }
             }
 
+            if (!entity.active) {
+                throw TokenError.targetInactive(OAuth2TokenSubKind.ROBOT);
+            }
+
             let permissions = [];
 
             if (permissionCache) {
@@ -115,6 +132,10 @@ export async function extendOAuth2TokenVerification(
                 if (cache) {
                     await cache.set(entity.id, entity);
                 }
+            }
+
+            if (!entity.active) {
+                throw TokenError.targetInactive(OAuth2TokenSubKind.USER);
             }
 
             let permissions = [];

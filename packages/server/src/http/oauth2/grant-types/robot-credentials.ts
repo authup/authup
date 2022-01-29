@@ -6,9 +6,8 @@
  */
 
 import {
-    OAuth2ServerError,
     OAuth2TokenResponse,
-    OAuth2TokenSubKind,
+    OAuth2TokenSubKind, RobotError,
 } from '@typescript-auth/domains';
 import { getCustomRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
@@ -46,7 +45,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         const entity = await repository.verifyCredentials(id, secret);
 
         if (typeof entity === 'undefined') {
-            throw OAuth2ServerError.invalidCredentials();
+            throw RobotError.credentialsInvalid();
         }
 
         return entity;

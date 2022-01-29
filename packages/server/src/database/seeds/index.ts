@@ -103,6 +103,7 @@ export class DatabaseRootSeeder implements Seeder {
                 password: await hash(this.options.userPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
+                active: true,
             });
 
             response.user = user;

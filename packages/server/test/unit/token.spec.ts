@@ -47,7 +47,7 @@ describe('src/http/controllers/token', () => {
         expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
     });
 
-    it('should revoke token', async () => {
+    fit('should revoke token', async () => {
         let response = await superTest
             .post('/token')
             .send({
