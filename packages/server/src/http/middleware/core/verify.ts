@@ -80,7 +80,7 @@ export async function verifyAuthorizationHeader(
     request.token = header.token;
     request.realmId = token.entity.realm_id;
 
-    const tokenExtended = await extendOAuth2TokenVerification(token);
+    const tokenExtended = await extendOAuth2TokenVerification(token, { redis: options.redis });
 
     request.ability = new AbilityManager(tokenExtended.target.permissions);
 

@@ -53,7 +53,7 @@ export async function verifyTokenRouteHandler(
         },
     );
 
-    const response = await extendOAuth2TokenVerification(token);
+    const response = await extendOAuth2TokenVerification(token, { redis: options.redis });
 
     return res.respond({
         data: response,

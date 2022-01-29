@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenVerifyContext } from '@typescript-auth/server-utils';
 import { Cache, Client } from 'redis-extension';
 import {
     OAuth2TokenSubKind, OAuth2TokenVerification, Robot, TokenVerificationPayload, User,
@@ -20,10 +19,12 @@ import { CachePrefix } from '../../../config/constants';
 
 export async function extendOAuth2TokenVerification(
     token: OAuth2TokenVerification,
-    context?: TokenVerifyContext & {
-        redis: Client | boolean | string
+    context?: {
+        redis?: Client | boolean | string
     },
 ) {
+    context ??= {};
+
     const data : TokenVerificationPayload = {
         ...token,
     };
@@ -66,12 +67,10 @@ export async function extendOAuth2TokenVerification(
                 }
             }
 
-            data.target.entity = entity;
-
             let permissions = [];
 
             if (permissionCache) {
-                permissions = await cache.get(entity.id);
+                permissions = await permissionCache.get(entity.id);
             }
 
             if (!permissions) {
@@ -83,11 +82,15 @@ export async function extendOAuth2TokenVerification(
                 }
 
                 if (permissionCache) {
-                    await cache.set(entity.id, permissions);
+                    await permissionCache.set(entity.id, permissions);
                 }
             }
 
-            data.target.permissions = permissions || [];
+            data.target = {
+                kind: OAuth2TokenSubKind.ROBOT,
+                entity,
+                permissions: permissions || [],
+            };
             break;
         }
         case OAuth2TokenSubKind.USER: {
@@ -114,12 +117,10 @@ export async function extendOAuth2TokenVerification(
                 }
             }
 
-            data.target.entity = entity;
-
             let permissions = [];
 
             if (permissionCache) {
-                permissions = await cache.get(entity.id);
+                permissions = await permissionCache.get(entity.id);
             }
 
             if (!permissions) {
@@ -130,7 +131,11 @@ export async function extendOAuth2TokenVerification(
                 }
             }
 
-            data.target.permissions = permissions || [];
+            data.target = {
+                kind: OAuth2TokenSubKind.USER,
+                entity,
+                permissions: permissions || [],
+            };
         }
     }
 
