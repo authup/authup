@@ -51,10 +51,12 @@ export async function deleteTokenRouteHandler(
             id: token.payload.access_token_id,
         }));
 
-        await redis.del(buildKeyPath({
-            prefix: CachePrefix.TOKEN_REFRESH,
-            id: token.payload.refresh_token_id,
-        }));
+        if (token.payload.kind === OAuth2TokenKind.REFRESH) {
+            await redis.del(buildKeyPath({
+                prefix: CachePrefix.TOKEN_REFRESH,
+                id: token.payload.refresh_token_id,
+            }));
+        }
 
         await redis.del(buildKeyPath({
             prefix: CachePrefix.TOKEN_TARGET,
