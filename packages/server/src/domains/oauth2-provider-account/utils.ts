@@ -151,6 +151,7 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
             name_locked: nameLocked,
             display_name: name,
             realm_id: data.realm_id,
+            active: true,
         });
 
         await userRepository.insert(user);
