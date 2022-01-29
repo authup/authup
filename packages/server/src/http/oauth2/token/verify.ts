@@ -9,6 +9,7 @@ import {
     OAuth2AccessTokenPayload,
     OAuth2RefreshTokenPayload,
     OAuth2TokenKind,
+    OAuth2TokenVerification,
     TokenError,
 } from '@typescript-auth/domains';
 import { TokenVerifyContext, verifyToken } from '@typescript-auth/server-utils';
@@ -17,15 +18,15 @@ import { NotFoundError } from '@typescript-error/http';
 import { Cache, Client } from 'redis-extension';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { OAuth2TokenVerifyResult } from './type';
 import { useRedisClient } from '../../../utils';
+import { CachePrefix } from '../../../config/constants';
 
 export async function verifyOAuth2Token(
     token: string,
     context?: TokenVerifyContext & {
         redis?: Client | boolean | string
     },
-) : Promise<OAuth2TokenVerifyResult> {
+) : Promise<OAuth2TokenVerification> {
     const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
         token,
         context,
@@ -33,8 +34,9 @@ export async function verifyOAuth2Token(
 
     context ??= {};
     const redis = useRedisClient(context.redis);
+    const cache : Cache<string> = redis ? new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN }) : undefined;
 
-    let result : OAuth2TokenVerifyResult;
+    let result : OAuth2TokenVerification;
 
     if (!result) {
         switch (tokenPayload.kind) {
@@ -42,8 +44,7 @@ export async function verifyOAuth2Token(
                 const repository = getRepository(OAuth2AccessTokenEntity);
                 let entity : OAuth2AccessTokenEntity | undefined;
 
-                if (redis) {
-                    const cache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.ACCESS });
+                if (cache) {
                     entity = await cache.get(tokenPayload.access_token_id);
                     if (entity) {
                         entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
@@ -75,8 +76,7 @@ export async function verifyOAuth2Token(
                 const repository = getRepository(OAuth2RefreshTokenEntity);
                 let entity : OAuth2RefreshTokenEntity | undefined;
 
-                if (redis) {
-                    const cache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.REFRESH });
+                if (cache) {
                     entity = await cache.get(tokenPayload.refresh_token_id);
                     if (entity) {
                         entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);

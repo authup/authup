@@ -8,40 +8,50 @@
 import { User } from '../user';
 import { Robot } from '../robot';
 import {
-    OAuth2AccessToken,
-    OAuth2AccessTokenGrant,
-    OAuth2AccessTokenPayload,
+    OAuth2TokenGrant,
     OAuth2TokenSubKind,
 } from '../oauth2-access-token';
 import { PermissionItem } from '../permission';
-import { OAuth2RefreshToken, OAuth2RefreshTokenPayload } from '../oauth2-refresh-token';
+import { OAuth2TokenVerificationExtended } from '../oauth2';
 
 type TokenTargetRobot = {
-    type: `${OAuth2TokenSubKind.ROBOT}`,
-    data: Partial<User> & {
-        permissions: PermissionItem<any>[]
-    }
+    kind: `${OAuth2TokenSubKind.ROBOT}`,
+    entity: Robot,
+    permissions: PermissionItem[]
 };
 
 type TokenTargetUser = {
-    type: `${OAuth2TokenSubKind.USER}`,
-    data: Partial<Robot> & {
-        permissions: PermissionItem<any>[]
-    }
+    kind: `${OAuth2TokenSubKind.USER}`,
+    entity: User,
+    permissions: PermissionItem[]
 };
 
-export type TokenVerificationPayload = {
-    payload: OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload,
-    entity: OAuth2AccessToken | OAuth2RefreshToken,
-    target: TokenTargetRobot | TokenTargetUser
-};
+export type TokenVerificationPayload = OAuth2TokenVerificationExtended<TokenTargetRobot | TokenTargetUser>;
 
-export type TokenGrantPayload = {
+// ------------------------------------------------------
+
+export type TokenPasswordGrantPayload = {
+    grant_type?: OAuth2TokenGrant.PASSWORD,
     username: string,
     password: string
 };
 
-export type TokenGrantType = `${OAuth2AccessTokenGrant}`;
+export type TokenRefreshTokenGrantPayload = {
+    grant_type?: OAuth2TokenGrant.REFRESH_TOKEN,
+    refresh_token: string
+};
+
+export type TokenRobotCredentialsGrantPayload = {
+    grant_type?: OAuth2TokenGrant.ROBOT_CREDENTIALS,
+    id: string,
+    secret: string
+};
+
+export type TokenGrantPayload = TokenPasswordGrantPayload |
+TokenRefreshTokenGrantPayload |
+TokenRobotCredentialsGrantPayload;
+
+// ------------------------------------------------------
 
 export type TokenMaxAgeType = number | {
     accessToken?: number,

@@ -7,7 +7,7 @@
 
 import {
     OAuth2ServerError,
-    OAuth2TokenKind, OAuth2TokenSubKind,
+    OAuth2TokenSubKind,
     determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
 } from '@typescript-auth/domains';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
@@ -17,13 +17,12 @@ import { GrantContext, IssueAccessTokenContext } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { useRedisClient } from '../../../utils';
+import { CachePrefix } from '../../../config/constants';
 
 export abstract class AbstractGrant {
     protected context : GrantContext;
 
-    protected accessTokenCache : Cache<string> | undefined;
-
-    protected refreshTokenCache : Cache<string> | undefined;
+    protected tokenCache : Cache<string>;
 
     constructor(context: GrantContext) {
         this.context = context;
@@ -34,12 +33,11 @@ export abstract class AbstractGrant {
     // -----------------------------------------------------
 
     private initCache() {
-        if (!this.context.redis || this.accessTokenCache || this.refreshTokenCache) return;
+        if (!this.context.redis || this.tokenCache) return;
 
         const redis = useRedisClient(this.context.redis);
         if (redis) {
-            this.accessTokenCache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.ACCESS });
-            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: OAuth2TokenKind.REFRESH });
+            this.tokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN });
         }
     }
 
@@ -74,8 +72,8 @@ export abstract class AbstractGrant {
 
         const token = await tokenBuilder.create();
 
-        if (this.accessTokenCache) {
-            await this.accessTokenCache.set(token.id, token, { seconds: maxAge });
+        if (this.tokenCache) {
+            await this.tokenCache.set(token.id, token, { seconds: maxAge });
         }
 
         return token;
@@ -91,8 +89,8 @@ export abstract class AbstractGrant {
 
         const token = await tokenBuilder.create();
 
-        if (this.refreshTokenCache) {
-            await this.refreshTokenCache.set(token.id, token, { seconds: maxAge });
+        if (this.tokenCache) {
+            await this.tokenCache.set(token.id, token, { seconds: maxAge });
         }
 
         return token;

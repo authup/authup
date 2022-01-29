@@ -6,8 +6,10 @@
  */
 
 import {
-    AbilityManager, CookieName, Robot, TokenAPI,
-    TokenVerificationPayload, User,
+    AbilityManager,
+    CookieName,
+    TokenAPI,
+    TokenVerificationPayload,
 } from '@typescript-auth/domains';
 import { BadRequestError } from '@typescript-error/http';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
@@ -67,22 +69,20 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             return;
         }
 
-        const { permissions, ...entity } = data.target.data;
-
-        switch (data.target.type) {
+        switch (data.target.kind) {
             case 'robot':
-                req.robotId = entity.id as Robot['id'];
-                req.robot = entity as Robot;
+                req.robotId = data.target.entity.id;
+                req.robot = data.target.entity;
                 break;
             case 'user':
-                req.userId = entity.id as User['id'];
-                req.user = entity as User;
+                req.userId = data.target.entity.id;
+                req.user = data.target.entity;
                 break;
         }
 
         req.token = header.token;
-        req.permissions = permissions;
-        req.ability = new AbilityManager(permissions);
+        req.permissions = data.target.permissions;
+        req.ability = new AbilityManager(data.target.permissions);
 
         next();
     };

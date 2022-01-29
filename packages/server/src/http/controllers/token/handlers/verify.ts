@@ -5,16 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
 import {
-    OAuth2TokenSubKind, PermissionID, TokenVerificationPayload,
+    PermissionID,
 } from '@typescript-auth/domains';
 import {
-    ForbiddenError, NotFoundError, UnauthorizedError,
+    ForbiddenError, NotFoundError,
 } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { RobotRepository, UserRepository } from '../../../../domains';
-import { verifyOAuth2Token } from '../../../oauth2';
+import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../../oauth2';
 import { ControllerOptions } from '../../type';
 
 export async function verifyTokenRouteHandler(
@@ -55,59 +53,7 @@ export async function verifyTokenRouteHandler(
         },
     );
 
-    const response : TokenVerificationPayload = {
-        payload: token.payload,
-        entity: token.entity,
-        target: {
-            type: token.payload.sub_kind,
-            data: undefined,
-        },
-    };
-
-    switch (token.payload.sub_kind) {
-        case OAuth2TokenSubKind.ROBOT: {
-            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
-            const robot = await robotRepository.findOne(token.payload.sub);
-
-            if (typeof robot === 'undefined') {
-                throw new UnauthorizedError();
-            }
-
-            let permissions = [];
-
-            if (robot.user_id) {
-                const userRepository = getCustomRepository<UserRepository>(UserRepository);
-                permissions = await userRepository.getOwnedPermissions(robot.user_id);
-            } else {
-                permissions = await robotRepository.getOwnedPermissions(robot.id);
-            }
-
-            response.target.data = {
-                ...robot,
-                permissions,
-            };
-            break;
-        }
-        case OAuth2TokenSubKind.USER: {
-            const userRepository = getCustomRepository<UserRepository>(UserRepository);
-            const userQuery = userRepository.createQueryBuilder('user')
-                .addSelect('user.email')
-                .where('user.id = :id', { id: token.payload.sub });
-
-            const user = await userQuery.getOne();
-
-            if (typeof user === 'undefined') {
-                throw new UnauthorizedError();
-            }
-
-            const permissions = await userRepository.getOwnedPermissions(user.id);
-
-            response.target.data = {
-                ...user,
-                permissions,
-            };
-        }
-    }
+    const response = await extendOAuth2TokenVerification(token);
 
     return res.respond({
         data: response,

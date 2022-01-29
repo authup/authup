@@ -6,6 +6,7 @@
  */
 
 import {
+    OAuth2RefreshTokenVerification,
     OAuth2ServerError, OAuth2TokenKind,
     OAuth2TokenResponse, TokenError,
 } from '@typescript-auth/domains';
@@ -15,8 +16,7 @@ import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { Grant } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { verifyOAuth2Token } from '../utils';
-import { OAuth2RefreshTokenVerifyResult } from '../utils/type';
+import { verifyOAuth2Token } from '../token';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run() : Promise<OAuth2TokenResponse> {
@@ -41,7 +41,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate() : Promise<OAuth2RefreshTokenVerifyResult> {
+    async validate() : Promise<OAuth2RefreshTokenVerification> {
         const { refresh_token: refreshToken } = this.context.request.body;
 
         const token = await verifyOAuth2Token(

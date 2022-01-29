@@ -14,3 +14,11 @@ export enum ConfigDefault {
 }
 
 export const ROOT_DIRECTORY = path.join(__dirname, '..', '..');
+
+// ----------------------------------------------------------
+
+export enum CachePrefix {
+    TOKEN = 'token',
+    TOKEN_TARGET = 'token_target',
+    TOKEN_TARGET_PERMISSIONS = 'token_target_permissions',
+}

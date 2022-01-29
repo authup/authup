@@ -33,22 +33,20 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        const { permissions, ...entity } = data.target.data;
-
-        switch (data.target.type) {
+        switch (data.target.kind) {
             case 'robot':
-                socket.data.robotId = entity.id;
-                socket.data.robot = entity;
+                socket.data.robotId = data.target.entity.id;
+                socket.data.robot = data.target.entity;
                 break;
             case 'user':
-                socket.data.userId = entity.id;
-                socket.data.user = entity;
+                socket.data.userId = data.target.entity.id;
+                socket.data.user = data.target.entity;
                 break;
         }
 
         socket.data.token = token;
-        socket.data.permissions = permissions;
-        socket.data.ability = new AbilityManager(permissions);
+        socket.data.permissions = data.target.permissions;
+        socket.data.ability = new AbilityManager(data.target.permissions);
 
         return next();
     };

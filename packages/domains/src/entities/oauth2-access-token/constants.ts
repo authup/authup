@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum OAuth2AccessTokenGrant {
+export enum OAuth2TokenGrant {
     PASSWORD = 'password',
     ROBOT_CREDENTIALS = 'robot_credentials',
     REFRESH_TOKEN = 'refresh_token',

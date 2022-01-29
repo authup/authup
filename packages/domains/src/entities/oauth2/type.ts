@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from './constants';
+import { OAuth2AccessTokenVerification } from '../oauth2-access-token';
+import { OAuth2RefreshTokenVerification } from '../oauth2-refresh-token';
 
 export type OAuth2TokenResponse = {
     access_token: string,
@@ -25,4 +26,12 @@ export type OAuth2TokenResponse = {
     scope?: string
 };
 
-export type Oauth2TokenType = `${OAuth2TokenKind}`;
+// -----------------------------------------------------------------
+
+export type OAuth2TokenVerification = OAuth2AccessTokenVerification |
+OAuth2RefreshTokenVerification;
+
+export type OAuth2TokenVerificationExtended<T extends Record<string, any>> =
+    OAuth2TokenVerification & {
+        target?: T
+    };

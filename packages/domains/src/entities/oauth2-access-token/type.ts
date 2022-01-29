@@ -11,6 +11,7 @@ import { Robot } from '../robot';
 import { OAuth2TokenKind } from '../oauth2';
 import { JWTPayload } from '../json-web-token';
 import { Realm } from '../realm';
+import { OAuth2TokenGrant } from './constants';
 
 export interface OAuth2AccessToken {
     id: string,
@@ -45,4 +46,12 @@ export type OAuth2AccessTokenPayload = JWTPayload & {
     kind: `${OAuth2TokenKind.ACCESS}`,
 
     access_token_id: OAuth2AccessToken['id'],
+};
+
+export type OAuth2TokenGrantType = `${OAuth2TokenGrant}`;
+
+export type OAuth2AccessTokenVerification = {
+    kind: OAuth2TokenKind.ACCESS,
+    entity: OAuth2AccessToken,
+    payload: OAuth2AccessTokenPayload
 };

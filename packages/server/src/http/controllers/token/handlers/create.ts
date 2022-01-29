@@ -7,8 +7,8 @@
 
 /* istanbul ignore next */
 import {
-    OAuth2AccessTokenGrant,
-    OAuth2ServerError, OAuth2TokenResponse,
+    OAuth2ServerError,
+    OAuth2TokenGrant, OAuth2TokenResponse,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
@@ -40,15 +40,15 @@ export async function createTokenRouteHandler(
     };
 
     switch (grantType) {
-        case OAuth2AccessTokenGrant.ROBOT_CREDENTIALS: {
+        case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
             grant = new RobotCredentialsGrantType(grantContext);
             break;
         }
-        case OAuth2AccessTokenGrant.PASSWORD: {
+        case OAuth2TokenGrant.PASSWORD: {
             grant = new PasswordGrantType(grantContext);
             break;
         }
-        case OAuth2AccessTokenGrant.REFRESH_TOKEN: {
+        case OAuth2TokenGrant.REFRESH_TOKEN: {
             grant = new RefreshTokenGrantType(grantContext);
             break;
         }

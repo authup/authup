@@ -40,3 +40,9 @@ export type OAuth2RefreshTokenPayload = JWTPayload & {
 
     refresh_token_id: OAuth2AccessToken['id'],
 };
+
+export type OAuth2RefreshTokenVerification = {
+    kind: OAuth2TokenKind.REFRESH,
+    entity: OAuth2RefreshToken,
+    payload: OAuth2RefreshTokenPayload
+};

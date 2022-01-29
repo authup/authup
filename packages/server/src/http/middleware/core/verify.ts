@@ -9,7 +9,8 @@ import {
     AbilityManager,
     AuthHeaderTypeUnsupported,
     OAuth2TokenKind,
-    OAuth2TokenSubKind, PermissionItem,
+    OAuth2TokenSubKind,
+    PermissionItem,
     TokenError,
 } from '@typescript-auth/domains';
 import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
@@ -17,8 +18,10 @@ import { Client } from 'redis-extension';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { verifyOAuth2Token } from '../../oauth2';
-import { RobotRepository, UserRepository } from '../../../domains';
+import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
+import {
+    RobotEntity, UserEntity, UserRepository,
+} from '../../../domains';
 
 export async function verifyAuthorizationHeader(
     request: ExpressRequest,
@@ -74,46 +77,24 @@ export async function verifyAuthorizationHeader(
         throw TokenError.accessTokenRequired();
     }
 
+    request.token = header.token;
     request.realmId = token.entity.realm_id;
 
-    switch (token.payload.sub_kind) {
+    const tokenExtended = await extendOAuth2TokenVerification(token);
+
+    request.ability = new AbilityManager(tokenExtended.target.permissions);
+
+    switch (tokenExtended.target.kind) {
         case OAuth2TokenSubKind.USER: {
-            const entity = await userRepository.findOne(token.entity.user_id);
-
-            if (typeof entity === 'undefined') {
-                throw new NotFoundError();
-            }
-
-            request.user = entity;
-            request.userId = entity.id;
-
-            permissions = await userRepository.getOwnedPermissions(token.entity.user_id);
+            request.user = tokenExtended.target.entity as UserEntity;
+            request.userId = tokenExtended.target.entity.id;
             break;
         }
         case OAuth2TokenSubKind.ROBOT: {
-            const repository = getCustomRepository<RobotRepository>(RobotRepository);
-            const entity = await repository.findOne(token.entity.robot_id);
-
-            if (typeof entity === 'undefined') {
-                throw new NotFoundError();
-            }
-
-            if (entity.user_id) {
-                permissions = await userRepository.getOwnedPermissions(entity.user_id);
-            } else {
-                permissions = await repository.getOwnedPermissions(entity.id);
-            }
-
-            request.userId = entity.user_id;
-            request.robot = entity;
-            request.robotId = entity.id;
+            request.robot = tokenExtended.target.entity as RobotEntity;
+            request.robotId = tokenExtended.target.entity.id;
+            request.userId = tokenExtended.target.entity.user_id;
             break;
         }
     }
-
-    if (header.type === AuthorizationHeaderType.BEARER) {
-        request.token = header.token;
-    }
-
-    request.ability = new AbilityManager(permissions);
 }

@@ -4,11 +4,14 @@ import {
 } from '@typescript-auth/domains';
 import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2AccessTokenEntity } from '../../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../../domains/oauth2-refresh-token';
 import { verifyOAuth2Token } from '../../../oauth2';
 import { ControllerOptions } from '../../type';
+import { useRedisClient } from '../../../../utils';
+import { CachePrefix } from '../../../../config/constants';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
@@ -40,12 +43,29 @@ export async function deleteTokenRouteHandler(
         redis: options.redis,
     });
 
+    const redis = useRedisClient(options.redis);
+
+    if (redis) {
+        await redis.del(buildKeyPath({
+            prefix: CachePrefix.TOKEN,
+            id: token.entity.id,
+        }));
+
+        await redis.del(buildKeyPath({
+            prefix: CachePrefix.TOKEN_TARGET,
+            id: token.payload.sub,
+        }));
+
+        await redis.del(buildKeyPath({
+            prefix: CachePrefix.TOKEN_TARGET_PERMISSIONS,
+            id: token.payload.sub,
+        }));
+    }
+
     switch (token.kind) {
         case OAuth2TokenKind.ACCESS: {
             const repository = getRepository(OAuth2AccessTokenEntity);
-            await repository.remove(token.entity);
-
-            // todo: remove token from cache ;)
+            await repository.remove(token.entity as OAuth2AccessTokenEntity);
 
             return res.respondDeleted({
                 data: token.entity,
@@ -53,9 +73,7 @@ export async function deleteTokenRouteHandler(
         }
         case OAuth2TokenKind.REFRESH: {
             const repository = getRepository(OAuth2RefreshTokenEntity);
-            await repository.remove(token.entity);
-
-            // todo: remove token from cache ;)
+            await repository.remove(token.entity as OAuth2RefreshTokenEntity);
 
             return res.respondDeleted({
                 data: token.entity,
