@@ -109,6 +109,7 @@ export class DatabaseRootSeeder implements Seeder {
             response.user = user;
         } else if (this.options.userPasswordReset) {
             user.password = await hash(this.options.userPassword);
+            user.active = true;
         }
 
         await userRepository.save(user);

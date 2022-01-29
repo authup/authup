@@ -15,11 +15,11 @@ export async function removeExpiredOAuth2Tokens() {
 
     await accessTokenRepository
         .delete({
-            expires: LessThan((new Date()).toISOString()),
+            expires: LessThan(new Date()),
         });
 
     await refreshTokenRepository
         .delete({
-            expires: LessThan((new Date()).toISOString()),
+            expires: LessThan(new Date()),
         });
 }
