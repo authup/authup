@@ -18,8 +18,14 @@ The `Readme.md` is under construction ☂ at the moment. So please stay patient,
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Server](#server)
+  - [Standalone](#standalone)
+    - [Config](#config)
+    - [Setup](#setup)
+    - [Start](#start)
   - [Extension](#extension)
+    - [HTTP](#http)
+    - [Database](#database)
+    - [Aggregators](#aggregators)
   
 ## Installation
 
@@ -29,7 +35,7 @@ npm install @typescript-auth/server --save
 
 ## Usage
 
-### Server
+### Standalone
 
 #### Config
 
@@ -143,11 +149,8 @@ app.listen(3010);
 ```
 
 #### Database
-To register the domain entities for the **typeorm** connection, there are two possible opportunities to do this 🔥.
-
-**First Opportunity**
-
-Simply set **all** entities for the connection options, with a utility function.
+To register the domain entities for the **typeorm** connection, 
+simply set **all** entities for the connection options, with a utility function.
 
 ```typescript
 import { setEntitiesForConnectionOptions } from "@typescript-auth/server";
@@ -165,70 +168,25 @@ import {
 })();
 ```
 
-**Second Opportunity**
-
-The second opportunity, is to add the entities individually to the ConnectionOptions object:
-
-```typescript
-import {
-    setEntitiesForConnectionOptions,
-    OAuth2ProviderEntity,
-    OAuth2ProviderAccountEntity,
-    OAuth2ProviderRoleEntity,
-    PermissionEntity,
-    RealmEntity,
-    RobotEntity,
-    RobotPermissionEntity,
-    RobotRoleEntity,
-    RoleEntity,
-    RolePermissionEntity,
-    UserEntity,
-    UserPermissionEntity,
-    UserRoleEntity,
-} from "@typescript-auth/server";
-import {
-    createConnection,
-    buildConnectionOptions
-} from 'typeorm';
-
-(async () => {
-    const connectionOptions = await buildConnectionOptions();
-
-    connectionOptions = {
-        ...connectionOptions,
-        entities: [
-            OAuth2ProviderEntity,
-            OAuth2ProviderAccountEntity,
-            OAuth2ProviderRoleEntity,
-            PermissionEntity,
-            RealmEntity,
-            RobotEntity,
-            RobotPermissionEntity,
-            RobotRoleEntity,
-            RoleEntity,
-            RolePermissionEntity,
-            UserEntity,
-            UserPermissionEntity,
-            UserRoleEntity,
-            ...(connectionOptions.entities ? connectionOptions.entities : []),
-        ],
-    };
-
-    const connection = await createConnection(connectionOptions);
-})();
-```
-
 ---
 
 Another important thing, is to seed the database. To do that, run the database seeder after
 registering the domain entities and creating a connection ⚡.
 
 ```typescript
-import { DatabaseRootSeeder } from "@typescript-auth/server";
-import { createConnection } from 'typeorm';
+import { DatabaseRootSeeder, setEntitiesForConnectionOptions } from "@typescript-auth/server";
+import { 
+    createConnection,
+    buildConnectionOptions 
+} from 'typeorm';
 
 (async () => {
-    const connection = await createConnection();
+    const connectionOptions = await buildConnectionOptions();
+
+    setEntitiesForConnectionOptions(connectionOptions);
+    const connection = await createConnection(connectionOptions);
+    
+    // ------------------------------------
 
     const seeder = new DatabaseRootSeeder({
         userName: 'admin',
@@ -238,5 +196,37 @@ import { createConnection } from 'typeorm';
     await seeder.run(connection);
 
     
+})();
+```
+#### Aggregators
+
+The last step after registering the http (controllers & middleware)- & database-module, is
+to start the token aggregator.
+The aggregator will remove all expired database tokens (access_tokens & refresh_tokens) from the database on startup.
+In addition, it will listen for expired token events from the redis store, to remove the corresponding database entries. 
+
+```typescript
+import {DatabaseRootSeeder, setEntitiesForConnectionOptions} from "@typescript-auth/server";
+import {
+    createConnection,
+    buildConnectionOptions
+} from 'typeorm';
+import {buildTokenAggregator} from "@typescript-auth/server/src";
+import {useClient} from "redis-extension";
+
+(async () => {
+    const connectionOptions = await buildConnectionOptions();
+
+    setEntitiesForConnectionOptions(connectionOptions);
+    const connection = await createConnection(connectionOptions);
+
+    // ------------------------------------
+
+    // init redis client
+    const redis = useClient();
+    
+    const { start } = buildTokenAggregator(redis);
+
+    await start();
 })();
 ```

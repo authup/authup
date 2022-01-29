@@ -12,6 +12,7 @@ import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
+import { buildTokenAggregator } from '../aggregators';
 
 export async function startCommand(context: StartCommandContext) {
     const spinner = ora.default({
@@ -50,6 +51,13 @@ export async function startCommand(context: StartCommandContext) {
     }
 
     spinner.succeed('Established database connection.');
+
+    spinner.start('Build & start token aggregator.');
+    const { start } = buildTokenAggregator(context.config.redis);
+
+    await start();
+
+    spinner.succeed('Built & started token aggregator.');
 
     httpServer.listen(context.config.port, '0.0.0.0', () => {
         spinner.succeed('Startup completed.');

@@ -9,7 +9,7 @@ import { LessThan, getRepository } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 
-export async function runOAuthToken2Cleaner() {
+export async function removeExpiredOAuth2Tokens() {
     const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
     const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
 

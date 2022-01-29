@@ -18,7 +18,8 @@ export const ROOT_DIRECTORY = path.join(__dirname, '..', '..');
 // ----------------------------------------------------------
 
 export enum CachePrefix {
-    TOKEN = 'token',
+    TOKEN_ACCESS = 'token_access',
+    TOKEN_REFRESH = 'token_refresh',
     TOKEN_TARGET = 'token_target',
     TOKEN_TARGET_PERMISSIONS = 'token_target_permissions',
 }

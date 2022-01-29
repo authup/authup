@@ -34,7 +34,6 @@ export async function verifyOAuth2Token(
 
     context ??= {};
     const redis = useRedisClient(context.redis);
-    const cache : Cache<string> = redis ? new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN }) : undefined;
 
     let result : OAuth2TokenVerification;
 
@@ -43,6 +42,10 @@ export async function verifyOAuth2Token(
             case OAuth2TokenKind.ACCESS: {
                 const repository = getRepository(OAuth2AccessTokenEntity);
                 let entity : OAuth2AccessTokenEntity | undefined;
+
+                const cache : Cache<string> = redis ?
+                    new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS }) :
+                    undefined;
 
                 if (cache) {
                     entity = await cache.get(tokenPayload.access_token_id);
@@ -75,6 +78,10 @@ export async function verifyOAuth2Token(
             case OAuth2TokenKind.REFRESH: {
                 const repository = getRepository(OAuth2RefreshTokenEntity);
                 let entity : OAuth2RefreshTokenEntity | undefined;
+
+                const cache : Cache<string> = redis ?
+                    new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH }) :
+                    undefined;
 
                 if (cache) {
                     entity = await cache.get(tokenPayload.refresh_token_id);

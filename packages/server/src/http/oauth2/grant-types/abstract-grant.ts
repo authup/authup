@@ -22,7 +22,9 @@ import { CachePrefix } from '../../../config/constants';
 export abstract class AbstractGrant {
     protected context : GrantContext;
 
-    protected tokenCache : Cache<string>;
+    protected accessTokenCache : Cache<string>;
+
+    protected refreshTokenCache : Cache<string>;
 
     constructor(context: GrantContext) {
         this.context = context;
@@ -33,11 +35,12 @@ export abstract class AbstractGrant {
     // -----------------------------------------------------
 
     private initCache() {
-        if (!this.context.redis || this.tokenCache) return;
+        if (!this.context.redis || this.accessTokenCache) return;
 
         const redis = useRedisClient(this.context.redis);
         if (redis) {
-            this.tokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN });
+            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
+            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
         }
     }
 
@@ -72,8 +75,8 @@ export abstract class AbstractGrant {
 
         const token = await tokenBuilder.create();
 
-        if (this.tokenCache) {
-            await this.tokenCache.set(token.id, token, { seconds: maxAge });
+        if (this.accessTokenCache) {
+            await this.accessTokenCache.set(token.id, token, { seconds: maxAge });
         }
 
         return token;
@@ -89,8 +92,8 @@ export abstract class AbstractGrant {
 
         const token = await tokenBuilder.create();
 
-        if (this.tokenCache) {
-            await this.tokenCache.set(token.id, token, { seconds: maxAge });
+        if (this.refreshTokenCache) {
+            await this.refreshTokenCache.set(token.id, token, { seconds: maxAge });
         }
 
         return token;

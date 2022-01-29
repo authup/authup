@@ -5,28 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache, Client, useClient } from 'redis-extension';
+import { Cache, Client } from 'redis-extension';
 import { getRepository } from 'typeorm';
-import { OAuth2TokenKind } from '@typescript-auth/domains';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { useRedisClient } from '../../../utils';
+import { CachePrefix } from '../../../config/constants';
 
-export async function startOAuth2TokenWatcher(redis: Client | boolean) {
+export async function startOAuth2TokenWatcher(redis?: Client | boolean | string) {
+    redis = useRedisClient(redis);
+
     if (!redis) {
         return;
     }
-
-    const client : Client = typeof redis === 'boolean' ?
-        useClient() :
-        redis;
 
     // -------------------------------------------------
 
     const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
     const accessTokenCache = new Cache<string>({
-        redis: client,
+        redis,
     }, {
-        prefix: OAuth2TokenKind.ACCESS,
+        prefix: CachePrefix.TOKEN_ACCESS,
     });
     accessTokenCache.on('expired', async (data) => {
         await accessTokenRepository.delete(data.id);
@@ -36,9 +35,9 @@ export async function startOAuth2TokenWatcher(redis: Client | boolean) {
 
     const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
     const refreshTokenCache = new Cache<string>({
-        redis: client,
+        redis,
     }, {
-        prefix: OAuth2TokenKind.REFRESH,
+        prefix: CachePrefix.TOKEN_REFRESH,
     });
     refreshTokenCache.on('expired', async (data) => {
         await refreshTokenRepository.delete(data.id);

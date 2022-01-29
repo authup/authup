@@ -47,8 +47,13 @@ export async function deleteTokenRouteHandler(
 
     if (redis) {
         await redis.del(buildKeyPath({
-            prefix: CachePrefix.TOKEN,
-            id: token.entity.id,
+            prefix: CachePrefix.TOKEN_ACCESS,
+            id: token.payload.access_token_id,
+        }));
+
+        await redis.del(buildKeyPath({
+            prefix: CachePrefix.TOKEN_REFRESH,
+            id: token.payload.refresh_token_id,
         }));
 
         await redis.del(buildKeyPath({
