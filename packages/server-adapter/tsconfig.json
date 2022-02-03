@@ -3,8 +3,7 @@
     "compilerOptions": {
         "lib": ["dom", "ES6"],
         "paths": {
-            "@typescript-auth/domains": ["./packages/domains/src"],
-            "@typescript-auth/server-utils": ["./packages/server-utils/src"]
+            "@typescript-auth/domains": ["./packages/domains/src"]
         }
     }
 }
