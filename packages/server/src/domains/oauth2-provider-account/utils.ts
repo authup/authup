@@ -6,6 +6,7 @@
  */
 
 import {
+    KeycloakJWTPayload,
     OAuth2Provider,
     OAuth2ProviderAccount,
     OAuth2TokenResponse,
@@ -15,7 +16,6 @@ import {
     isValidUserName,
 } from '@typescript-auth/domains';
 import { getCustomRepository, getRepository } from 'typeorm';
-import { KeycloakJWTPayload } from '@typescript-auth/domains/src/entities/third-party';
 import { string } from 'yargs';
 import { decodeToken } from '@typescript-auth/server-utils';
 import { UserEntity, UserRepository } from '../user';

@@ -10,8 +10,7 @@ import {
     PermissionID, User, isValidUserName,
 } from '@typescript-auth/domains';
 import { BadRequestError } from '@typescript-error/http';
-import { matchedValidationData } from '../../../../utils';
-import { ExpressValidationError } from '../../../error/validation';
+import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
 
 export async function runUserValidation(

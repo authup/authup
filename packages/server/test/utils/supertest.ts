@@ -7,8 +7,7 @@
 
 import path from 'path';
 import supertest, { SuperTest, Test } from 'supertest';
-import { createExpressApp } from '../../src/http/express';
-import { useConfig } from '../../src/config';
+import { createExpressApp, useConfig } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
     const config = useConfig();

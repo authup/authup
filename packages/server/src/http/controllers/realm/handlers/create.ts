@@ -12,7 +12,7 @@ import {
     PermissionID, Realm,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
+import { ExpressValidationError } from '../../../express-validation';
 import { runRealmValidation } from './utils';
 import { RealmEntity } from '../../../../domains';
 

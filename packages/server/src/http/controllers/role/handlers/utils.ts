@@ -10,7 +10,7 @@ import {
 } from '@typescript-auth/domains';
 import { check, matchedData, validationResult } from 'express-validator';
 import { BadRequestError } from '@typescript-error/http';
-import { ExpressValidationError } from '../../../error/validation';
+import { ExpressValidationError } from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
 
 export async function runRoleValidation(

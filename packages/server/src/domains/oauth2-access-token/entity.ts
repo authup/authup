@@ -9,9 +9,9 @@ import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2Client, Realm, Robot, User,
+    OAuth2AccessToken, OAuth2Client, Realm, Robot,
+    User,
 } from '@typescript-auth/domains';
-import { OAuth2AccessToken } from '@typescript-auth/domains/src/entities/oauth2-access-token';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
 import { OAuth2ClientEntity } from '../oauth2-client';

@@ -4,7 +4,7 @@ import {
     PermissionID,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { RobotEntity } from '../../../../domains';
+import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
 
 export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -30,6 +30,11 @@ export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressR
     }
 
     await repository.remove(entity);
+
+    useRobotEventEmitter()
+        .emit('deleted', {
+            ...entity,
+        });
 
     return res.respondDeleted({
         data: entity,

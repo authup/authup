@@ -13,11 +13,14 @@ import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
 import { buildTokenAggregator } from '../aggregators';
+import { useConfig } from '../config';
 
 export async function startCommand(context: StartCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
+
+    context.config ??= useConfig();
 
     spinner.info(`Environment: ${context.config.env}`);
     spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);

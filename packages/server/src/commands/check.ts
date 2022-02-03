@@ -9,11 +9,14 @@ import * as ora from 'ora';
 import { createConnection } from 'typeorm';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
 import { CheckCommandContext } from './type';
+import { useConfig } from '../config';
 
 export async function checkCommand(context: CheckCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
+
+    context.config ??= useConfig();
 
     spinner.start('Establish database connection.');
 

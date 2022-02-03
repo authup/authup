@@ -10,6 +10,7 @@ import * as ora from 'ora';
 import { UpgradeCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
 import { migrationGenerateCommand } from './migration';
+import { useConfig } from '../config';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     const spinner = ora.default({
@@ -17,6 +18,8 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
     });
 
     spinner.start('Establish database connection.');
+
+    context.config ??= useConfig();
 
     const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
 

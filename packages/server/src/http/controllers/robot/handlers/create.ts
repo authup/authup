@@ -44,6 +44,11 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
             secret,
         });
 
+    useRobotEventEmitter()
+        .emit('created', {
+            ...entity,
+        });
+
     return res.respondCreated({
         data: entity,
     });

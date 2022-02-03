@@ -8,8 +8,7 @@
 import { check, validationResult } from 'express-validator';
 import { Robot } from '@typescript-auth/domains';
 import { ExpressRequest } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
-import { matchedValidationData } from '../../../../utils';
+import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
 
 export async function runClientValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<Partial<Robot>> {
     await check('secret')

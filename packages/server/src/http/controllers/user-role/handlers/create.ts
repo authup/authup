@@ -10,7 +10,7 @@ import { NotFoundError } from '@typescript-error/http';
 import { check, matchedData, validationResult } from 'express-validator';
 import { PermissionID, UserRole } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
+import { ExpressValidationError } from '../../../express-validation';
 import { UserRoleEntity } from '../../../../domains';
 
 export async function createUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

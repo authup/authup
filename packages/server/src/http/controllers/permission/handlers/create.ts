@@ -11,7 +11,7 @@ import { check, matchedData, validationResult } from 'express-validator';
 import {
     Permission, PermissionID,
 } from '@typescript-auth/domains';
-import { ExpressValidationError } from '../../../error/validation';
+import { ExpressValidationError } from '../../../express-validation';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { PermissionEntity } from '../../../../domains';
 

@@ -12,8 +12,7 @@ import {
     MASTER_REALM_ID, OAuth2Provider, PermissionID, Realm,
 } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../error/validation';
-import { matchedValidationData } from '../../../../utils/express-validator';
+import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
 import { runOauth2ProviderValidation } from './utils';
 import { OAuth2ProviderEntity, RealmEntity } from '../../../../domains';
 
