@@ -6,6 +6,7 @@
  */
 
 import path from 'path';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import supertest, { SuperTest, Test } from 'supertest';
 import { createExpressApp, useConfig } from '../../src';
 

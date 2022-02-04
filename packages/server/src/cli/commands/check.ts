@@ -33,6 +33,7 @@ export class CheckCommand implements CommandModule {
             await checkCommand({ config });
             process.exit(0);
         } catch (e) {
+            // eslint-disable-next-line no-console
             console.log(e);
             process.exit(0);
         }

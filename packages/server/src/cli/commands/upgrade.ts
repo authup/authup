@@ -39,6 +39,7 @@ export class UpgradeCommand implements CommandModule {
 
             process.exit(0);
         } catch (e) {
+            // eslint-disable-next-line no-console
             console.log(e);
 
             process.exit(1);
