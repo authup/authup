@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, User } from '@typescript-auth/domains';
-import { expectPropertiesEqualToSrc } from '../utils/properties';
-import { useSuperTest } from '../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
+import { Role } from '@typescript-auth/domains';
+import * as console from 'console';
+import { useSuperTest } from '../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
-describe('src/http/controllers/user', () => {
+describe('src/http/controllers/role', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -21,15 +21,13 @@ describe('src/http/controllers/user', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<User> = {
+    const details : Partial<Role> = {
         name: 'Test',
-        name_locked: false,
-        realm_id: MASTER_REALM_ID,
     };
 
-    it('should get collection', async () => {
+    it('should read collection', async () => {
         const response = await superTest
-            .get('/users')
+            .get('/roles')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -40,19 +38,22 @@ describe('src/http/controllers/user', () => {
 
     it('should create, read, update, delete resource', async () => {
         let response = await superTest
-            .post('/users')
+            .post('/roles')
             .send(details)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        let keys : string[] = Object.keys(details);
+        for (let i = 0; i < keys.length; i++) {
+            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
+        }
 
         // ---------------------------------------------------------
 
         response = await superTest
-            .get(`/users/${response.body.id}`)
+            .get(`/roles/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -63,19 +64,22 @@ describe('src/http/controllers/user', () => {
         details.name = 'TestA';
 
         response = await superTest
-            .post(`/users/${response.body.id}`)
+            .post(`/roles/${response.body.id}`)
             .send(details)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        keys = Object.keys(details);
+        for (let i = 0; i < keys.length; i++) {
+            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
+        }
 
         // ---------------------------------------------------------
 
         response = await superTest
-            .delete(`/users/${response.body.id}`)
+            .delete(`/roles/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);

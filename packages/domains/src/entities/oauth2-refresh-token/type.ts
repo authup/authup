@@ -24,9 +24,9 @@ export interface OAuth2RefreshToken {
 
     client: OAuth2Client | null;
 
-    access_token_id: OAuth2AccessToken['id'];
+    access_token_id: OAuth2AccessToken['id'] | null;
 
-    access_token: OAuth2AccessToken;
+    access_token: OAuth2AccessToken | null;
 
     realm_id: Realm['id'];
 

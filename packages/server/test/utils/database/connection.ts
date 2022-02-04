@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    ConnectionWithSeederOptions, createDatabase, dropDatabase,
-} from 'typeorm-extension';
+import { ConnectionWithSeederOptions, createDatabase, dropDatabase } from 'typeorm-extension';
 import { ConnectionOptions, createConnection, getConnection } from 'typeorm';
-import { DatabaseRootSeeder } from '../../../src/database/seeds';
-import { Config, useConfig } from '../../../src/config';
-import { buildDatabaseConnectionOptions } from '../../../src';
+import {
+    Config,
+    DatabaseRootSeeder,
+    DatabaseRootSeederRunResponse,
+    buildDatabaseConnectionOptions,
+    useConfig,
+} from '../../../src';
 
 async function createConnectionOptions(config: Config) {
     const options = await buildDatabaseConnectionOptions(config);
@@ -25,7 +27,7 @@ async function createConnectionOptions(config: Config) {
     } as ConnectionWithSeederOptions;
 }
 
-export async function useTestDatabase() {
+export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
     const config = useConfig();
 
     const connectionOptions = await createConnectionOptions(config);
@@ -39,9 +41,7 @@ export async function useTestDatabase() {
         userPassword: config.adminPassword,
     });
 
-    await core.run(connection);
-
-    return connection;
+    return core.run(connection);
 }
 
 export async function dropTestDatabase() {

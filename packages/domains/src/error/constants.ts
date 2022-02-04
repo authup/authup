@@ -13,6 +13,8 @@ export enum ErrorCode {
 
     CREDENTIALS_INVALID = 'invalid_credentials',
 
+    ENTITY_INACTIVE = 'inactive_entity',
+
     TOKEN_INVALID = 'invalid_token',
     TOKEN_INACTIVE = 'inactive_token',
     TOKEN_EXPIRED = 'expired_token',

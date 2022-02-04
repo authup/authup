@@ -16,6 +16,21 @@ import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database'
 import { useConfig } from '../config';
 
 export async function setupCommand(context: SetupCommandContext) {
+    if (
+        typeof context.keyPair === 'undefined' &&
+        typeof context.database === 'undefined' &&
+        typeof context.databaseSeeder === 'undefined' &&
+        typeof context.documentation === 'undefined'
+    ) {
+        // eslint-disable-next-line no-multi-assign
+        context.keyPair = context.database = context.databaseSeeder = context.documentation = true;
+    }
+
+    context.keyPair ??= true;
+    context.database ??= true;
+    context.databaseSeeder ??= true;
+    context.documentation ??= true;
+
     context.config ??= useConfig();
 
     const writableDirectoryPath = path.join(
@@ -26,16 +41,6 @@ export async function setupCommand(context: SetupCommandContext) {
     const spinner = ora.default({
         spinner: 'dots',
     });
-
-    if (
-        !context.keyPair &&
-        !context.database &&
-        !context.databaseSeeder &&
-        !context.documentation
-    ) {
-        // eslint-disable-next-line no-multi-assign
-        context.keyPair = context.database = context.databaseSeeder = context.documentation = true;
-    }
 
     if (context.keyPair) {
         spinner.start('Generating rsa key-pair.');
@@ -99,7 +104,6 @@ export async function setupCommand(context: SetupCommandContext) {
                 spinner.info(`Robot Secret: ${seederData.robot.secret}`);
             }
         } catch (e) {
-            console.log(e);
             spinner.fail('Synchronizing or seeding the database failed.');
             throw e;
         } finally {

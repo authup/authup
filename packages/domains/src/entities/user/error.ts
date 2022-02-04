@@ -12,7 +12,14 @@ export class UserError extends BadRequestError {
     static credentialsInvalid() {
         return new UserError({
             code: ErrorCode.CREDENTIALS_INVALID,
-            message: 'The credentials are invalid.',
+            message: 'The user credentials are invalid.',
+        });
+    }
+
+    static inactive() {
+        return new UserError({
+            code: ErrorCode.ENTITY_INACTIVE,
+            message: 'The user account is inactive.',
         });
     }
 }

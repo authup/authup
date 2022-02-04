@@ -22,7 +22,7 @@ export async function deleteTokenRouteHandler(
 
     if (
         !id &&
-        typeof req.token === 'string'
+        req.token
     ) {
         id = req.token;
     }

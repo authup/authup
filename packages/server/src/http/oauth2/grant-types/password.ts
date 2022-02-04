@@ -49,6 +49,10 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             throw UserError.credentialsInvalid();
         }
 
+        if (!entity.active) {
+            throw UserError.inactive();
+        }
+
         return entity;
     }
 }

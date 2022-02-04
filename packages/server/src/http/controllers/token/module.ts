@@ -20,6 +20,14 @@ export function registerTokenController(router: Application, options: Controller
         }
     });
 
+    router.delete('/token/:id', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+        try {
+            await deleteTokenRouteHandler(req, res, options);
+        } catch (e) {
+            next(e);
+        }
+    });
+
     router.delete('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
             await deleteTokenRouteHandler(req, res, options);

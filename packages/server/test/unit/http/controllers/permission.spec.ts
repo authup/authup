@@ -6,8 +6,8 @@
  */
 
 import { Permission, PermissionID } from '@typescript-auth/domains';
-import { useSuperTest } from '../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
+import { useSuperTest } from '../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
 describe('src/http/controllers/permission', () => {
     const superTest = useSuperTest();

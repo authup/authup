@@ -52,12 +52,15 @@ export function errorMiddleware(
         baseError.message = 'An error occurred.';
     }
 
+    const extra = baseError.getOption('extra');
+
     return response
         .status(statusCode)
         .json({
             code: baseError.getOption('code') ?? ServerErrorSettings.InternalServerError.code,
             message: baseError.message ?? ServerErrorSettings.InternalServerError.message,
             statusCode,
+            ...(extra ? { extra } : {}),
         })
         .end();
 }

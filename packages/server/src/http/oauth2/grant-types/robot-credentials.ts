@@ -45,6 +45,10 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             throw RobotError.credentialsInvalid();
         }
 
+        if (!entity.active) {
+            throw RobotError.inactive();
+        }
+
         return entity;
     }
 }

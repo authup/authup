@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, Robot } from '@typescript-auth/domains';
-import { expectPropertiesEqualToSrc } from '../utils/properties';
-import { useSuperTest } from '../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
+import { useSuperTest } from '../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
-describe('src/http/controllers/robot', () => {
+describe('src/http/controllers/realm', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -21,15 +19,9 @@ describe('src/http/controllers/robot', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Robot> = {
-        name: 'foo',
-        realm_id: MASTER_REALM_ID,
-    };
-
-    it('should get collection', async () => {
+    it('should read collection', async () => {
         const response = await superTest
-            .get('/robots')
-            .auth('admin', 'start123');
+            .get('/realms');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
@@ -38,44 +30,56 @@ describe('src/http/controllers/robot', () => {
     });
 
     it('should create, read, update, delete resource', async () => {
+        const details = {
+            name: 'Test',
+        };
+
         let response = await superTest
-            .post('/robots')
+            .post('/realms')
+            .send({
+                ...details,
+                id: 'test',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        let keys : string[] = Object.keys(details);
+        for (let i = 0; i < keys.length; i++) {
+            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
+        }
+
+        // ---------------------------------------------------------
+
+        response = await superTest
+            .get(`/realms/${response.body.id}`)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        // ---------------------------------------------------------
+
+        details.name = 'TestA';
+
+        response = await superTest
+            .post(`/realms/${response.body.id}`)
             .send(details)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        keys = Object.keys(details);
+        for (let i = 0; i < keys.length; i++) {
+            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
+        }
 
         // ---------------------------------------------------------
 
         response = await superTest
-            .get(`/robots/${response.body.id}`)
-            .auth('admin', 'start123');
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        // ---------------------------------------------------------
-
-        details.name = 'baz';
-        details.description = 'bar';
-
-        response = await superTest
-            .post(`/robots/${response.body.id}`)
-            .send(details)
-            .auth('admin', 'start123');
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
-
-        // ---------------------------------------------------------
-
-        response = await superTest
-            .delete(`/robots/${response.body.id}`)
+            .delete(`/realms/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);

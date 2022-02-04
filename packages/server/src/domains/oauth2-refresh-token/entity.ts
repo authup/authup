@@ -41,11 +41,11 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
         client: OAuth2ClientEntity | null;
 
     @Column()
-        access_token_id: OAuth2AccessToken['id'];
+        access_token_id: OAuth2AccessToken['id'] | null;
 
-    @ManyToOne(() => OAuth2AccessTokenEntity, { onDelete: 'CASCADE' })
+    @ManyToOne(() => OAuth2AccessTokenEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'access_token_id' })
-        access_token: OAuth2AccessTokenEntity;
+        access_token: OAuth2AccessTokenEntity | null;
 
     @Column()
         realm_id: Realm['id'] | null;

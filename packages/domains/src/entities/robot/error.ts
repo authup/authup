@@ -12,7 +12,14 @@ export class RobotError extends BadRequestError {
     static credentialsInvalid() {
         return new RobotError({
             code: ErrorCode.CREDENTIALS_INVALID,
-            message: 'The credentials are invalid.',
+            message: 'The robot credentials are invalid.',
+        });
+    }
+
+    static inactive() {
+        return new RobotError({
+            code: ErrorCode.ENTITY_INACTIVE,
+            message: 'The robot account is inactive.',
         });
     }
 }

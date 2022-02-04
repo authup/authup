@@ -6,9 +6,9 @@
  */
 
 import { HTTPOAuth2Client, MASTER_REALM_ID, OAuth2Provider } from '@typescript-auth/domains';
-import { useSuperTest } from '../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../utils/database/connection';
-import { useConfig } from '../../src';
+import { useSuperTest } from '../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { useConfig } from '../../../../src';
 
 describe('src/http/controllers/oauth2-provider', () => {
     const superTest = useSuperTest();
