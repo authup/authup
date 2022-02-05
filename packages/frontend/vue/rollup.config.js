@@ -43,6 +43,7 @@ const baseConfig = {
         postVue: [
             resolve({
                 extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
+                preferBuiltins: true,
             }),
             commonjs(),
         ],
