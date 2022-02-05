@@ -1,6 +1,8 @@
 {
     "packages": [
-        "packages/*"
+        "packages/backend/*",
+        "packages/common/*",
+        "packages/frontend/*"
     ],
     "command": {
         "publish": {
