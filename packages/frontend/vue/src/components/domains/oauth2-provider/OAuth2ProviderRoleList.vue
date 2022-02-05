@@ -10,6 +10,7 @@ import ProviderRoleListItem from './OAuth2ProviderRoleListItem';
 import RoleList from '../role/RoleList';
 
 export default {
+    name: 'OAuth2ProviderRoleList',
     components: {
         RoleList, ProviderRoleListItem,
     },
