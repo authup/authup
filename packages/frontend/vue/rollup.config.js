@@ -6,6 +6,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
+import json from '@rollup/plugin-json';
 
 import typescriptTransformer from 'ttypescript';
 import typescript from 'rollup-plugin-typescript2';
@@ -17,7 +18,7 @@ const includePathOptions = {
     include: {
         vue: 'node_modules/vue/dist/vue.common.js',
     },
-    external: ['vue'],
+    external: ['vue', 'vuelidate', 'bootstrap-vue'],
 };
 
 // Get browserslist config and remove ie from es build targets
@@ -59,6 +60,8 @@ const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
     'vue',
+    'bootstrap-vue',
+    'vuelidate',
 ];
 
 // UMD/IIFE shared settings: output.globals
@@ -82,6 +85,7 @@ const esConfig = {
         assetFileNames: '[name]-[hash][extname]',
     },
     plugins: [
+        json(),
         replace(baseConfig.plugins.replace),
         postcss({
             extract: true,
@@ -123,6 +127,7 @@ const umdConfig = {
         globals,
     },
     plugins: [
+        json(),
         replace(baseConfig.plugins.replace),
         postcss({
             extract: true,

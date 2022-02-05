@@ -5,4 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as HelloWorld } from './HelloWorld.vue';
+export { default as RolePermissionList } from './RolePermissionList.vue';
+export { default as RolePermissionListItemActions } from './RolePermissionListItemActions.vue';

@@ -5,7 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-declare module '*.vue' {
-    import Vue from 'vue'
-    export default Vue
-}
+export { default as UserRoleList } from './UserRoleList.vue';
+export { default as UserRoleListItemActions } from './UserRoleListItemActions.vue';
