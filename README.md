@@ -28,6 +28,8 @@ This monorepo contains different auth packages for frontend and backend.
 
 The main propose of this package, is to provide general classes, interfaces & types for authorization & authentication.
 
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/common/domains#README.md)
+
 ### Backend
 
 #### @typescript-auth/server ⚔
@@ -36,15 +38,21 @@ The main propose of this package, is to provide general classes, interfaces & ty
 This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
 should therefore only be used for backend- applications & microservices.
 
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server#README.md)
+
 #### @typescript-auth/server-adapter 🌉
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
 
 The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
 
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-adapter#README.md)
+
 #### @typescript-auth/server-utils 🛡
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-utils.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-utils)
 
 The main propose of this package, is to provide general utilities for authorization & authentication.
+
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-utils#README.md)
 
 ### Frontend
 
@@ -52,6 +60,8 @@ The main propose of this package, is to provide general utilities for authorizat
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fvue.svg)](https://badge.fury.io/js/@typescript-auth%2Fvue)
 
 This repository contains different vue components for the typescript-auth domain entities.
+
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/frontend/vue#README.md)
 
 ## Installation & Usage
 Please follow the `README.md` instructions in the respective package folder.
