@@ -4,7 +4,7 @@
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 import {
     email, maxLength, minLength, required,
 } from 'vuelidate/lib/validators';

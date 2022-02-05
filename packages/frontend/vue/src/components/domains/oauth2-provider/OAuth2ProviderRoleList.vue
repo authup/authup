@@ -4,7 +4,7 @@
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 import Vue from 'vue';
 import ProviderRoleListItem from './OAuth2ProviderRoleListItem';
 import RoleList from '../role/RoleList';
@@ -15,7 +15,7 @@ export default {
         RoleList, ProviderRoleListItem,
     },
     props: {
-        providerId: Number,
+        providerId: String,
     },
     data() {
         return {

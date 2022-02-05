@@ -4,12 +4,12 @@
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 import {
     mergeDeep,
 } from '@typescript-auth/domains';
 import Vue from 'vue';
-import Pagination from '../../Pagination';
+import Pagination from '../../Pagination.vue';
 
 export default {
     name: 'OAuth2ProviderList',
@@ -116,13 +116,13 @@ export default {
 
             const l = this.$createElement;
 
-            await this.$bvModal.msgBoxConfirm(l('div', { class: 'alert alert-dark m-b-0' }, [
+            await this.$bvModal.msgBoxConfirm([l('div', { class: 'alert alert-dark m-b-0' }, [
                 l('p', null, [
                     'Are you sure that you want to delete the provider  ',
                     l('b', null, [item.name]),
                     '?',
                 ]),
-            ]), {
+            ])], {
                 size: 'md',
                 buttonSize: 'xs',
             })

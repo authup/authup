@@ -4,12 +4,13 @@
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 import {
     createNanoID, hasOwnProperty,
 } from '@typescript-auth/domains';
+
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import ProviderRoleList from './OAuth2ProviderRoleList';
+import ProviderRoleList from './OAuth2ProviderRoleList.vue';
 
 export default {
     name: 'OAuth2ProviderForm',
@@ -17,7 +18,7 @@ export default {
     props: {
         provider: {
             type: Object,
-            default: {},
+            default: () => {},
         },
         realmId: {
             type: String,
@@ -517,8 +518,3 @@ export default {
         </div>
     </div>
 </template>
-<style>
-.list-group-item {
-    padding: .45rem .65rem;
-}
-</style>

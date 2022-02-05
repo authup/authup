@@ -1,6 +1,15 @@
 {
     "extends": "../../../tsconfig.json",
     "compilerOptions": {
-        "lib": ["dom", "ES6"]
-    }
+        "lib": [
+            "esnext",
+            "dom",
+            "dom.iterable",
+            "scripthost"
+        ],
+    },
+    "files": [
+        "types/vue.shim.d.ts"
+    ],
+    "include": ["**/*.ts", "**/*.vue"]
 }

@@ -4,7 +4,7 @@
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 import { mergeDeep } from '@typescript-auth/domains';
 import Vue from 'vue';
 import Pagination from '../../Pagination';
@@ -103,13 +103,13 @@ export default {
 
             const l = this.$createElement;
 
-            await this.$bvModal.msgBoxConfirm(l('div', { class: 'alert alert-dark m-b-0' }, [
+            await this.$bvModal.msgBoxConfirm([l('div', { class: 'alert alert-dark m-b-0' }, [
                 l('p', null, [
                     'Are you sure that you want to delete the robot ',
                     l('b', null, [item.name]),
                     '?',
                 ]),
-            ]), {
+            ])], {
                 size: 'md',
                 buttonSize: 'xs',
             })
@@ -156,8 +156,9 @@ export default {
         editArrayItem(item) {
             const index = this.items.findIndex((el) => el.id === item.id);
             if (index !== -1) {
-                for (const key in item) {
-                    Vue.set(this.items[index], key, item[key]);
+                const keys = Object.keys(item);
+                for (let i = 0; i < keys.length; i++) {
+                    Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 
 export default {

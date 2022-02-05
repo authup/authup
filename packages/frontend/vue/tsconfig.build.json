@@ -18,7 +18,12 @@
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
         "sourceMap": false,
-        "module": "ESNext"
+        "module": "ESNext",
+        "jsx": "preserve",
+
+        // Babel test opt
+        "declaration": true,
+        "isolatedModules": true
     },
     "exclude": [
         "node_modules",
@@ -26,6 +31,7 @@
     ],
     "include": [
         "types/**/*.d.ts",
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "src/**/*.vue"
     ]
 }

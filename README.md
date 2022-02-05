@@ -9,8 +9,9 @@ This monorepo contains different auth packages for frontend and backend.
 **Table of Contents**
 
 - [Packages](#Packages)
-  - [Backend](#backend)
+  - [Common](#common)
     - [Domains](#typescript-authdomains-)
+  - [Backend](#backend)
     - [Server](#typescript-authserver-)
     - [ServerAdapter](#typescript-authserver-adapter-)
     - [ServerUtils](#typescript-authserver-utils-)
@@ -20,12 +21,14 @@ This monorepo contains different auth packages for frontend and backend.
 
 ## Packages
 
-### Backend
+### Common
 
 #### @typescript-auth/domains 🎉
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fdomains.svg)](https://badge.fury.io/js/@typescript-auth%2Fdomains)
 
 The main propose of this package, is to provide general classes, interfaces & types for authorization & authentication.
+
+### Backend
 
 #### @typescript-auth/server ⚔
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)

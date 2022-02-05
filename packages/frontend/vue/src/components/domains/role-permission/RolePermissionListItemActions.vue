@@ -22,7 +22,7 @@
         </button>
     </div>
 </template>
-<script>
+<script lang="ts">
 export default {
     props: {
         rolePermissions: {
@@ -35,7 +35,7 @@ export default {
             type: String,
             default: 'permission',
         },
-        roleId: Number,
+        roleId: String,
         permissionId: String,
     },
     data() {
