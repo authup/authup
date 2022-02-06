@@ -6,11 +6,11 @@
   -->
 <script lang="ts">
 import {
-    createNanoID,
-} from '@typescript-auth/domains';
-import {
     helpers, maxLength, minLength,
 } from 'vuelidate/lib/validators';
+import {
+    createNanoID,
+} from '../../../utils';
 
 const validId = helpers.regex('validId', /^[a-zA-Z0-9_-]*$/);
 

@@ -5,10 +5,10 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+import Vue from 'vue';
 import {
     mergeDeep,
-} from '@typescript-auth/domains';
-import Vue from 'vue';
+} from '../../../utils';
 import Pagination from '../../Pagination.vue';
 
 export default {

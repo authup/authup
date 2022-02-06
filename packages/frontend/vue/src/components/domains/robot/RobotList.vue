@@ -5,9 +5,9 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { mergeDeep } from '@typescript-auth/domains';
 import Vue from 'vue';
-import Pagination from '../../Pagination';
+import { mergeDeep } from '../../../utils';
+import Pagination from '../../Pagination.vue';
 
 export default {
     name: 'RobotList',

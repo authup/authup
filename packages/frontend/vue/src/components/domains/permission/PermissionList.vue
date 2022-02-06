@@ -6,8 +6,8 @@
   -->
 <script lang="ts">
 import Vue from 'vue';
-import { mergeDeep } from '@typescript-auth/domains';
-import Pagination from '../../Pagination';
+import { mergeDeep } from '../../../utils';
+import Pagination from '../../Pagination.vue';
 
 export default {
     name: 'PermissionList',

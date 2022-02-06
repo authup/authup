@@ -5,10 +5,10 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { createNanoID } from '@typescript-auth/domains';
 import {
     helpers, maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
+import { createNanoID } from '../../../utils';
 
 const validId = helpers.regex('validId', /^[a-z0-9-_]*$/);
 

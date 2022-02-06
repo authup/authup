@@ -5,11 +5,8 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import {
-    createNanoID, hasOwnProperty,
-} from '@typescript-auth/domains';
-
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
+import { createNanoID, hasOwnProperty } from '../../../utils';
 import ProviderRoleList from './OAuth2ProviderRoleList.vue';
 
 export default {

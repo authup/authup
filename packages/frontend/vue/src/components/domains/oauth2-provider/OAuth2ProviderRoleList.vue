@@ -6,8 +6,8 @@
   -->
 <script lang="ts">
 import Vue from 'vue';
-import ProviderRoleListItem from './OAuth2ProviderRoleListItem';
-import RoleList from '../role/RoleList';
+import ProviderRoleListItem from './OAuth2ProviderRoleListItem.vue';
+import RoleList from '../role/RoleList.vue';
 
 export default {
     name: 'OAuth2ProviderRoleList',
