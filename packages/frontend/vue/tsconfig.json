@@ -2,7 +2,7 @@
     "extends": "../../../tsconfig.json",
     "compilerOptions": {
         "lib": [
-            "esnext",
+            "ES6",
             "dom",
             "dom.iterable",
             "scripthost"

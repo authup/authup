@@ -41,7 +41,9 @@ export default {
         },
     },
     created() {
-        this.formData.name = this.entityProperty?.name ?? '';
+        if (this.isEditing) {
+            this.formData.name = this.entityProperty.name || '';
+        }
     },
     methods: {
         async handleSubmit(e) {

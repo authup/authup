@@ -63,8 +63,6 @@ export default {
             const ids = this.items.map((item) => item.permission_id);
             let additionFilter;
 
-            build = build ?? this.assignedOnly;
-
             if (build) {
                 additionFilter = {
                     id: ids.join(','),

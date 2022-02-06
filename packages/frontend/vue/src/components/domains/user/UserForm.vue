@@ -75,7 +75,7 @@ export default {
                 return false;
             }
 
-            return this.entityProperty.name_locked ?? true;
+            return !!this.entityProperty.name_locked;
         },
     },
     created() {

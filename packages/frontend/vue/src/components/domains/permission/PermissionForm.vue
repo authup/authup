@@ -42,7 +42,7 @@ export default {
     },
     created() {
         if (this.isEditing) {
-            this.formData.id = this.entityProperty?.id ?? '';
+            this.formData.id = this.entityProperty.id;
         }
     },
     methods: {
