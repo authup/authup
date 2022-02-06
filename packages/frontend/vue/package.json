@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/vue",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "This package contains auth related vue components.",
     "main": "dist/index.ssr.js",
     "browser": "dist/index.esm.js",
@@ -69,8 +69,8 @@
         "vuelidate": "^0.7.7"
     },
     "dependencies": {
-        "regenerator-runtime": "^0.13.9",
-        "nanoid": "^3.2.0"
+        "nanoid": "^3.2.0",
+        "regenerator-runtime": "^0.13.9"
     },
     "peerDependencies": {
         "bootstrap-vue": "^2.x",
