@@ -100,7 +100,7 @@ export class DatabaseRootSeeder implements Seeder {
         if (typeof user === 'undefined') {
             user = userRepository.create({
                 name: this.options.userName,
-                password: await hash(this.options.userPassword),
+                password: await hash(this.options.userPassword || 'start123'),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
                 active: true,
@@ -108,7 +108,7 @@ export class DatabaseRootSeeder implements Seeder {
 
             response.user = user;
         } else if (this.options.userPasswordReset) {
-            user.password = await hash(this.options.userPassword);
+            user.password = await hash(this.options.userPassword || 'start123');
             user.active = true;
         }
 

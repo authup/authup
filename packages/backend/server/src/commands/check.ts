@@ -33,6 +33,8 @@ export async function checkCommand(context: CheckCommandContext) {
             userPassword: context.config.adminPassword,
 
             robotSecret: context.config.robotSecret,
+
+            permissions: context.config.permissions,
             ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
         });
         await seeder.run(connection);

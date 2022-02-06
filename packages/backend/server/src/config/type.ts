@@ -17,6 +17,8 @@ export type Config = {
 
     robotSecret?: string,
 
+    permissions?: string[],
+
     rootPath: string,
     writableDirectory: string
 

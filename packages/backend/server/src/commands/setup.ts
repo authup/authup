@@ -94,6 +94,8 @@ export async function setupCommand(context: SetupCommandContext) {
                     robotSecret: context.config.robotSecret,
                     robotSecretReset: true,
 
+                    permissions: context.config.permissions,
+
                     ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
                 });
 

@@ -45,6 +45,13 @@ export function buildConfig(
         config.robotSecret = !config.robotSecret ? undefined : config.robotSecret;
     }
 
+    if (!config.permissions) {
+        const permissions = requireFromEnv('PERMISSIONS', null);
+        if (permissions) {
+            config.permissions = permissions.split(',').filter();
+        }
+    }
+
     if (!config.selfUrl) {
         config.selfUrl = requireFromEnv('SELF_URL', `http://127.0.0.1:${config.port}/`);
     }
