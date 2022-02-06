@@ -42,6 +42,7 @@
     },
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "devDependencies": {
+        "@fortawesome/fontawesome-free": "^5.15.1",
         "@babel/core": "^7.16.5",
         "@babel/preset-env": "^7.16.11",
         "@babel/preset-typescript": "^7.16.5",

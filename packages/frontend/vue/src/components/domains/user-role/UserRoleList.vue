@@ -16,14 +16,6 @@ export default {
     props: {
         userId: String,
     },
-    data() {
-        return {
-
-        };
-    },
-    methods: {
-
-    },
 };
 </script>
 <template>

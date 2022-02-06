@@ -18,4 +18,8 @@ declare module 'vue/types/vue' {
     interface VueConstructor {
         $authApi: HTTPClient
     }
+
+    interface Vue {
+        $authApi: HTTPClient
+    }
 }

@@ -183,7 +183,7 @@ export default {
                 <div>
                     <slot name="header-title">
                         <h6 class="mb-0">
-                            Providers
+                            <i class="fab fa-pied-piper-alt" /> Providers
                         </h6>
                     </slot>
                 </div>

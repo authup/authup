@@ -1,39 +1,9 @@
-<!--
-  Copyright (c) 2021-2021.
-  Author Peter Placzek (tada5hi)
-  For the full copyright and license information,
-  view the LICENSE file that was distributed with this source code.
-  -->
-<template>
-    <div>
-        <button
-            v-if="!isAssigned"
-            class="btn btn-xs btn-success"
-            @click.prevent="add"
-        >
-            <i class="fa fa-plus" />
-        </button>
-        <button
-            v-if="isAssigned"
-            class="btn btn-xs btn-danger"
-            @click.prevent="drop"
-        >
-            <i class="fa fa-trash" />
-        </button>
-    </div>
-</template>
 <script lang="ts">
 export default {
     props: {
-        rolePermissions: {
+        items: {
             type: Array,
-            default() {
-                return [];
-            },
-        },
-        primaryParameter: {
-            type: String,
-            default: 'permission',
+            default: () => [],
         },
         roleId: String,
         permissionId: String,
@@ -41,21 +11,51 @@ export default {
     data() {
         return {
             busy: false,
+            item: null,
+
+            initialized: false,
         };
     },
-    computed: {
-        rolePermissionIndex() {
-            return this.rolePermissions.findIndex((rolePermission) => (this.primaryParameter === 'permission' ?
-                rolePermission.permission_id === this.permissionId :
-                rolePermission.role_id === this.roleId));
-        },
-        isAssigned() {
-            return this.rolePermissionIndex !== -1;
-        },
+    created() {
+        Promise.resolve()
+            .then(() => this.initFromProperties())
+            .then(() => this.init())
+            .then(() => {
+                this.initialized = true;
+            });
     },
     methods: {
+        initFromProperties() {
+            if (!Array.isArray(this.items)) return;
+
+            const index = this.items.findIndex((item) => item.role_id === this.roleId && item.permission_id === this.permissionId);
+            if (index !== -1) {
+                this.item = this.items[index];
+            }
+        },
+        async init() {
+            try {
+                const response = await this.$authApi.rolePermission.getMany({
+                    filters: {
+                        role_id: this.roleId,
+                        permission_id: this.permissionId,
+                    },
+                    page: {
+                        limit: 1,
+                    },
+                });
+
+                if (response.meta.total === 1) {
+                    const { 0: item } = response.data;
+
+                    this.item = item;
+                }
+            } catch (e) {
+                // ...
+            }
+        },
         async add() {
-            if (this.busy) return;
+            if (this.busy || this.item) return;
 
             this.busy = true;
 
@@ -65,24 +65,52 @@ export default {
                     permission_id: this.permissionId,
                 });
 
-                this.$emit('added', item);
+                this.$bvToast.toast('The role-permission relation was successfully created.', {
+                    variant: 'success',
+                    toaster: 'b-toaster-top-center',
+                });
+
+                this.item = item;
+
+                this.$emit('created', item);
             } catch (e) {
-                // ...
+                if (e instanceof Error) {
+                    this.$bvToast.toast(e.message, {
+                        variant: 'warning',
+                        toaster: 'b-toaster-top-center',
+                    });
+
+                    this.$emit('failed', e);
+                }
             }
 
             this.busy = false;
         },
         async drop() {
-            if (this.busy || this.rolePermissionIndex === -1) return;
+            if (this.busy || !this.item) return;
 
             this.busy = true;
 
             try {
-                await this.$authApi.rolePermission.delete(this.rolePermissions[this.rolePermissionIndex].id);
+                const item = await this.$authApi.rolePermission.delete(this.item.id);
 
-                this.$emit('dropped', this.rolePermissions[this.rolePermissionIndex]);
+                this.$bvToast.toast('The role-permission relation was successfully deleted.', {
+                    variant: 'success',
+                    toaster: 'b-toaster-top-center',
+                });
+
+                this.item = null;
+
+                this.$emit('deleted', item);
             } catch (e) {
-                // ...
+                if (e instanceof Error) {
+                    this.$bvToast.toast(e.message, {
+                        variant: 'warning',
+                        toaster: 'b-toaster-top-center',
+                    });
+
+                    this.$emit('failed', e);
+                }
             }
 
             this.busy = false;
@@ -90,3 +118,21 @@ export default {
     },
 };
 </script>
+<template>
+    <div>
+        <button
+            v-if="!item && initialized"
+            class="btn btn-xs btn-success"
+            @click.prevent="add"
+        >
+            <i class="fa fa-plus" />
+        </button>
+        <button
+            v-if="item && initialized"
+            class="btn btn-xs btn-danger"
+            @click.prevent="drop"
+        >
+            <i class="fa fa-trash" />
+        </button>
+    </div>
+</template>

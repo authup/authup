@@ -13,18 +13,21 @@ export default {
     name: 'PermissionList',
     components: { Pagination },
     props: {
-        filterItems: Function,
         query: {
             type: Object,
             default() {
                 return {};
             },
         },
-        withSearch: {
+        loadOnInit: {
             type: Boolean,
             default: true,
         },
-        loadOnInit: {
+        withHeader: {
+            type: Boolean,
+            default: true,
+        },
+        withSearch: {
             type: Boolean,
             default: true,
         },
@@ -41,15 +44,6 @@ export default {
             },
             itemBusy: false,
         };
-    },
-    computed: {
-        formattedItems() {
-            if (typeof this.filterItems === 'undefined') {
-                return this.items;
-            }
-
-            return this.items.filter(this.filterItems);
-        },
     },
     watch: {
         q(val, oldVal) {
@@ -91,9 +85,9 @@ export default {
 
                 this.items = response.data;
                 const { total } = response.meta;
-
                 this.meta.total = total;
             } catch (e) {
+                console.log(e);
                 // ...
             }
 
@@ -126,12 +120,15 @@ export default {
 </script>
 <template>
     <div>
-        <slot name="header">
+        <slot
+            v-if="withHeader"
+            name="header"
+        >
             <div class="d-flex flex-row mb-2">
                 <div>
                     <slot name="header-title">
                         <h6 class="mb-0">
-                            Permissions
+                            <i class="fa fa-key" /> Permissions
                         </h6>
                     </slot>
                 </div>
@@ -176,12 +173,12 @@ export default {
         </div>
         <slot
             name="items"
-            :items="formattedItems"
+            :items="items"
             :busy="busy"
         >
             <div class="c-list">
                 <div
-                    v-for="(item,key) in formattedItems"
+                    v-for="(item,key) in items"
                     :key="key"
                     class="c-list-item mb-2"
                 >
@@ -205,7 +202,7 @@ export default {
         </slot>
 
         <div
-            v-if="!busy && formattedItems.length === 0"
+            v-if="!busy && !items"
             slot="no-more"
         >
             <div class="alert alert-sm alert-info">
@@ -214,6 +211,7 @@ export default {
         </div>
 
         <pagination
+            v-if="meta"
             :total="meta.total"
             :offset="meta.offset"
             :limit="meta.limit"
