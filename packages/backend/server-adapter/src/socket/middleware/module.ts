@@ -44,6 +44,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
                 break;
         }
 
+        socket.data.realmId = data.target.entity.realm_id;
         socket.data.token = token;
         socket.data.permissions = data.target.permissions;
         socket.data.ability = new AbilityManager(data.target.permissions);

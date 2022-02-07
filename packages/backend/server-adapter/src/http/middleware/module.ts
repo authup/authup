@@ -80,6 +80,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
                 break;
         }
 
+        req.realmId = data.target.entity.realm_id;
         req.token = header.token;
         req.permissions = data.target.permissions;
         req.ability = new AbilityManager(data.target.permissions);

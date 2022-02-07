@@ -5,8 +5,8 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import RoleList from '../role/RoleList';
-import UserRoleListItemActions from './UserRoleListItemActions';
+import RoleList from '../role/RoleList.vue';
+import UserRoleListItemActions from './UserRoleListItemActions.vue';
 
 export default {
     components: {
