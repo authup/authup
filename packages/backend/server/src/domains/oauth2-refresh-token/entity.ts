@@ -40,7 +40,7 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     @JoinColumn({ name: 'client_id' })
         client: OAuth2ClientEntity | null;
 
-    @Column()
+    @Column({ nullable: true, default: null })
         access_token_id: OAuth2AccessToken['id'] | null;
 
     @ManyToOne(() => OAuth2AccessTokenEntity, { onDelete: 'SET NULL', nullable: true })
