@@ -7,7 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { useConfig } from '../../config';
-import { setupCommand } from '../../commands/setup';
+import { setupCommand } from '../../commands';
 
 interface SetupArguments extends Arguments {
     root: string;
