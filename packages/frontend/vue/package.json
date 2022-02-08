@@ -42,7 +42,7 @@
     },
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "devDependencies": {
-        "@babel/core": "^7.16.5",
+        "@babel/core": "^7.17.0",
         "@babel/preset-env": "^7.16.11",
         "@babel/preset-typescript": "^7.16.5",
         "@fortawesome/fontawesome-free": "^5.15.1",
@@ -57,7 +57,7 @@
         "@zerollup/ts-transform-paths": "^1.7.18",
         "bootstrap-vue": "^2.18.1",
         "rimraf": "^3.0.2",
-        "rollup": "^2.67.0",
+        "rollup": "^2.67.1",
         "rollup-plugin-includepaths": "^0.2.4",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-styles": "^3.14.1",
