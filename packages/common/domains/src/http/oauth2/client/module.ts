@@ -23,12 +23,17 @@ import { buildHTTPQuery } from '../../utils';
 import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 
 export class HTTPOAuth2Client {
+    protected options : HTTPOAuth2ClientOptions;
+
     public httpClient : Client;
 
     constructor(
-        protected options: HTTPOAuth2ClientOptions,
+        options?: HTTPOAuth2ClientOptions,
         protected client?: Config | Client,
     ) {
+        options = options || {};
+        this.options = options;
+
         if (client instanceof Client) {
             this.httpClient = client;
         } else {
@@ -90,7 +95,10 @@ export class HTTPOAuth2Client {
             urlSearchParams.append(parameterKeys[i], (parameters as Record<string, any>)[parameterKeys[i]]);
         }
 
-        const url: string = removeDuplicateForwardSlashesFromURL(this.options.token_host + (this.options.token_path || '/oauth/token'));
+        const url: string = removeDuplicateForwardSlashesFromURL(
+            (this.options.token_host || '') +
+            (this.options.token_path || '/oauth/token'),
+        );
 
         const { data } = await this.httpClient.post(
             url,
@@ -134,7 +142,7 @@ export class HTTPOAuth2Client {
      * @param token
      */
     async getUserInfo(token: string) {
-        let url: string = this.options.user_info_host ?? this.options.token_host;
+        let url: string = this.options.user_info_host ?? (this.options.token_host || '');
 
         if (typeof this.options.user_info_path === 'string') {
             url += this.options.user_info_path;
@@ -157,7 +165,9 @@ export class HTTPOAuth2Client {
     // ------------------------------------------------------------------
 
     buildTokenParameters(parameters: Oauth2GrantParameters): Oauth2GrantParameters {
-        parameters.client_id = this.options.client_id;
+        if (this.options.client_id) {
+            parameters.client_id = this.options.client_id;
+        }
 
         if (
             parameters.grant_type !== 'authorization_code'
@@ -182,7 +192,7 @@ export class HTTPOAuth2Client {
             }
         }
 
-        if (typeof this.options.client_id === 'string') {
+        if (this.options.client_id) {
             parameters.client_id = this.options.client_id;
         }
 
@@ -198,7 +208,7 @@ export class HTTPOAuth2Client {
 
         const queryParameters: Oauth2AuthorizeQueryParameters = {
             response_type: 'code',
-            client_id: this.options.client_id,
+            ...(this.options.client_id ? { client_id: this.options.client_id } : {}),
             redirect_uri: this.options.redirect_uri,
         };
 
@@ -218,7 +228,7 @@ export class HTTPOAuth2Client {
             queryParameters.scope = queryParameters.scope.join(' ');
         }
 
-        const host: string = this.options.authorize_host ?? this.options.token_host;
+        const host: string = this.options.authorize_host ?? (this.options.token_host || '');
         const path: string = this.options.authorize_path ?? '/oauth/authorize';
 
         return removeDuplicateForwardSlashesFromURL(host + path) + buildHTTPQuery(queryParameters);

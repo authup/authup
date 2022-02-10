@@ -45,9 +45,8 @@
         "clean": "lerna run clean",
         "build": "lerna run build",
         "test": "lerna run test",
-        "pub": "lerna publish",
+        "pub": "npm run build && lerna publish",
         "lint": "eslint --ext .ts ./packages/",
-        "lint:fix": "npm run lint -- --fix",
-        "prepublishOnly": "npm run build"
+        "lint:fix": "npm run lint -- --fix"
     }
 }

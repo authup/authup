@@ -6,14 +6,14 @@
  */
 
 export type HTTPOAuth2ClientOptions = {
-    client_id: string,
+    client_id?: string,
     client_secret?: string,
 
     scope?: string | string[],
 
     redirect_uri?: string,
 
-    token_host: string,
+    token_host?: string,
     token_path?: string,
 
     authorize_host?: string,
@@ -27,7 +27,7 @@ export type HTTPOAuth2ClientOptions = {
 
 export type Oauth2AuthorizeQueryParameters = {
     response_type: 'code',
-    client_id: string,
+    client_id?: string,
     redirect_uri: string,
     scope?: string | string[]
 };
