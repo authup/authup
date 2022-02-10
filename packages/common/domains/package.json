@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/domains",
-    "version": "0.0.23",
+    "version": "0.0.24",
     "description": "Typescript auth type, interface & constants package.",
     "main": "dist/index.js",
     "files": [

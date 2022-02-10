@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/vue",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "This package contains auth related vue components.",
     "main": "dist/index.ssr.js",
     "browser": "dist/index.esm.js",
@@ -53,7 +53,7 @@
         "@rollup/plugin-node-resolve": "^13.1.1",
         "@rollup/plugin-replace": "^3.0.0",
         "@types/node": "^17.0.16",
-        "@typescript-auth/domains": "^0.0.23",
+        "@typescript-auth/domains": "^0.0.24",
         "@zerollup/ts-transform-paths": "^1.7.18",
         "bootstrap-vue": "^2.18.1",
         "rimraf": "^3.0.2",
