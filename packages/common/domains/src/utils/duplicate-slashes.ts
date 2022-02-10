@@ -6,7 +6,5 @@
  */
 
 export function removeDuplicateForwardSlashesFromURL(str: string) : string {
-    const url = new URL(str);
-
-    return `${url.protocol}//${(url.host + url.pathname).replace(/([^:]\/)\/+/g, '$1')}${url.search}`;
+    return str.replace(/([^:]\/)\/+/g, '$1');
 }

@@ -18,7 +18,7 @@ describe('src/utils/index.ts', () => {
 
         // ensure tailing slash
         url = removeDuplicateForwardSlashesFromURL('https://example.com');
-        expect(url).toEqual('https://example.com/');
+        expect(url).toEqual('https://example.com');
 
         url = removeDuplicateForwardSlashesFromURL('https://example.com/?id=1');
         expect(url).toEqual('https://example.com/?id=1');
