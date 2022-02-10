@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server",
-    "version": "2.0.0-alpha.35",
+    "version": "2.0.0-alpha.36",
     "description": "This package can be used as simple server in standalone mode or as an extension.",
     "main": "dist/index.js",
     "scripts": {
@@ -46,8 +46,8 @@
         "@decorators/express": "^2.6.0",
         "@trapi/client": "^2.0.4",
         "@trapi/swagger": "^0.2.15",
-        "@typescript-auth/domains": "^0.0.22",
-        "@typescript-auth/server-utils": "^0.0.9",
+        "@typescript-auth/domains": "^0.0.23",
+        "@typescript-auth/server-utils": "^0.0.10",
         "@typescript-error/http": "^1.1.3",
         "change-case": "^4.1.2",
         "cookie-parser": "^1.4.6",
