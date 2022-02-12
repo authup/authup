@@ -6,7 +6,7 @@
         "project": "./tsconfig.json",
         "extraFileExtensions": [".vue"]
     },
-    "ignorePatterns": ["**/dist/*", "**/*.d.ts"],
+    "ignorePatterns": ["**/dist/*"],
     "globals": {
         "NodeJS": true
     },
