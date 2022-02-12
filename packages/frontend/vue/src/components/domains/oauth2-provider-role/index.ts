@@ -5,4 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { RoleUserList } from './RoleUserList';
+export { OAuth2ProviderRoleList } from './OAuth2ProviderRoleList';
+export { OAuth2ProviderRoleListItem } from './OAuth2ProviderRoleListItem';

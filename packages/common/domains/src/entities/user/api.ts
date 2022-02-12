@@ -57,7 +57,7 @@ export class UserAPI {
 
     async update(
         id: User['id'],
-        data: Partial<User> & { password_repeat: User['password'] },
+        data: Partial<User> & { password_repeat?: User['password'] },
     ): Promise<SingleResourceResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 

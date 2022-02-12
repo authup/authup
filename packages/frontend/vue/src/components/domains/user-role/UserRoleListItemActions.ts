@@ -1,13 +1,25 @@
-<script lang="ts">
-export default {
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import Vue, { PropType } from 'vue';
+import { UserRole } from '@typescript-auth/domains';
+import { ComponentListItemData } from '../../type';
+
+export type Properties = {
+    items?: UserRole[],
+    roleId?: string,
+    userId?: string
+};
+
+export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole>, any, any, Properties>({
     props: {
         items: {
-            type: Array,
+            type: Array as PropType<UserRole[]>,
             default: () => [],
-        },
-        primaryParameter: {
-            type: String,
-            default: 'role',
         },
         roleId: String,
         userId: String,
@@ -17,7 +29,7 @@ export default {
             busy: false,
             item: null,
 
-            initialized: false,
+            loaded: false,
         };
     },
     created() {
@@ -25,14 +37,14 @@ export default {
             .then(() => this.initFromProperties())
             .then(() => this.init())
             .then(() => {
-                this.initialized = true;
+                this.loaded = true;
             });
     },
     methods: {
         initFromProperties() {
             if (!Array.isArray(this.items)) return;
 
-            const index = this.items.findIndex((userRole) => userRole.role_id === this.roleId && userRole.user_id === this.userId);
+            const index = this.items.findIndex((userRole: UserRole) => userRole.role_id === this.roleId && userRole.user_id === this.userId);
             if (index !== -1) {
                 this.item = this.items[index];
             }
@@ -120,23 +132,24 @@ export default {
             this.busy = false;
         },
     },
-};
-</script>
-<template>
-    <div>
-        <button
-            v-if="!item && initialized"
-            class="btn btn-xs btn-success"
-            @click.prevent="add"
-        >
-            <i class="fa fa-plus" />
-        </button>
-        <button
-            v-if="item && initialized"
-            class="btn btn-xs btn-danger"
-            @click.prevent="drop"
-        >
-            <i class="fa fa-trash" />
-        </button>
-    </div>
-</template>
+    template: `
+        <div>
+            <button
+                v-if="!item && loaded"
+                class="btn btn-xs btn-success"
+                @click.prevent="add"
+            >
+                <i class="fa fa-plus" />
+            </button>
+            <button
+                v-if="item && loaded"
+                class="btn btn-xs btn-danger"
+                @click.prevent="drop"
+            >
+                <i class="fa fa-trash" />
+            </button>
+        </div>
+    `,
+});
+
+export default UserRoleListItemActions;

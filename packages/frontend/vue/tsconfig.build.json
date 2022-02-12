@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "lib": [
             "dom",
-            "ES6",
+            "ESNext",
             "dom.iterable",
             "scripthost"
         ],
@@ -18,11 +18,11 @@
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
         "sourceMap": false,
-        "module": "ES6",
+        "module": "ESNext",
         "jsx": "preserve",
 
-        // Babel test opt
         "declaration": true,
+        "declarationDir": "dist/types",
         "isolatedModules": true
     },
     "exclude": [
@@ -31,7 +31,6 @@
     ],
     "include": [
         "types/**/*.d.ts",
-        "src/**/*.ts",
-        "src/**/*.vue"
+        "src/**/*.ts"
     ]
 }

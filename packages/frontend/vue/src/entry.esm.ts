@@ -1,14 +1,16 @@
 import 'regenerator-runtime';
 
-import vue, { PluginFunction } from 'vue';
+import Vue, { Component, PluginFunction } from 'vue';
 
 // Import vue components
-import * as components from './components/domains';
+import * as components from './components';
 
 // install function executed by Vue.use()
-const install: PluginFunction<any> = function installVueLayoutNavigation(instance: typeof vue) {
+const install: PluginFunction<any> = function install(instance: typeof Vue) {
     Object.entries(components).forEach(([componentName, component]) => {
-        instance.component(componentName, component);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        instance.component(componentName, component as Component);
     });
 };
 
@@ -17,4 +19,4 @@ export default install;
 
 // To allow individual component use, export components
 // each can be registered via Vue.component()
-export * from './components/domains';
+export * from './components';

@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as RealmForm } from './RealmForm.vue';
-export { default as RealmList } from './RealmList.vue';
+export { RealmForm } from './RealmForm';
+export { RealmList } from './RealmList';

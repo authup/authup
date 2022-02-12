@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as UserRoleList } from './UserRoleList.vue';
-export { default as UserRoleListItemActions } from './UserRoleListItemActions.vue';
+export { UserRoleList } from './UserRoleList';
+export { UserRoleListItemActions } from './UserRoleListItemActions';

@@ -1,24 +1,37 @@
-<!--
-  Copyright (c) 2021-2021.
-  Author Peter Placzek (tada5hi)
-  For the full copyright and license information,
-  view the LICENSE file that was distributed with this source code.
-  -->
-<script lang="ts">
-import Vue from 'vue';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import Vue, { PropType } from 'vue';
+import { BuildInput } from '@trapi/query';
+import { OAuth2Provider } from '@typescript-auth/domains';
 import {
     mergeDeep,
 } from '../../../utils';
-import Pagination from '../../Pagination.vue';
+import { Pagination } from '../../Pagination';
+import { ComponentListData, ComponentListProperties } from '../../type';
 
-export default {
+type Properties = ComponentListProperties<OAuth2Provider> & {
+    mapItems?: () => void,
+    filterItems?: () => void
+};
+
+export const OAuth2ProviderList = Vue.extend<
+ComponentListData<OAuth2Provider>,
+any,
+any,
+Properties
+>({
     name: 'OAuth2ProviderList',
     components: { Pagination },
     props: {
         mapItems: Function,
         filterItems: Function,
         query: {
-            type: Object,
+            type: Object as PropType<BuildInput<OAuth2Provider>>,
             default() {
                 return {};
             },
@@ -171,110 +184,111 @@ export default {
             }
         },
     },
-};
-</script>
-<template>
-    <div>
-        <slot
-            v-if="withHeader"
-            name="header"
-        >
-            <div class="d-flex flex-row mb-2">
-                <div>
-                    <slot name="header-title">
-                        <h6 class="mb-0">
-                            <i class="fab fa-pied-piper-alt" /> Providers
-                        </h6>
-                    </slot>
-                </div>
-                <div class="ml-auto">
-                    <slot
-                        name="header-actions"
-                        :load="load"
-                        :busy="busy"
-                    >
-                        <div class="d-flex flex-row">
-                            <div>
-                                <button
-                                    type="button"
-                                    class="btn btn-xs btn-dark"
-                                    :disabled="busy"
-                                    @click.prevent="load"
-                                >
-                                    <i class="fas fa-sync" /> Refresh
-                                </button>
-                            </div>
-                        </div>
-                    </slot>
-                </div>
-            </div>
-        </slot>
-        <div
-            v-if="withSearch"
-            class="form-group"
-        >
-            <div class="input-group">
-                <label />
-                <input
-                    v-model="q"
-                    type="text"
-                    name="q"
-                    class="form-control"
-                    placeholder="..."
-                >
-                <div class="input-group-append">
-                    <span class="input-group-text"><i class="fa fa-search" /></span>
-                </div>
-            </div>
-        </div>
-        <slot
-            name="items"
-            :items="formattedItems"
-            :item-busy="itemBusy"
-            :drop="drop"
-            :busy="busy"
-        >
-            <div class="c-list">
-                <div
-                    v-for="(item,key) in formattedItems"
-                    :key="key"
-                    class="c-list-item mb-2"
-                >
-                    <div class="c-list-content align-items-center">
-                        <div class="c-list-icon">
-                            <i class="fa fa-group" />
-                        </div>
-                        <slot name="item-name">
-                            <span class="mb-0">{{ item.name }}</span>
+    template: `
+        <div>
+            <slot
+                v-if="withHeader"
+                name="header"
+            >
+                <div class="d-flex flex-row mb-2">
+                    <div>
+                        <slot name="header-title">
+                            <h6 class="mb-0">
+                                <i class="fab fa-pied-piper-alt" /> Providers
+                            </h6>
                         </slot>
-
-                        <div class="ml-auto">
-                            <slot
-                                name="item-actions"
-                                :item="item"
-                                :item-busy="itemBusy"
-                                :drop="drop"
-                            />
-                        </div>
+                    </div>
+                    <div class="ml-auto">
+                        <slot
+                            name="header-actions"
+                            :load="load"
+                            :busy="busy"
+                        >
+                            <div class="d-flex flex-row">
+                                <div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-xs btn-dark"
+                                        :disabled="busy"
+                                        @click.prevent="load"
+                                    >
+                                        <i class="fas fa-sync" /> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </slot>
+                    </div>
+                </div>
+            </slot>
+            <div
+                v-if="withSearch"
+                class="form-group"
+            >
+                <div class="input-group">
+                    <label />
+                    <input
+                        v-model="q"
+                        type="text"
+                        name="q"
+                        class="form-control"
+                        placeholder="..."
+                    >
+                    <div class="input-group-append">
+                        <span class="input-group-text"><i class="fa fa-search" /></span>
                     </div>
                 </div>
             </div>
-        </slot>
+            <slot
+                name="items"
+                :items="formattedItems"
+                :item-busy="itemBusy"
+                :drop="drop"
+                :busy="busy"
+            >
+                <div class="c-list">
+                    <div
+                        v-for="(item,key) in formattedItems"
+                        :key="key"
+                        class="c-list-item mb-2"
+                    >
+                        <div class="c-list-content align-items-center">
+                            <div class="c-list-icon">
+                                <i class="fa fa-group" />
+                            </div>
+                            <slot name="item-name">
+                                <span class="mb-0">{{ item.name }}</span>
+                            </slot>
 
-        <div
-            v-if="!busy && formattedItems.length === 0"
-            slot="no-more"
-        >
-            <div class="alert alert-sm alert-info">
-                No (more) providers available.
+                            <div class="ml-auto">
+                                <slot
+                                    name="item-actions"
+                                    :item="item"
+                                    :item-busy="itemBusy"
+                                    :drop="drop"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </slot>
+
+            <div
+                v-if="!busy && formattedItems.length === 0"
+                slot="no-more"
+            >
+                <div class="alert alert-sm alert-info">
+                    No (more) providers available.
+                </div>
             </div>
-        </div>
 
-        <pagination
-            :total="meta.total"
-            :offset="meta.offset"
-            :limit="meta.limit"
-            @to="goTo"
-        />
-    </div>
-</template>
+            <pagination
+                :total="meta.total"
+                :offset="meta.offset"
+                :limit="meta.limit"
+                @to="goTo"
+            />
+        </div>
+    `,
+});
+
+export default OAuth2ProviderList;

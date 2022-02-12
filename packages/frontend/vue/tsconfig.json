@@ -7,9 +7,10 @@
             "dom.iterable",
             "scripthost"
         ],
+        "strict": true
     },
-    "files": [
-        "types/vue.shim.d.ts"
-    ],
-    "include": ["**/*.ts", "**/*.vue"]
+    "include": [
+        "types/**/*.d.ts",
+        "src/**/*.ts"
+    ]
 }

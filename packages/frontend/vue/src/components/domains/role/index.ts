@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as RoleForm } from './RoleForm.vue';
-export { default as RoleList } from './RoleList.vue';
+export { RoleForm } from './RoleForm';
+export { RoleList } from './RoleList';

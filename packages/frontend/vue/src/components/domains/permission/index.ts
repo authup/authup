@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as PermissionForm } from './PermissionForm.vue';
-export { default as PermissionList } from './PermissionList.vue';
+export { PermissionForm } from './PermissionForm';
+export { PermissionList } from './PermissionList';

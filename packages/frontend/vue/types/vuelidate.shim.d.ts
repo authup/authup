@@ -7,7 +7,7 @@
 
 declare module 'vuelidate' {
     // we need to augment the actual Vue types
-    import vue from 'vue'
+    import vue from 'vue';
 
     // must bolt on the validations property to the input of ComponentOptions
     // and also onto the "output" of @Component in the form of VueClass<Vue>
@@ -34,14 +34,14 @@ declare module 'vuelidate' {
         data: () => { [x: string]: any }
         beforeCreate: () => void
         beforeDestroy: () => void
-    }
+    };
 
     export function withParams(
         paramsOrClosure: any,
         maybeValidator: any,
-    ): (...args: any[]) => any
+    ): (...args: any[]) => any;
 
     // these are untested, the Vue.use approach to make it a global mixin
-    export function Vuelidate(Vue: vue): void
-    export default function(Vue: vue): void
+    export function Vuelidate(Vue: vue): void;
+    export default function (Vue: vue): void;
 }

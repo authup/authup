@@ -6,4 +6,4 @@
  */
 
 export * from './domains';
-export { default as Pagination } from './Pagination.vue';
+export { Pagination } from './Pagination';

@@ -27,6 +27,11 @@ const browserList = fs.readFileSync('./.browserslistrc')
     .split('\n')
     .filter((entry) => entry && entry.substring(0, 2) !== 'ie');
 
+// Extract babel preset-env config, to combine with esbrowserslist
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const babelPresetEnvConfig = require('./babel.config')
+    .presets.filter((entry) => entry[0] === '@babel/preset-env')[0][1];
+
 const baseConfig = {
     input: 'src/entry.ts',
     plugins: {
@@ -106,6 +111,7 @@ const esConfig = {
             presets: [
                 [
                     '@babel/preset-env', {
+                        ...babelPresetEnvConfig,
                         targets: browserList,
                     },
                 ],

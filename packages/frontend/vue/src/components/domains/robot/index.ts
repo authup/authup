@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { default as RobotForm } from './RobotForm.vue';
-export { default as RobotList } from './RobotList.vue';
+export { RobotForm } from './RobotForm';
+export { RobotList } from './RobotList';
