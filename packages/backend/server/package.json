@@ -61,7 +61,7 @@
         "reflect-metadata": "^0.1.13",
         "sqlite3": "^5.0.2",
         "swagger-ui-express": "^4.3.0",
-        "typeorm": "^0.2.42",
+        "typeorm": "^0.2.43",
         "typeorm-extension": "^1.1.0",
         "yargs": "^17.0.1"
     },
