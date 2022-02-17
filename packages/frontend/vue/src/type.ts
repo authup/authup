@@ -5,5 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './core';
-export * from './domains';
+import { HTTPClient } from '@typescript-auth/domains';
+
+export type InstallOptions = {
+    httpClient?: HTTPClient
+};

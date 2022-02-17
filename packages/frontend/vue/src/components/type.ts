@@ -5,32 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput } from '@trapi/query';
-import { PaginationProperties } from './Pagination';
-
-export type ComponentListData<T = Record<string, any>> = {
-    busy: boolean,
-    items: T[],
-    q: string,
-    meta: PaginationProperties,
-    itemBusy: boolean
+export type PaginationMeta = {
+    limit?: number,
+    offset?: number,
+    total?: number
 };
 
-export type ComponentListItemData<T = Record<string, any>> = {
-    busy: boolean,
-    item: T | null,
-    loaded?: boolean
-};
-
-export type ComponentListProperties<T = Record<string, any>> = {
-    query?: BuildInput<T>,
-
-    withHeader?: boolean,
-    withSearch?: boolean,
-    withPagination?: boolean,
-
-    loadOnInit?: boolean,
-};
+// -------------------------------------------------------
 
 export type ComponentFormData<T = Record<string, any>> = {
     form: Partial<T>,

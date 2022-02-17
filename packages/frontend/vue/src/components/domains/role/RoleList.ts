@@ -5,14 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { Component, PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Role } from '@typescript-auth/domains';
 import { mergeDeep } from '../../../utils';
-import { Pagination } from '../../Pagination';
-import { ComponentListData, ComponentListProperties } from '../../type';
+import { Pagination } from '../../core/Pagination';
+import {
+    ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
+    buildListItems,
+    buildListNoMore,
+    buildListPagination,
+    buildListSearch,
+} from '../../helpers';
 
-export const RoleList = Vue.extend<ComponentListData<Role>, any, any, ComponentListProperties<Role>>({
+export const RoleList = Vue.extend<
+ComponentListData<Role>,
+ComponentListMethods<Role>,
+any,
+ComponentListProperties<Role>
+>({
     name: 'RoleList',
     components: { Pagination },
     props: {
@@ -58,12 +69,14 @@ export const RoleList = Vue.extend<ComponentListData<Role>, any, any, ComponentL
 
             this.meta.offset = 0;
 
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         },
     },
     created() {
         if (this.loadOnInit) {
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         }
     },
     methods: {
@@ -103,132 +116,48 @@ export const RoleList = Vue.extend<ComponentListData<Role>, any, any, ComponentL
                 .catch(reject);
         },
 
-        dropArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleCreated(item: Role) {
+            const index = this.items.findIndex((el: Role) => el.id === item.id);
             if (index !== -1) {
                 this.items.splice(index, 1);
             }
         },
-        addArrayItem(item) {
-            this.items.push(item);
-        },
-        editArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleUpdated(item: Role) {
+            const index = this.items.findIndex((el: Role) => el.id === item.id);
             if (index !== -1) {
-                const keys = Object.keys(item);
+                const keys : (keyof Role)[] = Object.keys(item) as (keyof Role)[];
                 for (let i = 0; i < keys.length; i++) {
                     Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },
+        handleDeleted(item: Role) {
+            const index = this.items.findIndex((el: Role) => el.id === item.id);
+            if (index !== -1) {
+                this.items.splice(index, 1);
+                this.meta.total--;
+            }
+        },
     },
-    template: `
-        <div>
-            <slot
-                v-if="withHeader"
-                name="header"
-            >
-                <div class="d-flex flex-row mb-2">
-                    <div>
-                        <slot name="header-title">
-                            <h6 class="mb-0">
-                                <i class="fas fa-layer-group" /> Roles
-                            </h6>
-                        </slot>
-                    </div>
-                    <div class="ml-auto">
-                        <slot
-                            name="header-actions"
-                            :load="load"
-                            :busy="busy"
-                        >
-                            <div class="d-flex flex-row">
-                                <div>
-                                    <button
-                                        type="button"
-                                        class="btn btn-xs btn-dark"
-                                        :disabled="busy"
-                                        @click.prevent="load"
-                                    >
-                                        <i class="fas fa-sync" /> Refresh
-                                    </button>
-                                </div>
-                                <div class="ml-2">
-                                    <nuxt-link
-                                        to="/admin/roles/add"
-                                        type="button"
-                                        class="btn btn-xs btn-success"
-                                    >
-                                        <i class="fa fa-plus" /> Add
-                                    </nuxt-link>
-                                </div>
-                            </div>
-                        </slot>
-                    </div>
-                </div>
-            </slot>
-            <div class="form-group">
-                <div class="input-group">
-                    <label for="permission-q" />
-                    <input
-                        id="permission-q"
-                        v-model="q"
-                        type="text"
-                        name="q"
-                        class="form-control"
-                        placeholder="Name..."
-                        autocomplete="new-password"
-                    >
-                    <div class="input-group-append">
-                        <span class="input-group-text"><i class="fa fa-search" /></span>
-                    </div>
-                </div>
-            </div>
-            <slot
-                name="items"
-                :items="items"
-                :busy="busy"
-            >
-                <div class="c-list">
-                    <div
-                        v-for="(item,key) in items"
-                        :key="key"
-                        class="c-list-item mb-2"
-                    >
-                        <div class="c-list-content align-items-center">
-                            <div class="c-list-icon">
-                                <i class="fa fa-group" />
-                            </div>
-                            <slot name="item-name">
-                                <span class="mb-0">{{ item.name }}</span>
-                            </slot>
+    render(createElement: CreateElement): VNode {
+        const header = buildListHeader(this, createElement, { title: 'Roles', iconClass: 'fa fa-layer-group' });
+        const search = buildListSearch(this, createElement);
+        const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-user-group' });
+        const noMore = buildListNoMore(this, createElement);
+        const pagination = buildListPagination(this, createElement);
 
-                            <div class="ml-auto">
-                                <slot
-                                    name="item-actions"
-                                    :item="item"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </slot>
-
-            <div
-                v-if="!busy && items.length === 0"
-                slot="no-more"
-            >
-                <div class="alert alert-sm alert-info">
-                    No (more) roles available anymore.
-                </div>
-            </div>
-
-            <pagination
-                :total="meta.total"
-                :offset="meta.offset"
-                :limit="meta.limit"
-                @to="goTo"
-            />
-        </div>
-    `,
+        return createElement(
+            'div',
+            { staticClass: 'list' },
+            [
+                header,
+                search,
+                items,
+                noMore,
+                pagination,
+            ],
+        );
+    },
 });
+
+export default RoleList;

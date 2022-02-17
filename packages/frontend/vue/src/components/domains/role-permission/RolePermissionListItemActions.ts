@@ -7,7 +7,7 @@
 
 import Vue, { PropType } from 'vue';
 import { RolePermission } from '@typescript-auth/domains';
-import { ComponentListItemData } from '../../type';
+import { ComponentListItemData } from '../../helpers';
 
 export type Properties = {
     items?: RolePermission[],

@@ -8,10 +8,15 @@
 import {
     email, maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
-import Vue, { PropType } from 'vue';
+import Vue, {
+    CreateElement, PropType, VNode, VNodeData,
+} from 'vue';
 
-import { User } from '@typescript-auth/domains';
+import { Realm, User } from '@typescript-auth/domains';
 import { ComponentFormData } from '../../type';
+import { FormGroup, FormGroupSlotScope } from '../../core';
+import { RealmList } from '../realm';
+import { ComponentListData } from '../../helpers';
 
 export type Properties = {
     [key: string]: any;
@@ -40,6 +45,7 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
     data() {
         return {
             form: {
+                active: false,
                 name: '',
                 display_name: '',
                 email: '',
@@ -74,8 +80,8 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
         },
     },
     computed: {
-        isRealmPredefined() {
-            return typeof this.realmId !== 'undefined';
+        isRealmLocked() {
+            return !!this.realmId;
         },
         isEditing() {
             return typeof this.entity !== 'undefined' &&
@@ -174,171 +180,283 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
 
             this.busy = false;
         },
-        updateDisplayName(e: Event) {
+        updateDisplayName(value: string) {
             if (!this.displayNameChanged) {
-                this.form.display_name = (e.target as HTMLInputElement).value;
+                this.form.display_name = value;
             }
         },
-        handleDisplayNameChanged(e: Event) {
-            this.displayNameChanged = (e.target as HTMLInputElement).value.length !== 0;
+        handleDisplayNameChanged(value: string) {
+            this.displayNameChanged = value.length !== 0;
         },
     },
-    template: `
-        <div>
-            <form @submit.prevent="submit">
-                <div
-                    v-if="!isRealmPredefined"
-                    class="form-group"
-                    :class="{ 'form-group-error': $v.form.realm_id.$error }"
-                >
-                    <label>Realm</label>
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
 
-                    <realm-list>
-                        <template #items="props">
-                            <select
-                                v-model="$v.form.realm_id.$model"
-                                class="form-control"
-                                :disabled="props.busy"
-                            >
-                                <option value="">
-                                    --- Select ---
-                                </option>
-                                <option
-                                    v-for="(item,key) in props.items"
-                                    :key="key"
-                                    :value="item.id"
-                                >
-                                    {{ item.name }}
-                                </option>
-                            </select>
-                        </template>
-                    </realm-list>
+        let realm = h();
+        if (!vm.isRealmLocked) {
+            realm = h(FormGroup, {
+                props: {
+                    validations: vm.$v.form.realm_id,
+                },
+                scopedSlots: {
+                    default: (props: FormGroupSlotScope) => h('div', {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.realm_id.$error,
+                            'form-group-warning': vm.$v.form.realm_id.$invalid && !vm.$v.form.realm_id.$dirty,
+                        },
+                    }, [
+                        h('label', ['Realm']),
+                        h(RealmList, {
+                            props: {
+                                withSearch: false,
+                                withHeader: false,
+                            },
+                            slot: 'items',
+                            scopedSlots: {
+                                items: (propsItemsSlot: Partial<ComponentListData<Realm>>) => h(
+                                    'select',
+                                    {
+                                        staticClass: 'form-control',
+                                        attrs: {
+                                            disabled: propsItemsSlot.busy,
+                                        },
+                                        on: {
+                                            change($event: any) {
+                                                const $$selectedVal = Array.prototype.filter.call($event.target.options, (o) => o.selected).map((o) => ('_value' in o ? o._value : o.value));
 
+                                                vm.$set(vm.$v.form.realm_id, '$model', $event.target.multiple ? $$selectedVal : $$selectedVal[0]);
+                                            },
+                                        },
+                                    },
+                                    [
+                                        h('option', {
+                                            domProps: { value: '' },
+                                        }, ['-- Select option --']),
+                                        propsItemsSlot.items?.map((item: Realm) => h('option', {
+                                            key: item.id,
+                                            domProps: {
+                                                value: item.id,
+                                            },
+                                        }, [item.name])),
+                                    ],
+                                ),
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ]),
+                },
+            });
+        }
 
-                    <div
-                        v-if="!$v.form.realm_id.required && !$v.form.realm_id.$model"
-                        class="form-group-hint group-required"
-                    >
-                        Please select a realm.
-                    </div>
-                </div>
+        const name = h(FormGroup, {
+            props: {
+                validations: vm.$v.form.name,
+            },
+            scopedSlots: {
+                default: (props: FormGroupSlotScope) => h(
+                    'div',
+                    {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.name.$error,
+                            'form-group-warning': vm.$v.form.name.$invalid && !vm.$v.form.name.$dirty,
+                        },
+                    },
+                    [
+                        h('label', ['Name']),
+                        h('input', {
+                            attrs: {
+                                type: 'text',
+                                placeholder: '...',
+                                disabled: vm.isNameLocked,
+                            },
+                            domProps: {
+                                value: vm.$v.form.name.$model,
+                            },
+                            staticClass: 'form-control',
+                            on: {
+                                input($event: any) {
+                                    if ($event.target.composing) {
+                                        return;
+                                    }
 
-                <div
-                    class="form-group"
-                    :class="{ 'form-group-error': $v.form.name.$error }"
-                >
-                    <label>Name</label>
-                    <input
-                        v-model="$v.form.name.$model"
-                        :disabled="isNameLocked"
-                        type="text"
-                        name="name"
-                        class="form-control"
-                        placeholder="..."
-                        @change.prevent="updateDisplayName"
-                    >
+                                    vm.$set(vm.$v.form.name, '$model', $event.target.value);
+                                    vm.updateDisplayName($event.target.value);
+                                },
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ],
+                ),
+            },
+        });
 
-                    <div
-                        v-if="!$v.form.name.required && !$v.form.name.$model"
-                        class="form-group-hint group-required"
-                    >
-                        Please enter a name.
-                    </div>
-                    <div
-                        v-if="!$v.form.name.minLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the name must be less than <strong>{{ $v.form.name.$params.minLength.min }}</strong> characters.
-                    </div>
-                    <div
-                        v-if="!$v.form.name.maxLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the name must be greater than <strong>{{ $v.form.name.$params.maxLength.max }}</strong> characters.
-                    </div>
-                </div>
+        const displayName = h(FormGroup, {
+            props: {
+                validations: vm.$v.form.display_name,
+            },
+            scopedSlots: {
+                default: (props: FormGroupSlotScope) => h(
+                    'div',
+                    {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.display_name.$error,
+                            'form-group-warning': vm.$v.form.display_name.$invalid && !vm.$v.form.display_name.$dirty,
+                        },
+                    },
+                    [
+                        h('label', ['Display Name']),
+                        h('input', {
+                            attrs: {
+                                type: 'text',
+                                placeholder: '...',
+                            },
+                            domProps: {
+                                value: vm.$v.form.display_name.$model,
+                            },
+                            staticClass: 'form-control',
+                            on: {
+                                input($event: any) {
+                                    if ($event.target.composing) {
+                                        return;
+                                    }
 
-                <div
-                    class="form-group"
-                    :class="{ 'form-group-error': $v.form.display_name.$error }"
-                >
-                    <label>Display Name</label>
-                    <input
-                        v-model="$v.form.display_name.$model"
-                        type="text"
-                        name="display_name"
-                        class="form-control"
-                        placeholder="..."
-                        @change.prevent="handleDisplayNameChanged"
-                    >
+                                    vm.$set(vm.$v.form.display_name, '$model', $event.target.value);
+                                    vm.handleDisplayNameChanged($event.target.value);
+                                },
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ],
+                ),
+            },
+        });
 
-                    <div
-                        v-if="!$v.form.display_name.required && !$v.form.display_name.$model"
-                        class="form-group-hint group-required"
-                    >
-                        Please enter a display name.
-                    </div>
-                    <div
-                        v-if="!$v.form.display_name.minLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the display name must be less than <strong>{{ $v.form.display_name.$params.minLength.min }}</strong> characters.
-                    </div>
-                    <div
-                        v-if="!$v.form.display_name.maxLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the display name must be greater than  <strong>{{ $v.form.display_name.$params.maxLength.max }}</strong> characters.
-                    </div>
-                </div>
+        const email = h(FormGroup, {
+            props: {
+                validations: vm.$v.form.email,
+            },
+            scopedSlots: {
+                default: (props: FormGroupSlotScope) => h(
+                    'div',
+                    {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.email.$error,
+                            'form-group-warning': vm.$v.form.email.$invalid && !vm.$v.form.email.$dirty,
+                        },
+                    },
+                    [
+                        h('label', ['Email']),
+                        h('input', {
+                            attrs: {
+                                type: 'email',
+                                placeholder: '...@...',
+                            },
+                            domProps: {
+                                value: vm.$v.form.email.$model,
+                            },
+                            staticClass: 'form-control',
+                            on: {
+                                input($event: any) {
+                                    if ($event.target.composing) {
+                                        return;
+                                    }
 
-                <div
-                    class="form-group"
-                    :class="{ 'form-group-error': $v.form.email.$error }"
-                >
-                    <label>Email</label>
-                    <input
-                        v-model="$v.form.email.$model"
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        placeholder="..."
-                    >
+                                    vm.$set(vm.$v.form.email, '$model', $event.target.value);
+                                },
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ],
+                ),
+            },
+        });
 
-                    <div
-                        v-if="!$v.form.email.minLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the e-mail address must be less than  <strong>{{ $v.form.email.$params.minLength.min }}</strong> characters.
-                    </div>
-                    <div
-                        v-if="!$v.form.email.maxLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the e-mail address must be greater than  <strong>{{ $v.form.email.$params.maxLength.max }}</strong> characters.
-                    </div>
-                    <div
-                        v-if="!$v.form.email.email"
-                        class="form-group-hint group-required"
-                    >
-                        The e-mail address is not valid.
-                    </div>
-                </div>
+        const activate = h('div', {
+            staticClass: 'form-group mb-1',
+        }, [
+            h('b-form-checkbox', {
+                attrs: {
+                    switch: '',
+                },
+                model: {
+                    value: vm.form.active,
+                    callback(v: boolean) {
+                        vm.form.active = v;
+                    },
+                    expression: 'form.active',
+                },
+            } as VNodeData, [
+                h('span', {
+                    class: {
+                        'text-warning': !vm.form.active,
+                        'text-success': vm.form.active,
+                    },
+                }, [vm.form.active ? 'active' : 'inactive']),
+            ]),
+        ]);
 
-                <div class="form-group">
-                    <button
-                        :disabled="$v.form.$invalid || busy"
-                        type="submit"
-                        class="btn btn-primary btn-xs"
-                        @click.prevent="submit"
-                    >
-                        <i :class="{'fa fa-save': isEditing, 'fa fa-plus': !isEditing}" />
-                        {{ isEditing ? 'Update' : 'Create' }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    `,
+        const submit = h('div', {
+            staticClass: 'form-group',
+        }, [
+            h('button', {
+                staticClass: 'btn btn-xs',
+                class: {
+                    'btn-primary': vm.isEditing,
+                    'btn-success': !vm.isEditing,
+                },
+                attrs: {
+                    disabled: vm.$v.form.$invalid || vm.busy,
+                    type: 'button',
+                },
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        return vm.submit.apply(null);
+                    },
+                },
+            }, [
+                h('i', {
+                    class: {
+                        'fa fa-save': vm.isEditing,
+                        'fa fa-plus': !vm.isEditing,
+                    },
+                }),
+                ' ',
+                (vm.isEditing ? 'Update' : 'Create'),
+            ]),
+        ]);
+
+        return h('form', {
+            on: {
+                submit($event: any) {
+                    $event.preventDefault();
+
+                    return vm.submit.apply(null);
+                },
+            },
+        }, [
+            realm,
+            name,
+            displayName,
+            email,
+            activate,
+            submit,
+        ]);
+    },
 });
 
 export default UserForm;

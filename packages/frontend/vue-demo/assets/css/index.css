@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.list {
+    display: flex;
+    flex-direction: column;
+}
+
+.list .list-item {
+    background-color: #ececec;
+    border: 1px solid #dedede;
+
+    /* box-shadow: 0 4px 25px 0 rgba(0,0,0,.1); */
+    transition: all .3s ease-in-out;
+
+    border-radius: 4px;
+
+    padding: 0.25rem 0.25rem;
+    display: flex;
+    flex-direction: row;
+    vertical-align: middle;
+    align-items: center;
+    margin-bottom: 0.25rem;
+
+}
+
+.list .list-item i {
+    font-size: 1rem;
+    padding-right: 0.5rem;
+}
+
+
+.provider-role-list-bar {
+    background-color: #ececec;
+    border: 1px solid #dedede;
+    box-shadow: 0 4px 25px 0 rgb(0 0 0 / 10%);
+    transition: all .3s ease-in-out;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+}
+
+.provider-role-list-bar h6 {
+    cursor: pointer;
+}
+
+.pagination > li > .page-link {
+    color: #333;
+    background-color: #eee;
+    border: 1px solid #eee;
+    cursor:pointer;
+    padding: 5px 8px;
+}
+
+.pagination > .active > .page-link,
+.pagination > .active > .page-link:focus,
+.pagination > .active > .page-link:hover,
+.pagination > li > .page-link:focus,
+.pagination > li > .page-link:hover {
+    background-color: #30373e;
+    color: #FFF;
+    border: 1px solid #30373e;
+}
+
+.form-group-warning label,
+.form-group-warning .label {
+    color: #a68d2f;
+}
+
+.form-group-warning input.form-control,
+.form-group-warning textarea.form-control,
+.form-group-warning select.form-control {
+    box-shadow: 0 0 0 0.1rem #f3db82;
+    border-color: #f3db82;
+}
+
+.form-group-error label,
+.form-group-error .label {
+    color: #f04124;
+}
+
+.form-group-error input.form-control,
+.form-group-error textarea.form-control,
+.form-group-error select.form-control {
+    box-shadow: 0 0 0 0.1rem #f79483;
+    border-color: #f79483;
+}
+
+.form-group-hint {
+    font-size: 0.75rem;
+    line-height: 0.9rem;
+    display: none;
+    margin-left: 10px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.9375rem;
+}
+
+.form-group-hint.group-required,
+.form-group-error .form-group-hint {
+    display: block;
+}
+
+.form-group-hint.group-required {
+    color: rgba(0,123,255);
+}
+
+.form-group-error .form-group-hint {
+    color: #f57f6c;
+}

@@ -9,8 +9,8 @@ import Vue, { PropType } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Robot } from '@typescript-auth/domains';
 import { mergeDeep } from '../../../utils';
-import { Pagination } from '../../Pagination';
-import { ComponentListData, ComponentListProperties } from '../../type';
+import { Pagination } from '../../core/Pagination';
+import { ComponentListData, ComponentListProperties } from '../../helpers';
 
 export const RobotList = Vue.extend<
 ComponentListData<Robot>,

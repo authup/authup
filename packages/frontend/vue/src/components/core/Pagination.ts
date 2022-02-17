@@ -1,19 +1,14 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
+import { PaginationMeta } from '../type';
 
-export type PaginationProperties = {
-    total?: number,
-    limit?: number,
-    offset?: number
-};
-
-export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationProperties>({
+export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationMeta>({
     props: {
         total: {
             type: Number,
@@ -77,6 +72,7 @@ export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationProp
         },
     },
     render(createElement: CreateElement): VNode {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const vm = this;
         const h = createElement;
 

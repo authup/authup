@@ -6,7 +6,7 @@
  */
 import Vue from 'vue';
 import { mergeDeep } from '../../../utils';
-import { Pagination } from '../../Pagination';
+import { Pagination } from '../../core/Pagination';
 
 export const PermissionList = Vue.extend({
     name: 'PermissionList',

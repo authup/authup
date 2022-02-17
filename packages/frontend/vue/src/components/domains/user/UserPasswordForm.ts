@@ -8,22 +8,25 @@
 import {
     maxLength, minLength, required, sameAs,
 } from 'vuelidate/lib/validators';
-import Vue, { PropType } from 'vue';
+import Vue, {
+    CreateElement, VNode, VNodeData,
+} from 'vue';
 import { User } from '@typescript-auth/domains';
 import { ComponentFormData } from '../../type';
+import { FormGroup, FormGroupSlotScope } from '../../core';
 
 type Properties = {
     [key: string]: any;
 
-    entity?: User
+    id: User['id']
 };
 
 export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Properties>({
     name: 'UserPasswordForm',
     props: {
-        entity: {
-            type: Object as PropType<User>,
-            default: undefined,
+        id: {
+            type: String,
+            required: true,
         },
     },
     data() {
@@ -46,23 +49,20 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
                 maxLength: maxLength(100),
             },
             password_repeat: {
-                required,
                 minLength: minLength(5),
                 maxLength: maxLength(100),
-                sameAsPassword: sameAs('password'),
+                sameAs: sameAs('password'),
             },
         },
     },
     methods: {
-        //---------------------------------------------------------------
-
         async submit() {
             if (this.busy) return;
 
             this.busy = true;
 
             try {
-                const user = await this.$authApi.user.update(this.entity.id, {
+                const user = await this.$authApi.user.update(this.id, {
                     password: this.form.password,
                     password_repeat: this.form.password_repeat,
                 });
@@ -87,103 +87,158 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             this.busy = false;
         },
     },
-    template: `
-        <form @submit.prevent="submit">
-            <div
-                class="form-group"
-                :class="{ 'form-group-error': $v.form.password.$error }"
-            >
-                <label>Password</label>
-                <input
-                    v-model="$v.form.password.$model"
-                    :type="form.passwordShow ? 'text' : 'password'"
-                    name="name"
-                    class="form-control"
-                    placeholder="..."
-                >
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
 
-                <div
-                    v-if="!$v.form.password.required"
-                    class="form-group-hint group-required"
-                >
-                    Enter a password.
-                </div>
-                <div
-                    v-if="!$v.form.password.minLength"
-                    class="form-group-hint group-required"
-                >
-                    The length of the password must be greater than <strong>{{ $v.form.password.$params.minLength.min }}</strong> characters.
-                </div>
-                <div
-                    v-if="!$v.form.password.maxLength"
-                    class="form-group-hint group-required"
-                >
-                    The length of the password must be less than <strong>{{ $v.form.password.$params.maxLength.max }}</strong> characters.
-                </div>
-            </div>
+        const password = h(FormGroup, {
+            props: {
+                validations: vm.$v.form.password,
+            },
+            scopedSlots: {
+                default: (props: FormGroupSlotScope) => h(
+                    'div',
+                    {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.password.$error,
+                            'form-group-warning': vm.$v.form.password.$invalid && !vm.$v.form.password.$dirty,
+                        },
+                    },
+                    [
+                        h('label', ['Password']),
+                        h('input', {
+                            attrs: {
+                                type: vm.form.passwordShow ? 'text' : 'password',
+                                placeholder: '...',
+                                autocomplete: 'new-password',
+                            },
+                            domProps: {
+                                value: vm.$v.form.password.$model,
+                            },
+                            staticClass: 'form-control',
+                            on: {
+                                input($event: any) {
+                                    if ($event.target.composing) {
+                                        return;
+                                    }
 
-            <div
-                class="form-group"
-                :class="{ 'form-group-error': $v.form.password_repeat.$error }"
-            >
-                <label>Repeat password</label>
-                <input
-                    v-model="$v.form.password_repeat.$model"
-                    :type="form.passwordShow ? 'text' : 'password'"
-                    name="name"
-                    class="form-control"
-                    placeholder="..."
-                >
+                                    vm.$set(vm.$v.form.password, '$model', $event.target.value);
+                                },
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ],
+                ),
+            },
+        });
 
-                <div
-                    v-if="!$v.form.password_repeat.required"
-                    class="form-group-hint group-required"
-                >
-                    Repeat the password from above.
-                </div>
-                <div
-                    v-if="!$v.form.password_repeat.minLength"
-                    class="form-group-hint group-required"
-                >
-                    The length of the password must be greater than <strong>{{ $v.form.password_repeat.$params.minLength.min }}</strong> characters.
-                </div>
-                <div
-                    v-if="!$v.form.password_repeat.maxLength"
-                    class="form-group-hint group-required"
-                >
-                    The length of the password must be less than <strong>{{ $v.form.password_repeat.$params.maxLength.max }}</strong> characters.
-                </div>
-                <div
-                    v-if="!$v.form.password_repeat.sameAsPassword"
-                    class="form-group-hint group-required"
-                >
-                    The entered passwords are not the same.
-                </div>
-            </div>
+        const passwordRepeat = h(FormGroup, {
+            props: {
+                validations: vm.$v.form.password_repeat,
+            },
+            scopedSlots: {
+                default: (props: FormGroupSlotScope) => h(
+                    'div',
+                    {
+                        staticClass: 'form-group',
+                        class: {
+                            'form-group-error': vm.$v.form.password_repeat.$error,
+                            'form-group-warning': vm.$v.form.password_repeat.$invalid && !vm.$v.form.password_repeat.$dirty,
+                        },
+                    },
+                    [
+                        h('label', ['Password Repeat']),
+                        h('input', {
+                            attrs: {
+                                type: vm.form.passwordShow ? 'text' : 'password',
+                                placeholder: '...',
+                                autocomplete: 'new-password',
+                            },
+                            domProps: {
+                                value: vm.$v.form.password_repeat.$model,
+                            },
+                            staticClass: 'form-control',
+                            on: {
+                                input($event: any) {
+                                    if ($event.target.composing) {
+                                        return;
+                                    }
 
-            <div class="form-group pl-1 mb-1">
-                <b-form-checkbox
-                    v-model="form.passwordShow"
-                    switch
-                >
-                    Password {{ form.passwordShow ? 'hide' : 'show' }}
-                </b-form-checkbox>
-            </div>
+                                    vm.$set(vm.$v.form.password_repeat, '$model', $event.target.value);
+                                },
+                            },
+                        }),
+                        props.errors.map((error) => h('div', {
+                            staticClass: 'form-group-hint group-required',
+                        }, [error])),
+                    ],
+                ),
+            },
+        });
 
-            <hr>
+        const showPassword = h('div', {
+            staticClass: 'form-group mb-1',
+        }, [
+            h('b-form-checkbox', {
+                attrs: {
+                    switch: '',
+                },
+                model: {
+                    value: vm.form.passwordShow,
+                    callback(v: boolean) {
+                        vm.form.passwordShow = v;
+                    },
+                    expression: 'form.passwordShow',
+                },
+            } as VNodeData, [
+                'Password ',
+                (vm.form.passwordShow ? 'hide' : 'show'),
+            ]),
+        ]);
 
-            <div class="form-group">
-                <button
-                    :disabled="$v.form.$invalid || busy"
-                    type="submit"
-                    class="btn btn-primary btn-xs"
-                    @click.prevent="submit"
-                >
-                    <i class="fa fa-save" /> Update
-                </button>
-            </div>
-        </form>
-    `,
+        const submit = h('div', {
+            staticClass: 'form-group',
+        }, [
+            h('button', {
+                staticClass: 'btn btn-primary btn-xs',
+                attrs: {
+                    disabled: vm.$v.form.$invalid || vm.busy,
+                    type: 'button',
+                },
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        return vm.submit.apply(null);
+                    },
+                },
+            }, [
+                h('i', {
+                    staticClass: 'fa fa-save',
+                }),
+                ' ',
+                'Update',
+            ]),
+        ]);
+
+        return h('form', {
+            on: {
+                submit($event: any) {
+                    $event.preventDefault();
+
+                    return vm.submit.apply(null);
+                },
+            },
+        }, [
+            password,
+            passwordRepeat,
+            showPassword,
+            submit,
+        ]);
+    },
 });
 
 export default UserPasswordForm;

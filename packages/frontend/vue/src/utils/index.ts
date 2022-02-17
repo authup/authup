@@ -6,5 +6,6 @@
  */
 
 export * from './has-own-property';
+export * from './http-client';
 export * from './merge-deep';
 export * from './nanoid';

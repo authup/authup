@@ -10,11 +10,18 @@ import Vue, {
 } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { User } from '@typescript-auth/domains';
-import { mergeDeep } from '../../../utils';
-import { Pagination } from '../../Pagination';
-import { ComponentListData } from '../../type';
-import { hasNormalizedSlot, normalizeSlot } from '../../utils/normalize-slot';
-import { SlotName } from '../../constants';
+import { mergeDeep, useHTTPClient } from '../../../utils';
+import { Pagination } from '../../core/Pagination';
+import { PaginationMeta } from '../../type';
+import {
+    ComponentListData,
+    ComponentListMethods,
+    buildListHeader,
+    buildListItems,
+    buildListNoMore,
+    buildListPagination,
+    buildListSearch,
+} from '../../helpers';
 
 export type Properties = {
     [key: string]: any;
@@ -26,7 +33,7 @@ export type Properties = {
     loadOnInit?: boolean;
 };
 
-export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties>({
+export const UserList = Vue.extend<ComponentListData<User>, ComponentListMethods<User>, any, Properties>({
     name: 'UserList',
     components: { Pagination },
     props: {
@@ -74,12 +81,14 @@ export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties
 
             this.meta.offset = 0;
 
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         },
     },
     created() {
         if (this.loadOnInit) {
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         }
     },
     methods: {
@@ -89,7 +98,7 @@ export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties
             this.busy = true;
 
             try {
-                const response = await this.$authApi.user.getMany(mergeDeep({
+                const response = await useHTTPClient().user.getMany(mergeDeep({
                     include: {
                         realm: true,
                     },
@@ -112,7 +121,7 @@ export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties
 
             this.busy = false;
         },
-        goTo(options, resolve, reject) {
+        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
             if (options.offset === this.meta.offset) return;
 
             this.meta.offset = options.offset;
@@ -122,20 +131,23 @@ export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties
                 .catch(reject);
         },
 
-        addArrayItem(item) {
-            this.items.push(item);
-        },
-        editArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleCreated(item: User) {
+            const index = this.items.findIndex((el: User) => el.id === item.id);
             if (index !== -1) {
-                const keys = Object.keys(item);
+                this.items.splice(index, 1);
+            }
+        },
+        handleUpdated(item: User) {
+            const index = this.items.findIndex((el: User) => el.id === item.id);
+            if (index !== -1) {
+                const keys : (keyof User)[] = Object.keys(item) as (keyof User)[];
                 for (let i = 0; i < keys.length; i++) {
                     Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },
-        dropArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleDeleted(item: User) {
+            const index = this.items.findIndex((el: User) => el.id === item.id);
             if (index !== -1) {
                 this.items.splice(index, 1);
                 this.meta.total--;
@@ -143,208 +155,23 @@ export const UserList = Vue.extend<ComponentListData<User>, any, any, Properties
         },
     },
     render(createElement: CreateElement): VNode {
-        const vm = this;
+        const header = buildListHeader(this, createElement, { title: 'Users', iconClass: 'fa fa-users' });
+        const search = buildListSearch(this, createElement);
+        const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-user' });
+        const noMore = buildListNoMore(this, createElement);
+        const pagination = buildListPagination(this, createElement);
 
-        const h = createElement;
-
-        const $scopedSlots = vm.$scopedSlots || {};
-        const $slots = vm.$slots || {};
-        const slotScope = {};
-
-        let header = h();
-        if (vm.withHeader) {
-            const hasHeaderTitleSlot = hasNormalizedSlot(SlotName.HEADER_TITLE, $scopedSlots, $slots);
-            const headerTitleAlt = h('h6', {
-                staticClass: 'mb-0',
-            }, [
-                h('i', { staticClass: 'fa fa-users' }),
-                ' Users',
-            ]);
-
-            const headerTitle = hasHeaderTitleSlot ?
-                normalizeSlot(SlotName.HEADER_TITLE, $scopedSlots, $slots) :
-                headerTitleAlt;
-
-            // -------------------------------------------------------------
-
-            const hasHeaderActionsSlot = hasNormalizedSlot(SlotName.HEADER_TITLE, $scopedSlots, $slots);
-            const headerActionsAlt = h(
-                'div',
-                {
-                    staticClass: 'd-flex flex-row',
-                },
-                [
-                    h('div', [
-                        h('button', {
-                            domProps: {
-                                type: 'button',
-                                disabled: vm.busy,
-                            },
-                            staticClass: 'btn btn-xs btn-dark',
-                            on: {
-                                click($event: Event) {
-                                    $event.preventDefault();
-
-                                    // eslint-disable-next-line @typescript-eslint/ban-types,prefer-spread,prefer-rest-params
-                                    return (vm.load as Function).apply(null, arguments);
-                                },
-                            },
-                        }, [
-                            h('i', { staticClass: 'fa fa-sync' }),
-                            ' refresh',
-                        ]),
-                        h('a', {
-                            props: {
-                                to: '/admin/users/add',
-                            },
-                            domProps: {
-                                type: 'button',
-                                disabled: vm.busy,
-                            },
-                            staticClass: 'btn btn-xs btn-success ml-1',
-                        }, [
-                            h('i', { staticClass: 'fa fa-plus' }),
-                            ' add',
-                        ]),
-                    ]),
-                ],
-            );
-
-            const headerActions = hasHeaderActionsSlot ?
-                normalizeSlot(SlotName.HEADER_ACTIONS, slotScope, $scopedSlots, $slots) :
-                headerActionsAlt;
-
-            // -------------------------------------------------------------
-
-            const headerAlt = h(
-                'div',
-                {
-                    staticClass: 'd-flex flex-row mb-2',
-                },
-                [
-                    h('div', [headerTitle]),
-                    h('div', { staticClass: 'ml-auto' }, [headerActions]),
-                ],
-            );
-
-            const hasHeaderSlot = hasNormalizedSlot(SlotName.HEADER, $scopedSlots, $slots);
-            header = h(
-                'div',
-                [hasHeaderSlot ?
-                    normalizeSlot(SlotName.HEADER, slotScope, $scopedSlots, $slots) :
-                    headerAlt],
-            );
-        }
-
-        let search = h();
-        if (vm.withSearch) {
-            search = h('div', { staticClass: 'form-group' }, [
-                h('div', { staticClass: 'input-group' }, [
-                    h('input', {
-                        directives: [{
-                            name: 'model',
-                            value: vm.q,
-                        }],
-                        staticClass: 'form-control',
-                        attrs: {
-                            type: 'text',
-                            placeholder: '...',
-                        },
-                        domProps: {
-                            value: vm.q,
-                        },
-                        on: {
-                            input($event: any) {
-                                if ($event.target.composing) {
-                                    return;
-                                }
-
-                                vm.q = $event.target.value;
-                            },
-                        },
-                    }),
-                ]),
-            ]);
-        }
-
-        // ----------------------------------------------------------------------
-
-        const hasItemSlot = hasNormalizedSlot(SlotName.ITEM, $scopedSlots, $slots);
-        const itemFn = (item: User) => h('div', {
-            key: item.id,
-        }, [
-            h('div', {
-                staticClass: 'align-items-center',
-            }, [
-                h('div', [h('i', { staticClass: 'fa fa-user' })]),
-                h('div', [item.name]),
-                h('div', { staticClass: 'ml-auto' }, [
-                    hasNormalizedSlot(SlotName.ITEM_ACTIONS, $scopedSlots, $slots) ?
-                        normalizeSlot(SlotName.ITEM_ACTIONS, { item }, $scopedSlots, $slots) :
-                        '',
-                ]),
-            ]),
-        ]);
-
-        // ----------------------------------------------------------------------
-        const itemsAlt = h('div', [
-            vm.items.map((item: User) => (hasItemSlot ?
-                normalizeSlot(SlotName.ITEM, {
-                    item,
-                    busy: vm.busy,
-                }, $scopedSlots, $slots) :
-                itemFn(item))),
-        ]);
-
-        const hasItemsSlot = hasNormalizedSlot(SlotName.ITEMS, $scopedSlots, $slots);
-        const items = h(
+        return createElement(
             'div',
-            [hasItemsSlot ?
-                normalizeSlot(SlotName.ITEMS, {
-                    items: vm.items,
-                    busy: vm.busy,
-                }, $scopedSlots, $slots) :
-                itemsAlt,
+            { staticClass: 'list' },
+            [
+                header,
+                search,
+                items,
+                noMore,
+                pagination,
             ],
         );
-
-        // ----------------------------------------------------------------------
-
-        let noMore = h();
-        if (!vm.busy && vm.items.length === 0) {
-            const hasNoMoreSlot = hasNormalizedSlot(SlotName.ITEMS_NO_MORE, $scopedSlots, $slots);
-            if (hasNoMoreSlot) {
-                noMore = normalizeSlot(SlotName.ITEMS_NO_MORE, {}, $scopedSlots, $slots);
-            } else {
-                noMore = h('div', { staticClass: 'alert alert-sm alert-info' }, [
-                    'No (more) entries available.',
-                ]);
-            }
-        }
-
-        // ----------------------------------------------------------------------
-
-        let pagination = h();
-        if (vm.withPagination) {
-            pagination = h(Pagination, {
-                props: vm.meta,
-                on: {
-                    to($event: any) {
-                        $event.preventDefault();
-                        // eslint-disable-next-line @typescript-eslint/ban-types,prefer-spread,prefer-rest-params
-                        return (vm.goTo as Function).apply(null, arguments);
-                    },
-                },
-            });
-        }
-
-        return h('div', [
-            header,
-            search,
-            items,
-            noMore,
-            pagination,
-        ]);
     },
 });
 
