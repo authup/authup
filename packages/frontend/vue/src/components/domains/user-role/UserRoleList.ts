@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue from 'vue';
+import Vue, { CreateElement, VNode } from 'vue';
 import { RoleList } from '../role';
 import { UserRoleListItemActions } from './UserRoleListItemActions';
+import { SlotName } from '../../constants';
 
 export type Properties = {
     [key: string]: any;
@@ -23,20 +24,21 @@ export const UserRoleList = Vue.extend<any, any, any, Properties>({
     props: {
         userId: String,
     },
-    template: `
-        <div>
-            <role-list
-                ref="itemList"
-            >
-                <template #item-actions="props">
-                    <user-role-list-item-actions
-                        :role-id="props.item.id"
-                        :user-id="userId"
-                    />
-                </template>
-            </role-list>
-        </div>
-    `,
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
+
+        return h(RoleList, {
+            scopedSlots: {
+                [SlotName.ITEM_ACTIONS]: (slotProps) => h(UserRoleListItemActions, {
+                    props: {
+                        userId: vm.userId,
+                        roleId: slotProps.item.id,
+                    },
+                }),
+            },
+        });
+    },
 });
 
 export default UserRoleList;

@@ -13,4 +13,5 @@ export const LanguageFormEnglish : LanguageFormMap = {
     minLength: 'The length of the input must be greater than {{min}}.',
     required: 'An input value is required.',
     sameAs: 'The input value is not equal to the value of {{field}}',
+    alphaNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-z-_]+',
 };

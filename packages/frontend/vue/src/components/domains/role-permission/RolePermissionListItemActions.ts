@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { RolePermission } from '@typescript-auth/domains';
 import { ComponentListItemData } from '../../helpers';
 
@@ -67,7 +67,9 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
                     this.item = item;
                 }
             } catch (e) {
-                // ...
+                if (e instanceof Error) {
+                    this.$emit('failed', e);
+                }
             }
         },
         async add() {
@@ -81,21 +83,11 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
                     permission_id: this.permissionId,
                 });
 
-                this.$bvToast.toast('The role-permission relation was successfully created.', {
-                    variant: 'success',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.item = item;
 
                 this.$emit('created', item);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
@@ -110,21 +102,11 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
             try {
                 const item = await this.$authApi.rolePermission.delete(this.item.id);
 
-                this.$bvToast.toast('The role-permission relation was successfully deleted.', {
-                    variant: 'success',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.item = null;
 
                 this.$emit('deleted', item);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
@@ -132,22 +114,41 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
             this.busy = false;
         },
     },
-    template: `
-        <div>
-            <button
-                v-if="!item && loaded"
-                class="btn btn-xs btn-success"
-                @click.prevent="add"
-            >
-                <i class="fa fa-plus" />
-            </button>
-            <button
-                v-if="item && loaded"
-                class="btn btn-xs btn-danger"
-                @click.prevent="drop"
-            >
-                <i class="fa fa-trash" />
-            </button>
-        </div>
-    `,
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
+
+        let button = h();
+
+        if (vm.loaded) {
+            button = h('button', {
+                class: {
+                    'btn-success': !vm.item,
+                    'btn-danger': vm.item,
+                },
+                staticClass: 'btn btn-xs',
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        if (vm.item) {
+                            return vm.drop.call(null);
+                        }
+
+                        return vm.add.call(null);
+                    },
+                },
+            }, [
+                h('i', {
+                    staticClass: 'fa',
+                    class: {
+                        'fa-plus': !vm.item,
+                        'fa-trash': vm.item,
+                    },
+                }),
+            ]);
+        }
+
+        return h('div', [button]);
+    },
 });

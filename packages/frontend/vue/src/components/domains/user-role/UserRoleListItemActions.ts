@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { UserRole } from '@typescript-auth/domains';
 import { ComponentListItemData } from '../../helpers';
 
@@ -81,21 +81,11 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
                     user_id: this.userId,
                 });
 
-                this.$bvToast.toast('The user-role relation was successfully created.', {
-                    variant: 'success',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.item = userRole;
 
                 this.$emit('created', userRole);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
@@ -110,21 +100,11 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             try {
                 const userRole = await this.$authApi.userRole.delete(this.item.id);
 
-                this.$bvToast.toast('The user-role relation was successfully deleted.', {
-                    variant: 'success',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.item = null;
 
                 this.$emit('deleted', userRole);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
@@ -132,24 +112,43 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             this.busy = false;
         },
     },
-    template: `
-        <div>
-            <button
-                v-if="!item && loaded"
-                class="btn btn-xs btn-success"
-                @click.prevent="add"
-            >
-                <i class="fa fa-plus" />
-            </button>
-            <button
-                v-if="item && loaded"
-                class="btn btn-xs btn-danger"
-                @click.prevent="drop"
-            >
-                <i class="fa fa-trash" />
-            </button>
-        </div>
-    `,
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
+
+        let button = h();
+
+        if (vm.loaded) {
+            button = h('button', {
+                class: {
+                    'btn-success': !vm.item,
+                    'btn-danger': vm.item,
+                },
+                staticClass: 'btn btn-xs',
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        if (vm.item) {
+                            return vm.drop.call(null);
+                        }
+
+                        return vm.add.call(null);
+                    },
+                },
+            }, [
+                h('i', {
+                    staticClass: 'fa',
+                    class: {
+                        'fa-plus': !vm.item,
+                        'fa-trash': vm.item,
+                    },
+                }),
+            ]);
+        }
+
+        return h('div', [button]);
+    },
 });
 
 export default UserRoleListItemActions;

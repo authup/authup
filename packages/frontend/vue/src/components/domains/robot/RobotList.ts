@@ -5,16 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Robot } from '@typescript-auth/domains';
 import { mergeDeep } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
-import { ComponentListData, ComponentListProperties } from '../../helpers';
+import {
+    ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
+    buildListItems,
+    buildListNoMore,
+    buildListPagination,
+    buildListSearch,
+} from '../../helpers';
+import { PaginationMeta } from '../../type';
 
 export const RobotList = Vue.extend<
 ComponentListData<Robot>,
-any,
+ComponentListMethods<Robot>,
 any,
 ComponentListProperties<Robot>
 >({
@@ -63,12 +70,14 @@ ComponentListProperties<Robot>
 
             this.meta.offset = 0;
 
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         },
     },
     created() {
         if (this.loadOnInit) {
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         }
     },
     methods: {
@@ -92,51 +101,14 @@ ComponentListProperties<Robot>
                 const { total } = response.meta;
                 this.meta.total = total;
             } catch (e) {
-                console.log(e);
-                // ...
+                if (e instanceof Error) {
+                    this.$emit('failed', e);
+                }
             }
 
             this.busy = false;
         },
-        async drop(item) {
-            if (this.itemBusy) return;
-
-            this.itemBusy = true;
-
-            const l = this.$createElement;
-
-            await this.$bvModal.msgBoxConfirm([l('div', { class: 'alert alert-dark m-b-0' }, [
-                l('p', null, [
-                    'Are you sure that you want to delete the robot ',
-                    l('b', null, [item.name]),
-                    '?',
-                ]),
-            ])], {
-                size: 'md',
-                buttonSize: 'xs',
-            })
-                .then((value) => {
-                    if (value) {
-                        return this.$authApi.robot.delete(item.id)
-                            .then(() => {
-                                this.dropArrayItem(item);
-                                return value;
-                            })
-                            .then((value) => {
-                                this.itemBusy = false;
-                                return value;
-                            });
-                    }
-
-                    this.itemBusy = false;
-
-                    return value;
-                }).catch(() => {
-                    // ...
-                    this.itemBusy = false;
-                });
-        },
-        goTo(options, resolve, reject) {
+        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
             if (options.offset === this.meta.offset) return;
 
             this.meta.offset = options.offset;
@@ -146,136 +118,46 @@ ComponentListProperties<Robot>
                 .catch(reject);
         },
 
-        dropArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleCreated(item: Robot) {
+            const index = this.items.findIndex((el: Robot) => el.id === item.id);
             if (index !== -1) {
                 this.items.splice(index, 1);
             }
         },
-        addArrayItem(item) {
-            this.items.push(item);
-        },
-        editArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleUpdated(item: Robot) {
+            const index = this.items.findIndex((el: Robot) => el.id === item.id);
             if (index !== -1) {
-                const keys = Object.keys(item);
+                const keys : (keyof Robot)[] = Object.keys(item) as (keyof Robot)[];
                 for (let i = 0; i < keys.length; i++) {
                     Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },
+        handleDeleted(item: Robot) {
+            const index = this.items.findIndex((el: Robot) => el.id === item.id);
+            if (index !== -1) {
+                this.items.splice(index, 1);
+                this.meta.total--;
+            }
+        },
     },
-    template: `
-        <div>
-            <slot
-                v-if="withHeader"
-                name="header"
-            >
-                <div class="d-flex flex-row mb-2">
-                    <div>
-                        <slot name="header-title">
-                            <h6 class="mb-0">
-                                <i class="fa fa-robot" /> Robots
-                            </h6>
-                        </slot>
-                    </div>
-                    <div class="ml-auto">
-                        <slot
-                            name="header-actions"
-                            :load="load"
-                            :busy="busy"
-                        >
-                            <div class="d-flex flex-row">
-                                <div>
-                                    <button
-                                        type="button"
-                                        class="btn btn-xs btn-dark"
-                                        :disabled="busy"
-                                        @click.prevent="load"
-                                    >
-                                        <i class="fas fa-sync" /> Refresh
-                                    </button>
-                                </div>
-                                <div class="ml-2">
-                                    <nuxt-link
-                                        to="/admin/robots/add"
-                                        type="button"
-                                        class="btn btn-xs btn-success"
-                                    >
-                                        <i class="fa fa-plus" /> Add
-                                    </nuxt-link>
-                                </div>
-                            </div>
-                        </slot>
-                    </div>
-                </div>
-            </slot>
-            <div class="form-group">
-                <div class="input-group">
-                    <label for="permission-q" />
-                    <input
-                        id="permission-q"
-                        v-model="q"
-                        type="text"
-                        name="q"
-                        class="form-control"
-                        placeholder="Name..."
-                        autocomplete="new-password"
-                    >
-                    <div class="input-group-append">
-                        <span class="input-group-text"><i class="fa fa-search" /></span>
-                    </div>
-                </div>
-            </div>
-            <slot
-                name="items"
-                :items="items"
-                :item-busy="itemBusy"
-                :drop="drop"
-                :busy="busy"
-            >
-                <div class="c-list">
-                    <div
-                        v-for="(item,key) in items"
-                        :key="key"
-                        class="c-list-item mb-2"
-                    >
-                        <div class="c-list-content align-items-center">
-                            <div class="c-list-icon">
-                                <i class="fa fa-group" />
-                            </div>
-                            <slot name="item-name">
-                                <span class="mb-0">{{ item.name }}</span>
-                            </slot>
+    render(createElement: CreateElement): VNode {
+        const header = buildListHeader(this, createElement, { title: 'Robots', iconClass: 'fa fa-robot' });
+        const search = buildListSearch(this, createElement);
+        const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-robot' });
+        const noMore = buildListNoMore(this, createElement);
+        const pagination = buildListPagination(this, createElement);
 
-                            <div class="ml-auto">
-                                <slot
-                                    name="item-actions"
-                                    :item="item"
-                                    :item-busy="itemBusy"
-                                    :drop="drop"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </slot>
-
-            <div
-                v-if="!busy && items && items.length === 0"
-                slot="no-more"
-            >
-                <div class="alert alert-sm alert-info">
-                    No (more) robots available.
-                </div>
-            </div>
-
-            <pagination
-                :total="meta.total"
-                :offset="meta.offset"
-                :limit="meta.limit"
-                @to="goTo"
-            />
-        </div>
-    `,
+        return createElement(
+            'div',
+            { staticClass: 'list' },
+            [
+                header,
+                search,
+                items,
+                noMore,
+                pagination,
+            ],
+        );
+    },
 });

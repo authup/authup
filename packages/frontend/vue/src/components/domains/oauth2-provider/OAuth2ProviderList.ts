@@ -12,7 +12,8 @@ import {
     mergeDeep,
 } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
-import { ComponentListData, ComponentListProperties } from '../../helpers';
+import { ComponentListData, ComponentListMethods, ComponentListProperties } from '../../helpers';
+import { PaginationMeta } from '../../type';
 
 type Properties = ComponentListProperties<OAuth2Provider> & {
     mapItems?: () => void,
@@ -21,7 +22,7 @@ type Properties = ComponentListProperties<OAuth2Provider> & {
 
 export const OAuth2ProviderList = Vue.extend<
 ComponentListData<OAuth2Provider>,
-any,
+ComponentListMethods<OAuth2Provider>,
 any,
 Properties
 >({
@@ -87,12 +88,14 @@ Properties
 
             this.meta.offset = 0;
 
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         },
     },
     created() {
         if (this.loadOnInit) {
-            this.load();
+            Promise.resolve()
+                .then(this.load);
         }
     },
     methods: {
@@ -122,40 +125,7 @@ Properties
 
             this.busy = false;
         },
-        async drop(item) {
-            if (this.itemBusy) return;
-
-            this.itemBusy = true;
-
-            const l = this.$createElement;
-
-            await this.$bvModal.msgBoxConfirm([l('div', { class: 'alert alert-dark m-b-0' }, [
-                l('p', null, [
-                    'Are you sure that you want to delete the provider  ',
-                    l('b', null, [item.name]),
-                    '?',
-                ]),
-            ])], {
-                size: 'md',
-                buttonSize: 'xs',
-            })
-                .then((value) => {
-                    if (value) {
-                        return this.$authApi.oauth2Provider.delete(item.id)
-                            .then(() => {
-                                this.dropArrayItem(item);
-                                return value;
-                            });
-                    }
-
-                    this.itemBusy = false;
-
-                    return value;
-                }).catch(() => {
-                    // ...
-                });
-        },
-        goTo(options, resolve, reject) {
+        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
             if (options.offset === this.meta.offset) return;
 
             this.meta.offset = options.offset;
@@ -165,130 +135,29 @@ Properties
                 .catch(reject);
         },
 
-        dropArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleCreated(item: OAuth2Provider) {
+            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
             if (index !== -1) {
                 this.items.splice(index, 1);
             }
         },
-        addArrayItem(item) {
-            this.items.push(item);
-        },
-        editArrayItem(item) {
-            const index = this.items.findIndex((el) => el.id === item.id);
+        handleUpdated(item: OAuth2Provider) {
+            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
             if (index !== -1) {
-                const keys = Object.keys(item);
+                const keys : (keyof OAuth2Provider)[] = Object.keys(item) as (keyof OAuth2Provider)[];
                 for (let i = 0; i < keys.length; i++) {
                     Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },
+        handleDeleted(item: OAuth2Provider) {
+            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
+            if (index !== -1) {
+                this.items.splice(index, 1);
+                this.meta.total--;
+            }
+        },
     },
-    template: `
-        <div>
-            <slot
-                v-if="withHeader"
-                name="header"
-            >
-                <div class="d-flex flex-row mb-2">
-                    <div>
-                        <slot name="header-title">
-                            <h6 class="mb-0">
-                                <i class="fab fa-pied-piper-alt" /> Providers
-                            </h6>
-                        </slot>
-                    </div>
-                    <div class="ml-auto">
-                        <slot
-                            name="header-actions"
-                            :load="load"
-                            :busy="busy"
-                        >
-                            <div class="d-flex flex-row">
-                                <div>
-                                    <button
-                                        type="button"
-                                        class="btn btn-xs btn-dark"
-                                        :disabled="busy"
-                                        @click.prevent="load"
-                                    >
-                                        <i class="fas fa-sync" /> Refresh
-                                    </button>
-                                </div>
-                            </div>
-                        </slot>
-                    </div>
-                </div>
-            </slot>
-            <div
-                v-if="withSearch"
-                class="form-group"
-            >
-                <div class="input-group">
-                    <label />
-                    <input
-                        v-model="q"
-                        type="text"
-                        name="q"
-                        class="form-control"
-                        placeholder="..."
-                    >
-                    <div class="input-group-append">
-                        <span class="input-group-text"><i class="fa fa-search" /></span>
-                    </div>
-                </div>
-            </div>
-            <slot
-                name="items"
-                :items="formattedItems"
-                :item-busy="itemBusy"
-                :drop="drop"
-                :busy="busy"
-            >
-                <div class="c-list">
-                    <div
-                        v-for="(item,key) in formattedItems"
-                        :key="key"
-                        class="c-list-item mb-2"
-                    >
-                        <div class="c-list-content align-items-center">
-                            <div class="c-list-icon">
-                                <i class="fa fa-group" />
-                            </div>
-                            <slot name="item-name">
-                                <span class="mb-0">{{ item.name }}</span>
-                            </slot>
-
-                            <div class="ml-auto">
-                                <slot
-                                    name="item-actions"
-                                    :item="item"
-                                    :item-busy="itemBusy"
-                                    :drop="drop"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </slot>
-
-            <div
-                v-if="!busy && formattedItems.length === 0"
-                slot="no-more"
-            >
-                <div class="alert alert-sm alert-info">
-                    No (more) providers available.
-                </div>
-            </div>
-
-            <pagination
-                :total="meta.total"
-                :offset="meta.offset"
-                :limit="meta.limit"
-                @to="goTo"
-            />
-        </div>
-    `,
 });
 
 export default OAuth2ProviderList;

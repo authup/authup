@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue from 'vue';
+import Vue, { CreateElement, VNode } from 'vue';
+import { Role } from '@typescript-auth/domains';
 import { OAuth2ProviderRoleListItem } from './OAuth2ProviderRoleListItem';
 import { RoleList } from '../role';
+import { SlotName } from '../../constants';
 
 type Properties = {
     [key: string]: any;
@@ -29,26 +31,25 @@ Properties
     props: {
         providerId: String,
     },
-    template: `
-        <div>
-            <role-list
-                ref="roleList"
-                :query="query"
-                :with-header="false"
-            >
-                <template #header-title>
-                    <span />
-                </template>
-                <template #items="props">
-                    <template v-for="role in props.items">
-                        <o-auth2-provider-role-list-item
-                            :key="role.id"
-                            :provider-id="providerId"
-                            :role="role"
-                        />
-                    </template>
-                </template>
-            </role-list>
-        </div>
-    `,
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
+
+        return h(RoleList, {
+            props: {
+                withHeader: false,
+            },
+            scopedSlots: {
+                [SlotName.ITEMS]: (slotProps) => slotProps.items.map((item: Role) => h(OAuth2ProviderRoleListItem, {
+                    key: item.id,
+                    props: {
+                        providerId: vm.providerId,
+                        role: item,
+                    },
+                })),
+            },
+        });
+    },
 });
+
+export default OAuth2ProviderRoleList;

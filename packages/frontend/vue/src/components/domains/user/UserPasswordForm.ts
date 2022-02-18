@@ -12,8 +12,8 @@ import Vue, {
     CreateElement, VNode, VNodeData,
 } from 'vue';
 import { User } from '@typescript-auth/domains';
-import { ComponentFormData } from '../../type';
-import { FormGroup, FormGroupSlotScope } from '../../core';
+import { buildFormInput } from '../../helpers/form/render/input';
+import { ComponentFormData } from '../../helpers';
 
 type Properties = {
     [key: string]: any;
@@ -91,91 +91,21 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
         const vm = this;
         const h = createElement;
 
-        const password = h(FormGroup, {
-            props: {
-                validations: vm.$v.form.password,
-            },
-            scopedSlots: {
-                default: (props: FormGroupSlotScope) => h(
-                    'div',
-                    {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.password.$error,
-                            'form-group-warning': vm.$v.form.password.$invalid && !vm.$v.form.password.$dirty,
-                        },
-                    },
-                    [
-                        h('label', ['Password']),
-                        h('input', {
-                            attrs: {
-                                type: vm.form.passwordShow ? 'text' : 'password',
-                                placeholder: '...',
-                                autocomplete: 'new-password',
-                            },
-                            domProps: {
-                                value: vm.$v.form.password.$model,
-                            },
-                            staticClass: 'form-control',
-                            on: {
-                                input($event: any) {
-                                    if ($event.target.composing) {
-                                        return;
-                                    }
-
-                                    vm.$set(vm.$v.form.password, '$model', $event.target.value);
-                                },
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ],
-                ),
+        const password = buildFormInput<User>(this, h, {
+            title: 'Password',
+            propName: 'password',
+            inputAttrs: {
+                type: vm.form.passwordShow ? 'text' : 'password',
+                autocomplete: 'new-password',
             },
         });
 
-        const passwordRepeat = h(FormGroup, {
-            props: {
-                validations: vm.$v.form.password_repeat,
-            },
-            scopedSlots: {
-                default: (props: FormGroupSlotScope) => h(
-                    'div',
-                    {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.password_repeat.$error,
-                            'form-group-warning': vm.$v.form.password_repeat.$invalid && !vm.$v.form.password_repeat.$dirty,
-                        },
-                    },
-                    [
-                        h('label', ['Password Repeat']),
-                        h('input', {
-                            attrs: {
-                                type: vm.form.passwordShow ? 'text' : 'password',
-                                placeholder: '...',
-                                autocomplete: 'new-password',
-                            },
-                            domProps: {
-                                value: vm.$v.form.password_repeat.$model,
-                            },
-                            staticClass: 'form-control',
-                            on: {
-                                input($event: any) {
-                                    if ($event.target.composing) {
-                                        return;
-                                    }
-
-                                    vm.$set(vm.$v.form.password_repeat, '$model', $event.target.value);
-                                },
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ],
-                ),
+        const passwordRepeat = buildFormInput(this, h, {
+            title: 'Password repeat',
+            propName: 'password_repeat',
+            inputAttrs: {
+                type: vm.form.passwordShow ? 'text' : 'password',
+                autocomplete: 'new-password',
             },
         });
 

@@ -12,11 +12,11 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 
-import { Realm, User } from '@typescript-auth/domains';
-import { ComponentFormData } from '../../type';
+import { User } from '@typescript-auth/domains';
 import { FormGroup, FormGroupSlotScope } from '../../core';
-import { RealmList } from '../realm';
-import { ComponentListData } from '../../helpers';
+import { ComponentFormData, ComponentFormMethods } from '../../helpers';
+import { buildFormSubmit } from '../../helpers/form/render';
+import { buildRealmSelectForm } from '../realm/render/select';
 
 export type Properties = {
     [key: string]: any;
@@ -27,10 +27,9 @@ export type Properties = {
 
 type Data = {
     displayNameChanged: boolean,
-
 } & ComponentFormData<User>;
 
-export const UserForm = Vue.extend<Data, any, any, Properties>({
+export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Properties>({
     name: 'UserForm',
     props: {
         entity: {
@@ -150,19 +149,9 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
                     if (this.isEditing) {
                         const user = await this.$authApi.user.update(this.entity.id, { ...properties });
 
-                        this.$bvToast.toast('The user was successfully updated.', {
-                            variant: 'success',
-                            toaster: 'b-toaster-top-center',
-                        });
-
                         this.$emit('updated', user);
                     } else {
                         const user = await this.$authApi.user.create(properties);
-
-                        this.$bvToast.toast('The realm was successfully created.', {
-                            variant: 'success',
-                            toaster: 'b-toaster-top-center',
-                        });
 
                         this.$emit('created', user);
                     }
@@ -195,60 +184,8 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
 
         let realm = h();
         if (!vm.isRealmLocked) {
-            realm = h(FormGroup, {
-                props: {
-                    validations: vm.$v.form.realm_id,
-                },
-                scopedSlots: {
-                    default: (props: FormGroupSlotScope) => h('div', {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.realm_id.$error,
-                            'form-group-warning': vm.$v.form.realm_id.$invalid && !vm.$v.form.realm_id.$dirty,
-                        },
-                    }, [
-                        h('label', ['Realm']),
-                        h(RealmList, {
-                            props: {
-                                withSearch: false,
-                                withHeader: false,
-                            },
-                            slot: 'items',
-                            scopedSlots: {
-                                items: (propsItemsSlot: Partial<ComponentListData<Realm>>) => h(
-                                    'select',
-                                    {
-                                        staticClass: 'form-control',
-                                        attrs: {
-                                            disabled: propsItemsSlot.busy,
-                                        },
-                                        on: {
-                                            change($event: any) {
-                                                const $$selectedVal = Array.prototype.filter.call($event.target.options, (o) => o.selected).map((o) => ('_value' in o ? o._value : o.value));
-
-                                                vm.$set(vm.$v.form.realm_id, '$model', $event.target.multiple ? $$selectedVal : $$selectedVal[0]);
-                                            },
-                                        },
-                                    },
-                                    [
-                                        h('option', {
-                                            domProps: { value: '' },
-                                        }, ['-- Select option --']),
-                                        propsItemsSlot.items?.map((item: Realm) => h('option', {
-                                            key: item.id,
-                                            domProps: {
-                                                value: item.id,
-                                            },
-                                        }, [item.name])),
-                                    ],
-                                ),
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ]),
-                },
+            realm = buildRealmSelectForm(vm, h, {
+                propName: 'realm_id',
             });
         }
 
@@ -408,37 +345,7 @@ export const UserForm = Vue.extend<Data, any, any, Properties>({
             ]),
         ]);
 
-        const submit = h('div', {
-            staticClass: 'form-group',
-        }, [
-            h('button', {
-                staticClass: 'btn btn-xs',
-                class: {
-                    'btn-primary': vm.isEditing,
-                    'btn-success': !vm.isEditing,
-                },
-                attrs: {
-                    disabled: vm.$v.form.$invalid || vm.busy,
-                    type: 'button',
-                },
-                on: {
-                    click($event: any) {
-                        $event.preventDefault();
-
-                        return vm.submit.apply(null);
-                    },
-                },
-            }, [
-                h('i', {
-                    class: {
-                        'fa fa-save': vm.isEditing,
-                        'fa fa-plus': !vm.isEditing,
-                    },
-                }),
-                ' ',
-                (vm.isEditing ? 'Update' : 'Create'),
-            ]),
-        ]);
+        const submit = buildFormSubmit(this, h);
 
         return h('form', {
             on: {

@@ -23,7 +23,7 @@ import {
     buildListSearch,
 } from '../../helpers';
 
-export type Properties = {
+export type UserProperties = {
     [key: string]: any;
 
     query?: BuildInput<User>;
@@ -33,7 +33,7 @@ export type Properties = {
     loadOnInit?: boolean;
 };
 
-export const UserList = Vue.extend<ComponentListData<User>, ComponentListMethods<User>, any, Properties>({
+export const UserList = Vue.extend<ComponentListData<User>, ComponentListMethods<User>, any, UserProperties>({
     name: 'UserList',
     components: { Pagination },
     props: {

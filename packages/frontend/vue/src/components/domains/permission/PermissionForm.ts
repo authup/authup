@@ -5,17 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { Component, PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Permission } from '@typescript-auth/domains';
+import { ComponentFormData } from '../../helpers';
+import { buildFormInput } from '../../helpers/form/render/input';
+import { buildFormSubmit } from '../../helpers/form/render';
 
-export type PermissionFormComponent = Component & {
+type Properties = {
     [key: string]: any;
 
     entity?: Partial<Permission>
 };
 
-export const PermissionForm : PermissionFormComponent = Vue.extend({
+export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any, Properties>({
     name: 'PermissionForm',
     props: {
         entityProperty: {
@@ -25,16 +28,15 @@ export const PermissionForm : PermissionFormComponent = Vue.extend({
     },
     data() {
         return {
-            formData: {
+            form: {
                 id: '',
             },
 
             busy: false,
-            message: null,
         };
     },
     validations: {
-        formData: {
+        form: {
             id: {
                 required,
                 minLength: minLength(3),
@@ -50,7 +52,7 @@ export const PermissionForm : PermissionFormComponent = Vue.extend({
     },
     created() {
         if (this.isEditing) {
-            this.formData.id = this.entityProperty.id;
+            this.form.id = this.entityProperty.id;
         }
     },
     methods: {
@@ -66,71 +68,43 @@ export const PermissionForm : PermissionFormComponent = Vue.extend({
                 let response;
 
                 if (this.isEditing) {
-                    response = await this.$authApi.permission.update(this.entityProperty.id, this.formData);
+                    response = await this.$authApi.permission.update(this.entityProperty.id, this.form);
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.permission.create(this.formData);
+                    response = await this.$authApi.permission.create(this.form);
                     this.$emit('created', response);
                 }
             } catch (e) {
-                this.message = {
-                    data: e.message,
-                    isError: true,
-                };
+                if (e instanceof Error) {
+                    this.$emit('failed', e);
+                }
             }
 
             this.busy = false;
         },
     },
-    template: `
-        <div>
-            <div class="form-group">
-                <div
-                    class="form-group"
-                    :class="{ 'form-group-error': $v.formData.id.$error }"
-                >
-                    <label>ID</label>
-                    <input
-                        v-model="$v.formData.id.$model"
-                        type="text"
-                        name="name"
-                        class="form-control"
-                        placeholder="Name..."
-                    >
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
 
-                    <div
-                        v-if="!$v.formData.id.required"
-                        class="form-group-hint group-required"
-                    >
-                        Enter a ID
-                    </div>
-                    <div
-                        v-if="!$v.formData.id.minLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the ID must be greater than <strong>{{ $v.formData.id.$params.minLength.min }}</strong> characters
-                    </div>
-                    <div
-                        v-if="!$v.formData.id.maxLength"
-                        class="form-group-hint group-required"
-                    >
-                        The length of the ID must be less than <strong>{{ $v.formData.id.$params.maxLength.max }}</strong> characters.
-                    </div>
-                </div>
+        const id = buildFormInput(this, h, {
+            title: 'ID',
+            propName: 'id',
+        });
 
-                <hr>
+        const submit = buildFormSubmit(this, h);
 
-                <div class="form-group">
-                    <button
-                        type="submit"
-                        class="btn btn-outline-primary btn-sm"
-                        :disabled="$v.$invalid || busy"
-                        @click.prevent="submit"
-                    >
-                        {{ isEditing ? 'Update' : 'Create' }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `,
+        return h('form', {
+            on: {
+                submit($event: any) {
+                    $event.preventDefault();
+
+                    return vm.submit.apply(null);
+                },
+            },
+        }, [
+            id,
+            submit,
+        ]);
+    },
 });

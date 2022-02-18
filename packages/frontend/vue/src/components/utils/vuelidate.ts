@@ -5,11 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type LanguageFormType = 'email' |
-'maxLength' |
-'minLength' |
-'required' |
-'sameAs' |
-'alphaNumHyphenUnderscore';
+import { helpers } from 'vuelidate/lib/validators';
 
-export type LanguageFormMap = Record<LanguageFormType, string>;
+export const alphaNumHyphenUnderscore = helpers.regex('alphaNumHyphenUnderscore', /^[a-z0-9-_]*$/);

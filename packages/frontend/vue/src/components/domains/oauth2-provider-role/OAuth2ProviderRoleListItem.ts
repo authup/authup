@@ -6,9 +6,10 @@
  */
 
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import Vue, { PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { OAuth2ProviderRole, Role } from '@typescript-auth/domains';
-import { ComponentFormData } from '../../type';
+import { ComponentFormData } from '../../helpers';
+import { buildFormInput } from '../../helpers/form/render/input';
 
 export type Properties = {
     [key: string]: any;
@@ -118,11 +119,6 @@ Properties
                         ...this.form,
                     });
 
-                    this.$bvToast.toast('The provider-role was successfully updated.', {
-                        variant: 'success',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('updated', response);
                 } else {
                     response = await this.$authApi.oauth2ProviderRole.create({
@@ -133,20 +129,10 @@ Properties
 
                     this.item = response;
 
-                    this.$bvToast.toast('The provider-role was successfully created.', {
-                        variant: 'success',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('created', response);
                 }
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'danger',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
@@ -161,16 +147,13 @@ Properties
             try {
                 const response = await this.$authApi.oauth2ProviderRole.delete(this.item.id);
 
-                this.$bvToast.toast('The provider-role was successfully deleted.', {
-                    variant: 'warning',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.item = null;
 
                 this.$emit('deleted', response);
             } catch (e) {
-                // ...
+                if (e instanceof Error) {
+                    this.$emit('failed', e);
+                }
             }
 
             this.busy = false;
@@ -182,89 +165,132 @@ Properties
             this.display = !this.display;
         },
     },
-    template: `
-        <div>
-            <div
-                class="provider-role-list-bar d-flex flex-row"
-            >
-                <div class="mr-2">
-                    <button
-                        v-if="loaded"
-                        class="btn btn-xs btn-dark"
-                        @click.prevent="toggleDisplay"
-                    >
-                        <i :class="{'fa fa-chevron-down': !display, 'fa fa-chevron-up': display}" />
-                    </button>
-                </div>
-                <div>
-                    <h6
-                        class="mb-0"
-                        @click.prevent="toggleDisplay"
-                    >
-                        {{ role.name }}
-                    </h6>
-                </div>
-                <div class="ml-auto">
-                    <button
-                        v-if="loaded"
-                        :class="{
-                            'btn-primary': !item,
-                            'btn-dark': !!item
-                        }"
-                        class="btn btn-xs"
-                        @click.prevent="submit"
-                    >
-                        <i :class="{'fa fa-plus': !item, 'fa fa-save': item}" />
-                    </button>
-                    <button
-                        v-if="loaded && item"
-                        class="btn btn-xs btn-danger"
-                        :disabled="$v.$invalid || busy"
-                        @click.prevent="drop"
-                    >
-                        <i class="fa fa-trash" />
-                    </button>
-                </div>
-            </div>
+    render(createElement: CreateElement): VNode {
+        const vm = this;
+        const h = createElement;
 
-            <template v-if="display">
-                <div class="mt-2">
-                    <div
-                        class="form-group"
-                        :class="{ 'form-group-error': $v.form.external_id.$error }"
-                    >
-                        <label>External ID</label>
-                        <input
-                            v-model="$v.form.external_id.$model"
-                            type="text"
-                            class="form-control"
-                            placeholder="..."
-                        >
+        let displayButton = h();
 
-                        <div
-                            v-if="!$v.form.external_id.required && !$v.form.external_id.$model"
-                            class="form-group-hint group-required"
-                        >
-                            Enter an external ID.
-                        </div>
+        if (vm.loaded) {
+            displayButton = h('button', {
+                staticClass: 'btn btn-xs btn-dark',
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
 
-                        <div
-                            v-if="!$v.form.external_id.minLength"
-                            class="form-group-hint group-required"
-                        >
-                            The length of the external ID must be greater than
-                            <strong>{{ $v.form.external_id.$params.minLength.min }}</strong> characters.
-                        </div>
-                        <div
-                            v-if="!$v.form.external_id.maxLength"
-                            class="form-group-hint group-required"
-                        >
-                            The length of the external ID must be less than
-                            <strong>{{ $v.form.external_id.$params.maxLength.max }}</strong> characters.
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-    `,
+                        vm.toggleDisplay.call(null);
+                    },
+                },
+            }, [
+                h('i', {
+                    staticClass: 'fa',
+                    class: {
+                        'fa-chevron-down': !vm.display,
+                        'fa-chevron-up': vm.display,
+                    },
+                }),
+            ]);
+        }
+
+        let itemActions = h();
+
+        if (vm.loaded) {
+            let dropAction = h();
+
+            if (vm.item) {
+                dropAction = h('button', {
+                    staticClass: 'btn btn-xs btn-danger',
+                    attrs: {
+                        disabled: vm.$v.$invalid || vm.busy,
+                    },
+                    on: {
+                        click($event: any) {
+                            $event.preventDefault();
+
+                            return vm.drop.call(null);
+                        },
+                    },
+                }, [
+                    h('i', {
+                        staticClass: 'fa',
+                        class: {
+                            'fa-plus': !vm.item,
+                            'fa-save': vm.item,
+                        },
+                    }),
+                ]);
+            }
+
+            itemActions = h('div', {
+                staticClass: 'ml-auto',
+            }, [
+                h('button', {
+                    staticClass: 'btn btn-xs',
+                    class: {
+                        'btn-primary': !vm.item,
+                        'btn-dark': !!vm.item,
+                    },
+                    on: {
+                        click($event: any) {
+                            $event.preventDefault();
+
+                            return vm.submit.call(null);
+                        },
+                    },
+                }, [
+                    h('i', {
+                        staticClass: 'fa',
+                        class: {
+                            'fa-plus': !vm.item,
+                            'fa-save': vm.item,
+                        },
+                    }),
+                ]),
+                dropAction,
+            ]);
+        }
+
+        const listBar = h('div', {
+            staticClass: 'provider-role-list-bar d-flex flex-row',
+        }, [
+            h('div', {
+                staticClass: 'mr-2',
+            }, [
+                displayButton,
+                h('div', [
+                    h('h6', {
+                        staticClass: 'mb-0',
+                        on: {
+                            click($event: any) {
+                                $event.preventDefault();
+
+                                if (vm.loaded) {
+                                    vm.toggleDisplay.call(null);
+                                }
+                            },
+                        },
+                    }, [vm.role.name]),
+                ]),
+                itemActions,
+            ]),
+        ]);
+
+        let form = h();
+
+        if (vm.display) {
+            form = h('div', {
+                staticClass: 'mt-2',
+            }, [
+                buildFormInput(vm, h, {
+                    title: 'External ID',
+                    propName: 'external_id',
+                }),
+            ]);
+        }
+
+        return h('div', [
+            listBar,
+            form,
+        ]);
+    },
 });

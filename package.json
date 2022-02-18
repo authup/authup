@@ -1,5 +1,6 @@
 {
     "name": "typescript-auth",
+    "private": true,
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
