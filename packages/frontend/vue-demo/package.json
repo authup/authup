@@ -46,7 +46,7 @@
     "devDependencies": {
         "@vue/cli-plugin-babel": "^4.5.13",
         "@vue/cli-plugin-typescript": "^4.5.13",
-        "@vue/cli-service": "^4.5.13"
+        "@vue/cli-service": "^5.0.1"
     },
     "publishConfig": {
         "access": "public"
