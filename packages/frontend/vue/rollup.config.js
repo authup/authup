@@ -128,7 +128,7 @@ const umdConfig = {
         compact: true,
         file: 'dist/index.ssr.js',
         format: 'cjs',
-        name: 'VueLayoutNavigation',
+        name: 'TypescriptAuth',
         exports: 'auto',
         assetFileNames: '[name]-[hash][extname]',
         globals,
