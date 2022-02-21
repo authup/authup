@@ -37,7 +37,7 @@
     },
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
-        "@trapi/client": "^2.0.4",
+        "@trapi/client": "^2.0.5",
         "@types/express": "^4.17.13",
         "@typescript-auth/domains": "^0.0.24",
         "@typescript-error/http": "^1.1.3",

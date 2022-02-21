@@ -41,7 +41,7 @@
     "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
     "dependencies": {
         "@casl/ability": "^5.4.3",
-        "@trapi/client": "^2.0.4",
+        "@trapi/client": "^2.0.5",
         "@trapi/query": "^2.0.5",
         "@typescript-error/core": "^1.1.2",
         "@typescript-error/http": "^1.1.3",

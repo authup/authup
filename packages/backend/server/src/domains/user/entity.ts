@@ -80,7 +80,7 @@ export class UserEntity implements User {
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'boolean', default: false,
+        type: 'boolean', default: true,
     })
         active: boolean;
 
