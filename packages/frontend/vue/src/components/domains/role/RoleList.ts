@@ -27,6 +27,10 @@ ComponentListProperties<Role>
     name: 'RoleList',
     components: { Pagination },
     props: {
+        loadOnInit: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<Role>>,
             default() {
@@ -37,11 +41,15 @@ ComponentListProperties<Role>
             type: Boolean,
             default: true,
         },
-        withSearch: {
+        withNoMore: {
             type: Boolean,
             default: true,
         },
-        loadOnInit: {
+        withPagination: {
+            type: Boolean,
+            default: true,
+        },
+        withSearch: {
             type: Boolean,
             default: true,
         },

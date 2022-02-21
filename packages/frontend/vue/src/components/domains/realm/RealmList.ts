@@ -28,6 +28,10 @@ ComponentListProperties<Realm>
     name: 'RealmList',
     components: { Pagination },
     props: {
+        loadOnInit: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<Realm>>,
             default() {
@@ -38,11 +42,15 @@ ComponentListProperties<Realm>
             type: Boolean,
             default: true,
         },
-        withSearch: {
+        withNoMore: {
             type: Boolean,
             default: true,
         },
-        loadOnInit: {
+        withPagination: {
+            type: Boolean,
+            default: true,
+        },
+        withSearch: {
             type: Boolean,
             default: true,
         },

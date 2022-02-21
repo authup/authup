@@ -32,11 +32,12 @@ export type ComponentListItemData<T = Record<string, any>> = {
 };
 
 export type ComponentListProperties<T = Record<string, any>> = {
-    query?: BuildInput<T>,
+    query: BuildInput<T>,
 
-    withHeader?: boolean,
-    withSearch?: boolean,
-    withPagination?: boolean,
+    withHeader: boolean,
+    withNoMore: boolean,
+    withSearch: boolean,
+    withPagination: boolean,
 
-    loadOnInit?: boolean,
+    loadOnInit: boolean,
 };

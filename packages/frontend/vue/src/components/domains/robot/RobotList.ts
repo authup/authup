@@ -28,6 +28,10 @@ ComponentListProperties<Robot>
     name: 'RobotList',
     components: { Pagination },
     props: {
+        loadOnInit: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<Robot>>,
             default() {
@@ -38,15 +42,15 @@ ComponentListProperties<Robot>
             type: Boolean,
             default: true,
         },
+        withNoMore: {
+            type: Boolean,
+            default: true,
+        },
         withPagination: {
             type: Boolean,
             default: true,
         },
         withSearch: {
-            type: Boolean,
-            default: true,
-        },
-        loadOnInit: {
             type: Boolean,
             default: true,
         },

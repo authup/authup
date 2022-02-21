@@ -4,8 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import Vue, { CreateElement, VNode } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Permission } from '@typescript-auth/domains';
+import { BuildInput } from '@trapi/query';
 import { mergeDeep, useHTTPClient } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
 import {
@@ -26,17 +27,21 @@ ComponentListProperties<Permission>
     name: 'PermissionList',
     components: { Pagination },
     props: {
-        query: {
-            type: Object,
-            default() {
-                return {};
-            },
-        },
         loadOnInit: {
             type: Boolean,
             default: true,
         },
+        query: {
+            type: Object as PropType<BuildInput<Permission>>,
+            default() {
+                return {};
+            },
+        },
         withHeader: {
+            type: Boolean,
+            default: true,
+        },
+        withNoMore: {
             type: Boolean,
             default: true,
         },

@@ -37,11 +37,19 @@ Properties
                 return {};
             },
         },
-        withSearch: {
+        withNoMore: {
             type: Boolean,
             default: true,
         },
         withHeader: {
+            type: Boolean,
+            default: true,
+        },
+        withPagination: {
+            type: Boolean,
+            default: true,
+        },
+        withSearch: {
             type: Boolean,
             default: true,
         },

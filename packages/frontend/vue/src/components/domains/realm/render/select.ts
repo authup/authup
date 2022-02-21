@@ -44,6 +44,7 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                     props: {
                         withSearch: false,
                         withHeader: false,
+                        withNoMore: false,
                     },
                     scopedSlots: {
                         [SlotName.ITEMS]: (propsItemsSlot: Partial<ComponentListData<Realm>>) => h(

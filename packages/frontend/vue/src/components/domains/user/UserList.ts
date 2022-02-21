@@ -16,27 +16,26 @@ import { PaginationMeta } from '../../type';
 import {
     ComponentListData,
     ComponentListMethods,
+    ComponentListProperties,
     buildListHeader,
     buildListItems,
     buildListNoMore,
-    buildListPagination,
-    buildListSearch,
+    buildListPagination, buildListSearch,
 } from '../../helpers';
 
-export type UserProperties = {
-    [key: string]: any;
-
-    query?: BuildInput<User>;
-
-    withSearch?: boolean;
-
-    loadOnInit?: boolean;
-};
-
-export const UserList = Vue.extend<ComponentListData<User>, ComponentListMethods<User>, any, UserProperties>({
+export const UserList = Vue.extend<
+ComponentListData<User>,
+ComponentListMethods<User>,
+any,
+ComponentListProperties<User>
+>({
     name: 'UserList',
     components: { Pagination },
     props: {
+        loadOnInit: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<User>>,
             default: undefined,
@@ -45,15 +44,15 @@ export const UserList = Vue.extend<ComponentListData<User>, ComponentListMethods
             type: Boolean,
             default: true,
         },
+        withNoMore: {
+            type: Boolean,
+            default: true,
+        },
         withPagination: {
             type: Boolean,
             default: true,
         },
         withSearch: {
-            type: Boolean,
-            default: true,
-        },
-        loadOnInit: {
             type: Boolean,
             default: true,
         },

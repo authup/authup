@@ -195,13 +195,22 @@ Properties
         let changeSecret = h();
 
         if (vm.entity) {
-            id = buildFormInput(this, h, {
-                title: 'ID',
-                propName: 'id',
-                inputAttrs: {
-                    disabled: true,
-                },
-            });
+            id = h('div', {
+                staticClass: 'form-group',
+            }, [
+                h('label', ['ID']),
+                h('input', {
+                    attrs: {
+                        type: 'text',
+                        placeholder: '...',
+                        disabled: true,
+                    },
+                    domProps: {
+                        value: vm.entity.id,
+                    },
+                    staticClass: 'form-group',
+                }),
+            ]);
 
             changeSecret = h('div', {
                 staticClass: 'form-group mb-1',

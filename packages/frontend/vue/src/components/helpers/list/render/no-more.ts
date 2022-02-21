@@ -23,7 +23,11 @@ export function buildListNoMore<T extends Record<string, any>>(
     const $slots = instance.$slots || {};
 
     let node = h();
-    if (!instance.busy && instance.items.length === 0) {
+    if (
+        instance.withNoMore &&
+        !instance.busy &&
+        instance.items.length === 0
+    ) {
         const hasNoMoreSlot = hasNormalizedSlot(SlotName.ITEMS_NO_MORE, $scopedSlots, $slots);
 
         node = h('div', { staticClass: 'list-no-more' }, [
