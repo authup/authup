@@ -12,6 +12,7 @@ import {
 } from '../../../helpers';
 import { RealmList } from '../RealmList';
 import { FormGroup, FormGroupSlotScope } from '../../../core';
+import { SlotName } from '../../../constants';
 
 export type RealmSelectListBuildContext<T extends Record<string, any>> = {
     propName: keyof T | string
@@ -45,7 +46,7 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                         withHeader: false,
                     },
                     scopedSlots: {
-                        items: (propsItemsSlot: Partial<ComponentListData<Realm>>) => h(
+                        [SlotName.ITEMS]: (propsItemsSlot: Partial<ComponentListData<Realm>>) => h(
                             'select',
                             {
                                 staticClass: 'form-control',

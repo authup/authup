@@ -323,7 +323,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         });
 
         const activate = h('div', {
-            staticClass: 'form-group mb-1',
+            staticClass: 'form-group mb-3',
         }, [
             h('b-form-checkbox', {
                 attrs: {

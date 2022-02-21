@@ -38,6 +38,10 @@ ComponentListProperties<Robot>
             type: Boolean,
             default: true,
         },
+        withPagination: {
+            type: Boolean,
+            default: true,
+        },
         withSearch: {
             type: Boolean,
             default: true,

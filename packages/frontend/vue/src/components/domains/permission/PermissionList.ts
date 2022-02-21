@@ -40,6 +40,10 @@ ComponentListProperties<Permission>
             type: Boolean,
             default: true,
         },
+        withPagination: {
+            type: Boolean,
+            default: true,
+        },
         withSearch: {
             type: Boolean,
             default: true,
@@ -145,7 +149,7 @@ ComponentListProperties<Permission>
     render(createElement: CreateElement): VNode {
         const header = buildListHeader(this, createElement, { title: 'Permissions', iconClass: 'fa-solid fa-key' });
         const search = buildListSearch(this, createElement);
-        const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-key' });
+        const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-key', itemTextPropName: 'id' });
         const noMore = buildListNoMore(this, createElement);
         const pagination = buildListPagination(this, createElement);
 

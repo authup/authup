@@ -126,7 +126,7 @@ Properties
             this.form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
         },
 
-        async save() {
+        async submit() {
             if (this.busy || this.$v.$invalid) return;
 
             this.busy = true;

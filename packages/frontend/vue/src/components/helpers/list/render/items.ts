@@ -12,6 +12,7 @@ import { SlotName } from '../../../constants';
 
 export type ListItemsBuildContext = {
     itemIconClass?: string,
+    itemTextPropName?: string
 };
 
 export function buildListItems<T extends Record<string, any>>(
@@ -29,6 +30,7 @@ export function buildListItems<T extends Record<string, any>>(
 
     context = context || {};
     context.itemIconClass = context.itemIconClass || 'fa fa-bars';
+    context.itemTextPropName = context.itemTextPropName || 'name';
 
     const hasItemSlot = hasNormalizedSlot(SlotName.ITEM, $scopedSlots, $slots);
     const itemFn = (item: T) => h('div', {
@@ -36,7 +38,7 @@ export function buildListItems<T extends Record<string, any>>(
         staticClass: 'list-item',
     }, [
         h('div', [h('i', { staticClass: context?.itemIconClass })]),
-        h('div', [item.name]),
+        h('div', [context?.itemTextPropName ? item[context?.itemTextPropName] : '???']),
         h('div', { staticClass: 'ml-auto' }, [
             hasNormalizedSlot(SlotName.ITEM_ACTIONS, $scopedSlots, $slots) ?
                 normalizeSlot(SlotName.ITEM_ACTIONS, { item }, $scopedSlots, $slots) :

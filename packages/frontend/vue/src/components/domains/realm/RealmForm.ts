@@ -152,17 +152,21 @@ Properties
             }, [
                 h('div', {
                     staticClass: 'mb-1',
-                    on: {
-                        click($event: any) {
-                            $event.preventDefault();
-
-                            vm.generateID.call(null);
-                        },
-                    },
                 }, [
-                    h('i', { staticClass: 'fa fa-wrench' }),
-                    ' ',
-                    'Generate',
+                    h('button', {
+                        staticClass: 'btn btn-dark btn-xs',
+                        on: {
+                            click($event: any) {
+                                $event.preventDefault();
+
+                                vm.generateID.call(null);
+                            },
+                        },
+                    }, [
+                        h('i', { staticClass: 'fa fa-wrench' }),
+                        ' ',
+                        'Generate',
+                    ]),
                 ]),
             ]);
         }
