@@ -11,6 +11,7 @@ import { Role } from '@typescript-auth/domains';
 import { buildFormSubmit } from '../../helpers/form/render';
 import { ComponentFormData, ComponentFormMethods } from '../../helpers';
 import { buildFormInput } from '../../helpers/form/render/input';
+import { useHTTPClient } from '../../../utils';
 
 type Properties = {
     entity?: Partial<Role>
@@ -72,11 +73,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await this.$authApi.role.update(this.entity.id, this.form);
+                    response = await useHTTPClient().role.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.role.create(this.form);
+                    response = await useHTTPClient().role.create(this.form);
 
                     this.$emit('created', response);
                 }

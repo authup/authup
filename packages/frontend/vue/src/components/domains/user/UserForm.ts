@@ -17,6 +17,7 @@ import { FormGroup, FormGroupSlotScope } from '../../core';
 import { ComponentFormData, ComponentFormMethods } from '../../helpers';
 import { buildFormSubmit } from '../../helpers/form/render';
 import { buildRealmSelectForm } from '../realm/render/select';
+import { useHTTPClient } from '../../../utils';
 
 export type Properties = {
     [key: string]: any;
@@ -147,11 +148,11 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
                     }
 
                     if (this.isEditing) {
-                        const user = await this.$authApi.user.update(this.entity.id, { ...properties });
+                        const user = await useHTTPClient().user.update(this.entity.id, { ...properties });
 
                         this.$emit('updated', user);
                     } else {
-                        const user = await this.$authApi.user.create(properties);
+                        const user = await useHTTPClient().user.create(properties);
 
                         this.$emit('created', user);
                     }

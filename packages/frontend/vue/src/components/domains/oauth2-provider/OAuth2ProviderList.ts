@@ -9,7 +9,7 @@ import Vue, { PropType } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { OAuth2Provider } from '@typescript-auth/domains';
 import {
-    mergeDeep,
+    mergeDeep, useHTTPClient,
 } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
 import { ComponentListData, ComponentListMethods, ComponentListProperties } from '../../helpers';
@@ -105,7 +105,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await this.$authApi.oauth2Provider.getMany(mergeDeep({
+                const response = await useHTTPClient().oauth2Provider.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

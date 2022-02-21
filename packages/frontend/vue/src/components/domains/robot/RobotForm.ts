@@ -13,7 +13,7 @@ import {
 } from 'vuelidate/lib/validators';
 import { Robot } from '@typescript-auth/domains';
 import {
-    createNanoID,
+    createNanoID, useHTTPClient,
 } from '../../../utils';
 import { ComponentFormData } from '../../helpers';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
@@ -137,14 +137,14 @@ Properties
                 if (this.isEditing) {
                     const { secret, ...form } = this.form;
 
-                    response = await this.$authApi.robot.update(this.item.id, {
+                    response = await useHTTPClient().robot.update(this.item.id, {
                         ...form,
                         ...(this.isSecretHashed || !this.secretChange ? { } : { secret }),
                     });
 
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.robot.create({
+                    response = await useHTTPClient().robot.create({
                         ...this.form,
                     });
 
@@ -164,7 +164,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await this.$authApi.robot.delete(this.item.id);
+                const response = await useHTTPClient().robot.delete(this.item.id);
 
                 this.$emit('deleted', response);
             } catch (e) {

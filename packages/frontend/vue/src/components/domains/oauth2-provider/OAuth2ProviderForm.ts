@@ -10,7 +10,7 @@ import Vue, {
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { OAuth2Provider } from '@typescript-auth/domains';
-import { createNanoID, hasOwnProperty } from '../../../utils';
+import { createNanoID, hasOwnProperty, useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import { ComponentFormData, ComponentFormMethods } from '../../helpers';
 import { buildRealmSelectForm } from '../realm/render/select';
@@ -160,11 +160,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await this.$authApi.oauth2Provider.update(this.entity.id, this.form);
+                    response = await useHTTPClient().oauth2Provider.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.oauth2Provider.create(this.form);
+                    response = await useHTTPClient().oauth2Provider.create(this.form);
 
                     this.$emit('created', response);
                 }

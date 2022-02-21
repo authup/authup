@@ -24,11 +24,7 @@ export function buildListPagination<T extends Record<string, any>>(
             h(Pagination, {
                 props: instance.meta,
                 on: {
-                    to($event: any) {
-                        $event.preventDefault();
-                        // eslint-disable-next-line @typescript-eslint/ban-types,prefer-spread,prefer-rest-params
-                        return (instance.goTo as Function).apply(null, arguments);
-                    },
+                    to: instance.goTo,
                 },
             }),
         ]);

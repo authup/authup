@@ -8,6 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { UserRole } from '@typescript-auth/domains';
 import { ComponentListItemData } from '../../helpers';
+import { useHTTPClient } from '../../../utils';
 
 export type Properties = {
     items?: UserRole[],
@@ -51,7 +52,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
         },
         async init() {
             try {
-                const response = await this.$authApi.userRole.getMany({
+                const response = await useHTTPClient().userRole.getMany({
                     filters: {
                         role_id: this.roleId,
                         user_id: this.userId,
@@ -76,7 +77,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             this.busy = true;
 
             try {
-                const userRole = await this.$authApi.userRole.create({
+                const userRole = await useHTTPClient().userRole.create({
                     role_id: this.roleId,
                     user_id: this.userId,
                 });
@@ -98,7 +99,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             this.busy = true;
 
             try {
-                const userRole = await this.$authApi.userRole.delete(this.item.id);
+                const userRole = await useHTTPClient().userRole.delete(this.item.id);
 
                 this.item = null;
 

@@ -6,7 +6,7 @@
  */
 import Vue, { CreateElement, VNode } from 'vue';
 import { Permission } from '@typescript-auth/domains';
-import { mergeDeep } from '../../../utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
@@ -85,7 +85,7 @@ ComponentListProperties<Permission>
             this.busy = true;
 
             try {
-                const response = await this.$authApi.permission.getMany(mergeDeep({
+                const response = await useHTTPClient().permission.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

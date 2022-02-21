@@ -10,6 +10,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { OAuth2ProviderRole, Role } from '@typescript-auth/domains';
 import { ComponentFormData } from '../../helpers';
 import { buildFormInput } from '../../helpers/form/render/input';
+import { useHTTPClient } from '../../../utils';
 
 export type Properties = {
     [key: string]: any;
@@ -86,7 +87,7 @@ Properties
             this.loaded = false;
 
             try {
-                const { data } = await this.$authApi.oauth2ProviderRole.getMany({
+                const { data } = await useHTTPClient().oauth2ProviderRole.getMany({
                     filter: {
                         role_id: this.role.id,
                         provider_id: this.providerId,
@@ -115,13 +116,13 @@ Properties
                 let response;
 
                 if (this.item) {
-                    response = await this.$authApi.oauth2ProviderRole.update(this.item.id, {
+                    response = await useHTTPClient().oauth2ProviderRole.update(this.item.id, {
                         ...this.form,
                     });
 
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.oauth2ProviderRole.create({
+                    response = await useHTTPClient().oauth2ProviderRole.create({
                         ...this.form,
                         role_id: this.role.id,
                         provider_id: this.providerId,
@@ -145,7 +146,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await this.$authApi.oauth2ProviderRole.delete(this.item.id);
+                const response = await useHTTPClient().oauth2ProviderRole.delete(this.item.id);
 
                 this.item = null;
 

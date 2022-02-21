@@ -14,6 +14,7 @@ import Vue, {
 import { User } from '@typescript-auth/domains';
 import { buildFormInput } from '../../helpers/form/render/input';
 import { ComponentFormData } from '../../helpers';
+import { useHTTPClient } from '../../../utils';
 
 type Properties = {
     [key: string]: any;
@@ -62,7 +63,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             this.busy = true;
 
             try {
-                const user = await this.$authApi.user.update(this.id, {
+                const user = await useHTTPClient().user.update(this.id, {
                     password: this.form.password,
                     password_repeat: this.form.password_repeat,
                 });

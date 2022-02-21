@@ -82,7 +82,7 @@ const globals = {
 const buildFormats = [];
 const esConfig = {
     ...baseConfig,
-    input: 'src/entry.esm.ts',
+    input: 'src/index.ts',
     external,
     output: {
         file: 'dist/index.esm.js',

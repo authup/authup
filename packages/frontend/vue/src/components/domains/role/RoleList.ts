@@ -8,7 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Role } from '@typescript-auth/domains';
-import { mergeDeep } from '../../../utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
@@ -86,7 +86,7 @@ ComponentListProperties<Role>
             this.busy = true;
 
             try {
-                const response = await this.$authApi.role.getMany(mergeDeep({
+                const response = await useHTTPClient().role.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

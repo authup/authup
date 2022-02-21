@@ -8,9 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import { BuildInput } from '@trapi/query';
-import { BvMsgBoxData } from 'bootstrap-vue';
-import { SingleResourceResponse } from '@typescript-auth/domains/dist/entities/type';
-import { mergeDeep } from '../../../utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
 import {
     ComponentListData,
@@ -89,7 +87,7 @@ ComponentListProperties<Realm>
             this.busy = true;
 
             try {
-                const response = await this.$authApi.realm.getMany(mergeDeep({
+                const response = await useHTTPClient().realm.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,
@@ -108,42 +106,6 @@ ComponentListProperties<Realm>
             }
 
             this.busy = false;
-        },
-        async drop(item: Realm) {
-            if (this.itemBusy) return;
-
-            this.itemBusy = true;
-
-            const l = this.$createElement;
-
-            await this.$bvModal.msgBoxConfirm([l('div', { class: 'alert alert-dark m-b-0' }, [
-                l('p', null, [
-                    'Are you sure that you want to delete the realm  ',
-                    l('b', null, [item.name]),
-                    '?',
-                ]),
-            ])], {
-                size: 'md',
-                buttonSize: 'xs',
-            })
-                .then((value: BvMsgBoxData) => {
-                    if (value) {
-                        return this.$authApi.realm.delete(item.id)
-                            .then(() => {
-                                this.dropArrayItem(item);
-                                return value;
-                            }).then((value: SingleResourceResponse<Realm>) => {
-                                this.itemBusy = false;
-                                return value;
-                            });
-                    }
-
-                    this.itemBusy = false;
-
-                    return value;
-                }).catch(() => {
-                    // ...
-                });
         },
         goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
             if (options.offset === this.meta.offset) return;

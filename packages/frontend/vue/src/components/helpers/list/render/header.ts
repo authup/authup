@@ -49,7 +49,7 @@ export function buildListHeader<T extends Record<string, any>>(
 
         // -------------------------------------------------------------
 
-        const hasHeaderActionsSlot = hasNormalizedSlot(SlotName.HEADER_TITLE, $scopedSlots, $slots);
+        const hasHeaderActionsSlot = hasNormalizedSlot(SlotName.HEADER_ACTIONS, $scopedSlots, $slots);
         const headerActionsAlt = h(
             'div',
             {
@@ -106,7 +106,8 @@ export function buildListHeader<T extends Record<string, any>>(
             },
             [hasHeaderSlot ?
                 normalizeSlot(SlotName.HEADER, slotScope, $scopedSlots, $slots) :
-                headerAlt],
+                headerAlt,
+            ],
         );
     }
 

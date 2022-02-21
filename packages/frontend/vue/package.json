@@ -6,7 +6,7 @@
     "browser": "dist/index.esm.js",
     "module": "dist/index.esm.js",
     "unpkg": "dist/index.min.js",
-    "types": "dist/entry.esm.d.ts",
+    "types": "dist/types/index.d.ts",
     "files": [
         "dist/"
     ],

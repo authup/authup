@@ -9,7 +9,7 @@ import {
 } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
-import { createNanoID } from '../../../utils';
+import { createNanoID, useHTTPClient } from '../../../utils';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import { buildFormSubmit } from '../../helpers/form/render';
 import { buildFormInput } from '../../helpers/form/render/input';
@@ -102,11 +102,11 @@ Properties
             try {
                 let response;
                 if (this.isEditing) {
-                    response = await this.$authApi.realm.update(this.entity.id, this.form);
+                    response = await useHTTPClient().realm.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.realm.create(this.form);
+                    response = await useHTTPClient().realm.create(this.form);
 
                     this.$emit('created', response);
                 }

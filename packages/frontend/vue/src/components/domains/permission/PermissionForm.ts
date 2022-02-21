@@ -11,6 +11,7 @@ import { Permission } from '@typescript-auth/domains';
 import { ComponentFormData } from '../../helpers';
 import { buildFormInput } from '../../helpers/form/render/input';
 import { buildFormSubmit } from '../../helpers/form/render';
+import { useHTTPClient } from '../../../utils';
 
 type Properties = {
     [key: string]: any;
@@ -68,10 +69,10 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
                 let response;
 
                 if (this.isEditing) {
-                    response = await this.$authApi.permission.update(this.entityProperty.id, this.form);
+                    response = await useHTTPClient().permission.update(this.entityProperty.id, this.form);
                     this.$emit('updated', response);
                 } else {
-                    response = await this.$authApi.permission.create(this.form);
+                    response = await useHTTPClient().permission.create(this.form);
                     this.$emit('created', response);
                 }
             } catch (e) {

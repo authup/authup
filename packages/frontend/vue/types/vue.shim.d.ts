@@ -5,22 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HTTPClient } from '@typescript-auth/domains';
-
 declare module '*.vue' {
     import Vue from 'vue';
 
     export default Vue;
-}
-
-declare module 'vue/types/vue' {
-    // Global properties can be declared
-    // on the `VueConstructor` interface
-    interface VueConstructor {
-        $authApi: HTTPClient
-    }
-
-    interface Vue {
-        $authApi: HTTPClient
-    }
 }

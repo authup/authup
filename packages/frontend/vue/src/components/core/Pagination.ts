@@ -89,7 +89,7 @@ export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationMeta
                             $event.preventDefault();
 
                             // eslint-disable-next-line prefer-rest-params
-                            return vm.goTo.apply(null, vm.currentPage - 1);
+                            return vm.goTo(vm.currentPage - 1);
                         },
                     },
                 }, [
@@ -113,7 +113,7 @@ export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationMeta
                             $event.preventDefault();
 
                             // eslint-disable-next-line prefer-rest-params
-                            return vm.goTo.apply(null, vm.pages[i]);
+                            return vm.goTo(vm.pages[i]);
                         },
                     },
                 }, [
@@ -137,7 +137,7 @@ export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationMeta
                             $event.preventDefault();
 
                             // eslint-disable-next-line prefer-rest-params
-                            return vm.goTo.apply(null, vm.currentPage + 1);
+                            return vm.goTo(vm.currentPage + 1);
                         },
                     },
                 }, [
