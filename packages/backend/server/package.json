@@ -56,7 +56,7 @@
         "express": "^4.17.3",
         "express-validator": "^6.14.0",
         "mysql": "^2.18.1",
-        "ora": "^4.0.3",
+        "ora": "^6.1.0",
         "redis-extension": "^1.0.0-4",
         "reflect-metadata": "^0.1.13",
         "sqlite3": "^5.0.2",
