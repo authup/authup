@@ -8,9 +8,9 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { UserRole } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
 
-export class UserRoleAPI {
+export class UserRoleAPI implements DomainAPISlim<UserRole> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

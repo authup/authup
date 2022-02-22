@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,9 +7,9 @@
 
 import template from 'lodash/template';
 import Vue from 'vue';
-import { LanguageFormEnglish } from '../language/en/form';
-import { LanguageFormGerman } from '../language/de/form';
-import { LanguageFormMap } from '../language/type';
+import { LanguageFormEnglish } from '../../../language/en/form';
+import { LanguageFormGerman } from '../../../language/de/form';
+import { LanguageFormMap } from '../../../language/type';
 
 type FormGroupComputed = {
     errors: string[],

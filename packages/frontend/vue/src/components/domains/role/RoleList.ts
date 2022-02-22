@@ -9,7 +9,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Role } from '@typescript-auth/domains';
 import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
     buildListItems,
@@ -124,10 +124,14 @@ ComponentListProperties<Role>
                 .catch(reject);
         },
 
-        handleCreated(item: Role) {
+        handleCreated(item: Role, unshift?: boolean) {
             const index = this.items.findIndex((el: Role) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                if (unshift) {
+                    this.items.unshift(item);
+                } else {
+                    this.items.push(item);
+                }
             }
         },
         handleUpdated(item: Role) {

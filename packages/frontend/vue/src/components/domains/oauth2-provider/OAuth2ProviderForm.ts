@@ -12,10 +12,9 @@ import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { OAuth2Provider } from '@typescript-auth/domains';
 import { createNanoID, hasOwnProperty, useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
-import { ComponentFormData, ComponentFormMethods } from '../../helpers';
+import { ComponentFormData, ComponentFormMethods, buildFormSubmit } from '../../helpers';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { buildFormInput } from '../../helpers/form/render/input';
-import { buildFormSubmit } from '../../helpers/form/render';
 
 type Properties = {
     [key: string]: any;

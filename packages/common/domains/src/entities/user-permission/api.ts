@@ -8,10 +8,10 @@
 import { ClientDriverInstance } from '@trapi/client';
 import { BuildInput, buildQuery } from '@trapi/query';
 import { UserPermission } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
 import { nullifyEmptyObjectProperties } from '../../utils';
 
-export class UserPermissionAPI {
+export class UserPermissionAPI implements DomainAPISlim<UserPermission> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

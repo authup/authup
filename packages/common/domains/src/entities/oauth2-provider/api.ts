@@ -9,10 +9,10 @@ import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { OAuth2Provider } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 import { buildOAuth2ProviderAuthorizePath } from './utils';
 
-export class OAuth2ProviderAPI {
+export class OAuth2ProviderAPI implements DomainAPI<OAuth2Provider> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

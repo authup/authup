@@ -8,9 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Permission } from '@typescript-auth/domains';
-import { ComponentFormData } from '../../helpers';
-import { buildFormInput } from '../../helpers/form/render/input';
-import { buildFormSubmit } from '../../helpers/form/render';
+import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
 import { useHTTPClient } from '../../../utils';
 
 type Properties = {

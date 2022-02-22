@@ -9,9 +9,9 @@ import { CreateElement, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import {
     ComponentFormComputed, ComponentFormData, ComponentFormMethods, ComponentFormVuelidate, ComponentListData,
+    FormGroup, FormGroupSlotScope,
 } from '../../../helpers';
 import { RealmList } from '../RealmList';
-import { FormGroup, FormGroupSlotScope } from '../../../core';
 import { SlotName } from '../../../constants';
 
 export type RealmSelectListBuildContext<T extends Record<string, any>> = {

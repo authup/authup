@@ -9,9 +9,9 @@ import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { Realm } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
-export class RealmAPI {
+export class RealmAPI implements DomainAPI<Realm> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

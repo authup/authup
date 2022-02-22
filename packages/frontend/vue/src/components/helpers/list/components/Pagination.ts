@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
-import { PaginationMeta } from '../type';
+import { PaginationMeta } from '../../../type';
 
 export const Pagination = Vue.extend<{ busy: boolean }, any, any, PaginationMeta>({
     props: {

@@ -9,7 +9,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { Robot } from '@typescript-auth/domains';
 import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
     buildListItems,
@@ -126,10 +126,14 @@ ComponentListProperties<Robot>
                 .catch(reject);
         },
 
-        handleCreated(item: Robot) {
+        handleCreated(item: Robot, unshift?: boolean) {
             const index = this.items.findIndex((el: Robot) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                if (unshift) {
+                    this.items.unshift(item);
+                } else {
+                    this.items.push(item);
+                }
             }
         },
         handleUpdated(item: Robot) {

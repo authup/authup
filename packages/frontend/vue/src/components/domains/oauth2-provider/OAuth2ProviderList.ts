@@ -11,7 +11,7 @@ import { OAuth2Provider } from '@typescript-auth/domains';
 import {
     mergeDeep, useHTTPClient,
 } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
     buildListItems,
@@ -149,10 +149,14 @@ Properties
                 .catch(reject);
         },
 
-        handleCreated(item: OAuth2Provider) {
+        handleCreated(item: OAuth2Provider, unshift?: boolean) {
             const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                if (unshift) {
+                    this.items.unshift(item);
+                } else {
+                    this.items.push(item);
+                }
             }
         },
         handleUpdated(item: OAuth2Provider) {

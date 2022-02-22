@@ -9,9 +9,9 @@ import { ClientDriverInstance } from '@trapi/client';
 import { BuildInput, buildQuery } from '@trapi/query';
 import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
-export class RobotAPI {
+export class RobotAPI implements DomainAPI<Robot> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

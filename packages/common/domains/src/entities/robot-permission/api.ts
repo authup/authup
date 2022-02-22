@@ -8,9 +8,11 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { RobotPermission } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import {
+    CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
+} from '../type';
 
-export class RobotPermissionAPI {
+export class RobotPermissionAPI implements DomainAPISlim<RobotPermission> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {
@@ -22,8 +24,8 @@ export class RobotPermissionAPI {
         return response.data;
     }
 
-    async getOne(id: RobotPermission['id']) : Promise<SingleResourceResponse<RobotPermission>> {
-        const response = await this.client.get(`robot-permissions/${id}`);
+    async getOne(id: RobotPermission['id'], data?: BuildInput<RobotPermission>) : Promise<SingleResourceResponse<RobotPermission>> {
+        const response = await this.client.get(`robot-permissions/${id}${buildQuery(data)}`);
 
         return response.data;
     }

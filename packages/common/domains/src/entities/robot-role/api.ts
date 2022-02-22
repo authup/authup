@@ -8,9 +8,11 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { RobotRole } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import {
+    CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
+} from '../type';
 
-export class RobotRoleAPI {
+export class RobotRoleAPI implements DomainAPISlim<RobotRole> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {

@@ -7,7 +7,7 @@
 
 import { CreateElement } from 'vue';
 import { ComponentListData, ComponentListMethods, ComponentListProperties } from '../type';
-import { Pagination } from '../../../core/Pagination';
+import { Pagination } from '../components/Pagination';
 
 export function buildListPagination<T extends Record<string, any>>(
     instance: ComponentListMethods<T> &

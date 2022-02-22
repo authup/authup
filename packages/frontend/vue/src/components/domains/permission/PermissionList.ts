@@ -8,7 +8,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Permission } from '@typescript-auth/domains';
 import { BuildInput } from '@trapi/query';
 import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
     buildListItems,
@@ -128,10 +128,14 @@ ComponentListProperties<Permission>
                 .catch(reject);
         },
 
-        handleCreated(item: Permission) {
+        handleCreated(item: Permission, unshift?: boolean) {
             const index = this.items.findIndex((el: Permission) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                if (unshift) {
+                    this.items.unshift(item);
+                } else {
+                    this.items.push(item);
+                }
             }
         },
         handleUpdated(item: Permission) {

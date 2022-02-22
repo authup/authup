@@ -13,9 +13,10 @@ import Vue, {
 } from 'vue';
 
 import { User } from '@typescript-auth/domains';
-import { FormGroup, FormGroupSlotScope } from '../../core';
-import { ComponentFormData, ComponentFormMethods } from '../../helpers';
-import { buildFormSubmit } from '../../helpers/form/render';
+import {
+    ComponentFormData, ComponentFormMethods, FormGroup, FormGroupSlotScope,
+    buildFormSubmit,
+} from '../../helpers';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
 

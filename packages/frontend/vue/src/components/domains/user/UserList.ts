@@ -11,7 +11,7 @@ import Vue, {
 import { BuildInput } from '@trapi/query';
 import { User } from '@typescript-auth/domains';
 import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import { PaginationMeta } from '../../type';
 import {
     ComponentListData,
@@ -130,10 +130,14 @@ ComponentListProperties<User>
                 .catch(reject);
         },
 
-        handleCreated(item: User) {
+        handleCreated(item: User, unshift?: boolean) {
             const index = this.items.findIndex((el: User) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                if (unshift) {
+                    this.items.unshift(item);
+                } else {
+                    this.items.push(item);
+                }
             }
         },
         handleUpdated(item: User) {

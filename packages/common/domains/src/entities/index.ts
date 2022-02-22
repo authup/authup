@@ -26,3 +26,6 @@ export * from './third-party';
 export * from './user';
 export * from './user-permission';
 export * from './user-role';
+
+export * from './type';
+export * from './utils';

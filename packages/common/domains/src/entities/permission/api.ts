@@ -8,9 +8,9 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { Permission } from './entity';
-import { CollectionResourceResponse, SingleResourceResponse } from '../type';
+import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
-export class PermissionAPI {
+export class PermissionAPI implements DomainAPI<Permission> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {
@@ -19,6 +19,18 @@ export class PermissionAPI {
 
     async getMany(data?: BuildInput<Permission>): Promise<CollectionResourceResponse<Permission>> {
         const response = await this.client.get(`permissions${buildQuery(data)}`);
+        return response.data;
+    }
+
+    async delete(id: Permission['id']): Promise<SingleResourceResponse<Permission>> {
+        const response = await this.client.delete(`permissions/${id}`);
+
+        return response.data;
+    }
+
+    async getOne(id: Permission['id'], record?: BuildInput<Permission>) {
+        const response = await this.client.get(`permissions/${id}`);
+
         return response.data;
     }
 

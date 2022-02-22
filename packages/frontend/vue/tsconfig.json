@@ -8,7 +8,10 @@
             "dom.iterable",
             "scripthost"
         ],
-        "strict": true
+        "strict": true,
+        "paths": {
+            "@typescript-auth/domains": ["./packages/common/domains/src"]
+        }
     },
     "include": [
         "types/**/*.d.ts",

@@ -20,7 +20,7 @@ export type ComponentListMethods<T = Record<string, any>> = {
     [key: string]: any,
     load: () => Promise<void>,
     goTo: (options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) => void,
-    handleCreated: (item: T) => void,
+    handleCreated: (item: T, unshift?: boolean) => void,
     handleUpdated: (item: T) => void,
     handleDeleted: (item: T) => void,
 };

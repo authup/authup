@@ -10,7 +10,7 @@ import {
     ComponentFormComputed, ComponentFormData,
     ComponentFormMethods, ComponentFormVuelidate,
 } from '../type';
-import { FormGroup, FormGroupSlotScope } from '../../../core';
+import { FormGroup, FormGroupSlotScope } from '../components';
 
 export type FormTextareaBuildContext<T extends Record<string, any>> = {
     title: string | VNode | (VNode | string)[],

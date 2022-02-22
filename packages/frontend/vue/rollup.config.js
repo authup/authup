@@ -19,6 +19,7 @@ const includePathOptions = {
         vue: 'node_modules/vue/dist/vue.common.js',
     },
     external: [
+        'axios',
         'vue',
         'vuelidate',
         'vuelidate/lib/validators',
@@ -70,6 +71,7 @@ const baseConfig = {
 const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
+    'axios',
     'vue',
     'vuelidate',
     'vuelidate/lib/validators',

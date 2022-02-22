@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuildInput } from '@trapi/query';
+
 export type SingleResourceResponse<R> = R;
 export type CollectionResourceResponse<R> = {
     data: R[],
@@ -14,3 +16,20 @@ export type CollectionResourceResponse<R> = {
         total: number
     }
 };
+
+export interface DomainAPISlim<
+    T extends Record<string, any> = Record<string, any>,
+    ID extends keyof T = 'id',
+> {
+    getMany(record?: BuildInput<T>);
+    getOne(id: T[ID], record?: BuildInput<T>);
+    delete(id: T[ID]) : Promise<SingleResourceResponse<T>>;
+    create(data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+}
+
+export interface DomainAPI<
+    T extends Record<string, any> = Record<string, any>,
+    ID extends keyof T = 'id',
+> extends DomainAPISlim<T, ID> {
+    update(id: T[ID], data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+}

@@ -8,6 +8,7 @@
     ],
     "scripts": {
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "build:watch": "npm run build -- --watch",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
         "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
     },

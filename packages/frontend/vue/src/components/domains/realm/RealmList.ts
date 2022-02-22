@@ -9,7 +9,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import { BuildInput } from '@trapi/query';
 import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../core/Pagination';
+import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData,
     ComponentListProperties, buildListHeader, buildListItems,
@@ -127,8 +127,8 @@ ComponentListProperties<Realm>
 
         handleCreated(item: Realm) {
             const index = this.items.findIndex((el: Realm) => el.id === item.id);
-            if (index !== -1) {
-                this.items.splice(index, 1);
+            if (index === -1) {
+                this.items.push(item);
             }
         },
         handleUpdated(item: Realm) {
