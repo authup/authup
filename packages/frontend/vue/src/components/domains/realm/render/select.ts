@@ -45,6 +45,7 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                     props: {
                         withSearch: false,
                         withHeader: false,
+                        withPagination: false,
                         withNoMore: false,
                     },
                     scopedSlots: {

@@ -19,5 +19,6 @@
                 <user-password-form id="bed1e14a-3110-480d-9ebb-ad74aae30f4c" />
             </div>
         </div>
+        <o-auth2-provider-form />
     </div>
 </template>

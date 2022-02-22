@@ -40,7 +40,7 @@ Properties
         },
         realmId: {
             type: String,
-            default: null,
+            default: undefined,
         },
     },
     data() {
@@ -133,22 +133,27 @@ Properties
         },
     },
     created() {
-        if (this.realmId) {
-            this.form.realm_id = this.realmId;
-        }
-
-        // eslint-disable-next-line no-restricted-syntax
-        for (const key in this.form) {
-            if (hasOwnProperty(this.entity, key)) {
-                this.form[key] = this.entity[key];
-            }
-        }
-
-        if (this.isNameEmpty) {
-            this.generateID();
-        }
+        this.initFromProperties();
     },
     methods: {
+        initFromProperties() {
+            if (this.realmId) {
+                this.form.realm_id = this.realmId;
+            }
+
+            if (this.entity) {
+                const keys = Object.keys(this.form);
+                for (let i = 0; i < keys.length; i++) {
+                    if (hasOwnProperty(this.entity, keys[i])) {
+                        this.form[keys[i]] = this.entity[keys[i]];
+                    }
+                }
+            }
+
+            if (this.isNameEmpty) {
+                this.generateID();
+            }
+        },
         async submit() {
             if (this.busy || this.$v.$invalid) {
                 return;
@@ -189,6 +194,7 @@ Properties
         if (vm.isRealmLocked) {
             realm = buildRealmSelectForm(vm, h, {
                 propName: 'realm_id',
+                value: vm.form.realm_id.$model,
             });
         }
 
@@ -229,11 +235,7 @@ Properties
                     propName: 'name',
                 }),
                 h('div', {
-                    staticClass: 'alert alert-sm',
-                    class: {
-                        'alert-warning': vm.isNameEmpty,
-                        'alert-success': !vm.isNameEmpty,
-                    },
+                    staticClass: 'mb-3',
                 }, [
                     h('button', {
                         staticClass: 'btn btn-xs btn-dark',
@@ -244,7 +246,11 @@ Properties
                                 vm.generateID.call(null);
                             },
                         },
-                    }),
+                    }, [
+                        h('i', { staticClass: 'fa fa-wrench' }),
+                        ' ',
+                        'Generate',
+                    ]),
                 ]),
                 realm,
                 openID,
@@ -268,81 +274,72 @@ Properties
             ]),
         ]);
 
-        const secondRow = h('div', [
-            h('div', {
-                staticClass: 'col',
-            }, [
-                h('h6', [
-                    h('i', { staticClass: 'fa fa-link' }),
-                    ' ',
-                    'Token',
+        const secondRow = h(
+            'div',
+            {
+                staticClass: 'row',
+            },
+            [
+                h('div', {
+                    staticClass: 'col',
+                }, [
+                    h('h6', [
+                        h('i', { staticClass: 'fa-solid fa-key' }),
+                        ' ',
+                        'Token',
+                    ]),
+                    buildFormInput(vm, h, {
+                        title: 'Host',
+                        propName: 'token_host',
+                        inputAttrs: {
+                            placeholder: 'https://...',
+                        },
+                    }),
+                    buildFormInput(vm, h, {
+                        title: [
+                            'Path',
+                            ' ',
+                            h('small', { staticClass: 'text-success' }, '(optional)'),
+                        ],
+                        propName: 'token_path',
+                        inputAttrs: {
+                            placeholder: 'oauth/token',
+                        },
+                    }),
                 ]),
-                buildFormInput(vm, h, {
-                    title: 'Token Host',
-                    propName: 'token_host',
-                    inputAttrs: {
-                        placeholder: 'https://...',
-                    },
-                }),
-                buildFormInput(vm, h, {
-                    title: [
-                        h('Token Path (optional)'),
+                h('div', {
+                    staticClass: 'col',
+                }, [
+                    h('h6', [
+                        h('i', { staticClass: 'fa-solid fa-vihara' }),
                         ' ',
-                        h('small', {
-                            staticClass: 'text-success',
-                        }, [
-                            'default: ',
-                            '"oauth/token"',
-                        ]),
-                    ],
-                    propName: 'token_path',
-                    inputAttrs: {
-                        placeholder: 'path/...',
-                    },
-                }),
-            ]),
-            h('div', {
-                staticClass: 'col',
-            }, [
-                h('h6', [
-                    h('i', { staticClass: 'fa fa-link' }),
-                    ' ',
-                    'Authorization',
+                        'Authorization',
+                    ]),
+                    buildFormInput(vm, h, {
+                        title: [
+                            'Host',
+                            ' ',
+                            h('small', { staticClass: 'text-success' }, '(optional)'),
+                        ],
+                        propName: 'authorize_host',
+                        inputAttrs: {
+                            placeholder: vm.$v.form.token_host.$model || 'https://...',
+                        },
+                    }),
+                    buildFormInput(vm, h, {
+                        title: [
+                            'Path',
+                            ' ',
+                            h('small', { staticClass: 'text-success' }, '(optional)'),
+                        ],
+                        propName: 'authorize_path',
+                        inputAttrs: {
+                            placeholder: 'oauth/authorize',
+                        },
+                    }),
                 ]),
-                buildFormInput(vm, h, {
-                    title: [
-                        h('Authorization Host (optional)'),
-                        ' ',
-                        h('small', {
-                            staticClass: 'text-success',
-                        }, [
-                            'default: ',
-                            'Token Host',
-                        ]),
-                    ],
-                    propName: 'authorize_host',
-                    inputAttrs: {
-                        placeholder: 'https://...',
-                    },
-                }),
-                buildFormInput(vm, h, {
-                    title: [
-                        h('Authorization Path (optional)'),
-                        ' ',
-                        h('small', {
-                            staticClass: 'text-success',
-                        }, [
-                            'default: ',
-                            '"oauth/authorize"',
-                        ]),
-                    ],
-                    propName: 'authorize_path',
-                    inputAttrs: {
-                        placeholder: 'path/...',
-                    },
-                }),
-            ]),
-        ]);
+            ],
+        );
 
         let roleList = h();
 
