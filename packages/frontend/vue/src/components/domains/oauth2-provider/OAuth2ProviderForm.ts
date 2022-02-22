@@ -191,10 +191,10 @@ Properties
 
         let realm = h();
 
-        if (vm.isRealmLocked) {
+        if (!vm.isRealmLocked) {
             realm = buildRealmSelectForm(vm, h, {
                 propName: 'realm_id',
-                value: vm.form.realm_id.$model,
+                value: vm.form.realm_id,
             });
         }
 

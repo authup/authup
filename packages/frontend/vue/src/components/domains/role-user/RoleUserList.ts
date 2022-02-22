@@ -6,30 +6,34 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
+import { Role, User } from '@typescript-auth/domains';
 import { UserRoleListItemActions } from '../user-role';
 import { UserList } from '../user/UserList';
 import { SlotName } from '../../constants';
+import { UserRoleListItemActionsProperties } from '../user-role/UserRoleListItemActions';
 
 type Properties = {
-    roleId?: string
+    entityId: string
 };
 
 export const RoleUserList = Vue.extend<any, any, any, Properties>({
     components: { UserList, UserRoleListItemActions },
     props: {
-        roleId: String,
+        entityId: String,
     },
     render(createElement: CreateElement): VNode {
         const vm = this;
         const h = createElement;
 
+        const buildProps = (item: User) : UserRoleListItemActionsProperties => ({
+            roleId: vm.entityId,
+            userId: item.id,
+        });
+
         return h(UserList, {
             scopedSlots: {
                 [SlotName.ITEM_ACTIONS]: (slotProps) => h(UserRoleListItemActions, {
-                    props: {
-                        roleId: vm.roleId,
-                        userId: slotProps.item.id,
-                    },
+                    props: buildProps(slotProps.item),
                 }),
             },
         });

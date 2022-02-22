@@ -12,23 +12,29 @@ import { ComponentFormData } from '../../helpers';
 import { buildFormInput } from '../../helpers/form/render/input';
 import { useHTTPClient } from '../../../utils';
 
-export type Properties = {
+export type OAuth2ProviderRoleListItemProperties = {
     [key: string]: any;
 
-    role?: Role,
-    providerId?: string
+    role: Role,
+    entityId: string
 };
 
 export const OAuth2ProviderRoleListItem = Vue.extend<
 ComponentFormData<OAuth2ProviderRole>,
 any,
 any,
-Properties
+OAuth2ProviderRoleListItemProperties
 >({
     name: 'OAuth2ProviderRoleListItem',
     props: {
-        role: Object as PropType<Role>,
-        providerId: String,
+        role: {
+            type: Object as PropType<Role>,
+            required: true,
+        },
+        entityId: {
+            type: String,
+            required: true,
+        },
     },
     data() {
         return {
@@ -90,7 +96,7 @@ Properties
                 const { data } = await useHTTPClient().oauth2ProviderRole.getMany({
                     filter: {
                         role_id: this.role.id,
-                        provider_id: this.providerId,
+                        provider_id: this.entityId,
                     },
                 });
 
@@ -125,7 +131,7 @@ Properties
                     response = await useHTTPClient().oauth2ProviderRole.create({
                         ...this.form,
                         role_id: this.role.id,
-                        provider_id: this.providerId,
+                        provider_id: this.entityId,
                     });
 
                     this.item = response;
@@ -252,28 +258,28 @@ Properties
         }
 
         const listBar = h('div', {
-            staticClass: 'provider-role-list-bar d-flex flex-row',
+            staticClass: 'd-flex flex-row',
         }, [
             h('div', {
                 staticClass: 'mr-2',
             }, [
                 displayButton,
-                h('div', [
-                    h('h6', {
-                        staticClass: 'mb-0',
-                        on: {
-                            click($event: any) {
-                                $event.preventDefault();
-
-                                if (vm.loaded) {
-                                    vm.toggleDisplay.call(null);
-                                }
-                            },
-                        },
-                    }, [vm.role.name]),
-                ]),
-                itemActions,
             ]),
+            h('div', [
+                h('h6', {
+                    staticClass: 'mb-0',
+                    on: {
+                        click($event: any) {
+                            $event.preventDefault();
+
+                            if (vm.loaded) {
+                                vm.toggleDisplay.call(null);
+                            }
+                        },
+                    },
+                }, [vm.role.name]),
+            ]),
+            itemActions,
         ]);
 
         let form = h();
@@ -289,7 +295,7 @@ Properties
             ]);
         }
 
-        return h('div', [
+        return h('div', { staticClass: 'list-item flex-column' }, [
             listBar,
             form,
         ]);

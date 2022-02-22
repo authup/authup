@@ -7,36 +7,39 @@
 
 import Vue, { CreateElement, VNode } from 'vue';
 import { Role } from '@typescript-auth/domains';
-import { RoleList } from '../role';
-import { UserRoleListItemActions, UserRoleListItemActionsProperties } from './UserRoleListItemActions';
+import { RolePermissionListItemActions } from '../role-permission';
 import { SlotName } from '../../constants';
+import { RoleList } from '../role';
+import { RolePermissionListItemActionsProperties } from '../role-permission/RolePermissionListItemActions';
 
 export type Properties = {
-    [key: string]: any;
-
     entityId: string
 };
 
-export const UserRoleList = Vue.extend<any, any, any, Properties>({
+export const PermissionRoleList = Vue.extend<any, any, any, Properties>({
+    name: 'PermissionRoleList',
     components: {
-        UserRoleListItemActions,
         RoleList,
+        RolePermissionListItemActions,
     },
     props: {
-        entityId: String,
+        entityId: {
+            type: String,
+            required: true,
+        },
     },
     render(createElement: CreateElement): VNode {
         const vm = this;
         const h = createElement;
 
-        const buildProps = (item: Role) : UserRoleListItemActionsProperties => ({
-            userId: vm.entityId,
+        const buildProps = (item: Role) : RolePermissionListItemActionsProperties => ({
+            permissionId: vm.entityId,
             roleId: item.id,
         });
 
         return h(RoleList, {
             scopedSlots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps) => h(UserRoleListItemActions, {
+                [SlotName.ITEM_ACTIONS]: (slotProps) => h(RolePermissionListItemActions, {
                     props: buildProps(slotProps.item),
                 }),
             },
@@ -44,4 +47,4 @@ export const UserRoleList = Vue.extend<any, any, any, Properties>({
     },
 });
 
-export default UserRoleList;
+export default PermissionRoleList;

@@ -10,13 +10,13 @@ import { UserRole } from '@typescript-auth/domains';
 import { ComponentListItemData } from '../../helpers';
 import { useHTTPClient } from '../../../utils';
 
-export type Properties = {
+export type UserRoleListItemActionsProperties = {
     items?: UserRole[],
-    roleId?: string,
-    userId?: string
+    roleId: string,
+    userId: string
 };
 
-export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole>, any, any, Properties>({
+export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole>, any, any, UserRoleListItemActionsProperties>({
     props: {
         items: {
             type: Array as PropType<UserRole[]>,

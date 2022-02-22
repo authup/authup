@@ -7,21 +7,21 @@
 
 import Vue, { CreateElement, VNode } from 'vue';
 import { Role } from '@typescript-auth/domains';
-import { OAuth2ProviderRoleListItem } from './OAuth2ProviderRoleListItem';
+import { OAuth2ProviderRoleListItem, OAuth2ProviderRoleListItemProperties } from './OAuth2ProviderRoleListItem';
 import { RoleList } from '../role';
 import { SlotName } from '../../constants';
 
-type Properties = {
+type OAuth2ProviderRoleListProperties = {
     [key: string]: any;
 
-    providerId?: string
+    entityId: string
 };
 
 export const OAuth2ProviderRoleList = Vue.extend<
 any,
 any,
 any,
-Properties
+OAuth2ProviderRoleListProperties
 >({
     name: 'OAuth2ProviderRoleList',
     components: {
@@ -29,11 +29,19 @@ Properties
         OAuth2ProviderRoleListItem,
     },
     props: {
-        providerId: String,
+        entityId: {
+            type: String,
+            required: true,
+        },
     },
     render(createElement: CreateElement): VNode {
         const vm = this;
         const h = createElement;
+
+        const buildProps = (item: Role) : OAuth2ProviderRoleListItemProperties => ({
+            entityId: vm.entityId,
+            role: item,
+        });
 
         return h(RoleList, {
             props: {
@@ -42,10 +50,7 @@ Properties
             scopedSlots: {
                 [SlotName.ITEMS]: (slotProps) => slotProps.items.map((item: Role) => h(OAuth2ProviderRoleListItem, {
                     key: item.id,
-                    props: {
-                        providerId: vm.providerId,
-                        role: item,
-                    },
+                    props: buildProps(item),
                 })),
             },
         });

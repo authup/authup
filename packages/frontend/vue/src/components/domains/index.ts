@@ -8,6 +8,7 @@
 export * from './oauth2-provider';
 export * from './oauth2-provider-role';
 export * from './permission';
+export * from './permission-role';
 export * from './realm';
 export * from './robot';
 export * from './role';

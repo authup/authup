@@ -6,12 +6,16 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
-import { RolePermissionListItemActions } from './RolePermissionListItemActions';
+import { Permission, Role } from '@typescript-auth/domains';
+import {
+    RolePermissionListItemActions,
+    RolePermissionListItemActionsProperties,
+} from './RolePermissionListItemActions';
 import { PermissionList } from '../permission';
 import { SlotName } from '../../constants';
 
 export type Properties = {
-    roleId?: string
+    entityId: string
 };
 
 export const RolePermissionList = Vue.extend<any, any, any, Properties>({
@@ -21,19 +25,24 @@ export const RolePermissionList = Vue.extend<any, any, any, Properties>({
         RolePermissionListItemActions,
     },
     props: {
-        roleId: String,
+        entityId: {
+            type: String,
+            required: true,
+        },
     },
     render(createElement: CreateElement): VNode {
         const vm = this;
         const h = createElement;
 
+        const buildProps = (item: Permission) : RolePermissionListItemActionsProperties => ({
+            roleId: vm.entityId,
+            permissionId: item.id,
+        });
+
         return h(PermissionList, {
             scopedSlots: {
                 [SlotName.ITEM_ACTIONS]: (slotProps) => h(RolePermissionListItemActions, {
-                    props: {
-                        roleId: vm.roleId,
-                        permissionId: slotProps.item.id,
-                    },
+                    props: buildProps(slotProps.item),
                 }),
             },
         });
