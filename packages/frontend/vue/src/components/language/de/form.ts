@@ -6,6 +6,7 @@
  */
 
 import { LanguageFormMap } from '../type';
+import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 
 export const LanguageFormGerman : LanguageFormMap = {
     email: 'Die Eingabe muss eine gültige E-Mail sein.',
@@ -14,4 +15,5 @@ export const LanguageFormGerman : LanguageFormMap = {
     required: 'Ein Eingabewert wird benötigt.',
     sameAs: 'Der Eingabewert entspricht nicht dem Wert der Eingabe von {{field}}',
     alphaNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-z-_]+',
+    alphaWithUpperNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-zA-Z-_]+',
 };

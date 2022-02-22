@@ -16,7 +16,7 @@ import {
     createNanoID, useHTTPClient,
 } from '../../../utils';
 import { ComponentFormData } from '../../helpers';
-import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
+import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 import { buildFormInput } from '../../helpers/form/render/input';
 import { buildFormSubmit } from '../../helpers/form/render';
 
@@ -60,7 +60,7 @@ Properties
     validations: {
         form: {
             name: {
-                alphaNumHyphenUnderscore,
+                alphaWithUpperNumHyphenUnderScore,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
@@ -208,7 +208,7 @@ Properties
                     domProps: {
                         value: vm.entity.id,
                     },
-                    staticClass: 'form-group',
+                    staticClass: 'form-control',
                 }),
             ]);
 

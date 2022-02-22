@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import AuthVue from '@typescript-auth/vue';
 import Vue, { VNode } from 'vue';
 import { BootstrapVue } from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
+import AuthVue, { setHTTPClient } from '@typescript-auth/vue';
 import { useAPI } from './api';
 
 // CSS
@@ -35,6 +35,8 @@ import Dev from './components/index.vue';
         token: token.access_token,
     });
 
+    setHTTPClient(api);
+
     Vue.use(BootstrapVue);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -46,8 +48,6 @@ import Dev from './components/index.vue';
     });
 
     Vue.config.productionTip = false;
-
-    Vue.prototype.$authApi = api;
 
     new Vue({
         render: (h): VNode => h(Dev),

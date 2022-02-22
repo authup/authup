@@ -10,6 +10,7 @@ export type LanguageFormType = 'email' |
 'minLength' |
 'required' |
 'sameAs' |
-'alphaNumHyphenUnderscore';
+'alphaNumHyphenUnderscore' |
+'alphaWithUpperNumHyphenUnderscore';
 
 export type LanguageFormMap = Record<LanguageFormType, string>;

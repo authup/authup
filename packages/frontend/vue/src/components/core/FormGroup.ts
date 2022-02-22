@@ -29,7 +29,6 @@ export const FormGroup = Vue.extend<Record<string, any>, any, FormGroupComputed,
         validations: {
             required: true,
             type: Object,
-            default: undefined,
         },
         language: {
             required: false,

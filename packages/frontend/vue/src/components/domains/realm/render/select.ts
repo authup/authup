@@ -15,7 +15,8 @@ import { FormGroup, FormGroupSlotScope } from '../../../core';
 import { SlotName } from '../../../constants';
 
 export type RealmSelectListBuildContext<T extends Record<string, any>> = {
-    propName: keyof T | string
+    propName: keyof T | string,
+    value?: string
 };
 
 export function buildRealmSelectForm<T extends Record<string, any>>(
@@ -53,6 +54,9 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                                 staticClass: 'form-control',
                                 attrs: {
                                     disabled: propsItemsSlot.busy,
+                                },
+                                domProps: {
+                                    ...(context.value ? { value: context.value } : {}),
                                 },
                                 on: {
                                     change($event: any) {

@@ -18,7 +18,12 @@ const includePathOptions = {
     include: {
         vue: 'node_modules/vue/dist/vue.common.js',
     },
-    external: ['vue', 'vuelidate', 'bootstrap-vue'],
+    external: [
+        'vue',
+        'vuelidate',
+        'vuelidate/lib/validators',
+        'bootstrap-vue',
+    ],
 };
 
 // Get browserslist config and remove ie from es build targets
@@ -66,8 +71,9 @@ const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
     'vue',
-    'bootstrap-vue',
     'vuelidate',
+    'vuelidate/lib/validators',
+    'bootstrap-vue',
 ];
 
 // UMD/IIFE shared settings: output.globals
