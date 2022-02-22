@@ -5,14 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { PropType } from 'vue';
+import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { OAuth2Provider } from '@typescript-auth/domains';
 import {
     mergeDeep, useHTTPClient,
 } from '../../../utils';
 import { Pagination } from '../../core/Pagination';
-import { ComponentListData, ComponentListMethods, ComponentListProperties } from '../../helpers';
+import {
+    ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
+    buildListItems,
+    buildListNoMore,
+    buildListPagination,
+    buildListSearch,
+} from '../../helpers';
 import { PaginationMeta } from '../../type';
 
 type Properties = ComponentListProperties<OAuth2Provider> & {
@@ -165,6 +171,25 @@ Properties
                 this.meta.total--;
             }
         },
+    },
+    render(createElement: CreateElement): VNode {
+        const header = buildListHeader(this, createElement, { title: 'Providers', iconClass: 'fa-solid fa-atom' });
+        const search = buildListSearch(this, createElement);
+        const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-atom' });
+        const noMore = buildListNoMore(this, createElement);
+        const pagination = buildListPagination(this, createElement);
+
+        return createElement(
+            'div',
+            { staticClass: 'list' },
+            [
+                header,
+                search,
+                items,
+                noMore,
+                pagination,
+            ],
+        );
     },
 });
 

@@ -41,6 +41,10 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             type: String,
             default: undefined,
         },
+        canManage: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
         return {
@@ -184,9 +188,13 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         const h = createElement;
 
         let realm = h();
-        if (!vm.isRealmLocked) {
+        if (
+            !vm.isRealmLocked &&
+            vm.canManage
+        ) {
             realm = buildRealmSelectForm(vm, h, {
                 propName: 'realm_id',
+                value: vm.$v.form.realm_id.$model,
             });
         }
 
@@ -322,29 +330,33 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             },
         });
 
-        const activate = h('div', {
-            staticClass: 'form-group mb-3',
-        }, [
-            h('b-form-checkbox', {
-                attrs: {
-                    switch: '',
-                },
-                model: {
-                    value: vm.form.active,
-                    callback(v: boolean) {
-                        vm.form.active = v;
+        let activate = h();
+
+        if (vm.canManage) {
+            activate = h('div', {
+                staticClass: 'form-group mb-3',
+            }, [
+                h('b-form-checkbox', {
+                    attrs: {
+                        switch: '',
                     },
-                    expression: 'form.active',
-                },
-            } as VNodeData, [
-                h('span', {
-                    class: {
-                        'text-warning': !vm.form.active,
-                        'text-success': vm.form.active,
+                    model: {
+                        value: vm.form.active,
+                        callback(v: boolean) {
+                            vm.form.active = v;
+                        },
+                        expression: 'form.active',
                     },
-                }, [vm.form.active ? 'active' : 'inactive']),
-            ]),
-        ]);
+                } as VNodeData, [
+                    h('span', {
+                        class: {
+                            'text-warning': !vm.form.active,
+                            'text-success': vm.form.active,
+                        },
+                    }, [vm.form.active ? 'active' : 'inactive']),
+                ]),
+            ]);
+        }
 
         const submit = buildFormSubmit(this, h);
 
