@@ -22,6 +22,7 @@ any,
 any,
 RobotPermissionListItemActionsProperties
 >({
+    name: 'RobotPermissionListItemActions',
     props: {
         items: {
             type: Array as PropType<RobotPermission[]>,
@@ -158,3 +159,5 @@ RobotPermissionListItemActionsProperties
         return h('div', [button]);
     },
 });
+
+export default RobotPermissionListItemActions;

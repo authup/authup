@@ -17,6 +17,7 @@ type Properties = {
 };
 
 export const RoleUserList = Vue.extend<any, any, any, Properties>({
+    name: 'RoleUserList',
     components: { UserList, UserRoleListItemActions },
     props: {
         entityId: String,

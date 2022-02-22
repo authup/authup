@@ -22,6 +22,7 @@ any,
 any,
 RobotRoleListItemActionsProperties
 >({
+    name: 'RobotRoleListItemActions',
     props: {
         items: {
             type: Array as PropType<RobotRole[]>,

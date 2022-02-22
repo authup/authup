@@ -20,6 +20,7 @@ export type Properties = {
 };
 
 export const PermissionRobotList = Vue.extend<any, any, any, Properties>({
+    name: 'PermissionRobotList',
     components: {
         PermissionList,
         RobotPermissionListItemActions,

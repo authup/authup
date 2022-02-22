@@ -17,6 +17,7 @@ export type UserRoleListItemActionsProperties = {
 };
 
 export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole>, any, any, UserRoleListItemActionsProperties>({
+    name: 'UserRoleListItemActions',
     props: {
         items: {
             type: Array as PropType<UserRole[]>,

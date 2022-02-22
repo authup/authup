@@ -120,3 +120,5 @@ Properties
         ]);
     },
 });
+
+export default RoleForm;

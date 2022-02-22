@@ -34,6 +34,7 @@ any,
 any,
 AuthEntityDeleteProperties
 >({
+    name: 'AuthEntityDelete',
     props: {
         elementIcon: {
             type: String,
@@ -167,3 +168,5 @@ AuthEntityDeleteProperties
         ]);
     },
 });
+
+export default AuthEntityDelete;

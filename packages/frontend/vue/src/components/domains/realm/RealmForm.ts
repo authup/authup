@@ -11,10 +11,12 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import { createNanoID, useHTTPClient } from '../../../utils';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
-import { buildFormSubmit } from '../../helpers/form/render';
-import { buildFormInput } from '../../helpers/form/render/input';
-import { buildFormTextarea } from '../../helpers/form/render/textarea';
-import { ComponentFormData } from '../../helpers';
+import {
+    ComponentFormData,
+    buildFormInput,
+    buildFormSubmit,
+    buildFormTextarea,
+} from '../../helpers';
 
 type Properties = {
     entity?: Realm,

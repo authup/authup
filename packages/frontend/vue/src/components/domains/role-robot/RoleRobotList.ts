@@ -22,6 +22,7 @@ export type Properties = {
 };
 
 export const RoleRobotList = Vue.extend<any, any, any, Properties>({
+    name: 'RoleRobotList',
     components: {
         RobotRoleListItemActions,
         RoleList,

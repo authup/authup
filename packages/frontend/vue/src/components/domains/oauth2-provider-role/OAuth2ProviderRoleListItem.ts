@@ -301,3 +301,5 @@ OAuth2ProviderRoleListItemProperties
         ]);
     },
 });
+
+export default OAuth2ProviderRoleListItem;
