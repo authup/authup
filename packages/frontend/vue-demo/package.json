@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/vue-demo",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "private": true,
     "description": "This package contains a vue demo app.",
     "scripts": {
@@ -37,8 +37,8 @@
     "dependencies": {
         "@fortawesome/fontawesome-free": "^6.0.0",
         "@trapi/client": "^2.0.5",
-        "@typescript-auth/domains": "^0.0.25",
-        "@typescript-auth/vue": "^0.0.13",
+        "@typescript-auth/domains": "^0.0.26",
+        "@typescript-auth/vue": "^0.0.14",
         "bootstrap": "^4.6.1",
         "bootstrap-vue": "^2.21.2",
         "vue": "^2.6.14",
