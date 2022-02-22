@@ -18,7 +18,7 @@ import {
     getOneUserPermissionRouteHandler,
 } from './handlers';
 
-@SwaggerTags('robot')
+@SwaggerTags('user')
 @Controller('/user-permissions')
 export class UserPermissionController {
     @Get('', [ForceLoggedInMiddleware])
