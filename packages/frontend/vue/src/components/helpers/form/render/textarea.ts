@@ -15,7 +15,7 @@ import { FormGroup, FormGroupSlotScope } from '../components';
 export type FormTextareaBuildContext<T extends Record<string, any>> = {
     title: string | VNode | (VNode | string)[],
     propName: keyof T | string,
-    textareaAttrs?: Record<string, any>
+    attrs?: Record<string, any>
 };
 
 export function buildFormTextarea<T extends Record<string, any>>(
@@ -45,7 +45,7 @@ export function buildFormTextarea<T extends Record<string, any>>(
                     h('textarea', {
                         attrs: {
                             placeholder: '...',
-                            ...(context.textareaAttrs || {}),
+                            ...(context.attrs || {}),
                         },
                         domProps: {
                             value: instance.$v.form[context.propName].$model,

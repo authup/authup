@@ -210,6 +210,9 @@ OAuth2ProviderRoleListItemProperties
                     attrs: {
                         disabled: vm.$v.$invalid || vm.busy,
                     },
+                    domProps: {
+                        disabled: vm.$v.$invalid || vm.busy,
+                    },
                     on: {
                         click($event: any) {
                             $event.preventDefault();

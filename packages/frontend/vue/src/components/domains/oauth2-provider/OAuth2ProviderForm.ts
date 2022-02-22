@@ -291,7 +291,7 @@ Properties
                     buildFormInput(vm, h, {
                         title: 'Host',
                         propName: 'token_host',
-                        inputAttrs: {
+                        attrs: {
                             placeholder: 'https://...',
                         },
                     }),
@@ -302,7 +302,7 @@ Properties
                             h('small', { staticClass: 'text-success' }, '(optional)'),
                         ],
                         propName: 'token_path',
-                        inputAttrs: {
+                        attrs: {
                             placeholder: 'oauth/token',
                         },
                     }),
@@ -322,7 +322,7 @@ Properties
                             h('small', { staticClass: 'text-success' }, '(optional)'),
                         ],
                         propName: 'authorize_host',
-                        inputAttrs: {
+                        attrs: {
                             placeholder: vm.$v.form.token_host.$model || 'https://...',
                         },
                     }),
@@ -333,7 +333,7 @@ Properties
                             h('small', { staticClass: 'text-success' }, '(optional)'),
                         ],
                         propName: 'authorize_path',
-                        inputAttrs: {
+                        attrs: {
                             placeholder: 'oauth/authorize',
                         },
                     }),

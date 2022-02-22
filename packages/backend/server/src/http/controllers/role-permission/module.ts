@@ -18,7 +18,7 @@ import {
     getOneRolePermissionRouteHandler,
 } from './handlers';
 
-@SwaggerTags('auth')
+@SwaggerTags('role')
 @Controller('/role-permissions')
 export class RolePermissionController {
     @Get('', [ForceLoggedInMiddleware])

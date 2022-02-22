@@ -153,19 +153,28 @@ AuthEntityDeleteProperties
             text = vm.elementText;
         }
 
-        return h(tag, {
-            on: {
-                click($event: any) {
-                    $event.preventDefault();
-
-                    return vm.delete.apply(null);
+        return h(
+            tag,
+            mergeDeep({
+                domProps: {
+                    disabled: vm.busy,
                 },
-            },
-            ...data,
-        }, [
-            icon,
-            text,
-        ]);
+                props: {
+                    disabled: vm.busy,
+                },
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        return vm.delete.apply(null);
+                    },
+                },
+            }, data),
+            [
+                icon,
+                text,
+            ],
+        );
     },
 });
 

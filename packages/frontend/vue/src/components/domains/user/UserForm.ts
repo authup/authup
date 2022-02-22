@@ -217,11 +217,12 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
                         h('label', ['Name']),
                         h('input', {
                             attrs: {
+                                disabled: vm.isNameLocked,
                                 type: 'text',
                                 placeholder: '...',
-                                disabled: vm.isNameLocked,
                             },
                             domProps: {
+                                disabled: vm.isNameLocked,
                                 value: vm.$v.form.name.$model,
                             },
                             staticClass: 'form-control',

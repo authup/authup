@@ -7,7 +7,7 @@
 
 import { getRepository } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyRelations,
+    applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { OAuth2Provider, PermissionID } from '@typescript-auth/domains';
@@ -16,7 +16,7 @@ import { OAuth2ProviderEntity } from '../../../../domains';
 
 export async function getManyOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
-        page, filter, fields, include,
+        page, filter, fields, include, sort,
     } = req.query;
 
     const repository = getRepository(OAuth2ProviderEntity);
@@ -32,6 +32,11 @@ export async function getManyOauth2ProviderRouteHandler(req: ExpressRequest, res
         relations,
         defaultAlias: 'provider',
         allowed: ['realm_id', 'realm.name'],
+    });
+
+    applySort(query, sort, {
+        allowed: ['id', 'created_at', 'updated_at'],
+        defaultAlias: 'provider',
     });
 
     if (

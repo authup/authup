@@ -6,14 +6,14 @@
  */
 
 import { getRepository } from 'typeorm';
-import { applyFilters, applyPagination } from 'typeorm-extension';
+import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { Role } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
 
 export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page } = req.query;
+    const { filter, page, sort } = req.query;
 
     const roleRepository = getRepository(RoleEntity);
     const query = roleRepository.createQueryBuilder('role');
@@ -21,6 +21,10 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
     applyFilters(query, filter, {
         allowed: ['id', 'name'],
         defaultAlias: 'role',
+    });
+
+    applySort(query, sort, {
+        allowed: ['id', 'name', 'updated_at', 'created_at'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });

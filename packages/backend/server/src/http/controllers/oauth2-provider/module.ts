@@ -28,7 +28,7 @@ import { ForceLoggedInMiddleware } from '../../middleware';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { ControllerOptions } from '../type';
 
-@SwaggerTags('auth')
+@SwaggerTags('oauth2-provider')
 @Controller('/oauth2-providers')
 export class Oauth2ProviderController {
     @Get('', [])

@@ -18,7 +18,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('auth')
+@SwaggerTags('realm')
 @Controller('/realms')
 export class RealmController {
     @Get('', [])

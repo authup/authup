@@ -27,6 +27,9 @@ export function buildFormSubmit<T extends Record<string, any>>(
                 'btn-primary': instance.isEditing,
                 'btn-success': !instance.isEditing,
             },
+            domProps: {
+                disabled: instance.$v.form.$invalid || instance.busy,
+            },
             attrs: {
                 disabled: instance.$v.form.$invalid || instance.busy,
                 type: 'button',

@@ -53,10 +53,8 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                             'select',
                             {
                                 staticClass: 'form-control',
-                                attrs: {
-                                    disabled: propsItemsSlot.busy,
-                                },
                                 domProps: {
+                                    disabled: propsItemsSlot.busy,
                                     ...(context.value ? { value: context.value } : {}),
                                 },
                                 on: {

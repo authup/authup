@@ -18,20 +18,26 @@ import { UserController } from './user';
 import { UserRoleController } from './user-role';
 import { registerTokenController } from './token';
 import { ControllerOptions } from './type';
+import { RobotPermissionController } from './robot-permission';
+import { RobotRoleController } from './robot-role';
+import { UserPermissionController } from './user-permission';
 
 export function registerControllers(
     router: Application,
     options: ControllerOptions,
 ) {
     attachControllers(router, [
-        RobotController,
         Oauth2ProviderRoleController,
         Oauth2ProviderController,
         PermissionController,
+        RobotController,
+        RobotPermissionController,
+        RobotRoleController,
         RealmController,
         RoleController,
         RolePermissionController,
         UserController,
+        UserPermissionController,
         UserRoleController,
     ]);
 

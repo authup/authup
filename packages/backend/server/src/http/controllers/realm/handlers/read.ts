@@ -6,14 +6,13 @@
  */
 
 import { getRepository } from 'typeorm';
-import { applyFilters, applyPagination } from 'typeorm-extension';
+import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
-import { Realm } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
 
 export async function getManyRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page } = req.query;
+    const { filter, page, sort } = req.query;
     const realmRepository = getRepository(RealmEntity);
 
     const query = realmRepository.createQueryBuilder('realm');
@@ -21,6 +20,11 @@ export async function getManyRealmRouteHandler(req: ExpressRequest, res: Express
     applyFilters(query, filter, {
         defaultAlias: 'realm',
         allowed: ['id', 'name'],
+    });
+
+    applySort(query, sort, {
+        defaultAlias: 'realm',
+        allowed: ['id', 'name', 'created_at', 'updated_at'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });

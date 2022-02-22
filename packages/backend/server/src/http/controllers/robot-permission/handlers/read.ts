@@ -8,9 +8,8 @@
 import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { RolePermission } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { RolePermissionEntity } from '../../../../domains';
+import { RobotPermissionEntity } from '../../../../domains';
 
 /**
  * Receive user permissions of a specific user.
@@ -18,15 +17,15 @@ import { RolePermissionEntity } from '../../../../domains';
  * @param req
  * @param res
  */
-export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRobotPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const rolePermissionRepository = getRepository(RolePermissionEntity);
-    const query = rolePermissionRepository.createQueryBuilder('rolePermission');
+    const robotPermissionRepository = getRepository(RobotPermissionEntity);
+    const query = robotPermissionRepository.createQueryBuilder('robotPermission');
 
     applyFilters(query, filter, {
-        defaultAlias: 'rolePermission',
-        allowed: ['role_id', 'permission_id'],
+        defaultAlias: 'robotPermission',
+        allowed: ['robot_id', 'permission_id'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
@@ -52,11 +51,11 @@ export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res
  * @param req
  * @param res
  */
-export async function getOneRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getOneRobotPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const rolePermissionRepository = getRepository(RolePermissionEntity);
-    const entity = await rolePermissionRepository.findOne(id);
+    const robotPermissionRepository = getRepository(RobotPermissionEntity);
+    const entity = await robotPermissionRepository.findOne(id);
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

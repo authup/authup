@@ -95,7 +95,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
         const password = buildFormInput<User>(this, h, {
             title: 'Password',
             propName: 'password',
-            inputAttrs: {
+            attrs: {
                 type: vm.form.passwordShow ? 'text' : 'password',
                 autocomplete: 'new-password',
             },
@@ -104,7 +104,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
         const passwordRepeat = buildFormInput(this, h, {
             title: 'Password repeat',
             propName: 'password_repeat',
-            inputAttrs: {
+            attrs: {
                 type: vm.form.passwordShow ? 'text' : 'password',
                 autocomplete: 'new-password',
             },
@@ -138,6 +138,9 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
                 attrs: {
                     disabled: vm.$v.form.$invalid || vm.busy,
                     type: 'button',
+                },
+                domProps: {
+                    disabled: vm.$v.form.$invalid || vm.busy,
                 },
                 on: {
                     click($event: any) {

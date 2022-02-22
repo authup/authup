@@ -9,34 +9,33 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Robot } from '@typescript-auth/domains';
+import { UserPermission } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createRobotRouteHandler,
-    deleteRobotRouteHandler,
-    getManyRobotRouteHandler,
-    getOneRobotRouteHandler,
-    updateRobotRouteHandler,
+    createUserPermissionRouteHandler,
+    deleteUserPermissionRouteHandler,
+    getManyUserPermissionRouteHandler,
+    getOneUserPermissionRouteHandler,
 } from './handlers';
 
 @SwaggerTags('robot')
-@Controller('/robots')
-export class RobotController {
+@Controller('/user-permissions')
+export class UserPermissionController {
     @Get('', [ForceLoggedInMiddleware])
     async getMany(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<Robot[]> {
-        return getManyRobotRouteHandler(req, res);
+    ): Promise<UserPermission[]> {
+        return getManyUserPermissionRouteHandler(req, res);
     }
 
     @Post('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Robot,
+        @Body() data: Pick<UserPermission, 'user_id' | 'permission_id'>,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Robot> {
-        return createRobotRouteHandler(req, res);
+    ): Promise<UserPermission> {
+        return createUserPermissionRouteHandler(req, res);
     }
 
     @Get('/:id', [ForceLoggedInMiddleware])
@@ -44,18 +43,8 @@ export class RobotController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Robot> {
-        return getOneRobotRouteHandler(req, res);
-    }
-
-    @Post('/:id', [ForceLoggedInMiddleware])
-    async edit(
-        @Params('id') id: string,
-            @Body() data: Pick<Robot, 'name'>,
-            @Request() req: any,
-            @Response() res: any,
-    ): Promise<Robot> {
-        return updateRobotRouteHandler(req, res);
+    ): Promise<UserPermission> {
+        return getOneUserPermissionRouteHandler(req, res);
     }
 
     @Delete('/:id', [ForceLoggedInMiddleware])
@@ -63,7 +52,7 @@ export class RobotController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Robot> {
-        return deleteRobotRouteHandler(req, res);
+    ): Promise<UserPermission> {
+        return deleteUserPermissionRouteHandler(req, res);
     }
 }

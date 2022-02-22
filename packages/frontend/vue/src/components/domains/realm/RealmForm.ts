@@ -137,8 +137,11 @@ Properties
         const id = buildFormInput<Realm>(this, h, {
             title: 'ID',
             propName: 'id',
-            inputAttrs: {
-                disabled: this.isEditing,
+            domProps: {
+                disabled: vm.isEditing,
+            },
+            attrs: {
+                disabled: vm.isEditing,
             },
         });
 
@@ -146,29 +149,25 @@ Properties
 
         if (!this.isEditing) {
             idHint = h('div', {
-                staticClass: 'alert alert-sm',
-                class: {
-                    'alert-warning': this.isIDEmpty,
-                    'alert-success': !this.isIDEmpty,
-                },
+                staticClass: 'mb-3',
             }, [
-                h('div', {
-                    staticClass: 'mb-1',
-                }, [
-                    h('button', {
-                        staticClass: 'btn btn-dark btn-xs',
-                        on: {
-                            click($event: any) {
-                                $event.preventDefault();
+                h('button', {
+                    staticClass: 'btn btn-xs',
+                    class: {
+                        'btn-dark': this.isIDEmpty,
+                        'btn-warning': !this.isIDEmpty,
+                    },
+                    on: {
+                        click($event: any) {
+                            $event.preventDefault();
 
-                                vm.generateID.call(null);
-                            },
+                            vm.generateID.call(null);
                         },
-                    }, [
-                        h('i', { staticClass: 'fa fa-wrench' }),
-                        ' ',
-                        'Generate',
-                    ]),
+                    },
+                }, [
+                    h('i', { staticClass: 'fa fa-wrench' }),
+                    ' ',
+                    'Generate',
                 ]),
             ]);
         }
@@ -181,7 +180,7 @@ Properties
         const description = buildFormTextarea<Realm>(this, h, {
             title: 'Description',
             propName: 'description',
-            textareaAttrs: {
+            attrs: {
                 rows: 4,
             },
         });

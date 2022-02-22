@@ -1,6 +1,6 @@
 import { getCustomRepository } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyRelations,
+    applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@typescript-auth/domains';
@@ -9,7 +9,7 @@ import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../do
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
-        filter, page, include, fields,
+        filter, page, include, fields, sort,
     } = req.query;
 
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
@@ -35,6 +35,11 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
     applyRelations(query, include, {
         defaultAlias: 'user',
         allowed: ['realm'],
+    });
+
+    applySort(query, sort, {
+        defaultAlias: 'user',
+        allowed: ['id', 'name', 'created_at', 'updated_at'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });

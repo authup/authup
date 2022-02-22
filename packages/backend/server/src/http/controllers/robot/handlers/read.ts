@@ -7,7 +7,7 @@
 
 import { getRepository } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyRelations,
+    applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
@@ -18,7 +18,7 @@ import { RobotEntity } from '../../../../domains';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
-        filter, fields, page, include,
+        filter, fields, page, include, sort,
     } = req.query;
 
     const repository = getRepository(RobotEntity);
@@ -31,6 +31,11 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 
     applyRelations(query, include, {
         allowed: ['realm', 'user'],
+        defaultAlias: 'robot',
+    });
+
+    applySort(query, sort, {
+        allowed: ['id', 'updated_at', 'created_at', 'realm_id'],
         defaultAlias: 'robot',
     });
 

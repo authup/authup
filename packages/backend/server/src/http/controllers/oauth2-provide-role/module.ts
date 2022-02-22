@@ -19,7 +19,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('auth')
+@SwaggerTags('oauth2-provider')
 @Controller('/oauth2-provider-roles')
 export class Oauth2ProviderRoleController {
     @Get('', [])

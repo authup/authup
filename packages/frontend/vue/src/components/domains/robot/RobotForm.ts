@@ -15,10 +15,8 @@ import { Robot } from '@typescript-auth/domains';
 import {
     createNanoID, useHTTPClient,
 } from '../../../utils';
-import { ComponentFormData } from '../../helpers';
+import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
 import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
-import { buildFormInput } from '../../helpers/form/render/input';
-import { buildFormSubmit } from '../../helpers/form/render';
 
 type Properties = {
     [key: string]: any;
@@ -83,8 +81,8 @@ Properties
             return !this.form.secret || this.form.secret.length === 0;
         },
         isSecretHashed() {
-            return this.item &&
-                this.item.secret === this.form.secret &&
+            return this.entity &&
+                this.entity.secret === this.form.secret &&
                 this.form.secret.startsWith('$');
         },
         updatedAt() {
@@ -137,7 +135,7 @@ Properties
                 if (this.isEditing) {
                     const { secret, ...form } = this.form;
 
-                    response = await useHTTPClient().robot.update(this.item.id, {
+                    response = await useHTTPClient().robot.update(this.entity.id, {
                         ...form,
                         ...(this.isSecretHashed || !this.secretChange ? { } : { secret }),
                     });
@@ -158,25 +156,8 @@ Properties
 
             this.busy = false;
         },
-        async drop() {
-            if (this.busy || !this.item) return;
-
-            this.busy = true;
-
-            try {
-                const response = await useHTTPClient().robot.delete(this.item.id);
-
-                this.$emit('deleted', response);
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
         handleSecretChanged() {
-            this.secretHashed = this.item && this.form.secret === this.item.secret;
+            this.secretHashed = this.entity && this.form.secret === this.entity.secret;
         },
     },
     render(createElement: CreateElement): VNode {
@@ -186,7 +167,7 @@ Properties
         const name = buildFormInput(this, h, {
             title: 'Name',
             propName: 'name',
-            inputAttrs: {
+            domProps: {
                 disabled: vm.nameFixed,
             },
         });
@@ -201,11 +182,12 @@ Properties
                 h('label', ['ID']),
                 h('input', {
                     attrs: {
+                        disabled: true,
                         type: 'text',
                         placeholder: '...',
-                        disabled: true,
                     },
                     domProps: {
+                        disabled: true,
                         value: vm.entity.id,
                     },
                     staticClass: 'form-control',
@@ -238,7 +220,7 @@ Properties
 
         if (!vm.isEditing || vm.secretChange) {
             secret = buildFormInput(this, h, {
-                title: h('template', [
+                title: [
                     'Secret',
                     vm.isSecretHashed ? h('span', {
                         staticClass: 'text-danger font-weight-bold',
@@ -247,7 +229,7 @@ Properties
                         ' ',
                         h('i', { staticClass: 'fa fa-exclamation-triangle' }),
                     ]) : '',
-                ]),
+                ],
                 propName: 'secret',
                 changeCallback: (input: string) => vm.handleSecretChanged.call(null, input),
             });

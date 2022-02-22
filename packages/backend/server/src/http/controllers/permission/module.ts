@@ -13,7 +13,7 @@ import { Permission } from '@typescript-auth/domains';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { createOnePermissionRouteHandler, getManyPermissionRouteHandler, getOnePermissionRouteHandler } from './handlers';
 
-@SwaggerTags('auth')
+@SwaggerTags('permission')
 @Controller('/permissions')
 export class PermissionController {
     @Get('', [ForceLoggedInMiddleware])

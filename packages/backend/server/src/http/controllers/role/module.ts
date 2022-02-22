@@ -18,7 +18,7 @@ import {
     updateRoleRouteHandler,
 } from './handlers';
 
-@SwaggerTags('auth')
+@SwaggerTags('role')
 @Controller('/roles')
 export class RoleController {
     @Get('', [ForceLoggedInMiddleware])

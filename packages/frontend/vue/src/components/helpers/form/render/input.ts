@@ -15,7 +15,8 @@ import { FormGroup, FormGroupSlotScope } from '../components';
 export type FormInputBuildContext<T extends Record<string, any> = Record<string, any>> = {
     title: string | VNode | (VNode | string)[],
     propName: keyof T | string,
-    inputAttrs?: Record<string, any>,
+    attrs?: Record<string, any>,
+    domProps?: Record<string, any>,
     changeCallback?: (input: string) => void
 };
 
@@ -47,10 +48,11 @@ export function buildFormInput<T extends Record<string, any>>(
                         attrs: {
                             type: 'text',
                             placeholder: '...',
-                            ...(context.inputAttrs || {}),
+                            ...(context.attrs || {}),
                         },
                         domProps: {
                             value: instance.$v.form[context.propName].$model,
+                            ...(context.domProps || {}),
                         },
                         staticClass: 'form-control',
                         on: {
