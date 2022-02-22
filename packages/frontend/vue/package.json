@@ -20,13 +20,13 @@
         "typescript",
         "template",
         "auth-template",
+        "vue",
+        "list",
+        "form",
         "oauth2",
         "oauth2-client",
-        "ability",
-        "permission",
-        "header",
-        "bearer",
-        "basic"
+        "domains",
+        "components"
     ],
     "author": {
         "name": "Peter Placzek",

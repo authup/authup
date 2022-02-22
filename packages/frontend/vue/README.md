@@ -11,7 +11,6 @@ The README.md is still under construction 🚧, so please stay patient till it i
 This package requires the following `dependencies` to be installed in addition:
 - vue v2.x
 - bootstrap-vue v2.x
-- nuxt v2.x
 - vuelidate v0.x
 
 **Table of Contents**
@@ -21,5 +20,5 @@ This package requires the following `dependencies` to be installed in addition:
 ## Installation
 
 ```bash
-npm install @typescript-auth/vue bootstrap-vue nuxt vue vuelidate --save-dev
+npm install @typescript-auth/vue --save-dev
 ```
