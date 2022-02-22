@@ -26,7 +26,9 @@ export async function generateSwaggerDocumentation(
         entryFile: path.join(__dirname, '..', '..', '..', 'src', 'http', 'controllers', '**', '*{.ts,.js,.d.ts}'),
         ignore: [
             '**/node_modules/**',
-            '**/typescript-auth/packages/domains/src/**',
+        ],
+        allow: [
+            '**/@typescript-auth/**',
         ],
         decorator: {
             internal: true,
