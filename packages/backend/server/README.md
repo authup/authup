@@ -5,28 +5,28 @@
 [![codecov](https://codecov.io/gh/Tada5hi/typescript-auth/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/typescript-auth)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
-This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
+This package can be used as simple `standalone` server or as an `extension` to an existent (express) resource API and
 should therefore only be used for backend- applications & microservices.
 
 ---
 **Important NOTE**
 
-The `Readme.md` is under construction ☂ at the moment. So please stay patient, till it is available ⭐.
+The `README.md` is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
 
 ---
 
 **Table of Contents**
 
 - [Installation](#installation)
-- [Usage](#usage)
-  - [Standalone](#standalone)
-    - [Config](#config)
-    - [Setup](#setup)
-    - [Start](#start)
-  - [Extension](#extension)
-    - [HTTP](#http)
-    - [Database](#database)
-    - [Aggregators](#aggregators)
+- [Usage - Standalone](#usage---standalone)
+  - [Config](#config)
+  - [Setup](#setup)
+  - [Start](#start)
+  - [Upgrade](#upgrade)
+- [Usage - Extension](#usage---extension)
+  - [HTTP](#http)
+  - [Database](#database)
+  - [Aggregators](#aggregators)
   
 ## Installation
 
@@ -34,11 +34,9 @@ The `Readme.md` is under construction ☂ at the moment. So please stay patient,
 npm install @typescript-auth/server --save
 ```
 
-## Usage
+## Usage - Standalone
 
-### Standalone
-
-#### Config
+### Config
 
 In general no configuration file is required at all!
 All options have either default values or are generated automatically 🔥.
@@ -69,30 +67,38 @@ module.exports = {
 ```
 The above example shows the (generated) property values if non are specified explicit.
 
-#### Setup
+### Setup
 If no option is specified, all options are by default `true` as long no
 other option is explicit specified.
 In the following shell snippet all options are manually set to `true`.
 ```shell
-auth-server setup \
+$ auth-server setup \
   --keyPair=true \
   --database=true \
   --databaseSeeder=true \
   --documentation=true
 ```
 
-#### Start
+### Start
 
 To start the authentication- & authorization-server simply execute the command: 
 
-```
-auth-server start
+```shell
+$ auth-server start
 ```
 
-### Extension
+#### Upgrade 
+
+To upgrade the auth server, run:
+
+```shell
+$ auth-server upgrade
+```
+
+## Usage - Extension
 Controllers & middlewares can be configured like described for an existing express application.
 
-#### HTTP
+### HTTP
 ```typescript
 import {
     errorMiddleware,
@@ -149,7 +155,7 @@ app.use(errorMiddleware);
 app.listen(3010);
 ```
 
-#### Database
+### Database
 To register the domain entities for the **typeorm** connection, 
 simply set **all** entities for the connection options, with a utility function.
 
@@ -199,7 +205,7 @@ import {
     
 })();
 ```
-#### Aggregators
+### Aggregators
 
 The last step after registering the http (controllers & middleware)- & database-module, is
 to start the token aggregator.

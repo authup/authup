@@ -45,7 +45,7 @@ axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';
 server.use(setupHTTPMiddleware({
     redis,
     redisPrefix: 'token',
-    axios
+    http: axios
 }));
 ```
 
@@ -73,6 +73,6 @@ axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';
 server.use(setupSocketMiddleware({
     redis,
     redisPrefix: 'token',
-    axios
+    http: axios
 }));
 ```

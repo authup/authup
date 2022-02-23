@@ -22,3 +22,10 @@ This package requires the following `dependencies` to be installed in addition:
 ```bash
 npm install @typescript-auth/vue --save-dev
 ```
+
+---
+**Important NOTE**
+
+The `README.md` is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
+
+---
