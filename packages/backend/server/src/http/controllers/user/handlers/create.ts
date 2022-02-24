@@ -21,26 +21,28 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const data = await runUserValidation(req, 'create');
 
     const userRepository = getCustomRepository<UserRepository>(UserRepository);
-    const user = await userRepository.create(data);
+    const entity = await userRepository.create(data);
 
     const realmRepository = getRepository(RealmEntity);
-    const realm = await realmRepository.findOne(data.realm_id);
+
+    entity.realm_id = entity.realm_id || req.realmId;
+    const realm = await realmRepository.findOne(entity.realm_id);
 
     if (typeof realm === 'undefined') {
         throw new NotFoundError('The referenced realm could not be found.');
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, user.realm_id)) {
-        throw new ForbiddenError(`You are not allowed to add users to the realm ${user.realm_id}`);
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError(`You are not allowed to add users to the realm ${entity.realm_id}`);
     }
 
-    if (user.password) {
-        user.password = await hash(user.password);
+    if (entity.password) {
+        entity.password = await hash(entity.password);
     }
 
-    await userRepository.save(user);
+    await userRepository.save(entity);
 
-    delete user.password;
+    delete entity.password;
 
-    return res.respondCreated({ data: user });
+    return res.respondCreated({ data: entity });
 }

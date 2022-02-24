@@ -99,6 +99,7 @@ export async function runUserValidation(
                 .exists()
                 .notEmpty()
                 .isString()
+                .optional()
                 .run(req);
         }
 

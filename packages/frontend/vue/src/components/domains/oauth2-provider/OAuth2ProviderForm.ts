@@ -10,12 +10,13 @@ import Vue, {
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { OAuth2Provider } from '@typescript-auth/domains';
-import { createNanoID, hasOwnProperty, useHTTPClient } from '../../../utils';
+import { createNanoID, useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
 } from '../../helpers';
 import { buildRealmSelectForm } from '../realm/render/select';
+import { initPropertiesFromSource } from '../../utils/proprety';
 
 type Properties = {
     [key: string]: any;
@@ -131,6 +132,16 @@ Properties
         isNameEmpty() {
             return !this.form.name || this.form.name.length === 0;
         },
+        updatedAt() {
+            return this.entity ? this.entity.updated_at : undefined;
+        },
+    },
+    watch: {
+        updatedAt(val, oldVal) {
+            if (val && val !== oldVal) {
+                this.initFromProperties();
+            }
+        },
     },
     created() {
         this.initFromProperties();
@@ -142,12 +153,7 @@ Properties
             }
 
             if (this.entity) {
-                const keys = Object.keys(this.form);
-                for (let i = 0; i < keys.length; i++) {
-                    if (hasOwnProperty(this.entity, keys[i])) {
-                        this.form[keys[i]] = this.entity[keys[i]];
-                    }
-                }
+                initPropertiesFromSource<OAuth2Provider>(this.entity, this.form);
             }
 
             if (this.isNameEmpty) {

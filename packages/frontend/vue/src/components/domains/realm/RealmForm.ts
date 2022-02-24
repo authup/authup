@@ -17,6 +17,7 @@ import {
     buildFormSubmit,
     buildFormTextarea,
 } from '../../helpers';
+import { initPropertiesFromSource } from '../../utils/proprety';
 
 type Properties = {
     entity?: Realm,
@@ -75,6 +76,16 @@ Properties
         isIDEmpty() {
             return !this.form.id || this.form.id.length === 0;
         },
+        updatedAt() {
+            return this.entity ? this.entity.updated_at : undefined;
+        },
+    },
+    watch: {
+        updatedAt(val, oldVal) {
+            if (val && val !== oldVal) {
+                this.initFromProperties();
+            }
+        },
     },
     created() {
         this.initFromProperties();
@@ -82,12 +93,7 @@ Properties
     methods: {
         initFromProperties() {
             if (this.entity) {
-                const keys = Object.keys(this.form);
-                for (let i = 0; i < keys.length; i++) {
-                    if (Object.prototype.hasOwnProperty.call(this.entity, keys[i])) {
-                        this.form[keys[i]] = this.entity[keys[i]];
-                    }
-                }
+                initPropertiesFromSource<Realm>(this.entity, this.form);
             }
 
             if (this.form.id.length === 0) {

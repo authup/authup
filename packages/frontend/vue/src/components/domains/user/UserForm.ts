@@ -19,6 +19,7 @@ import {
 } from '../../helpers';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
+import { initPropertiesFromSource } from '../../utils/proprety';
 
 export type Properties = {
     [key: string]: any;
@@ -99,22 +100,30 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
 
             return !!this.entity.name_locked;
         },
+        updatedAt() {
+            return this.entity ? this.entity.updated_at : undefined;
+        },
+    },
+    watch: {
+        updatedAt(val, oldVal) {
+            if (val && val !== oldVal) {
+                this.initFromProperties();
+            }
+        },
     },
     created() {
-        if (typeof this.realmId !== 'undefined') {
-            this.form.realm_id = this.realmId;
-        }
-
-        const keys = Object.keys(this.form);
-        if (typeof this.entity !== 'undefined') {
-            for (let i = 0; i < keys.length; i++) {
-                if (Object.prototype.hasOwnProperty.call(this.entity, keys[i])) {
-                    this.form[keys[i]] = this.entity[keys[i]];
-                }
-            }
-        }
+        this.initFromProperties();
     },
     methods: {
+        initFromProperties() {
+            if (this.realmId) {
+                this.form.realm_id = this.realmId;
+            }
+
+            if (this.entity) {
+                initPropertiesFromSource<User>(this.entity, this.form);
+            }
+        },
         getModifiedFields() {
             if (typeof this.entity === 'undefined') {
                 return Object.keys(this.form);

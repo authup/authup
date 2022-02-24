@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import {
-    maxLength, minLength,
+    maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
 import { Robot } from '@typescript-auth/domains';
 import {
@@ -17,6 +17,8 @@ import {
 } from '../../../utils';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
 import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
+import { initPropertiesFromSource } from '../../utils/proprety';
+import { buildRealmSelectForm } from '../realm/render/select';
 
 type Properties = {
     [key: string]: any;
@@ -42,11 +44,16 @@ Properties
             type: Object as PropType<Robot>,
             default: undefined,
         },
+        realmId: {
+            type: String,
+            default: undefined,
+        },
     },
     data() {
         return {
             form: {
                 name: '',
+                realm_id: '',
                 secret: '',
             },
             busy: false,
@@ -62,6 +69,9 @@ Properties
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
+            realm_id: {
+                required,
+            },
             secret: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
@@ -69,13 +79,16 @@ Properties
         },
     },
     computed: {
-        nameFixed() {
+        isNameFixed() {
             return !!this.name &&
                 this.name.length > 0;
         },
         isEditing() {
             return this.entity &&
                 Object.prototype.hasOwnProperty.call(this.entity, 'id');
+        },
+        isRealmLocked() {
+            return !!this.realmId;
         },
         isSecretEmpty() {
             return !this.form.secret || this.form.secret.length === 0;
@@ -98,7 +111,6 @@ Properties
     },
     created() {
         Promise.resolve()
-            .then(this.find)
             .then(this.initFromProperties);
     },
     methods: {
@@ -107,13 +119,12 @@ Properties
                 this.form.name = this.name;
             }
 
+            if (this.realmId) {
+                this.form.realm_id = this.realmId;
+            }
+
             if (this.entity) {
-                const keys = Object.keys(this.form);
-                for (let i = 0; i < keys.length; i++) {
-                    if (Object.prototype.hasOwnProperty.call(this.entity, keys[i])) {
-                        this.form[keys[i]] = this.entity[keys[i]];
-                    }
-                }
+                initPropertiesFromSource<Robot>(this.entity, this.form);
             }
 
             if (this.form.secret.length === 0) {
@@ -164,11 +175,21 @@ Properties
         const vm = this;
         const h = createElement;
 
+        let realm = h();
+        if (
+            !vm.isRealmLocked
+        ) {
+            realm = buildRealmSelectForm(vm, h, {
+                propName: 'realm_id',
+                value: vm.$v.form.realm_id.$model,
+            });
+        }
+
         const name = buildFormInput(this, h, {
             title: 'Name',
             propName: 'name',
             domProps: {
-                disabled: vm.nameFixed,
+                disabled: vm.isNameFixed,
             },
         });
 
@@ -263,6 +284,7 @@ Properties
                 },
             },
         }, [
+            realm,
             name,
             id,
             changeSecret,

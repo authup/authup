@@ -8,12 +8,13 @@
 import { getRepository } from 'typeorm';
 import {
     PermissionID, Robot,
-    createNanoID,
+    createNanoID, isPermittedForResourceRealm,
 } from '@typescript-auth/domains';
 import { hash } from '@typescript-auth/server-utils';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
-import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
+import { RealmEntity, RobotEntity, useRobotEventEmitter } from '../../../../domains';
 
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const data = await runClientValidation(req, 'create');
@@ -32,7 +33,18 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     const secret = entity.secret || createNanoID(undefined, 64);
     entity.secret = await hash(secret);
-    entity.realm_id = req.realmId;
+
+    const realmRepository = getRepository(RealmEntity);
+    entity.realm_id = entity.realm_id || req.realmId;
+    const realm = await realmRepository.findOne(entity.realm_id);
+
+    if (typeof realm === 'undefined') {
+        throw new NotFoundError('The referenced realm could not be found.');
+    }
+
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError(`You are not allowed to add robots to the realm ${entity.realm_id}`);
+    }
 
     await repository.save(entity);
 

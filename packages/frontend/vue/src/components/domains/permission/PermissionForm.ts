@@ -10,6 +10,7 @@ import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Permission } from '@typescript-auth/domains';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
 import { useHTTPClient } from '../../../utils';
+import { initPropertiesFromSource } from '../../utils/proprety';
 
 type Properties = {
     [key: string]: any;
@@ -20,7 +21,7 @@ type Properties = {
 export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any, Properties>({
     name: 'PermissionForm',
     props: {
-        entityProperty: {
+        entity: {
             type: Object as PropType<Permission>,
             default: undefined,
         },
@@ -48,13 +49,27 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
             return this.entityProperty &&
                 Object.prototype.hasOwnProperty.call(this.entityProperty, 'id');
         },
+        updatedAt() {
+            return this.entity ? this.entity.updated_at : undefined;
+        },
+    },
+    watch: {
+        updatedAt(val, oldVal) {
+            if (val && val !== oldVal) {
+                this.initFromProperties();
+            }
+        },
     },
     created() {
-        if (this.isEditing) {
-            this.form.id = this.entityProperty.id;
-        }
+        Promise.resolve()
+            .then(this.initFromProperties);
     },
     methods: {
+        initFromProperties() {
+            if (this.entity) {
+                initPropertiesFromSource<Permission>(this.entity, this.form);
+            }
+        },
         async submit() {
             if (this.busy || this.$v.$invalid) {
                 return;

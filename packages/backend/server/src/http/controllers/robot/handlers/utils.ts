@@ -41,6 +41,15 @@ export async function runClientValidation(req: ExpressRequest, operation: 'creat
         .optional({ nullable: true })
         .run(req);
 
+    if (operation === 'create') {
+        await check('realm_id')
+            .exists()
+            .notEmpty()
+            .isString()
+            .optional()
+            .run(req);
+    }
+
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
         throw new ExpressValidationError(validation);

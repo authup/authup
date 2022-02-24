@@ -8,10 +8,11 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Role } from '@typescript-auth/domains';
-import { buildFormSubmit } from '../../helpers/form/render';
-import { ComponentFormData, ComponentFormMethods } from '../../helpers';
-import { buildFormInput } from '../../helpers/form/render/input';
+import {
+    ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
+} from '../../helpers';
 import { useHTTPClient } from '../../../utils';
+import { initPropertiesFromSource } from '../../utils/proprety';
 
 type Properties = {
     entity?: Partial<Role>
@@ -54,13 +55,27 @@ Properties
             return this.entity &&
                 Object.prototype.hasOwnProperty.call(this.entity, 'id');
         },
+        updatedAt() {
+            return this.entity ? this.entity.updated_at : undefined;
+        },
+    },
+    watch: {
+        updatedAt(val, oldVal) {
+            if (val && val !== oldVal) {
+                this.initFromProperties();
+            }
+        },
     },
     created() {
-        if (this.isEditing) {
-            this.form.name = this.entity.name || '';
-        }
+        Promise.resolve()
+            .then(this.initFromProperties);
     },
     methods: {
+        initFromProperties() {
+            if (this.entity) {
+                initPropertiesFromSource<Role>(this.entity, this.form);
+            }
+        },
         async submit() {
             if (this.busy || this.$v.$invalid) {
                 return;
