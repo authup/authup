@@ -25,7 +25,7 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
     const query = repository.createQueryBuilder('robot');
 
     applyFilters(query, filter, {
-        allowed: ['id', 'name'],
+        allowed: ['id', 'name', 'realm_id', 'user_id'],
         defaultAlias: 'robot',
     });
 
@@ -35,7 +35,7 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
     });
 
     applySort(query, sort, {
-        allowed: ['id', 'updated_at', 'created_at', 'realm_id'],
+        allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'],
         defaultAlias: 'robot',
     });
 

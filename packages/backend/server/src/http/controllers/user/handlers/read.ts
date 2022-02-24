@@ -39,7 +39,7 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
 
     applySort(query, sort, {
         defaultAlias: 'user',
-        allowed: ['id', 'name', 'created_at', 'updated_at'],
+        allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
