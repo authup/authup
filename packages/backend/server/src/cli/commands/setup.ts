@@ -6,8 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { useConfig } from '../../config';
-import { setupCommand } from '../../commands';
+import { setupCommand, useConfig } from '@typescript-auth/server-core';
 
 interface SetupArguments extends Arguments {
     root: string;

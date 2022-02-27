@@ -6,14 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import {
-    dropDatabase,
-} from 'typeorm-extension';
-import {
-    buildDatabaseConnectionOptions,
-} from '../../database';
-import { useConfig } from '../../config';
-import { resetCommand } from '../../commands/reset';
+import { resetCommand, useConfig } from '@typescript-auth/server-core';
 
 interface ResetArguments extends Arguments {
     root: string;

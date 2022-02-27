@@ -6,8 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { useConfig } from '../../config';
-import { checkCommand } from '../../commands/check';
+import { checkCommand, useConfig } from '@typescript-auth/server-core';
 
 interface SeedCheckArguments extends Arguments {
     root: string;

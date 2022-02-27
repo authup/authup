@@ -15,6 +15,7 @@ import {
 import path from 'path';
 import { URL } from 'url';
 import { SwaggerDocumentationCreateContext } from './type';
+import { getSwaggerEntrypointFilePath } from './utils';
 
 export async function generateSwaggerDocumentation(
     context: SwaggerDocumentationCreateContext,
@@ -23,7 +24,7 @@ export async function generateSwaggerDocumentation(
     const packageJson = require(path.join(context.rootDirectoryPath, 'package.json'));
 
     const metadataConfig : MetadataConfig = {
-        entryFile: path.join(__dirname, '..', '..', '..', 'src', 'http', 'controllers', '**', '*{.ts,.js,.d.ts}'),
+        entryFile: getSwaggerEntrypointFilePath(),
         ignore: [
             '**/node_modules/**',
         ],

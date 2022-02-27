@@ -59,7 +59,7 @@
         "@typescript-auth/domains": "^0.0.28",
         "@zerollup/ts-transform-paths": "^1.7.18",
         "bootstrap-vue": "^2.18.1",
-        "ilingo": "^2.0.0-3",
+        "ilingo": "^2.0.0",
         "rimraf": "^3.0.2",
         "rollup": "^2.68.0",
         "rollup-plugin-includepaths": "^0.2.4",

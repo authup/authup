@@ -32,13 +32,20 @@ The main propose of this package, is to provide general classes, interfaces & ty
 
 ### Backend
 
-#### @typescript-auth/server ⚔
+#### @typescript-auth/server ♟
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)
 
-This package can be used as simple standalone `server` or as an `extension` to an existent (express) resource API and
-should therefore only be used for backend- applications & microservices.
+This package contains a simple standalone server.
 
 [README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server#README.md)
+
+#### @typescript-auth/server-core 🍀
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-core.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-core)
+
+This package should be used as an extension to an existing (express) application and
+should therefore only be used on the server-side.
+
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-core#README.md)
 
 #### @typescript-auth/server-adapter 🌉
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)

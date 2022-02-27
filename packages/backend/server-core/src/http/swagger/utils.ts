@@ -5,5 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './type';
+import path from 'path';
+
+export function getSwaggerEntrypointFilePath() {
+    return path.join(__dirname, '..', '..', '..', 'src', 'http', 'controllers', '**', '*{.ts,.js,.d.ts}');
+}

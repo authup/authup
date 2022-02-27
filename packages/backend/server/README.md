@@ -1,12 +1,11 @@
-# @typescript-auth/server ⚔
+# @typescript-auth/server ♟
 
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)
 [![main](https://github.com/Tada5hi/typescript-auth/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/typescript-auth/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/Tada5hi/typescript-auth/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/typescript-auth)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
 
-This package can be used as simple `standalone` server or as an `extension` to an existent (express) resource API and
-should therefore only be used for backend- applications & microservices.
+This package contains a simple standalone server.
 
 ---
 **Important NOTE**
@@ -18,15 +17,11 @@ The `README.md` is under construction ☂ at the moment. So please stay patient 
 **Table of Contents**
 
 - [Installation](#installation)
-- [Usage - Standalone](#usage---standalone)
+- [Usage](#usage)
   - [Config](#config)
   - [Setup](#setup)
   - [Start](#start)
   - [Upgrade](#upgrade)
-- [Usage - Extension](#usage---extension)
-  - [HTTP](#http)
-  - [Database](#database)
-  - [Aggregators](#aggregators)
   
 ## Installation
 
@@ -34,13 +29,15 @@ The `README.md` is under construction ☂ at the moment. So please stay patient 
 npm install @typescript-auth/server --save
 ```
 
-## Usage - Standalone
+## Usage
 
 ### Config
 
 In general no configuration file is required at all!
 All options have either default values or are generated automatically 🔥.
-To overwrite the default (generated) config property values, create a `server.config.js` file in the root directory with the following content:
+
+To overwrite the default (generated) config property values, 
+create a `server.config.js` file in the root directory with the following content:
 
 ```typescript
 module.exports = {
@@ -51,21 +48,47 @@ module.exports = {
     adminPassword: 'start123',
     
     // robotSecret: '', // 
-
+    
     root: process.cwd(),
     writableDirectory: 'writable',
 
-    selfUrl: 'http://localhost:3010/',
-
-    swaggerDocumentation: true,
+    selfUrl: 'http://127.0.0.1:3010/',
+    webUrl: 'http://127.0.0.1:3000/',
 
     tokenMaxAge: {
         accessToken: 3600, // 1 hour
         refreshToken: 36000 // 10 hours
     },
+    
+    swaggerDocumentation: true,
+    
+    redis: true,
 }
 ```
-The above example shows the (generated) property values if non are specified explicit.
+Another way is e.g. to place an `.env` file in the root-directory or provide these properties
+by the system environment.
+
+```dotenv
+PORT=3010
+
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=start123
+
+ROBOT_SECRET=xxx
+PERMISSIONS=data_add,data_edit,...
+
+SELF_URL=http://127.0.0.1:3010/
+WEB_URL=http://127.0.0.1:3000/
+
+WRITABLE_DIRECTORY=writable
+
+REFRESH_TOKEN_MAX_AGE=3600
+ACCESS_TOKEN_MAX_AGE=3600
+
+SWAGGER_DOCUMENTATION=true
+
+REDIS=true
+```
 
 ### Setup
 If no option is specified, all options are by default `true` as long no
@@ -79,161 +102,42 @@ $ auth-server setup \
   --documentation=true
 ```
 
+The output should be similar, with other values for the `Robot ID` and `Robot Secret`:
+```shell
+✔ Generated rsa key-pair.
+✔ Created database.
+✔ Synchronized database schema.
+✔ Seeded database.
+ℹ Robot ID: 51dc4d96-f122-47a8-92f4-f0643dae9be5
+ℹ Robot Secret: d1l33354crj1kyo58dbpflned2ocnw2yez69
+```
+
 ### Start
 
-To start the authentication- & authorization-server simply execute the command: 
+To start the server simply execute the command: 
 
 ```shell
 $ auth-server start
 ```
 
+It will output the following information on startup:
+
+```shell
+ℹ Environment: development
+ℹ WritableDirectory: C:\Data\Projects\tada5hi\repositories\typescript-auth\packages\backend\server\writable
+ℹ URL: http://127.0.0.1:3010/
+ℹ Docs-URL: http://127.0.0.1:3010/docs
+ℹ Web-URL: http://127.0.0.1:3000/
+✔ Initialised controllers & middlewares.
+✔ Established database connection.
+✔ Built & started token aggregator.
+✔ Startup completed.
+```
+
 #### Upgrade 
 
-To upgrade the auth server, run:
+To upgrade the server (migrations, schemes, ...), run:
 
 ```shell
 $ auth-server upgrade
-```
-
-## Usage - Extension
-Controllers & middlewares can be configured like described for an existing express application.
-
-### HTTP
-```typescript
-import {
-    errorMiddleware,
-    registerControllers,
-    registerMiddlewares
-} from "@typescript-auth/server";
-
-import express from "express";
-import path from "path";
-
-const app = express();
-
-// Setup middleware
-registerMiddlewares(app, {
-    // optional
-    writableDirectoryPath: path.join(
-        process.cwd(), 
-        'writable'
-    ),
-    // required!
-    bodyParserMiddleware: true,
-    // required!
-    cookieParserMiddleware: true,
-    // required!
-    responseMiddleware: true,
-    // optional :)
-    swaggerMiddleware: {
-        path: '/docs',
-        writableDirectoryPath: path.join(
-            process.cwd(), 
-            'writable'
-        ),
-    }
-});
-
-// Register client, role, user, ... controllers
-registerControllers(app, {
-    redis: true,
-    tokenMaxAge: {
-        accessToken: 3600, // 1 hour
-        refreshToken: 36000 // 10 hours
-    },
-    selfUrl: 'http://localhost:3010/',
-    selfAuthorizeRedirectUrl: 'http://localhost:3000/',
-    writableDirectoryPath: path.join(
-        process.cwd(), 
-        'writable'
-    ),
-});
-
-// This middleware is required, to handle thrown errors by controllers
-app.use(errorMiddleware);
-
-app.listen(3010);
-```
-
-### Database
-To register the domain entities for the **typeorm** connection, 
-simply set **all** entities for the connection options, with a utility function.
-
-```typescript
-import { setEntitiesForConnectionOptions } from "@typescript-auth/server";
-import { 
-    createConnection, 
-    buildConnectionOptions
-} from 'typeorm';
-
-(async () => {
-    const connectionOptions = await buildConnectionOptions();
-
-    setEntitiesForConnectionOptions(connectionOptions);
-
-    const connection = await createConnection(connectionOptions);
-})();
-```
-
----
-
-Another important thing, is to seed the database. To do that, run the database seeder after
-registering the domain entities and creating a connection ⚡.
-
-```typescript
-import { DatabaseRootSeeder, setEntitiesForConnectionOptions } from "@typescript-auth/server";
-import { 
-    createConnection,
-    buildConnectionOptions 
-} from 'typeorm';
-
-(async () => {
-    const connectionOptions = await buildConnectionOptions();
-
-    setEntitiesForConnectionOptions(connectionOptions);
-    const connection = await createConnection(connectionOptions);
-    
-    // ------------------------------------
-
-    const seeder = new DatabaseRootSeeder({
-        userName: 'admin',
-        userPassword: 'start123',
-    });
-    
-    await seeder.run(connection);
-
-    
-})();
-```
-### Aggregators
-
-The last step after registering the http (controllers & middleware)- & database-module, is
-to start the token aggregator.
-The aggregator will remove all expired database tokens (access_tokens & refresh_tokens) from the database on startup.
-In addition, it will listen for expired token events from the redis store, to remove the corresponding database entries. 
-
-```typescript
-import {DatabaseRootSeeder, setEntitiesForConnectionOptions} from "@typescript-auth/server";
-import {
-    createConnection,
-    buildConnectionOptions
-} from 'typeorm';
-import {buildTokenAggregator} from "@typescript-auth/server/src";
-import {useClient} from "redis-extension";
-
-(async () => {
-    const connectionOptions = await buildConnectionOptions();
-
-    setEntitiesForConnectionOptions(connectionOptions);
-    const connection = await createConnection(connectionOptions);
-
-    // ------------------------------------
-
-    // init redis client
-    const redis = useClient();
-    
-    const { start } = buildTokenAggregator(redis);
-
-    await start();
-})();
 ```

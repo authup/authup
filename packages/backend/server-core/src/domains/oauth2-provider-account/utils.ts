@@ -16,7 +16,6 @@ import {
     isValidUserName,
 } from '@typescript-auth/domains';
 import { getCustomRepository, getRepository } from 'typeorm';
-import { string } from 'yargs';
 import { decodeToken } from '@typescript-auth/server-utils';
 import { UserEntity, UserRepository } from '../user';
 import { OAuth2ProviderAccountEntity } from './entity';

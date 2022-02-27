@@ -6,8 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { upgradeCommand } from '../../commands/upgrade';
-import { useConfig } from '../../config';
+import { upgradeCommand, useConfig } from '@typescript-auth/server-core';
 
 interface UpgradeArguments extends Arguments {
     root: string;
