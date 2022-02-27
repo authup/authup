@@ -4,7 +4,6 @@
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/cli/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=6000",
         "test:coverage": "npm run test -- --coverage"
@@ -13,9 +12,6 @@
         "dist/",
         "src/http/controllers"
     ],
-    "bin": {
-        "auth-server": "dist/cli/index.js"
-    },
     "keywords": [
         "auth",
         "module",
