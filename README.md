@@ -14,6 +14,7 @@ This monorepo contains different auth packages for frontend and backend.
   - [Backend](#backend)
     - [Server](#typescript-authserver-)
     - [ServerAdapter](#typescript-authserver-adapter-)
+    - [ServerCore](#typescript-authserver-core-)
     - [ServerUtils](#typescript-authserver-utils-)
   - [Frontend](#frontend)
     - [Vue](#typescript-authvue-)
@@ -39,6 +40,13 @@ This package contains a simple standalone server.
 
 [README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server#README.md)
 
+#### @typescript-auth/server-adapter 🌉
+[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
+
+The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
+
+[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-adapter#README.md)
+
 #### @typescript-auth/server-core 🍀
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-core.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-core)
 
@@ -46,13 +54,6 @@ This package should be used as an extension to an existing (express) application
 should therefore only be used on the server-side.
 
 [README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-core#README.md)
-
-#### @typescript-auth/server-adapter 🌉
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
-
-The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
-
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-adapter#README.md)
 
 #### @typescript-auth/server-utils 🛡
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-utils.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-utils)
