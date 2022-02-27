@@ -20,6 +20,7 @@ const includePathOptions = {
     },
     external: [
         'axios',
+        'ilingo',
         'vue',
         'vuelidate',
         'vuelidate/lib/validators',
@@ -72,6 +73,7 @@ const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
     'axios',
+    'ilingo',
     'vue',
     'vuelidate',
     'vuelidate/lib/validators',

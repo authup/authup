@@ -5,15 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LanguageFormMap } from '../type';
-import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
+import { Lines } from 'ilingo';
 
-export const LanguageFormGerman : LanguageFormMap = {
-    email: 'Die Eingabe muss eine gültige E-Mail sein.',
-    maxLength: 'Die Länge der Eingabe muss kleiner als {{max}} sein.',
-    minLength: 'Die Länge der Eingabe muss größer als {{max}} sein.',
-    required: 'Ein Eingabewert wird benötigt.',
-    sameAs: 'Der Eingabewert entspricht nicht dem Wert der Eingabe von {{field}}',
-    alphaNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-z-_]+',
-    alphaWithUpperNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-zA-Z-_]+',
+export const LanguageFormGerman : Lines = {
+    update: 'Aktualisieren',
+    create: 'Erstellen',
 };

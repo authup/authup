@@ -29,6 +29,8 @@ export default {
                             class="btn btn-xs btn-dark"
                             :entity-type="'user'"
                             :entity-id="props.item.id"
+                            :with-text="false"
+                            :locale="'de'"
                             @done="handleDeleted"
                         />
                     </template>

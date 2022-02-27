@@ -10,6 +10,7 @@ import {
     ComponentFormComputed, ComponentFormData,
     ComponentFormMethods, ComponentFormVuelidate,
 } from '../type';
+import { useAuthIlingo } from '../../../language/singleton';
 
 export function buildFormSubmit<T extends Record<string, any>>(
     instance: ComponentFormMethods<T> &
@@ -49,7 +50,13 @@ export function buildFormSubmit<T extends Record<string, any>>(
                 },
             }),
             ' ',
-            (instance.isEditing ? 'Update' : 'Create'),
+            (
+                useAuthIlingo()
+                    .getSync(`form.${instance.isEditing ?
+                        'update' :
+                        'create'}`, instance.locale)
+
+            ),
         ]),
     ]);
 }

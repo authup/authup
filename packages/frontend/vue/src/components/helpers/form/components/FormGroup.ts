@@ -5,15 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import template from 'lodash/template';
 import Vue from 'vue';
-import { LanguageFormEnglish } from '../../../language/en/form';
-import { LanguageFormGerman } from '../../../language/de/form';
-import { LanguageFormMap } from '../../../language/type';
+import { useAuthIlingo } from '../../../language/singleton';
 
 type FormGroupComputed = {
     errors: string[],
-    languageMap: LanguageFormMap,
     invalid: boolean
 };
 
@@ -21,7 +17,7 @@ export type FormGroupSlotScope = FormGroupComputed;
 
 export type FormGroupProperties = {
     validations: Record<string, any>,
-    language?: string,
+    locale?: string,
 };
 
 export const FormGroup = Vue.extend<Record<string, any>, any, FormGroupComputed, FormGroupProperties>({
@@ -30,10 +26,10 @@ export const FormGroup = Vue.extend<Record<string, any>, any, FormGroupComputed,
             required: true,
             type: Object,
         },
-        language: {
+        locale: {
             required: false,
             type: String,
-            default: 'en',
+            default: undefined,
         },
     },
     computed: {
@@ -42,23 +38,37 @@ export const FormGroup = Vue.extend<Record<string, any>, any, FormGroupComputed,
                 return [];
             }
 
+            let { locale } = this;
+
+            if (!locale && this.ilingo) {
+                locale = this.ilingo.getLocale();
+            }
+
+            if (!locale && this.$ilingo) {
+                locale = this.$ilingo.getLocale();
+            }
+
             return Object.keys(this.validations.$params).reduce(
                 (errors: string[], validator) => {
-                    if (
-                        !this.validations[validator] &&
-                        Object.prototype.hasOwnProperty.call(this.languageMap, validator)
-                    ) {
-                        const compiled = template(this.languageMap[validator], {
-                            interpolate: /{{([\s\S]+?)}}/g,
-                        });
+                    if (!this.validations[validator]) {
+                        // hope that lang file is already loaded ;)
+                        let output = useAuthIlingo()
+                            .getSync(
+                                `validation.${validator}`,
+                                this.validations.$params[validator],
+                                locale,
+                            );
 
-                        if (this.validations.$params[validator]) {
-                            const output = compiled(this.validations.$params[validator]);
+                        output = output !== validator ?
+                            output :
+                            useAuthIlingo()
+                                .getSync(
+                                    'app.validator.alt',
+                                    { validator },
+                                    locale,
+                                );
 
-                            errors.push(output);
-                        } else {
-                            errors.push(`The ${validator} operator condition is not fulfilled.`);
-                        }
+                        errors.push(output);
                     }
 
                     return errors;
@@ -66,19 +76,20 @@ export const FormGroup = Vue.extend<Record<string, any>, any, FormGroupComputed,
                 [],
             );
         },
-        languageMap() {
-            switch (this.language) {
-                case 'de':
-                    return LanguageFormGerman;
-                default:
-                    return LanguageFormEnglish;
-            }
-        },
         invalid() {
             return this.validations &&
                     this.validations.$dirty &&
                     this.validations.$invalid;
         },
+    },
+    created() {
+        // todo : use system wide ilingo cache, for other locales ?
+        /*
+        if (this.$ilingo) {
+            useAuthIlingo()
+                .setCache(this.$ilingo.getCache());
+        }
+        */
     },
     render() {
         return this.$scopedSlots.default({

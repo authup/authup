@@ -11,6 +11,7 @@ import Vue, {
 import { BvMsgBoxData, BvMsgBoxOptions } from 'bootstrap-vue';
 import { useDomainAPI } from '@typescript-auth/domains';
 import { mergeDeep, useHTTPClient } from '../../utils';
+import { useAuthIlingo } from '../language/singleton';
 
 enum ElementType {
     BUTTON = 'button',
@@ -21,11 +22,13 @@ enum ElementType {
 export type AuthEntityDeleteProperties = {
     [key: string]: any,
     elementIcon: string,
-    elementText: string,
+    withText: boolean,
     elementType: `${ElementType}`,
     entityId: string,
     entityType: string,
-    hint?: string
+    hint?: string,
+    locale?: string,
+    options?: BvMsgBoxOptions
 };
 
 export const AuthEntityDelete = Vue.extend<
@@ -40,9 +43,9 @@ AuthEntityDeleteProperties
             type: String,
             default: 'fa-solid fa-trash',
         },
-        elementText: {
-            type: String,
-            default: 'Drop',
+        withText: {
+            type: Boolean,
+            default: true,
         },
         elementType: {
             type: String as PropType<`${ElementType}`>,
@@ -57,6 +60,10 @@ AuthEntityDeleteProperties
         },
 
         hint: {
+            type: String,
+            default: undefined,
+        },
+        locale: {
             type: String,
             default: undefined,
         },
@@ -85,7 +92,8 @@ AuthEntityDeleteProperties
 
             let { hint } = this;
             if (!hint) {
-                hint = 'Are you sure, that you want to delete this entity?';
+                hint = useAuthIlingo()
+                    .getSync('app.delete.hint', this.locale);
             }
 
             const message = h(
@@ -100,6 +108,10 @@ AuthEntityDeleteProperties
                 {
                     size: 'md',
                     buttonSize: 'xs',
+                    okTitle: useAuthIlingo()
+                        .getSync('app.delete.okTitle', this.locale),
+                    cancelTitle: useAuthIlingo()
+                        .getSync('app.delete.cancelTitle', this.locale),
                 },
                 this.options || {},
             ));
@@ -143,14 +155,15 @@ AuthEntityDeleteProperties
             icon = h('i', {
                 staticClass: vm.elementIcon,
                 class: {
-                    'pr-1': vm.elementText,
+                    'pr-1': vm.withText,
                 },
             });
         }
 
-        let text = h('');
-        if (vm.elementText) {
-            text = vm.elementText;
+        let text : string | VNode = h('');
+        if (vm.withText) {
+            text = useAuthIlingo()
+                .getSync('app.delete.button', this.locale);
         }
 
         return h(

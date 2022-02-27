@@ -59,6 +59,7 @@
         "@typescript-auth/domains": "^0.0.28",
         "@zerollup/ts-transform-paths": "^1.7.18",
         "bootstrap-vue": "^2.18.1",
+        "ilingo": "^2.0.0-3",
         "rimraf": "^3.0.2",
         "rollup": "^2.68.0",
         "rollup-plugin-includepaths": "^0.2.4",
@@ -73,14 +74,13 @@
         "vuelidate": "^0.7.7"
     },
     "dependencies": {
-        "lodash": "^4.17.21",
         "nanoid": "^3.3.1",
         "regenerator-runtime": "^0.13.9"
     },
     "peerDependencies": {
-        "@trapi/query": "^2.x",
         "@typescript-auth/domains": "^0.x",
         "bootstrap-vue": "^2.x",
+        "ilingo": "^2.x",
         "vue": "^2.x",
         "vuelidate": "^0.x"
     },
