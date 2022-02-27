@@ -9,10 +9,21 @@ import { Connection } from 'typeorm';
 import { Config } from '../config';
 import { DatabaseRootSeederOptions } from '../database';
 
+export type Spinner = {
+    start(text?: string) : Spinner,
+    succeed(text?: string) : Spinner,
+    stop() : Spinner,
+    fail(text?: string) : Spinner,
+    warn(text?: string) : Spinner,
+    info(string?: string) : Spinner,
+    [key: string] : any,
+};
+
 export type CommandContext = {
     config?: Config,
     databaseConnectionMerge?: boolean,
-    databaseSeederOptions?: Partial<DatabaseRootSeederOptions>
+    databaseSeederOptions?: Partial<DatabaseRootSeederOptions>,
+    spinner?: Spinner
 };
 
 export type StartCommandContext = CommandContext;

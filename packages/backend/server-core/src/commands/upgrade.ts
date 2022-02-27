@@ -6,18 +6,15 @@
  */
 
 import { createConnection } from 'typeorm';
-import * as ora from 'ora';
 import { UpgradeCommandContext } from './type';
 import { buildDatabaseConnectionOptions } from '../database';
 import { migrationGenerateCommand } from './migration';
 import { useConfig } from '../config';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
-    const spinner = ora.default({
-        spinner: 'dots',
-    });
-
-    spinner.start('Establish database connection.');
+    if (context.spinner) {
+        context.spinner.start('Establish database connection.');
+    }
 
     context.config ??= useConfig();
 
@@ -33,12 +30,20 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
 
     const connection = await createConnection(connectionOptions);
 
-    spinner.succeed('Established database connection.');
+    if (context.spinner) {
+        context.spinner.succeed('Established database connection.');
+    }
 
     try {
-        spinner.start('Execute migrations.');
+        if (context.spinner) {
+            context.spinner.start('Execute migrations.');
+        }
+
         await connection.runMigrations({ transaction: 'all' });
-        spinner.succeed('Executed migrations.');
+
+        if (context.spinner) {
+            context.spinner.succeed('Executed migrations.');
+        }
 
         if (context.migrationsGenerate) {
             await migrationGenerateCommand({
@@ -46,9 +51,13 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
                 connection,
             });
 
-            spinner.start('Execute migrations.');
+            if (context.spinner) {
+                context.spinner.start('Execute migrations.');
+            }
             await connection.runMigrations({ transaction: 'all' });
-            spinner.succeed('Executed migrations.');
+            if (context.spinner) {
+                context.spinner.succeed('Executed migrations.');
+            }
         }
     } finally {
         await connection.close();

@@ -7,6 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { startCommand, useConfig } from '@typescript-auth/server-core';
+import * as ora from 'ora';
 
 interface StartArguments extends Arguments {
     root: string;
@@ -28,9 +29,13 @@ export class StartCommand implements CommandModule {
 
     async handler(args: StartArguments) {
         const config = useConfig(args.root);
+        const spinner = ora.default({
+            spinner: 'dots',
+        });
 
         await startCommand({
             config,
+            spinner,
         });
     }
 }

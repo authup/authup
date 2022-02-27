@@ -7,6 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { upgradeCommand, useConfig } from '@typescript-auth/server-core';
+import * as ora from 'ora';
 
 interface UpgradeArguments extends Arguments {
     root: string;
@@ -29,10 +30,14 @@ export class UpgradeCommand implements CommandModule {
 
     async handler(args: UpgradeArguments) {
         const config = useConfig(args.root);
+        const spinner = ora.default({
+            spinner: 'dots',
+        });
 
         try {
             await upgradeCommand({
                 config,
+                spinner,
                 migrationsGenerate: true,
             });
 

@@ -5,28 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import * as ora from 'ora';
 import { createConnection } from 'typeorm';
 import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
 import { CheckCommandContext } from './type';
 import { useConfig } from '../config';
 
 export async function checkCommand(context: CheckCommandContext) {
-    const spinner = ora.default({
-        spinner: 'dots',
-    });
-
     context.config ??= useConfig();
 
-    spinner.start('Establish database connection.');
+    if (context.spinner) {
+        context.spinner.start('Establish database connection.');
+    }
 
     const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
     const connection = await createConnection(connectionOptions);
 
-    spinner.succeed('Established database connection.');
+    if (context.spinner) {
+        context.spinner.succeed('Established database connection.');
+    }
 
     try {
-        spinner.start('Seeding database.');
+        if (context.spinner) {
+            context.spinner.start('Seeding database.');
+        }
 
         const seeder = new DatabaseRootSeeder({
             userName: context.config.adminUsername,
@@ -39,7 +40,9 @@ export async function checkCommand(context: CheckCommandContext) {
         });
         await seeder.run(connection);
 
-        spinner.succeed('Seeded database.');
+        if (context.spinner) {
+            context.spinner.succeed('Seeded database.');
+        }
     } finally {
         await connection.close();
     }

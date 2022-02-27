@@ -7,6 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { setupCommand, useConfig } from '@typescript-auth/server-core';
+import * as ora from 'ora';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -57,10 +58,14 @@ export class SetupCommand implements CommandModule {
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
         const config = useConfig(args.root);
+        const spinner = ora.default({
+            spinner: 'dots',
+        });
 
         try {
             await setupCommand({
                 config,
+                spinner,
                 ...args,
             });
         } catch (e) {

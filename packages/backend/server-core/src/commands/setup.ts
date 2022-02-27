@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import * as ora from 'ora';
 import path from 'path';
 import { createDatabase } from 'typeorm-extension';
 import { createConnection } from 'typeorm';
@@ -38,22 +37,24 @@ export async function setupCommand(context: SetupCommandContext) {
         context.config.writableDirectory,
     );
 
-    const spinner = ora.default({
-        spinner: 'dots',
-    });
-
     if (context.keyPair) {
-        spinner.start('Generating rsa key-pair.');
+        if (context.spinner) {
+            context.spinner.start('Generating rsa key-pair.');
+        }
 
         await createKeyPair({
             directory: writableDirectoryPath,
         });
 
-        spinner.succeed('Generated rsa key-pair.');
+        if (context.spinner) {
+            context.spinner.succeed('Generated rsa key-pair.');
+        }
     }
 
     if (context.documentation) {
-        spinner.start('Generating documentation.');
+        if (context.spinner) {
+            context.spinner.start('Generating documentation.');
+        }
 
         await generateSwaggerDocumentation({
             rootDirectoryPath: context.config.rootPath,
@@ -61,7 +62,9 @@ export async function setupCommand(context: SetupCommandContext) {
             selfUrl: context.config.selfUrl,
         });
 
-        spinner.start('Generated documentation.');
+        if (context.spinner) {
+            context.spinner.start('Generated documentation.');
+        }
     }
 
     if (context.database || context.databaseSeeder) {
@@ -71,20 +74,33 @@ export async function setupCommand(context: SetupCommandContext) {
         const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
 
         if (context.database) {
-            spinner.start('Creating database.');
+            if (context.spinner) {
+                context.spinner.start('Creating database.');
+            }
+
             await createDatabase({ ifNotExist: true }, connectionOptions);
-            spinner.succeed('Created database.');
+
+            if (context.spinner) {
+                context.spinner.succeed('Created database.');
+            }
         }
 
         const connection = await createConnection(connectionOptions);
 
         try {
-            spinner.start('Synchronize database schema.');
+            if (context.spinner) {
+                context.spinner.start('Synchronize database schema.');
+            }
+
             await connection.synchronize();
-            spinner.succeed('Synchronized database schema.');
+            if (context.spinner) {
+                context.spinner.succeed('Synchronized database schema.');
+            }
 
             if (context.databaseSeeder) {
-                spinner.start('Seeding database.');
+                if (context.spinner) {
+                    context.spinner.start('Seeding database.');
+                }
 
                 const seeder = new DatabaseRootSeeder({
                     userName: context.config.adminUsername,
@@ -99,14 +115,20 @@ export async function setupCommand(context: SetupCommandContext) {
                     ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
                 });
 
-                spinner.succeed('Seeded database.');
+                if (context.spinner) {
+                    context.spinner.succeed('Seeded database.');
+                }
 
                 const seederData = await seeder.run(connection);
-                spinner.info(`Robot ID: ${seederData.robot.id}`);
-                spinner.info(`Robot Secret: ${seederData.robot.secret}`);
+                if (context.spinner) {
+                    context.spinner.info(`Robot ID: ${seederData.robot.id}`);
+                    context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
+                }
             }
         } catch (e) {
-            spinner.fail('Synchronizing or seeding the database failed.');
+            if (context.spinner) {
+                context.spinner.fail('Synchronizing or seeding the database failed.');
+            }
             throw e;
         } finally {
             await connection.close();

@@ -6,7 +6,8 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { checkCommand, useConfig } from '@typescript-auth/server-core';
+import { Spinner, checkCommand, useConfig } from '@typescript-auth/server-core';
+import * as ora from 'ora';
 
 interface SeedCheckArguments extends Arguments {
     root: string;
@@ -28,8 +29,12 @@ export class CheckCommand implements CommandModule {
 
     async handler(args: SeedCheckArguments) {
         const config = useConfig(args.root);
+        const spinner = ora.default({
+            spinner: 'dots',
+        });
+
         try {
-            await checkCommand({ config });
+            await checkCommand({ config, spinner });
             process.exit(0);
         } catch (e) {
             // eslint-disable-next-line no-console

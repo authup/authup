@@ -7,7 +7,6 @@
 
 import { URL } from 'url';
 import { createConnection } from 'typeorm';
-import * as ora from 'ora';
 import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
@@ -16,19 +15,17 @@ import { buildTokenAggregator } from '../aggregators';
 import { useConfig } from '../config';
 
 export async function startCommand(context: StartCommandContext) {
-    const spinner = ora.default({
-        spinner: 'dots',
-    });
-
     context.config ??= useConfig();
 
-    spinner.info(`Environment: ${context.config.env}`);
-    spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);
-    spinner.info(`URL: ${context.config.selfUrl}`);
-    spinner.info(`Docs-URL: ${new URL('docs', context.config.selfUrl).href}`);
-    spinner.info(`Web-URL: ${context.config.webUrl}`);
+    if (context.spinner) {
+        context.spinner.info(`Environment: ${context.config.env}`);
+        context.spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);
+        context.spinner.info(`URL: ${context.config.selfUrl}`);
+        context.spinner.info(`Docs-URL: ${new URL('docs', context.config.selfUrl).href}`);
+        context.spinner.info(`Web-URL: ${context.config.webUrl}`);
 
-    spinner.start('Initialise controllers & middlewares.');
+        context.spinner.start('Initialise controllers & middlewares.');
+    }
     /*
     HTTP Server & Express App
     */
@@ -41,11 +38,15 @@ export async function startCommand(context: StartCommandContext) {
         redis: context.config.redis,
     });
 
-    spinner.succeed('Initialised controllers & middlewares.');
+    if (context.spinner) {
+        context.spinner.succeed('Initialised controllers & middlewares.');
+    }
 
     const httpServer = createHttpServer({ expressApp });
 
-    spinner.start('Establish database connection.');
+    if (context.spinner) {
+        context.spinner.start('Establish database connection.');
+    }
 
     const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
     const connection = await createConnection(connectionOptions);
@@ -53,16 +54,23 @@ export async function startCommand(context: StartCommandContext) {
         await connection.synchronize();
     }
 
-    spinner.succeed('Established database connection.');
+    if (context.spinner) {
+        context.spinner.succeed('Established database connection.');
 
-    spinner.start('Build & start token aggregator.');
+        context.spinner.start('Build & start token aggregator.');
+    }
+
     const { start } = buildTokenAggregator(context.config.redis);
 
     await start();
 
-    spinner.succeed('Built & started token aggregator.');
+    if (context.spinner) {
+        context.spinner.succeed('Built & started token aggregator.');
+    }
 
     httpServer.listen(context.config.port, '0.0.0.0', () => {
-        spinner.succeed('Startup completed.');
+        if (context.spinner) {
+            context.spinner.succeed('Startup completed.');
+        }
     });
 }

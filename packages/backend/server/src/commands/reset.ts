@@ -7,6 +7,7 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { resetCommand, useConfig } from '@typescript-auth/server-core';
+import * as ora from 'ora';
 
 interface ResetArguments extends Arguments {
     root: string;
@@ -28,8 +29,11 @@ export class ResetCommand implements CommandModule {
 
     async handler(args: ResetArguments) {
         const config = useConfig(args.root);
+        const spinner = ora.default({
+            spinner: 'dots',
+        });
 
-        await resetCommand({ config });
+        await resetCommand({ config, spinner });
 
         process.exit(0);
     }
