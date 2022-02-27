@@ -78,6 +78,7 @@
         "regenerator-runtime": "^0.13.9"
     },
     "peerDependencies": {
+        "@trapi/query": "^2.x",
         "@typescript-auth/domains": "^0.x",
         "bootstrap-vue": "^2.x",
         "ilingo": "^2.x",
