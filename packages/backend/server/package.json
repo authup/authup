@@ -47,7 +47,7 @@
         "mysql": "^2.18.1",
         "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
-        "sqlite3": "^5.0.2",
+        "better-sqlite3": "^7.5.0",
         "typeorm": "^0.2.44",
         "yargs": "^17.0.1"
     },

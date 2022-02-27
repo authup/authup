@@ -30,7 +30,7 @@ export async function buildDatabaseConnectionOptions(
     } catch (e) {
         connectionOptions = {
             name: 'default',
-            type: 'sqlite',
+            type: 'better-sqlite3',
             database: path.join(config.rootPath, config.writableDirectory, config.env === 'test' ? 'test.sql' : 'db.sql'),
             subscribers: [],
             migrations: [],
