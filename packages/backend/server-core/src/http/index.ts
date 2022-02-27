@@ -9,4 +9,5 @@ export * from './controllers';
 export * from './express';
 export * from './middleware';
 export * from './server';
+export * from './swagger';
 export * from './type';
