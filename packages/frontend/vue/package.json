@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/vue",
-    "version": "0.0.20",
+    "version": "0.1.0",
     "description": "This package contains auth related vue components.",
     "main": "dist/index.ssr.js",
     "browser": "dist/index.esm.js",
