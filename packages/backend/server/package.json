@@ -4,14 +4,14 @@
     "description": "This is a simple standalone server.",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/cli/index.ts",
+        "cli": "ts-node src/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [
         "dist/"
     ],
     "bin": {
-        "auth-server": "dist/cli/index.js"
+        "auth-server": "dist/index.js"
     },
     "keywords": [
         "auth",
