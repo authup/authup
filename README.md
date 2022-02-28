@@ -27,7 +27,7 @@ This monorepo contains different auth packages for frontend and backend.
 #### @typescript-auth/domains 🎉
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fdomains.svg)](https://badge.fury.io/js/@typescript-auth%2Fdomains)
 
-The main propose of this package, is to provide general classes, interfaces & types for authorization & authentication.
+The main propose of this package, is to provide general classes, interfaces & types for all packages.
 
 [README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/common/domains#README.md)
 
@@ -67,7 +67,7 @@ The main propose of this package, is to provide general utilities for authorizat
 #### @typescript-auth/vue 🏝
 [![npm version](https://badge.fury.io/js/@typescript-auth%2Fvue.svg)](https://badge.fury.io/js/@typescript-auth%2Fvue)
 
-This repository contains different vue components for the typescript-auth domain entities.
+This repository contains different vue components for the domain entities.
 
 [README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/frontend/vue#README.md)
 

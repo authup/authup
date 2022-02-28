@@ -13,56 +13,31 @@ import {
     PermissionItem,
     TokenError,
 } from '@typescript-auth/domains';
-import { AuthorizationHeader, AuthorizationHeaderType } from '@trapi/client';
+import {
+    AuthorizationHeader,
+    AuthorizationHeaderType,
+    BasicAuthorizationHeader,
+    BearerAuthorizationHeader,
+} from '@trapi/client';
 import { Client } from 'redis-extension';
 import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
 import {
-    RobotEntity, UserEntity, UserRepository,
+    RobotEntity, RobotRepository, UserEntity, UserRepository,
 } from '../../../domains';
 
-export async function verifyAuthorizationHeader(
+type AuthorizationHeaderVerifyOptions = {
+    writableDirectoryPath: string,
+    redis?: Client | string | boolean
+};
+
+async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
-    header: AuthorizationHeader,
-    options: {
-        writableDirectoryPath: string,
-        redis?: Client | string | boolean
-    },
-) : Promise<void> {
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
-
-    let permissions : PermissionItem[] = [];
-
-    if (header.type !== AuthorizationHeaderType.BEARER) {
-        if (
-            process.env.NODE_ENV === 'test' &&
-            header.type === 'Basic' &&
-            header.username === 'admin' &&
-            header.password === 'start123'
-        ) {
-            const entity = await userRepository.findOne({
-                name: 'admin',
-            });
-
-            if (typeof entity === 'undefined') {
-                throw new NotFoundError();
-            }
-
-            permissions = await userRepository.getOwnedPermissions(entity.id);
-
-            request.user = entity;
-            request.userId = entity.id;
-            request.realmId = entity.realm_id;
-            request.ability = new AbilityManager(permissions);
-
-            return;
-        }
-
-        throw HeaderError.unsupportedHeaderType(header.type);
-    }
-
+    header: BearerAuthorizationHeader,
+    options: AuthorizationHeaderVerifyOptions,
+) {
     const token = await verifyOAuth2Token(
         header.token,
         {
@@ -97,4 +72,63 @@ export async function verifyAuthorizationHeader(
             break;
         }
     }
+}
+
+async function verifyBasicAuthorizationHeader(
+    request: ExpressRequest,
+    header: BasicAuthorizationHeader,
+    options: AuthorizationHeaderVerifyOptions,
+) {
+    let permissions : PermissionItem[] = [];
+
+    if (
+        process.env.NODE_ENV === 'test' &&
+        header.username === 'admin' &&
+        header.password === 'start123'
+    ) {
+        const userRepository = getCustomRepository<UserRepository>(UserRepository);
+        const entity = await userRepository.findOne({
+            name: 'admin',
+        });
+
+        if (typeof entity === 'undefined') {
+            throw new NotFoundError();
+        }
+
+        permissions = await userRepository.getOwnedPermissions(entity.id);
+
+        request.user = entity;
+        request.userId = entity.id;
+        request.realmId = entity.realm_id;
+        request.ability = new AbilityManager(permissions);
+
+        return;
+    }
+
+    const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+    const robot = await robotRepository.verifyCredentials(header.username, header.password);
+    if (robot) {
+        // allow authentication but not authorization with basic auth for robots!
+        request.ability = new AbilityManager([]);
+
+        request.realmId = robot.realm_id;
+        request.robot = robot;
+        request.robotId = robot.id;
+        request.userId = robot.user_id;
+    }
+}
+
+export async function verifyAuthorizationHeader(
+    request: ExpressRequest,
+    header: AuthorizationHeader,
+    options: AuthorizationHeaderVerifyOptions,
+) : Promise<void> {
+    switch (header.type) {
+        case AuthorizationHeaderType.BEARER:
+            return verifyBearerAuthorizationHeader(request, header, options);
+        case AuthorizationHeaderType.BASIC:
+            return verifyBasicAuthorizationHeader(request, header, options);
+    }
+
+    throw HeaderError.unsupportedHeaderType(header.type);
 }
