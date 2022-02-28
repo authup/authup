@@ -1,6 +1,6 @@
 {
     "name": "@typescript-auth/server-core",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
