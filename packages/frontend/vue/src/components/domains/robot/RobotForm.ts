@@ -248,7 +248,7 @@ Properties
                     }, [
                         'Hashed',
                         ' ',
-                        h('i', { staticClass: 'fa fa-exclamation-triangle' }),
+                        h('i', { staticClass: 'fa fa-exclamation-triangle pl-1' }),
                     ]) : '',
                 ],
                 propName: 'secret',
@@ -289,6 +289,7 @@ Properties
             id,
             changeSecret,
             secret,
+            secretInfo,
             submit,
         ]);
     },
