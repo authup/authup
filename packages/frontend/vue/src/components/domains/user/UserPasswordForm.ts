@@ -68,19 +68,9 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
                     password_repeat: this.form.password_repeat,
                 });
 
-                this.$bvToast.toast('The user password was successfully updated.', {
-                    variant: 'success',
-                    toaster: 'b-toaster-top-center',
-                });
-
                 this.$emit('updated', user);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }

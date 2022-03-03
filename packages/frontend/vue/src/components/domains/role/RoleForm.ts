@@ -98,11 +98,6 @@ Properties
                 }
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$bvToast.toast(e.message, {
-                        variant: 'warning',
-                        toaster: 'b-toaster-top-center',
-                    });
-
                     this.$emit('failed', e);
                 }
             }
