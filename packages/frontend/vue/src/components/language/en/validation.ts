@@ -12,7 +12,7 @@ export const LanguageValidationEnglish : Lines = {
     maxLength: 'The length of the input must be less than {{max}}.',
     minLength: 'The length of the input must be greater than {{min}}.',
     required: 'An input value is required.',
-    sameAs: 'The input value is not equal to the value of {{field}}',
+    sameAs: 'The input value is not equal to the value of {{eq}}',
     alphaNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-z-_]+',
     alphaWithUpperNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-zA-Z-_]+',
 };

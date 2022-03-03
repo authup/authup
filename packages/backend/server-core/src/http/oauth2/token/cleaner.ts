@@ -13,13 +13,15 @@ export async function removeExpiredOAuth2Tokens() {
     const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
     const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
 
+    const date = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     await accessTokenRepository
         .delete({
-            expires: LessThan(new Date()),
+            expires: LessThan(date),
         });
 
     await refreshTokenRepository
         .delete({
-            expires: LessThan(new Date()),
+            expires: LessThan(date),
         });
 }

@@ -21,25 +21,25 @@ export async function startOAuth2TokenWatcher(redis?: Client | boolean | string)
 
     // -------------------------------------------------
 
-    const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
     const accessTokenCache = new Cache<string>({
         redis,
     }, {
         prefix: CachePrefix.TOKEN_ACCESS,
     });
     accessTokenCache.on('expired', async (data) => {
+        const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
         await accessTokenRepository.delete(data.id);
     });
 
     // -------------------------------------------------
 
-    const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
     const refreshTokenCache = new Cache<string>({
         redis,
     }, {
         prefix: CachePrefix.TOKEN_REFRESH,
     });
     refreshTokenCache.on('expired', async (data) => {
+        const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
         await refreshTokenRepository.delete(data.id);
     });
 

@@ -57,6 +57,10 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
                                     disabled: propsItemsSlot.busy,
                                     ...(context.value ? { value: context.value } : {}),
                                 },
+                                directives: [{
+                                    name: 'model',
+                                    value: context.value,
+                                }],
                                 on: {
                                     change($event: any) {
                                         const $$selectedVal = Array.prototype.filter.call($event.target.options, (o) => o.selected).map((o) => ('_value' in o ? o._value : o.value));
