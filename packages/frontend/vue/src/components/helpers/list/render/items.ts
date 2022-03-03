@@ -37,12 +37,14 @@ export function buildListItems<T extends Record<string, any>>(
         key: item.id,
         staticClass: 'list-item',
     }, [
-        h('div', [h('i', { staticClass: context?.itemIconClass })]),
-        h('div', [context?.itemTextPropName ? item[context?.itemTextPropName] : '???']),
-        h('div', { staticClass: 'ml-auto' }, [
-            hasNormalizedSlot(SlotName.ITEM_ACTIONS, $scopedSlots, $slots) ?
-                normalizeSlot(SlotName.ITEM_ACTIONS, { item }, $scopedSlots, $slots) :
-                '',
+        h('div', { staticClass: 'd-flex flex-row' }, [
+            h('div', [h('i', { staticClass: context?.itemIconClass })]),
+            h('div', [context?.itemTextPropName ? item[context?.itemTextPropName] : '???']),
+            h('div', { staticClass: 'ml-auto' }, [
+                hasNormalizedSlot(SlotName.ITEM_ACTIONS, $scopedSlots, $slots) ?
+                    normalizeSlot(SlotName.ITEM_ACTIONS, { item }, $scopedSlots, $slots) :
+                    '',
+            ]),
         ]),
     ]);
 
