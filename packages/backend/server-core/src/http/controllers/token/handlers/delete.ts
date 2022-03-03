@@ -72,7 +72,12 @@ export async function deleteTokenRouteHandler(
     switch (token.kind) {
         case OAuth2TokenKind.ACCESS: {
             const repository = getRepository(OAuth2AccessTokenEntity);
+
+            const { id: entityId } = token.entity;
+
             await repository.remove(token.entity as OAuth2AccessTokenEntity);
+
+            token.entity.id = entityId;
 
             return res.respondDeleted({
                 data: token.entity,
@@ -80,7 +85,12 @@ export async function deleteTokenRouteHandler(
         }
         case OAuth2TokenKind.REFRESH: {
             const repository = getRepository(OAuth2RefreshTokenEntity);
+
+            const { id: entityId } = token.entity;
+
             await repository.remove(token.entity as OAuth2RefreshTokenEntity);
+
+            token.entity.id = entityId;
 
             return res.respondDeleted({
                 data: token.entity,

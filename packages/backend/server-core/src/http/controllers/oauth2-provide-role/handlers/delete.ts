@@ -20,7 +20,11 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
+    const { id: entityId } = entity;
+
     await repository.remove(entity);
+
+    entity.id = entityId;
 
     return res.respondDeleted();
 }

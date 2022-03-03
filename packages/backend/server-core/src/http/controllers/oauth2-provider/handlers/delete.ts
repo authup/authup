@@ -28,7 +28,11 @@ export async function deleteOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
+    const { id: entityId } = entity;
+
     await repository.remove(entity);
+
+    entity.id = entityId;
 
     return res.respondDeleted({
         data: entity,

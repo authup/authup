@@ -26,7 +26,11 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError(`You are not authorized to drop a user fo the realm ${entity.realm_id}`);
     }
 
+    const { id: entityId } = entity;
+
     await repository.remove(entity);
+
+    entity.id = entityId;
 
     return res.respondDeleted({
         data: entity,
