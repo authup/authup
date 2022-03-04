@@ -18,6 +18,12 @@ function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefi
         undefined;
 }
 
+function unsetCookies(res: ExpressResponse) {
+    res.cookie(CookieName.ACCESS_TOKEN, null, { maxAge: 0 });
+    res.cookie(CookieName.REFRESH_TOKEN, null, { maxAge: 0 });
+    res.cookie(CookieName.ACCESS_TOKEN_EXPIRE_DATE, null, { maxAge: 0 });
+}
+
 export function createMiddleware(context: AuthMiddlewareOptions) {
     return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
@@ -45,6 +51,7 @@ export function createMiddleware(context: AuthMiddlewareOptions) {
 
             next();
         } catch (e) {
+            unsetCookies(response);
             next(e);
         }
     };

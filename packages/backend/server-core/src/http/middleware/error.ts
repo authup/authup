@@ -30,6 +30,7 @@ export function errorMiddleware(
     // eslint-disable-next-line default-case
     switch (code) {
         case 'ER_DUP_ENTRY':
+        case 'SQLITE_CONSTRAINT_UNIQUE':
             error = new ConflictError('An entry with some unique attributes already exist.', { previous: error });
             break;
         case 'ER_DISK_FULL':

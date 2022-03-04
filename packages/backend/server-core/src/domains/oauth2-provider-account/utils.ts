@@ -159,7 +159,10 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
     } catch (e) {
         if (
             hasOwnProperty(e, 'code') &&
-            e.code === 'ER_DUP_ENTRY'
+            (
+                e.code === 'ER_DUP_ENTRY' ||
+                e.code === 'SQLITE_CONSTRAINT_UNIQUE'
+            )
         ) {
             return createUser(data, names);
         }

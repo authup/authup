@@ -7,5 +7,6 @@
 
 export enum CookieName {
     ACCESS_TOKEN = 'auth_access_token',
+    ACCESS_TOKEN_EXPIRE_DATE = 'auth_access_token_expire_date',
     REFRESH_TOKEN = 'auth_refresh_token',
 }
