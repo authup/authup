@@ -7,16 +7,20 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Permission } from '@typescript-auth/domains';
 import { BuildInput } from '@trapi/query';
-import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../helpers/list/components/Pagination';
 import {
-    ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
+    ComponentListData,
+    ComponentListHandlerMethodOptions,
+    ComponentListMethods,
+    ComponentListProperties,
+    Pagination,
+    PaginationMeta,
+    buildListHeader,
     buildListItems,
     buildListNoMore,
     buildListPagination,
     buildListSearch,
-} from '../../helpers';
-import { PaginationMeta } from '../../type';
+} from '@vue-layout/utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 
 export const PermissionList = Vue.extend<
 ComponentListData<Permission>,
@@ -88,8 +92,12 @@ ComponentListProperties<Permission>
         }
     },
     methods: {
-        async load() {
+        async load(options?: PaginationMeta) {
             if (this.busy) return;
+
+            if (options) {
+                this.meta.offset = options.offset;
+            }
 
             this.busy = true;
 
@@ -118,20 +126,13 @@ ComponentListProperties<Permission>
 
             this.busy = false;
         },
-        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
-            if (options.offset === this.meta.offset) return;
 
-            this.meta.offset = options.offset;
+        handleCreated(item: Permission, options?: ComponentListHandlerMethodOptions<Permission>) {
+            options = options || {};
 
-            this.load()
-                .then(resolve)
-                .catch(reject);
-        },
-
-        handleCreated(item: Permission, unshift?: boolean) {
             const index = this.items.findIndex((el: Permission) => el.id === item.id);
             if (index === -1) {
-                if (unshift) {
+                if (options.unshift) {
                     this.items.unshift(item);
                 } else {
                     this.items.push(item);
@@ -159,7 +160,9 @@ ComponentListProperties<Permission>
         const header = buildListHeader(this, createElement, { title: 'Permissions', iconClass: 'fa-solid fa-key' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-key', itemTextPropName: 'id' });
-        const noMore = buildListNoMore(this, createElement);
+        const noMore = buildListNoMore(this, createElement, {
+            hint: 'No more permissions available...',
+        });
         const pagination = buildListPagination(this, createElement);
 
         return createElement(

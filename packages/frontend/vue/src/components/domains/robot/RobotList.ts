@@ -7,17 +7,20 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { Robot } from '@typescript-auth/domains';
-import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../helpers/list/components/Pagination';
+import { Robot, User } from '@typescript-auth/domains';
 import {
-    ComponentListData, ComponentListMethods, ComponentListProperties, buildListHeader,
+    ComponentListData,
+    ComponentListHandlerMethodOptions,
+    ComponentListMethods,
+    ComponentListProperties,
+    Pagination,
+    PaginationMeta,
+    buildListHeader,
     buildListItems,
     buildListNoMore,
-    buildListPagination,
-    buildListSearch,
-} from '../../helpers';
-import { PaginationMeta } from '../../type';
+    buildListPagination, buildListSearch,
+} from '@vue-layout/utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 
 export const RobotList = Vue.extend<
 ComponentListData<Robot>,
@@ -89,8 +92,12 @@ ComponentListProperties<Robot>
         }
     },
     methods: {
-        async load() {
+        async load(options?: PaginationMeta) {
             if (this.busy) return;
+
+            if (options) {
+                this.meta.offset = options.offset;
+            }
 
             this.busy = true;
 
@@ -116,20 +123,13 @@ ComponentListProperties<Robot>
 
             this.busy = false;
         },
-        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
-            if (options.offset === this.meta.offset) return;
 
-            this.meta.offset = options.offset;
+        handleCreated(item: Robot, options?: ComponentListHandlerMethodOptions<Robot>) {
+            options = options || {};
 
-            this.load()
-                .then(resolve)
-                .catch(reject);
-        },
-
-        handleCreated(item: Robot, unshift?: boolean) {
             const index = this.items.findIndex((el: Robot) => el.id === item.id);
             if (index === -1) {
-                if (unshift) {
+                if (options?.unshift) {
                     this.items.unshift(item);
                 } else {
                     this.items.push(item);
@@ -157,7 +157,9 @@ ComponentListProperties<Robot>
         const header = buildListHeader(this, createElement, { title: 'Robots', iconClass: 'fa fa-robot' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-robot' });
-        const noMore = buildListNoMore(this, createElement);
+        const noMore = buildListNoMore(this, createElement, {
+            hint: 'No more robots available',
+        });
         const pagination = buildListPagination(this, createElement);
 
         return createElement(

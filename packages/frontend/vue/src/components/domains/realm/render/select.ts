@@ -8,11 +8,13 @@
 import { CreateElement, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import {
-    ComponentFormComputed, ComponentFormData, ComponentFormMethods, ComponentFormVuelidate, ComponentListData,
-    FormGroup, FormGroupSlotScope,
-} from '../../../helpers';
+    ComponentFormComputed,
+    ComponentFormData, ComponentFormMethods, ComponentFormVuelidate, ComponentListData,
+    FormGroup, FormGroupProperties, FormGroupSlotScope,
+} from '@vue-layout/utils';
 import { RealmList } from '../RealmList';
 import { SlotName } from '../../../constants';
+import { useAuthIlingo } from '../../../language/singleton';
 
 export type RealmSelectListBuildContext<T extends Record<string, any>> = {
     propName: keyof T | string,
@@ -30,7 +32,8 @@ export function buildRealmSelectForm<T extends Record<string, any>>(
     return h(FormGroup, {
         props: {
             validations: instance.$v.form[context.propName],
-        },
+            ilingo: useAuthIlingo(),
+        } as FormGroupProperties,
         scopedSlots: {
             default: (props: FormGroupSlotScope) => h('div', {
                 staticClass: 'form-group',

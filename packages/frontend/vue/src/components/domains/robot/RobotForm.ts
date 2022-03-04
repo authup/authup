@@ -12,13 +12,14 @@ import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
 import { Robot } from '@typescript-auth/domains';
+import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import {
     createNanoID, useHTTPClient,
 } from '../../../utils';
-import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
 import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { buildRealmSelectForm } from '../realm/render/select';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     [key: string]: any;
@@ -186,6 +187,7 @@ Properties
         }
 
         const name = buildFormInput(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Name',
             propName: 'name',
             domProps: {
@@ -241,6 +243,7 @@ Properties
 
         if (!vm.isEditing || vm.secretChange) {
             secret = buildFormInput(this, h, {
+                ilingo: useAuthIlingo(),
                 title: [
                     'Secret',
                     vm.isSecretHashed ? h('span', {
@@ -273,7 +276,10 @@ Properties
             ]);
         }
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            updateText: 'Update',
+            createText: 'Create',
+        });
 
         return h('form', {
             on: {

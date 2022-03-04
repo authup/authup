@@ -12,9 +12,9 @@ import Vue, {
     CreateElement, VNode, VNodeData,
 } from 'vue';
 import { User } from '@typescript-auth/domains';
-import { buildFormInput } from '../../helpers/form/render/input';
-import { ComponentFormData } from '../../helpers';
+import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     [key: string]: any;
@@ -56,6 +56,11 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             },
         },
     },
+    computed: {
+        isEditing() {
+            return true;
+        },
+    },
     methods: {
         async submit() {
             if (this.busy) return;
@@ -83,6 +88,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
         const h = createElement;
 
         const password = buildFormInput<User>(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Password',
             propName: 'password',
             attrs: {
@@ -92,6 +98,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
         });
 
         const passwordRepeat = buildFormInput(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Password repeat',
             propName: 'password_repeat',
             attrs: {
@@ -120,33 +127,10 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             ]),
         ]);
 
-        const submit = h('div', {
-            staticClass: 'form-group',
-        }, [
-            h('button', {
-                staticClass: 'btn btn-primary btn-xs',
-                attrs: {
-                    disabled: vm.$v.form.$invalid || vm.busy,
-                    type: 'button',
-                },
-                domProps: {
-                    disabled: vm.$v.form.$invalid || vm.busy,
-                },
-                on: {
-                    click($event: any) {
-                        $event.preventDefault();
-
-                        return vm.submit.apply(null);
-                    },
-                },
-            }, [
-                h('i', {
-                    staticClass: 'fa fa-save',
-                }),
-                ' ',
-                'Update',
-            ]),
-        ]);
+        const submit = buildFormSubmit(vm, h, {
+            createText: 'Create',
+            updateText: 'Update',
+        });
 
         return h('form', {
             on: {

@@ -6,7 +6,7 @@
  */
 
 import Vue from 'vue';
-import { useAuthIlingo } from '../../../language/singleton';
+import { useAuthIlingo } from './language/singleton';
 
 type FormGroupComputed = {
     errors: string[],

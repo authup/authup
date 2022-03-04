@@ -8,9 +8,10 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Permission } from '@typescript-auth/domains';
-import { ComponentFormData, buildFormInput, buildFormSubmit } from '../../helpers';
+import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     [key: string]: any;
@@ -102,11 +103,15 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
         const h = createElement;
 
         const id = buildFormInput(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'ID',
             propName: 'id',
         });
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            updateText: 'Update',
+            createText: 'Create',
+        });
 
         return h('form', {
             on: {

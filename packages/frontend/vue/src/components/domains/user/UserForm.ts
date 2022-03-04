@@ -15,11 +15,12 @@ import Vue, {
 import { User } from '@typescript-auth/domains';
 import {
     ComponentFormData, ComponentFormMethods, FormGroup, FormGroupSlotScope,
-    buildFormSubmit,
-} from '../../helpers';
+    buildFormInput, buildFormSubmit,
+} from '@vue-layout/utils';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
+import { useAuthIlingo } from '../../language/singleton';
 
 export type Properties = {
     [key: string]: any;
@@ -203,136 +204,37 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             });
         }
 
-        const name = h(FormGroup, {
-            props: {
-                validations: vm.$v.form.name,
+        const name = buildFormInput<User>(vm, h, {
+            ilingo: useAuthIlingo(),
+            title: 'Name',
+            propName: 'name',
+            attrs: {
+                disabled: vm.isNameLocked,
             },
-            scopedSlots: {
-                default: (props: FormGroupSlotScope) => h(
-                    'div',
-                    {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.name.$error,
-                            'form-group-warning': vm.$v.form.name.$invalid && !vm.$v.form.name.$dirty,
-                        },
-                    },
-                    [
-                        h('label', ['Name']),
-                        h('input', {
-                            attrs: {
-                                disabled: vm.isNameLocked,
-                                type: 'text',
-                                placeholder: '...',
-                            },
-                            domProps: {
-                                disabled: vm.isNameLocked,
-                                value: vm.$v.form.name.$model,
-                            },
-                            staticClass: 'form-control',
-                            on: {
-                                input($event: any) {
-                                    if ($event.target.composing) {
-                                        return;
-                                    }
-
-                                    vm.$set(vm.$v.form.name, '$model', $event.target.value);
-                                    vm.updateDisplayName($event.target.value);
-                                },
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ],
-                ),
+            domProps: {
+                disabled: vm.isNameLocked,
+            },
+            changeCallback(input) {
+                vm.updateDisplayName.call(null, input);
             },
         });
 
-        const displayName = h(FormGroup, {
-            props: {
-                validations: vm.$v.form.display_name,
-            },
-            scopedSlots: {
-                default: (props: FormGroupSlotScope) => h(
-                    'div',
-                    {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.display_name.$error,
-                            'form-group-warning': vm.$v.form.display_name.$invalid && !vm.$v.form.display_name.$dirty,
-                        },
-                    },
-                    [
-                        h('label', ['Display Name']),
-                        h('input', {
-                            attrs: {
-                                type: 'text',
-                                placeholder: '...',
-                            },
-                            domProps: {
-                                value: vm.$v.form.display_name.$model,
-                            },
-                            staticClass: 'form-control',
-                            on: {
-                                input($event: any) {
-                                    if ($event.target.composing) {
-                                        return;
-                                    }
-
-                                    vm.$set(vm.$v.form.display_name, '$model', $event.target.value);
-                                    vm.handleDisplayNameChanged($event.target.value);
-                                },
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ],
-                ),
+        const displayName = buildFormInput<User>(vm, h, {
+            ilingo: useAuthIlingo(),
+            title: 'Display Name',
+            propName: 'display_name',
+            changeCallback(input) {
+                vm.handleDisplayNameChanged.call(null, input);
             },
         });
 
-        const email = h(FormGroup, {
-            props: {
-                validations: vm.$v.form.email,
-            },
-            scopedSlots: {
-                default: (props: FormGroupSlotScope) => h(
-                    'div',
-                    {
-                        staticClass: 'form-group',
-                        class: {
-                            'form-group-error': vm.$v.form.email.$error,
-                            'form-group-warning': vm.$v.form.email.$invalid && !vm.$v.form.email.$dirty,
-                        },
-                    },
-                    [
-                        h('label', ['Email']),
-                        h('input', {
-                            attrs: {
-                                type: 'email',
-                                placeholder: '...@...',
-                            },
-                            domProps: {
-                                value: vm.$v.form.email.$model,
-                            },
-                            staticClass: 'form-control',
-                            on: {
-                                input($event: any) {
-                                    if ($event.target.composing) {
-                                        return;
-                                    }
-
-                                    vm.$set(vm.$v.form.email, '$model', $event.target.value);
-                                },
-                            },
-                        }),
-                        props.errors.map((error) => h('div', {
-                            staticClass: 'form-group-hint group-required',
-                        }, [error])),
-                    ],
-                ),
+        const email = buildFormInput<User>(vm, h, {
+            ilingo: useAuthIlingo(),
+            title: 'Email',
+            propName: 'email',
+            attrs: {
+                type: 'email',
+                placeholder: '...@...',
             },
         });
 
@@ -364,7 +266,10 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             ]);
         }
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            updateText: 'Update',
+            createText: 'Create',
+        });
 
         return h('form', {
             on: {

@@ -9,15 +9,16 @@ import {
 } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
-import { createNanoID, useHTTPClient } from '../../../utils';
-import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import {
     ComponentFormData,
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
-} from '../../helpers';
+} from '@vue-layout/utils';
+import { createNanoID, useHTTPClient } from '../../../utils';
+import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     entity?: Realm,
@@ -136,6 +137,7 @@ Properties
         const h = createElement;
 
         const id = buildFormInput<Realm>(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'ID',
             propName: 'id',
             domProps: {
@@ -174,11 +176,13 @@ Properties
         }
 
         const name = buildFormInput<Realm>(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Name',
             propName: 'name',
         });
 
         const description = buildFormTextarea<Realm>(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Description',
             propName: 'description',
             attrs: {
@@ -186,7 +190,10 @@ Properties
             },
         });
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            createText: 'Create',
+            updateText: 'Update',
+        });
 
         return h('form', {
             on: {

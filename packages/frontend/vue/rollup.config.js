@@ -19,7 +19,8 @@ const includePathOptions = {
         vue: 'node_modules/vue/dist/vue.common.js',
     },
     external: [
-        'axios',
+        '@trapi/query',
+        '@typescript-auth/domains',
         'ilingo',
         'vue',
         'vuelidate',
@@ -72,7 +73,8 @@ const baseConfig = {
 const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
-    'axios',
+    '@trapi/query',
+    '@typescript-auth/domains',
     'ilingo',
     'vue',
     'vuelidate',

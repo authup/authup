@@ -20,16 +20,11 @@
     border-radius: 4px;
 
     padding: 0.25rem 0.25rem;
-    display: flex;
-    flex-direction: row;
-    vertical-align: middle;
-    align-items: center;
     margin-bottom: 0.25rem;
 
 }
 
-.list .list-item i {
-    font-size: 1rem;
+.list .list-item div div:first-child i {
     padding-right: 0.5rem;
 }
 

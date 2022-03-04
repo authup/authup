@@ -10,9 +10,10 @@ import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Role } from '@typescript-auth/domains';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
-} from '../../helpers';
+} from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     entity?: Partial<Role>
@@ -110,11 +111,15 @@ Properties
         const h = createElement;
 
         const name = buildFormInput<Role>(this, h, {
+            ilingo: useAuthIlingo(),
             title: 'Name',
             propName: 'name',
         });
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            updateText: 'Update',
+            createText: 'Create',
+        });
 
         return h('form', {
             on: {

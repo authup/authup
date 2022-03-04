@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { RobotPermission } from '@typescript-auth/domains';
-import { ComponentListItemData } from '../../helpers';
+import { ComponentListItemData } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 
 export type RobotPermissionListItemActionsProperties = {

@@ -10,18 +10,20 @@ import Vue, {
 } from 'vue';
 import { BuildInput } from '@trapi/query';
 import { User } from '@typescript-auth/domains';
-import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../helpers/list/components/Pagination';
-import { PaginationMeta } from '../../type';
 import {
     ComponentListData,
+    ComponentListHandlerMethodOptions,
     ComponentListMethods,
     ComponentListProperties,
+    Pagination,
+    PaginationMeta,
     buildListHeader,
     buildListItems,
     buildListNoMore,
-    buildListPagination, buildListSearch,
-} from '../../helpers';
+    buildListPagination,
+    buildListSearch,
+} from '@vue-layout/utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 
 export const UserList = Vue.extend<
 ComponentListData<User>,
@@ -91,8 +93,12 @@ ComponentListProperties<User>
         }
     },
     methods: {
-        async load() {
+        async load(options?: PaginationMeta) {
             if (this.busy) return;
+
+            if (options) {
+                this.meta.offset = options.offset;
+            }
 
             this.busy = true;
 
@@ -120,20 +126,12 @@ ComponentListProperties<User>
 
             this.busy = false;
         },
-        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
-            if (options.offset === this.meta.offset) return;
 
-            this.meta.offset = options.offset;
-
-            this.load()
-                .then(resolve)
-                .catch(reject);
-        },
-
-        handleCreated(item: User, unshift?: boolean) {
+        handleCreated(item: User, options?: ComponentListHandlerMethodOptions<User>) {
+            options = options || {};
             const index = this.items.findIndex((el: User) => el.id === item.id);
             if (index === -1) {
-                if (unshift) {
+                if (options.unshift) {
                     this.items.unshift(item);
                 } else {
                     this.items.push(item);
@@ -161,7 +159,9 @@ ComponentListProperties<User>
         const header = buildListHeader(this, createElement, { title: 'Users', iconClass: 'fa fa-users' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-user' });
-        const noMore = buildListNoMore(this, createElement);
+        const noMore = buildListNoMore(this, createElement, {
+            hint: 'No more users available...',
+        });
         const pagination = buildListPagination(this, createElement);
 
         return createElement(

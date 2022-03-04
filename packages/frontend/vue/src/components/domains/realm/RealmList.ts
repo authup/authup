@@ -8,16 +8,18 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm } from '@typescript-auth/domains';
 import { BuildInput } from '@trapi/query';
-import { mergeDeep, useHTTPClient } from '../../../utils';
-import { Pagination } from '../../helpers/list/components/Pagination';
 import {
     ComponentListData,
-    ComponentListProperties, buildListHeader, buildListItems,
+    ComponentListProperties,
+    Pagination,
+    PaginationMeta,
+    buildListHeader,
+    buildListItems,
     buildListNoMore,
     buildListPagination,
     buildListSearch,
-} from '../../helpers';
-import { PaginationMeta } from '../../type';
+} from '@vue-layout/utils';
+import { mergeDeep, useHTTPClient } from '../../../utils';
 
 export const RealmList = Vue.extend<
 ComponentListData<Realm>,
@@ -89,8 +91,12 @@ ComponentListProperties<Realm>
         }
     },
     methods: {
-        async load() {
+        async load(options?: PaginationMeta) {
             if (this.busy) return;
+
+            if (options) {
+                this.meta.offset = options.offset;
+            }
 
             this.busy = true;
 
@@ -114,15 +120,6 @@ ComponentListProperties<Realm>
             }
 
             this.busy = false;
-        },
-        goTo(options: PaginationMeta, resolve: () => void, reject: (err?: Error) => void) {
-            if (options.offset === this.meta.offset) return;
-
-            this.meta.offset = options.offset;
-
-            this.load()
-                .then(resolve)
-                .catch(reject);
         },
 
         handleCreated(item: Realm) {
@@ -152,7 +149,9 @@ ComponentListProperties<Realm>
         const header = buildListHeader(this, createElement, { title: 'Realms', iconClass: 'fa fa-city' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-city' });
-        const noMore = buildListNoMore(this, createElement);
+        const noMore = buildListNoMore(this, createElement, {
+            hint: 'No more realms available...',
+        });
         const pagination = buildListPagination(this, createElement);
 
         return createElement(

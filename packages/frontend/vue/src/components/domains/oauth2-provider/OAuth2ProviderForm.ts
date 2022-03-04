@@ -10,13 +10,15 @@ import Vue, {
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { OAuth2Provider } from '@typescript-auth/domains';
-import { createNanoID, useHTTPClient } from '../../../utils';
-import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
-} from '../../helpers';
+} from '@vue-layout/utils';
+import { createNanoID, useHTTPClient } from '../../../utils';
+import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { initPropertiesFromSource } from '../../utils/proprety';
+import { FormGroup } from '../../FormGroup';
+import { useAuthIlingo } from '../../language/singleton';
 
 type Properties = {
     [key: string]: any;
@@ -237,6 +239,7 @@ Properties
                     'Configuration',
                 ]),
                 buildFormInput(vm, h, {
+                    ilingo: useAuthIlingo(),
                     title: 'Name',
                     propName: 'name',
                 }),
@@ -270,10 +273,12 @@ Properties
                     'Security',
                 ]),
                 buildFormInput(vm, h, {
+                    ilingo: useAuthIlingo(),
                     title: 'Client ID',
                     propName: 'client_id',
                 }),
                 buildFormInput(vm, h, {
+                    ilingo: useAuthIlingo(),
                     title: 'Client Secret',
                     propName: 'client_secret',
                 }),
@@ -295,6 +300,7 @@ Properties
                         'Token',
                     ]),
                     buildFormInput(vm, h, {
+                        ilingo: useAuthIlingo(),
                         title: 'Host',
                         propName: 'token_host',
                         attrs: {
@@ -302,6 +308,7 @@ Properties
                         },
                     }),
                     buildFormInput(vm, h, {
+                        ilingo: useAuthIlingo(),
                         title: [
                             'Path',
                             ' ',
@@ -322,6 +329,7 @@ Properties
                         'Authorization',
                     ]),
                     buildFormInput(vm, h, {
+                        ilingo: useAuthIlingo(),
                         title: [
                             'Host',
                             ' ',
@@ -333,6 +341,7 @@ Properties
                         },
                     }),
                     buildFormInput(vm, h, {
+                        ilingo: useAuthIlingo(),
                         title: [
                             'Path',
                             ' ',
@@ -365,7 +374,10 @@ Properties
             ]);
         }
 
-        const submit = buildFormSubmit(this, h);
+        const submit = buildFormSubmit(this, h, {
+            updateText: 'Update',
+            createText: 'Create',
+        });
 
         return h('form', {
             on: {
