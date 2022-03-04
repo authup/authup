@@ -20,12 +20,14 @@ import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 type Properties = {
     [key: string]: any;
 
     name?: string,
-    entity?: Robot
+    entity?: Robot,
+    translatorLocale?: string
 };
 
 // Data, Methods, Computed, Props
@@ -46,6 +48,10 @@ Properties
             default: undefined,
         },
         realmId: {
+            type: String,
+            default: undefined,
+        },
+        translatorLocale: {
             type: String,
             default: undefined,
         },
@@ -187,7 +193,7 @@ Properties
         }
 
         const name = buildFormInput(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
             propName: 'name',
             domProps: {
@@ -243,7 +249,7 @@ Properties
 
         if (!vm.isEditing || vm.secretChange) {
             secret = buildFormInput(this, h, {
-                ilingo: useAuthIlingo(),
+                validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                 title: [
                     'Secret',
                     vm.isSecretHashed ? h('span', {
@@ -277,8 +283,8 @@ Properties
         }
 
         const submit = buildFormSubmit(this, h, {
-            updateText: 'Update',
-            createText: 'Create',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

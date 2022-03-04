@@ -146,11 +146,11 @@ ComponentListProperties<Realm>
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Realms', iconClass: 'fa fa-city' });
+        const header = buildListHeader(this, createElement, { titleText: 'Realms', iconClass: 'fa fa-city' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-city' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more realms available...',
+            text: 'No more realms available...',
         });
         const pagination = buildListPagination(this, createElement);
 

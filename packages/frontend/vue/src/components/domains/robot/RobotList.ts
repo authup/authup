@@ -154,11 +154,11 @@ ComponentListProperties<Robot>
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Robots', iconClass: 'fa fa-robot' });
+        const header = buildListHeader(this, createElement, { titleText: 'Robots', iconClass: 'fa fa-robot' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-robot' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more robots available',
+            text: 'No more robots available',
         });
         const pagination = buildListPagination(this, createElement);
 

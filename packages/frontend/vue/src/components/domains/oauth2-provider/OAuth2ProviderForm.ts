@@ -17,14 +17,15 @@ import { createNanoID, useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { initPropertiesFromSource } from '../../utils/proprety';
-import { FormGroup } from '../../FormGroup';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 type Properties = {
     [key: string]: any;
 
     entity?: OAuth2Provider,
-    realmId?: string
+    realmId?: string,
+    translatorLocale?: string
 };
 
 export const OAuth2ProviderForm = Vue.extend<
@@ -42,6 +43,10 @@ Properties
             default: undefined,
         },
         realmId: {
+            type: String,
+            default: undefined,
+        },
+        translatorLocale: {
             type: String,
             default: undefined,
         },
@@ -239,7 +244,7 @@ Properties
                     'Configuration',
                 ]),
                 buildFormInput(vm, h, {
-                    ilingo: useAuthIlingo(),
+                    validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                     title: 'Name',
                     propName: 'name',
                 }),
@@ -273,12 +278,12 @@ Properties
                     'Security',
                 ]),
                 buildFormInput(vm, h, {
-                    ilingo: useAuthIlingo(),
+                    validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                     title: 'Client ID',
                     propName: 'client_id',
                 }),
                 buildFormInput(vm, h, {
-                    ilingo: useAuthIlingo(),
+                    validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                     title: 'Client Secret',
                     propName: 'client_secret',
                 }),
@@ -300,7 +305,7 @@ Properties
                         'Token',
                     ]),
                     buildFormInput(vm, h, {
-                        ilingo: useAuthIlingo(),
+                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                         title: 'Host',
                         propName: 'token_host',
                         attrs: {
@@ -308,7 +313,7 @@ Properties
                         },
                     }),
                     buildFormInput(vm, h, {
-                        ilingo: useAuthIlingo(),
+                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                         title: [
                             'Path',
                             ' ',
@@ -329,7 +334,7 @@ Properties
                         'Authorization',
                     ]),
                     buildFormInput(vm, h, {
-                        ilingo: useAuthIlingo(),
+                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                         title: [
                             'Host',
                             ' ',
@@ -341,7 +346,7 @@ Properties
                         },
                     }),
                     buildFormInput(vm, h, {
-                        ilingo: useAuthIlingo(),
+                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                         title: [
                             'Path',
                             ' ',
@@ -375,8 +380,8 @@ Properties
         }
 
         const submit = buildFormSubmit(this, h, {
-            updateText: 'Update',
-            createText: 'Create',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

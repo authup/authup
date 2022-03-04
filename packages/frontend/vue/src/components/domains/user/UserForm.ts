@@ -14,19 +14,21 @@ import Vue, {
 
 import { User } from '@typescript-auth/domains';
 import {
-    ComponentFormData, ComponentFormMethods, FormGroup, FormGroupSlotScope,
-    buildFormInput, buildFormSubmit,
+    ComponentFormData, ComponentFormMethods,
+    ValidationTranslator, buildFormInput, buildFormSubmit,
 } from '@vue-layout/utils';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 export type Properties = {
     [key: string]: any;
 
     entity?: Partial<User>,
-    realmId?: string
+    realmId?: string,
+    translatorLocale?: string
 };
 
 type Data = {
@@ -47,6 +49,10 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         canManage: {
             type: Boolean,
             default: true,
+        },
+        translatorLocale: {
+            type: String,
+            default: undefined,
         },
     },
     data() {
@@ -205,7 +211,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         }
 
         const name = buildFormInput<User>(vm, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
             propName: 'name',
             attrs: {
@@ -220,7 +226,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         });
 
         const displayName = buildFormInput<User>(vm, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Display Name',
             propName: 'display_name',
             changeCallback(input) {
@@ -229,7 +235,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         });
 
         const email = buildFormInput<User>(vm, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Email',
             propName: 'email',
             attrs: {
@@ -267,8 +273,8 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         }
 
         const submit = buildFormSubmit(this, h, {
-            updateText: 'Update',
-            createText: 'Create',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

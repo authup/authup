@@ -19,9 +19,11 @@ import { createNanoID, useHTTPClient } from '../../../utils';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 type Properties = {
     entity?: Realm,
+    translatorLocale?: string
 };
 
 export const RealmForm = Vue.extend<
@@ -35,6 +37,10 @@ Properties
         entity: {
             type: Object as PropType<Realm>,
             required: false,
+            default: undefined,
+        },
+        translatorLocale: {
+            type: String,
             default: undefined,
         },
     },
@@ -137,7 +143,7 @@ Properties
         const h = createElement;
 
         const id = buildFormInput<Realm>(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'ID',
             propName: 'id',
             domProps: {
@@ -176,13 +182,13 @@ Properties
         }
 
         const name = buildFormInput<Realm>(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
             propName: 'name',
         });
 
         const description = buildFormTextarea<Realm>(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Description',
             propName: 'description',
             attrs: {
@@ -191,8 +197,8 @@ Properties
         });
 
         const submit = buildFormSubmit(this, h, {
-            createText: 'Create',
-            updateText: 'Update',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

@@ -157,11 +157,11 @@ ComponentListProperties<Permission>
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Permissions', iconClass: 'fa-solid fa-key' });
+        const header = buildListHeader(this, createElement, { titleText: 'Permissions', iconClass: 'fa-solid fa-key' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-key', itemTextPropName: 'id' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more permissions available...',
+            text: 'No more permissions available...',
         });
         const pagination = buildListPagination(this, createElement);
 

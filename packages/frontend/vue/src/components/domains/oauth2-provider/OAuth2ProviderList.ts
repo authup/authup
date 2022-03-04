@@ -178,11 +178,11 @@ Properties
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Providers', iconClass: 'fa-solid fa-atom' });
+        const header = buildListHeader(this, createElement, { titleText: 'Providers', iconClass: 'fa-solid fa-atom' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-atom' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more oauth2-providers available...',
+            text: 'No more oauth2-providers available...',
         });
         const pagination = buildListPagination(this, createElement);
 

@@ -153,11 +153,11 @@ ComponentListProperties<Role>
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Roles', iconClass: 'fa fa-layer-group' });
+        const header = buildListHeader(this, createElement, { titleText: 'Roles', iconClass: 'fa fa-layer-group' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa-solid fa-user-group' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more roles available...',
+            text: 'No more roles available...',
         });
         const pagination = buildListPagination(this, createElement);
 

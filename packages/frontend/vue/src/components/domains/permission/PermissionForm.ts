@@ -12,11 +12,13 @@ import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 type Properties = {
     [key: string]: any;
 
-    entity?: Partial<Permission>
+    entity?: Partial<Permission>,
+    translatorLocale?: string
 };
 
 export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any, Properties>({
@@ -24,6 +26,10 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
     props: {
         entity: {
             type: Object as PropType<Permission>,
+            default: undefined,
+        },
+        translatorLocale: {
+            type: String,
             default: undefined,
         },
     },
@@ -103,14 +109,14 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
         const h = createElement;
 
         const id = buildFormInput(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'ID',
             propName: 'id',
         });
 
         const submit = buildFormSubmit(this, h, {
-            updateText: 'Update',
-            createText: 'Create',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

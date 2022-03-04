@@ -14,9 +14,11 @@ import {
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
+import { buildVuelidateTranslator } from '../../language/utils';
 
 type Properties = {
-    entity?: Partial<Role>
+    entity?: Partial<Role>,
+    translatorLocale?: string
 };
 
 export const RoleForm = Vue.extend<
@@ -29,6 +31,10 @@ Properties
     props: {
         entity: {
             type: Object as PropType<Role>,
+            default: undefined,
+        },
+        translatorLocale: {
+            type: String,
             default: undefined,
         },
     },
@@ -111,14 +117,14 @@ Properties
         const h = createElement;
 
         const name = buildFormInput<Role>(this, h, {
-            ilingo: useAuthIlingo(),
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
             propName: 'name',
         });
 
         const submit = buildFormSubmit(this, h, {
-            updateText: 'Update',
-            createText: 'Create',
+            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
+            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
         return h('form', {

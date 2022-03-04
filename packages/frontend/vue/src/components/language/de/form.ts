@@ -8,6 +8,10 @@
 import { Lines } from 'ilingo';
 
 export const LanguageFormGerman : Lines = {
-    update: 'Aktualisieren',
-    create: 'Erstellen',
+    update: {
+        button: 'Aktualisieren',
+    },
+    create: {
+        button: 'Erstellen',
+    },
 };

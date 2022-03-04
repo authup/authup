@@ -156,11 +156,11 @@ ComponentListProperties<User>
         },
     },
     render(createElement: CreateElement): VNode {
-        const header = buildListHeader(this, createElement, { title: 'Users', iconClass: 'fa fa-users' });
+        const header = buildListHeader(this, createElement, { titleText: 'Users', iconClass: 'fa fa-users' });
         const search = buildListSearch(this, createElement);
         const items = buildListItems(this, createElement, { itemIconClass: 'fa fa-user' });
         const noMore = buildListNoMore(this, createElement, {
-            hint: 'No more users available...',
+            text: 'No more users available...',
         });
         const pagination = buildListPagination(this, createElement);
 
