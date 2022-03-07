@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager, PermissionItem } from '../../../src';
+import { AbilityManager } from '../../../src';
 
-const testPermissions : PermissionItem<unknown>[] = [
+const testPermissions : PermissionMeta<unknown>[] = [
     { id: 'user_add', negation: false, power: 999 },
     { id: 'user_add', negation: false, power: 999 },
     { id: 'user_add', negation: false, power: 777 },
@@ -43,9 +43,9 @@ describe('src/ability/manager.ts', () => {
     it('get permission', () => {
         manager.setPermissions(testPermissions);
 
-        expect(manager.getPermission('user_add')).toBeDefined();
-        expect(manager.getPermission('user_add')).toEqual(testPermissions[0]);
-        expect(manager.getPermission('something_do')).toBeUndefined();
+        expect(manager.findPermission('user_add')).toBeDefined();
+        expect(manager.findPermission('user_add')).toEqual(testPermissions[0]);
+        expect(manager.findPermission('something_do')).toBeUndefined();
     });
 
     it('has permission', () => {

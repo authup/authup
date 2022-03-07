@@ -6,7 +6,7 @@
  */
 
 import { EntityRepository, In, Repository } from 'typeorm';
-import { PermissionItem, Role } from '@typescript-auth/domains';
+import { Role } from '@typescript-auth/domains';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 
@@ -14,7 +14,7 @@ import { RolePermissionEntity } from '../role-permission';
 export class RoleRepository extends Repository<RoleEntity> {
     async getOwnedPermissions(
         roleId: Role['id'] | Role['id'][],
-    ) : Promise<PermissionItem<unknown>[]> {
+    ) : Promise<PermissionMeta<unknown>[]> {
         if (!Array.isArray(roleId)) {
             roleId = [roleId];
         }
@@ -29,7 +29,7 @@ export class RoleRepository extends Repository<RoleEntity> {
             role_id: In(roleId),
         });
 
-        const result : PermissionItem<unknown>[] = [];
+        const result : PermissionMeta<unknown>[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,

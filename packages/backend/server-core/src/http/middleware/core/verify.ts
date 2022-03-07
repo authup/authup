@@ -10,7 +10,6 @@ import {
     HeaderError,
     OAuth2TokenKind,
     OAuth2TokenSubKind,
-    PermissionItem,
     TokenError,
 } from '@typescript-auth/domains';
 import {
@@ -79,7 +78,7 @@ async function verifyBasicAuthorizationHeader(
     header: BasicAuthorizationHeader,
     options: AuthorizationHeaderVerifyOptions,
 ) {
-    let permissions : PermissionItem[] = [];
+    let permissions : PermissionMeta[] = [];
 
     if (
         process.env.NODE_ENV === 'test' &&

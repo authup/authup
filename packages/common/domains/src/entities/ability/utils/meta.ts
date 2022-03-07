@@ -4,7 +4,8 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { camelCase } from 'change-case';
+import { pascalCase } from 'change-case';
+import { Subject } from '@casl/ability';
 import { AbilityMeta } from '../type';
 import { AbilityError } from '../../../error';
 
@@ -25,11 +26,25 @@ export function buildAbilityMetaFromName(
         throw AbilityError.buildMeta();
     }
 
-    const action : string | undefined = parts.pop();
-    const subject : string = camelCase(parts.join(delimiter));
+    const action : string = parts.pop();
+    const subject : string = pascalCase(parts.join(' '));
 
     return {
         action,
         subject,
     };
+}
+
+/**
+ * Transform string subject from camel-, or snake-case to
+ * pascal-case.
+ *
+ * @param subject
+ */
+export function transformAbilityStringSubject(subject: Subject) : Subject {
+    if (typeof subject === 'string') {
+        return pascalCase(subject);
+    }
+
+    return subject;
 }

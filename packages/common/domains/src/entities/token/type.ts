@@ -11,19 +11,19 @@ import {
     OAuth2TokenGrant,
     OAuth2TokenSubKind,
 } from '../oauth2-access-token';
-import { PermissionItem } from '../permission';
 import { OAuth2TokenVerificationExtended } from '../oauth2';
+import { PermissionMeta } from '../ability';
 
 type TokenTargetRobot = {
     kind: `${OAuth2TokenSubKind.ROBOT}`,
     entity: Robot,
-    permissions: PermissionItem[]
+    permissions: PermissionMeta[]
 };
 
 type TokenTargetUser = {
     kind: `${OAuth2TokenSubKind.USER}`,
     entity: User,
-    permissions: PermissionItem[]
+    permissions: PermissionMeta[]
 };
 
 export type TokenVerificationPayload = OAuth2TokenVerificationExtended<TokenTargetRobot | TokenTargetUser>;

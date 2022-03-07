@@ -7,7 +7,6 @@
 
 import { EntityRepository, In, Repository } from 'typeorm';
 import {
-    PermissionItem,
     Role, User, UserRole,
 } from '@typescript-auth/domains';
 
@@ -52,8 +51,8 @@ export class UserRepository extends Repository<UserEntity> {
 
     async getOwnedPermissions(
         userId: User['id'],
-    ) : Promise<PermissionItem[]> {
-        let permissions : PermissionItem<unknown>[] = await this.getSelfOwnedPermissions(userId);
+    ) : Promise<PermissionMeta[]> {
+        let permissions : PermissionMeta<unknown>[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
@@ -73,14 +72,14 @@ export class UserRepository extends Repository<UserEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(userId: string) : Promise<PermissionItem[]> {
+    async getSelfOwnedPermissions(userId: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
             user_id: userId,
         });
 
-        const result : PermissionItem<unknown>[] = [];
+        const result : PermissionMeta<unknown>[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,

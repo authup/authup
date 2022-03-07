@@ -8,8 +8,7 @@
 import { Cache, Client } from 'redis-extension';
 import {
     OAuth2TokenSubKind,
-    OAuth2TokenVerification, PermissionItem,
-    Robot,
+    OAuth2TokenVerification, Robot,
     TokenError,
     TokenVerificationPayload,
     User,
@@ -84,7 +83,7 @@ export async function extendOAuth2TokenVerification(
                 throw TokenError.targetInactive(OAuth2TokenSubKind.ROBOT);
             }
 
-            let permissions : PermissionItem[] | undefined;
+            let permissions : PermissionMeta[] | undefined;
 
             if (permissionCache) {
                 permissions = await permissionCache.get(entity.id);
@@ -138,7 +137,7 @@ export async function extendOAuth2TokenVerification(
                 throw TokenError.targetInactive(OAuth2TokenSubKind.USER);
             }
 
-            let permissions : PermissionItem[] | undefined;
+            let permissions : PermissionMeta[] | undefined;
 
             if (permissionCache) {
                 permissions = await permissionCache.get(entity.id);

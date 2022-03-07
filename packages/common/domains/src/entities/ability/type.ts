@@ -5,17 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Subject } from '@casl/ability';
 import {
     ArrayInstruction, BaseInstruction, BooleanInstruction, InstructionOnInstruction,
 } from './constants';
-import { PermissionItem } from '../permission';
 
 export type AbilityMeta = {
     action: string,
-    subject: string
+    subject: Subject
 };
 
-export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityMeta & PermissionItem<T>;
+export type PermissionMeta<T extends Record<string, any> = Record<string, any>> = {
+    id: string,
+    negation?: boolean,
+    condition?: Condition<T> | null,
+    fields?: string[] | null,
+    power?: number | null
+};
+
+export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityMeta & PermissionMeta<T>;
 
 // -------------------------------------------------------------------
 

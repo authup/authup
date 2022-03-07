@@ -6,40 +6,73 @@
  */
 
 import { Ability, AbilityBuilder, Subject } from '@casl/ability';
-import { AbilityItem, AbilityMeta } from './type';
-import { buildAbilityMetaFromName } from './utils';
-import { PermissionItem } from '../permission';
+import { AbilityItem, AbilityMeta, PermissionMeta } from './type';
+import { buildAbilityMetaFromName, transformAbilityStringSubject } from './utils';
 
 export class AbilityManager {
-    protected ability!: Ability;
+    protected ability: Ability;
 
-    protected permissions!: PermissionItem<any>[];
+    protected permissions: PermissionMeta[];
 
-    protected abilityItems: AbilityItem<any>[];
+    protected items: AbilityItem[];
 
-    constructor(permissions: PermissionItem<any>[] = []) {
+    // ----------------------------------------------
+
+    constructor(permissions: PermissionMeta[] = []) {
         this.setPermissions(permissions);
     }
 
     // ----------------------------------------------
 
     can(action: string, subject: Subject, field?: string) : boolean {
-        return this.ability.can(action, subject, field);
-    }
+        subject = transformAbilityStringSubject(subject);
 
-    hasAbility(meta: AbilityMeta) : boolean {
-        return this.ability.can(meta.action, meta.subject);
+        return this.ability.can(action, subject, field);
     }
 
     // ----------------------------------------------
 
-    getPower(action: string, subject: Subject, field?: string) : undefined | number {
-        if (typeof subject !== 'string') {
-            return undefined;
-        }
+    hasAbilityMeta(meta: AbilityMeta) : boolean {
+        return this.ability.can(meta.action, meta.subject);
+    }
 
-        let items = this.abilityItems.filter((abilityItem) => {
-            const baseCheck : boolean = abilityItem.action === action && abilityItem.subject === subject;
+    // ----------------------------------------------
+    // Permission(s)
+    // ----------------------------------------------
+
+    hasPermission(id: string) : boolean {
+        return typeof this.findPermission(id) !== 'undefined';
+    }
+
+    setPermissions(permissions: PermissionMeta[]) {
+        this.permissions = permissions;
+        this.update();
+    }
+
+    getPermissions() {
+        return this.permissions;
+    }
+
+    findPermission(id: string) : PermissionMeta | undefined {
+        const index = this.permissions.findIndex((permission) => permission.id === id);
+
+        return index === -1 ? undefined : this.permissions[index];
+    }
+
+    // ----------------------------------------------
+    // Power
+    // ----------------------------------------------
+
+    getPower(
+        action: string,
+        subject: Subject,
+        field?: string,
+    ) : undefined | number {
+        subject = transformAbilityStringSubject(subject);
+
+        let items = this.items.filter((abilityItem) => {
+            const baseCheck : boolean = abilityItem.action === action &&
+                abilityItem.subject === subject;
 
             if (!baseCheck) {
                 return false;
@@ -63,54 +96,13 @@ export class AbilityManager {
     }
 
     // ----------------------------------------------
-
-    setPermissions(permissions: PermissionItem<any>[]) {
-        this.permissions = permissions;
-        this.build();
-    }
-
-    getPermissions() {
-        return this.permissions;
-    }
-
-    getPermission(id: string) : PermissionItem<any> | undefined {
-        const index : number = this.permissions.findIndex((permission) => permission.id === id);
-        if (index === -1) {
-            return undefined;
-        }
-
-        return this.permissions[index];
-    }
-
-    hasPermission(id: string) : boolean {
-        const permission : PermissionItem<any> | undefined = this.getPermission(id);
-
-        return typeof permission !== 'undefined';
-    }
-
-    // ----------------------------------------------
     // Ability
     // ----------------------------------------------
 
-    protected transformPermissionsForAbilityBuilder() : AbilityItem<any>[] {
-        const items = this.permissions.map((permission) => {
-            const ability: AbilityItem<any> = {
-                ...permission,
-                ...buildAbilityMetaFromName(permission.id),
-            };
+    protected update() : void {
+        this.build();
 
-            return ability;
-        });
-
-        this.abilityItems = items;
-
-        return items;
-    }
-
-    protected build() : void {
-        const items = this.transformPermissionsForAbilityBuilder();
-
-        if (items.length === 0) {
+        if (this.items.length === 0) {
             if (typeof this.ability === 'undefined') {
                 this.ability = new Ability();
             } else {
@@ -122,16 +114,34 @@ export class AbilityManager {
 
         const { can, rules } = new AbilityBuilder(Ability);
 
-        for (let i = 0; i < items.length; i++) {
-            const ability: AbilityItem<any> = items[i];
+        for (let i = 0; i < this.items.length; i++) {
+            const ability: AbilityItem = this.items[i];
 
-            can(ability.action, ability.subject, ability.fields, ability.condition);
+            can(
+                ability.action,
+                ability.subject,
+                ability.fields,
+                ability.condition,
+            );
         }
 
-        if (typeof this.ability === 'undefined') {
-            this.ability = new Ability(rules);
-        } else {
+        if (this.ability) {
             this.ability.update(rules);
+        } else {
+            this.ability = new Ability(rules);
         }
+    }
+
+    protected build() {
+        const items : AbilityItem[] = [];
+
+        for (let i = 0; i < this.permissions.length; i++) {
+            items[i] = {
+                ...this.permissions[i],
+                ...buildAbilityMetaFromName(this.permissions[i].id),
+            };
+        }
+
+        this.items = items;
     }
 }

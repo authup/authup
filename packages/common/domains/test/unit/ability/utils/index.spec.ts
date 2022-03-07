@@ -5,14 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildAbilityMetaFromName } from '../../../../src';
+import { AbilityMeta, buildAbilityMetaFromName } from '../../../../src';
 
 describe('src/ability/utils/index.ts', () => {
+    it('should build ability', () => {
+        let abilityKeys = buildAbilityMetaFromName('user_add');
+        expect(abilityKeys).toEqual({ action: 'add', subject: 'User' } as AbilityMeta);
+
+        abilityKeys = buildAbilityMetaFromName('user_permission_add');
+        expect(abilityKeys).toEqual({ action: 'add', subject: 'UserPermission' } as AbilityMeta);
+
+        abilityKeys = buildAbilityMetaFromName('user-permission-drop', '-');
+        expect(abilityKeys).toEqual({ action: 'drop', subject: 'UserPermission' } as AbilityMeta);
+    });
+
     it('should throw error', () => {
-        const abilityKeys = buildAbilityMetaFromName('user_add');
-
-        expect(abilityKeys).toEqual({ action: 'add', subject: 'user' });
-
         expect(() => buildAbilityMetaFromName('user')).toThrowError();
     });
 });
