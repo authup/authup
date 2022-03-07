@@ -28,13 +28,16 @@ export class RolePermissionEntity implements RolePermission {
         power: number;
 
     @Column({ type: 'text', nullable: true, default: null })
-        condition: any | null;
+        condition: string | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string[] | null;
 
     @Column({ type: 'boolean', default: false })
         negation: boolean;
+
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
 
     // ------------------------------------------------------------------
 

@@ -6,6 +6,7 @@
  */
 
 import {
+    Column,
     CreateDateColumn,
     Entity,
     PrimaryColumn,
@@ -17,6 +18,9 @@ import { Permission } from '@typescript-auth/domains';
 export class PermissionEntity implements Permission {
     @PrimaryColumn({ type: 'varchar', length: 128, generated: false })
         id: string;
+
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
 
     @CreateDateColumn()
         created_at: Date;

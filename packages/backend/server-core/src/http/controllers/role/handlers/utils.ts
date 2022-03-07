@@ -41,6 +41,15 @@ export async function runRoleValidation(
         .optional({ nullable: true })
         .run(req);
 
+    await check('target')
+        .exists()
+        .isString()
+        .isLength({ min: 3, max: 16 })
+        .optional({ nullable: true })
+        .run(req);
+
+    // ----------------------------------------------
+
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
         throw new ExpressValidationError(validation);

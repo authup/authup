@@ -13,11 +13,13 @@ export interface RolePermission {
 
     power: number;
 
-    condition: any | null;
+    condition: string | null;
 
     fields: string[] | null;
 
     negation: boolean;
+
+    target: string | null;
 
     // ------------------------------------------------------------------
 

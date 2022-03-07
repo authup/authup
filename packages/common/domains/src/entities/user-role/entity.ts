@@ -14,11 +14,15 @@ export interface UserRole {
 
     role_id: string;
 
-    created_at: string;
-
-    updated_at: string;
+    // ------------------------------------------------------------------
 
     role: Role;
 
     user: User;
+
+    // ------------------------------------------------------------------
+
+    created_at: string;
+
+    updated_at: string;
 }

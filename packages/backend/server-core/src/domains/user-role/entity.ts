@@ -25,23 +25,27 @@ export class UserRoleEntity implements UserRole {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column()
-        user_id: string;
+    // ------------------------------------------------------------------
 
     @Column()
         role_id: string;
+
+    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'role_id' })
+        role: Role;
+
+    @Column()
+        user_id: string;
+
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
+        user: User;
+
+    // ------------------------------------------------------------------
 
     @CreateDateColumn()
         created_at: string;
 
     @UpdateDateColumn()
         updated_at: string;
-
-    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'role_id' })
-        role: Role;
-
-    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
-        user: User;
 }

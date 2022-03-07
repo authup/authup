@@ -20,6 +20,7 @@ export type PermissionMeta<T extends Record<string, any> = Record<string, any>> 
     negation?: boolean,
     condition?: Condition<T> | null,
     fields?: string[] | null,
+    target?: string | null,
     power?: number | null
 };
 

@@ -11,3 +11,11 @@ import { ExpressRequest } from '../type';
 export type ExpressValidatorMeta = Meta & {
     req: ExpressRequest
 };
+
+export type ExpressValidationResult<
+    T extends Record<string, any>,
+    M extends Record<string, any> = Record<string, any>,
+    > = {
+        data: Partial<T>,
+        meta?: M
+    };

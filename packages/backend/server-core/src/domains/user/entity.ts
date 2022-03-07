@@ -100,7 +100,7 @@ export class UserEntity implements User {
     // ------------------------------------------------------------------
 
     @Column()
-        realm_id: string;
+        realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

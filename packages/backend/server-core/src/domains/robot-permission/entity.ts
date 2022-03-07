@@ -28,7 +28,7 @@ export class RobotPermissionEntity implements RobotPermission {
         power: number;
 
     @Column({ type: 'text', nullable: true, default: null })
-        condition: any | null;
+        condition: string | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string[] | null;
@@ -36,13 +36,8 @@ export class RobotPermissionEntity implements RobotPermission {
     @Column({ type: 'boolean', default: false })
         negation: boolean;
 
-    // ------------------------------------------------------------------
-
-    @CreateDateColumn()
-        created_at: Date;
-
-    @UpdateDateColumn()
-        updated_at: Date;
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
 
     // ------------------------------------------------------------------
 
@@ -59,4 +54,12 @@ export class RobotPermissionEntity implements RobotPermission {
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
         permission: Permission;
+
+    // ------------------------------------------------------------------
+
+    @CreateDateColumn()
+        created_at: Date;
+
+    @UpdateDateColumn()
+        updated_at: Date;
 }

@@ -71,10 +71,7 @@ export class AbilityManager {
         subject = transformAbilityStringSubject(subject);
 
         let items = this.items.filter((abilityItem) => {
-            const baseCheck : boolean = abilityItem.action === action &&
-                abilityItem.subject === subject;
-
-            if (!baseCheck) {
+            if (abilityItem.action !== action || abilityItem.subject !== subject) {
                 return false;
             }
 

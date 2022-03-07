@@ -15,11 +15,15 @@ export interface RobotRole {
 
     role_id: string;
 
-    created_at: string;
-
-    updated_at: string;
+    // ------------------------------------------------------------------
 
     role: Role;
 
     robot: Robot;
+
+    // ------------------------------------------------------------------
+
+    created_at: string;
+
+    updated_at: string;
 }

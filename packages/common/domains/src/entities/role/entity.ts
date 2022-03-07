@@ -5,12 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Realm } from '../realm';
+
 export interface Role {
     id: string;
 
     name: string;
 
+    target: string | null;
+
     description: string;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
+
+    // ------------------------------------------------------------------
 
     created_at: string;
 

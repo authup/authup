@@ -19,6 +19,8 @@ export interface UserPermission {
 
     negation: boolean;
 
+    target: string | null;
+
     // ------------------------------------------------------------------
 
     created_at: Date;
@@ -27,11 +29,11 @@ export interface UserPermission {
 
     // ------------------------------------------------------------------
 
-    user_id: string;
+    user_id: User['id'];
 
     user: User;
 
-    permission_id: string;
+    permission_id: Permission['id'];
 
     permission: Permission;
 }

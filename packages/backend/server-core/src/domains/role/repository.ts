@@ -6,7 +6,7 @@
  */
 
 import { EntityRepository, In, Repository } from 'typeorm';
-import { Role } from '@typescript-auth/domains';
+import { PermissionMeta, Role, buildAbilityCondition } from '@typescript-auth/domains';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 
@@ -14,7 +14,7 @@ import { RolePermissionEntity } from '../role-permission';
 export class RoleRepository extends Repository<RoleEntity> {
     async getOwnedPermissions(
         roleId: Role['id'] | Role['id'][],
-    ) : Promise<PermissionMeta<unknown>[]> {
+    ) : Promise<PermissionMeta[]> {
         if (!Array.isArray(roleId)) {
             roleId = [roleId];
         }
@@ -29,11 +29,11 @@ export class RoleRepository extends Repository<RoleEntity> {
             role_id: In(roleId),
         });
 
-        const result : PermissionMeta<unknown>[] = [];
+        const result : PermissionMeta[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,
-                condition: entities[i].condition,
+                condition: buildAbilityCondition(entities[i].condition),
                 power: entities[i].power,
                 fields: entities[i].fields,
                 negation: entities[i].negation,

@@ -7,7 +7,9 @@
 
 import { EntityRepository, Repository } from 'typeorm';
 import {
+    PermissionMeta,
     Robot, Role,
+    buildAbilityCondition,
 } from '@typescript-auth/domains';
 
 import { compare } from '@typescript-auth/server-utils';
@@ -18,12 +20,10 @@ import { RobotPermissionEntity } from '../robot-permission';
 
 @EntityRepository(RobotEntity)
 export class RobotRepository extends Repository<RobotEntity> {
-    // ------------------------------------------------------------------
-
     async getOwnedPermissions(
         id: Robot['id'],
-    ) : Promise<PermissionMeta<unknown>[]> {
-        let permissions : PermissionMeta<unknown>[] = await this.getSelfOwnedPermissions(id);
+    ) : Promise<PermissionMeta[]> {
+        let permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)
@@ -43,18 +43,18 @@ export class RobotRepository extends Repository<RobotEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<PermissionMeta<unknown>[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
             robot_id: id,
         });
 
-        const result : PermissionMeta<unknown>[] = [];
+        const result : PermissionMeta[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,
-                condition: entities[i].condition,
+                condition: buildAbilityCondition(entities[i].condition),
                 power: entities[i].power,
                 fields: entities[i].fields,
                 negation: entities[i].negation,

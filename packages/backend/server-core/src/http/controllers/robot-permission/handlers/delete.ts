@@ -24,6 +24,15 @@ export async function deleteRobotPermissionRouteHandler(req: ExpressRequest, res
         throw new NotFoundError();
     }
 
+    // ----------------------------------------------
+
+    const ownedPermission = req.ability.findPermission(PermissionID.ROBOT_PERMISSION_DROP);
+    if (ownedPermission.target !== entity.target) {
+        throw new ForbiddenError('You are not permitted for the robot-permission target.');
+    }
+
+    // ----------------------------------------------
+
     const { id: entityId } = entity;
 
     await repository.remove(entity);

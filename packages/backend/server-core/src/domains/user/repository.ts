@@ -7,7 +7,9 @@
 
 import { EntityRepository, In, Repository } from 'typeorm';
 import {
+    PermissionMeta,
     Role, User, UserRole,
+    buildAbilityCondition,
 } from '@typescript-auth/domains';
 
 import { compare } from '@typescript-auth/server-utils';
@@ -52,7 +54,7 @@ export class UserRepository extends Repository<UserEntity> {
     async getOwnedPermissions(
         userId: User['id'],
     ) : Promise<PermissionMeta[]> {
-        let permissions : PermissionMeta<unknown>[] = await this.getSelfOwnedPermissions(userId);
+        let permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(userId);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
@@ -79,11 +81,11 @@ export class UserRepository extends Repository<UserEntity> {
             user_id: userId,
         });
 
-        const result : PermissionMeta<unknown>[] = [];
+        const result : PermissionMeta[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push({
                 id: entities[i].permission_id,
-                condition: entities[i].condition,
+                condition: buildAbilityCondition(entities[i].condition),
                 power: entities[i].power,
                 fields: entities[i].fields,
                 negation: entities[i].negation,

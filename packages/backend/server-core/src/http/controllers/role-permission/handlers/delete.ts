@@ -1,6 +1,6 @@
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, RolePermission } from '@typescript-auth/domains';
+import { PermissionID } from '@typescript-auth/domains';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RolePermissionEntity } from '../../../../domains';
 
@@ -23,6 +23,15 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
+
+    // ----------------------------------------------
+
+    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_PERMISSION_DROP);
+    if (ownedPermission.target !== entity.target) {
+        throw new ForbiddenError('You are not permitted for the role-permission target.');
+    }
+
+    // ----------------------------------------------
 
     const { id: entityId } = entity;
 

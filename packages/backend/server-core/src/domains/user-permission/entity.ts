@@ -28,13 +28,16 @@ export class UserPermissionEntity implements UserPermission {
         power: number;
 
     @Column({ type: 'text', nullable: true, default: null })
-        condition: any | null;
+        condition: string | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string[] | null;
 
     @Column({ type: 'boolean', default: false })
         negation: boolean;
+
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
 
     // ------------------------------------------------------------------
 
@@ -47,14 +50,14 @@ export class UserPermissionEntity implements UserPermission {
     // ------------------------------------------------------------------
 
     @Column()
-        user_id: string;
+        user_id: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
         user: User;
 
     @Column({ type: 'varchar' })
-        permission_id: string;
+        permission_id: Permission['id'];
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })

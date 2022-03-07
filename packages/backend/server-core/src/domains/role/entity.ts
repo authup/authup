@@ -8,11 +8,12 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index,
+    Entity, Index, JoinColumn, ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Role } from '@typescript-auth/domains';
+import { Realm, Role } from '@typescript-auth/domains';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_roles' })
 export class RoleEntity implements Role {
@@ -23,8 +24,22 @@ export class RoleEntity implements Role {
     @Index({ unique: true })
         name: string;
 
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
+
     @Column({ type: 'text', nullable: true })
         description: string;
+
+    // ------------------------------------------------------------------
+
+    @Column({ nullable: true })
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'realm_id' })
+        realm: Realm | null;
+
+    // ------------------------------------------------------------------
 
     @CreateDateColumn()
         created_at: string;

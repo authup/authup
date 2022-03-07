@@ -25,23 +25,27 @@ export class RobotRoleEntity implements RobotRole {
     @PrimaryGeneratedColumn()
         id: string;
 
-    @Column()
-        robot_id: string;
+    // ------------------------------------------------------------------
 
     @Column()
         role_id: string;
+
+    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'role_id' })
+        role: Role;
+
+    @Column()
+        robot_id: string;
+
+    @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'client_id' })
+        robot: Robot;
+
+    // ------------------------------------------------------------------
 
     @CreateDateColumn()
         created_at: string;
 
     @UpdateDateColumn()
         updated_at: string;
-
-    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'role_id' })
-        role: Role;
-
-    @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'client_id' })
-        robot: Robot;
 }
