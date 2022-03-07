@@ -8,7 +8,7 @@
 import { Cache, Client } from 'redis-extension';
 import {
     OAuth2TokenSubKind,
-    OAuth2TokenVerification, Robot,
+    OAuth2TokenVerification, PermissionMeta, Robot,
     TokenError,
     TokenVerificationPayload,
     User,

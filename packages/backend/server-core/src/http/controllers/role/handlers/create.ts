@@ -21,6 +21,15 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const data = await runRoleValidation(req, 'create');
 
+    // ----------------------------------------------
+
+    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_ADD);
+    if (ownedPermission.target) {
+        data.target = ownedPermission.target;
+    }
+
+    // ----------------------------------------------
+
     const roleRepository = getRepository(RoleEntity);
     const role = roleRepository.create(data);
 

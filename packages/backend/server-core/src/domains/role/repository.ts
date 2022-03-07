@@ -37,6 +37,7 @@ export class RoleRepository extends Repository<RoleEntity> {
                 power: entities[i].power,
                 fields: entities[i].fields,
                 negation: entities[i].negation,
+                target: entities[i].target,
             });
         }
 

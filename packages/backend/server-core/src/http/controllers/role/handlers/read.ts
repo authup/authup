@@ -18,8 +18,8 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
         filter, page, sort, fields,
     } = req.query;
 
-    const roleRepository = getRepository(RoleEntity);
-    const query = roleRepository.createQueryBuilder('role');
+    const repository = getRepository(RoleEntity);
+    const query = repository.createQueryBuilder('role');
 
     applyFields(query, fields, {
         defaultAlias: 'role',
@@ -52,13 +52,22 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
 
 export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
+    const { fields } = req.query;
 
-    const roleRepository = getRepository(RoleEntity);
-    const result = await roleRepository.findOne(id);
+    const repository = getRepository(RoleEntity);
+    const query = repository.createQueryBuilder('role')
+        .where('role.id = :id', { id });
 
-    if (typeof result === 'undefined') {
+    applyFields(query, fields, {
+        defaultAlias: 'role',
+        allowed: ['id', 'name', 'target', 'description', 'created_at', 'updated_at'],
+    });
+
+    const entity = await query.getOne();
+
+    if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    return res.respond({ data: result });
+    return res.respond({ data: entity });
 }

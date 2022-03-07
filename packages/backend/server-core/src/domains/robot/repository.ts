@@ -58,6 +58,7 @@ export class RobotRepository extends Repository<RobotEntity> {
                 power: entities[i].power,
                 fields: entities[i].fields,
                 negation: entities[i].negation,
+                target: entities[i].target,
             });
         }
 

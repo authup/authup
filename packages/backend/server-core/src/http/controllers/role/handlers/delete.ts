@@ -18,6 +18,15 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
+    // ----------------------------------------------
+
+    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_DROP);
+    if (ownedPermission.target !== entity.target) {
+        throw new ForbiddenError('You are not permitted for the role target.');
+    }
+
+    // ----------------------------------------------
+
     const { id: entityId } = entity;
 
     await repository.remove(entity);

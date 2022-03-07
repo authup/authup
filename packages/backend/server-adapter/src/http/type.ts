@@ -7,7 +7,7 @@
 
 import { NextFunction, Request } from 'express';
 import {
-    AbilityManager, Realm, Robot, User,
+    AbilityManager, PermissionMeta, Realm, Robot, User,
 } from '@typescript-auth/domains';
 
 export interface ExpressRequest extends Request {
@@ -22,7 +22,7 @@ export interface ExpressRequest extends Request {
     token?: string,
 
     ability: AbilityManager,
-    permissions: PermissionMeta<any>[],
+    permissions: PermissionMeta[],
 }
 
 export interface ExpressResponse extends Response {

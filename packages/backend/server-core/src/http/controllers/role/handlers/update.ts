@@ -17,6 +17,15 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         return res.respondAccepted();
     }
 
+    // ----------------------------------------------
+
+    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_EDIT);
+    if (ownedPermission.target) {
+        data.target = ownedPermission.target;
+    }
+
+    // ----------------------------------------------
+
     const roleRepository = getRepository(RoleEntity);
     let role = await roleRepository.findOne(id);
 

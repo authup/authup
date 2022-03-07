@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager } from '../../../src';
+import { AbilityManager, PermissionMeta } from '../../../src';
 
-const testPermissions : PermissionMeta<unknown>[] = [
+const testPermissions : PermissionMeta[] = [
     { id: 'user_add', negation: false, power: 999 },
     { id: 'user_add', negation: false, power: 999 },
     { id: 'user_add', negation: false, power: 777 },

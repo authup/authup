@@ -9,7 +9,7 @@ import {
     AbilityManager,
     HeaderError,
     OAuth2TokenKind,
-    OAuth2TokenSubKind,
+    OAuth2TokenSubKind, PermissionMeta,
     TokenError,
 } from '@typescript-auth/domains';
 import {
