@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { pascalCase } from 'change-case';
-import { Subject } from '@casl/ability';
-import { AbilityMeta } from '../type';
+import { AbilityMeta, PermissionMeta } from '../type';
 import { AbilityError } from '../../../error';
+import { PermissionRelation } from '../../permission';
+import { buildPermissionMetaCondition } from './condition';
+import { buildPermissionMetaFields } from './fields';
 
 /**
  * Build ability-meta object from permission name.
@@ -35,16 +37,13 @@ export function buildAbilityMetaFromName(
     };
 }
 
-/**
- * Transform string subject from camel-, or snake-case to
- * pascal-case.
- *
- * @param subject
- */
-export function transformAbilityStringSubject(subject: Subject) : Subject {
-    if (typeof subject === 'string') {
-        return pascalCase(subject);
-    }
-
-    return subject;
+export function buildPermissionMetaFromRelation(entity: PermissionRelation) : PermissionMeta {
+    return {
+        id: entity.permission_id,
+        condition: buildPermissionMetaCondition(entity.condition),
+        power: entity.power,
+        fields: buildPermissionMetaFields(entity.fields),
+        negation: entity.negation,
+        target: entity.target,
+    };
 }

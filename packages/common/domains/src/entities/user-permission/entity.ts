@@ -5,21 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission } from '../permission';
 import { User } from '../user';
+import { PermissionRelation } from '../permission';
 
-export interface UserPermission {
+export interface UserPermission extends PermissionRelation {
     id: string;
-
-    power: number;
-
-    condition: any | null;
-
-    fields: string[] | null;
-
-    negation: boolean;
-
-    target: string | null;
 
     // ------------------------------------------------------------------
 
@@ -32,8 +22,4 @@ export interface UserPermission {
     user_id: User['id'];
 
     user: User;
-
-    permission_id: Permission['id'];
-
-    permission: Permission;
 }

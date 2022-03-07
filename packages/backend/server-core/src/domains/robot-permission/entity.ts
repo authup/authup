@@ -31,7 +31,7 @@ export class RobotPermissionEntity implements RobotPermission {
         condition: string | null;
 
     @Column({ type: 'text', nullable: true, default: null })
-        fields: string[] | null;
+        fields: string | null;
 
     @Column({ type: 'boolean', default: false })
         negation: boolean;

@@ -5,21 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission } from '../permission';
+import { PermissionRelation } from '../permission';
 import { Robot } from '../robot';
 
-export interface RobotPermission {
+export interface RobotPermission extends PermissionRelation {
     id: string;
-
-    power: number;
-
-    condition: string | null;
-
-    fields: string[] | null;
-
-    negation: boolean;
-
-    target: string | null;
 
     // ------------------------------------------------------------------
 
@@ -32,8 +22,4 @@ export interface RobotPermission {
     robot_id: string;
 
     robot: Robot;
-
-    permission_id: string;
-
-    permission: Permission;
 }

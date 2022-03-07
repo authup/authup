@@ -7,7 +7,7 @@
 
 import { Condition } from '../type';
 
-export function buildAbilityCondition(input: string | null) : Condition {
+export function buildPermissionMetaCondition(input: string | null) : Condition {
     if (typeof input === 'undefined') {
         return {};
     }

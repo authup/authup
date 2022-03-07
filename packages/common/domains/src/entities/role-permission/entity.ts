@@ -5,21 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission } from '../permission';
+import { Permission, PermissionRelation } from '../permission';
 import { Role } from '../role';
 
-export interface RolePermission {
+export interface RolePermission extends PermissionRelation {
     id: string;
-
-    power: number;
-
-    condition: string | null;
-
-    fields: string[] | null;
-
-    negation: boolean;
-
-    target: string | null;
 
     // ------------------------------------------------------------------
 
@@ -32,8 +22,4 @@ export interface RolePermission {
     role_id: string;
 
     role: Role;
-
-    permission_id: string;
-
-    permission: Permission;
 }

@@ -6,7 +6,11 @@
  */
 
 import { EntityRepository, In, Repository } from 'typeorm';
-import { PermissionMeta, Role, buildAbilityCondition } from '@typescript-auth/domains';
+import {
+    PermissionMeta,
+    Role,
+    buildPermissionMetaFromRelation,
+} from '@typescript-auth/domains';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 
@@ -31,14 +35,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
         const result : PermissionMeta[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push({
-                id: entities[i].permission_id,
-                condition: buildAbilityCondition(entities[i].condition),
-                power: entities[i].power,
-                fields: entities[i].fields,
-                negation: entities[i].negation,
-                target: entities[i].target,
-            });
+            result.push(buildPermissionMetaFromRelation(entities[i]));
         }
 
         return result;
