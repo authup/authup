@@ -80,17 +80,17 @@ export class Oauth2ProviderController {
 export function registerOauth2ProviderController(router: Application, options: ControllerOptions) {
     router.get(buildOAuth2ProviderAuthorizePath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            return await authorizeURLOauth2ProviderRouteHandler(req, res, options);
+            await authorizeURLOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {
-            return next(e);
+            next(e);
         }
     });
 
     router.get(buildOAuth2ProviderAuthorizeCallbackPath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            return await authorizeCallbackOauth2ProviderRouteHandler(req, res, options);
+            await authorizeCallbackOauth2ProviderRouteHandler(req, res, options);
         } catch (e) {
-            return next(e);
+            next(e);
         }
     });
 }
