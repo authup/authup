@@ -5,8 +5,8 @@
 [![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
 
-This package contains a simple standalone api application. It also contains ongoing migration files, for all versions.
-But in general, it is recommended to incldue the `api-core` module to your application and create migrations from there.
+This package contains a simple standalone api application.
+Database migrations e.g. have to be created every time the version of this package is updated.
 
 ---
 **Important NOTE**

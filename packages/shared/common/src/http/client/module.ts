@@ -13,7 +13,7 @@ import {
     RealmAPI,
     RobotAPI,
     RobotPermissionAPI, RobotRoleAPI, RoleAPI, RolePermissionAPI, TokenAPI, UserAPI, UserPermissionAPI, UserRoleAPI,
-} from '../../entities';
+} from '../../domains';
 
 export class HTTPClient extends Client {
     public readonly oauth2Provider : OAuth2ProviderAPI;

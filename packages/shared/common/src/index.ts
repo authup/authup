@@ -6,6 +6,6 @@
  */
 
 export * from './http';
-export * from './entities';
+export * from './domains';
 export * from './error';
 export * from './utils';

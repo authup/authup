@@ -27,7 +27,7 @@
 #### @authelion/common 🎉
 [![npm version](https://badge.fury.io/js/@authelion%2Fcommon.svg)](https://badge.fury.io/js/@authelion%2Fcommon)
 
-The main propose of this package, is to provide general classes, interfaces & types for all packages.
+The main purpose of this package, is to provide general classes, interfaces & types for all packages.
 
 [README.md](https://github.com/Tada5hi/authelion/tree/master/packages/common/common#README.md)
 
@@ -36,14 +36,14 @@ The main propose of this package, is to provide general classes, interfaces & ty
 #### @authelion/api ♟
 [![npm version](https://badge.fury.io/js/@authelion%2Fapi.svg)](https://badge.fury.io/js/@authelion%2Fapi)
 
-This package contains a simple standalone api.
+This package contains a simple standalone api application.
 
 [README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api#README.md)
 
 #### @authelion/api-adapter 🌉
 [![npm version](https://badge.fury.io/js/@authelion%2Fapi-adapter.svg)](https://badge.fury.io/js/@authelion%2Fapi-adapter)
 
-The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
+The main purpose of this package, is to provide middlewares for (micro-) services, which are based on a http (express) or (web-) socket (socket.io) server.
 
 [README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api-adapter#README.md)
 
@@ -58,7 +58,7 @@ should therefore only be used on the server-side.
 #### @authelion/api-utils 🛡
 [![npm version](https://badge.fury.io/js/@authelion%2Fapi-utils.svg)](https://badge.fury.io/js/@authelion%2Fapi-utils)
 
-The main propose of this package, is to provide general utilities for authorization & authentication.
+The main purpose of this package, is to provide general utilities for authorization & authentication on the server-side.
 
 [README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api-utils#README.md)
 

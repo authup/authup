@@ -18,7 +18,7 @@ import {
     Oauth2PasswordGrantParameters,
     Oauth2RefreshTokenGrantParameters,
 } from './type';
-import { OAuth2TokenResponse } from '../../../entities';
+import { OAuth2TokenResponse } from '../../../domains';
 import { buildHTTPQuery } from '../../utils';
 import { removeDuplicateForwardSlashesFromURL } from '../../../utils';
 
