@@ -9,7 +9,7 @@ import {
     ClientError,
     Config,
 } from '@trapi/client';
-import { HTTPClient } from '@typescript-auth/domains';
+import { HTTPClient } from '@authelion/common';
 
 const interceptor = (error: ClientError) => {
     if (typeof error?.response?.data?.message === 'string') {

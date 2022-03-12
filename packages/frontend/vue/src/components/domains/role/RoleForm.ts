@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { Role } from '@typescript-auth/domains';
+import { Role } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
 } from '@vue-layout/utils';

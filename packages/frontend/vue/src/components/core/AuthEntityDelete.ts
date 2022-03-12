@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { BvMsgBoxData, BvMsgBoxOptions } from 'bootstrap-vue';
-import { useDomainAPI } from '@typescript-auth/domains';
+import { useDomainAPI } from '@authelion/common';
 import { mergeDeep, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../language/singleton';
 

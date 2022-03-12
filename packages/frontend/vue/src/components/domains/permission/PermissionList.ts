@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Permission } from '@typescript-auth/domains';
+import { Permission } from '@authelion/common';
 import { BuildInput } from '@trapi/query';
 import {
     ComponentListData,

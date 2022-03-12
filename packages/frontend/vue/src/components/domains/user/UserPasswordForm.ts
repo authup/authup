@@ -11,7 +11,7 @@ import {
 import Vue, {
     CreateElement, VNode, VNodeData,
 } from 'vue';
-import { User } from '@typescript-auth/domains';
+import { User } from '@authelion/common';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 import { useAuthIlingo } from '../../language/singleton';

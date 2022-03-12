@@ -10,7 +10,7 @@
         ],
         "strict": true,
         "paths": {
-            "@typescript-auth/domains": ["./packages/common/domains/src"]
+            "@authelion/common": ["./packages/shared/common/src"]
         }
     },
     "include": [

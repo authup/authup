@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { Permission } from '@typescript-auth/domains';
+import { Permission } from '@authelion/common';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';

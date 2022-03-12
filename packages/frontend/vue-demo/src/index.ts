@@ -8,7 +8,7 @@
 import Vue, { VNode } from 'vue';
 import { BootstrapVue } from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
-import AuthVue, { setHTTPClient } from '@typescript-auth/vue';
+import AuthVue, { setHTTPClient } from '@authelion/vue';
 import { useAPI } from './api';
 
 // CSS

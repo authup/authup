@@ -12,7 +12,7 @@ module.exports = {
     resolve: {
         // for WebStorm, remove this after refactoring
         alias: {
-            '@typescript-auth/domains': path.resolve(__dirname, 'packages/common/domains/src'),
+            '@authelion/common': path.resolve(__dirname, 'packages/shared/common/src'),
         },
     },
 };

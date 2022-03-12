@@ -1,9 +1,0 @@
-{
-    "extends": "../../../tsconfig.json",
-    "compilerOptions": {
-        "lib": ["dom", "ES6"],
-        "paths": {
-            "@typescript-auth/domains": ["./packages/common/domains/src"]
-        }
-    }
-}

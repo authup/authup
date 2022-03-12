@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { OAuth2Provider } from '@typescript-auth/domains';
+import { OAuth2Provider } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
 } from '@vue-layout/utils';

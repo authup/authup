@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
-import { Role } from '@typescript-auth/domains';
+import { Role } from '@authelion/common';
 import { RolePermissionListItemActions } from '../role-permission';
 import { SlotName } from '../../constants';
 import { RoleList } from '../role';

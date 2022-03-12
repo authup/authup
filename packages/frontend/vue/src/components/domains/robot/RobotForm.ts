@@ -11,7 +11,7 @@ import Vue, {
 import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
-import { Robot } from '@typescript-auth/domains';
+import { Robot } from '@authelion/common';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import {
     createNanoID, useHTTPClient,

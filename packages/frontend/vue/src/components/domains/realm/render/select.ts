@@ -6,7 +6,7 @@
  */
 
 import { CreateElement, VNode } from 'vue';
-import { Realm } from '@typescript-auth/domains';
+import { Realm } from '@authelion/common';
 import {
     ComponentFormComputed,
     ComponentFormData, ComponentFormMethods, ComponentFormVuelidate, ComponentListData,

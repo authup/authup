@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
-import { Role } from '@typescript-auth/domains';
+import { Role } from '@authelion/common';
 import { OAuth2ProviderRoleListItem, OAuth2ProviderRoleListItemProperties } from './OAuth2ProviderRoleListItem';
 import { RoleList } from '../role';
 import { SlotName } from '../../constants';

@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Realm } from '@typescript-auth/domains';
+import { Realm } from '@authelion/common';
 import { BuildInput } from '@trapi/query';
 import {
     ComponentListData,

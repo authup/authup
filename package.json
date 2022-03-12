@@ -1,5 +1,5 @@
 {
-    "name": "typescript-auth",
+    "name": "authelion",
     "private": true,
     "author": {
         "name": "Peter Placzek",
@@ -10,7 +10,7 @@
     "version": "1.0.0",
     "workspaces": [
         "./packages/backend/*",
-        "./packages/common/*",
+        "./packages/shared/*",
         "./packages/frontend/*"
     ],
     "keywords": [
@@ -24,12 +24,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/typescript-auth.git"
+        "url": "git+https://github.com/Tada5hi/authelion.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/typescript-auth/issues"
+        "url": "https://github.com/Tada5hi/authelion/issues"
     },
-    "homepage": "https://github.com/Tada5hi/typescript-auth#readme",
+    "homepage": "https://github.com/Tada5hi/authelion#readme",
     "engines": {
         "node": ">=14.0.0"
     },

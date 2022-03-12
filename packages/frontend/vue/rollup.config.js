@@ -20,7 +20,7 @@ const includePathOptions = {
     },
     external: [
         '@trapi/query',
-        '@typescript-auth/domains',
+        '@authelion/common',
         'ilingo',
         'vue',
         'vuelidate',
@@ -74,7 +74,7 @@ const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
     '@trapi/query',
-    '@typescript-auth/domains',
+    '@authelion/common',
     'ilingo',
     'vue',
     'vuelidate',

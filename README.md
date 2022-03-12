@@ -1,75 +1,75 @@
-# @typescript-auth ⛩	
+# @authelion ⛩	
 
-[![main](https://github.com/Tada5hi/typescript-auth/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/typescript-auth/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/typescript-auth/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/typescript-auth)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/typescript-auth/badge.svg)](https://snyk.io/test/github/Tada5hi/typescript-auth)
+[![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
 
-This monorepo contains different auth packages for frontend and backend.
+`Authelion` is a monorepo, containing a collection of different packages for frontend and backend authentication & authorization.
 
 **Table of Contents**
 
 - [Packages](#Packages)
-  - [Common](#common)
-    - [Domains](#typescript-authdomains-)
+  - [Shared](#shared)
+    - [Common](#authelioncommon-)
   - [Backend](#backend)
-    - [Server](#typescript-authserver-)
-    - [ServerAdapter](#typescript-authserver-adapter-)
-    - [ServerCore](#typescript-authserver-core-)
-    - [ServerUtils](#typescript-authserver-utils-)
+    - [Api](#authelionapi-)
+    - [ApiAdapter](#authelionapi-adapter-)
+    - [ApiCore](#authelionapi-core-)
+    - [ApiUtils](#authelionapi-utils-)
   - [Frontend](#frontend)
-    - [Vue](#typescript-authvue-)
+    - [Vue](#authelionvue-)
 - [Installation & Usage](#installation--usage)
 
 ## Packages
 
-### Common
+### Shared
 
-#### @typescript-auth/domains 🎉
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fdomains.svg)](https://badge.fury.io/js/@typescript-auth%2Fdomains)
+#### @authelion/common 🎉
+[![npm version](https://badge.fury.io/js/@authelion%2Fcommon.svg)](https://badge.fury.io/js/@authelion%2Fcommon)
 
 The main propose of this package, is to provide general classes, interfaces & types for all packages.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/common/domains#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/common/common#README.md)
 
 ### Backend
 
-#### @typescript-auth/server ♟
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver)
+#### @authelion/api ♟
+[![npm version](https://badge.fury.io/js/@authelion%2Fapi.svg)](https://badge.fury.io/js/@authelion%2Fapi)
 
-This package contains a simple standalone server.
+This package contains a simple standalone api.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api#README.md)
 
-#### @typescript-auth/server-adapter 🌉
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-adapter)
+#### @authelion/api-adapter 🌉
+[![npm version](https://badge.fury.io/js/@authelion%2Fapi-adapter.svg)](https://badge.fury.io/js/@authelion%2Fapi-adapter)
 
 The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-adapter#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api-adapter#README.md)
 
-#### @typescript-auth/server-core 🍀
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-core.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-core)
+#### @authelion/api-core 🍀
+[![npm version](https://badge.fury.io/js/@authelion%2Fapi-core.svg)](https://badge.fury.io/js/@authelion%2Fapi-core)
 
 This package should be used as an extension to an existing (express) application and
 should therefore only be used on the server-side.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-core#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api-core#README.md)
 
-#### @typescript-auth/server-utils 🛡
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fserver-utils.svg)](https://badge.fury.io/js/@typescript-auth%2Fserver-utils)
+#### @authelion/api-utils 🛡
+[![npm version](https://badge.fury.io/js/@authelion%2Fapi-utils.svg)](https://badge.fury.io/js/@authelion%2Fapi-utils)
 
 The main propose of this package, is to provide general utilities for authorization & authentication.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/backend/server-utils#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/backend/api-utils#README.md)
 
 ### Frontend
 
-#### @typescript-auth/vue 🏝
-[![npm version](https://badge.fury.io/js/@typescript-auth%2Fvue.svg)](https://badge.fury.io/js/@typescript-auth%2Fvue)
+#### @authelion/vue 🏝
+[![npm version](https://badge.fury.io/js/@authelion%2Fvue.svg)](https://badge.fury.io/js/@authelion%2Fvue)
 
 This repository contains different vue components for the domain entities.
 
-[README.md](https://github.com/Tada5hi/typescript-auth/tree/master/packages/frontend/vue#README.md)
+[README.md](https://github.com/Tada5hi/authelion/tree/master/packages/frontend/vue#README.md)
 
 ## Installation & Usage
 Please follow the `README.md` instructions in the respective package folder.

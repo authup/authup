@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, VNode } from 'vue';
-import { Robot } from '@typescript-auth/domains';
+import { Robot } from '@authelion/common';
 import {
     RobotPermissionListItemActions,
     RobotPermissionListItemActionsProperties,

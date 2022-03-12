@@ -8,7 +8,7 @@ import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Realm } from '@typescript-auth/domains';
+import { Realm } from '@authelion/common';
 import {
     ComponentFormData,
     buildFormInput,

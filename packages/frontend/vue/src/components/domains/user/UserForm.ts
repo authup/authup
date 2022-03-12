@@ -12,7 +12,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 
-import { User } from '@typescript-auth/domains';
+import { User } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods,
     ValidationTranslator, buildFormInput, buildFormSubmit,

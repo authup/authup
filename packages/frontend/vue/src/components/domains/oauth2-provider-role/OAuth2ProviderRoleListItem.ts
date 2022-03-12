@@ -7,7 +7,7 @@
 
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { OAuth2ProviderRole, Role } from '@typescript-auth/domains';
+import { OAuth2ProviderRole, Role } from '@authelion/common';
 import { ComponentFormData, buildFormInput } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 

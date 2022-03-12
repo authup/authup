@@ -8,8 +8,8 @@
             "scripthost"
         ],
         "paths": {
-            "@typescript-auth/domains": ["./packages/common/domains/src"],
-            "@typescript-auth/vue": ["./packages/frontend/vue"]
+            "@authelion/common": ["./packages/shared/common/src"],
+            "@authelion/vue": ["./packages/frontend/vue"]
         }
     },
     "include": [

@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { OAuth2Provider } from '@typescript-auth/domains';
+import { OAuth2Provider } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,

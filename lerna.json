@@ -1,7 +1,7 @@
 {
     "packages": [
         "packages/backend/*",
-        "packages/common/*",
+        "packages/shared/*",
         "packages/frontend/*"
     ],
     "command": {

@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { Role } from '@typescript-auth/domains';
+import { Role } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
