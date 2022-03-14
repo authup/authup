@@ -13,7 +13,7 @@ import { buildConfig } from './utils';
 export function useConfig(directoryPath?: string) : Config {
     directoryPath ??= process.cwd();
 
-    const filePath : string = path.join(directoryPath, 'server.config.js');
+    const filePath : string = path.join(directoryPath, 'authelion.config.js');
 
     if (!fs.existsSync(filePath)) {
         return buildConfig({}, directoryPath);

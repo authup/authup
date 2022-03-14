@@ -10,12 +10,13 @@ import {
     Column,
     CreateDateColumn,
     Entity, Index, JoinColumn,
-    ManyToOne,
+    ManyToOne, OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Realm, User } from '@authelion/common';
 import { RealmEntity } from '../realm';
+import { UserAttributeEntity } from '../user-attribute';
 
 @Entity({ name: 'auth_users' })
 export class UserEntity implements User {
@@ -30,10 +31,10 @@ export class UserEntity implements User {
         name_locked: boolean;
 
     @Column({ type: 'varchar', length: 128, nullable: true })
-        first_name: string;
+        first_name: string | null;
 
     @Column({ type: 'varchar', length: 128, nullable: true })
-        last_name: string;
+        last_name: string | null;
 
     @Column({ type: 'varchar', length: 128 })
         display_name: string;
@@ -41,12 +42,20 @@ export class UserEntity implements User {
     @Column({
         type: 'varchar', length: 256, default: null, nullable: true, select: false,
     })
-        email: string;
+        email: string | null;
 
     @Column({
         type: 'varchar', length: 512, default: null, nullable: true, select: false,
     })
-        password: string;
+        password: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+        avatar: string | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+        cover: string | null;
 
     // ------------------------------------------------------------------
 
@@ -105,6 +114,9 @@ export class UserEntity implements User {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
+
+    @OneToMany(() => UserAttributeEntity, (entity) => entity.user_id)
+        attributes: UserAttributeEntity[];
 
     // ------------------------------------------------------------------
 

@@ -26,6 +26,12 @@ export interface User {
 
     // ------------------------------------------------------------------
 
+    avatar: string | null;
+
+    cover: string | null;
+
+    // ------------------------------------------------------------------
+
     reset_hash: string | null;
 
     reset_at: Date | null;

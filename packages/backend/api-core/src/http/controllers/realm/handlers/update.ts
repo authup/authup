@@ -27,18 +27,18 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    const realmRepository = getRepository(RealmEntity);
+    const repository = getRepository(RealmEntity);
 
-    let realm = await realmRepository.findOne(id);
-    if (typeof realm === 'undefined') {
+    let entity = await repository.findOne(id);
+    if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    realm = realmRepository.merge(realm, data);
+    entity = repository.merge(entity, data);
 
-    await realmRepository.save(realm);
+    await repository.save(entity);
 
     return res.respond({
-        data: realm,
+        data: entity,
     });
 }

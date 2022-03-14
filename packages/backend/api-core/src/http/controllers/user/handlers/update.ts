@@ -28,19 +28,19 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         return res.respondAccepted();
     }
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+    const repository = getCustomRepository<UserRepository>(UserRepository);
 
     if (typeof data.password !== 'undefined') {
         data.password = await hash(data.password);
     }
 
-    let user = await userRepository.findOne(id);
-    if (typeof user === 'undefined') {
+    let entity = await repository.findOne(id);
+    if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, user.realm_id)) {
-        throw new ForbiddenError(`You are not allowed to edit users of the realm ${user.realm_id}`);
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
     }
 
     if (typeof data.realm_id === 'string') {
@@ -51,22 +51,22 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     if (
         typeof data.name === 'string' &&
-        data.name !== user.name
+        data.name !== entity.name
     ) {
         if (typeof data.name_locked !== 'undefined') {
-            user.name_locked = data.name_locked;
+            entity.name_locked = data.name_locked;
         }
 
-        if (user.name_locked) {
+        if (entity.name_locked) {
             delete data.name;
         }
     }
 
-    user = userRepository.merge(user, data);
+    entity = repository.merge(entity, data);
 
-    await userRepository.save(user);
+    await repository.save(entity);
 
     return res.respond({
-        data: user,
+        data: entity,
     });
 }

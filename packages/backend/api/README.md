@@ -125,7 +125,7 @@ It will output the following information on startup:
 
 ```shell
 ℹ Environment: development
-ℹ WritableDirectory: C:\Data\Projects\tada5hi\repositories\authelion\packages\backend\api\writable
+ℹ WritableDirectory: writable
 ℹ URL: http://127.0.0.1:3010/
 ℹ Docs-URL: http://127.0.0.1:3010/docs
 ℹ Web-URL: http://127.0.0.1:3000/

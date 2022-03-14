@@ -33,13 +33,13 @@ export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    const realmRepository = getRepository(RealmEntity);
+    const repository = getRepository(RealmEntity);
 
-    const realm = realmRepository.create(data);
+    const entity = repository.create(data);
 
-    await realmRepository.save(realm);
+    await repository.save(entity);
 
     return res.respondCreated({
-        data: realm,
+        data: entity,
     });
 }

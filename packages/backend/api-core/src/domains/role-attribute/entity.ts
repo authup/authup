@@ -8,40 +8,43 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index, JoinColumn, ManyToOne, OneToMany,
-    PrimaryGeneratedColumn,
+    Entity, Index, JoinColumn, ManyToOne,
+    PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import { Realm, Role } from '@authelion/common';
+import {
+    Realm, Role, RoleAttribute,
+} from '@authelion/common';
 import { RealmEntity } from '../realm';
-import { RoleAttributeEntity } from '../role-attribute';
+import { RoleEntity } from '../role';
 
-@Entity({ name: 'auth_roles' })
-export class RoleEntity implements Role {
+@Unique(['key', 'role_id'])
+@Entity({ name: 'auth_role_attributes' })
+export class RoleAttributeEntity implements RoleAttribute {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 30 })
-    @Index({ unique: true })
-        name: string;
+    @Column({ type: 'varchar', length: 255 })
+        key: string;
 
-    @Column({ type: 'varchar', length: 16, nullable: true })
-        target: string | null;
-
-    @Column({ type: 'text', nullable: true })
-        description: string;
+    @Column({ type: 'text' })
+        value: string;
 
     // ------------------------------------------------------------------
-
-    @OneToMany(() => RoleAttributeEntity, (entity) => entity.role_id)
-        attributes: RoleAttributeEntity[];
 
     @Column({ nullable: true })
         realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm | null;
+        realm: RealmEntity | null;
+
+    @Column()
+        role_id: Role['id'];
+
+    @ManyToOne(() => RoleEntity, (entity) => entity.attributes, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'role_id' })
+        role: RoleEntity;
 
     // ------------------------------------------------------------------
 

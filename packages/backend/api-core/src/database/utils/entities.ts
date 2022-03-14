@@ -17,9 +17,9 @@ import {
     RealmEntity,
     RobotEntity,
     RobotPermissionEntity,
-    RobotRoleEntity,
+    RobotRoleEntity, RoleAttributeEntity,
     RoleEntity,
-    RolePermissionEntity,
+    RolePermissionEntity, UserAttributeEntity,
     UserEntity, UserPermissionEntity, UserRoleEntity,
 } from '../../domains';
 
@@ -43,8 +43,10 @@ export function setEntitiesForConnectionOptions<T extends ConnectionOptions>(
             RobotPermissionEntity,
             RobotRoleEntity,
             RoleEntity,
+            RoleAttributeEntity,
             RolePermissionEntity,
             UserEntity,
+            UserAttributeEntity,
             UserPermissionEntity,
             UserRoleEntity,
             ...(merge && connectionOptions.entities ? connectionOptions.entities : []),

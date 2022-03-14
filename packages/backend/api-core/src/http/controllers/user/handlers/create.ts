@@ -20,8 +20,8 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const data = await runUserValidation(req, 'create');
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
-    const entity = await userRepository.create(data);
+    const repository = getCustomRepository<UserRepository>(UserRepository);
+    const entity = await repository.create(data);
 
     const realmRepository = getRepository(RealmEntity);
 
@@ -40,7 +40,7 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
         entity.password = await hash(entity.password);
     }
 
-    await userRepository.save(entity);
+    await repository.save(entity);
 
     delete entity.password;
 

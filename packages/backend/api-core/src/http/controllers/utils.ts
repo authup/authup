@@ -21,6 +21,8 @@ import { ControllerOptions } from './type';
 import { RobotPermissionController } from './robot-permission';
 import { RobotRoleController } from './robot-role';
 import { UserPermissionController } from './user-permission';
+import { RoleAttributeController } from './role-attribute';
+import { UserAttributeController } from './user-attribute';
 
 export function registerControllers(
     router: Application,
@@ -35,8 +37,10 @@ export function registerControllers(
         RobotRoleController,
         RealmController,
         RoleController,
+        RoleAttributeController,
         RolePermissionController,
         UserController,
+        UserAttributeController,
         UserPermissionController,
         UserRoleController,
     ]);

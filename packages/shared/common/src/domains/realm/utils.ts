@@ -14,13 +14,15 @@ import { MASTER_REALM_ID } from './constants';
  */
 export function isPermittedForResourceRealm(
     realmId?: string,
-    resourceRealmId?: string,
+    resourceRealmId?: string | string[],
 ) : boolean {
     if (!realmId) return false;
 
     if (realmId === MASTER_REALM_ID) return true;
 
-    return realmId === resourceRealmId;
+    return Array.isArray(resourceRealmId) ?
+        resourceRealmId.some((id) => id === realmId) :
+        realmId === resourceRealmId;
 }
 
 export function isValidRealmName(name: string) : boolean {

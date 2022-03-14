@@ -38,13 +38,13 @@ export class RoleAPI implements DomainAPI<Role> {
         return response.data;
     }
 
-    async create(data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
+    async create(data: Partial<Role>): Promise<SingleResourceResponse<Role>> {
         const response = await this.client.post('roles', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Role['id'], data: Pick<Role, 'name'>): Promise<SingleResourceResponse<Role>> {
+    async update(id: Role['id'], data: Partial<Role>): Promise<SingleResourceResponse<Role>> {
         const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
