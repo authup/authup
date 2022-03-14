@@ -21,7 +21,7 @@ export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 30 })
+    @Column({ type: 'varchar', length: 64 })
     @Index({ unique: true })
         name: string;
 
@@ -29,7 +29,7 @@ export class RoleEntity implements Role {
         target: string | null;
 
     @Column({ type: 'text', nullable: true })
-        description: string;
+        description: string | null;
 
     // ------------------------------------------------------------------
 

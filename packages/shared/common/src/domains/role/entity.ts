@@ -14,7 +14,7 @@ export interface Role {
 
     target: string | null;
 
-    description: string;
+    description: string | null;
 
     // ------------------------------------------------------------------
 
