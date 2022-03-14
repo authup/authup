@@ -11,7 +11,10 @@ import Vue, {
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { OAuth2Provider } from '@authelion/common';
 import {
-    ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
+    ComponentFormData,
+    ComponentFormMethods,
+    buildFormInput,
+    buildFormSubmit,
 } from '@vue-layout/utils';
 import { createNanoID, useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
