@@ -23,8 +23,7 @@ export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 128 })
-    @Index({ unique: true })
+    @Column({ type: 'varchar', length: 128, unique: true })
         name: string;
 
     @Column({ type: 'boolean', default: true })
