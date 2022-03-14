@@ -1,6 +1,6 @@
 {
     "name": "@authelion/vue-demo",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "private": true,
     "description": "This package contains a vue demo app.",
     "scripts": {
@@ -36,7 +36,7 @@
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
         "@authelion/common": "^0.0.2",
-        "@authelion/vue": "^0.0.3",
+        "@authelion/vue": "^0.0.4",
         "@fortawesome/fontawesome-free": "^6.0.0",
         "@trapi/client": "^2.0.5",
         "bootstrap": "^4.6.1",
