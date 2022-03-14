@@ -9,7 +9,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Role } from '@authelion/common';
 import {
-    ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit,
+    ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/utils';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
@@ -42,6 +42,7 @@ Properties
         return {
             form: {
                 name: '',
+                description: '',
             },
 
             busy: false,
@@ -54,6 +55,10 @@ Properties
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(30),
+            },
+            description: {
+                minLength: minLength(5),
+                maxLength: maxLength(4096),
             },
         },
     },
@@ -122,6 +127,15 @@ Properties
             propName: 'name',
         });
 
+        const description = buildFormTextarea<Role>(vm, h, {
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
+            title: 'Description',
+            propName: 'description',
+            attrs: {
+                rows: 6,
+            },
+        });
+
         const submit = buildFormSubmit(this, h, {
             updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
             createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
@@ -137,6 +151,7 @@ Properties
             },
         }, [
             name,
+            description,
             submit,
         ]);
     },
