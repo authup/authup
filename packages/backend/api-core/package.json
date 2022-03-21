@@ -52,7 +52,7 @@
         "redis-extension": "^1.0.0-4",
         "reflect-metadata": "^0.1.13",
         "swagger-ui-express": "^4.3.0",
-        "typeorm-extension": "^1.2.0"
+        "typeorm-extension": "^1.2.1"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
