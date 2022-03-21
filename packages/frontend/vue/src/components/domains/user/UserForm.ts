@@ -15,7 +15,7 @@ import Vue, {
 import { User } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods,
-    ValidationTranslator, buildFormInput, buildFormSubmit,
+    buildFormInput, buildFormSubmit,
 } from '@vue-layout/utils';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
@@ -58,7 +58,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
     data() {
         return {
             form: {
-                active: false,
+                active: true,
                 name: '',
                 display_name: '',
                 email: '',
