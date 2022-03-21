@@ -50,7 +50,7 @@
         "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.2.45",
-        "yargs": "^17.0.1"
+        "yargs": "^17.4.0"
     },
     "devDependencies": {
         "@types/change-case": "^2.3.1",
