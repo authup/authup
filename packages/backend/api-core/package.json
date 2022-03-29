@@ -42,7 +42,7 @@
     "dependencies": {
         "@authelion/api-utils": "^0.0.2",
         "@decorators/express": "^2.6.0",
-        "@trapi/client": "^2.0.5",
+        "@trapi/client": "^2.0.6",
         "@trapi/swagger": "^0.2.15",
         "@typescript-error/http": "^1.1.4",
         "cookie-parser": "^1.4.6",
