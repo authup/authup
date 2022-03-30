@@ -37,8 +37,8 @@
     "dependencies": {
         "@authelion/common": "^0.0.2",
         "@authelion/vue": "^0.0.5",
-        "@fortawesome/fontawesome-free": "^6.1.0",
-        "@trapi/client": "^2.0.5",
+        "@fortawesome/fontawesome-free": "^6.1.1",
+        "@trapi/client": "^2.0.6",
         "bootstrap": "^4.6.1",
         "bootstrap-vue": "^2.21.2",
         "ilingo": "^2.0.0",
