@@ -12,16 +12,17 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 
-import { User } from '@authelion/common';
+import { Realm, User } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods,
-    buildFormInput, buildFormSubmit,
+    ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
 } from '@vue-layout/utils';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
+import { RealmList } from '../realm';
 
 export type Properties = {
     [key: string]: any;
@@ -199,17 +200,6 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
         const vm = this;
         const h = createElement;
 
-        let realm = h();
-        if (
-            !vm.isRealmLocked &&
-            vm.canManage
-        ) {
-            realm = buildRealmSelectForm(vm, h, {
-                propName: 'realm_id',
-                value: vm.$v.form.realm_id.$model,
-            });
-        }
-
         const name = buildFormInput<User>(vm, h, {
             validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
@@ -277,6 +267,38 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
 
+        const leftColumn = h('div', { staticClass: 'col' }, [
+            name,
+            displayName,
+            email,
+            activate,
+            submit,
+        ]);
+
+        let rightColumn = h();
+        if (
+            !vm.isRealmLocked &&
+            vm.canManage
+        ) {
+            const realm = h(RealmList, {
+                scopedSlots: {
+                    [SlotName.ITEM_ACTIONS]: (
+                        props: ComponentListItemSlotProps<Realm>,
+                    ) => buildListItemToggleAction(vm.form, h, {
+                        propName: 'realm_id',
+                        item: props.item,
+                        busy: props.busy,
+                    }),
+                },
+            });
+
+            rightColumn = h('div', {
+                staticClass: 'col',
+            }, [
+                realm,
+            ]);
+        }
+
         return h('form', {
             on: {
                 submit($event: any) {
@@ -286,12 +308,10 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
                 },
             },
         }, [
-            realm,
-            name,
-            displayName,
-            email,
-            activate,
-            submit,
+            h('div', { staticClass: 'row' }, [
+                leftColumn,
+                rightColumn,
+            ]),
         ]);
     },
 });

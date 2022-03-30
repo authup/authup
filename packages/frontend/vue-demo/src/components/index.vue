@@ -30,8 +30,7 @@ export default {
                             :entity-type="'user'"
                             :entity-id="props.item.id"
                             :with-text="false"
-                            :locale="'de'"
-                            @done="handleDeleted"
+                            @deleted="handleDeleted"
                         />
                     </template>
                 </user-list>
@@ -40,6 +39,8 @@ export default {
             </div>
             <div class="col">
                 <user-form @created="handleCreated" />
+
+                <robot-form />
 
                 <user-password-form id="bed1e14a-3110-480d-9ebb-ad74aae30f4c" />
             </div>

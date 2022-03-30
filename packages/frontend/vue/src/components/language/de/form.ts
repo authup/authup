@@ -14,4 +14,7 @@ export const LanguageFormGerman : Lines = {
     create: {
         button: 'Erstellen',
     },
+    generate: {
+        button: 'Generieren',
+    },
 };

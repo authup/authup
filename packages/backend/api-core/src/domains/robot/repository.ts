@@ -7,12 +7,11 @@
 
 import { EntityRepository, Repository } from 'typeorm';
 import {
-    PermissionMeta,
-    Robot, Role,
-    buildPermissionMetaFromRelation,
+    PermissionMeta, Robot,
+    Role, buildPermissionMetaFromRelation, createNanoID,
 } from '@authelion/common';
 
-import { compare } from '@authelion/api-utils';
+import { compare, hash } from '@authelion/api-utils';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
@@ -83,5 +82,20 @@ export class RobotRepository extends Repository<RobotEntity> {
         }
 
         return entity;
+    }
+
+    async createWithSecret(data: Partial<Robot>) : Promise<{
+        entity: Robot,
+        secret: string
+    }> {
+        const entity = this.create(data);
+
+        const secret = entity.secret || createNanoID(undefined, 64);
+        entity.secret = await hash(secret);
+
+        return {
+            entity,
+            secret,
+        };
     }
 }

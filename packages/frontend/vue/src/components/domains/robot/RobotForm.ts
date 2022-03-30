@@ -6,13 +6,15 @@
  */
 
 import Vue, {
-    CreateElement, PropType, VNode, VNodeData,
+    CreateElement, PropType, VNode,
 } from 'vue';
 import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
-import { Robot } from '@authelion/common';
-import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
+import { Realm, Robot } from '@authelion/common';
+import {
+    ComponentFormData, ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
+} from '@vue-layout/utils';
 import {
     createNanoID, useHTTPClient,
 } from '../../../utils';
@@ -21,6 +23,7 @@ import { initPropertiesFromSource } from '../../utils/proprety';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
+import { RealmList } from '../realm';
 
 type Properties = {
     [key: string]: any;
@@ -65,8 +68,6 @@ Properties
             },
             busy: false,
             loaded: false,
-
-            secretChange: false,
         };
     },
     validations: {
@@ -155,7 +156,7 @@ Properties
 
                     response = await useHTTPClient().robot.update(this.entity.id, {
                         ...form,
-                        ...(this.isSecretHashed || !this.secretChange ? { } : { secret }),
+                        ...(this.isSecretHashed ? { } : { secret }),
                     });
 
                     this.$emit('updated', response);
@@ -182,16 +183,6 @@ Properties
         const vm = this;
         const h = createElement;
 
-        let realm = h();
-        if (
-            !vm.isRealmLocked
-        ) {
-            realm = buildRealmSelectForm(vm, h, {
-                propName: 'realm_id',
-                value: vm.$v.form.realm_id.$model,
-            });
-        }
-
         const name = buildFormInput(this, h, {
             validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
             title: 'Name',
@@ -202,7 +193,6 @@ Properties
         });
 
         let id = h();
-        let changeSecret = h();
 
         if (vm.entity) {
             id = h('div', {
@@ -222,70 +212,78 @@ Properties
                     staticClass: 'form-control',
                 }),
             ]);
-
-            changeSecret = h('div', {
-                staticClass: 'form-group mb-1',
-            }, [
-                h('b-form-checkbox', {
-                    attrs: {
-                        switch: '',
-                        size: 'sm',
-                    },
-                    model: {
-                        value: vm.secretChange,
-                        callback(v: boolean) {
-                            vm.secretChange = v;
-                        },
-                        expression: 'secretChange',
-                    },
-                } as VNodeData, [
-                    'Change secret?',
-                ]),
-            ]);
         }
 
-        let secret = h();
-        let secretInfo = h();
-
-        if (!vm.isEditing || vm.secretChange) {
-            secret = buildFormInput(this, h, {
-                validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                title: [
-                    'Secret',
-                    vm.isSecretHashed ? h('span', {
-                        staticClass: 'text-danger font-weight-bold',
-                    }, [
-                        'Hashed',
-                        ' ',
-                        h('i', { staticClass: 'fa fa-exclamation-triangle pl-1' }),
-                    ]) : '',
-                ],
-                propName: 'secret',
-                changeCallback: (input: string) => vm.handleSecretChanged.call(null, input),
-            });
-
-            secretInfo = h('div', { staticClass: 'mb-1' }, [
-                h('button', {
-                    staticClass: 'btn btn-dark btn-xs',
-                    on: {
-                        click($event: any) {
-                            $event.preventDefault();
-
-                            vm.generateSecret.call(null);
-                        },
-                    },
+        const secret = buildFormInput(this, h, {
+            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
+            title: [
+                'Secret',
+                vm.isSecretHashed ? h('span', {
+                    staticClass: 'text-danger font-weight-bold pl-1',
                 }, [
-                    h('i', { staticClass: 'fa fa-wrench' }),
+                    'Hashed',
                     ' ',
-                    'Generate',
-                ]),
-            ]);
-        }
+                    h('i', { staticClass: 'fa fa-exclamation-triangle pl-1' }),
+                ]) : '',
+            ],
+            propName: 'secret',
+            changeCallback: (input: string) => vm.handleSecretChanged.call(null, input),
+        });
+
+        const secretInfo = h('div', [
+            h('button', {
+                staticClass: 'btn btn-dark btn-xs',
+                on: {
+                    click($event: any) {
+                        $event.preventDefault();
+
+                        vm.generateSecret.call(null);
+                    },
+                },
+            }, [
+                h('i', { staticClass: 'fa fa-wrench' }),
+                ' ',
+                useAuthIlingo().getSync('form.generate.button', vm.translatorLocale),
+            ]),
+        ]);
 
         const submit = buildFormSubmit(this, h, {
             updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
             createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
         });
+
+        const leftColumn = h('div', { staticClass: 'col' }, [
+            id,
+            name,
+            secret,
+            secretInfo,
+            h('hr'),
+            submit,
+        ]);
+
+        let rightColumn = h();
+
+        if (
+            !vm.isRealmLocked
+        ) {
+            const realm = h(RealmList, {
+                scopedSlots: {
+                    [SlotName.ITEM_ACTIONS]: (
+                        props: ComponentListItemSlotProps<Realm>,
+                    ) => buildListItemToggleAction(vm.form, h, {
+                        propName: 'realm_id',
+                        item: props.item,
+                        busy: props.busy,
+                    }),
+                },
+            });
+
+            rightColumn = h('div', {
+                staticClass: 'col',
+            }, [
+                realm,
+            ]);
+        }
 
         return h('form', {
             on: {
@@ -296,13 +294,10 @@ Properties
                 },
             },
         }, [
-            realm,
-            name,
-            id,
-            changeSecret,
-            secret,
-            secretInfo,
-            submit,
+            h('div', { staticClass: 'row' }, [
+                leftColumn,
+                rightColumn,
+            ]),
         ]);
     },
 });

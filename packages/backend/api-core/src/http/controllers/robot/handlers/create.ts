@@ -5,16 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
+import { getCustomRepository, getRepository } from 'typeorm';
 import {
-    PermissionID, Robot,
-    createNanoID, isPermittedForResourceRealm,
+    PermissionID,
+    isPermittedForResourceRealm,
 } from '@authelion/common';
-import { hash } from '@authelion/api-utils';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runClientValidation } from './utils';
-import { RealmEntity, RobotEntity, useRobotEventEmitter } from '../../../../domains';
+import {
+    RealmEntity, RobotRepository, useRobotEventEmitter,
+} from '../../../../domains';
 
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const data = await runClientValidation(req, 'create');
@@ -28,11 +29,8 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
         data.user_id = req.userId;
     }
 
-    const repository = getRepository<Robot>(RobotEntity);
-    const entity = repository.create(data);
-
-    const secret = entity.secret || createNanoID(undefined, 64);
-    entity.secret = await hash(secret);
+    const repository = getCustomRepository<RobotRepository>(RobotRepository);
+    const { entity, secret } = await repository.createWithSecret(data);
 
     const realmRepository = getRepository(RealmEntity);
     entity.realm_id = entity.realm_id || req.realmId;
@@ -48,7 +46,7 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     await repository.save(entity);
 
-    entity.secret = secret; // expose secret one time ;)
+    entity.secret = secret;
 
     useRobotEventEmitter()
         .emit('credentials', {
