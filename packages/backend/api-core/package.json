@@ -1,6 +1,6 @@
 {
     "name": "@authelion/api-core",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
@@ -40,7 +40,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/api-utils": "^0.0.2",
+        "@authelion/api-utils": "^0.0.3",
         "@decorators/express": "^2.6.0",
         "@trapi/client": "^2.0.6",
         "@trapi/swagger": "^0.2.16",
@@ -60,7 +60,7 @@
         "typeorm": "^0.2.x"
     },
     "devDependencies": {
-        "@authelion/common": "^0.0.2",
+        "@authelion/common": "^0.0.3",
         "@types/express": "^4.17.12",
         "@types/express-validator": "^3.0.0",
         "@types/jest": "^27.4.1",

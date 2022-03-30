@@ -1,6 +1,6 @@
 {
     "name": "@authelion/api-utils",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Authelion http & socket server utils.",
     "main": "dist/index.js",
     "files": [
@@ -40,7 +40,7 @@
         "jsonwebtoken": "^8.5.1"
     },
     "devDependencies": {
-        "@authelion/common": "^0.0.2",
+        "@authelion/common": "^0.0.3",
         "@types/bcrypt": "^5.0.0",
         "@types/jsonwebtoken": "^8.5.8"
     },
