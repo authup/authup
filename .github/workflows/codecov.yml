@@ -30,6 +30,6 @@ jobs:
                   npm run test:coverage --if-present
 
             - name: Upload Code coverage report
-              uses: codecov/codecov-action@v2.1.0
+              uses: codecov/codecov-action@v3
               with:
                   token: ${{ secrets.codecov }}
