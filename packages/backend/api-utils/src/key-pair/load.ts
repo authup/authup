@@ -41,7 +41,7 @@ export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | 
     let publicKey : string;
 
     try {
-        await fs.promises.stat(privateKeyPath);
+        await fs.promises.stat(publicKeyPath);
         const publicKeyBuffer = await fs.promises.readFile(publicKeyPath);
         publicKey = publicKeyBuffer.toString();
     } catch (e) {
@@ -61,10 +61,12 @@ export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | 
             publicKey = stringOrBuffer;
         }
 
-        await saveKeyPair({
-            privateKey,
-            publicKey,
-        }, context);
+        if (context.save) {
+            await saveKeyPair({
+                privateKey,
+                publicKey,
+            }, context);
+        }
     }
 
     return {
