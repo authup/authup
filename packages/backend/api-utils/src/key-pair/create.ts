@@ -54,7 +54,9 @@ export async function createKeyPair(context?: KeyPairContext) : Promise<KeyPair>
         }
     });
 
-    await saveKeyPair(keyPair, context);
+    if (context.save) {
+        await saveKeyPair(keyPair, context);
+    }
 
     if (
         context.passphrase ||

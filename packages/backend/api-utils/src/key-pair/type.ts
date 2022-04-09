@@ -45,5 +45,6 @@ ECKeyPairGenerator;
 export type KeyPairContext = {
     directory?: string,
     alias?: string,
-    passphrase?: string
+    passphrase?: string,
+    save?: boolean
 } & KeyPairGenerator;

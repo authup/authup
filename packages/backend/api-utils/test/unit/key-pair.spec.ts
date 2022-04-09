@@ -14,20 +14,24 @@ describe('sc/key-pair', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
     it('should create key-pair', async () => {
-        const keyPair = await createKeyPair();
+        let keyPair = await createKeyPair({
+            save: false,
+        });
 
         expect(keyPair).toBeDefined();
         expect(keyPair.privateKey).toBeDefined();
         expect(keyPair.publicKey).toBeDefined();
+
+        keyPair = await loadKeyPair();
+        expect(keyPair).toBeUndefined();
     });
 
     it('should save, load & delete key-pair', async () => {
-        let keyPair = await createKeyPair();
-        await saveKeyPair(keyPair, {
+        await createKeyPair({
             directory,
         });
 
-        keyPair = await loadKeyPair({
+        let keyPair = await loadKeyPair({
             directory,
         });
 

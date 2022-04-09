@@ -44,5 +44,8 @@ export function extendKeyPairContext(
         context.options.privateKeyEncoding.cipher = 'aes-256-cbc';
     }
 
+    context.save = typeof context.save === 'undefined' ||
+        !!context.save;
+
     return context;
 }

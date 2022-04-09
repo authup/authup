@@ -14,7 +14,7 @@ describe('src/json-web-token', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
     it('should sign and decrypt json webtoken', async () => {
-        const data = { text: 'peterpan' };
+        const data = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             keyPair: {
@@ -32,7 +32,7 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decrypt json webtoken with passphrase', async () => {
-        const data = { text: 'super-secret' };
+        const data = { text: 'secretText' };
         const keyPairOptions : KeyPairContext = {
             passphrase: 'start123',
             alias: 'encrypted',
