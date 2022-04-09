@@ -24,12 +24,18 @@ export async function verifyToken<T extends string | object | Buffer | Record<st
 ): Promise<T> {
     context ??= {};
 
-    const keyPair: KeyPair = await useKeyPair(context.keyPairOptions);
-
+    const keyPair: KeyPair = await useKeyPair(context.keyPair);
     context.options ??= {};
-    context.options.algorithms = ['RS256'];
 
     try {
+        if (context.secret) {
+            context.options.algorithms = context.options.algorithms || ['HS256', 'HS384', 'HS512'];
+
+            return await verify(token, context.secret, context.options) as T;
+        }
+
+        context.options.algorithms = context.options.algorithms || ['RS256', 'RS384', 'RS512'];
+
         return await verify(token, keyPair.publicKey, context.options) as T;
     } catch (e) {
         if (
@@ -47,6 +53,7 @@ export async function verifyToken<T extends string | object | Buffer | Record<st
         }
 
         throw new TokenError({
+            statusCode: 401,
             previous: e,
             decorateMessage: true,
             logMessage: true,

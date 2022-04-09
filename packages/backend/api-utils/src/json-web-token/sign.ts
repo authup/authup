@@ -14,14 +14,16 @@ export async function signToken<T extends string | object | Buffer | Record<stri
     context?: TokenSignContext,
 ): Promise<string> {
     context ??= {};
-
-    const keyPair: KeyPair = await useKeyPair(context.keyPairOptions);
-
     context.options ??= {};
     context.options.expiresIn = context.options.expiresIn || 3600;
 
-    // always use rsa encryption
-    context.options.algorithm = 'RS256';
+    if (context.secret) {
+        context.options.algorithm = context.options.algorithm || 'HS256';
+        return sign(payload, context.secret, context.options);
+    }
+
+    const keyPair: KeyPair = await useKeyPair(context.keyPair);
+    context.options.algorithm = context.options.algorithm || 'RS256';
 
     return sign(payload, keyPair.privateKey, context.options);
 }

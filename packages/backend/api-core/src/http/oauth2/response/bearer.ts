@@ -52,7 +52,7 @@ export class OAuth2BearerTokenResponse {
             response.refresh_token = await signToken(
                 refreshTokenPayload,
                 {
-                    keyPairOptions: this.context.keyPairOptions,
+                    keyPair: this.context.keyPairOptions,
                     options: {
                         expiresIn: secondsDiff,
                     },

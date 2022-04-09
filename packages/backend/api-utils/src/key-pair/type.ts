@@ -6,9 +6,10 @@
  */
 
 import {
-    DSAKeyPairKeyObjectOptions,
-    ECKeyPairKeyObjectOptions,
-    RSAKeyPairKeyObjectOptions, RSAPSSKeyPairKeyObjectOptions,
+    DSAKeyPairOptions,
+    ECKeyPairOptions,
+    RSAKeyPairOptions,
+    RSAPSSKeyPairOptions,
 } from 'crypto';
 
 export type KeyPair = {
@@ -17,23 +18,23 @@ export type KeyPair = {
 };
 
 export type RSAKeyPairGenerator = {
-    type: 'rsa',
-    options?: RSAKeyPairKeyObjectOptions
+    type?: 'rsa',
+    options?: RSAKeyPairOptions<'pem', 'pem'>
 };
 
 export type RSAPSSKeyPairGenerator = {
-    type: 'rsa-pss',
-    options?: RSAPSSKeyPairKeyObjectOptions
+    type?: 'rsa-pss',
+    options?: RSAPSSKeyPairOptions<'pem', 'pem'>
 };
 
 export type DSAKeyPairGenerator = {
-    type: 'dsa',
-    options?: DSAKeyPairKeyObjectOptions
+    type?: 'dsa',
+    options?: DSAKeyPairOptions<'pem', 'pem'>
 };
 
 export type ECKeyPairGenerator = {
-    type: 'ec',
-    options?: ECKeyPairKeyObjectOptions,
+    type?: 'ec',
+    options?: ECKeyPairOptions<'pem', 'pem'>,
 };
 
 export type KeyPairGenerator = DSAKeyPairGenerator |
@@ -41,8 +42,8 @@ RSAKeyPairGenerator |
 RSAPSSKeyPairGenerator |
 ECKeyPairGenerator;
 
-export type KeyPairOptions = {
+export type KeyPairContext = {
     directory?: string,
     alias?: string,
-    generator?: KeyPairGenerator
-};
+    passphrase?: string
+} & KeyPairGenerator;

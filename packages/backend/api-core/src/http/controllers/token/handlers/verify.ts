@@ -46,7 +46,7 @@ export async function verifyTokenRouteHandler(
     const token = await verifyOAuth2Token(
         id,
         {
-            keyPairOptions: {
+            keyPair: {
                 directory: options.writableDirectoryPath,
             },
             redis: options.redis,

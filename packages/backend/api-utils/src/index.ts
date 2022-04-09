@@ -5,4 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './utils';
+export * from './json-web-token';
+export * from './hash';
+export * from './key-pair';

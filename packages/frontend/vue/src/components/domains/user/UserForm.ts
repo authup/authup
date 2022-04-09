@@ -272,6 +272,7 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             displayName,
             email,
             activate,
+            h('hr'),
             submit,
         ]);
 

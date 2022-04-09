@@ -6,18 +6,19 @@
  */
 
 import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
-import { KeyPairOptions } from '../key-pair';
+import { KeyPairContext } from '../key-pair';
 
 type Context<T> = {
-    options?: T
+    options?: T,
+    secret?: string
 };
 
 export type TokenSignContext = Context<SignOptions> & {
-    keyPairOptions?: Partial<KeyPairOptions>
+    keyPair?: Partial<KeyPairContext>
 };
 
 export type TokenVerifyContext = Context<VerifyOptions> & {
-    keyPairOptions?: Partial<KeyPairOptions>
+    keyPair?: Partial<KeyPairContext>,
 };
 
 export type TokenDecodeContext = Context<DecodeOptions>;

@@ -37,7 +37,7 @@ export async function deleteTokenRouteHandler(
     }
 
     const token = await verifyOAuth2Token(id, {
-        keyPairOptions: {
+        keyPair: {
             directory: options.writableDirectoryPath,
         },
         redis: options.redis,

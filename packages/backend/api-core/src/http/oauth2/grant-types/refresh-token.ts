@@ -47,7 +47,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const token = await verifyOAuth2Token(
             refreshToken,
             {
-                keyPairOptions: this.context.keyPairOptions,
+                keyPair: this.context.keyPairOptions,
             },
         );
 

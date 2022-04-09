@@ -28,6 +28,7 @@ export class TokenError extends BadRequestError {
 
     static expired() {
         return new TokenError({
+            statusCode: 401,
             code: ErrorCode.TOKEN_EXPIRED,
             message: 'The token has been expired.',
         });
@@ -41,6 +42,7 @@ export class TokenError extends BadRequestError {
 
     static notActiveBefore(date: string) {
         return new TokenError({
+            statusCode: 401,
             code: ErrorCode.TOKEN_INACTIVE,
             message: `The token is not active before: ${date}.`,
             date,

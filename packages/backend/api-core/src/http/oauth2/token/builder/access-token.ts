@@ -90,7 +90,7 @@ export class Oauth2AccessTokenBuilder {
         return signToken(
             tokenPayload,
             {
-                keyPairOptions: this.context.keyPairOptions,
+                keyPair: this.context.keyPairOptions,
                 options: {
                     expiresIn: this.context.maxAge,
                 },

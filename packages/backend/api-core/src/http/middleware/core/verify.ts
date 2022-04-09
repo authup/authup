@@ -40,7 +40,7 @@ async function verifyBearerAuthorizationHeader(
     const token = await verifyOAuth2Token(
         header.token,
         {
-            keyPairOptions: {
+            keyPair: {
                 directory: options.writableDirectoryPath,
             },
             redis: options.redis,

@@ -6,7 +6,7 @@
  */
 
 import { OAuth2AccessToken } from '@authelion/common';
-import { KeyPairOptions } from '@authelion/api-utils';
+import { KeyPairContext } from '@authelion/api-utils';
 import { ExpressRequest } from '../../../type';
 
 export type TokenBuilderContext = {
@@ -14,7 +14,7 @@ export type TokenBuilderContext = {
 };
 
 export type AccessTokenBuilderContext = TokenBuilderContext & {
-    keyPairOptions?: Partial<KeyPairOptions>
+    keyPairOptions?: Partial<KeyPairContext>
     request: ExpressRequest,
     selfUrl: string,
 };

@@ -85,7 +85,7 @@ export class RobotRepository extends Repository<RobotEntity> {
     }
 
     async createWithSecret(data: Partial<Robot>) : Promise<{
-        entity: Robot,
+        entity: RobotEntity,
         secret: string
     }> {
         const entity = this.create(data);
