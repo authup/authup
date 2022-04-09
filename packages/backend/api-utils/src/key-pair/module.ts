@@ -14,8 +14,8 @@ const keyPairCache : Record<string, KeyPair> = {};
 export async function useKeyPair(context: KeyPairContext) : Promise<KeyPair> {
     context = extendKeyPairContext(context);
 
-    if (Object.prototype.hasOwnProperty.call(keyPairCache, context.alias)) {
-        return keyPairCache[context.alias];
+    if (Object.prototype.hasOwnProperty.call(keyPairCache, context.privateName)) {
+        return keyPairCache[context.privateName];
     }
 
     let keyPair = await loadKeyPair(context);
@@ -23,7 +23,7 @@ export async function useKeyPair(context: KeyPairContext) : Promise<KeyPair> {
         keyPair = await createKeyPair(context);
     }
 
-    keyPairCache[context.alias] = keyPair;
+    keyPairCache[context.privateName] = keyPair;
 
     return keyPair;
 }

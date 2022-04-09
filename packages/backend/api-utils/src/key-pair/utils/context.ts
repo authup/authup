@@ -13,8 +13,6 @@ export function extendKeyPairContext(
 ) : KeyPairContext {
     context = context ?? {};
 
-    context.alias = context.alias || '';
-
     context.directory = context.directory || process.cwd();
     context.directory = path.isAbsolute(context.directory) ?
         context.directory :

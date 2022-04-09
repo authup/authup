@@ -17,11 +17,11 @@ export async function saveKeyPair(keyPair: KeyPair, context?: KeyPairContext) : 
     await Promise.all(
         [
             {
-                path: path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context.alias)),
+                path: path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context)),
                 content: keyPair.privateKey,
             },
             {
-                path: path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context.alias)),
+                path: path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context)),
                 content: keyPair.publicKey,
             },
         ]

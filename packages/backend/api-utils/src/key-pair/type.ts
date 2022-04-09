@@ -43,8 +43,46 @@ RSAPSSKeyPairGenerator |
 ECKeyPairGenerator;
 
 export type KeyPairContext = {
+    /**
+     * Directory where to save key-pair.
+     *
+     * default: process.cwd()
+     */
     directory?: string,
-    alias?: string,
+    /**
+     * Private key name
+     *
+     * default: private
+     */
+    privateName?: string,
+    /**
+     * Extension for private key.
+     *
+     * default: pem
+     */
+    privateExtension?: string,
+    /**
+     * Public key name
+     *
+     * default: public
+     */
+    publicName?: string,
+    /**
+     * Extension for public key.
+     *
+     * default: pem
+     */
+    publicExtension?: string,
+    /**
+     * Passphrase for private key.
+     *
+     * default: undefined
+     */
     passphrase?: string,
+    /**
+     * Save key-pair to file system.
+     *
+     * default: true
+     */
     save?: boolean
 } & KeyPairGenerator;

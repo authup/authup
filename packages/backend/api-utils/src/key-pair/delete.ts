@@ -14,8 +14,8 @@ import { KeyPairKind } from './constants';
 export async function deleteKeyPair(context?: KeyPairContext) : Promise<void> {
     context = extendKeyPairContext(context);
 
-    const privateKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context.alias));
-    const publicKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context.alias));
+    const privateKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context));
+    const publicKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context));
 
     try {
         await Promise.all([privateKeyPath, publicKeyPath]

@@ -62,9 +62,21 @@ type KeyPairContext = {
      */
     directory?: string,
     /**
-     * default: ''
+     * default: 'private'
      */
-    alias?: string,
+    privateName?: string,
+    /**
+     * default: pem
+     */
+    privateExtension?: string,
+    /**
+     * default: 'public' 
+     */
+    publicName?: string,
+    /**
+     * default: pem
+     */
+    publicExtension?: string,
     /**
      * default: undefined
      */

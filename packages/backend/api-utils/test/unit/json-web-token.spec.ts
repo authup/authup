@@ -35,7 +35,8 @@ describe('src/json-web-token', () => {
         const data = { text: 'secretText' };
         const keyPairOptions : KeyPairContext = {
             passphrase: 'start123',
-            alias: 'encrypted',
+            privateName: 'private-passphrase',
+            publicName: 'public-passphrase',
             directory,
         };
 
