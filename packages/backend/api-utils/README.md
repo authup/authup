@@ -25,26 +25,74 @@ npm install @authelion/api-utils --save
 
 ### KeyPair
 
-Create a private `pkcs8` key and `spki` public key.
-The `useKeyPair` method will automatically create, a key pair in the specified directory if it
-doesn't already exist.
+The following context parameters are all optional and will inherit default values,
+if not otherwise specified.
+```typescript
+import {
+    DSAKeyPairOptions,
+    ECKeyPairOptions,
+    RSAKeyPairOptions,
+    RSAPSSKeyPairOptions,
+} from 'crypto';
+
+type KeyPairContext = {
+    /**
+     * default: 'rsa'
+     */
+    type: 'rsa' | 'rsa-pss' | 'dsa' | 'ec',
+    /**
+     * default: {
+     *     modulusLength: 2048,
+     *     privateKeyEncoding: {
+     *         type: 'pkcs8',
+     *         format: 'pem'
+     *     },
+     *     publicKeyEncoding: {
+     *         type: 'spki',
+     *         format: 'pem'
+     *     }
+     * }
+     */
+    options?: RSAKeyPairOptions<'pem', 'pem'> | 
+        RSAPSSKeyPairOptions<'pem', 'pem'> |
+        DSAKeyPairOptions<'pem' | 'pem'> |
+        ECKeyPairOptions<'pem', 'pem'>,
+    /**
+     * default: process.cwd()
+     */
+    directory?: string,
+    /**
+     * default: ''
+     */
+    alias?: string,
+    /**
+     * default: undefined
+     */
+    passphrase?: string,
+    /**
+     * default: true
+     */
+    save?: boolean
+}
+```
+
+The `useKeyPair` method will
+- create a key-pair, if it does not already exist
+- use an internal runtime cache, if the key was once loaded before during runtime
 
 ```typescript
 import path from 'path';
 import {
-    createKeyPair,
     useKeyPair,
-    KeyPairOptions
+    KeyPairContext
 } from "@authelion/server";
 
-const keyPairOptions: KeyPairOptions = {
-    directory: path.join(__dirname, 'writable')
+const context: KeyPairContext = {
+    directory: path.join(__dirname, 'writable'),
 }
 
 (async () => {
-    await createKeyPair(keyPairOptions);
-
-    const keyPair = await useKeyPair(keyPairOptions);
+    const keyPair = await useKeyPair(context);
     
     console.log(keyPair);
     // {privateKey: 'xxx', publicKey: 'xxx'}
@@ -59,13 +107,13 @@ A private- & public-key will be automatically generated if none already exists.
 ```typescript
 import path from 'path';
 import {
-    KeyPairOptions,
+    KeyPairContext,
     signToken,
     verifyToken
 } from "@authelion/api-utils";
 
 
-const keyPairOptions: KeyPairOptions = {
+const keyPair: KeyPairContext = {
     directory: path.join(__dirname, 'writable')
 }
 
@@ -75,7 +123,7 @@ const keyPairOptions: KeyPairOptions = {
         options: {
             expiresIn: 3600
         },
-        keyPairOptions
+        keyPair
     });
     
     const tokenVerified = await verifyToken(tokenSigned);
