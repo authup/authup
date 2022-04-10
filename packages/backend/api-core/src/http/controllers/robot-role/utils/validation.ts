@@ -15,8 +15,8 @@ import {
     buildExpressValidationErrorMessage,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRobot } from '../../robot/utils/extend';
-import { extendExpressValidationResultWithRole } from '../../role/utils/extend';
+import { extendExpressValidationResultWithRobot } from '../../robot';
+import { extendExpressValidationResultWithRole } from '../../role';
 import { CRUDOperation } from '../../../constants';
 
 export async function runRobotRoleValidation(
@@ -56,15 +56,17 @@ export async function runRobotRoleValidation(
         if (!isPermittedForResourceRealm(req.realmId, result.meta.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
+
+        result.data.role_realm_id = result.meta.role.realm_id;
     }
 
     await extendExpressValidationResultWithRobot(result);
     if (result.meta.robot) {
-        if (
-            !isPermittedForResourceRealm(req.realmId, result.meta.robot.realm_id)
-        ) {
+        if (!isPermittedForResourceRealm(req.realmId, result.meta.robot.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
+
+        result.data.robot_realm_id = result.meta.robot.realm_id;
     }
 
     // ----------------------------------------------

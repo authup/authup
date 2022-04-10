@@ -21,7 +21,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id) ||
+        !isPermittedForResourceRealm(req.realmId, entity.provider_realm_id) ||
         !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
     ) {
         throw new ForbiddenError();

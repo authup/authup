@@ -14,8 +14,8 @@ import {
     buildExpressValidationErrorMessage,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRobot } from '../../robot/utils/extend';
-import { extendExpressValidationResultWithPermission } from '../../permission/utils/extend';
+import { extendExpressValidationResultWithRobot } from '../../robot';
+import { extendExpressValidationResultWithPermission } from '../../permission';
 import { RobotPermissionValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
 
@@ -76,6 +76,8 @@ export async function runRobotPermissionValidation(
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
+
+        result.data.robot_realm_id = result.meta.robot.realm_id;
     }
 
     // ----------------------------------------------

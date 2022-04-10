@@ -26,7 +26,10 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.robot_realm_id)) {
+    if (
+        !isPermittedForResourceRealm(req.realmId, entity.robot_realm_id) ||
+        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+    ) {
         throw new ForbiddenError();
     }
 

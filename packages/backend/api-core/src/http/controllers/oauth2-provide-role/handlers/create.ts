@@ -7,13 +7,11 @@
 
 import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
-import { matchedData, validationResult } from 'express-validator';
 import {
-    OAuth2ProviderRole, PermissionID,
+    PermissionID,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
-import { runOauth2ProviderRoleValidation } from '../utils/validaiton';
+import { runOauth2ProviderRoleValidation } from '../utils';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 

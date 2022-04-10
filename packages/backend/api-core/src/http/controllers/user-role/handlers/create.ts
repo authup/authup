@@ -10,7 +10,7 @@ import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRoleEntity } from '../../../../domains';
-import { runUserRoleValidation } from '../utils/utils';
+import { runUserRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
 export async function createUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

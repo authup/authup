@@ -76,6 +76,8 @@ export async function runUserPermissionValidation(
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('user_id'));
         }
+
+        result.data.user_realm_id = result.meta.user.realm_id;
     }
 
     // ----------------------------------------------

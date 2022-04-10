@@ -27,7 +27,7 @@ export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: Expre
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.user_realm_id) &&
+        !isPermittedForResourceRealm(req.realmId, entity.user_realm_id) ||
         !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
     ) {
         throw new ForbiddenError();

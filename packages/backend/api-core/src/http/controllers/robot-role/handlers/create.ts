@@ -10,7 +10,7 @@ import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
-import { runRobotRoleValidation } from '../utils/validation';
+import { runRobotRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
 export async function createRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

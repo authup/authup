@@ -11,7 +11,7 @@ import {
     PermissionID, isPermittedForResourceRealm,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runOauth2ProviderRoleValidation } from '../utils/validaiton';
+import { runOauth2ProviderRoleValidation } from '../utils';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
@@ -35,7 +35,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id) ||
+        !isPermittedForResourceRealm(req.realmId, entity.provider_realm_id) ||
         !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
     ) {
         throw new ForbiddenError();

@@ -12,10 +12,8 @@ import { ExpressValidationResult, buildExpressValidationErrorMessage } from '../
 import { RoleEntity } from '../../../../domains';
 
 type ExpressValidationResultExtendedWithRole = ExpressValidationResult<{
-    [key: string]: any,
     role_id: Role['id']
 }, {
-    [key: string]: any,
     role?: RoleEntity
 }>;
 

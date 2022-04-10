@@ -17,7 +17,7 @@ import {
 } from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
 import { UserValidationResult } from '../type';
-import { extendExpressValidationResultWithRealm } from '../../realm/utils/extend';
+import { extendExpressValidationResultWithRealm } from '../../realm';
 import { CRUDOperation } from '../../../constants';
 
 export async function runUserValidation(
