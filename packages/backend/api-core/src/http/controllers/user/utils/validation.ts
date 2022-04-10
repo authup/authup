@@ -7,16 +7,28 @@
 
 import { check, validationResult } from 'express-validator';
 import {
-    PermissionID, User, isValidUserName,
+    PermissionID, isPermittedForResourceRealm, isValidUserName,
 } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
+import {
+    ExpressValidationError,
+    buildExpressValidationErrorMessage,
+    matchedValidationData,
+} from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
+import { UserValidationResult } from '../type';
+import { extendExpressValidationResultWithRealm } from '../../realm/utils/extend';
+import { CRUDOperation } from '../../../constants';
 
 export async function runUserValidation(
     req: ExpressRequest,
-    operation: 'create' | 'update',
-) : Promise<Partial<User>> {
+    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+) : Promise<UserValidationResult> {
+    const result : UserValidationResult = {
+        data: {},
+        meta: {},
+    };
+
     const nameChain = check('name')
         .exists()
         .notEmpty()
@@ -28,7 +40,7 @@ export async function runUserValidation(
 
             return isValid;
         });
-    if (operation === 'update') {
+    if (operation === CRUDOperation.UPDATE) {
         nameChain.optional();
     }
     await nameChain.run(req);
@@ -94,7 +106,7 @@ export async function runUserValidation(
             .optional()
             .run(req);
 
-        if (operation === 'create') {
+        if (operation === CRUDOperation.CREATE) {
             await check('realm_id')
                 .exists()
                 .notEmpty()
@@ -123,5 +135,23 @@ export async function runUserValidation(
         throw new ExpressValidationError(validation);
     }
 
-    return matchedValidationData(req, { includeOptionals: true });
+    result.data = matchedValidationData(req, { includeOptionals: true });
+
+    // ----------------------------------------------
+
+    await extendExpressValidationResultWithRealm(result);
+    if (result.meta.realm) {
+        if (!isPermittedForResourceRealm(req.realmId, result.meta.realm.id)) {
+            throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
+        }
+    }
+
+    if (
+        operation === CRUDOperation.CREATE &&
+        !result.data.realm_id
+    ) {
+        result.data.realm_id = req.realmId;
+    }
+
+    return result;
 }

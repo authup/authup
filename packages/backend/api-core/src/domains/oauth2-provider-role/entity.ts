@@ -15,9 +15,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { OAuth2Provider, OAuth2ProviderRole, Role } from '@authelion/common';
+import {
+    OAuth2Provider, OAuth2ProviderRole, Realm, Role,
+} from '@authelion/common';
 import { OAuth2ProviderEntity } from '../oauth2-provider';
 import { RoleEntity } from '../role';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_oauth2_provider_roles' })
 @Index(['provider_id', 'role_id'], { unique: true })
@@ -44,10 +47,24 @@ export class OAuth2ProviderRoleEntity implements OAuth2ProviderRole {
     @JoinColumn({ name: 'role_id' })
         role: Role;
 
+    @Column({ nullable: true })
+        role_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'role_realm_id' })
+        role_realm: Realm | null;
+
     @Column()
         provider_id: string;
 
     @ManyToOne(() => OAuth2ProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
         provider: OAuth2Provider;
+
+    @Column({ nullable: true })
+        provider_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'provider_realm_id' })
+        provider_realm: Realm | null;
 }

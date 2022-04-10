@@ -5,13 +5,14 @@ import { matchedData, validationResult } from 'express-validator';
 import { PermissionID, Realm, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../express-validation';
-import { runUserAttributeValidation } from './utils';
+import { runUserAttributeValidation } from '../utils/validation';
 import { RealmEntity, UserAttributeEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const result = await runUserAttributeValidation(req, 'create');
+    const result = await runUserAttributeValidation(req, CRUDOperation.UPDATE);
     if (!result) {
         return res.respondAccepted();
     }

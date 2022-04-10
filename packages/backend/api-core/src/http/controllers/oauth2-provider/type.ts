@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type Oauth2ProviderControllerOptions = {
-    selfUrl: string,
-    selfCallbackPath?: string,
+import { OAuth2Provider } from '@authelion/common';
+import { ExpressValidationResult } from '../../express-validation';
+import { RealmEntity } from '../../../domains';
 
-    writableDirectoryPath: string,
-    maxAge?: number,
-
-    redirectUrl: string
-};
+export type OAuth2ProviderValidationResult = ExpressValidationResult<OAuth2Provider, {
+    realm?: RealmEntity
+}>;

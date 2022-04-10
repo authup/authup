@@ -7,12 +7,11 @@
 
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { validationResult } from 'express-validator';
-import { OAuth2Provider, PermissionID } from '@authelion/common';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { runOauth2ProviderValidation } from './utils';
+import { runOauth2ProviderValidation } from '../utils';
 import { OAuth2ProviderEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -21,15 +20,8 @@ export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res:
         throw new ForbiddenError();
     }
 
-    await runOauth2ProviderValidation(req, 'update');
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data : Partial<OAuth2Provider> = matchedValidationData(req, { includeOptionals: true });
-    if (!data) {
+    const result = await runOauth2ProviderValidation(req, CRUDOperation.UPDATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
@@ -40,7 +32,11 @@ export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res:
         throw new NotFoundError();
     }
 
-    entity = repository.merge(entity, data);
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError();
+    }
+
+    entity = repository.merge(entity, result.data);
 
     await repository.save(entity);
 

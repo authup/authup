@@ -6,20 +6,22 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { getCustomRepository } from 'typeorm';
-import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
-import { RoleAttributeValidationResult } from '../type';
+import { UserAttributeValidationResult } from '../type';
 import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { RoleRepository } from '../../../../domains';
+import { extendExpressValidationResultWithUser } from '../../user';
+import { CRUDOperation } from '../../../constants';
 
-export async function runRoleAttributeValidation(req: ExpressRequest, operation: 'create' | 'update') : Promise<RoleAttributeValidationResult> {
-    const result : RoleAttributeValidationResult = {
+export async function runUserAttributeValidation(
+    req: ExpressRequest,
+    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+) : Promise<UserAttributeValidationResult> {
+    const result : UserAttributeValidationResult = {
         data: {},
         meta: {},
     };
 
-    if (operation === 'create') {
+    if (operation === CRUDOperation.CREATE) {
         await check('key')
             .exists()
             .notEmpty()
@@ -27,7 +29,7 @@ export async function runRoleAttributeValidation(req: ExpressRequest, operation:
             .isLength({ min: 3, max: 255 })
             .run(req);
 
-        await check('role_id')
+        await check('user_id')
             .exists()
             .isUUID()
             .optional();
@@ -50,22 +52,15 @@ export async function runRoleAttributeValidation(req: ExpressRequest, operation:
 
     result.data = matchedValidationData(req, { includeOptionals: true });
 
-    if (operation === 'create') {
-        if (result.data.role_id) {
-            const roleRepository = getCustomRepository(RoleRepository);
-            const role = await roleRepository.findOne(result.data.role_id);
+    if (operation === CRUDOperation.CREATE) {
+        await extendExpressValidationResultWithUser(result);
 
-            if (typeof role === 'undefined') {
-                throw new BadRequestError('The referenced user was not found');
-            }
-
-            result.data.realm_id = role.realm_id;
-            result.data.role_id = role.id;
-
-            result.meta.role = role;
+        if (result.meta.user) {
+            result.data.realm_id = result.meta.user.realm_id;
+            result.data.user_id = result.meta.user.id;
         } else {
             result.data.realm_id = req.realmId;
-            result.data.role_id = req.userId;
+            result.data.user_id = req.userId;
         }
     }
 

@@ -7,7 +7,7 @@
 
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { OAuth2Provider, PermissionID } from '@authelion/common';
+import { OAuth2Provider, PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity } from '../../../../domains';
 
@@ -26,6 +26,10 @@ export async function deleteOauth2ProviderRouteHandler(
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
+    }
+
+    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;

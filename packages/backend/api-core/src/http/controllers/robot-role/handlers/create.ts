@@ -7,36 +7,21 @@
 
 import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { check, matchedData, validationResult } from 'express-validator';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
 import { RobotRoleEntity } from '../../../../domains';
+import { runRobotRoleValidation } from '../utils/validation';
+import { CRUDOperation } from '../../../constants';
 
 export async function createRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    await check('robot_id')
-        .exists()
-        .isUUID()
-        .run(req);
-
-    await check('role_id')
-        .exists()
-        .isUUID()
-        .run(req);
-
     if (!req.ability.hasPermission(PermissionID.ROBOT_ROLE_ADD)) {
         throw new NotFoundError();
     }
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
+    const result = await runRobotRoleValidation(req, CRUDOperation.CREATE);
 
     const repository = getRepository(RobotRoleEntity);
-    let entity = repository.create(data);
+    let entity = repository.create(result.data);
 
     entity = await repository.save(entity);
 

@@ -91,11 +91,15 @@ export class RobotRepository extends Repository<RobotEntity> {
         const entity = this.create(data);
 
         const secret = entity.secret || createNanoID(undefined, 64);
-        entity.secret = await hash(secret);
+        entity.secret = await this.hashSecret(secret);
 
         return {
             entity,
             secret,
         };
+    }
+
+    async hashSecret(secret: string) : Promise<string> {
+        return hash(secret);
     }
 }

@@ -14,9 +14,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Permission, Robot, RobotPermission } from '@authelion/common';
+import {
+    Permission, Realm, Robot, RobotPermission,
+} from '@authelion/common';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_robot_permissions' })
 @Index(['permission_id', 'robot_id'], { unique: true })
@@ -47,6 +50,13 @@ export class RobotPermissionEntity implements RobotPermission {
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'robot_id' })
         robot: Robot;
+
+    @Column({ nullable: true })
+        robot_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'robot_realm_id' })
+        robot_realm: Realm | null;
 
     @Column({ type: 'varchar' })
         permission_id: string;

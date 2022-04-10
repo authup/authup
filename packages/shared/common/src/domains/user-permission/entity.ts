@@ -7,6 +7,7 @@
 
 import { User } from '../user';
 import { PermissionRelation } from '../permission';
+import { Realm } from '../realm';
 
 export interface UserPermission extends PermissionRelation {
     id: string;
@@ -22,4 +23,8 @@ export interface UserPermission extends PermissionRelation {
     user_id: User['id'];
 
     user: User;
+
+    user_realm_id: Realm['id'] | null;
+
+    user_realm: Realm | null;
 }

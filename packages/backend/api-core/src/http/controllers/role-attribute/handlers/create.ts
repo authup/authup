@@ -12,11 +12,12 @@ import {
     isPermittedForResourceRealm,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runRoleAttributeValidation } from './utils';
+import { runRoleAttributeValidation } from '../utils/validation';
 import { RoleAttributeEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const result = await runRoleAttributeValidation(req, 'create');
+    const result = await runRoleAttributeValidation(req, CRUDOperation.CREATE);
     if (!result) {
         return res.respondAccepted();
     }

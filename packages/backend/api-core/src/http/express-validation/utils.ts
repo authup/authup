@@ -11,7 +11,9 @@ import { ExpressRequest } from '../type';
 
 export function buildExpressValidationErrorMessage<
     T extends Record<string, any> = Record<string, any>,
-    >(names: (keyof T)[]) {
+    >(name: keyof T | (keyof T)[]) {
+    const names = Array.isArray(name) ? name : [name];
+
     if (names.length > 1) {
         return `The parameters ${names.join(', ')} is invalid.`;
     }

@@ -7,6 +7,7 @@
 
 import { OAuth2Provider } from '../oauth2-provider';
 import { Role } from '../role';
+import { Realm } from '../realm';
 
 export interface OAuth2ProviderRole {
     id: string;
@@ -23,7 +24,15 @@ export interface OAuth2ProviderRole {
 
     role: Role;
 
+    role_realm_id: Realm['id'] | null;
+
+    role_realm: Realm | null;
+
     provider_id: string;
 
     provider: OAuth2Provider;
+
+    provider_realm_id: Realm['id'] | null;
+
+    provider_realm: Realm | null;
 }

@@ -5,8 +5,9 @@ import { matchedData, validationResult } from 'express-validator';
 import { PermissionID, Realm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../express-validation';
-import { runRealmValidation } from './utils';
+import { runRealmValidation } from '../utils/validation';
 import { RealmEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -15,7 +16,7 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
-    await runRealmValidation(req, 'update');
+    await runRealmValidation(req, CRUDOperation.UPDATE);
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {

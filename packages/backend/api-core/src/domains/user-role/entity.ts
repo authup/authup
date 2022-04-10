@@ -15,9 +15,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Role, User, UserRole } from '@authelion/common';
+import {
+    Realm, Role, User, UserRole,
+} from '@authelion/common';
 import { RoleEntity } from '../role';
 import { UserEntity } from '../user';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_user_roles' })
 @Index(['role_id', 'user_id'], { unique: true })
@@ -34,12 +37,26 @@ export class UserRoleEntity implements UserRole {
     @JoinColumn({ name: 'role_id' })
         role: Role;
 
+    @Column({ nullable: true })
+        role_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'role_realm_id' })
+        role_realm: Realm | null;
+
     @Column()
         user_id: string;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
         user: User;
+
+    @Column({ nullable: true })
+        user_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'user_realm_id' })
+        user_realm: Realm | null;
 
     // ------------------------------------------------------------------
 

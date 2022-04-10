@@ -1,20 +1,27 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, Robot } from '@authelion/common';
-import { hash } from '@authelion/api-utils';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runClientValidation } from './utils';
-import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
+import { runClientValidation } from '../utils/validation';
+import { RobotRepository, useRobotEventEmitter } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const data = await runClientValidation(req, 'update');
-    if (!data) {
+    const result = await runClientValidation(req, CRUDOperation.UPDATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
-    const repository = getRepository<Robot>(RobotEntity);
+    const repository = getCustomRepository(RobotRepository);
     let entity = await repository.findOne(id);
 
     if (typeof entity === 'undefined') {
@@ -34,10 +41,10 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         }
     }
 
-    entity = repository.merge(entity, data);
+    entity = repository.merge(entity, result.data);
 
-    if (data.secret) {
-        entity.secret = await hash(data.secret);
+    if (result.data.secret) {
+        entity.secret = await repository.hashSecret(result.data.secret);
     }
 
     entity = await repository.save(entity);
@@ -47,14 +54,14 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
             ...entity,
         });
 
-    if (data.secret) {
+    if (result.data.secret) {
         useRobotEventEmitter()
             .emit('credentials', {
                 ...entity,
-                secret: data.secret,
+                secret: result.data.secret,
             });
 
-        entity.secret = data.secret; // expose secret one time ;)
+        entity.secret = result.data.secret;
     }
 
     return res.respondAccepted({

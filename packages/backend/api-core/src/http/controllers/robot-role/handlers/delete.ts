@@ -6,8 +6,8 @@
  */
 
 import { getRepository } from 'typeorm';
-import { NotFoundError } from '@typescript-error/http';
-import { PermissionID, RobotRole } from '@authelion/common';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { PermissionID, RobotRole, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
 
@@ -15,15 +15,19 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
     const { id } = req.params;
 
     if (!req.ability.hasPermission(PermissionID.ROBOT_ROLE_DROP)) {
-        throw new NotFoundError();
+        throw new ForbiddenError();
     }
 
     const repository = getRepository(RobotRoleEntity);
 
-    const entity : RobotRole | undefined = await repository.findOne(id);
+    const entity = await repository.findOne(id);
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
+    }
+
+    if (!isPermittedForResourceRealm(req.realmId, entity.robot_realm_id)) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;

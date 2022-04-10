@@ -14,9 +14,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Permission, User, UserPermission } from '@authelion/common';
+import {
+    Permission, Realm, User, UserPermission,
+} from '@authelion/common';
 import { UserEntity } from '../user';
 import { PermissionEntity } from '../permission';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_user_permissions' })
 @Index(['permission_id', 'user_id'], { unique: true })
@@ -55,6 +58,13 @@ export class UserPermissionEntity implements UserPermission {
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
         user: User;
+
+    @Column({ nullable: true })
+        user_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'user_realm_id' })
+        user_realm: Realm | null;
 
     @Column({ type: 'varchar' })
         permission_id: Permission['id'];

@@ -8,15 +8,16 @@
 import { EntityRepository, In, Repository } from 'typeorm';
 import {
     PermissionMeta,
-    Role, User, UserRole,
-    buildPermissionMetaFromRelation,
+    Robot, Role, User,
+    UserRole, buildPermissionMetaFromRelation, createNanoID,
 } from '@authelion/common';
 
-import { compare } from '@authelion/api-utils';
+import { compare, hash } from '@authelion/api-utils';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
+import { RobotEntity } from '../robot';
 
 @EntityRepository(UserEntity)
 export class UserRepository extends Repository<UserEntity> {
@@ -116,5 +117,24 @@ export class UserRepository extends Repository<UserEntity> {
         }
 
         return entity;
+    }
+
+    async createWithPassword(data: Partial<User>) : Promise<{
+        entity: UserEntity,
+        password: string
+    }> {
+        const entity = this.create(data);
+
+        const password = entity.password || createNanoID(undefined, 64);
+        entity.password = await this.hashPassword(password);
+
+        return {
+            entity,
+            password,
+        };
+    }
+
+    async hashPassword(password: string) : Promise<string> {
+        return hash(password);
     }
 }

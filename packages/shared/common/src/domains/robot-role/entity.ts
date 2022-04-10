@@ -7,6 +7,7 @@
 
 import { Role } from '../role';
 import { Robot } from '../robot';
+import { Realm } from '../realm';
 
 export interface RobotRole {
     id: string;
@@ -19,7 +20,15 @@ export interface RobotRole {
 
     role: Role;
 
+    role_realm_id: Realm['id'] | null;
+
+    role_realm: Realm | null;
+
     robot: Robot;
+
+    robot_realm_id: Realm['id'] | null;
+
+    robot_realm: Realm | null;
 
     // ------------------------------------------------------------------
 

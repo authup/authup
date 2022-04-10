@@ -6,19 +6,28 @@
  */
 import { Role } from '../role';
 import { User } from '../user';
+import { Realm } from '../realm';
 
 export interface UserRole {
     id: string;
 
-    user_id: string;
-
-    role_id: string;
-
     // ------------------------------------------------------------------
+
+    role_id: Role['id'];
 
     role: Role;
 
+    role_realm_id: Realm['id'] | null;
+
+    role_realm: Realm | null;
+
+    user_id: User['id'];
+
     user: User;
+
+    user_realm_id: Realm['id'] | null;
+
+    user_realm: Realm | null;
 
     // ------------------------------------------------------------------
 

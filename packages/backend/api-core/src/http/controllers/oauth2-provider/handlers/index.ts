@@ -10,4 +10,3 @@ export * from './custom';
 export * from './delete';
 export * from './read';
 export * from './update';
-export * from './type';

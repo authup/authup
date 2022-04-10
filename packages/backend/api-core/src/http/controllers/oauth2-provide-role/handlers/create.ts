@@ -13,29 +13,23 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../express-validation';
-import { runOauth2ProviderRoleValidation } from './utils';
+import { runOauth2ProviderRoleValidation } from '../utils/validaiton';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 
-    await runOauth2ProviderRoleValidation(req, 'create');
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data : Partial<OAuth2ProviderRole> = matchedData(req, { includeOptionals: true });
-    if (!data) {
+    const result = await runOauth2ProviderRoleValidation(req, CRUDOperation.CREATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
     const repository = getRepository(OAuth2ProviderRoleEntity);
 
-    const entity = repository.create(data);
+    const entity = repository.create(result.data);
 
     await repository.save(entity);
 

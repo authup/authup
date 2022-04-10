@@ -7,11 +7,11 @@
 
 import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, Realm, isPermittedForResourceRealm } from '@authelion/common';
-import { hash } from '@authelion/api-utils';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runUserValidation } from './utils';
+import { runUserValidation } from '../utils/validation';
 import { UserRepository } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -23,15 +23,15 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError('You are not authorized to modify a user.');
     }
 
-    const data = await runUserValidation(req, 'update');
-    if (!data) {
+    const result = await runUserValidation(req, CRUDOperation.UPDATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
     const repository = getCustomRepository<UserRepository>(UserRepository);
 
-    if (typeof data.password !== 'undefined') {
-        data.password = await hash(data.password);
+    if (result.data.password) {
+        result.data.password = await repository.hashPassword(result.data.password);
     }
 
     let entity = await repository.findOne(id);
@@ -43,26 +43,20 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
     }
 
-    if (typeof data.realm_id === 'string') {
-        if (!isPermittedForResourceRealm(req.realmId, data.realm_id)) {
-            throw new ForbiddenError(`You are not allowed to move users to the realm ${data.realm_id}`);
-        }
-    }
-
     if (
-        typeof data.name === 'string' &&
-        data.name !== entity.name
+        result.data.name &&
+        result.data.name !== entity.name
     ) {
-        if (typeof data.name_locked !== 'undefined') {
-            entity.name_locked = data.name_locked;
+        if (result.data.name_locked) {
+            entity.name_locked = result.data.name_locked;
         }
 
         if (entity.name_locked) {
-            delete data.name;
+            delete result.data.name;
         }
     }
 
-    entity = repository.merge(entity, data);
+    entity = repository.merge(entity, result.data);
 
     await repository.save(entity);
 

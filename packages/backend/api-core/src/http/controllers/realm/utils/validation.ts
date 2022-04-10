@@ -9,9 +9,13 @@ import { check } from 'express-validator';
 import { isValidRealmName } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
+import { CRUDOperation } from '../../../constants';
 
-export async function runRealmValidation(req: ExpressRequest, operation: 'create' | 'update') {
-    if (operation === 'create') {
+export async function runRealmValidation(
+    req: ExpressRequest,
+    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+) {
+    if (operation === CRUDOperation.CREATE) {
         await check('id')
             .exists()
             .notEmpty()
@@ -34,7 +38,7 @@ export async function runRealmValidation(req: ExpressRequest, operation: 'create
         .isString()
         .isLength({ min: 3, max: 128 });
 
-    if (operation === 'update') nameChain.optional({ nullable: true });
+    if (operation === CRUDOperation.UPDATE) nameChain.optional({ nullable: true });
 
     await nameChain.run(req);
 

@@ -11,27 +11,21 @@ import {
     PermissionID,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runRoleValidation } from './utils';
+import { runRoleValidation } from '../utils/validaiton';
 import { RoleEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
         throw new ForbiddenError();
     }
 
-    const data = await runRoleValidation(req, 'create');
-
-    // ----------------------------------------------
-
-    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_ADD);
-    if (ownedPermission.target) {
-        data.target = ownedPermission.target;
-    }
+    const result = await runRoleValidation(req, CRUDOperation.CREATE);
 
     // ----------------------------------------------
 
     const roleRepository = getRepository(RoleEntity);
-    const role = roleRepository.create(data);
+    const role = roleRepository.create(result.data);
 
     await roleRepository.save(role);
 

@@ -7,6 +7,7 @@
 
 import { PermissionRelation } from '../permission';
 import { Robot } from '../robot';
+import { Realm } from '../realm';
 
 export interface RobotPermission extends PermissionRelation {
     id: string;
@@ -22,4 +23,8 @@ export interface RobotPermission extends PermissionRelation {
     robot_id: string;
 
     robot: Robot;
+
+    robot_realm_id: Realm['id'] | null;
+
+    robot_realm: Realm | null;
 }

@@ -6,8 +6,8 @@
  */
 
 import { getRepository } from 'typeorm';
-import { NotFoundError } from '@typescript-error/http';
-import { PermissionID, UserRole } from '@authelion/common';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRoleEntity } from '../../../../domains';
 
@@ -15,15 +15,22 @@ export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: Expre
     const { id } = req.params;
 
     if (!req.ability.hasPermission(PermissionID.USER_ROLE_DROP)) {
-        throw new NotFoundError();
+        throw new ForbiddenError();
     }
 
     const repository = getRepository(UserRoleEntity);
 
-    const entity : UserRole | undefined = await repository.findOne(id);
+    const entity = await repository.findOne(id);
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
+    }
+
+    if (
+        !isPermittedForResourceRealm(req.realmId, entity.user_realm_id) &&
+        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+    ) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;

@@ -14,6 +14,8 @@ import { ExpressValidationError } from '../../../express-validation';
 import {
     PermissionEntity, RolePermissionEntity, RoleRepository, UserRepository,
 } from '../../../../domains';
+import { runRolePermissionValidation } from '../utils/validation';
+import { CRUDOperation } from '../../../constants';
 
 /**
  * Add an permission by id to a specific user.
@@ -26,72 +28,14 @@ export async function createRolePermissionRouteHandler(req: ExpressRequest, res:
         throw new ForbiddenError();
     }
 
-    await check('role_id')
-        .exists()
-        .isUUID()
-        .run(req);
-
-    await check('permission_id')
-        .exists()
-        .notEmpty()
-        .isString()
-        .run(req);
-
-    await check('target')
-        .exists()
-        .isString()
-        .isLength({ min: 3, max: 16 })
-        .optional({ nullable: true })
-        .run(req);
-
     // ----------------------------------------------
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data : Partial<RolePermission> = matchedData(req, {
-        includeOptionals: false,
-    });
-
-    // ----------------------------------------------
-
-    const roleRepository = getCustomRepository(RoleRepository);
-    const role = await roleRepository.findOne(data.role_id);
-
-    if (typeof role === 'undefined') {
-        throw new BadRequestError('The referenced role was not found...');
-    }
-
-    if (!isPermittedForResourceRealm(req.realmId, role.realm_id)) {
-        throw new BadRequestError('You are not permitted to add role-permissions for that realm');
-    }
-
-    // ----------------------------------------------
-
-    const permissionRepository = getRepository(PermissionEntity);
-    const permission = await permissionRepository.findOne(data.permission_id);
-
-    if (typeof permission === 'undefined') {
-        throw new BadRequestError('The referenced permission was not found...');
-    }
-
-    if (permission.target) {
-        data.target = permission.target;
-    }
-
-    // ----------------------------------------------
-
-    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_PERMISSION_ADD);
-    if (ownedPermission.target) {
-        data.target = ownedPermission.target;
-    }
+    const result = await runRolePermissionValidation(req, CRUDOperation.CREATE);
 
     // ----------------------------------------------
 
     const repository = getRepository(RolePermissionEntity);
-    let rolePermission = repository.create(data);
+    let rolePermission = repository.create(result.data);
 
     rolePermission = await repository.save(rolePermission);
 

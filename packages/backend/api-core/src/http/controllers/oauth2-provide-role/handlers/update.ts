@@ -7,12 +7,13 @@
 
 import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { matchedData, validationResult } from 'express-validator';
-import { OAuth2Provider, OAuth2ProviderRole, PermissionID } from '@authelion/common';
+import {
+    PermissionID, isPermittedForResourceRealm,
+} from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
-import { runOauth2ProviderRoleValidation } from './utils';
+import { runOauth2ProviderRoleValidation } from '../utils/validaiton';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -21,30 +22,30 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         throw new ForbiddenError();
     }
 
-    await runOauth2ProviderRoleValidation(req, 'update');
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data : Partial<OAuth2ProviderRole> = matchedData(req, { includeOptionals: true });
-    if (!data) {
+    const result = await runOauth2ProviderRoleValidation(req, CRUDOperation.UPDATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
     const repository = getRepository(OAuth2ProviderRoleEntity);
 
-    let provider = await repository.findOne(id);
-    if (typeof provider === 'undefined') {
+    let entity = await repository.findOne(id);
+    if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }
 
-    provider = repository.merge(provider, data);
+    if (
+        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id) ||
+        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+    ) {
+        throw new ForbiddenError();
+    }
 
-    await repository.save(provider);
+    entity = repository.merge(entity, result.data);
+
+    await repository.save(entity);
 
     return res.respond({
-        data: provider,
+        data: entity,
     });
 }

@@ -6,37 +6,22 @@
  */
 
 import { getRepository } from 'typeorm';
-import { NotFoundError } from '@typescript-error/http';
-import { check, matchedData, validationResult } from 'express-validator';
-import { PermissionID, UserRole } from '@authelion/common';
+import { ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
 import { UserRoleEntity } from '../../../../domains';
+import { runUserRoleValidation } from '../utils/utils';
+import { CRUDOperation } from '../../../constants';
 
 export async function createUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    await check('user_id')
-        .exists()
-        .isUUID()
-        .run(req);
-
-    await check('role_id')
-        .exists()
-        .isUUID()
-        .run(req);
-
     if (!req.ability.hasPermission(PermissionID.USER_ROLE_ADD)) {
-        throw new NotFoundError();
+        throw new ForbiddenError();
     }
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
+    const result = await runUserRoleValidation(req, CRUDOperation.CREATE);
 
     const repository = getRepository(UserRoleEntity);
-    let entity = repository.create(data);
+    let entity = repository.create(result.data);
 
     entity = await repository.save(entity);
 

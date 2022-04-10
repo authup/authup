@@ -13,15 +13,16 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../express-validation';
-import { runRealmValidation } from './utils';
+import { runRealmValidation } from '../utils/validation';
 import { RealmEntity } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.REALM_ADD)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
-    await runRealmValidation(req, 'create');
+    await runRealmValidation(req, CRUDOperation.CREATE);
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {

@@ -5,40 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository, getRepository } from 'typeorm';
-import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { hash } from '@authelion/api-utils';
+import { getCustomRepository } from 'typeorm';
+import { ForbiddenError } from '@typescript-error/http';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runUserValidation } from './utils';
-import { RealmEntity, UserRepository } from '../../../../domains';
+import { runUserValidation } from '../utils/validation';
+import { UserRepository } from '../../../../domains';
+import { CRUDOperation } from '../../../constants';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.USER_ADD)) {
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
-    const data = await runUserValidation(req, 'create');
+    const result = await runUserValidation(req, CRUDOperation.CREATE);
 
     const repository = getCustomRepository<UserRepository>(UserRepository);
-    const entity = await repository.create(data);
-
-    const realmRepository = getRepository(RealmEntity);
-
-    entity.realm_id = entity.realm_id || req.realmId;
-    const realm = await realmRepository.findOne(entity.realm_id);
-
-    if (typeof realm === 'undefined') {
-        throw new NotFoundError('The referenced realm could not be found.');
-    }
-
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
-        throw new ForbiddenError(`You are not allowed to add users to the realm ${entity.realm_id}`);
-    }
-
-    if (entity.password) {
-        entity.password = await hash(entity.password);
-    }
+    const { entity } = await repository.createWithPassword(result.data);
 
     await repository.save(entity);
 
