@@ -29,7 +29,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
         const repository = this.manager.getRepository(RolePermissionEntity);
 
-        const entities = await repository.find({
+        const entities = await repository.findBy({
             role_id: In(roleId),
         });
 

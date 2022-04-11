@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
 import { runUserPermissionValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 /**
  * Add an permission by id to a specific user.
@@ -30,7 +30,8 @@ export async function createUserPermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    const repository = getRepository(UserPermissionEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserPermissionEntity);
     let rolePermission = repository.create(result.data);
 
     rolePermission = await repository.save(rolePermission);

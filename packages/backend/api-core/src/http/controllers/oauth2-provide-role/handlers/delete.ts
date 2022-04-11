@@ -1,8 +1,15 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
     req: ExpressRequest,
@@ -14,8 +21,9 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(OAuth2ProviderRoleEntity);
-    const entity = await repository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
+    const entity = await repository.findOneBy({ id });
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }

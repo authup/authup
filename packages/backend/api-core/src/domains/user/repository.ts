@@ -17,7 +17,6 @@ import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
-import { RobotEntity } from '../robot';
 
 @EntityRepository(UserEntity)
 export class UserRepository extends Repository<UserEntity> {
@@ -59,7 +58,7 @@ export class UserRepository extends Repository<UserEntity> {
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
-            .find({
+            .findBy({
                 user_id: userId,
             });
 
@@ -78,7 +77,7 @@ export class UserRepository extends Repository<UserEntity> {
     async getSelfOwnedPermissions(userId: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
-        const entities = await repository.find({
+        const entities = await repository.findBy({
             user_id: userId,
         });
 

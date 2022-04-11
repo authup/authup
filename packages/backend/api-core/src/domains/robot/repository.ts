@@ -26,7 +26,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)
-            .find({
+            .findBy({
                 robot_id: id,
             });
 
@@ -45,7 +45,7 @@ export class RobotRepository extends Repository<RobotEntity> {
     async getSelfOwnedPermissions(id: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
-        const entities = await repository.find({
+        const entities = await repository.findBy({
             robot_id: id,
         });
 

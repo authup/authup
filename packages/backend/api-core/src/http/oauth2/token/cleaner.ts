@@ -5,23 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LessThan, getRepository } from 'typeorm';
+import { LessThan } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { useDataSource } from '../../../database';
 
 export async function removeExpiredOAuth2Tokens() {
-    const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
-    const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
+    const dataSource = await useDataSource();
+    const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
+    const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
     const date = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     await accessTokenRepository
         .delete({
-            expires: LessThan(date),
+            expires: LessThan(date) as unknown as Date,
         });
 
     await refreshTokenRepository
         .delete({
-            expires: LessThan(date),
+            expires: LessThan(date) as unknown as Date,
         });
 }

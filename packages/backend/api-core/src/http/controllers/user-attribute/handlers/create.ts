@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runUserAttributeValidation } from '../utils/validation';
+import { runUserAttributeValidation } from '../utils';
 import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const result = await runUserAttributeValidation(req, CRUDOperation.CREATE);
@@ -33,7 +33,8 @@ export async function createUserAttributeRouteHandler(req: ExpressRequest, res: 
         }
     }
 
-    const repository = getRepository(UserAttributeEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserAttributeEntity);
 
     const entity = repository.create(result.data);
 

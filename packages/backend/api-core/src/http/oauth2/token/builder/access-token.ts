@@ -16,10 +16,10 @@ import {
     Robot,
     User, hasOwnProperty,
 } from '@authelion/common';
-import { getRepository } from 'typeorm';
 import { signToken } from '@authelion/api-utils';
 import { OAuth2AccessTokenEntity } from '../../../../domains/oauth2-access-token';
 import { AccessTokenBuilderContext } from './type';
+import { useDataSource } from '../../../../database';
 
 export class Oauth2AccessTokenBuilder {
     static MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS = 10;
@@ -99,7 +99,8 @@ export class Oauth2AccessTokenBuilder {
     }
 
     public async create(data?: Partial<OAuth2AccessTokenEntity>) : Promise<OAuth2AccessTokenEntity> {
-        const repository = getRepository(OAuth2AccessTokenEntity);
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
 
         const scope : string = this.scope.join(' ');
 

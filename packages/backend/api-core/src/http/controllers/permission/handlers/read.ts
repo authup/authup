@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { Permission } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { PermissionEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(PermissionEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(PermissionEntity);
     const query = repository.createQueryBuilder('permission');
 
     applyFilters(query, filter, {
@@ -40,7 +40,8 @@ export async function getManyPermissionRouteHandler(req: ExpressRequest, res: Ex
 export async function getOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(PermissionEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(PermissionEntity);
     const result = await repository.createQueryBuilder('permission')
         .where('id = :id', { id })
         .getOne();

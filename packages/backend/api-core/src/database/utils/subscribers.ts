@@ -5,18 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ConnectionOptions } from 'typeorm';
+import { DataSourceOptions } from 'typeorm';
 
-export function setSubscribersForConnectionOptions<T extends ConnectionOptions>(
-    connectionOptions: T,
+export function setSubscribersForConnectionOptions<T extends DataSourceOptions>(
+    options: T,
     merge?: boolean,
 ) : T {
-    connectionOptions = {
-        ...connectionOptions,
+    options = {
+        ...options,
         subscribers: [
-            ...(merge && connectionOptions.subscribers ? connectionOptions.subscribers : []),
+            ...(merge && options.subscribers ? options.subscribers : []) as string[],
         ],
     };
 
-    return connectionOptions;
+    return options;
 }

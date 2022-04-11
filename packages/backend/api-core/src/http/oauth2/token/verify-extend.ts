@@ -13,13 +13,13 @@ import {
     TokenVerificationPayload,
     User,
 } from '@authelion/common';
-import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { useRedisClient } from '../../../utils';
 import {
     RobotEntity, RobotRepository, UserEntity, UserRepository,
 } from '../../../domains';
 import { CachePrefix } from '../../../config/constants';
+import { useDataSource } from '../../../database';
 
 /**
  *
@@ -58,9 +58,11 @@ export async function extendOAuth2TokenVerification(
         );
     }
 
+    const dataSource = await useDataSource();
+
     switch (data.payload.sub_kind) {
         case OAuth2TokenSubKind.ROBOT: {
-            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+            const robotRepository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
 
             let entity : RobotEntity | undefined;
             if (cache) {
@@ -68,7 +70,7 @@ export async function extendOAuth2TokenVerification(
             }
 
             if (!entity) {
-                entity = await robotRepository.findOne(data.payload.sub);
+                entity = await robotRepository.findOneBy({ id: data.payload.sub });
 
                 if (typeof entity === 'undefined') {
                     throw new NotFoundError();
@@ -91,7 +93,7 @@ export async function extendOAuth2TokenVerification(
 
             if (!permissions) {
                 if (entity.user_id) {
-                    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+                    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
                     permissions = await userRepository.getOwnedPermissions(entity.user_id);
                 } else {
                     permissions = await robotRepository.getOwnedPermissions(entity.id);
@@ -110,7 +112,7 @@ export async function extendOAuth2TokenVerification(
             break;
         }
         case OAuth2TokenSubKind.USER: {
-            const userRepository = getCustomRepository<UserRepository>(UserRepository);
+            const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
 
             let entity : UserEntity | undefined;
             if (cache) {

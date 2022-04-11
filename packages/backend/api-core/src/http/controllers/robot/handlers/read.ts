@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
@@ -15,13 +14,15 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
         filter, fields, page, include, sort,
     } = req.query;
 
-    const repository = getRepository(RobotEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
 
     applyFilters(query, filter, {
@@ -83,7 +84,8 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     const { fields, include } = req.query;
 
-    const repository = getRepository(RobotEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot')
         .where('robot.id = :id', { id });
 

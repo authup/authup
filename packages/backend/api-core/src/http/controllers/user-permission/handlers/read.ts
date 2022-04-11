@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 /**
  * Receive user permissions of a specific user.
@@ -20,7 +20,8 @@ import { UserPermissionEntity } from '../../../../domains';
 export async function getManyUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const robotPermissionRepository = getRepository(UserPermissionEntity);
+    const dataSource = await useDataSource();
+    const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
     const query = robotPermissionRepository.createQueryBuilder('userPermission');
 
     applyFilters(query, filter, {
@@ -54,8 +55,9 @@ export async function getManyUserPermissionRouteHandler(req: ExpressRequest, res
 export async function getOneUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const robotPermissionRepository = getRepository(UserPermissionEntity);
-    const entity = await robotPermissionRepository.findOne(id);
+    const dataSource = await useDataSource();
+    const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
+    const entity = await robotPermissionRepository.findOneBy({ id });
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

@@ -6,11 +6,11 @@
  */
 
 import { URL } from 'url';
-import { createConnection } from 'typeorm';
+import { DataSource, createConnection } from 'typeorm';
 import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
-import { buildDatabaseConnectionOptions } from '../database';
+import { buildDataSourceOptions, setDataSource } from '../database';
 import { buildTokenAggregator } from '../aggregators';
 import { useConfig } from '../config';
 
@@ -48,11 +48,16 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
-    const connection = await createConnection(connectionOptions);
+    const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+    const dataSource = new DataSource(options);
+
+    await dataSource.initialize();
+
     if (context.config.env === 'development') {
-        await connection.synchronize();
+        await dataSource.synchronize();
     }
+
+    setDataSource(dataSource);
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');

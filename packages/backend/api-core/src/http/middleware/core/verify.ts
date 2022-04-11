@@ -19,13 +19,13 @@ import {
     BearerAuthorizationHeader,
 } from '@trapi/client';
 import { Client } from 'redis-extension';
-import { getCustomRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
 import {
     RobotEntity, RobotRepository, UserEntity, UserRepository,
 } from '../../../domains';
+import { useDataSource } from '../../../database';
 
 type AuthorizationHeaderVerifyOptions = {
     writableDirectoryPath: string,
@@ -80,13 +80,15 @@ async function verifyBasicAuthorizationHeader(
 ) {
     let permissions : PermissionMeta[] = [];
 
+    const dataSource = await useDataSource();
+
     if (
         process.env.NODE_ENV === 'test' &&
         header.username === 'admin' &&
         header.password === 'start123'
     ) {
-        const userRepository = getCustomRepository<UserRepository>(UserRepository);
-        const entity = await userRepository.findOne({
+        const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+        const entity = await userRepository.findOneBy({
             name: 'admin',
         });
 
@@ -104,7 +106,7 @@ async function verifyBasicAuthorizationHeader(
         return;
     }
 
-    const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+    const robotRepository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!

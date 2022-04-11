@@ -5,19 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleAttributeEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function deleteRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(RoleAttributeEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleAttributeEntity);
 
-    const entity = await repository.findOne(id);
+    const entity = await repository.findOneBy({ id });
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

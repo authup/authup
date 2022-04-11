@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
@@ -23,6 +22,7 @@ import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../d
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
 import { ControllerOptions } from '../../type';
+import { useDataSource } from '../../../../database';
 
 export async function authorizeURLOauth2ProviderRouteHandler(
     req: ExpressRequest,
@@ -31,7 +31,8 @@ export async function authorizeURLOauth2ProviderRouteHandler(
 ) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2ProviderEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderEntity);
     const provider = await repository.createQueryBuilder('provider')
         .leftJoinAndSelect('provider.realm', 'realm')
         .where('provider.id = :id', { id })
@@ -61,7 +62,8 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const { id } = req.params;
     const { code, state } = req.query;
 
-    const repository = getRepository(OAuth2ProviderEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderEntity);
     const provider = await repository.createQueryBuilder('provider')
         .addSelect('provider.client_secret')
         .leftJoinAndSelect('provider.realm', 'realm')

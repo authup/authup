@@ -13,13 +13,13 @@ import {
     TokenError,
 } from '@authelion/common';
 import { TokenVerifyContext, verifyToken } from '@authelion/api-utils';
-import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { Cache, Client } from 'redis-extension';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { useRedisClient } from '../../../utils';
 import { CachePrefix } from '../../../config/constants';
+import { useDataSource } from '../../../database';
 
 export async function verifyOAuth2Token(
     token: string,
@@ -37,9 +37,11 @@ export async function verifyOAuth2Token(
 
     let result : OAuth2TokenVerification;
 
+    const dataSource = await useDataSource();
+
     switch (tokenPayload.kind) {
         case OAuth2TokenKind.ACCESS: {
-            const repository = getRepository(OAuth2AccessTokenEntity);
+            const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
             let entity : OAuth2AccessTokenEntity | undefined;
 
             const cache : Cache<string> = redis ?
@@ -55,7 +57,7 @@ export async function verifyOAuth2Token(
                 cacheHit = true;
                 entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
             } else {
-                entity = await repository.findOne(tokenPayload.access_token_id);
+                entity = await repository.findOneBy({ id: tokenPayload.access_token_id });
 
                 if (typeof entity === 'undefined') {
                     throw new NotFoundError();
@@ -84,7 +86,7 @@ export async function verifyOAuth2Token(
             break;
         }
         case OAuth2TokenKind.REFRESH: {
-            const repository = getRepository(OAuth2RefreshTokenEntity);
+            const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
             let entity : OAuth2RefreshTokenEntity | undefined;
 
             const cache : Cache<string> = redis ?
@@ -100,7 +102,7 @@ export async function verifyOAuth2Token(
                 cacheHit = true;
                 entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
             } else {
-                entity = await repository.findOne(tokenPayload.refresh_token_id);
+                entity = await repository.findOneBy({ id: tokenPayload.refresh_token_id });
 
                 if (typeof entity === 'undefined') {
                     throw new NotFoundError();

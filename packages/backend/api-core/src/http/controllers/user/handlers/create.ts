@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runUserValidation } from '../utils/validation';
+import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.USER_ADD)) {
@@ -20,7 +20,8 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const result = await runUserValidation(req, CRUDOperation.CREATE);
 
-    const repository = getCustomRepository<UserRepository>(UserRepository);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
     const { entity } = await repository.createWithPassword(result.data);
 
     await repository.save(entity);

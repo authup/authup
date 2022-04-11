@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, RobotRole, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -18,9 +18,10 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(RobotRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RobotRoleEntity);
 
-    const entity = await repository.findOne(id);
+    const entity = await repository.findOneBy({ id });
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

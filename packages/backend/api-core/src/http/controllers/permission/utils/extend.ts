@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import { Permission } from '@authelion/common';
 import { ExpressValidationResult, buildExpressValidationErrorMessage } from '../../../express-validation';
 import { PermissionEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 type ExpressValidationResultExtendedWithPermission = ExpressValidationResult<{
     permission_id: Permission['id']
@@ -21,10 +21,11 @@ export async function extendExpressValidationResultWithPermission<
     T extends ExpressValidationResultExtendedWithPermission,
 >(result: T) : Promise<T> {
     if (result.data.permission_id) {
-        const repository = getRepository(PermissionEntity);
-        const entity = await repository.findOne(result.data.permission_id);
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(PermissionEntity);
+        const entity = await repository.findOneBy({ id: result.data.permission_id });
         if (typeof entity === 'undefined') {
-            throw new BadRequestError(buildExpressValidationErrorMessage('permision_id'));
+            throw new BadRequestError(buildExpressValidationErrorMessage('permission_id'));
         }
 
         result.meta.permission = entity;

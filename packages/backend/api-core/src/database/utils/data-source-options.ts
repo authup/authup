@@ -1,0 +1,75 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+import { buildDataSourceOptions as build } from 'typeorm-extension';
+import path from 'path';
+import { DataSourceOptions } from 'typeorm';
+import { Config } from '../../config';
+import { setEntitiesForConnectionOptions } from './entities';
+import { setSubscribersForConnectionOptions } from './subscribers';
+
+let instance : DataSourceOptions | undefined;
+
+export function setDataSourceOptions(data: DataSourceOptions, merge?: boolean) {
+    instance = extendDataSourceOptions(data, merge);
+}
+
+export async function useDataSourceOptions() {
+    if (typeof instance !== 'undefined') {
+        return instance;
+    }
+
+    instance = await buildDataSourceOptions({
+        rootPath: process.cwd(),
+        writableDirectory: 'writable',
+        env: process.env.NODE_ENV,
+    });
+
+    return instance;
+}
+
+export async function buildDataSourceOptions(
+    config: Pick<Config, 'rootPath' | 'writableDirectory' | 'env'>,
+    merge?: boolean,
+) : Promise<DataSourceOptions> {
+    let dataSourceOptions : DataSourceOptions;
+
+    try {
+        dataSourceOptions = await build({
+            root: config.rootPath,
+            buildForCommand: true,
+        });
+
+        Object.assign(dataSourceOptions, {
+            migrations: [
+                path.join(config.rootPath, config.writableDirectory, 'migrations', '*{.ts,.js}'),
+            ],
+            logging: ['error'],
+        } as Partial<DataSourceOptions>);
+    } catch (e) {
+        dataSourceOptions = {
+            name: 'default',
+            type: 'better-sqlite3',
+            database: path.join(
+                config.rootPath,
+                config.writableDirectory,
+                config.env === 'test' ? 'test.sql' : 'db.sql',
+            ),
+            subscribers: [],
+            migrations: [],
+            logging: ['error'],
+        };
+    }
+
+    return extendDataSourceOptions(dataSourceOptions, merge);
+}
+
+export function extendDataSourceOptions(options: DataSourceOptions, merge?: boolean) {
+    options = setEntitiesForConnectionOptions(options, merge);
+    options = setSubscribersForConnectionOptions(options, merge);
+
+    return options;
+}

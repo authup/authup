@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Config } from '../config';
 import { DatabaseRootSeederOptions } from '../database';
 
@@ -46,5 +46,5 @@ export type CheckCommandContext = CommandContext;
 export type MigrationGenerateCommandContext = CommandContext & {
     name?: string,
     directory?: string,
-    connection?: Connection
+    dataSource: DataSource
 };

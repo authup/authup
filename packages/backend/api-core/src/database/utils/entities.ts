@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ConnectionOptions } from 'typeorm';
+import { DataSourceOptions } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../domains/oauth2-access-token';
 import { OAuth2ClientEntity } from '../../domains/oauth2-client';
 import { OAuth2RefreshTokenEntity } from '../../domains/oauth2-refresh-token';
@@ -23,12 +23,12 @@ import {
     UserEntity, UserPermissionEntity, UserRoleEntity,
 } from '../../domains';
 
-export function setEntitiesForConnectionOptions<T extends ConnectionOptions>(
-    connectionOptions: T,
+export function setEntitiesForConnectionOptions<T extends DataSourceOptions>(
+    options: T,
     merge?: boolean,
 ) : T {
     return {
-        ...connectionOptions,
+        ...options,
         entities: [
             OAuth2AccessTokenEntity,
             OAuth2ClientEntity,
@@ -49,7 +49,7 @@ export function setEntitiesForConnectionOptions<T extends ConnectionOptions>(
             UserAttributeEntity,
             UserPermissionEntity,
             UserRoleEntity,
-            ...(merge && connectionOptions.entities ? connectionOptions.entities : []),
+            ...(merge && options.entities ? options.entities : []) as string[],
         ],
     };
 }

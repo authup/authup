@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runRoleAttributeValidation } from '../utils/validation';
+import { runRoleAttributeValidation } from '../utils';
 import { RoleAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const result = await runRoleAttributeValidation(req, CRUDOperation.CREATE);
@@ -29,7 +29,8 @@ export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: 
         throw new ForbiddenError('You are not permitted to set an attribute for this role...');
     }
 
-    const repository = getRepository(RoleAttributeEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleAttributeEntity);
 
     const entity = repository.create(result.data);
 

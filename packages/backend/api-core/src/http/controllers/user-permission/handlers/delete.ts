@@ -1,8 +1,15 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 /**
  * Drop an permission by id of a specific user.
@@ -17,8 +24,9 @@ export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res:
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(UserPermissionEntity);
-    const entity = await repository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserPermissionEntity);
+    const entity = await repository.findOneBy({ id });
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createConnection } from 'typeorm';
-import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
+import { DataSource } from 'typeorm';
+import { DatabaseRootSeeder, buildDataSourceOptions } from '../database';
 import { CheckCommandContext } from './type';
 import { useConfig } from '../config';
 
@@ -17,8 +17,10 @@ export async function checkCommand(context: CheckCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
-    const connection = await createConnection(connectionOptions);
+    const dataSourceOptions = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+    const connection = new DataSource(dataSourceOptions);
+
+    await connection.initialize();
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');
@@ -38,12 +40,13 @@ export async function checkCommand(context: CheckCommandContext) {
             permissions: context.config.permissions,
             ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
         });
+
         await seeder.run(connection);
 
         if (context.spinner) {
             context.spinner.succeed('Seeded database.');
         }
     } finally {
-        await connection.close();
+        await connection.destroy();
     }
 }

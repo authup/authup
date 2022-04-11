@@ -1,14 +1,21 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { UserRole } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const repository = getRepository(UserRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserRoleEntity);
     const query = await repository.createQueryBuilder('user_roles');
 
     applyFilters(query, filter, {
@@ -34,8 +41,9 @@ export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: Expr
 export async function getOneUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(UserRoleEntity);
-    const entities = await repository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserRoleEntity);
+    const entities = await repository.findOneBy({ id });
 
     if (typeof entities === 'undefined') {
         throw new NotFoundError();

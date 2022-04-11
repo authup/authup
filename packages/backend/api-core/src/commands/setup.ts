@@ -7,11 +7,11 @@
 
 import path from 'path';
 import { createDatabase } from 'typeorm-extension';
-import { createConnection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { createKeyPair } from '@authelion/api-utils';
 import { SetupCommandContext } from './type';
-import { generateSwaggerDocumentation } from '../http/swagger';
-import { DatabaseRootSeeder, buildDatabaseConnectionOptions } from '../database';
+import { generateSwaggerDocumentation } from '../http';
+import { DatabaseRootSeeder, buildDataSourceOptions } from '../database';
 import { useConfig } from '../config';
 
 export async function setupCommand(context: SetupCommandContext) {
@@ -71,28 +71,30 @@ export async function setupCommand(context: SetupCommandContext) {
         /**
          * Setup database with schema & seeder
          */
-        const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
+        const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
 
         if (context.database) {
             if (context.spinner) {
                 context.spinner.start('Creating database.');
             }
 
-            await createDatabase({ ifNotExist: true }, connectionOptions);
+            await createDatabase({ options });
 
             if (context.spinner) {
                 context.spinner.succeed('Created database.');
             }
         }
 
-        const connection = await createConnection(connectionOptions);
+        const dataSource = new DataSource(options);
+
+        await dataSource.initialize();
 
         try {
             if (context.spinner) {
                 context.spinner.start('Synchronize database schema.');
             }
 
-            await connection.synchronize();
+            await dataSource.synchronize();
             if (context.spinner) {
                 context.spinner.succeed('Synchronized database schema.');
             }
@@ -119,7 +121,7 @@ export async function setupCommand(context: SetupCommandContext) {
                     context.spinner.succeed('Seeded database.');
                 }
 
-                const seederData = await seeder.run(connection);
+                const seederData = await seeder.run(dataSource);
                 if (context.spinner) {
                     context.spinner.info(`Robot ID: ${seederData.robot.id}`);
                     context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
@@ -131,7 +133,7 @@ export async function setupCommand(context: SetupCommandContext) {
             }
             throw e;
         } finally {
-            await connection.close();
+            await dataSource.destroy();
         }
     }
 }

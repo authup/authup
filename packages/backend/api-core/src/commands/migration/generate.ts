@@ -5,28 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createConnection } from 'typeorm';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 import fs from 'fs';
-import { buildDatabaseConnectionOptions } from '../../database';
 import { MigrationGenerateCommandContext } from '../type';
 
 export async function migrationGenerateCommand(context: MigrationGenerateCommandContext) {
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
-
     context.name = context.name || 'Auth';
 
     if (!context.directory) {
-        context.directory = connectionOptions.cli && connectionOptions.cli.migrationsDir ?
-            connectionOptions.cli.migrationsDir :
-            path.join(context.config.writableDirectory, 'migrations');
+        context.directory = path.join(context.config.writableDirectory, 'migrations');
     }
 
     const timestamp = new Date().getTime();
     const fileName = `${timestamp}-${context.name}.ts`;
 
-    const connection = context.connection || await createConnection(connectionOptions);
+    const { dataSource } = context;
 
     if (context.spinner) {
         context.spinner.start('Generate migrations.');
@@ -36,7 +30,7 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
         downStatements: string[] = [];
 
     try {
-        const sqlInMemory = await connection.driver.createSchemaBuilder().log();
+        const sqlInMemory = await dataSource.driver.createSchemaBuilder().log();
 
         sqlInMemory.upQueries.forEach((upQuery) => {
             upStatements.push(`        await queryRunner.query(\`${upQuery.query.replace(/`/g, '\\`')}\`${queryParams(upQuery.parameters)});`);
@@ -45,8 +39,8 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
             downStatements.push(`        await queryRunner.query(\`${downQuery.query.replace(/`/g, '\\`')}\`${queryParams(downQuery.parameters)});`);
         });
     } finally {
-        if (!context.connection) {
-            await connection.close();
+        if (!context.dataSource) {
+            await dataSource.close();
         }
     }
 

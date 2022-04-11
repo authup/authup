@@ -1,4 +1,10 @@
-import { getCustomRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
@@ -6,13 +12,15 @@ import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
         filter, page, include, fields, sort,
     } = req.query;
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+    const dataSource = await useDataSource();
+    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
     const query = userRepository.createQueryBuilder('user');
 
     onlyRealmPermittedQueryResources(query, req.realmId);
@@ -61,7 +69,8 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const { id } = req.params;
     const { include, fields } = req.query;
 
-    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+    const dataSource = await useDataSource();
+    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
     const query = await userRepository.createQueryBuilder('user')
         .andWhere('user.id = :id', { id });
 

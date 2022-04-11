@@ -5,18 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ConnectionWithSeederOptions, createDatabase, dropDatabase } from 'typeorm-extension';
-import { ConnectionOptions, createConnection, getConnection } from 'typeorm';
+import { createDatabase, dropDatabase } from 'typeorm-extension';
+import {
+    DataSource, DataSourceOptions,
+} from 'typeorm';
 import {
     Config,
     DatabaseRootSeeder,
     DatabaseRootSeederRunResponse,
-    buildDatabaseConnectionOptions,
+    buildDataSourceOptions,
     useConfig,
 } from '../../../src';
 
 async function createConnectionOptions(config: Config) {
-    const options = await buildDatabaseConnectionOptions(config);
+    const options = await buildDataSourceOptions(config);
 
     return {
         ...options,
@@ -24,32 +26,32 @@ async function createConnectionOptions(config: Config) {
             options.type !== 'sqlite' &&
             options.type !== 'better-sqlite3' ? { database: 'test' } : {}
         ),
-    } as ConnectionWithSeederOptions;
+    } as DataSourceOptions;
 }
 
 export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
     const config = useConfig();
 
-    const connectionOptions = await createConnectionOptions(config);
-    await createDatabase({ ifNotExist: true }, connectionOptions);
+    const options = await createConnectionOptions(config);
+    await createDatabase({ options });
 
-    const connection = await createConnection(connectionOptions as ConnectionOptions);
-    await connection.synchronize();
+    const dataSource = new DataSource(options);
+
+    await dataSource.initialize();
+    await dataSource.synchronize();
 
     const core = new DatabaseRootSeeder({
         userName: config.adminUsername,
         userPassword: config.adminPassword,
     });
 
-    return core.run(connection);
+    return core.run(dataSource);
 }
 
 export async function dropTestDatabase() {
     const config = useConfig();
-    const connectionOptions = await createConnectionOptions(config);
 
-    await getConnection()
-        .close();
+    const options = await createConnectionOptions(config);
 
-    await dropDatabase({ ifExist: true }, connectionOptions);
+    await dropDatabase({ options });
 }

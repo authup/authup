@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     PermissionID, isPermittedForResourceRealm,
@@ -14,6 +13,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderRoleValidation } from '../utils';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -27,9 +27,10 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2ProviderRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
-    let entity = await repository.findOne(id);
+    let entity = await repository.findOneBy({ id });
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }

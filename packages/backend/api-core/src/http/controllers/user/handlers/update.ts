@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runUserValidation } from '../utils/validation';
+import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -28,13 +28,14 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         return res.respondAccepted();
     }
 
-    const repository = getCustomRepository<UserRepository>(UserRepository);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
 
     if (result.data.password) {
         result.data.password = await repository.hashPassword(result.data.password);
     }
 
-    let entity = await repository.findOne(id);
+    let entity = await repository.findOneBy({ id });
     if (typeof entity === 'undefined') {
         throw new NotFoundError();
     }

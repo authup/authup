@@ -5,24 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runClientValidation } from '../utils/validation';
+import { runRobotValidation } from '../utils';
 import { RobotRepository, useRobotEventEmitter } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const result = await runClientValidation(req, CRUDOperation.UPDATE);
+    const result = await runRobotValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
         return res.respondAccepted();
     }
 
-    const repository = getCustomRepository(RobotRepository);
-    let entity = await repository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getCustomRepository(RobotRepository);
+    let entity = await repository.findOneBy({ id });
 
     if (typeof entity === 'undefined') {
         throw new NotFoundError();

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createConnection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { UpgradeCommandContext } from './type';
-import { buildDatabaseConnectionOptions } from '../database';
+import { buildDataSourceOptions } from '../database';
 import { migrationGenerateCommand } from './migration';
 import { useConfig } from '../config';
 
@@ -18,9 +18,9 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
 
     context.config ??= useConfig();
 
-    const connectionOptions = await buildDatabaseConnectionOptions(context.config, context.databaseConnectionMerge);
+    const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
 
-    Object.assign(connectionOptions, {
+    Object.assign(options, {
         subscribers: [],
         synchronize: false,
         migrationsRun: false,
@@ -28,7 +28,9 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         logging: [],
     });
 
-    const connection = await createConnection(connectionOptions);
+    const dataSource = new DataSource(options);
+
+    await dataSource.initialize();
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');
@@ -39,7 +41,7 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
             context.spinner.start('Execute migrations.');
         }
 
-        await connection.runMigrations({ transaction: 'all' });
+        await dataSource.runMigrations({ transaction: 'all' });
 
         if (context.spinner) {
             context.spinner.succeed('Executed migrations.');
@@ -48,18 +50,18 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         if (context.migrationsGenerate) {
             await migrationGenerateCommand({
                 ...context,
-                connection,
+                dataSource,
             });
 
             if (context.spinner) {
                 context.spinner.start('Execute migrations.');
             }
-            await connection.runMigrations({ transaction: 'all' });
+            await dataSource.runMigrations({ transaction: 'all' });
             if (context.spinner) {
                 context.spinner.succeed('Executed migrations.');
             }
         }
     } finally {
-        await connection.close();
+        await dataSource.destroy();
     }
 }
