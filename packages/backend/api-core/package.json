@@ -72,7 +72,7 @@
         "jest-serial-runner": "^1.2.0",
         "supertest": "^6.2.2",
         "ts-node": "^10.7.0",
-        "typeorm": "^0.2.45"
+        "typeorm": "^0.3.6"
     },
     "publishConfig": {
         "access": "public"
