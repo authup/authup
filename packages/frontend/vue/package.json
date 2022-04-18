@@ -73,7 +73,7 @@
         "vuelidate": "^0.7.7"
     },
     "dependencies": {
-        "@vue-layout/utils": "^1.3.8",
+        "@vue-layout/utils": "^1.3.9",
         "nanoid": "^3.3.2",
         "regenerator-runtime": "^0.13.9"
     },
