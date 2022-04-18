@@ -58,7 +58,7 @@
         "@types/node": "^17.0.24",
         "@types/vuelidate": "^0.7.15",
         "@zerollup/ts-transform-paths": "^1.7.18",
-        "bootstrap-vue": "^2.18.1",
+        "bootstrap-vue": "^2.22.0",
         "ilingo": "^2.0.0",
         "rimraf": "^3.0.2",
         "rollup": "^2.70.2",
