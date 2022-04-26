@@ -129,4 +129,6 @@ export class UserEntity implements User {
             this.display_name = this.name;
         }
     }
+
+    extra?: Record<string, any>;
 }

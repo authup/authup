@@ -19,12 +19,12 @@ import {
     BearerAuthorizationHeader,
 } from '@trapi/client';
 import { Client } from 'redis-extension';
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
 import {
-    RobotEntity, RobotRepository, UserEntity, UserRepository,
+    RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 
 type AuthorizationHeaderVerifyOptions = {
@@ -93,6 +93,13 @@ async function verifyBasicAuthorizationHeader(
         if (typeof entity === 'undefined') {
             throw new NotFoundError();
         }
+
+        const userAttributeRepository = getRepository(UserAttributeEntity);
+        const userAttributes = await userAttributeRepository.find({
+            user_id: entity.id,
+        });
+
+        entity.extra = transformUserAttributes(userAttributes);
 
         permissions = await userRepository.getOwnedPermissions(entity.id);
 

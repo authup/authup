@@ -13,11 +13,11 @@ import {
     TokenVerificationPayload,
     User,
 } from '@authelion/common';
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { useRedisClient } from '../../../utils';
 import {
-    RobotEntity, RobotRepository, UserEntity, UserRepository,
+    RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { CachePrefix } from '../../../config/constants';
 
@@ -62,7 +62,7 @@ export async function extendOAuth2TokenVerification(
         case OAuth2TokenSubKind.ROBOT: {
             const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
 
-            let entity : RobotEntity | undefined;
+            let entity : Robot | undefined | null;
             if (cache) {
                 entity = await cache.get(data.payload.sub);
             }
@@ -112,7 +112,7 @@ export async function extendOAuth2TokenVerification(
         case OAuth2TokenSubKind.USER: {
             const userRepository = getCustomRepository<UserRepository>(UserRepository);
 
-            let entity : UserEntity | undefined;
+            let entity : User | undefined | null;
             if (cache) {
                 entity = await cache.get(data.payload.sub);
             }
@@ -127,6 +127,13 @@ export async function extendOAuth2TokenVerification(
                 if (typeof entity === 'undefined') {
                     throw new NotFoundError();
                 }
+
+                const userAttributeRepository = getRepository(UserAttributeEntity);
+                const userAttributes = await userAttributeRepository.find({
+                    user_id: entity.id,
+                });
+
+                entity.extra = transformUserAttributes(userAttributes);
 
                 if (cache) {
                     await cache.set(entity.id, entity);
