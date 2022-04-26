@@ -31,7 +31,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
     const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

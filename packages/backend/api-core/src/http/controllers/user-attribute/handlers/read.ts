@@ -66,7 +66,7 @@ export async function getOneUserAttributeRouteHandler(
 
     const result = await repository.findOneBy({ id });
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

@@ -67,7 +67,7 @@ export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const entity = await query.getOne();
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

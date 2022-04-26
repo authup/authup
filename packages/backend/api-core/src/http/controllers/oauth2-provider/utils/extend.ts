@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithOAuth2Provider<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2ProviderEntity);
         const entity = await repository.findOneBy({ id: result.data.provider_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('provider_id'));
         }
 

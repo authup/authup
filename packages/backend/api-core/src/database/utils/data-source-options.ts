@@ -39,8 +39,7 @@ export async function buildDataSourceOptions(
 
     try {
         dataSourceOptions = await build({
-            root: config.rootPath,
-            buildForCommand: true,
+            directory: config.rootPath,
         });
 
         Object.assign(dataSourceOptions, {

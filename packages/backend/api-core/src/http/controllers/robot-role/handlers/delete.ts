@@ -23,7 +23,7 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
 
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

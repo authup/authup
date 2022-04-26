@@ -59,7 +59,7 @@ export async function verifyOAuth2Token(
             } else {
                 entity = await repository.findOneBy({ id: tokenPayload.access_token_id });
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
             }
@@ -104,7 +104,7 @@ export async function verifyOAuth2Token(
             } else {
                 entity = await repository.findOneBy({ id: tokenPayload.refresh_token_id });
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
             }

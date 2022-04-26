@@ -42,11 +42,11 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const { username, password } = this.context.request.body;
 
         const dataSource = await useDataSource();
-        const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+        const repository = new UserRepository(dataSource);
 
         const entity = await repository.verifyCredentials(username, password);
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw UserError.credentialsInvalid();
         }
 

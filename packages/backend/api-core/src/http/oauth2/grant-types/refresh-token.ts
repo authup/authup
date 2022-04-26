@@ -63,7 +63,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
         const entity = await repository.findOneBy({ id: token.payload.refresh_token_id });
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw TokenError.refreshTokenInvalid();
         } else {
             await repository.remove(entity);
@@ -74,7 +74,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
         const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.payload.access_token_id });
 
-        if (typeof accessTokenEntity !== 'undefined') {
+        if (accessTokenEntity) {
             await accessTokenRepository.remove(accessTokenEntity);
         }
 

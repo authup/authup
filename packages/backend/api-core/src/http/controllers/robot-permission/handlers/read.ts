@@ -59,7 +59,7 @@ export async function getOneRobotPermissionRouteHandler(req: ExpressRequest, res
     const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
     const entity = await robotPermissionRepository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

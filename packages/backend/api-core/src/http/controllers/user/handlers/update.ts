@@ -29,14 +29,14 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+    const repository = new UserRepository(dataSource);
 
     if (result.data.password) {
         result.data.password = await repository.hashPassword(result.data.password);
     }
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

@@ -45,7 +45,7 @@ export async function getOneUserRoleRouteHandler(req: ExpressRequest, res: Expre
     const repository = dataSource.getRepository(UserRoleEntity);
     const entities = await repository.findOneBy({ id });
 
-    if (typeof entities === 'undefined') {
+    if (!entities) {
         throw new NotFoundError();
     }
 

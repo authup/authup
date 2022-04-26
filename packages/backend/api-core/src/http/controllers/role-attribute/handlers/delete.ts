@@ -20,7 +20,7 @@ export async function deleteRoleAttributeRouteHandler(req: ExpressRequest, res: 
 
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

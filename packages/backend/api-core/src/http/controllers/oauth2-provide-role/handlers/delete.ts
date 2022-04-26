@@ -24,7 +24,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
     const entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

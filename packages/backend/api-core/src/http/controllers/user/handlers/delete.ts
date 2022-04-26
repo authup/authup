@@ -23,10 +23,10 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+    const repository = new UserRepository(dataSource);
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

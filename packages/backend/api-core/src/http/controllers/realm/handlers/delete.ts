@@ -24,7 +24,7 @@ export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressR
 
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

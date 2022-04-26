@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityRepository, In, Repository } from 'typeorm';
+import {
+    DataSource, EntityManager, In, InstanceChecker, Repository,
+} from 'typeorm';
 import {
     PermissionMeta,
-    Robot, Role, User,
+    Role, User,
     UserRole, buildPermissionMetaFromRelation, createNanoID,
 } from '@authelion/common';
 
@@ -18,8 +20,11 @@ import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
 
-@EntityRepository(UserEntity)
 export class UserRepository extends Repository<UserEntity> {
+    constructor(instance: DataSource | EntityManager) {
+        super(UserEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+    }
+
     async syncRoles(
         userId: User['id'],
         roleIds: Role['id'][],
@@ -68,7 +73,7 @@ export class UserRepository extends Repository<UserEntity> {
             return permissions;
         }
 
-        const roleRepository = this.manager.getCustomRepository<RoleRepository>(RoleRepository);
+        const roleRepository = new RoleRepository(this.manager);
         permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
 
         return permissions;

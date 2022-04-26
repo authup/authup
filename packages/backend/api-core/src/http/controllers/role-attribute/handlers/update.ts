@@ -26,7 +26,7 @@ export async function updateRoleAttributeRouteHandler(req: ExpressRequest, res: 
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

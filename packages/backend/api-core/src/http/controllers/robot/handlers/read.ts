@@ -103,7 +103,7 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     const entity = await query.getOne();
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

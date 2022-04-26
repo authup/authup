@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithRobot<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(RobotEntity);
         const entity = await repository.findOneBy({ id: result.data.robot_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
 

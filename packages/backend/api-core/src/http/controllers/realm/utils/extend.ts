@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithRealm<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(RealmEntity);
         const entity = await repository.findOneBy({ id: result.data.realm_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
 

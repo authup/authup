@@ -28,7 +28,7 @@ export async function deleteRobotPermissionRouteHandler(req: ExpressRequest, res
     const repository = dataSource.getRepository(RobotPermissionEntity);
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

@@ -26,7 +26,7 @@ export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: 
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

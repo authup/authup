@@ -21,7 +21,7 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const result = await runUserValidation(req, CRUDOperation.CREATE);
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+    const repository = new UserRepository(dataSource);
     const { entity } = await repository.createWithPassword(result.data);
 
     await repository.save(entity);

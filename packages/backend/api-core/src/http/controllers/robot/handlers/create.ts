@@ -29,7 +29,7 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
+    const repository = new RobotRepository(dataSource);
     const { entity, secret } = await repository.createWithSecret(result.data);
 
     await repository.save(entity);

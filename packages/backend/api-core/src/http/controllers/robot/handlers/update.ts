@@ -22,10 +22,10 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getCustomRepository(RobotRepository);
+    const repository = new RobotRepository(dataSource);
     let entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

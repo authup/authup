@@ -20,7 +20,7 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
     } = req.query;
 
     const dataSource = await useDataSource();
-    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+    const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
     onlyRealmPermittedQueryResources(query, req.realmId);
@@ -70,7 +70,7 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const { include, fields } = req.query;
 
     const dataSource = await useDataSource();
-    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+    const userRepository = new UserRepository(dataSource);
     const query = await userRepository.createQueryBuilder('user')
         .andWhere('user.id = :id', { id });
 
@@ -93,7 +93,7 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const entity = await query.getOne();
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

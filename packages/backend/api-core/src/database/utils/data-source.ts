@@ -12,8 +12,29 @@ import {
 
 let instance : DataSource | undefined;
 
-export function setDataSource(data: DataSource) {
-    instance = data;
+export async function setDataSource(
+    dataSource: DataSource,
+    synchronize?: boolean,
+) {
+    if (!dataSource.isInitialized) {
+        await dataSource.initialize();
+    }
+
+    if (synchronize) {
+        await dataSource.synchronize();
+    }
+
+    instance = dataSource;
+}
+
+export async function unsetDataSource() {
+    if (!instance) {
+        return;
+    }
+
+    await instance.destroy();
+
+    instance = null;
 }
 
 export async function useDataSource() {

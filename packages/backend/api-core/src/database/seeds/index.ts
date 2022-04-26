@@ -15,8 +15,8 @@ import { hash } from '@authelion/api-utils';
 import {
     PermissionEntity,
     RealmEntity, RobotEntity, RobotPermissionEntity,
+    RoleEntity,
     RolePermissionEntity,
-    RoleRepository,
     UserRepository,
     UserRoleEntity,
     useRobotEventEmitter,
@@ -78,7 +78,7 @@ export class DatabaseRootSeeder implements Seeder {
         /**
          * Create default role
          */
-        const roleRepository = dataSource.getCustomRepository(RoleRepository);
+        const roleRepository = dataSource.getRepository(RoleEntity);
         let role = await roleRepository.findOneBy({
             name: 'admin',
         });
@@ -95,7 +95,7 @@ export class DatabaseRootSeeder implements Seeder {
         /**
          * Create default user
          */
-        const userRepository = dataSource.getCustomRepository(UserRepository);
+        const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
             name: this.options.userName,
         });

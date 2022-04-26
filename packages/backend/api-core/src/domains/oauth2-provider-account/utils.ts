@@ -40,7 +40,7 @@ export async function createOauth2ProviderAccount(
     const expiresIn : number = (accessTokenPayload.exp - accessTokenPayload.iat);
     const expireDate: Date = new Date((accessTokenPayload.iat * 1000) + (expiresIn * 1000));
 
-    if (typeof account !== 'undefined') {
+    if (account) {
         account = accountRepository.merge(account, {
             access_token: tokenResponse.access_token,
             refresh_token: tokenResponse.refresh_token,
@@ -123,7 +123,7 @@ export async function createOauth2ProviderAccount(
         if (
             providerRoles.length > 0
         ) {
-            const userRepository = dataSource.getCustomRepository(UserRepository);
+            const userRepository = new UserRepository(dataSource);
             await userRepository.syncRoles(
                 account.user.id,
                 providerRoles.map((providerRole) => providerRole.role_id),
@@ -149,7 +149,7 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
 
     try {
         const dataSource = await useDataSource();
-        const userRepository = dataSource.getCustomRepository(UserRepository);
+        const userRepository = new UserRepository(dataSource);
         const user = userRepository.create({
             name,
             name_locked: nameLocked,

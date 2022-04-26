@@ -39,10 +39,10 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         const { id, secret } = this.context.request.body;
 
         const dataSource = await useDataSource();
-        const repository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
+        const repository = new RobotRepository(dataSource);
         const entity = await repository.verifyCredentials(id, secret);
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw RobotError.credentialsInvalid();
         }
 

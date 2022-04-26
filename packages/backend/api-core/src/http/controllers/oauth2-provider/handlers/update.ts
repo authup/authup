@@ -29,7 +29,7 @@ export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res:
     const repository = dataSource.getRepository(OAuth2ProviderEntity);
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

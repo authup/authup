@@ -100,7 +100,7 @@ export async function getOneOauth2ProviderRouteHandler(req: ExpressRequest, res:
 
     const result = await query.getOne();
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

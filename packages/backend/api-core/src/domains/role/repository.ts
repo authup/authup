@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityRepository, In, Repository } from 'typeorm';
+import {
+    DataSource, EntityManager, In, InstanceChecker, Repository,
+} from 'typeorm';
 import {
     PermissionMeta,
     Role,
@@ -14,8 +16,11 @@ import {
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 
-@EntityRepository(RoleEntity)
 export class RoleRepository extends Repository<RoleEntity> {
+    constructor(instance: DataSource | EntityManager) {
+        super(RoleEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+    }
+
     async getOwnedPermissions(
         roleId: Role['id'] | Role['id'][],
     ) : Promise<PermissionMeta[]> {

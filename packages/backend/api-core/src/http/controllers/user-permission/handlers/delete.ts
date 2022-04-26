@@ -28,7 +28,7 @@ export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res:
     const repository = dataSource.getRepository(UserPermissionEntity);
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

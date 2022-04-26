@@ -45,7 +45,7 @@ export async function getOneRobotRoleRouteHandler(req: ExpressRequest, res: Expr
     const repository = dataSource.getRepository(RobotRoleEntity);
     const entities = await repository.findOneBy({ id });
 
-    if (typeof entities === 'undefined') {
+    if (!entities) {
         throw new NotFoundError();
     }
 

@@ -62,7 +62,7 @@ export async function extendOAuth2TokenVerification(
 
     switch (data.payload.sub_kind) {
         case OAuth2TokenSubKind.ROBOT: {
-            const robotRepository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
+            const robotRepository = new RobotRepository(dataSource);
 
             let entity : RobotEntity | undefined;
             if (cache) {
@@ -72,7 +72,7 @@ export async function extendOAuth2TokenVerification(
             if (!entity) {
                 entity = await robotRepository.findOneBy({ id: data.payload.sub });
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
 
@@ -93,7 +93,7 @@ export async function extendOAuth2TokenVerification(
 
             if (!permissions) {
                 if (entity.user_id) {
-                    const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+                    const userRepository = new UserRepository(dataSource);
                     permissions = await userRepository.getOwnedPermissions(entity.user_id);
                 } else {
                     permissions = await robotRepository.getOwnedPermissions(entity.id);
@@ -112,7 +112,7 @@ export async function extendOAuth2TokenVerification(
             break;
         }
         case OAuth2TokenSubKind.USER: {
-            const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+            const userRepository = new UserRepository(dataSource);
 
             let entity : UserEntity | undefined;
             if (cache) {
@@ -126,7 +126,7 @@ export async function extendOAuth2TokenVerification(
 
                 entity = await userQuery.getOne();
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
 

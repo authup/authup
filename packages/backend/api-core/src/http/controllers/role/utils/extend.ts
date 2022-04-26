@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithRole<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(RoleEntity);
         const entity = await repository.findOneBy({ id: result.data.role_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 

@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithPermission<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(PermissionEntity);
         const entity = await repository.findOneBy({ id: result.data.permission_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('permission_id'));
         }
 

@@ -14,7 +14,7 @@ import {
     DatabaseRootSeeder,
     DatabaseRootSeederRunResponse,
     buildDataSourceOptions,
-    useConfig,
+    setDataSource, unsetDataSource, useConfig, useDataSource,
 } from '../../../src';
 
 async function createConnectionOptions(config: Config) {
@@ -36,9 +36,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse>
     await createDatabase({ options });
 
     const dataSource = new DataSource(options);
-
-    await dataSource.initialize();
-    await dataSource.synchronize();
+    await setDataSource(dataSource, true);
 
     const core = new DatabaseRootSeeder({
         userName: config.adminUsername,
@@ -49,9 +47,11 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse>
 }
 
 export async function dropTestDatabase() {
-    const config = useConfig();
+    const dataSource = await useDataSource();
 
-    const options = await createConnectionOptions(config);
+    const { options } = dataSource;
+
+    await unsetDataSource();
 
     await dropDatabase({ options });
 }

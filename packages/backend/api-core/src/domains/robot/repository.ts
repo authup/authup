@@ -5,20 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityRepository, Repository } from 'typeorm';
 import {
     PermissionMeta, Robot,
     Role, buildPermissionMetaFromRelation, createNanoID,
 } from '@authelion/common';
 
 import { compare, hash } from '@authelion/api-utils';
+import {
+    DataSource, EntityManager, InstanceChecker, Repository,
+} from 'typeorm';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
 
-@EntityRepository(RobotEntity)
 export class RobotRepository extends Repository<RobotEntity> {
+    constructor(instance: DataSource | EntityManager) {
+        super(RobotEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+    }
+
     async getOwnedPermissions(
         id: Robot['id'],
     ) : Promise<PermissionMeta[]> {
@@ -36,7 +41,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             return permissions;
         }
 
-        const roleRepository = this.manager.getCustomRepository<RoleRepository>(RoleRepository);
+        const roleRepository = new RoleRepository(this.manager);
         permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
 
         return permissions;

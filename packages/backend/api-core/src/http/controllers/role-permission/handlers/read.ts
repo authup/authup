@@ -59,7 +59,7 @@ export async function getOneRolePermissionRouteHandler(req: ExpressRequest, res:
     const repository = dataSource.getRepository(RolePermissionEntity);
     const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

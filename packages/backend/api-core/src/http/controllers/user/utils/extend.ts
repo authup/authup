@@ -24,7 +24,7 @@ export async function extendExpressValidationResultWithUser<
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(UserEntity);
         const entity = await repository.findOneBy({ id: result.data.user_id });
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('user_id'));
         }
 

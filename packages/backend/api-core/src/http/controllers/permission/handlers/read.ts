@@ -46,7 +46,7 @@ export async function getOnePermissionRouteHandler(req: ExpressRequest, res: Exp
         .where('id = :id', { id })
         .getOne();
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

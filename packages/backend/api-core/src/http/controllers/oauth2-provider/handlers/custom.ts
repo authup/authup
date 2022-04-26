@@ -38,7 +38,7 @@ export async function authorizeURLOauth2ProviderRouteHandler(
         .where('provider.id = :id', { id })
         .getOne();
 
-    if (typeof provider === 'undefined') {
+    if (!provider) {
         throw new NotFoundError();
     }
 
@@ -70,7 +70,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         .where('provider.id = :id', { id })
         .getOne();
 
-    if (typeof provider === 'undefined') {
+    if (!provider) {
         throw new NotFoundError();
     }
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();

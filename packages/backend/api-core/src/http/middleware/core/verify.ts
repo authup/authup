@@ -87,12 +87,12 @@ async function verifyBasicAuthorizationHeader(
         header.username === 'admin' &&
         header.password === 'start123'
     ) {
-        const userRepository = dataSource.getCustomRepository<UserRepository>(UserRepository);
+        const userRepository = new UserRepository(dataSource);
         const entity = await userRepository.findOneBy({
             name: 'admin',
         });
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new NotFoundError();
         }
 
@@ -106,7 +106,7 @@ async function verifyBasicAuthorizationHeader(
         return;
     }
 
-    const robotRepository = dataSource.getCustomRepository<RobotRepository>(RobotRepository);
+    const robotRepository = new RobotRepository(dataSource);
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!

@@ -39,7 +39,7 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
     const repository = dataSource.getRepository(RealmEntity);
 
     let entity = await repository.findOneBy({ id });
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

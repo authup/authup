@@ -6,7 +6,7 @@
  */
 
 import { URL } from 'url';
-import { DataSource, createConnection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import path from 'path';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
@@ -51,13 +51,11 @@ export async function startCommand(context: StartCommandContext) {
     const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
     const dataSource = new DataSource(options);
 
-    await dataSource.initialize();
-
     if (context.config.env === 'development') {
         await dataSource.synchronize();
     }
 
-    setDataSource(dataSource);
+    await setDataSource(dataSource);
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');
