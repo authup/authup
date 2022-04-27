@@ -43,7 +43,7 @@
     "dependencies": {
         "@casl/ability": "^5.4.3",
         "@trapi/client": "^2.0.6",
-        "@trapi/query": "^2.1.2",
+        "@trapi/query": "^2.1.3",
         "@typescript-error/core": "^1.1.2",
         "@typescript-error/http": "^1.1.4",
         "change-case": "^4.1.2",
