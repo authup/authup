@@ -1,10 +1,17 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runRoleValidation } from '../utils/validaiton';
+import { runRoleValidation } from '../utils';
 import { RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -20,10 +27,11 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    const repository = getRepository(RoleEntity);
-    let entity = await repository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleEntity);
+    let entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

@@ -5,21 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { OAuth2Provider, PermissionID } from '@authelion/common';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
         page, filter, fields, include, sort,
     } = req.query;
 
-    const repository = getRepository(OAuth2ProviderEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderEntity);
 
     const query = repository.createQueryBuilder('provider');
 
@@ -72,7 +73,8 @@ export async function getOneOauth2ProviderRouteHandler(req: ExpressRequest, res:
     const { fields, include } = req.query;
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2ProviderEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderEntity);
 
     const query = repository.createQueryBuilder('provider')
         .where('provider.id = :id', { id });
@@ -98,7 +100,7 @@ export async function getOneOauth2ProviderRouteHandler(req: ExpressRequest, res:
 
     const result = await query.getOne();
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

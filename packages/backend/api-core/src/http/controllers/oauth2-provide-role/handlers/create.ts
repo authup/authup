@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
     PermissionID,
@@ -14,6 +13,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderRoleValidation } from '../utils';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
@@ -25,7 +25,8 @@ export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2ProviderRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
     const entity = repository.create(result.data);
 

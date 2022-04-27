@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderValidation } from '../utils';
 import { OAuth2ProviderEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -25,10 +25,11 @@ export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res:
         return res.respondAccepted();
     }
 
-    const repository = getRepository(OAuth2ProviderEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderEntity);
 
-    let entity = await repository.findOne(id);
-    if (typeof entity === 'undefined') {
+    let entity = await repository.findOneBy({ id });
+    if (!entity) {
         throw new NotFoundError();
     }
 

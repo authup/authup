@@ -18,7 +18,7 @@ import { extendExpressValidationResultWithRealm } from '../../realm/utils/extend
 import { RobotValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
 
-export async function runClientValidation(
+export async function runRobotValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<RobotValidationResult> {

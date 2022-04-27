@@ -5,16 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Brackets, getRepository } from 'typeorm';
 import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page, sort } = req.query;
-    const repository = getRepository(RoleAttributeEntity);
+
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleAttributeEntity);
 
     const query = repository.createQueryBuilder('roleAttribute');
 
@@ -55,11 +57,12 @@ export async function getOneRoleAttributeRouteHandler(
         throw new BadRequestError();
     }
 
-    const repository = getRepository(RoleAttributeEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleAttributeEntity);
 
-    const result = await repository.findOne(id);
+    const result = await repository.findOneBy({ id });
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

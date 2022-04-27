@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import { Robot } from '@authelion/common';
 import { ExpressValidationResult, buildExpressValidationErrorMessage } from '../../../express-validation';
 import { RobotEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 type ExpressValidationResultExtendedWithRobot = ExpressValidationResult<{
     robot_id: Robot['id']
@@ -21,9 +21,10 @@ export async function extendExpressValidationResultWithRobot<
     T extends ExpressValidationResultExtendedWithRobot,
 >(result: T) : Promise<T> {
     if (result.data.robot_id) {
-        const repository = getRepository(RobotEntity);
-        const entity = await repository.findOne(result.data.robot_id);
-        if (typeof entity === 'undefined') {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(RobotEntity);
+        const entity = await repository.findOneBy({ id: result.data.robot_id });
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
 

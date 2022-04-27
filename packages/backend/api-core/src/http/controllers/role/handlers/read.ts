@@ -5,20 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
         filter, page, sort, fields,
     } = req.query;
 
-    const repository = getRepository(RoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleEntity);
     const query = repository.createQueryBuilder('role');
 
     applyFields(query, fields, {
@@ -54,7 +55,8 @@ export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     const { id } = req.params;
     const { fields } = req.query;
 
-    const repository = getRepository(RoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RoleEntity);
     const query = repository.createQueryBuilder('role')
         .where('role.id = :id', { id });
 
@@ -65,7 +67,7 @@ export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     const entity = await query.getOne();
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

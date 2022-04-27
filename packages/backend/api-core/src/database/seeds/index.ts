@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Connection, In } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID,
@@ -15,8 +15,8 @@ import { hash } from '@authelion/api-utils';
 import {
     PermissionEntity,
     RealmEntity, RobotEntity, RobotPermissionEntity,
+    RoleEntity,
     RolePermissionEntity,
-    RoleRepository,
     UserRepository,
     UserRoleEntity,
     useRobotEventEmitter,
@@ -52,15 +52,18 @@ export class DatabaseRootSeeder implements Seeder {
         this.options = options;
     }
 
-    public async run(connection: Connection) : Promise<any> {
+    public async run(dataSource: DataSource) : Promise<any> {
         const response : DatabaseRootSeederRunResponse = {};
 
         /**
          * Create default realm
          */
-        const realmRepository = connection.getRepository(RealmEntity);
-        let realm = await realmRepository.findOne({ name: MASTER_REALM_ID });
-        if (typeof realm === 'undefined') {
+        const realmRepository = dataSource.getRepository(RealmEntity);
+        let realm = await realmRepository.findOneBy({
+            name: MASTER_REALM_ID,
+        });
+
+        if (!realm) {
             realm = realmRepository.create({
                 id: MASTER_REALM_ID,
                 name: 'Master',
@@ -75,11 +78,11 @@ export class DatabaseRootSeeder implements Seeder {
         /**
          * Create default role
          */
-        const roleRepository = connection.getCustomRepository(RoleRepository);
-        let role = await roleRepository.findOne({
+        const roleRepository = dataSource.getRepository(RoleEntity);
+        let role = await roleRepository.findOneBy({
             name: 'admin',
         });
-        if (typeof role === 'undefined') {
+        if (!role) {
             role = roleRepository.create({
                 name: 'admin',
             });
@@ -92,12 +95,12 @@ export class DatabaseRootSeeder implements Seeder {
         /**
          * Create default user
          */
-        const userRepository = connection.getCustomRepository(UserRepository);
-        let user = await userRepository.findOne({
+        const userRepository = new UserRepository(dataSource);
+        let user = await userRepository.findOneBy({
             name: this.options.userName,
         });
 
-        if (typeof user === 'undefined') {
+        if (!user) {
             user = userRepository.create({
                 name: this.options.userName,
                 password: await hash(this.options.userPassword || 'start123'),
@@ -123,10 +126,10 @@ export class DatabaseRootSeeder implements Seeder {
             user_id: user.id,
         };
 
-        const userRoleRepository = connection.getRepository(UserRoleEntity);
-        let userRole = await userRoleRepository.findOne(userRoleData);
+        const userRoleRepository = dataSource.getRepository(UserRoleEntity);
+        let userRole = await userRoleRepository.findOneBy(userRoleData);
 
-        if (typeof userRole === 'undefined') {
+        if (!userRole) {
             userRole = userRoleRepository.create(userRoleData);
         }
 
@@ -139,9 +142,9 @@ export class DatabaseRootSeeder implements Seeder {
          */
         let permissionIds : string[] = getPermissions(this.options);
 
-        const permissionRepository = connection.getRepository(PermissionEntity);
+        const permissionRepository = dataSource.getRepository(PermissionEntity);
 
-        const existingPermissions = await permissionRepository.find({
+        const existingPermissions = await permissionRepository.findBy({
             id: In(permissionIds),
         });
 
@@ -163,9 +166,9 @@ export class DatabaseRootSeeder implements Seeder {
          * Assign all permissions to default role.
          */
         permissionIds = getPermissions(this.options);
-        const rolePermissionRepository = connection.getRepository(RolePermissionEntity);
+        const rolePermissionRepository = dataSource.getRepository(RolePermissionEntity);
 
-        const existingRolePermissions = await rolePermissionRepository.find({
+        const existingRolePermissions = await rolePermissionRepository.findBy({
             permission_id: In(permissionIds),
             role_id: role.id,
         });
@@ -194,13 +197,13 @@ export class DatabaseRootSeeder implements Seeder {
         /**
          * Create default robot account
          */
-        const robotRepository = connection.getRepository<Robot>(RobotEntity);
-        let robot = await robotRepository.findOne({
+        const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
+        let robot = await robotRepository.findOneBy({
             name: 'SYSTEM',
         });
 
         const secret = this.options.robotSecret || createNanoID(undefined, 64);
-        if (typeof robot === 'undefined') {
+        if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',
                 realm_id: MASTER_REALM_ID,
@@ -232,9 +235,9 @@ export class DatabaseRootSeeder implements Seeder {
          * Assign all permissions to default robot.
          */
         permissionIds = getPermissions(this.options);
-        const robotPermissionRepository = connection.getRepository(RobotPermissionEntity);
+        const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
 
-        const existingRobotPermissions = await robotPermissionRepository.find({
+        const existingRobotPermissions = await robotPermissionRepository.findBy({
             permission_id: In(permissionIds),
             robot_id: robot.id,
         });

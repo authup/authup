@@ -9,11 +9,11 @@ import {
     OAuth2TokenResponse,
     OAuth2TokenSubKind, RobotError,
 } from '@authelion/common';
-import { getCustomRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../../domains';
 import { Grant } from './type';
+import { useDataSource } from '../../../database';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run() : Promise<OAuth2TokenResponse> {
@@ -38,10 +38,11 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async validate() : Promise<RobotEntity> {
         const { id, secret } = this.context.request.body;
 
-        const repository = getCustomRepository<RobotRepository>(RobotRepository);
+        const dataSource = await useDataSource();
+        const repository = new RobotRepository(dataSource);
         const entity = await repository.verifyCredentials(id, secret);
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw RobotError.credentialsInvalid();
         }
 

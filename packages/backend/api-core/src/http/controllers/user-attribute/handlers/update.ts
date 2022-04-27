@@ -1,13 +1,18 @@
-import { getRepository } from 'typeorm';
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
-import { matchedData, validationResult } from 'express-validator';
-import { PermissionID, Realm, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
-import { runUserAttributeValidation } from '../utils/validation';
-import { RealmEntity, UserAttributeEntity } from '../../../../domains';
+import { runUserAttributeValidation } from '../utils';
+import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -17,10 +22,11 @@ export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: 
         return res.respondAccepted();
     }
 
-    const repository = getRepository(UserAttributeEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserAttributeEntity);
 
-    let entity = await repository.findOne(id);
-    if (typeof entity === 'undefined') {
+    let entity = await repository.findOneBy({ id });
+    if (!entity) {
         throw new NotFoundError();
     }
 

@@ -6,11 +6,11 @@
  */
 
 import { Cache, Client } from 'redis-extension';
-import { getRepository } from 'typeorm';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { useRedisClient } from '../../../utils';
 import { CachePrefix } from '../../../config/constants';
+import { useDataSource } from '../../../database';
 
 export async function startOAuth2TokenWatcher(redis?: Client | boolean | string) {
     redis = useRedisClient(redis);
@@ -27,7 +27,8 @@ export async function startOAuth2TokenWatcher(redis?: Client | boolean | string)
         prefix: CachePrefix.TOKEN_ACCESS,
     });
     accessTokenCache.on('expired', async (data) => {
-        const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
+        const dataSource = await useDataSource();
+        const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
         await accessTokenRepository.delete(data.id);
     });
 
@@ -39,7 +40,8 @@ export async function startOAuth2TokenWatcher(redis?: Client | boolean | string)
         prefix: CachePrefix.TOKEN_REFRESH,
     });
     refreshTokenCache.on('expired', async (data) => {
-        const refreshTokenRepository = getRepository(OAuth2RefreshTokenEntity);
+        const dataSource = await useDataSource();
+        const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
         await refreshTokenRepository.delete(data.id);
     });
 

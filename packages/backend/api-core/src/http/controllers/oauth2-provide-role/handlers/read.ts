@@ -5,18 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import {
     applyFilters, applyPagination, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderRoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { page, filter, sort } = req.query;
 
-    const repository = getRepository(OAuth2ProviderRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
     const query = repository.createQueryBuilder('providerRole');
 
@@ -50,14 +51,15 @@ export async function getManyOauth2ProviderRoleRouteHandler(req: ExpressRequest,
 export async function getOneOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const repository = getRepository(OAuth2ProviderRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
     const query = repository.createQueryBuilder('providerRole')
         .where('providerRole.id = :id', { id });
 
     const result = await query.getOne();
 
-    if (typeof result === 'undefined') {
+    if (!result) {
         throw new NotFoundError();
     }
 

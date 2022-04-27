@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import {
     PermissionID,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runRoleValidation } from '../utils/validaiton';
+import { runRoleValidation } from '../utils';
 import { RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
@@ -24,7 +24,8 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    const roleRepository = getRepository(RoleEntity);
+    const dataSource = await useDataSource();
+    const roleRepository = dataSource.getRepository(RoleEntity);
     const role = roleRepository.create(result.data);
 
     await roleRepository.save(role);

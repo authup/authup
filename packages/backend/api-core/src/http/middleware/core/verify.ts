@@ -19,13 +19,13 @@ import {
     BearerAuthorizationHeader,
 } from '@trapi/client';
 import { Client } from 'redis-extension';
-import { getCustomRepository, getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
+import { useDataSource } from '../../../database';
 
 type AuthorizationHeaderVerifyOptions = {
     writableDirectoryPath: string,
@@ -80,22 +80,24 @@ async function verifyBasicAuthorizationHeader(
 ) {
     let permissions : PermissionMeta[] = [];
 
+    const dataSource = await useDataSource();
+
     if (
         process.env.NODE_ENV === 'test' &&
         header.username === 'admin' &&
         header.password === 'start123'
     ) {
-        const userRepository = getCustomRepository<UserRepository>(UserRepository);
-        const entity = await userRepository.findOne({
+        const userRepository = new UserRepository(dataSource);
+        const entity = await userRepository.findOneBy({
             name: 'admin',
         });
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw new NotFoundError();
         }
 
-        const userAttributeRepository = getRepository(UserAttributeEntity);
-        const userAttributes = await userAttributeRepository.find({
+        const userAttributeRepository = dataSource.getRepository(UserAttributeEntity);
+        const userAttributes = await userAttributeRepository.findBy({
             user_id: entity.id,
         });
 
@@ -111,7 +113,7 @@ async function verifyBasicAuthorizationHeader(
         return;
     }
 
-    const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+    const robotRepository = new RobotRepository(dataSource);
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!

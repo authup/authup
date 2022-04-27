@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
 import { runRobotRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.ROBOT_ROLE_ADD)) {
@@ -20,7 +20,8 @@ export async function createRobotRoleRouteHandler(req: ExpressRequest, res: Expr
 
     const result = await runRobotRoleValidation(req, CRUDOperation.CREATE);
 
-    const repository = getRepository(RobotRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RobotRoleEntity);
     let entity = repository.create(result.data);
 
     entity = await repository.save(entity);

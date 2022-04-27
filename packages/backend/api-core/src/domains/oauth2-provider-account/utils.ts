@@ -15,11 +15,11 @@ import {
     hasOwnProperty,
     isValidUserName,
 } from '@authelion/common';
-import { getCustomRepository, getRepository } from 'typeorm';
 import { decodeToken } from '@authelion/api-utils';
 import { UserEntity, UserRepository } from '../user';
 import { OAuth2ProviderAccountEntity } from './entity';
 import { OAuth2ProviderRoleEntity } from '../oauth2-provider-role';
+import { useDataSource } from '../../database';
 
 export async function createOauth2ProviderAccount(
     provider: OAuth2Provider,
@@ -27,16 +27,20 @@ export async function createOauth2ProviderAccount(
 ) : Promise<OAuth2ProviderAccount> {
     const accessTokenPayload : KeycloakJWTPayload = await decodeToken(tokenResponse.access_token);
 
-    const accountRepository = getRepository(OAuth2ProviderAccountEntity);
+    const dataSource = await useDataSource();
+    const accountRepository = dataSource.getRepository(OAuth2ProviderAccountEntity);
     let account = await accountRepository.findOne({
-        provider_user_id: accessTokenPayload.sub,
-        provider_id: provider.id,
-    }, { relations: ['user'] });
+        where: {
+            provider_user_id: accessTokenPayload.sub,
+            provider_id: provider.id,
+        },
+        relations: ['user'],
+    });
 
     const expiresIn : number = (accessTokenPayload.exp - accessTokenPayload.iat);
     const expireDate: Date = new Date((accessTokenPayload.iat * 1000) + (expiresIn * 1000));
 
-    if (typeof account !== 'undefined') {
+    if (account) {
         account = accountRepository.merge(account, {
             access_token: tokenResponse.access_token,
             refresh_token: tokenResponse.refresh_token,
@@ -107,7 +111,7 @@ export async function createOauth2ProviderAccount(
         roles &&
         roles.length > 0
     ) {
-        const providerRoleRepository = getRepository(OAuth2ProviderRoleEntity);
+        const providerRoleRepository = dataSource.getRepository(OAuth2ProviderRoleEntity);
 
         const providerRoles = await providerRoleRepository
             .createQueryBuilder('providerRole')
@@ -119,7 +123,7 @@ export async function createOauth2ProviderAccount(
         if (
             providerRoles.length > 0
         ) {
-            const userRepository = getCustomRepository(UserRepository);
+            const userRepository = new UserRepository(dataSource);
             await userRepository.syncRoles(
                 account.user.id,
                 providerRoles.map((providerRole) => providerRole.role_id),
@@ -144,7 +148,8 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
     }
 
     try {
-        const userRepository = getCustomRepository(UserRepository);
+        const dataSource = await useDataSource();
+        const userRepository = new UserRepository(dataSource);
         const user = userRepository.create({
             name,
             name_locked: nameLocked,

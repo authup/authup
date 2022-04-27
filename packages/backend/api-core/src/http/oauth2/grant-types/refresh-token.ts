@@ -10,13 +10,13 @@ import {
     OAuth2TokenKind,
     OAuth2TokenResponse, TokenError,
 } from '@authelion/common';
-import { getRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { Grant } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { verifyOAuth2Token } from '../token';
+import { useDataSource } from '../../../database';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run() : Promise<OAuth2TokenResponse> {
@@ -59,10 +59,11 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
             throw TokenError.refreshTokenInvalid();
         }
 
-        const repository = getRepository(OAuth2RefreshTokenEntity);
-        const entity = await repository.findOne(token.payload.refresh_token_id);
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
+        const entity = await repository.findOneBy({ id: token.payload.refresh_token_id });
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw TokenError.refreshTokenInvalid();
         } else {
             await repository.remove(entity);
@@ -70,10 +71,10 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         // -------------------------------------------------
 
-        const accessTokenRepository = getRepository(OAuth2AccessTokenEntity);
-        const accessTokenEntity = await accessTokenRepository.findOne(token.payload.access_token_id);
+        const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
+        const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.payload.access_token_id });
 
-        if (typeof accessTokenEntity !== 'undefined') {
+        if (accessTokenEntity) {
             await accessTokenRepository.remove(accessTokenEntity);
         }
 

@@ -9,11 +9,11 @@ import {
     OAuth2TokenResponse,
     OAuth2TokenSubKind, UserError,
 } from '@authelion/common';
-import { getCustomRepository } from 'typeorm';
 import { AbstractGrant } from './abstract-grant';
 import { UserEntity, UserRepository } from '../../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
+import { useDataSource } from '../../../database';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
     async run() : Promise<OAuth2TokenResponse> {
@@ -41,11 +41,12 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     async validate() : Promise<UserEntity> {
         const { username, password } = this.context.request.body;
 
-        const repository = getCustomRepository<UserRepository>(UserRepository);
+        const dataSource = await useDataSource();
+        const repository = new UserRepository(dataSource);
 
         const entity = await repository.verifyCredentials(username, password);
 
-        if (typeof entity === 'undefined') {
+        if (!entity) {
             throw UserError.credentialsInvalid();
         }
 

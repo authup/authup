@@ -16,8 +16,8 @@ import {
     buildExpressValidationErrorMessage,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRole } from '../../role/utils/extend';
-import { extendExpressValidationResultWithOAuth2Provider } from '../../oauth2-provider/utils/extend';
+import { extendExpressValidationResultWithRole } from '../../role';
+import { extendExpressValidationResultWithOAuth2Provider } from '../../oauth2-provider';
 
 export async function runOauth2ProviderRoleValidation(
     req: ExpressRequest,

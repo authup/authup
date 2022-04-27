@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRoleEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -18,11 +18,12 @@ export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: Expre
         throw new ForbiddenError();
     }
 
-    const repository = getRepository(UserRoleEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(UserRoleEntity);
 
-    const entity = await repository.findOne(id);
+    const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

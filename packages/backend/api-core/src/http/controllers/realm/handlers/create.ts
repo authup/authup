@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { ForbiddenError } from '@typescript-error/http';
 import { matchedData, validationResult } from 'express-validator';
 import {
@@ -13,9 +12,10 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError } from '../../../express-validation';
-import { runRealmValidation } from '../utils/validation';
+import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.hasPermission(PermissionID.REALM_ADD)) {
@@ -34,7 +34,8 @@ export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressR
         return res.respondAccepted();
     }
 
-    const repository = getRepository(RealmEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RealmEntity);
 
     const entity = repository.create(data);
 

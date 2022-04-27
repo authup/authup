@@ -1,8 +1,14 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
 import {
     CookieName,
     OAuth2TokenKind,
 } from '@authelion/common';
-import { getRepository } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -12,6 +18,7 @@ import { verifyOAuth2Token } from '../../../oauth2';
 import { ControllerOptions } from '../../type';
 import { useRedisClient } from '../../../../utils';
 import { CachePrefix } from '../../../../config/constants';
+import { useDataSource } from '../../../../database';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
@@ -69,9 +76,11 @@ export async function deleteTokenRouteHandler(
         }));
     }
 
+    const dataSource = await useDataSource();
+
     switch (token.kind) {
         case OAuth2TokenKind.ACCESS: {
-            const repository = getRepository(OAuth2AccessTokenEntity);
+            const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
 
             const { id: entityId } = token.entity;
 
@@ -84,7 +93,7 @@ export async function deleteTokenRouteHandler(
             });
         }
         case OAuth2TokenKind.REFRESH: {
-            const repository = getRepository(OAuth2RefreshTokenEntity);
+            const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
             const { id: entityId } = token.entity;
 

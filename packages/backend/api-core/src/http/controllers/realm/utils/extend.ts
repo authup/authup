@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
 import { Realm } from '@authelion/common';
 import { ExpressValidationResult, buildExpressValidationErrorMessage } from '../../../express-validation';
 import { RealmEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 type ExpressValidationResultExtendedWithRealm = ExpressValidationResult<{
     realm_id?: Realm['id']
@@ -21,9 +21,10 @@ export async function extendExpressValidationResultWithRealm<
     T extends ExpressValidationResultExtendedWithRealm,
 >(result: T) : Promise<T> {
     if (result.data.realm_id) {
-        const repository = getRepository(RealmEntity);
-        const entity = await repository.findOne(result.data.realm_id);
-        if (typeof entity === 'undefined') {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(RealmEntity);
+        const entity = await repository.findOneBy({ id: result.data.realm_id });
+        if (!entity) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
 

@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getCustomRepository } from 'typeorm';
 import {
     PermissionID,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { runClientValidation } from '../utils/validation';
+import { runRobotValidation } from '../utils';
 import {
     RobotRepository, useRobotEventEmitter,
 } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
+import { useDataSource } from '../../../../database';
 
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const result = await runClientValidation(req, CRUDOperation.CREATE);
+    const result = await runRobotValidation(req, CRUDOperation.CREATE);
 
     if (!req.ability.hasPermission(PermissionID.ROBOT_ADD)) {
         result.data.user_id = req.userId;
@@ -28,7 +28,8 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
         result.data.user_id = req.userId;
     }
 
-    const repository = getCustomRepository<RobotRepository>(RobotRepository);
+    const dataSource = await useDataSource();
+    const repository = new RobotRepository(dataSource);
     const { entity, secret } = await repository.createWithSecret(result.data);
 
     await repository.save(entity);

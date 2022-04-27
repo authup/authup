@@ -6,10 +6,10 @@
  */
 
 import { OAuth2RefreshToken, hasOwnProperty } from '@authelion/common';
-import { getRepository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { OAuth2RefreshTokenEntity } from '../../../../domains/oauth2-refresh-token';
 import { RefreshTokenBuilderContext } from './type';
+import { useDataSource } from '../../../../database';
 
 export class Oauth2RefreshTokenBuilder {
     static MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS = 10;
@@ -49,7 +49,8 @@ export class Oauth2RefreshTokenBuilder {
     }
 
     async create(data?: Partial<OAuth2RefreshTokenEntity>) : Promise<OAuth2RefreshTokenEntity> {
-        const repository = getRepository(OAuth2RefreshTokenEntity);
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
         let entity = repository.create({
             client_id: this.context.accessToken.client_id,

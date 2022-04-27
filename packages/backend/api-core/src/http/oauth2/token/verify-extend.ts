@@ -13,13 +13,13 @@ import {
     TokenVerificationPayload,
     User,
 } from '@authelion/common';
-import { getCustomRepository, getRepository } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
 import { useRedisClient } from '../../../utils';
 import {
     RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { CachePrefix } from '../../../config/constants';
+import { useDataSource } from '../../../database';
 
 /**
  *
@@ -58,9 +58,11 @@ export async function extendOAuth2TokenVerification(
         );
     }
 
+    const dataSource = await useDataSource();
+
     switch (data.payload.sub_kind) {
         case OAuth2TokenSubKind.ROBOT: {
-            const robotRepository = getCustomRepository<RobotRepository>(RobotRepository);
+            const robotRepository = new RobotRepository(dataSource);
 
             let entity : Robot | undefined | null;
             if (cache) {
@@ -68,9 +70,9 @@ export async function extendOAuth2TokenVerification(
             }
 
             if (!entity) {
-                entity = await robotRepository.findOne(data.payload.sub);
+                entity = await robotRepository.findOneBy({ id: data.payload.sub });
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
 
@@ -91,7 +93,7 @@ export async function extendOAuth2TokenVerification(
 
             if (!permissions) {
                 if (entity.user_id) {
-                    const userRepository = getCustomRepository<UserRepository>(UserRepository);
+                    const userRepository = new UserRepository(dataSource);
                     permissions = await userRepository.getOwnedPermissions(entity.user_id);
                 } else {
                     permissions = await robotRepository.getOwnedPermissions(entity.id);
@@ -110,7 +112,7 @@ export async function extendOAuth2TokenVerification(
             break;
         }
         case OAuth2TokenSubKind.USER: {
-            const userRepository = getCustomRepository<UserRepository>(UserRepository);
+            const userRepository = new UserRepository(dataSource);
 
             let entity : User | undefined | null;
             if (cache) {
@@ -124,12 +126,12 @@ export async function extendOAuth2TokenVerification(
 
                 entity = await userQuery.getOne();
 
-                if (typeof entity === 'undefined') {
+                if (!entity) {
                     throw new NotFoundError();
                 }
 
-                const userAttributeRepository = getRepository(UserAttributeEntity);
-                const userAttributes = await userAttributeRepository.find({
+                const userAttributeRepository = dataSource.getRepository(UserAttributeEntity);
+                const userAttributes = await userAttributeRepository.findBy({
                     user_id: entity.id,
                 });
 

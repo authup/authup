@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { applyFilters, applyPagination } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { RolePermission } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RolePermissionEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 /**
  * Receive user permissions of a specific user.
@@ -21,8 +20,9 @@ import { RolePermissionEntity } from '../../../../domains';
 export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page } = req.query;
 
-    const rolePermissionRepository = getRepository(RolePermissionEntity);
-    const query = rolePermissionRepository.createQueryBuilder('rolePermission');
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RolePermissionEntity);
+    const query = repository.createQueryBuilder('rolePermission');
 
     applyFilters(query, filter, {
         defaultAlias: 'rolePermission',
@@ -55,10 +55,11 @@ export async function getManyRolePermissionRouteHandler(req: ExpressRequest, res
 export async function getOneRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    const rolePermissionRepository = getRepository(RolePermissionEntity);
-    const entity = await rolePermissionRepository.findOne(id);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RolePermissionEntity);
+    const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getRepository } from 'typeorm';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 
-import { PermissionID, Realm } from '@authelion/common';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
+import { useDataSource } from '../../../../database';
 
 export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -19,11 +19,12 @@ export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }
 
-    const repository = getRepository(RealmEntity);
+    const dataSource = await useDataSource();
+    const repository = dataSource.getRepository(RealmEntity);
 
-    const entity = await repository.findOne(id);
+    const entity = await repository.findOneBy({ id });
 
-    if (typeof entity === 'undefined') {
+    if (!entity) {
         throw new NotFoundError();
     }
 
