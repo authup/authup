@@ -42,7 +42,7 @@
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
         "@casl/ability": "^5.4.3",
-        "@trapi/client": "^2.0.8",
+        "@trapi/client": "^2.0.9",
         "@trapi/query": "^2.1.3",
         "@typescript-error/core": "^1.1.2",
         "@typescript-error/http": "^1.1.4",
