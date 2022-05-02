@@ -1,6 +1,6 @@
 {
     "name": "@authelion/api-adapter",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Authelion http & socket server adapter package for api module.",
     "main": "dist/index.js",
     "files": [
@@ -43,7 +43,7 @@
         "redis-extension": "^1.0.0"
     },
     "devDependencies": {
-        "@authelion/common": "^0.0.5"
+        "@authelion/common": "^0.0.6"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x"

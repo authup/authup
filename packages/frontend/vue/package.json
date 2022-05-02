@@ -1,6 +1,6 @@
 {
     "name": "@authelion/vue",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "This package contains auth related vue components.",
     "main": "dist/index.ssr.js",
     "browser": "dist/index.esm.js",
@@ -43,7 +43,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "devDependencies": {
-        "@authelion/common": "^0.0.5",
+        "@authelion/common": "^0.0.6",
         "@babel/core": "^7.17.10",
         "@babel/preset-env": "^7.17.10",
         "@babel/preset-typescript": "^7.16.5",
