@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createDatabase, dropDatabase } from 'typeorm-extension';
+import {
+    createDatabase, dropDatabase, setDataSource, unsetDataSource,
+} from 'typeorm-extension';
 import {
     DataSource, DataSourceOptions,
 } from 'typeorm';
@@ -14,10 +16,10 @@ import {
     DatabaseRootSeeder,
     DatabaseRootSeederRunResponse,
     buildDataSourceOptions,
-    setDataSource, unsetDataSource, useConfig, useDataSource,
+    useConfig, useDataSource,
 } from '../../../src';
 
-async function createConnectionOptions(config: Config) {
+async function buildOptions(config: Config) {
     const options = await buildDataSourceOptions(config);
 
     return {
@@ -32,11 +34,14 @@ async function createConnectionOptions(config: Config) {
 export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
     const config = useConfig();
 
-    const options = await createConnectionOptions(config);
+    const options = await buildOptions(config);
     await createDatabase({ options });
 
     const dataSource = new DataSource(options);
-    await setDataSource(dataSource, true);
+    await dataSource.initialize();
+    await dataSource.synchronize();
+
+    setDataSource(dataSource);
 
     const core = new DatabaseRootSeeder({
         userName: config.adminUsername,
@@ -48,10 +53,11 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse>
 
 export async function dropTestDatabase() {
     const dataSource = await useDataSource();
+    await dataSource.destroy();
 
     const { options } = dataSource;
 
-    await unsetDataSource();
+    unsetDataSource();
 
     await dropDatabase({ options });
 }

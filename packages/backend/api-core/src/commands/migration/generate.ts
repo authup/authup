@@ -40,7 +40,7 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
         });
     } finally {
         if (!context.dataSource) {
-            await dataSource.close();
+            await dataSource.destroy();
         }
     }
 

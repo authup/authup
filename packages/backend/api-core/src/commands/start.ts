@@ -8,9 +8,10 @@
 import { URL } from 'url';
 import { DataSource } from 'typeorm';
 import path from 'path';
+import { setDataSource } from 'typeorm-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
-import { buildDataSourceOptions, setDataSource } from '../database';
+import { buildDataSourceOptions } from '../database';
 import { buildTokenAggregator } from '../aggregators';
 import { useConfig } from '../config';
 
@@ -50,12 +51,13 @@ export async function startCommand(context: StartCommandContext) {
 
     const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
     const dataSource = new DataSource(options);
+    await dataSource.initialize();
 
     if (context.config.env === 'development') {
         await dataSource.synchronize();
     }
 
-    await setDataSource(dataSource);
+    setDataSource(dataSource);
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');

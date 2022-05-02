@@ -23,10 +23,14 @@ export function useDomainAPI(client: HTTPClient, name: string) {
             return client.robotPermission;
         case 'role':
             return client.role;
+        case 'roleAttribute':
+            return client.roleAttribute;
         case 'rolePermission':
             return client.rolePermission;
         case 'user':
             return client.user;
+        case 'userAttribute':
+            return client.userAttribute;
         case 'userPermission':
             return client.userPermission;
         case 'userRole':

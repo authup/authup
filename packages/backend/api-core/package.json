@@ -51,13 +51,13 @@
         "pascal-case": "^3.1.2",
         "redis-extension": "^1.0.0",
         "reflect-metadata": "^0.1.13",
-        "swagger-ui-express": "^4.3.0",
-        "typeorm-extension": "^2.1.0"
+        "swagger-ui-express": "^4.3.0"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
         "express": "^4.x",
-        "typeorm": "^0.3.x"
+        "typeorm": "^0.3.x",
+        "typeorm-extension": "^2.x"
     },
     "devDependencies": {
         "@authelion/common": "^0.0.5",
@@ -72,7 +72,8 @@
         "jest-serial-runner": "^1.2.0",
         "supertest": "^6.2.3",
         "ts-node": "^10.7.0",
-        "typeorm": "^0.3.5"
+        "typeorm": "^0.3.6",
+        "typeorm-extension": "^2.1.0"
     },
     "publishConfig": {
         "access": "public"

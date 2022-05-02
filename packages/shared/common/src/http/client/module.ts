@@ -12,7 +12,15 @@ import {
     PermissionAPI,
     RealmAPI,
     RobotAPI,
-    RobotPermissionAPI, RobotRoleAPI, RoleAPI, RolePermissionAPI, TokenAPI, UserAPI, UserPermissionAPI, UserRoleAPI,
+    RobotPermissionAPI,
+    RobotRoleAPI,
+    RoleAPI, RoleAttributeAPI,
+    RolePermissionAPI,
+    TokenAPI,
+    UserAPI,
+    UserAttributeAPI,
+    UserPermissionAPI,
+    UserRoleAPI,
 } from '../../domains';
 
 export class HTTPClient extends Client {
@@ -32,11 +40,15 @@ export class HTTPClient extends Client {
 
     public readonly role : RoleAPI;
 
+    public readonly roleAttribute : RoleAttributeAPI;
+
     public readonly rolePermission : RolePermissionAPI;
 
     public readonly token : TokenAPI;
 
     public readonly user : UserAPI;
+
+    public readonly userAttribute: UserAttributeAPI;
 
     public readonly userPermission : UserPermissionAPI;
 
@@ -47,15 +59,23 @@ export class HTTPClient extends Client {
 
         this.oauth2Provider = new OAuth2ProviderAPI(this.driver);
         this.oauth2ProviderRole = new OAuth2ProviderRoleAPI(this.driver);
+
         this.permission = new PermissionAPI(this.driver);
+
         this.realm = new RealmAPI(this.driver);
+
         this.robot = new RobotAPI(this.driver);
         this.robotPermission = new RobotPermissionAPI(this.driver);
         this.robotRole = new RobotRoleAPI(this.driver);
+
         this.role = new RoleAPI(this.driver);
+        this.roleAttribute = new RoleAttributeAPI(this.driver);
         this.rolePermission = new RolePermissionAPI(this.driver);
+
         this.token = new TokenAPI(this.driver);
+
         this.user = new UserAPI(this.driver);
+        this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);
     }

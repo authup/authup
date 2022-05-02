@@ -11,26 +11,6 @@ import { Config } from '../../config';
 import { setEntitiesForConnectionOptions } from './entities';
 import { setSubscribersForConnectionOptions } from './subscribers';
 
-let instance : DataSourceOptions | undefined;
-
-export function setDataSourceOptions(data: DataSourceOptions, merge?: boolean) {
-    instance = extendDataSourceOptions(data, merge);
-}
-
-export async function useDataSourceOptions() {
-    if (typeof instance !== 'undefined') {
-        return instance;
-    }
-
-    instance = await buildDataSourceOptions({
-        rootPath: process.cwd(),
-        writableDirectory: 'writable',
-        env: process.env.NODE_ENV,
-    });
-
-    return instance;
-}
-
 export async function buildDataSourceOptions(
     config: Pick<Config, 'rootPath' | 'writableDirectory' | 'env'>,
     merge?: boolean,
