@@ -59,7 +59,7 @@
         "@types/vuelidate": "^0.7.15",
         "@zerollup/ts-transform-paths": "^1.7.18",
         "bootstrap-vue": "^2.22.0",
-        "ilingo": "^2.0.1",
+        "ilingo": "^2.0.2",
         "rimraf": "^3.0.2",
         "rollup": "^2.70.2",
         "rollup-plugin-includepaths": "^0.2.4",

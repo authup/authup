@@ -41,7 +41,7 @@
         "@trapi/client": "^2.0.9",
         "bootstrap": "^4.6.1",
         "bootstrap-vue": "^2.22.0",
-        "ilingo": "^2.0.1",
+        "ilingo": "^2.0.2",
         "vue": "^2.6.14",
         "vuelidate": "^0.7.7"
     },
