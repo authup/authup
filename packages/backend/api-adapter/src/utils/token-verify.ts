@@ -7,8 +7,10 @@
 
 import { Cache } from 'redis-extension';
 import {
-    TokenAPI, TokenError, TokenVerificationPayload,
+    TokenAPI,
+    TokenError, TokenVerificationPayload, hasOwnProperty,
 } from '@authelion/common';
+import { isClientError } from '@trapi/client';
 
 export type TokenVerifyContext = {
     token: string,
@@ -29,11 +31,23 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
         try {
             payload = await context.tokenAPIClient.verify(context.token);
         } catch (e) {
-            throw new TokenError({
-                statusCode: e.response.status,
-                code: e.response.data.code,
-                message: e.response.data.message,
-            });
+            if (
+                isClientError(e) &&
+                e.response &&
+                e.response.data &&
+                hasOwnProperty(e.response.data, 'code') &&
+                hasOwnProperty(e.response.data, 'message')
+            ) {
+                throw new TokenError({
+                    statusCode: e.response.status,
+                    code: e.response.data.code as string | number,
+                    message: e.response.data.message as string,
+                });
+            } else {
+                throw new TokenError({
+                    previous: e,
+                });
+            }
         }
 
         let secondsDiff : number = payload.payload.exp - (new Date().getTime() / 1000);
