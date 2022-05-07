@@ -9,6 +9,7 @@ import {
     OAuth2TokenResponse,
     OAuth2TokenSubKind, UserError,
 } from '@authelion/common';
+import path from 'path';
 import { AbstractGrant } from './abstract-grant';
 import { UserEntity, UserRepository } from '../../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
@@ -32,7 +33,9 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const response = new OAuth2BearerTokenResponse({
             accessToken,
             refreshToken,
-            keyPairOptions: this.context.keyPairOptions,
+            keyPairOptions: {
+                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+            },
         });
 
         return response.build();

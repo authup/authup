@@ -17,16 +17,16 @@ import { RolePermissionController } from './role-permission';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
 import { registerTokenController } from './token';
-import { ControllerOptions } from './type';
 import { RobotPermissionController } from './robot-permission';
 import { RobotRoleController } from './robot-role';
 import { UserPermissionController } from './user-permission';
 import { RoleAttributeController } from './role-attribute';
 import { UserAttributeController } from './user-attribute';
+import { Config } from '../../config';
 
 export function registerControllers(
     router: Application,
-    options: ControllerOptions,
+    config?: Config,
 ) {
     attachControllers(router, [
         Oauth2ProviderRoleController,
@@ -45,6 +45,6 @@ export function registerControllers(
         UserRoleController,
     ]);
 
-    registerOauth2ProviderController(router, options);
-    registerTokenController(router, options);
+    registerOauth2ProviderController(router, config);
+    registerTokenController(router, config);
 }

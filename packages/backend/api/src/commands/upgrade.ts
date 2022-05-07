@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { upgradeCommand, useConfig } from '@authelion/api-core';
+import { findConfig, upgradeCommand } from '@authelion/api-core';
 import * as ora from 'ora';
 
 interface UpgradeArguments extends Arguments {
@@ -29,7 +29,7 @@ export class UpgradeCommand implements CommandModule {
     }
 
     async handler(args: UpgradeArguments) {
-        const config = useConfig(args.root);
+        const config = await findConfig(args.root);
         const spinner = ora.default({
             spinner: 'dots',
         });

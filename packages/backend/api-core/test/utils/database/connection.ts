@@ -32,7 +32,7 @@ async function buildOptions(config: Config) {
 }
 
 export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
-    const config = useConfig();
+    const config = await useConfig();
 
     const options = await buildOptions(config);
     await createDatabase({ options });
@@ -44,8 +44,8 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse>
     setDataSource(dataSource);
 
     const core = new DatabaseRootSeeder({
-        userName: config.adminUsername,
-        userPassword: config.adminPassword,
+        userName: config.admin.username,
+        userPassword: config.admin.password,
     });
 
     return core.run(dataSource);

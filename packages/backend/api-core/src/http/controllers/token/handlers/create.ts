@@ -14,36 +14,33 @@ import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/util
 import { Grant, GrantContext } from '../../../oauth2/grant-types/type';
 import { PasswordGrantType, RobotCredentialsGrantType } from '../../../oauth2';
 import { RefreshTokenGrantType } from '../../../oauth2/grant-types/refresh-token';
-import { ControllerOptions } from '../../type';
+import { Config, useConfig } from '../../../../config';
 
 /**
  *
  * @param req
  * @param res
- * @param context
+ * @param config
  *
  * @throws TokenError
  */
 export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    context: ControllerOptions,
+    config?: Config,
 ) : Promise<any> {
     const grantType = determineRequestTokenGrantType(req);
     if (!grantType) {
         throw TokenError.grantInvalid();
     }
 
+    config ??= await useConfig();
+
     let grant : Grant | undefined;
 
     const grantContext : GrantContext = {
-        maxAge: context.tokenMaxAge,
         request: req,
-        selfUrl: context.selfUrl,
-        keyPairOptions: {
-            directory: context.writableDirectoryPath,
-        },
-        redis: context.redis,
+        config,
     };
 
     switch (grantType) {

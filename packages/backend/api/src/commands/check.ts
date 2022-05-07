@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { Spinner, checkCommand, useConfig } from '@authelion/api-core';
+import { checkCommand, findConfig } from '@authelion/api-core';
 import * as ora from 'ora';
 
 interface SeedCheckArguments extends Arguments {
@@ -28,7 +28,7 @@ export class CheckCommand implements CommandModule {
     }
 
     async handler(args: SeedCheckArguments) {
-        const config = useConfig(args.root);
+        const config = await findConfig(args.root);
         const spinner = ora.default({
             spinner: 'dots',
         });

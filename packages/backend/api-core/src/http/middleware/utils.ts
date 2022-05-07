@@ -11,59 +11,43 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
 import {
-    MiddlewareRegistrationOptions,
     createMiddleware,
     responseMiddleware,
 } from '../index';
+import { Config, useConfigSync } from '../../config';
 
 export function registerMiddlewares(
     router: Application,
-    options: MiddlewareRegistrationOptions,
+    config?: Config,
 ) {
-    if (options.bodyParserMiddleware) {
+    config ??= useConfigSync();
+
+    if (config.middleware.bodyParser) {
         router.use(urlencoded({ extended: false }));
         router.use(json());
     }
 
     router.use(cookieParser());
 
-    if (options.responseMiddleware) {
+    if (config.middleware.response) {
         router.use(responseMiddleware);
     }
 
     //--------------------------------------------------------------------
 
-    const writableDirectoryPath = options.writableDirectoryPath || path.join(process.cwd(), 'writable');
-
-    router.use(createMiddleware({
-        writableDirectoryPath,
-        redis: options.redis,
-    }));
+    router.use(createMiddleware(config));
 
     //--------------------------------------------------------------------
 
-    if (options.swaggerMiddleware) {
-        let docsPath = '/docs';
-        let writableDirectoryPath = path.join(process.cwd(), 'writable');
-
-        if (typeof options.swaggerMiddleware !== 'boolean') {
-            if (options.swaggerMiddleware.path) {
-                docsPath = options.swaggerMiddleware.path;
-            }
-
-            if (options.swaggerMiddleware.writableDirectoryPath) {
-                writableDirectoryPath = options.swaggerMiddleware.writableDirectoryPath;
-            }
-        }
-
-        const swaggerDocumentPath: string = path.join(writableDirectoryPath, 'swagger.json');
+    if (config.middleware.swagger) {
+        const swaggerDocumentPath: string = path.join(config.rootPath, config.writableDirectory, 'swagger.json');
 
         if (existsSync(swaggerDocumentPath)) {
             // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
             const swaggerDocument = require(swaggerDocumentPath);
 
             router.use(
-                docsPath,
+                '/docs',
                 swaggerUi.serve,
                 swaggerUi.setup(swaggerDocument, {
                     swaggerOptions: {

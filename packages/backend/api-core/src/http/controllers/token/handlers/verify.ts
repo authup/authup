@@ -13,12 +13,12 @@ import {
 } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../../oauth2';
-import { ControllerOptions } from '../../type';
+import { Config } from '../../../../config';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    options: ControllerOptions,
+    config?: Config,
 ) : Promise<any> {
     let { id } = req.params;
 
@@ -43,17 +43,8 @@ export async function verifyTokenRouteHandler(
         throw new ForbiddenError();
     }
 
-    const token = await verifyOAuth2Token(
-        id,
-        {
-            keyPair: {
-                directory: options.writableDirectoryPath,
-            },
-            redis: options.redis,
-        },
-    );
-
-    const response = await extendOAuth2TokenVerification(token, { redis: options.redis });
+    const token = await verifyOAuth2Token(id, { config });
+    const response = await extendOAuth2TokenVerification(token, config);
 
     return res.respond({
         data: response,

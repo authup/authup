@@ -5,19 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from 'redis-extension';
 import { TokenMaxAgeType } from '@authelion/common';
 
 export type Config = {
     env: string,
     port: number,
 
-    adminUsername: string,
-    adminPassword: string,
+    admin: {
+        username: string,
+        password: string
+    },
 
-    robotSecret?: string,
+    robot: {
+        enabled: boolean,
+        secret?: string
+    },
 
-    permissions?: string[],
+    permissions: string[],
 
     rootPath: string,
     writableDirectory: string
@@ -25,9 +29,18 @@ export type Config = {
     selfUrl: string,
     webUrl: string,
 
-    swaggerDocumentation: boolean,
-
     tokenMaxAge: TokenMaxAgeType,
 
-    redis?: string | boolean | Client
+    redis: {
+        enabled: boolean,
+        alias?: string,
+        connectionString?: string
+    },
+
+    middleware: {
+        bodyParser?: boolean,
+        cookieParser?: boolean,
+        response?: boolean,
+        swagger?: boolean
+    }
 };

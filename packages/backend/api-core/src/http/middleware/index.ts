@@ -9,4 +9,3 @@ export * from './core';
 export * from './error';
 export * from './response';
 export * from './utils';
-export * from './type';

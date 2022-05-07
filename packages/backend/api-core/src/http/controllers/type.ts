@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from 'redis-extension';
 import { TokenMaxAgeType } from '@authelion/common';
 
 export type ControllerOptions = {
@@ -14,6 +13,5 @@ export type ControllerOptions = {
     selfUrl: string,
     selfAuthorizeRedirectUrl?: string,
 
-    writableDirectoryPath: string,
-    redis?: Client | string | boolean
+    writableDirectoryPath: string
 };

@@ -16,7 +16,7 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    context.config ??= useConfig();
+    context.config ??= await useConfig();
 
     const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
 

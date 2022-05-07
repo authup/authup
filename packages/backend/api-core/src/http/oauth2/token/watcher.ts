@@ -5,19 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache, Client } from 'redis-extension';
+import { Cache, useClient } from 'redis-extension';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { useRedisClient } from '../../../utils';
 import { CachePrefix } from '../../../config/constants';
 import { useDataSource } from '../../../database';
+import { Config, useConfig } from '../../../config';
 
-export async function startOAuth2TokenWatcher(redis?: Client | boolean | string) {
-    redis = useRedisClient(redis);
-
-    if (!redis) {
+export async function startOAuth2TokenWatcher(config?: Config) {
+    config ??= await useConfig();
+    if (!config.redis.enabled) {
         return;
     }
+
+    const redis = useClient(config.redis.alias);
 
     // -------------------------------------------------
 

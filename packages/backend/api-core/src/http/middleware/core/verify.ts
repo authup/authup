@@ -18,32 +18,25 @@ import {
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from '@trapi/client';
-import { Client } from 'redis-extension';
 import { NotFoundError } from '@typescript-error/http';
+import path from 'path';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-
-type AuthorizationHeaderVerifyOptions = {
-    writableDirectoryPath: string,
-    redis?: Client | string | boolean
-};
+import { Config } from '../../../config';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
     header: BearerAuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
+    config: Config,
 ) {
     const token = await verifyOAuth2Token(
         header.token,
         {
-            keyPair: {
-                directory: options.writableDirectoryPath,
-            },
-            redis: options.redis,
+            config,
         },
     );
 
@@ -54,7 +47,7 @@ async function verifyBearerAuthorizationHeader(
     request.token = header.token;
     request.realmId = token.entity.realm_id;
 
-    const tokenExtended = await extendOAuth2TokenVerification(token, { redis: options.redis });
+    const tokenExtended = await extendOAuth2TokenVerification(token, config);
 
     request.ability = new AbilityManager(tokenExtended.target.permissions);
 
@@ -76,7 +69,6 @@ async function verifyBearerAuthorizationHeader(
 async function verifyBasicAuthorizationHeader(
     request: ExpressRequest,
     header: BasicAuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
 ) {
     let permissions : PermissionMeta[] = [];
 
@@ -129,13 +121,13 @@ async function verifyBasicAuthorizationHeader(
 export async function verifyAuthorizationHeader(
     request: ExpressRequest,
     header: AuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
+    config?: Config,
 ) : Promise<void> {
     switch (header.type) {
         case AuthorizationHeaderType.BEARER:
-            return verifyBearerAuthorizationHeader(request, header, options);
+            return verifyBearerAuthorizationHeader(request, header, config);
         case AuthorizationHeaderType.BASIC:
-            return verifyBasicAuthorizationHeader(request, header, options);
+            return verifyBasicAuthorizationHeader(request, header);
     }
 
     throw HeaderError.unsupportedHeaderType(header.type);

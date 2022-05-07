@@ -8,10 +8,14 @@
 import { DataSource } from 'typeorm';
 import { DatabaseRootSeeder, buildDataSourceOptions } from '../database';
 import { CheckCommandContext } from './type';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
 export async function checkCommand(context: CheckCommandContext) {
-    context.config ??= useConfig();
+    if (context.config) {
+        setConfig(context.config);
+    }
+
+    context.config ??= await useConfig();
 
     if (context.spinner) {
         context.spinner.start('Establish database connection.');
@@ -32,10 +36,10 @@ export async function checkCommand(context: CheckCommandContext) {
         }
 
         const seeder = new DatabaseRootSeeder({
-            userName: context.config.adminUsername,
-            userPassword: context.config.adminPassword,
+            userName: context.config.admin.username,
+            userPassword: context.config.admin.password,
 
-            robotSecret: context.config.robotSecret,
+            robotSecret: context.config.robot.secret,
 
             permissions: context.config.permissions,
             ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),

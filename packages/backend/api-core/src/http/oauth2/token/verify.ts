@@ -14,26 +14,39 @@ import {
 } from '@authelion/common';
 import { TokenVerifyContext, verifyToken } from '@authelion/api-utils';
 import { NotFoundError } from '@typescript-error/http';
-import { Cache, Client } from 'redis-extension';
+import { Cache, useClient } from 'redis-extension';
+import path from 'path';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { useRedisClient } from '../../../utils';
 import { CachePrefix } from '../../../config/constants';
 import { useDataSource } from '../../../database';
+import { Config, useConfig } from '../../../config';
 
 export async function verifyOAuth2Token(
     token: string,
-    context?: TokenVerifyContext & {
-        redis?: Client | boolean | string
+    context?: {
+        token?: TokenVerifyContext,
+        config?: Config
     },
 ) : Promise<OAuth2TokenVerification> {
+    context = context || {};
+
+    const config = context.config || await useConfig();
+    const tokenContext = context.token || {};
+    tokenContext.keyPair = tokenContext.keyPair || {};
+
+    if (!tokenContext.keyPair.directory) {
+        tokenContext.keyPair.directory = path.join(config.rootPath, config.writableDirectory);
+    }
+
     const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
         token,
-        context,
+        tokenContext,
     );
 
-    context ??= {};
-    const redis = useRedisClient(context.redis);
+    const redis = config.redis.enabled ?
+        useClient(config.redis.alias) :
+        undefined;
 
     let result : OAuth2TokenVerification;
 

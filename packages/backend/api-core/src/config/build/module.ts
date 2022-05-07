@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,22 +8,14 @@
 import path from 'path';
 import { Config } from '../type';
 import { ConfigDefault } from '../constants';
-
-function requireFromEnv(key : string, alt?: any) {
-    if (!process.env[key] && typeof alt === 'undefined') {
-        // eslint-disable-next-line no-console
-        console.error(`[APP ERROR] Missing variable: ${key}`);
-
-        return process.exit(1);
-    }
-
-    return process.env[key] ?? alt;
-}
+import { requireBooleanFromEnv, requireFromEnv } from './utils';
 
 export function buildConfig(
     config: Partial<Config>,
     directoryPath?: string,
 ): Config {
+    directoryPath ??= process.cwd();
+
     if (!config.env) {
         config.env = requireFromEnv('NODE_ENV', 'development');
     }
@@ -32,23 +24,36 @@ export function buildConfig(
         config.port = parseInt(requireFromEnv('PORT', ConfigDefault.PORT), 10);
     }
 
-    if (!config.adminUsername) {
-        config.adminUsername = requireFromEnv('ADMIN_USERNAME', 'admin');
+    if (!config.admin) {
+        config.admin = {} as Config['admin'];
     }
 
-    if (!config.adminPassword) {
-        config.adminPassword = requireFromEnv('ADMIN_PASSWORD', 'start123');
+    if (!config.admin.username) {
+        config.admin.username = requireFromEnv('ADMIN_USERNAME', 'admin');
     }
 
-    if (!config.robotSecret) {
-        config.robotSecret = requireFromEnv('ROBOT_SECRET', null);
-        config.robotSecret = !config.robotSecret ? undefined : config.robotSecret;
+    if (!config.admin.password) {
+        config.admin.password = requireFromEnv('ADMIN_PASSWORD', 'start123');
+    }
+
+    if (!config.robot) {
+        config.robot = {} as Config['robot'];
+    }
+
+    if (typeof config.robot.enabled === 'undefined') {
+        config.robot.enabled = requireBooleanFromEnv('ROBOT_ENABLED', true);
+    }
+
+    if (!config.robot.secret) {
+        config.robot.secret = requireFromEnv('ROBOT_SECRET', null) || undefined;
     }
 
     if (!config.permissions) {
         const permissions = requireFromEnv('PERMISSIONS', null);
         if (permissions) {
             config.permissions = permissions.split(',').filter();
+        } else {
+            config.permissions = [];
         }
     }
 
@@ -57,10 +62,8 @@ export function buildConfig(
     }
 
     if (!config.webUrl) {
-        config.webUrl = requireFromEnv('WEB_URL', 'http://127.0.0.1:3000/');
+        config.webUrl = requireFromEnv('WEB_URL', `http://127.0.0.1:${config.port}/`);
     }
-
-    directoryPath ??= process.cwd();
 
     if (config.rootPath) {
         if (!path.isAbsolute(config.rootPath)) {
@@ -100,21 +103,29 @@ export function buildConfig(
         }
     }
 
-    if (!config.swaggerDocumentation) {
-        config.swaggerDocumentation = requireFromEnv('SWAGGER_DOCUMENTATION', 'true') !== 'false';
+    if (!config.middleware) {
+        config.middleware = {
+            bodyParser: true,
+            cookieParser: true,
+            response: true,
+            swagger: true,
+        };
     }
 
-    if (typeof config.redis === 'undefined') {
-        const envRedis : string = requireFromEnv('REDIS', false);
-        if (envRedis) {
-            if (envRedis.toLowerCase() === 'true') {
-                config.redis = true;
-            } else if (envRedis.toLowerCase() === 'false') {
-                config.redis = false;
-            } else {
-                config.redis = envRedis;
-            }
-        }
+    if (!config.redis) {
+        config.redis = {} as Config['redis'];
+    }
+
+    if (typeof config.redis.enabled === 'undefined') {
+        config.redis.enabled = requireBooleanFromEnv('REDIS_ENABLED', false);
+    }
+
+    if (!config.redis.connectionString) {
+        config.redis.connectionString = requireFromEnv('REDIS_CONNECTION_STRING', null) || undefined;
+    }
+
+    if (!config.redis.alias) {
+        config.redis.alias = requireFromEnv('REDIS_ALIAS', null) || undefined;
     }
 
     return config as Config;

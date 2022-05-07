@@ -11,6 +11,7 @@ import {
 import { KeyPairContext } from '@authelion/api-utils';
 import { Client } from 'redis-extension';
 import { ExpressRequest } from '../../type';
+import { Config } from '../../../config';
 
 export type AccessTokenContextUserEntity = {
     kind: OAuth2TokenSubKind.USER,
@@ -38,13 +39,8 @@ export interface Grant {
 
 export type GrantContext = {
     request: ExpressRequest,
-    redis?: Client | string | boolean,
 
-    keyPairOptions?: Partial<KeyPairContext>,
-
-    maxAge?: TokenMaxAgeType,
-
-    selfUrl: string,
+    config: Config
 };
 
 // -----------------------------------------------------

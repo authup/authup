@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache, Client } from 'redis-extension';
+import { Cache, useClient } from 'redis-extension';
 import {
     OAuth2TokenSubKind,
     OAuth2TokenVerification, PermissionMeta, Robot,
@@ -14,39 +14,36 @@ import {
     User,
 } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
-import { useRedisClient } from '../../../utils';
 import {
     RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { CachePrefix } from '../../../config/constants';
 import { useDataSource } from '../../../database';
+import { Config, useConfig } from '../../../config';
 
 /**
  *
  * @param token
- * @param context
+ * @param config
  *
  * @throws TokenError
  * @throws NotFoundError
  */
 export async function extendOAuth2TokenVerification(
     token: OAuth2TokenVerification,
-    context?: {
-        redis?: Client | boolean | string
-    },
+    config?: Config,
 ) {
-    context ??= {};
-
     const data : TokenVerificationPayload = {
         ...token,
     };
 
-    const redis = useRedisClient(context.redis);
-
-    let cache : Cache<Robot['id'] | User['id']> | undefined;
+    let cache: Cache<Robot['id'] | User['id']> | undefined;
     let permissionCache: Cache<Robot['id'] | User['id']> | undefined;
 
-    if (redis) {
+    config ??= await useConfig();
+    if (config.redis.enabled) {
+        const redis = useClient(config.redis.alias);
+
         cache = new Cache<Robot['id'] | User['id']>(
             { redis },
             { prefix: CachePrefix.TOKEN_TARGET, seconds: 60 },

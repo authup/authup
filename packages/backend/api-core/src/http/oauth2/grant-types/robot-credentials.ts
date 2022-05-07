@@ -9,6 +9,7 @@ import {
     OAuth2TokenResponse,
     OAuth2TokenSubKind, RobotError,
 } from '@authelion/common';
+import path from 'path';
 import { AbstractGrant } from './abstract-grant';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../../domains';
@@ -28,7 +29,9 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         });
 
         const response = new OAuth2BearerTokenResponse({
-            keyPairOptions: this.context.keyPairOptions,
+            keyPairOptions: {
+                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+            },
             accessToken,
         });
 

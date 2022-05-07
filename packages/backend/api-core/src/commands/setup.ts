@@ -12,7 +12,7 @@ import { createKeyPair } from '@authelion/api-utils';
 import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
 import { DatabaseRootSeeder, buildDataSourceOptions } from '../database';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
 export async function setupCommand(context: SetupCommandContext) {
     if (
@@ -30,7 +30,11 @@ export async function setupCommand(context: SetupCommandContext) {
     context.databaseSeeder ??= true;
     context.documentation ??= true;
 
-    context.config ??= useConfig();
+    if (context.config) {
+        setConfig(context.config);
+    }
+
+    context.config ??= await useConfig();
 
     const writableDirectoryPath = path.join(
         context.config.rootPath,
@@ -105,11 +109,11 @@ export async function setupCommand(context: SetupCommandContext) {
                 }
 
                 const seeder = new DatabaseRootSeeder({
-                    userName: context.config.adminUsername,
-                    userPassword: context.config.adminPassword,
+                    userName: context.config.admin.username,
+                    userPassword: context.config.admin.password,
                     userPasswordReset: true,
 
-                    robotSecret: context.config.robotSecret,
+                    robotSecret: context.config.robot.secret,
                     robotSecretReset: true,
 
                     permissions: context.config.permissions,

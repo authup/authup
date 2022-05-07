@@ -6,6 +6,7 @@
  */
 
 import { OAuth2TokenResponse, Realm } from '@authelion/common';
+import path from 'path';
 import { AbstractGrant } from './abstract-grant';
 import {
     AccessTokenContextRobotEntity, AccessTokenContextUserEntity, Grant, InternalGrantContext,
@@ -35,7 +36,9 @@ export class InternalGrantType extends AbstractGrant implements Grant {
         const response = new OAuth2BearerTokenResponse({
             accessToken,
             refreshToken,
-            keyPairOptions: this.context.keyPairOptions,
+            keyPairOptions: {
+                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+            },
         });
 
         return response.build();

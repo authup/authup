@@ -9,14 +9,19 @@ import { URL } from 'url';
 import { DataSource } from 'typeorm';
 import path from 'path';
 import { setDataSource } from 'typeorm-extension';
+import { setConfig as setRedisConfig } from 'redis-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
 import { buildTokenAggregator } from '../aggregators';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
 export async function startCommand(context: StartCommandContext) {
-    context.config ??= useConfig();
+    if (context.config) {
+        setConfig(context.config);
+    } else {
+        context.config ??= await useConfig();
+    }
 
     if (context.spinner) {
         context.spinner.info(`Environment: ${context.config.env}`);
@@ -30,14 +35,7 @@ export async function startCommand(context: StartCommandContext) {
     /*
     HTTP Server & Express App
     */
-    const expressApp = createExpressApp({
-        writableDirectoryPath: path.join(context.config.rootPath, context.config.writableDirectory),
-        swaggerDocumentation: context.config.swaggerDocumentation,
-        selfUrl: context.config.selfUrl,
-        webUrl: context.config.webUrl,
-        tokenMaxAge: context.config.tokenMaxAge,
-        redis: context.config.redis,
-    });
+    const expressApp = createExpressApp(context.config);
 
     if (context.spinner) {
         context.spinner.succeed('Initialised controllers & middlewares.');
@@ -65,7 +63,13 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Build & start token aggregator.');
     }
 
-    const { start } = buildTokenAggregator(context.config.redis);
+    if (context.config.redis.connectionString) {
+        setRedisConfig({
+            connectionString: context.config.redis.connectionString,
+        }, context.config.redis.alias);
+    }
+
+    const { start } = buildTokenAggregator(context.config);
 
     await start();
 

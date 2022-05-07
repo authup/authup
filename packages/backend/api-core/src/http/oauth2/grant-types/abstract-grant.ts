@@ -10,13 +10,14 @@ import {
     TokenError, determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
 } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
-import { Cache } from 'redis-extension';
+import { Cache, useClient } from 'redis-extension';
+import path from 'path';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
 import { GrantContext, IssueAccessTokenContext } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { useRedisClient } from '../../../utils';
 import { CachePrefix } from '../../../config/constants';
+import { useConfigSync } from '../../../config';
 
 export abstract class AbstractGrant {
     protected context : GrantContext;
@@ -26,6 +27,7 @@ export abstract class AbstractGrant {
     protected refreshTokenCache : Cache<string>;
 
     constructor(context: GrantContext) {
+        context.config ??= useConfigSync();
         this.context = context;
 
         this.initCache();
@@ -34,24 +36,25 @@ export abstract class AbstractGrant {
     // -----------------------------------------------------
 
     private initCache() {
-        if (!this.context.redis || this.accessTokenCache) return;
+        if (this.accessTokenCache || !this.context.config.redis.enabled) return;
 
-        const redis = useRedisClient(this.context.redis);
-        if (redis) {
-            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
-            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
-        }
+        const redis = useClient(this.context.config.redis.alias);
+
+        this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
+        this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
     }
 
     // -----------------------------------------------------
 
     protected async issueAccessToken(context: IssueAccessTokenContext) : Promise<OAuth2AccessTokenEntity> {
-        const maxAge = determineAccessTokenMaxAge(this.context.maxAge);
+        const maxAge = determineAccessTokenMaxAge(this.context.config.tokenMaxAge);
 
         const tokenBuilder = new Oauth2AccessTokenBuilder({
             request: this.context.request,
-            keyPairOptions: this.context.keyPairOptions,
-            selfUrl: this.context.selfUrl,
+            keyPairOptions: {
+                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+            },
+            selfUrl: this.context.config.selfUrl,
             maxAge,
         });
 
@@ -82,7 +85,7 @@ export abstract class AbstractGrant {
     }
 
     protected async issueRefreshToken(data: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
-        const maxAge : number = determineRefreshTokenMaxAge(this.context.maxAge);
+        const maxAge : number = determineRefreshTokenMaxAge(this.context.config.tokenMaxAge);
 
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
             accessToken: data,

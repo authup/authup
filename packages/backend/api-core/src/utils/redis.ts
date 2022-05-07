@@ -5,22 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, setConfig, useClient } from 'redis-extension';
+let alias : string | undefined;
 
-export function useRedisClient(data?: string | boolean | Client) : Client | undefined {
-    if (!data) {
-        return undefined;
-    }
+export function setRedisAlias(value?: string) {
+    alias = value;
+}
 
-    if (typeof data === 'string') {
-        setConfig({
-            connectionString: data,
-        });
-
-        data = true;
-    }
-
-    return typeof data === 'boolean' ?
-        useClient() :
-        data;
+export function useRedisAlias() {
+    return alias;
 }

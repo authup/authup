@@ -8,10 +8,14 @@
 import { dropDatabase } from 'typeorm-extension';
 import { buildDataSourceOptions } from '../database';
 import { StartCommandContext } from './type';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
 export async function resetCommand(context: StartCommandContext) {
-    context.config ??= useConfig();
+    if (context.config) {
+        setConfig(context.config);
+    }
+
+    context.config ??= await useConfig();
 
     if (context.spinner) {
         context.spinner.start('Executing database reset.');

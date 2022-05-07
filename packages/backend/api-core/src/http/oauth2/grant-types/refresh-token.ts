@@ -10,6 +10,7 @@ import {
     OAuth2TokenKind,
     OAuth2TokenResponse, TokenError,
 } from '@authelion/common';
+import path from 'path';
 import { AbstractGrant } from './abstract-grant';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
@@ -33,7 +34,9 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const refreshToken = await this.issueRefreshToken(accessToken);
 
         const response = new OAuth2BearerTokenResponse({
-            keyPairOptions: this.context.keyPairOptions,
+            keyPairOptions: {
+                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+            },
             accessToken,
             refreshToken,
         });
@@ -47,7 +50,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const token = await verifyOAuth2Token(
             refreshToken,
             {
-                keyPair: this.context.keyPairOptions,
+                config: this.context.config,
             },
         );
 
