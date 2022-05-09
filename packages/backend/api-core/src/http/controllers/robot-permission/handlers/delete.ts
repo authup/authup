@@ -7,11 +7,9 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotPermissionEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
-import { CachePrefix } from '../../../../redis/constants';
 
 /**
  * Drop an permission by id of a specific user.
@@ -54,17 +52,6 @@ export async function deleteRobotPermissionRouteHandler(req: ExpressRequest, res
     await repository.remove(entity);
 
     entity.id = entityId;
-
-    // ----------------------------------------------
-
-    if (dataSource.queryResultCache) {
-        await dataSource.queryResultCache.remove([
-            buildKeyPath({
-                prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                id: entity.robot_id,
-            }),
-        ]);
-    }
 
     // ----------------------------------------------
 

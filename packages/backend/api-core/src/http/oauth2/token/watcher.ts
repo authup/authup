@@ -6,11 +6,13 @@
  */
 
 import { Cache, useClient } from 'redis-extension';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import {
+    OAuth2AccessTokenEntity,
+    OAuth2RefreshTokenEntity,
+} from '../../../domains';
 import { useDataSource } from '../../../database';
+import { CachePrefix } from '../../../redis';
 import { useConfig } from '../../../config';
-import { CachePrefix } from '../../../redis/constants';
 
 export async function startOAuth2TokenWatcher() {
     const config = await useConfig();
@@ -20,34 +22,23 @@ export async function startOAuth2TokenWatcher() {
 
     const redis = useClient(config.redis.alias);
 
-    // -------------------------------------------------
-
-    const accessTokenCache = new Cache<string>({
-        redis,
-    }, {
-        prefix: CachePrefix.TOKEN_ACCESS,
-    });
+    const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
     accessTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
         await accessTokenRepository.delete(data.id);
     });
 
+    await accessTokenCache.startScheduler();
+
     // -------------------------------------------------
 
-    const refreshTokenCache = new Cache<string>({
-        redis,
-    }, {
-        prefix: CachePrefix.TOKEN_REFRESH,
-    });
+    const refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
     refreshTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
         await refreshTokenRepository.delete(data.id);
     });
 
-    // -------------------------------------------------
-
-    await accessTokenCache.startScheduler();
     await refreshTokenCache.startScheduler();
 }

@@ -6,15 +6,12 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserAttributeValidation } from '../utils';
 import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
-import { CachePrefix } from '../../../../redis/constants';
 
 export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -46,15 +43,6 @@ export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: 
     }
 
     await repository.save(entity);
-
-    if (dataSource.queryResultCache) {
-        await dataSource.queryResultCache.remove([
-            buildKeyPath({
-                prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                id: entity.user_id,
-            }),
-        ]);
-    }
 
     return res.respond({
         data: entity,

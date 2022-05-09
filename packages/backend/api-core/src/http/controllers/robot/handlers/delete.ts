@@ -9,11 +9,9 @@ import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     PermissionID,
 } from '@authelion/common';
-import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
 import { useDataSource } from '../../../../database';
-import { CachePrefix } from '../../../../redis/constants';
 
 export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -53,16 +51,6 @@ export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressR
         .emit('deleted', {
             ...entity,
         });
-
-    if (dataSource.queryResultCache) {
-        await dataSource.queryResultCache.remove([
-            buildKeyPath({
-                prefix: CachePrefix.ROBOT,
-                id: entity.id,
-            }),
-        ]);
-    }
-
     // ----------------------------------------------
 
     return res.respondDeleted({

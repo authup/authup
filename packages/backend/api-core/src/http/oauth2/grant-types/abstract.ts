@@ -11,20 +11,34 @@ import {
     determineAccessTokenMaxAge,
     determineRefreshTokenMaxAge,
 } from '@authelion/common';
+import { Cache, useClient } from 'redis-extension';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
 import path from 'path';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
 import { AccessTokenIssueContext } from './type';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 import { Config } from '../../../config';
 import { ExpressRequest } from '../../type';
+import { CachePrefix } from '../../../redis';
 
 export abstract class AbstractGrant {
     protected config : Config;
 
+    protected accessTokenCache : Cache<string>;
+
+    protected refreshTokenCache : Cache<string>;
+
+    // -----------------------------------------------------
+
     constructor(config: Config) {
         this.config = config;
+
+        if (this.config.redis.enabled) {
+            const redis = useClient(this.config.redis.alias);
+
+            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
+            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
+        }
     }
 
     // -----------------------------------------------------
@@ -58,7 +72,13 @@ export abstract class AbstractGrant {
             tokenBuilder.addScope(context.scope);
         }
 
-        return tokenBuilder.create();
+        const token = await tokenBuilder.create();
+
+        if (this.accessTokenCache) {
+            await this.accessTokenCache.set(token.id, token, { seconds: maxAge });
+        }
+
+        return token;
     }
 
     protected async issueRefreshToken(accessToken: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
@@ -69,7 +89,13 @@ export abstract class AbstractGrant {
             maxAge,
         });
 
-        return tokenBuilder.create();
+        const token = await tokenBuilder.create();
+
+        if (this.refreshTokenCache) {
+            await this.refreshTokenCache.set(token.id, token, { seconds: maxAge });
+        }
+
+        return token;
     }
 
     // -----------------------------------------------------
@@ -77,10 +103,7 @@ export abstract class AbstractGrant {
     protected getClientCredentials(request: ExpressRequest) : [string, string] {
         let { client_id: clientId, client_secret: clientSecret } = request.body;
 
-        if (
-            !clientId &&
-            !clientSecret
-        ) {
+        if (!clientId && !clientSecret) {
             const { authorization: headerValue } = request.headers;
 
             const header = parseAuthorizationHeader(headerValue);

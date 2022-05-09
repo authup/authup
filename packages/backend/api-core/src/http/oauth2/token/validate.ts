@@ -14,10 +14,12 @@ import {
 } from '@authelion/common';
 import { verifyToken } from '@authelion/api-utils';
 import { NotFoundError } from '@typescript-error/http';
-import { buildKeyPath } from 'redis-extension';
 
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
+import { Cache, useClient } from 'redis-extension';
+import {
+    OAuth2AccessTokenEntity,
+    OAuth2RefreshTokenEntity,
+} from '../../../domains';
 import { useDataSource } from '../../../database';
 import { useConfig } from '../../../config';
 import { CachePrefix } from '../../../redis';
@@ -34,34 +36,45 @@ export async function validateOAuth2Token(
         },
     );
 
-    let result : OAuth2TokenVerification;
-
     const dataSource = await useDataSource();
+    const redis = config.redis.enabled ?
+        useClient(config.redis.alias) :
+        undefined;
+
+    let result : OAuth2TokenVerification;
 
     switch (tokenPayload.kind) {
         case OAuth2TokenKind.ACCESS: {
             const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
-            const entity = await repository.findOne({
-                where: {
-                    id: tokenPayload.access_token_id,
-                },
-                cache: {
-                    id: buildKeyPath({
-                        prefix: CachePrefix.TOKEN_ACCESS,
-                        id: tokenPayload.access_token_id,
-                    }),
-                    milliseconds: 60.000,
-                },
-            });
+            const cache : Cache<string> = redis ?
+                new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS }) :
+                undefined;
 
-            if (!entity) {
-                throw new NotFoundError();
+            let entity : OAuth2AccessTokenEntity | undefined;
+
+            if (cache) {
+                entity = await cache.get(tokenPayload.access_token_id);
+            }
+
+            if (entity) {
+                entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+            } else {
+                entity = await repository.findOneBy({ id: tokenPayload.access_token_id });
+
+                if (!entity) {
+                    throw new NotFoundError();
+                }
             }
 
             if (entity.expires.getTime() < Date.now()) {
                 await repository.remove(entity);
 
                 throw TokenError.expired();
+            }
+
+            if (cache) {
+                const seconds = Math.ceil((entity.expires.getTime() - Date.now()) / 1000);
+                await cache.set(tokenPayload.access_token_id, entity, { seconds });
             }
 
             result = {
@@ -73,27 +86,35 @@ export async function validateOAuth2Token(
         }
         case OAuth2TokenKind.REFRESH: {
             const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
-            const entity = await repository.findOne({
-                where: {
-                    id: tokenPayload.refresh_token_id,
-                },
-                cache: {
-                    id: buildKeyPath({
-                        prefix: CachePrefix.TOKEN_REFRESH,
-                        id: tokenPayload.refresh_token_id,
-                    }),
-                    milliseconds: 60.000,
-                },
-            });
+            const cache : Cache<string> = redis ?
+                new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH }) :
+                undefined;
 
-            if (!entity) {
-                throw new NotFoundError();
+            let entity : OAuth2RefreshTokenEntity | undefined;
+
+            if (cache) {
+                entity = await cache.get(tokenPayload.refresh_token_id);
+            }
+
+            if (entity) {
+                entity.expires = entity.expires instanceof Date ? entity.expires : new Date(entity.expires);
+            } else {
+                entity = await repository.findOneBy({ id: tokenPayload.refresh_token_id });
+
+                if (!entity) {
+                    throw new NotFoundError();
+                }
             }
 
             if (entity.expires.getTime() < Date.now()) {
                 await repository.remove(entity);
 
                 throw TokenError.expired();
+            }
+
+            if (cache) {
+                const seconds = Math.ceil((entity.expires.getTime() - Date.now()) / 1000);
+                await cache.set(tokenPayload.refresh_token_id, entity, { seconds });
             }
 
             result = {

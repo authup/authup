@@ -13,7 +13,7 @@ import { setConfig as setRedisConfig } from 'redis-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
-import { buildTokenAggregator } from '../aggregators';
+import { buildOAuth2TokenAggregator } from '../aggregators';
 import { useConfig } from '../config';
 
 export async function startCommand(context?: StartCommandContext) {
@@ -69,7 +69,7 @@ export async function startCommand(context?: StartCommandContext) {
         }
     }
 
-    const { start } = buildTokenAggregator();
+    const { start } = buildOAuth2TokenAggregator();
 
     await start();
 

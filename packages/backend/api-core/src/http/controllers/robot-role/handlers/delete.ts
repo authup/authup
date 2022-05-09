@@ -6,12 +6,10 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, RobotRole, isPermittedForResourceRealm } from '@authelion/common';
-import { buildKeyPath } from 'redis-extension';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
-import { CachePrefix } from '../../../../redis/constants';
 
 export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -41,15 +39,6 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
     await repository.remove(entity);
 
     entity.id = entityId;
-
-    if (dataSource.queryResultCache) {
-        await dataSource.queryResultCache.remove([
-            buildKeyPath({
-                prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                id: entity.robot_id,
-            }),
-        ]);
-    }
 
     return res.respondDeleted({ data: entity });
 }

@@ -7,11 +7,9 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
-import { CachePrefix } from '../../../../redis';
 
 /**
  * Drop an permission by id of a specific user.
@@ -56,17 +54,6 @@ export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res:
     await repository.remove(entity);
 
     entity.id = entityId;
-
-    // ----------------------------------------------
-
-    if (dataSource.queryResultCache) {
-        await dataSource.queryResultCache.remove([
-            buildKeyPath({
-                prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                id: entity.user_id,
-            }),
-        ]);
-    }
 
     // ----------------------------------------------
 

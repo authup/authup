@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeExpiredOAuth2Tokens, startOAuth2TokenWatcher } from '../http/oauth2';
+import { runOAuth2TokenCleaner, startOAuth2TokenWatcher } from '../http/oauth2';
 
-export function buildTokenAggregator() {
+export function buildOAuth2TokenAggregator() {
     function start() {
         return Promise.resolve()
-            .then(() => removeExpiredOAuth2Tokens())
+            .then(() => runOAuth2TokenCleaner())
             .then(() => startOAuth2TokenWatcher());
     }
 
