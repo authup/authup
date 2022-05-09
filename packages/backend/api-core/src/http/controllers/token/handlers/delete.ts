@@ -9,11 +9,14 @@ import {
     CookieName,
     OAuth2TokenKind,
 } from '@authelion/common';
+import { buildKeyPath, useClient } from 'redis-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../../domains';
 import { validateOAuth2Token } from '../../../oauth2';
 import { useDataSource } from '../../../../database';
+import { useConfig } from '../../../../config';
+import { CachePrefix } from '../../../../redis';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
@@ -39,6 +42,25 @@ export async function deleteTokenRouteHandler(
 
     const token = await validateOAuth2Token(id);
     const dataSource = await useDataSource();
+
+    const config = await useConfig();
+    if (config.redis.enabled) {
+        const redis = useClient(config.redis.alias);
+
+        if (redis) {
+            await redis.del(buildKeyPath({
+                prefix: CachePrefix.TOKEN_ACCESS,
+                id: token.payload.access_token_id,
+            }));
+
+            if (token.payload.kind === OAuth2TokenKind.REFRESH) {
+                await redis.del(buildKeyPath({
+                    prefix: CachePrefix.TOKEN_REFRESH,
+                    id: token.payload.refresh_token_id,
+                }));
+            }
+        }
+    }
 
     switch (token.kind) {
         case OAuth2TokenKind.ACCESS: {
