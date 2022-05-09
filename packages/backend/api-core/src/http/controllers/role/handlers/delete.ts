@@ -7,9 +7,11 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -46,6 +48,19 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     await repository.remove(entity);
 
     entity.id = entityId;
+
+    // ----------------------------------------------
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.ROLE,
+                id: entity.id,
+            }),
+        ]);
+    }
+
+    // ----------------------------------------------
 
     return res.respondDeleted({
         data: entity,

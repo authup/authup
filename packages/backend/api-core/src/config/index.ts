@@ -7,5 +7,5 @@
 
 export * from './find';
 export * from './module';
-export * from './build';
+export * from './extend';
 export * from './type';

@@ -7,11 +7,13 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -60,6 +62,15 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
     entity = repository.merge(entity, result.data);
 
     await repository.save(entity);
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.USER,
+                id: entity.id,
+            }),
+        ]);
+    }
 
     return res.respond({
         data: entity,

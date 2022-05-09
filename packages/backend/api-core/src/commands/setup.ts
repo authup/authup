@@ -11,34 +11,32 @@ import { DataSource } from 'typeorm';
 import { createKeyPair } from '@authelion/api-utils';
 import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
-import { DatabaseRootSeeder, buildDataSourceOptions } from '../database';
-import { setConfig, useConfig } from '../config';
+import { DatabaseSeeder, buildDataSourceOptions } from '../database';
+import { useConfig } from '../config';
 
-export async function setupCommand(context: SetupCommandContext) {
+export async function setupCommand(context?: SetupCommandContext) {
+    context = context || {};
+
     if (
         typeof context.keyPair === 'undefined' &&
         typeof context.database === 'undefined' &&
-        typeof context.databaseSeeder === 'undefined' &&
+        typeof context.databaseSeed === 'undefined' &&
         typeof context.documentation === 'undefined'
     ) {
         // eslint-disable-next-line no-multi-assign
-        context.keyPair = context.database = context.databaseSeeder = context.documentation = true;
+        context.keyPair = context.database = context.databaseSeed = context.documentation = true;
     }
 
     context.keyPair ??= true;
     context.database ??= true;
-    context.databaseSeeder ??= true;
+    context.databaseSeed ??= true;
     context.documentation ??= true;
 
-    if (context.config) {
-        setConfig(context.config);
-    }
-
-    context.config ??= await useConfig();
+    const config = await useConfig();
 
     const writableDirectoryPath = path.join(
-        context.config.rootPath,
-        context.config.writableDirectory,
+        config.rootPath,
+        config.writableDirectory,
     );
 
     if (context.keyPair) {
@@ -61,9 +59,9 @@ export async function setupCommand(context: SetupCommandContext) {
         }
 
         await generateSwaggerDocumentation({
-            rootDirectoryPath: context.config.rootPath,
-            writableDirectory: context.config.writableDirectory,
-            selfUrl: context.config.selfUrl,
+            rootPath: config.rootPath,
+            writableDirectory: config.writableDirectory,
+            baseUrl: config.selfUrl,
         });
 
         if (context.spinner) {
@@ -71,11 +69,11 @@ export async function setupCommand(context: SetupCommandContext) {
         }
     }
 
-    if (context.database || context.databaseSeeder) {
+    if (context.database || context.databaseSeed) {
         /**
          * Setup database with schema & seeder
          */
-        const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+        const options = await buildDataSourceOptions();
 
         if (context.database) {
             if (context.spinner) {
@@ -103,30 +101,16 @@ export async function setupCommand(context: SetupCommandContext) {
                 context.spinner.succeed('Synchronized database schema.');
             }
 
-            if (context.databaseSeeder) {
+            if (context.databaseSeed) {
                 if (context.spinner) {
                     context.spinner.start('Seeding database.');
                 }
 
-                const seeder = new DatabaseRootSeeder({
-                    userName: context.config.admin.username,
-                    userPassword: context.config.admin.password,
-                    userPasswordReset: true,
-
-                    robotSecret: context.config.robot.secret,
-                    robotSecretReset: true,
-
-                    permissions: context.config.permissions,
-
-                    ...(context.databaseSeederOptions ? context.databaseSeederOptions : {}),
-                });
+                const seeder = new DatabaseSeeder(config.database.seed);
+                const seederData = await seeder.run(dataSource);
 
                 if (context.spinner) {
                     context.spinner.succeed('Seeded database.');
-                }
-
-                const seederData = await seeder.run(dataSource);
-                if (context.spinner) {
                     context.spinner.info(`Robot ID: ${seederData.robot.id}`);
                     context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
                 }

@@ -5,12 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-let alias : string | undefined;
-
-export function setRedisAlias(value?: string) {
-    alias = value;
-}
-
-export function useRedisAlias() {
-    return alias;
-}
+export * from './extend';

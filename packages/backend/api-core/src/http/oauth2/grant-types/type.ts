@@ -8,10 +8,7 @@
 import {
     OAuth2Client, OAuth2TokenResponse, OAuth2TokenSubKind, Realm, Robot, TokenMaxAgeType, User,
 } from '@authelion/common';
-import { KeyPairContext } from '@authelion/api-utils';
-import { Client } from 'redis-extension';
 import { ExpressRequest } from '../../type';
-import { Config } from '../../../config';
 
 export type AccessTokenContextUserEntity = {
     kind: OAuth2TokenSubKind.USER,
@@ -23,7 +20,9 @@ export type AccessTokenContextRobotEntity = {
     data: Robot | Robot['id']
 };
 
-export type IssueAccessTokenContext = {
+export type AccessTokenIssueContext = {
+    request: ExpressRequest,
+
     entity: AccessTokenContextUserEntity | AccessTokenContextRobotEntity,
     realm: Realm['id'] | Realm,
 
@@ -34,18 +33,5 @@ export type IssueAccessTokenContext = {
 // -----------------------------------------------------
 
 export interface Grant {
-    run() : Promise<OAuth2TokenResponse>;
+    run(request: ExpressRequest) : Promise<OAuth2TokenResponse>;
 }
-
-export type GrantContext = {
-    request: ExpressRequest,
-
-    config: Config
-};
-
-// -----------------------------------------------------
-
-export type InternalGrantContext = GrantContext & {
-    realm: Realm | Realm['id'],
-    entity: AccessTokenContextUserEntity | AccessTokenContextRobotEntity
-};

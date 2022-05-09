@@ -10,17 +10,19 @@ import {
     OAuth2TokenSubKind, UserError,
 } from '@authelion/common';
 import path from 'path';
-import { AbstractGrant } from './abstract-grant';
+import { AbstractGrant } from './abstract';
 import { UserEntity, UserRepository } from '../../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
 import { useDataSource } from '../../../database';
+import { ExpressRequest } from '../../type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<OAuth2TokenResponse> {
-        const user = await this.validate();
+    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+        const user = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
+            request,
             entity: {
                 kind: OAuth2TokenSubKind.USER,
                 data: user,
@@ -34,15 +36,15 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             accessToken,
             refreshToken,
             keyPairOptions: {
-                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+                directory: path.join(this.config.rootPath, this.config.writableDirectory),
             },
         });
 
         return response.build();
     }
 
-    async validate() : Promise<UserEntity> {
-        const { username, password } = this.context.request.body;
+    async validate(request: ExpressRequest) : Promise<UserEntity> {
+        const { username, password } = request.body;
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);

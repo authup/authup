@@ -22,12 +22,11 @@ import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../d
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
 import { useDataSource } from '../../../../database';
-import { Config, useConfig } from '../../../../config';
+import { useConfig } from '../../../../config';
 
 export async function authorizeURLOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    config?: Config,
 ) : Promise<any> {
     const { id } = req.params;
 
@@ -42,7 +41,7 @@ export async function authorizeURLOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    config ??= await useConfig();
+    const config = await useConfig();
 
     const oauth2Client = new HTTPOAuth2Client({
         client_id: provider.client_id,
@@ -59,7 +58,6 @@ export async function authorizeURLOauth2ProviderRouteHandler(
 export async function authorizeCallbackOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    config?: Config,
 ) : Promise<any> {
     const { id } = req.params;
     const { code, state } = req.query;
@@ -76,7 +74,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    config ??= await useConfig();
+    const config = await useConfig();
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
     const oauth2Client = new HTTPOAuth2Client({
@@ -95,17 +93,15 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     });
 
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
-    const grant = new InternalGrantType({
-        request: req,
-        entity: {
+    const grant = new InternalGrantType(config);
+
+    const token = await grant
+        .setEntity({
             kind: OAuth2TokenSubKind.USER,
             data: account.user_id,
-        },
-        realm: provider.realm_id,
-        config,
-    });
-
-    const token = await grant.run();
+        })
+        .setRealm(provider.realm_id)
+        .run(req);
 
     const cookieOptions : CookieOptions = {
 

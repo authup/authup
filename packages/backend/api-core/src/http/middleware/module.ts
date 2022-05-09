@@ -14,33 +14,37 @@ import {
     createMiddleware,
     responseMiddleware,
 } from '../index';
-import { Config, useConfigSync } from '../../config';
+import { useConfigSync } from '../../config';
 
-export function registerMiddlewares(
-    router: Application,
-    config?: Config,
-) {
-    config ??= useConfigSync();
+export function registerMiddlewares(router: Application) {
+    const config = useConfigSync();
 
-    if (config.middleware.bodyParser) {
+    const options = config.middleware;
+
+    if (options.bodyParser) {
         router.use(urlencoded({ extended: false }));
         router.use(json());
     }
 
     router.use(cookieParser());
 
-    if (config.middleware.response) {
+    if (options.response) {
         router.use(responseMiddleware);
     }
 
     //--------------------------------------------------------------------
 
-    router.use(createMiddleware(config));
+    router.use(createMiddleware());
 
     //--------------------------------------------------------------------
 
-    if (config.middleware.swagger) {
-        const swaggerDocumentPath: string = path.join(config.rootPath, config.writableDirectory, 'swagger.json');
+    if (
+        options.swagger &&
+        options.swagger.enabled
+    ) {
+        const basePath = options.swagger.directory || path.join(process.cwd(), 'writable');
+
+        const swaggerDocumentPath: string = path.join(basePath, 'swagger.json');
 
         if (existsSync(swaggerDocumentPath)) {
             // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require

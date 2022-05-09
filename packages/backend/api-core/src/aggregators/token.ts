@@ -6,13 +6,12 @@
  */
 
 import { removeExpiredOAuth2Tokens, startOAuth2TokenWatcher } from '../http/oauth2';
-import { Config } from '../config';
 
-export function buildTokenAggregator(config?: Config) {
+export function buildTokenAggregator() {
     function start() {
         return Promise.resolve()
             .then(() => removeExpiredOAuth2Tokens())
-            .then(() => startOAuth2TokenWatcher(config));
+            .then(() => startOAuth2TokenWatcher());
     }
 
     return {

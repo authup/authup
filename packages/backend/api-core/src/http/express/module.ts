@@ -10,9 +10,8 @@ import cors from 'cors';
 
 import { errorMiddleware, registerMiddlewares } from '../middleware';
 import { registerControllers } from '../controllers';
-import { Config } from '../../config';
 
-export function createExpressApp(config?: Config) : Express {
+export function createExpressApp() : Express {
     const expressApp : Express = express();
 
     expressApp.set('trust proxy', 1);
@@ -24,8 +23,8 @@ export function createExpressApp(config?: Config) : Express {
         credentials: true,
     }));
 
-    registerMiddlewares(expressApp, config);
-    registerControllers(expressApp, config);
+    registerMiddlewares(expressApp);
+    registerControllers(expressApp);
 
     // needs to be last :/
     expressApp.use(errorMiddleware);

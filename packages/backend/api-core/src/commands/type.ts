@@ -6,8 +6,6 @@
  */
 
 import { DataSource } from 'typeorm';
-import { Config } from '../config';
-import { DatabaseRootSeederOptions } from '../database';
 
 export type Spinner = {
     start(text?: string) : Spinner,
@@ -20,19 +18,18 @@ export type Spinner = {
 };
 
 export type CommandContext = {
-    config?: Config,
-    databaseConnectionMerge?: boolean,
-    databaseSeederOptions?: Partial<DatabaseRootSeederOptions>,
     spinner?: Spinner
 };
 
 export type StartCommandContext = CommandContext;
 
 export type SetupCommandContext = CommandContext & {
-    keyPair: boolean,
-    database: boolean,
-    databaseSeeder: boolean,
-    documentation: boolean
+    keyPair?: boolean,
+
+    database?: boolean,
+    databaseSeed?: boolean,
+
+    documentation?: boolean
 };
 
 export type UpgradeCommandContext = CommandContext & {
@@ -41,7 +38,9 @@ export type UpgradeCommandContext = CommandContext & {
 
 export type ResetCommandContext = CommandContext;
 
-export type CheckCommandContext = CommandContext;
+export type CheckCommandContext = CommandContext & {
+    databaseSeed?: boolean
+};
 
 export type MigrationGenerateCommandContext = CommandContext & {
     name?: string,

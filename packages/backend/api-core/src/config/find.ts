@@ -8,9 +8,10 @@
 import {
     loadScriptFileExport, loadScriptFileExportSync, locateFile, locateFileSync,
 } from 'locter';
-import { buildConfig } from './build';
+import { extendConfig } from './extend';
+import { Config } from './type';
 
-export async function findConfig(directoryPath?: string) {
+export async function findConfig(directoryPath?: string) : Promise<Config> {
     directoryPath ??= process.cwd();
 
     const fileInfo = await locateFile('authelion.config', {
@@ -19,15 +20,15 @@ export async function findConfig(directoryPath?: string) {
     });
 
     if (!fileInfo) {
-        return buildConfig({}, directoryPath);
+        return extendConfig({}, directoryPath);
     }
 
     const fileExport = await loadScriptFileExport(fileInfo);
     if (fileExport.key !== 'default') {
-        return buildConfig({}, directoryPath);
+        return extendConfig({}, directoryPath);
     }
 
-    return buildConfig(fileExport.value, directoryPath);
+    return extendConfig(fileExport.value, directoryPath);
 }
 
 export function findConfigSync(directoryPath?: string) {
@@ -39,13 +40,13 @@ export function findConfigSync(directoryPath?: string) {
     });
 
     if (!fileInfo) {
-        return buildConfig({}, directoryPath);
+        return extendConfig({}, directoryPath);
     }
 
     const fileExport = loadScriptFileExportSync(fileInfo);
     if (fileExport.key !== 'default') {
-        return buildConfig({}, directoryPath);
+        return extendConfig({}, directoryPath);
     }
 
-    return buildConfig(fileExport.value, directoryPath);
+    return extendConfig(fileExport.value, directoryPath);
 }

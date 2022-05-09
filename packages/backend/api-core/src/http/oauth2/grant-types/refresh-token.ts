@@ -11,19 +11,21 @@ import {
     OAuth2TokenResponse, TokenError,
 } from '@authelion/common';
 import path from 'path';
-import { AbstractGrant } from './abstract-grant';
+import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
 import { Grant } from './type';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { verifyOAuth2Token } from '../token';
+import { validateOAuth2Token } from '../token';
 import { useDataSource } from '../../../database';
+import { ExpressRequest } from '../../type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<OAuth2TokenResponse> {
-        const token = await this.validate();
+    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+        const token = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
+            request,
             entity: {
                 kind: token.payload.sub_kind,
                 data: token.payload.sub,
@@ -35,7 +37,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             keyPairOptions: {
-                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+                directory: path.join(this.config.rootPath, this.config.writableDirectory),
             },
             accessToken,
             refreshToken,
@@ -44,15 +46,10 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate() : Promise<OAuth2RefreshTokenVerification> {
-        const { refresh_token: refreshToken } = this.context.request.body;
+    async validate(request: ExpressRequest) : Promise<OAuth2RefreshTokenVerification> {
+        const { refresh_token: refreshToken } = request.body;
 
-        const token = await verifyOAuth2Token(
-            refreshToken,
-            {
-                config: this.context.config,
-            },
-        );
+        const token = await validateOAuth2Token(refreshToken);
 
         if (token.kind !== OAuth2TokenKind.REFRESH) {
             throw TokenError.kindInvalid();

@@ -7,6 +7,6 @@
 
 export * from './builder';
 export * from './cleaner';
-export * from './verify';
-export * from './verify-extend';
+export * from './validate';
+export * from './extend';
 export * from './watcher';

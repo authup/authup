@@ -8,12 +8,12 @@
 import { Cache, useClient } from 'redis-extension';
 import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
 import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { CachePrefix } from '../../../config/constants';
 import { useDataSource } from '../../../database';
-import { Config, useConfig } from '../../../config';
+import { useConfig } from '../../../config';
+import { CachePrefix } from '../../../redis/constants';
 
-export async function startOAuth2TokenWatcher(config?: Config) {
-    config ??= await useConfig();
+export async function startOAuth2TokenWatcher() {
+    const config = await useConfig();
     if (!config.redis.enabled) {
         return;
     }

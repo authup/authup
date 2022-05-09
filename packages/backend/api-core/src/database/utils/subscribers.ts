@@ -7,14 +7,11 @@
 
 import { DataSourceOptions } from 'typeorm';
 
-export function setSubscribersForConnectionOptions<T extends DataSourceOptions>(
-    options: T,
-    merge?: boolean,
-) : T {
+export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     options = {
         ...options,
         subscribers: [
-            ...(merge && options.subscribers ? options.subscribers : []) as string[],
+            ...(options.subscribers ? options.subscribers : []) as string[],
         ],
     };
 

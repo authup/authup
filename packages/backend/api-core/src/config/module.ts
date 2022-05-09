@@ -7,6 +7,7 @@
 
 import { Config } from './type';
 import { findConfig, findConfigSync } from './find';
+import { extendConfig } from './extend';
 
 let instance : Config | undefined;
 let instancePromise : Promise<Config> | undefined;
@@ -35,6 +36,6 @@ export function useConfigSync(directoryPath?: string) : Config {
     return instance;
 }
 
-export function setConfig(value: Config) {
-    instance = value;
+export function setConfig(value: Partial<Config>) {
+    instance = extendConfig(value);
 }

@@ -14,14 +14,14 @@ import {
 } from '@trapi/swagger';
 import path from 'path';
 import { URL } from 'url';
-import { SwaggerDocumentationCreateContext } from './type';
+import { loadJsonFile } from 'locter';
+import { SwaggerDocumentCreateContext } from './type';
 import { getSwaggerEntrypointFilePath } from './utils';
 
 export async function generateSwaggerDocumentation(
-    context: SwaggerDocumentationCreateContext,
+    context: SwaggerDocumentCreateContext,
 ) : Promise<Record<SwaggerDocFormatType, SwaggerDocFormatData>> {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require
-    const packageJson = require(path.join(context.rootDirectoryPath, 'package.json'));
+    const packageJson : Record<string, any> = await loadJsonFile(path.join(context.rootPath, 'package.json'));
 
     const metadataConfig : MetadataConfig = {
         entryFile: getSwaggerEntrypointFilePath(),
@@ -41,12 +41,12 @@ export async function generateSwaggerDocumentation(
 
     const swaggerConfig : Specification.Config = {
         yaml: true,
-        host: context.selfUrl,
+        host: context.baseUrl,
         name: `${packageJson.name} - API Documentation`,
         description: packageJson.description,
         basePath: '/',
         version: packageJson.version,
-        outputDirectory: path.join(context.rootDirectoryPath, context.writableDirectory),
+        outputDirectory: path.join(context.rootPath, context.writableDirectory),
         securityDefinitions: {
             bearer: {
                 name: 'Bearer',
@@ -57,7 +57,7 @@ export async function generateSwaggerDocumentation(
                 type: 'oauth2',
                 flows: {
                     password: {
-                        tokenUrl: `${new URL('token', context.selfUrl).href}`,
+                        tokenUrl: `${new URL('token', context.baseUrl).href}`,
                     },
                 },
             },

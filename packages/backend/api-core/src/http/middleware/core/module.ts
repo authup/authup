@@ -24,7 +24,7 @@ function unsetCookies(res: ExpressResponse) {
     res.cookie(CookieName.ACCESS_TOKEN_EXPIRE_DATE, null, { maxAge: 0 });
 }
 
-export function createMiddleware(config?: Config) {
+export function createMiddleware() {
     return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
 
@@ -42,7 +42,7 @@ export function createMiddleware(config?: Config) {
 
             const header = parseAuthorizationHeader(headerValue);
 
-            await verifyAuthorizationHeader(request, header, config);
+            await verifyAuthorizationHeader(request, header);
 
             next();
         } catch (e) {

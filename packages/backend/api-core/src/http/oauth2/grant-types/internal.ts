@@ -7,26 +7,37 @@
 
 import { OAuth2TokenResponse, Realm } from '@authelion/common';
 import path from 'path';
-import { AbstractGrant } from './abstract-grant';
+import { AbstractGrant } from './abstract';
 import {
-    AccessTokenContextRobotEntity, AccessTokenContextUserEntity, Grant, InternalGrantContext,
+    AccessTokenContextRobotEntity, AccessTokenContextUserEntity, Grant,
 } from './type';
 import { OAuth2BearerTokenResponse } from '../response';
+import { ExpressRequest } from '../../type';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
     protected entity : AccessTokenContextUserEntity | AccessTokenContextRobotEntity;
 
     protected realm: Realm['id'] | Realm;
 
-    constructor(context: InternalGrantContext) {
-        super(context);
+    // ----------------------------------------------------------------------------
 
-        this.entity = context.entity;
-        this.realm = context.realm;
+    setRealm(realm: Realm['id'] | Realm) : this {
+        this.realm = realm;
+
+        return this;
     }
 
-    async run(): Promise<OAuth2TokenResponse> {
+    setEntity(entity: AccessTokenContextUserEntity | AccessTokenContextRobotEntity) : this {
+        this.entity = entity;
+
+        return this;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    async run(request: ExpressRequest): Promise<OAuth2TokenResponse> {
         const accessToken = await this.issueAccessToken({
+            request,
             entity: this.entity,
             realm: this.realm,
         });
@@ -37,7 +48,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
             accessToken,
             refreshToken,
             keyPairOptions: {
-                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
+                directory: path.join(this.config.rootPath, this.config.writableDirectory),
             },
         });
 

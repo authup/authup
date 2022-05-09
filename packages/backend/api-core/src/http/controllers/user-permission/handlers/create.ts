@@ -7,11 +7,13 @@
 
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
 import { runUserPermissionValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 /**
  * Add an permission by id to a specific user.
@@ -32,11 +34,20 @@ export async function createUserPermissionRouteHandler(req: ExpressRequest, res:
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserPermissionEntity);
-    let rolePermission = repository.create(result.data);
+    let entity = repository.create(result.data);
 
-    rolePermission = await repository.save(rolePermission);
+    entity = await repository.save(entity);
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.USER_OWNED_PERMISSIONS,
+                id: entity.user_id,
+            }),
+        ]);
+    }
 
     return res.respondCreated({
-        data: rolePermission,
+        data: entity,
     });
 }

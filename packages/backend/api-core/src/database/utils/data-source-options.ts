@@ -7,14 +7,14 @@
 import { buildDataSourceOptions as build } from 'typeorm-extension';
 import path from 'path';
 import { DataSourceOptions } from 'typeorm';
-import { Config } from '../../config';
-import { setEntitiesForConnectionOptions } from './entities';
-import { setSubscribersForConnectionOptions } from './subscribers';
+import { Config, useConfig } from '../../config';
+import { setEntitiesForDataSourceOptions } from './entities';
+import { setSubscribersForDataSourceOptions } from './subscribers';
+import { DatabaseQueryResultCache } from '../cache';
 
-export async function buildDataSourceOptions(
-    config: Pick<Config, 'rootPath' | 'writableDirectory' | 'env'>,
-    merge?: boolean,
-) : Promise<DataSourceOptions> {
+export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
+    const config = await useConfig();
+
     let dataSourceOptions : DataSourceOptions;
 
     try {
@@ -43,12 +43,22 @@ export async function buildDataSourceOptions(
         };
     }
 
-    return extendDataSourceOptions(dataSourceOptions, merge);
+    if (config.redis.enabled) {
+        Object.assign(dataSourceOptions, {
+            cache: {
+                provider(dataSource) {
+                    return new DatabaseQueryResultCache();
+                },
+            },
+        } as Partial<DataSourceOptions>);
+    }
+
+    return extendDataSourceOptions(dataSourceOptions);
 }
 
-export function extendDataSourceOptions(options: DataSourceOptions, merge?: boolean) {
-    options = setEntitiesForConnectionOptions(options, merge);
-    options = setSubscribersForConnectionOptions(options, merge);
+export function extendDataSourceOptions(options: DataSourceOptions) {
+    options = setEntitiesForDataSourceOptions(options);
+    options = setSubscribersForDataSourceOptions(options);
 
     return options;
 }

@@ -13,29 +13,44 @@ import {
     Role,
     buildPermissionMetaFromRelation,
 } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
+import { CachePrefix } from '../../redis/constants';
 
 export class RoleRepository extends Repository<RoleEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(RoleEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
 
-    async getOwnedPermissions(
-        roleId: Role['id'] | Role['id'][],
+    async getOwnedPermissionsByMany(
+        ids: Role['id'][],
     ) : Promise<PermissionMeta[]> {
-        if (!Array.isArray(roleId)) {
-            roleId = [roleId];
+        const permissions = [];
+
+        for (let i = 0; i < ids.length; i++) {
+            permissions.push(...await this.getOwnedPermissions(ids[i]));
         }
 
-        if (roleId.length === 0) {
-            return [];
-        }
+        return permissions;
+    }
 
+    async getOwnedPermissions(
+        id: Role['id'],
+    ) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
 
-        const entities = await repository.findBy({
-            role_id: In(roleId),
+        const entities = await repository.find({
+            where: {
+                role_id: id,
+            },
+            cache: {
+                id: buildKeyPath({
+                    prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+                    id,
+                }),
+                milliseconds: 60.000,
+            },
         });
 
         const result : PermissionMeta[] = [];

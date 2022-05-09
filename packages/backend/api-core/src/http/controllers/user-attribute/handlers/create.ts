@@ -10,11 +10,13 @@ import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserAttributeValidation } from '../utils';
 import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 export async function createUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const result = await runUserAttributeValidation(req, CRUDOperation.CREATE);
@@ -39,6 +41,15 @@ export async function createUserAttributeRouteHandler(req: ExpressRequest, res: 
     const entity = repository.create(result.data);
 
     await repository.save(entity);
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                id: entity.user_id,
+            }),
+        ]);
+    }
 
     return res.respondCreated({
         data: entity,

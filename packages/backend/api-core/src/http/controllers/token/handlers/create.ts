@@ -11,54 +11,47 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { determineRequestTokenGrantType } from '../../../oauth2/grant-types/utils/determine';
-import { Grant, GrantContext } from '../../../oauth2/grant-types/type';
+import { Grant } from '../../../oauth2/grant-types/type';
 import { PasswordGrantType, RobotCredentialsGrantType } from '../../../oauth2';
 import { RefreshTokenGrantType } from '../../../oauth2/grant-types/refresh-token';
-import { Config, useConfig } from '../../../../config';
+import { useConfig } from '../../../../config';
 
 /**
  *
  * @param req
  * @param res
- * @param config
  *
  * @throws TokenError
  */
 export async function createTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    config?: Config,
 ) : Promise<any> {
     const grantType = determineRequestTokenGrantType(req);
     if (!grantType) {
         throw TokenError.grantInvalid();
     }
 
-    config ??= await useConfig();
+    const config = await useConfig();
 
     let grant : Grant | undefined;
 
-    const grantContext : GrantContext = {
-        request: req,
-        config,
-    };
-
     switch (grantType) {
         case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
-            grant = new RobotCredentialsGrantType(grantContext);
+            grant = new RobotCredentialsGrantType(config);
             break;
         }
         case OAuth2TokenGrant.PASSWORD: {
-            grant = new PasswordGrantType(grantContext);
+            grant = new PasswordGrantType(config);
             break;
         }
         case OAuth2TokenGrant.REFRESH_TOKEN: {
-            grant = new RefreshTokenGrantType(grantContext);
+            grant = new RefreshTokenGrantType(config);
             break;
         }
     }
 
-    const tokenResponse : OAuth2TokenResponse = await grant.run();
+    const tokenResponse : OAuth2TokenResponse = await grant.run(req);
 
     return res.respond({
         data: tokenResponse,

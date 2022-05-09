@@ -8,9 +8,11 @@
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserAttributeEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 export async function deleteUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
@@ -40,6 +42,15 @@ export async function deleteUserAttributeRouteHandler(req: ExpressRequest, res: 
     await repository.remove(entity);
 
     entity.id = entityId;
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                id: entity.user_id,
+            }),
+        ]);
+    }
 
     return res.respondDeleted({
         data: entity,

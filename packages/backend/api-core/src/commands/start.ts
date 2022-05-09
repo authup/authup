@@ -14,28 +14,26 @@ import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
 import { buildTokenAggregator } from '../aggregators';
-import { setConfig, useConfig } from '../config';
+import { useConfig } from '../config';
 
-export async function startCommand(context: StartCommandContext) {
-    if (context.config) {
-        setConfig(context.config);
-    } else {
-        context.config ??= await useConfig();
-    }
+export async function startCommand(context?: StartCommandContext) {
+    context = context || {};
+
+    const config = await useConfig();
 
     if (context.spinner) {
-        context.spinner.info(`Environment: ${context.config.env}`);
-        context.spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);
-        context.spinner.info(`URL: ${context.config.selfUrl}`);
-        context.spinner.info(`Docs-URL: ${new URL('docs', context.config.selfUrl).href}`);
-        context.spinner.info(`Web-URL: ${context.config.webUrl}`);
+        context.spinner.info(`Environment: ${config.env}`);
+        context.spinner.info(`WritableDirectory: ${path.join(config.rootPath, config.writableDirectory)}`);
+        context.spinner.info(`URL: ${config.selfUrl}`);
+        context.spinner.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
+        context.spinner.info(`Web-URL: ${config.webUrl}`);
 
         context.spinner.start('Initialise controllers & middlewares.');
     }
     /*
     HTTP Server & Express App
     */
-    const expressApp = createExpressApp(context.config);
+    const expressApp = createExpressApp();
 
     if (context.spinner) {
         context.spinner.succeed('Initialised controllers & middlewares.');
@@ -47,11 +45,11 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+    const options = await buildDataSourceOptions();
     const dataSource = new DataSource(options);
     await dataSource.initialize();
 
-    if (context.config.env === 'development') {
+    if (config.env === 'development') {
         await dataSource.synchronize();
     }
 
@@ -63,13 +61,15 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Build & start token aggregator.');
     }
 
-    if (context.config.redis.connectionString) {
-        setRedisConfig({
-            connectionString: context.config.redis.connectionString,
-        }, context.config.redis.alias);
+    if (config.redis.enabled) {
+        if (config.redis.connectionString) {
+            setRedisConfig({
+                connectionString: config.redis.connectionString,
+            }, config.redis.alias);
+        }
     }
 
-    const { start } = buildTokenAggregator(context.config);
+    const { start } = buildTokenAggregator();
 
     await start();
 
@@ -77,7 +77,7 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.succeed('Built & started token aggregator.');
     }
 
-    httpServer.listen(context.config.port, '0.0.0.0', () => {
+    httpServer.listen(config.port, '0.0.0.0', () => {
         if (context.spinner) {
             context.spinner.succeed('Startup completed.');
         }

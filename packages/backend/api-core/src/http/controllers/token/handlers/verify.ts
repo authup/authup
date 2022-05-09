@@ -12,13 +12,12 @@ import {
     ForbiddenError, NotFoundError,
 } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../../oauth2';
+import { extendOAuth2Token, validateOAuth2Token } from '../../../oauth2';
 import { Config } from '../../../../config';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    config?: Config,
 ) : Promise<any> {
     let { id } = req.params;
 
@@ -43,8 +42,8 @@ export async function verifyTokenRouteHandler(
         throw new ForbiddenError();
     }
 
-    const token = await verifyOAuth2Token(id, { config });
-    const response = await extendOAuth2TokenVerification(token, config);
+    const token = await validateOAuth2Token(id);
+    const response = await extendOAuth2Token(token);
 
     return res.respond({
         data: response,

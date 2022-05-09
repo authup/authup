@@ -13,14 +13,14 @@ import {
 } from 'typeorm';
 import {
     Config,
-    DatabaseRootSeeder,
     DatabaseRootSeederRunResponse,
+    DatabaseSeeder,
     buildDataSourceOptions,
     useConfig, useDataSource,
 } from '../../../src';
 
-async function buildOptions(config: Config) {
-    const options = await buildDataSourceOptions(config);
+async function buildOptions() {
+    const options = await buildDataSourceOptions();
 
     return {
         ...options,
@@ -34,7 +34,7 @@ async function buildOptions(config: Config) {
 export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
     const config = await useConfig();
 
-    const options = await buildOptions(config);
+    const options = await buildOptions();
     await createDatabase({ options });
 
     const dataSource = new DataSource(options);
@@ -43,10 +43,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse>
 
     setDataSource(dataSource);
 
-    const core = new DatabaseRootSeeder({
-        userName: config.admin.username,
-        userPassword: config.admin.password,
-    });
+    const core = new DatabaseSeeder(config.database.seed);
 
     return core.run(dataSource);
 }

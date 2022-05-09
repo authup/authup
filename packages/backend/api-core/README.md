@@ -40,6 +40,27 @@ To use this package th `http-` & `database`-module must be configured at minimum
 
 All other modules and methods are optional 🔥.
 
+### Config
+
+```typescript
+import { setConfig } from '@authelion/api-core';
+
+setConfig({
+    env: 'development',
+    port: 3010,
+    database: {
+        admin: {
+            username: 'admin',
+            password: 'start123'
+        },
+        robot: {
+            enabled: true,
+            secret: false
+        }
+    }
+})
+```
+
 ### HTTP
 
 The controllers & middlewares, which are part of the http-module,

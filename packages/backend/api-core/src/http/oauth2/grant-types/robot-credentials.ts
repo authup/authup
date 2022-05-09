@@ -10,17 +10,19 @@ import {
     OAuth2TokenSubKind, RobotError,
 } from '@authelion/common';
 import path from 'path';
-import { AbstractGrant } from './abstract-grant';
+import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../../domains';
 import { Grant } from './type';
 import { useDataSource } from '../../../database';
+import { ExpressRequest } from '../../type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
-    async run() : Promise<OAuth2TokenResponse> {
-        const entity = await this.validate();
+    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+        const entity = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
+            request,
             entity: {
                 kind: OAuth2TokenSubKind.ROBOT,
                 data: entity,
@@ -29,17 +31,15 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         });
 
         const response = new OAuth2BearerTokenResponse({
-            keyPairOptions: {
-                directory: path.join(this.context.config.rootPath, this.context.config.writableDirectory),
-            },
+            keyPairOptions: this.config.keyPair,
             accessToken,
         });
 
         return response.build();
     }
 
-    async validate() : Promise<RobotEntity> {
-        const { id, secret } = this.context.request.body;
+    async validate(request: ExpressRequest) : Promise<RobotEntity> {
+        const { id, secret } = request.body;
 
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);

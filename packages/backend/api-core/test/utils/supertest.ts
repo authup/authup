@@ -7,12 +7,10 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import supertest, { SuperTest, Test } from 'supertest';
-import { createExpressApp, useConfigSync } from '../../src';
+import { createExpressApp } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const config = useConfigSync();
-
-    const expressApp = createExpressApp(config);
+    const expressApp = createExpressApp();
 
     return supertest(expressApp);
 }

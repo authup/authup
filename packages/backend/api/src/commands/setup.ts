@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { findConfig, setupCommand } from '@authelion/api-core';
+import { findConfig, setConfig, setupCommand } from '@authelion/api-core';
 import * as ora from 'ora';
 
 interface SetupArguments extends Arguments {
@@ -58,13 +58,14 @@ export class SetupCommand implements CommandModule {
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
         const config = await findConfig(args.root);
+        setConfig(config);
+
         const spinner = ora.default({
             spinner: 'dots',
         });
 
         try {
             await setupCommand({
-                config,
                 spinner,
                 ...args,
             });

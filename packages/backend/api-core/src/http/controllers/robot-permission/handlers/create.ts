@@ -7,12 +7,14 @@
 
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
+import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
 import { runRobotPermissionValidation } from '../utils';
 import { useDataSource } from '../../../../database';
+import { CachePrefix } from '../../../../redis/constants';
 
 /**
  * Add an permission by id to a specific user.
@@ -33,11 +35,20 @@ export async function createRobotPermissionRouteHandler(req: ExpressRequest, res
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotPermissionEntity);
-    let rolePermission = repository.create(result.data);
+    let entity = repository.create(result.data);
 
-    rolePermission = await repository.save(rolePermission);
+    entity = await repository.save(entity);
+
+    if (dataSource.queryResultCache) {
+        await dataSource.queryResultCache.remove([
+            buildKeyPath({
+                prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+                id: entity.robot_id,
+            }),
+        ]);
+    }
 
     return res.respondCreated({
-        data: rolePermission,
+        data: entity,
     });
 }
