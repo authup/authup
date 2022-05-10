@@ -25,12 +25,12 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
     // ----------------------------------------------
 
     const dataSource = await useDataSource();
-    const roleRepository = dataSource.getRepository(RoleEntity);
-    const role = roleRepository.create(result.data);
+    const repository = dataSource.getRepository(RoleEntity);
+    const entity = repository.create(result.data);
 
-    await roleRepository.save(role);
+    await repository.save(entity);
 
     return res.respondCreated({
-        data: role,
+        data: entity,
     });
 }

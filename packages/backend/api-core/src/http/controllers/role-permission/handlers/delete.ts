@@ -53,6 +53,8 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
 
     entity.id = entityId;
 
+    // ----------------------------------------------
+
     return res.respondDeleted({
         data: entity,
     });

@@ -32,11 +32,11 @@ export async function createUserPermissionRouteHandler(req: ExpressRequest, res:
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserPermissionEntity);
-    let rolePermission = repository.create(result.data);
+    let entity = repository.create(result.data);
 
-    rolePermission = await repository.save(rolePermission);
+    entity = await repository.save(entity);
 
     return res.respondCreated({
-        data: rolePermission,
+        data: entity,
     });
 }

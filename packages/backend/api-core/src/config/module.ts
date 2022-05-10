@@ -5,23 +5,37 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
-import fs from 'fs';
 import { Config } from './type';
-import { buildConfig } from './utils';
+import { findConfig, findConfigSync } from './find';
+import { extendConfig } from './extend';
 
-export function useConfig(directoryPath?: string) : Config {
-    directoryPath ??= process.cwd();
+let instance : Config | undefined;
+let instancePromise : Promise<Config> | undefined;
 
-    const filePath : string = path.join(directoryPath, 'authelion.config.js');
-
-    if (!fs.existsSync(filePath)) {
-        return buildConfig({}, directoryPath);
+export async function useConfig(directoryPath?: string) : Promise<Config> {
+    if (typeof instance !== 'undefined') {
+        return instance;
     }
 
-    // todo: validation required
-    // eslint-disable-next-line global-require,import/no-dynamic-require,@typescript-eslint/no-var-requires
-    const config : Config = require(filePath);
+    if (!instancePromise) {
+        instancePromise = findConfig(directoryPath);
+    }
 
-    return buildConfig(config, directoryPath);
+    instance = await instancePromise;
+
+    return instance;
+}
+
+export function useConfigSync(directoryPath?: string) : Config {
+    if (typeof instance !== 'undefined') {
+        return instance;
+    }
+
+    instance = findConfigSync(directoryPath);
+
+    return instance;
+}
+
+export function setConfig(value: Partial<Config>) {
+    instance = extendConfig(value);
 }

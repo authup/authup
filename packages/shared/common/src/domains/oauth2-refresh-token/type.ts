@@ -42,7 +42,7 @@ export type OAuth2RefreshTokenPayload = JWTPayload & {
 };
 
 export type OAuth2RefreshTokenVerification = {
-    kind: OAuth2TokenKind.REFRESH,
+    kind: `${OAuth2TokenKind.REFRESH}`,
     entity: OAuth2RefreshToken,
     payload: OAuth2RefreshTokenPayload
 };

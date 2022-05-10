@@ -50,6 +50,8 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     entity = await repository.save(entity);
 
+    // ----------------------------------------------
+
     useRobotEventEmitter()
         .emit('updated', {
             ...entity,
@@ -64,6 +66,8 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
         entity.secret = result.data.secret;
     }
+
+    // ----------------------------------------------
 
     return res.respondAccepted({
         data: entity,

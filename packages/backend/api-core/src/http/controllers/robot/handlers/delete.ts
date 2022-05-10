@@ -37,16 +37,21 @@ export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressR
         }
     }
 
+    // ----------------------------------------------
+
     const { id: entityId } = entity;
 
     await repository.remove(entity);
 
     entity.id = entityId;
 
+    // ----------------------------------------------
+
     useRobotEventEmitter()
         .emit('deleted', {
             ...entity,
         });
+    // ----------------------------------------------
 
     return res.respondDeleted({
         data: entity,

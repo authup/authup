@@ -6,15 +6,36 @@
  */
 
 import { DataSourceOptions } from 'typeorm';
+import {
+    RobotPermissionSubscriber,
+    RobotRoleSubscriber,
+    RobotSubscriber,
 
-export function setSubscribersForConnectionOptions<T extends DataSourceOptions>(
-    options: T,
-    merge?: boolean,
-) : T {
+    RolePermissionSubscriber,
+    RoleSubscriber,
+
+    UserAttributeSubscriber,
+    UserPermissionSubscriber,
+    UserRoleSubscriber,
+    UserSubscriber,
+} from '../subscribers';
+
+export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     options = {
         ...options,
         subscribers: [
-            ...(merge && options.subscribers ? options.subscribers : []) as string[],
+            RobotRoleSubscriber,
+            RobotSubscriber,
+            RobotPermissionSubscriber,
+
+            RoleSubscriber,
+            RolePermissionSubscriber,
+
+            UserRoleSubscriber,
+            UserSubscriber,
+            UserAttributeSubscriber,
+            UserPermissionSubscriber,
+            ...(options.subscribers ? options.subscribers : []) as string[],
         ],
     };
 

@@ -5,17 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from 'redis-extension';
+export type MiddlewareSwaggerOptions = {
+    enabled?: boolean,
+    directory?: string
+};
 
-export type MiddlewareRegistrationOptions = {
-    bodyParserMiddleware?: boolean,
-    cookieParserMiddleware?: boolean,
-    responseMiddleware?: boolean,
-    swaggerMiddleware?: boolean | {
-        writableDirectoryPath?: string,
-        path?: string
-    },
-
-    writableDirectoryPath?: string,
-    redis?: Client | boolean | string
+export type MiddlewareOptions = {
+    bodyParser?: boolean,
+    cookieParser?: boolean,
+    response?: boolean,
+    swagger?: MiddlewareSwaggerOptions
 };

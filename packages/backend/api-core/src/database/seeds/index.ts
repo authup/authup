@@ -9,7 +9,15 @@ import { DataSource, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID,
-    Permission, PermissionID, Robot, RobotPermission, RolePermission, User, UserRole, createNanoID,
+    Permission,
+    PermissionID,
+    Robot,
+    RobotPermission,
+    RolePermission,
+    User,
+    UserRole,
+    createNanoID,
+    mergeDeep,
 } from '@authelion/common';
 import { hash } from '@authelion/api-utils';
 import {
@@ -21,35 +29,32 @@ import {
     UserRoleEntity,
     useRobotEventEmitter,
 } from '../../domains';
-
-export type DatabaseRootSeederOptions = {
-    permissions?: string[],
-
-    userName: string,
-    userPassword: string,
-    userPasswordReset?: boolean,
-
-    robotSecret?: string,
-    robotSecretReset?: boolean
-};
+import { DatabaseSeedOptions } from '../type';
+import { useConfigSync } from '../../config';
 
 export type DatabaseRootSeederRunResponse = {
     robot?: Robot,
     user?: User
 };
 
-function getPermissions(options: DatabaseRootSeederOptions) {
+function getPermissions(options: DatabaseSeedOptions) {
     return [
         ...Object.values(PermissionID),
         ...(options.permissions ? options.permissions : []),
     ];
 }
 
-export class DatabaseRootSeeder implements Seeder {
-    protected options: DatabaseRootSeederOptions;
+export class DatabaseSeeder implements Seeder {
+    protected options: DatabaseSeedOptions;
 
-    constructor(options: DatabaseRootSeederOptions) {
-        this.options = options;
+    constructor(options?: DatabaseSeedOptions) {
+        const config = useConfigSync();
+
+        if (options) {
+            this.options = mergeDeep({}, options, config.database.seed);
+        } else {
+            this.options = config.database.seed;
+        }
     }
 
     public async run(dataSource: DataSource) : Promise<any> {
@@ -97,21 +102,21 @@ export class DatabaseRootSeeder implements Seeder {
          */
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
-            name: this.options.userName,
+            name: this.options.admin.username,
         });
 
         if (!user) {
             user = userRepository.create({
-                name: this.options.userName,
-                password: await hash(this.options.userPassword || 'start123'),
+                name: this.options.admin.username,
+                password: await hash(this.options.admin.password || 'start123'),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
                 active: true,
             });
 
             response.user = user;
-        } else if (this.options.userPasswordReset) {
-            user.password = await hash(this.options.userPassword || 'start123');
+        } else if (this.options.admin.passwordReset) {
+            user.password = await hash(this.options.admin.password || 'start123');
             user.active = true;
         }
 
@@ -202,7 +207,7 @@ export class DatabaseRootSeeder implements Seeder {
             name: 'SYSTEM',
         });
 
-        const secret = this.options.robotSecret || createNanoID(undefined, 64);
+        const secret = this.options.robot.secret || createNanoID(undefined, 64);
         if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',
@@ -214,7 +219,7 @@ export class DatabaseRootSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
-        } else if (this.options.robotSecretReset) {
+        } else if (this.options.robot.secretReset) {
             robot.secret = await hash(secret);
 
             await robotRepository.save(robot);

@@ -6,7 +6,6 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserAttributeValidation } from '../utils';

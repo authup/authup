@@ -53,6 +53,8 @@ export async function deleteRobotPermissionRouteHandler(req: ExpressRequest, res
 
     entity.id = entityId;
 
+    // ----------------------------------------------
+
     return res.respondDeleted({
         data: entity,
     });

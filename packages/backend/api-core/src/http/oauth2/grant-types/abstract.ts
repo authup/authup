@@ -7,51 +7,51 @@
 
 import {
     OAuth2TokenSubKind,
-    TokenError, determineAccessTokenMaxAge, determineRefreshTokenMaxAge,
+    TokenError,
+    determineAccessTokenMaxAge,
+    determineRefreshTokenMaxAge,
 } from '@authelion/common';
+import { Cache, useClient } from 'redis-extension';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
-import { Cache } from 'redis-extension';
+import path from 'path';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
-import { GrantContext, IssueAccessTokenContext } from './type';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { useRedisClient } from '../../../utils';
-import { CachePrefix } from '../../../config/constants';
+import { AccessTokenIssueContext } from './type';
+import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { Config } from '../../../config';
+import { ExpressRequest } from '../../type';
+import { CachePrefix } from '../../../redis';
 
 export abstract class AbstractGrant {
-    protected context : GrantContext;
+    protected config : Config;
 
     protected accessTokenCache : Cache<string>;
 
     protected refreshTokenCache : Cache<string>;
 
-    constructor(context: GrantContext) {
-        this.context = context;
-
-        this.initCache();
-    }
-
     // -----------------------------------------------------
 
-    private initCache() {
-        if (!this.context.redis || this.accessTokenCache) return;
+    constructor(config: Config) {
+        this.config = config;
 
-        const redis = useRedisClient(this.context.redis);
-        if (redis) {
-            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
-            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
+        if (this.config.redis.enabled) {
+            const redis = useClient(this.config.redis.alias);
+
+            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
+            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
         }
     }
 
     // -----------------------------------------------------
 
-    protected async issueAccessToken(context: IssueAccessTokenContext) : Promise<OAuth2AccessTokenEntity> {
-        const maxAge = determineAccessTokenMaxAge(this.context.maxAge);
+    protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<OAuth2AccessTokenEntity> {
+        const maxAge = determineAccessTokenMaxAge(this.config.tokenMaxAge);
 
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            request: this.context.request,
-            keyPairOptions: this.context.keyPairOptions,
-            selfUrl: this.context.selfUrl,
+            request: context.request,
+            keyPairOptions: {
+                directory: path.join(this.config.rootPath, this.config.writableDirectory),
+            },
+            selfUrl: this.config.selfUrl,
             maxAge,
         });
 
@@ -81,11 +81,11 @@ export abstract class AbstractGrant {
         return token;
     }
 
-    protected async issueRefreshToken(data: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
-        const maxAge : number = determineRefreshTokenMaxAge(this.context.maxAge);
+    protected async issueRefreshToken(accessToken: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
+        const maxAge : number = determineRefreshTokenMaxAge(this.config.tokenMaxAge);
 
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
-            accessToken: data,
+            accessToken,
             maxAge,
         });
 
@@ -100,14 +100,11 @@ export abstract class AbstractGrant {
 
     // -----------------------------------------------------
 
-    protected getClientCredentials() : [string, string] {
-        let { client_id: clientId, client_secret: clientSecret } = this.context.request.body;
+    protected getClientCredentials(request: ExpressRequest) : [string, string] {
+        let { client_id: clientId, client_secret: clientSecret } = request.body;
 
-        if (
-            !clientId &&
-            !clientSecret
-        ) {
-            const { authorization: headerValue } = this.context.request.headers;
+        if (!clientId && !clientSecret) {
+            const { authorization: headerValue } = request.headers;
 
             const header = parseAuthorizationHeader(headerValue);
 

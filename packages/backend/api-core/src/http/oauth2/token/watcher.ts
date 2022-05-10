@@ -5,48 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache, Client } from 'redis-extension';
-import { OAuth2AccessTokenEntity } from '../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../domains/oauth2-refresh-token';
-import { useRedisClient } from '../../../utils';
-import { CachePrefix } from '../../../config/constants';
+import { Cache, useClient } from 'redis-extension';
+import {
+    OAuth2AccessTokenEntity,
+    OAuth2RefreshTokenEntity,
+} from '../../../domains';
 import { useDataSource } from '../../../database';
+import { CachePrefix } from '../../../redis';
+import { useConfig } from '../../../config';
 
-export async function startOAuth2TokenWatcher(redis?: Client | boolean | string) {
-    redis = useRedisClient(redis);
-
-    if (!redis) {
+export async function startOAuth2TokenWatcher() {
+    const config = await useConfig();
+    if (!config.redis.enabled) {
         return;
     }
 
-    // -------------------------------------------------
+    const redis = useClient(config.redis.alias);
 
-    const accessTokenCache = new Cache<string>({
-        redis,
-    }, {
-        prefix: CachePrefix.TOKEN_ACCESS,
-    });
+    const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
     accessTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
         await accessTokenRepository.delete(data.id);
     });
 
+    await accessTokenCache.startScheduler();
+
     // -------------------------------------------------
 
-    const refreshTokenCache = new Cache<string>({
-        redis,
-    }, {
-        prefix: CachePrefix.TOKEN_REFRESH,
-    });
+    const refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
     refreshTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
         await refreshTokenRepository.delete(data.id);
     });
 
-    // -------------------------------------------------
-
-    await accessTokenCache.startScheduler();
     await refreshTokenCache.startScheduler();
 }

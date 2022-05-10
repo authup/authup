@@ -8,16 +8,16 @@
 import { dropDatabase } from 'typeorm-extension';
 import { buildDataSourceOptions } from '../database';
 import { StartCommandContext } from './type';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
-export async function resetCommand(context: StartCommandContext) {
-    context.config ??= useConfig();
+export async function resetCommand(context?: StartCommandContext) {
+    context = context || {};
 
     if (context.spinner) {
         context.spinner.start('Executing database reset.');
     }
 
-    const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+    const options = await buildDataSourceOptions();
     await dropDatabase({ options });
     if (context.spinner) {
         context.spinner.succeed('Executed database reset.');

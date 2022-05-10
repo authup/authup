@@ -9,8 +9,8 @@ import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/c
 import { CookieName } from '@authelion/common';
 import path from 'path';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
-import { AuthMiddlewareOptions } from './type';
 import { verifyAuthorizationHeader } from './verify';
+import { Config, useConfig } from '../../../config';
 
 function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefined {
     return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?
@@ -24,7 +24,7 @@ function unsetCookies(res: ExpressResponse) {
     res.cookie(CookieName.ACCESS_TOKEN_EXPIRE_DATE, null, { maxAge: 0 });
 }
 
-export function createMiddleware(context: AuthMiddlewareOptions) {
+export function createMiddleware() {
     return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
 
@@ -42,12 +42,7 @@ export function createMiddleware(context: AuthMiddlewareOptions) {
 
             const header = parseAuthorizationHeader(headerValue);
 
-            const writableDirectoryPath = context.writableDirectoryPath || path.join(process.cwd(), 'writable');
-
-            await verifyAuthorizationHeader(request, header, {
-                writableDirectoryPath,
-                redis: context.redis,
-            });
+            await verifyAuthorizationHeader(request, header);
 
             next();
         } catch (e) {

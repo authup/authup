@@ -9,21 +9,18 @@ import {
     CookieName,
     OAuth2TokenKind,
 } from '@authelion/common';
+import { buildKeyPath, useClient } from 'redis-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
-import { buildKeyPath } from 'redis-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { OAuth2AccessTokenEntity } from '../../../../domains/oauth2-access-token';
-import { OAuth2RefreshTokenEntity } from '../../../../domains/oauth2-refresh-token';
-import { verifyOAuth2Token } from '../../../oauth2';
-import { ControllerOptions } from '../../type';
-import { useRedisClient } from '../../../../utils';
-import { CachePrefix } from '../../../../config/constants';
+import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../../domains';
+import { validateOAuth2Token } from '../../../oauth2';
 import { useDataSource } from '../../../../database';
+import { useConfig } from '../../../../config';
+import { CachePrefix } from '../../../../redis';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    options: ControllerOptions,
 ) : Promise<any> {
     let { id } = req.params;
 
@@ -43,40 +40,27 @@ export async function deleteTokenRouteHandler(
         res.cookie(CookieName.REFRESH_TOKEN, null, { maxAge: 0 });
     }
 
-    const token = await verifyOAuth2Token(id, {
-        keyPair: {
-            directory: options.writableDirectoryPath,
-        },
-        redis: options.redis,
-    });
-
-    const redis = useRedisClient(options.redis);
-
-    if (redis) {
-        await redis.del(buildKeyPath({
-            prefix: CachePrefix.TOKEN_ACCESS,
-            id: token.payload.access_token_id,
-        }));
-
-        if (token.payload.kind === OAuth2TokenKind.REFRESH) {
-            await redis.del(buildKeyPath({
-                prefix: CachePrefix.TOKEN_REFRESH,
-                id: token.payload.refresh_token_id,
-            }));
-        }
-
-        await redis.del(buildKeyPath({
-            prefix: CachePrefix.TOKEN_TARGET,
-            id: token.payload.sub,
-        }));
-
-        await redis.del(buildKeyPath({
-            prefix: CachePrefix.TOKEN_TARGET_PERMISSIONS,
-            id: token.payload.sub,
-        }));
-    }
-
+    const token = await validateOAuth2Token(id);
     const dataSource = await useDataSource();
+
+    const config = await useConfig();
+    if (config.redis.enabled) {
+        const redis = useClient(config.redis.alias);
+
+        if (redis) {
+            await redis.del(buildKeyPath({
+                prefix: CachePrefix.OAUTH2_ACCESS_TOKEN,
+                id: token.payload.access_token_id,
+            }));
+
+            if (token.payload.kind === OAuth2TokenKind.REFRESH) {
+                await redis.del(buildKeyPath({
+                    prefix: CachePrefix.OAUTH2_REFRESH_TOKEN,
+                    id: token.payload.refresh_token_id,
+                }));
+            }
+        }
+    }
 
     switch (token.kind) {
         case OAuth2TokenKind.ACCESS: {

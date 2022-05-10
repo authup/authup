@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { resetCommand, useConfig } from '@authelion/api-core';
+import { findConfig, resetCommand, setConfig } from '@authelion/api-core';
 import * as ora from 'ora';
 
 interface ResetArguments extends Arguments {
@@ -28,12 +28,14 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        const config = useConfig(args.root);
+        const config = await findConfig(args.root);
+        setConfig(config);
+
         const spinner = ora.default({
             spinner: 'dots',
         });
 
-        await resetCommand({ config, spinner });
+        await resetCommand({ spinner });
 
         process.exit(0);
     }

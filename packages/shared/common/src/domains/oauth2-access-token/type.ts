@@ -51,7 +51,7 @@ export type OAuth2AccessTokenPayload = JWTPayload & {
 export type OAuth2TokenGrantType = `${OAuth2TokenGrant}`;
 
 export type OAuth2AccessTokenVerification = {
-    kind: OAuth2TokenKind.ACCESS,
+    kind: `${OAuth2TokenKind.ACCESS}`,
     entity: OAuth2AccessToken,
     payload: OAuth2AccessTokenPayload
 };

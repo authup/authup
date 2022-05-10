@@ -18,7 +18,7 @@ export type TokenSignContext = Context<SignOptions> & {
 };
 
 export type TokenVerifyContext = Context<VerifyOptions> & {
-    keyPair?: Partial<KeyPairContext>,
+    keyPair?: Partial<KeyPairContext>
 };
 
 export type TokenDecodeContext = Context<DecodeOptions>;

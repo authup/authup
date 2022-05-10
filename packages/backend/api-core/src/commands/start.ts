@@ -9,35 +9,31 @@ import { URL } from 'url';
 import { DataSource } from 'typeorm';
 import path from 'path';
 import { setDataSource } from 'typeorm-extension';
+import { setConfig as setRedisConfig } from 'redis-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
-import { buildTokenAggregator } from '../aggregators';
+import { buildOAuth2TokenAggregator } from '../aggregators';
 import { useConfig } from '../config';
 
-export async function startCommand(context: StartCommandContext) {
-    context.config ??= useConfig();
+export async function startCommand(context?: StartCommandContext) {
+    context = context || {};
+
+    const config = await useConfig();
 
     if (context.spinner) {
-        context.spinner.info(`Environment: ${context.config.env}`);
-        context.spinner.info(`WritableDirectory: ${path.join(context.config.rootPath, context.config.writableDirectory)}`);
-        context.spinner.info(`URL: ${context.config.selfUrl}`);
-        context.spinner.info(`Docs-URL: ${new URL('docs', context.config.selfUrl).href}`);
-        context.spinner.info(`Web-URL: ${context.config.webUrl}`);
+        context.spinner.info(`Environment: ${config.env}`);
+        context.spinner.info(`WritableDirectory: ${path.join(config.rootPath, config.writableDirectory)}`);
+        context.spinner.info(`URL: ${config.selfUrl}`);
+        context.spinner.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
+        context.spinner.info(`Web-URL: ${config.webUrl}`);
 
         context.spinner.start('Initialise controllers & middlewares.');
     }
     /*
     HTTP Server & Express App
     */
-    const expressApp = createExpressApp({
-        writableDirectoryPath: path.join(context.config.rootPath, context.config.writableDirectory),
-        swaggerDocumentation: context.config.swaggerDocumentation,
-        selfUrl: context.config.selfUrl,
-        webUrl: context.config.webUrl,
-        tokenMaxAge: context.config.tokenMaxAge,
-        redis: context.config.redis,
-    });
+    const expressApp = createExpressApp();
 
     if (context.spinner) {
         context.spinner.succeed('Initialised controllers & middlewares.');
@@ -49,11 +45,11 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const options = await buildDataSourceOptions(context.config, context.databaseConnectionMerge);
+    const options = await buildDataSourceOptions();
     const dataSource = new DataSource(options);
     await dataSource.initialize();
 
-    if (context.config.env === 'development') {
+    if (config.env === 'development') {
         await dataSource.synchronize();
     }
 
@@ -65,7 +61,15 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.start('Build & start token aggregator.');
     }
 
-    const { start } = buildTokenAggregator(context.config.redis);
+    if (config.redis.enabled) {
+        if (config.redis.connectionString) {
+            setRedisConfig({
+                connectionString: config.redis.connectionString,
+            }, config.redis.alias);
+        }
+    }
+
+    const { start } = buildOAuth2TokenAggregator();
 
     await start();
 
@@ -73,7 +77,7 @@ export async function startCommand(context: StartCommandContext) {
         context.spinner.succeed('Built & started token aggregator.');
     }
 
-    httpServer.listen(context.config.port, '0.0.0.0', () => {
+    httpServer.listen(config.port, '0.0.0.0', () => {
         if (context.spinner) {
             context.spinner.succeed('Startup completed.');
         }

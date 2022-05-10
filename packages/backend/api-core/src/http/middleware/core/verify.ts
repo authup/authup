@@ -18,34 +18,21 @@ import {
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from '@trapi/client';
-import { Client } from 'redis-extension';
 import { NotFoundError } from '@typescript-error/http';
+import path from 'path';
 import { ExpressRequest } from '../../type';
-import { extendOAuth2TokenVerification, verifyOAuth2Token } from '../../oauth2';
+import { extendOAuth2Token, validateOAuth2Token } from '../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-
-type AuthorizationHeaderVerifyOptions = {
-    writableDirectoryPath: string,
-    redis?: Client | string | boolean
-};
+import { Config, useConfig } from '../../../config';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
     header: BearerAuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
 ) {
-    const token = await verifyOAuth2Token(
-        header.token,
-        {
-            keyPair: {
-                directory: options.writableDirectoryPath,
-            },
-            redis: options.redis,
-        },
-    );
+    const token = await validateOAuth2Token(header.token);
 
     if (token.kind !== OAuth2TokenKind.ACCESS) {
         throw TokenError.accessTokenRequired();
@@ -54,7 +41,7 @@ async function verifyBearerAuthorizationHeader(
     request.token = header.token;
     request.realmId = token.entity.realm_id;
 
-    const tokenExtended = await extendOAuth2TokenVerification(token, { redis: options.redis });
+    const tokenExtended = await extendOAuth2Token(token);
 
     request.ability = new AbilityManager(tokenExtended.target.permissions);
 
@@ -76,16 +63,16 @@ async function verifyBearerAuthorizationHeader(
 async function verifyBasicAuthorizationHeader(
     request: ExpressRequest,
     header: BasicAuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
 ) {
     let permissions : PermissionMeta[] = [];
 
+    const config = await useConfig();
     const dataSource = await useDataSource();
 
     if (
-        process.env.NODE_ENV === 'test' &&
-        header.username === 'admin' &&
-        header.password === 'start123'
+        config.env === 'test' &&
+        header.username === config.database.seed.admin.username &&
+        header.password === config.database.seed.admin.password
     ) {
         const userRepository = new UserRepository(dataSource);
         const entity = await userRepository.findOneBy({
@@ -129,13 +116,12 @@ async function verifyBasicAuthorizationHeader(
 export async function verifyAuthorizationHeader(
     request: ExpressRequest,
     header: AuthorizationHeader,
-    options: AuthorizationHeaderVerifyOptions,
 ) : Promise<void> {
     switch (header.type) {
         case AuthorizationHeaderType.BEARER:
-            return verifyBearerAuthorizationHeader(request, header, options);
+            return verifyBearerAuthorizationHeader(request, header);
         case AuthorizationHeaderType.BASIC:
-            return verifyBasicAuthorizationHeader(request, header, options);
+            return verifyBasicAuthorizationHeader(request, header);
     }
 
     throw HeaderError.unsupportedHeaderType(header.type);

@@ -15,10 +15,12 @@ import {
 } from '@authelion/common';
 
 import { compare, hash } from '@authelion/api-utils';
+import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
+import { CachePrefix } from '../../redis/constants';
 
 export class UserRepository extends Repository<UserEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -57,14 +59,23 @@ export class UserRepository extends Repository<UserEntity> {
     // ------------------------------------------------------------------
 
     async getOwnedPermissions(
-        userId: User['id'],
+        id: User['id'],
     ) : Promise<PermissionMeta[]> {
-        let permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(userId);
+        const permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
-            .findBy({
-                user_id: userId,
+            .find({
+                where: {
+                    user_id: id,
+                },
+                cache: {
+                    id: buildKeyPath({
+                        prefix: CachePrefix.USER_OWNED_ROLES,
+                        id,
+                    }),
+                    milliseconds: 60.000,
+                },
             });
 
         const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
@@ -74,16 +85,25 @@ export class UserRepository extends Repository<UserEntity> {
         }
 
         const roleRepository = new RoleRepository(this.manager);
-        permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
+        permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
 
         return permissions;
     }
 
-    async getSelfOwnedPermissions(userId: string) : Promise<PermissionMeta[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
-        const entities = await repository.findBy({
-            user_id: userId,
+        const entities = await repository.find({
+            where: {
+                user_id: id,
+            },
+            cache: {
+                id: buildKeyPath({
+                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
+                    id,
+                }),
+                milliseconds: 60.000,
+            },
         });
 
         const result : PermissionMeta[] = [];

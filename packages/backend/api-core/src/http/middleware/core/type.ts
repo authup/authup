@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from 'redis-extension';
-
 export type AuthMiddlewareOptions = {
-    writableDirectoryPath?: string,
-    redis?: Client | boolean | string
+    writableDirectoryPath?: string
 };

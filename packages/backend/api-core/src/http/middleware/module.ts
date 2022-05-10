@@ -10,60 +10,56 @@ import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
+import { mergeDeep } from '@authelion/common';
 import {
-    MiddlewareRegistrationOptions,
-    createMiddleware,
+    MiddlewareOptions, createMiddleware,
     responseMiddleware,
 } from '../index';
+import { useConfigSync } from '../../config';
 
 export function registerMiddlewares(
     router: Application,
-    options: MiddlewareRegistrationOptions,
+    options?: MiddlewareOptions,
 ) {
-    if (options.bodyParserMiddleware) {
+    const config = useConfigSync();
+
+    if (options) {
+        options = mergeDeep({}, config.middleware, options);
+    } else {
+        options = config.middleware;
+    }
+
+    if (options.bodyParser) {
         router.use(urlencoded({ extended: false }));
         router.use(json());
     }
 
     router.use(cookieParser());
 
-    if (options.responseMiddleware) {
+    if (options.response) {
         router.use(responseMiddleware);
     }
 
     //--------------------------------------------------------------------
 
-    const writableDirectoryPath = options.writableDirectoryPath || path.join(process.cwd(), 'writable');
-
-    router.use(createMiddleware({
-        writableDirectoryPath,
-        redis: options.redis,
-    }));
+    router.use(createMiddleware());
 
     //--------------------------------------------------------------------
 
-    if (options.swaggerMiddleware) {
-        let docsPath = '/docs';
-        let writableDirectoryPath = path.join(process.cwd(), 'writable');
+    if (
+        options.swagger &&
+        options.swagger.enabled
+    ) {
+        const basePath = options.swagger.directory || path.join(process.cwd(), 'writable');
 
-        if (typeof options.swaggerMiddleware !== 'boolean') {
-            if (options.swaggerMiddleware.path) {
-                docsPath = options.swaggerMiddleware.path;
-            }
-
-            if (options.swaggerMiddleware.writableDirectoryPath) {
-                writableDirectoryPath = options.swaggerMiddleware.writableDirectoryPath;
-            }
-        }
-
-        const swaggerDocumentPath: string = path.join(writableDirectoryPath, 'swagger.json');
+        const swaggerDocumentPath: string = path.join(basePath, 'swagger.json');
 
         if (existsSync(swaggerDocumentPath)) {
             // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
             const swaggerDocument = require(swaggerDocumentPath);
 
             router.use(
-                docsPath,
+                '/docs',
                 swaggerUi.serve,
                 swaggerUi.setup(swaggerDocument, {
                     swaggerOptions: {

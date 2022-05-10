@@ -107,7 +107,7 @@ describe('src/http/controllers/oauth2-provider', () => {
         expect(response.status).toEqual(302);
         expect(response.header.location).toBeDefined();
 
-        const config = useConfig();
+        const config = await useConfig();
 
         const oauth2Client = new HTTPOAuth2Client({
             client_id: provider.client_id,

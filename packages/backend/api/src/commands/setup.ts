@@ -6,14 +6,14 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { setupCommand, useConfig } from '@authelion/api-core';
+import { findConfig, setConfig, setupCommand } from '@authelion/api-core';
 import * as ora from 'ora';
 
 interface SetupArguments extends Arguments {
     root: string;
     keyPair: boolean;
     database: boolean;
-    databaseSeeder: boolean;
+    databaseSeed: boolean;
     documentation: boolean;
 }
 
@@ -42,7 +42,7 @@ export class SetupCommand implements CommandModule {
                 type: 'boolean',
             })
 
-            .option('databaseSeeder', {
+            .option('databaseSeed', {
                 alias: 'db:seed',
                 describe: 'Seed database.',
                 type: 'boolean',
@@ -57,14 +57,15 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = useConfig(args.root);
+        const config = await findConfig(args.root);
+        setConfig(config);
+
         const spinner = ora.default({
             spinner: 'dots',
         });
 
         try {
             await setupCommand({
-                config,
                 spinner,
                 ...args,
             });

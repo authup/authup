@@ -5,20 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import supertest, { SuperTest, Test } from 'supertest';
-import { createExpressApp, useConfig } from '../../src';
+import { createExpressApp } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const config = useConfig();
+    const expressApp = createExpressApp();
 
-    const expressApp = createExpressApp({
-        writableDirectoryPath: path.join(config.rootPath, config.writableDirectory),
-        swaggerDocumentation: false,
-        selfUrl: config.selfUrl,
-        webUrl: config.webUrl,
-        tokenMaxAge: 3600,
-    });
     return supertest(expressApp);
 }

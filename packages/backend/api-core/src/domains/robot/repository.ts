@@ -14,10 +14,12 @@ import { compare, hash } from '@authelion/api-utils';
 import {
     DataSource, EntityManager, InstanceChecker, Repository,
 } from 'typeorm';
+import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
+import { CachePrefix } from '../../redis';
 
 export class RobotRepository extends Repository<RobotEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -27,12 +29,21 @@ export class RobotRepository extends Repository<RobotEntity> {
     async getOwnedPermissions(
         id: Robot['id'],
     ) : Promise<PermissionMeta[]> {
-        let permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(id);
+        const permissions : PermissionMeta[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)
-            .findBy({
-                robot_id: id,
+            .find({
+                where: {
+                    robot_id: id,
+                },
+                cache: {
+                    id: buildKeyPath({
+                        prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                        id,
+                    }),
+                    milliseconds: 60.000,
+                },
             });
 
         const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
@@ -42,7 +53,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         }
 
         const roleRepository = new RoleRepository(this.manager);
-        permissions = [...permissions, ...await roleRepository.getOwnedPermissions(roleIds)];
+        permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
 
         return permissions;
     }
@@ -50,8 +61,17 @@ export class RobotRepository extends Repository<RobotEntity> {
     async getSelfOwnedPermissions(id: string) : Promise<PermissionMeta[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
-        const entities = await repository.findBy({
-            robot_id: id,
+        const entities = await repository.find({
+            where: {
+                robot_id: id,
+            },
+            cache: {
+                id: buildKeyPath({
+                    prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+                    id,
+                }),
+                milliseconds: 60.000,
+            },
         });
 
         const result : PermissionMeta[] = [];

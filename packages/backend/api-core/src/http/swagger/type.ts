@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type SwaggerDocumentationCreateContext = {
-    rootDirectoryPath: string,
+export type SwaggerDocumentCreateContext = {
+    rootPath: string,
     writableDirectory: string,
-    selfUrl?: string
+    baseUrl?: string
 };

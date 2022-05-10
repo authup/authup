@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './oauth2-access-token';
 export * from './oauth2-provider';
 export * from './oauth2-provider-account';
 export * from './oauth2-provider-role';
+export * from './oauth2-refresh-token';
 export * from './permission';
 export * from './realm';
 export * from './robot';

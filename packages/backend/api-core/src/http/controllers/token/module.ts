@@ -9,12 +9,11 @@ import { Application } from 'express';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { createTokenRouteHandler, deleteTokenRouteHandler, verifyTokenRouteHandler } from './handlers';
 import { forceLoggedIn } from '../../middleware';
-import { ControllerOptions } from '../type';
 
-export function registerTokenController(router: Application, options: ControllerOptions) {
+export function registerTokenController(router: Application) {
     router.post('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await createTokenRouteHandler(req, res, options);
+            await createTokenRouteHandler(req, res);
         } catch (e) {
             next(e);
         }
@@ -22,7 +21,7 @@ export function registerTokenController(router: Application, options: Controller
 
     router.delete('/token/:id', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await deleteTokenRouteHandler(req, res, options);
+            await deleteTokenRouteHandler(req, res);
         } catch (e) {
             next(e);
         }
@@ -30,7 +29,7 @@ export function registerTokenController(router: Application, options: Controller
 
     router.delete('/token', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await deleteTokenRouteHandler(req, res, options);
+            await deleteTokenRouteHandler(req, res);
         } catch (e) {
             next(e);
         }
@@ -38,7 +37,7 @@ export function registerTokenController(router: Application, options: Controller
 
     router.get('/token/:id', async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await verifyTokenRouteHandler(req, res, options);
+            await verifyTokenRouteHandler(req, res);
         } catch (e) {
             next(e);
         }
@@ -46,7 +45,7 @@ export function registerTokenController(router: Application, options: Controller
 
     router.get('/token', [forceLoggedIn], async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         try {
-            await verifyTokenRouteHandler(req, res, options);
+            await verifyTokenRouteHandler(req, res);
         } catch (e) {
             next(e);
         }

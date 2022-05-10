@@ -9,13 +9,19 @@ import { pascalCase } from 'pascal-case';
 import path from 'path';
 import fs from 'fs';
 import { MigrationGenerateCommandContext } from '../type';
+import { useConfig } from '../../config';
 
 export async function migrationGenerateCommand(context: MigrationGenerateCommandContext) {
-    context.name = context.name || 'Auth';
+    const config = await useConfig();
 
     if (!context.directory) {
-        context.directory = path.join(context.config.writableDirectory, 'migrations');
+        context.directory = path.join(config.writableDirectory, 'migrations');
     }
+
+    context.directory = path.isAbsolute(context.directory) ?
+        context.directory :
+        path.join(config.rootPath, context.directory);
+    context.name = context.name || 'Auth';
 
     const timestamp = new Date().getTime();
     const fileName = `${timestamp}-${context.name}.ts`;
@@ -57,7 +63,7 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
 
     const directoryPath = path.isAbsolute(context.directory) ?
         context.directory :
-        path.join(context.config.rootPath, context.directory);
+        path.join(config.rootPath, context.directory);
 
     try {
         await fs.promises.access(directoryPath, fs.constants.R_OK | fs.constants.W_OK);

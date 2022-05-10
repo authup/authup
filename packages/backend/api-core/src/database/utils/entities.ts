@@ -23,10 +23,7 @@ import {
     UserEntity, UserPermissionEntity, UserRoleEntity,
 } from '../../domains';
 
-export function setEntitiesForConnectionOptions<T extends DataSourceOptions>(
-    options: T,
-    merge?: boolean,
-) : T {
+export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     return {
         ...options,
         entities: [
@@ -49,7 +46,7 @@ export function setEntitiesForConnectionOptions<T extends DataSourceOptions>(
             UserAttributeEntity,
             UserPermissionEntity,
             UserRoleEntity,
-            ...(merge && options.entities ? options.entities : []) as string[],
+            ...(options.entities ? options.entities : []) as string[],
         ],
     };
 }

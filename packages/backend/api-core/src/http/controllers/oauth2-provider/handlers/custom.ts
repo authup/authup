@@ -21,13 +21,12 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../oauth2/grant-types/internal';
-import { ControllerOptions } from '../../type';
 import { useDataSource } from '../../../../database';
+import { useConfig } from '../../../../config';
 
 export async function authorizeURLOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    options: ControllerOptions,
 ) : Promise<any> {
     const { id } = req.params;
 
@@ -42,12 +41,14 @@ export async function authorizeURLOauth2ProviderRouteHandler(
         throw new NotFoundError();
     }
 
+    const config = await useConfig();
+
     const oauth2Client = new HTTPOAuth2Client({
         client_id: provider.client_id,
         token_host: provider.token_host,
         authorize_host: provider.authorize_host,
         authorize_path: provider.authorize_path,
-        redirect_uri: `${options.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
+        redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     });
 
     return res.redirect(oauth2Client.buildAuthorizeURL({}));
@@ -57,7 +58,6 @@ export async function authorizeURLOauth2ProviderRouteHandler(
 export async function authorizeCallbackOauth2ProviderRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
-    options: ControllerOptions,
 ) : Promise<any> {
     const { id } = req.params;
     const { code, state } = req.query;
@@ -73,6 +73,8 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     if (!provider) {
         throw new NotFoundError();
     }
+
+    const config = await useConfig();
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
     const oauth2Client = new HTTPOAuth2Client({
@@ -82,7 +84,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         token_host: provider.token_host,
         token_path: provider.token_path,
 
-        redirect_uri: `${options.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
+        redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
     const tokenResponse : OAuth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
@@ -91,38 +93,32 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     });
 
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
-    const grant = new InternalGrantType({
-        request: req,
-        maxAge: options.tokenMaxAge,
-        entity: {
+    const grant = new InternalGrantType(config);
+
+    const token = await grant
+        .setEntity({
             kind: OAuth2TokenSubKind.USER,
             data: account.user_id,
-        },
-        realm: provider.realm_id,
-        selfUrl: options.selfUrl,
-        keyPairOptions: {
-            directory: options.writableDirectoryPath,
-        },
-    });
-
-    const token = await grant.run();
+        })
+        .setRealm(provider.realm_id)
+        .run(req);
 
     const cookieOptions : CookieOptions = {
 
         ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(options.selfAuthorizeRedirectUrl).hostname,
+            domain: new URL(config.webUrl).hostname,
         } : {}),
     };
 
     res.cookie(CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
-        maxAge: determineAccessTokenMaxAge(options.tokenMaxAge),
+        maxAge: determineAccessTokenMaxAge(config.tokenMaxAge),
     });
 
     res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
         ...cookieOptions,
-        maxAge: determineRefreshTokenMaxAge(options.tokenMaxAge),
+        maxAge: determineRefreshTokenMaxAge(config.tokenMaxAge),
     });
 
-    return res.redirect(options.selfAuthorizeRedirectUrl);
+    return res.redirect(config.webUrl);
 }

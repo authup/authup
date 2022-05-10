@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
-import { PermissionID, RobotRole, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
