@@ -9,7 +9,15 @@ import { DataSource, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_ID,
-    Permission, PermissionID, Robot, RobotPermission, RolePermission, User, UserRole, createNanoID,
+    Permission,
+    PermissionID,
+    Robot,
+    RobotPermission,
+    RolePermission,
+    User,
+    UserRole,
+    createNanoID,
+    mergeDeep,
 } from '@authelion/common';
 import { hash } from '@authelion/api-utils';
 import {
@@ -22,6 +30,7 @@ import {
     useRobotEventEmitter,
 } from '../../domains';
 import { DatabaseSeedOptions } from '../type';
+import { useConfigSync } from '../../config';
 
 export type DatabaseRootSeederRunResponse = {
     robot?: Robot,
@@ -38,8 +47,14 @@ function getPermissions(options: DatabaseSeedOptions) {
 export class DatabaseSeeder implements Seeder {
     protected options: DatabaseSeedOptions;
 
-    constructor(options: DatabaseSeedOptions) {
-        this.options = options;
+    constructor(options?: DatabaseSeedOptions) {
+        const config = useConfigSync();
+
+        if (options) {
+            this.options = mergeDeep({}, options, config.database.seed);
+        } else {
+            this.options = config.database.seed;
+        }
     }
 
     public async run(dataSource: DataSource) : Promise<any> {

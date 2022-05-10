@@ -20,11 +20,12 @@ So please stay patient or contribute to it, till it covers all parts ⭐.
 
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Config](#config)
   - [HTTP](#http)
     - [Middlewares](#middlewares)
     - [Controllers](#controllers)
   - [Database](#database)
-    - [Entities](#entities)
+    - [Entities & Subscribers](#entities--subscribers)
     - [Seeding](#seeding)
     - [Aggregators](#aggregators)
   
@@ -36,11 +37,12 @@ npm install @authelion/api-core --save
 
 ## Usage
 
-To use this package th `http-` & `database`-module must be configured at minimum.
-
-All other modules and methods are optional 🔥.
+This package consists of some submodules (e.g. `http` & `database`). These submodules should
+be configured globally.
+But the global configuration, can be overwritten when embedding a submodul 🔥.
 
 ### Config
+All options inherit default values, so it is not required to pass any options at all.
 
 ```typescript
 import { setConfig } from '@authelion/api-core';
@@ -57,14 +59,18 @@ setConfig({
             enabled: true,
             secret: false
         }
-    }
+    },
+    tokenMaxAge: {
+        accessToken: 3600, // 1 hour
+        refreshToken: 36000 // 10 hours
+    },
 })
 ```
 
 ### HTTP
 
 The controllers & middlewares, which are part of the http-module,
-can be configured as described in the following:
+can be registered as described in the following:
 
 #### Middlewares
 
@@ -79,21 +85,7 @@ import path from "path";
 const app = express();
 
 // Setup middleware
-registerMiddlewares(app, {
-    // optional
-    writableDirectoryPath: path.join(process.cwd(), 'writable'),
-    // required!
-    bodyParserMiddleware: true,
-    // required!
-    cookieParserMiddleware: true,
-    // required!
-    responseMiddleware: true,
-    // optional
-    swaggerMiddleware: {
-        path: '/docs',
-        writableDirectoryPath: path.join(process.cwd(), 'writable'),
-    }
-});
+registerMiddlewares(app);
 
 // Register controllers
 // Register error middleware
@@ -137,16 +129,7 @@ const app = express();
 // Register middlewares
 
 // Register client, role, user, ... controllers
-registerControllers(app, {
-    redis: true,
-    tokenMaxAge: {
-        accessToken: 3600, // 1 hour
-        refreshToken: 36000 // 10 hours
-    },
-    selfUrl: 'http://localhost:3010/',
-    selfAuthorizeRedirectUrl: 'http://localhost:3000/',
-    writableDirectoryPath: path.join(process.cwd(), 'writable'),
-});
+registerControllers(app);
 
 // Register error middleware
 
@@ -155,36 +138,42 @@ app.listen(3010);
 
 ### Database
 
-#### Entities
-All database domain entities, which can managed by 
-the HTTP api, must also be registered for the **typeorm** connection.
+#### Entities & Subscribers
 
-To set **all** entities for the connection, use the `setEntitiesForConnectionOptions` utility function.
+All domain entities, which can be managed by the REST-API, must be registered to 
+the typeorm DataSource.
+In addition to these entities, it is also necessary to include the corresponding subscriber,
+to invalidate the entity cache, when caching is enabled.
+
+Therefore, use the utility function `extendDataSourceOptions` to extend the typeorm DataSourceOptions.
 
 ```typescript
-import { 
-    setEntitiesForConnectionOptions
+import {
+    extendDataSourceOptions
 } from '@authelion/api-core';
 
 import { 
-    createConnection, 
-    buildConnectionOptions
+    DataSource,
+    DataSourceOptions
 } from 'typeorm';
 
 (async () => {
-    const connectionOptions = await buildConnectionOptions();
+    const options : DataSourceOptions = {
+        // ...
+    };
 
-    setEntitiesForConnectionOptions(connectionOptions);
+    extendDataSourceOptions(options);
 
-    const connection = await createConnection(connectionOptions);
+    const dataSource = new DataSource(options);
+    await dataSource.initialize();
 })();
 ```
 
 #### Seeding
 
-Another import thing to do, is seeding the database with an initial data set ⚡.
+Another import thing to do, is to seed the database with an initial data set ⚡.
 
-The `DatabaseRootSeeder` creates the following default entities:
+The `DatabaseSeeder` populates the database with default entities:
 - User: admin
 - Role: admin
 - Permission(s): user_add, user_edit, ...
@@ -194,76 +183,67 @@ and also all possible relations between:
 - role - permissions
 
 ```typescript
-import { 
-    DatabaseRootSeeder, 
-    setEntitiesForConnectionOptions
-} from "@authelion/api-core";
-import { 
-    createConnection,
-    buildConnectionOptions 
+import {
+    DatabaseSeeder,
+    extendDataSourceOptions
+} from '@authelion/api-core';
+
+import {
+    DataSource,
+    DataSourceOptions
 } from 'typeorm';
 
 (async () => {
-    const connectionOptions = await buildConnectionOptions();
+    const options : DataSourceOptions = {
+        // ...
+    };
 
-    setEntitiesForConnectionOptions(connectionOptions);
-    const connection = await createConnection(connectionOptions);
+    extendDataSourceOptions(options);
+
+    const dataSource = new DataSource(options);
+    await dataSource.initialize();
     
     // ------------------------------------
 
-    const seeder = new DatabaseRootSeeder({
-        // extend the default permissions
-        permissions: [],
-
-        //default: admin
-        userName: 'admin',
-        // default: start123
-        userPassword: 'start123',
-        // reset the user password, if called 2nd time
-        userPasswordReset: true,
-
-        // default: auto generated
-        robotSecret: 'xxx',
-        // reset the robot secret, if called 2nd time
-        robotSecretReset: true
-    });
+    const config = await useConfig();
+    const seeder = new DatabaseSeeder(config.database.seed);
     
     await seeder.run(connection);
 })();
 ```
 ### Aggregators
 
-The last step is to register the `TokenAggregator`, which will remove expired 
-access- & refresh-tokens for you.
+#### OAuth2Token
 
-This will happen on startup. In addition, it will listen for expired token events from the redis store,
-to remove the corresponding database entries on runtime 🔥. 
+The last step is to register the `OAuth2Token` aggregator, which is responsible for removing expired 
+access- & refresh-tokens 🔥.
+The aggregator should be registered on startup of the application.
 
 ```typescript
 import {
-    buildTokenAggregator,
-    DatabaseRootSeeder, 
-    setEntitiesForConnectionOptions
-} from "@authelion/api-core";
-import {useClient} from "redis-extension";
+    buildOAuth2TokenAggregator,
+    DatabaseSeeder,
+    extendDataSourceOptions
+} from '@authelion/api-core';
+
 import {
-    createConnection,
-    buildConnectionOptions
+    DataSource,
+    DataSourceOptions
 } from 'typeorm';
 
-
 (async () => {
-    const connectionOptions = await buildConnectionOptions();
+    const options : DataSourceOptions = {
+        // ...
+    };
 
-    setEntitiesForConnectionOptions(connectionOptions);
-    const connection = await createConnection(connectionOptions);
+    extendDataSourceOptions(options);
+
+    const dataSource = new DataSource(options);
+    await dataSource.initialize();
 
     // ------------------------------------
-
-    // init redis client
-    const redis = useClient();
     
-    const { start } = buildTokenAggregator(redis);
+    const { start } = buildOAuth2TokenAggregator();
 
     await start();
 })();

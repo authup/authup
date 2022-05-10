@@ -10,16 +10,24 @@ import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
+import { mergeDeep } from '@authelion/common';
 import {
-    createMiddleware,
+    MiddlewareOptions, createMiddleware,
     responseMiddleware,
 } from '../index';
 import { useConfigSync } from '../../config';
 
-export function registerMiddlewares(router: Application) {
+export function registerMiddlewares(
+    router: Application,
+    options?: MiddlewareOptions,
+) {
     const config = useConfigSync();
 
-    const options = config.middleware;
+    if (options) {
+        options = mergeDeep({}, config.middleware, options);
+    } else {
+        options = config.middleware;
+    }
 
     if (options.bodyParser) {
         router.use(urlencoded({ extended: false }));
