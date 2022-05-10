@@ -7,6 +7,7 @@
 
 export * from './robot';
 export * from './robot-permission';
+export * from './robot-role';
 
 export * from './role';
 export * from './role-permission';
@@ -14,3 +15,4 @@ export * from './role-permission';
 export * from './user';
 export * from './user-attribute';
 export * from './user-permission';
+export * from './user-role';

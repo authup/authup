@@ -13,7 +13,7 @@ interface SetupArguments extends Arguments {
     root: string;
     keyPair: boolean;
     database: boolean;
-    databaseSeeder: boolean;
+    databaseSeed: boolean;
     documentation: boolean;
 }
 
@@ -42,7 +42,7 @@ export class SetupCommand implements CommandModule {
                 type: 'boolean',
             })
 
-            .option('databaseSeeder', {
+            .option('databaseSeed', {
                 alias: 'db:seed',
                 describe: 'Seed database.',
                 type: 'boolean',

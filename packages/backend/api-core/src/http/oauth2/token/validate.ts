@@ -47,7 +47,7 @@ export async function validateOAuth2Token(
         case OAuth2TokenKind.ACCESS: {
             const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
             const cache : Cache<string> = redis ?
-                new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS }) :
+                new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN }) :
                 undefined;
 
             let entity : OAuth2AccessTokenEntity | undefined;
@@ -87,7 +87,7 @@ export async function validateOAuth2Token(
         case OAuth2TokenKind.REFRESH: {
             const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
             const cache : Cache<string> = redis ?
-                new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH }) :
+                new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN }) :
                 undefined;
 
             let entity : OAuth2RefreshTokenEntity | undefined;

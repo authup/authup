@@ -6,10 +6,8 @@
  */
 
 export enum CachePrefix {
-    TOKEN_ACCESS = 'token_access',
-    TOKEN_REFRESH = 'token_refresh',
-    TOKEN_TARGET = 'token_target',
-    TOKEN_TARGET_PERMISSIONS = 'token_target_permissions',
+    OAUTH2_ACCESS_TOKEN = 'oauth2_access_token',
+    OAUTH2_REFRESH_TOKEN = 'oauth2_refresh_token',
 
     USER = 'user',
     USER_OWNED_ATTRIBUTES = 'user_owned_attributes',

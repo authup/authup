@@ -22,7 +22,7 @@ export async function startOAuth2TokenWatcher() {
 
     const redis = useClient(config.redis.alias);
 
-    const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
+    const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
     accessTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
@@ -33,7 +33,7 @@ export async function startOAuth2TokenWatcher() {
 
     // -------------------------------------------------
 
-    const refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
+    const refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
     refreshTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);

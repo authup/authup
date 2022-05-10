@@ -36,8 +36,8 @@ export abstract class AbstractGrant {
         if (this.config.redis.enabled) {
             const redis = useClient(this.config.redis.alias);
 
-            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_ACCESS });
-            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.TOKEN_REFRESH });
+            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
+            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
         }
     }
 
