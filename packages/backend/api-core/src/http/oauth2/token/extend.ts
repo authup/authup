@@ -17,7 +17,7 @@ import {
     RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { CachePrefix } from '../../../redis/constants';
+import { CachePrefix } from '../../../constants';
 
 /**
  *

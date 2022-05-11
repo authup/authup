@@ -10,11 +10,11 @@ import { Config } from './type';
 import { ConfigDefault } from './constants';
 import { requireFromEnv, requireIntegerFromEnv } from './utils';
 import { extendDatabaseOptions } from '../database';
-import { extendRedisOptions } from '../redis';
 import { extendMiddlewareOptions } from '../http';
+import { Subset } from '../types';
 
 export function extendConfig(
-    config: Partial<Config>,
+    config: Subset<Config>,
     directoryPath?: string,
 ): Config {
     directoryPath ??= process.cwd();
@@ -52,7 +52,6 @@ export function extendConfig(
     const writableDirectoryPath = path.join(config.rootPath, config.writableDirectory);
 
     config.database = extendDatabaseOptions(config.database || {});
-    config.redis = extendRedisOptions(config.redis || {});
 
     if (!config.tokenMaxAge) {
         const refreshTokenMaxAge = requireIntegerFromEnv('REFRESH_TOKEN_MAX_AGE', 0);

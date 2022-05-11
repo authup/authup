@@ -8,6 +8,8 @@
 import { Config } from './type';
 import { findConfig, findConfigSync } from './find';
 import { extendConfig } from './extend';
+import { Subset } from '../types';
+import { applyConfig } from './apply';
 
 let instance : Config | undefined;
 let instancePromise : Promise<Config> | undefined;
@@ -22,6 +24,7 @@ export async function useConfig(directoryPath?: string) : Promise<Config> {
     }
 
     instance = await instancePromise;
+    applyConfig(instance);
 
     return instance;
 }
@@ -32,10 +35,14 @@ export function useConfigSync(directoryPath?: string) : Config {
     }
 
     instance = findConfigSync(directoryPath);
+    applyConfig(instance);
 
     return instance;
 }
 
-export function setConfig(value: Partial<Config>) {
+export function setConfig(value: Subset<Config>) : Config {
     instance = extendConfig(value);
+    applyConfig(instance);
+
+    return instance;
 }

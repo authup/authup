@@ -11,16 +11,16 @@ import {
     OAuth2RefreshTokenEntity,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { CachePrefix } from '../../../redis';
-import { useConfig } from '../../../config';
+import { isConfigRedisEnabled, useConfig } from '../../../config';
+import { CachePrefix } from '../../../constants';
 
 export async function startOAuth2TokenWatcher() {
     const config = await useConfig();
-    if (!config.redis.enabled) {
+    if (!isConfigRedisEnabled(config.redis)) {
         return;
     }
 
-    const redis = useClient(config.redis.alias);
+    const redis = useClient();
 
     const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
     accessTokenCache.on('expired', async (data) => {

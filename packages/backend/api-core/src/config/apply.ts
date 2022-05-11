@@ -5,5 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './extend';
-export * from './type';
+import { Config } from './type';
+import { applyConfigRedisOption } from './utils';
+
+export function applyConfig(config: Config) {
+    applyConfigRedisOption(config.redis);
+}

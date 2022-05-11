@@ -7,7 +7,7 @@
 
 import { TokenMaxAgeType } from '@authelion/common';
 import { KeyPairContext } from '@authelion/api-utils';
-import { RedisOptions } from '../redis';
+import { Client } from 'redis-extension';
 import { MiddlewareOptions } from '../http';
 import { DatabaseOptions } from '../database';
 
@@ -71,7 +71,7 @@ export type Config = {
      *     enabled: false
      * }
      */
-    redis: RedisOptions,
+    redis: string | boolean | Client,
 
     /**
      * default: {

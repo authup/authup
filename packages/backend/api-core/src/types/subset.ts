@@ -5,5 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
-export * from './options';
+export type Subset<K> = {
+    [attr in keyof K]?: K[attr] extends object ? Subset<K[attr]> : K[attr];
+};

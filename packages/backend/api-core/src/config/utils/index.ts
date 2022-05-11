@@ -5,8 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type RedisOptions = {
-    enabled: boolean,
-    connectionString?: string,
-    alias?: string
-};
+export * from './env';
+export * from './redis';

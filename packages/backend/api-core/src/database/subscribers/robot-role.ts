@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
 import { RobotRoleEntity } from '../../domains';
-import { CachePrefix } from '../../redis';
+import { CachePrefix } from '../../constants';
 
 @EventSubscriber()
 export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleEntity> {

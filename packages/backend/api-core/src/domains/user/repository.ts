@@ -20,7 +20,7 @@ import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
-import { CachePrefix } from '../../redis/constants';
+import { CachePrefix } from '../../constants';
 
 export class UserRepository extends Repository<UserEntity> {
     constructor(instance: DataSource | EntityManager) {

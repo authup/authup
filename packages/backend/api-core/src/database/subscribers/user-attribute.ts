@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
 import { UserAttributeEntity } from '../../domains';
-import { CachePrefix } from '../../redis';
+import { CachePrefix } from '../../constants';
 
 @EventSubscriber()
 export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAttributeEntity> {

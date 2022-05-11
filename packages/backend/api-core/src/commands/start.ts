@@ -9,7 +9,6 @@ import { URL } from 'url';
 import { DataSource } from 'typeorm';
 import path from 'path';
 import { setDataSource } from 'typeorm-extension';
-import { setConfig as setRedisConfig } from 'redis-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
@@ -59,14 +58,6 @@ export async function startCommand(context?: StartCommandContext) {
         context.spinner.succeed('Established database connection.');
 
         context.spinner.start('Build & start token aggregator.');
-    }
-
-    if (config.redis.enabled) {
-        if (config.redis.connectionString) {
-            setRedisConfig({
-                connectionString: config.redis.connectionString,
-            }, config.redis.alias);
-        }
     }
 
     const { start } = buildOAuth2TokenAggregator();

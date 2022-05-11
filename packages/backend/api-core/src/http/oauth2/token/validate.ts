@@ -21,8 +21,8 @@ import {
     OAuth2RefreshTokenEntity,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { useConfig } from '../../../config';
-import { CachePrefix } from '../../../redis';
+import { isConfigRedisEnabled, useConfig } from '../../../config';
+import { CachePrefix } from '../../../constants';
 
 export async function validateOAuth2Token(
     token: string,
@@ -37,8 +37,8 @@ export async function validateOAuth2Token(
     );
 
     const dataSource = await useDataSource();
-    const redis = config.redis.enabled ?
-        useClient(config.redis.alias) :
+    const redis = isConfigRedisEnabled(config.redis) ?
+        useClient() :
         undefined;
 
     let result : OAuth2TokenVerification;

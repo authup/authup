@@ -19,7 +19,7 @@ import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
-import { CachePrefix } from '../../redis';
+import { CachePrefix } from '../../constants';
 
 export class RobotRepository extends Repository<RobotEntity> {
     constructor(instance: DataSource | EntityManager) {

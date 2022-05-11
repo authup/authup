@@ -17,9 +17,9 @@ import path from 'path';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
 import { AccessTokenIssueContext } from './type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { Config } from '../../../config';
+import { Config, isConfigRedisEnabled } from '../../../config';
 import { ExpressRequest } from '../../type';
-import { CachePrefix } from '../../../redis';
+import { CachePrefix } from '../../../constants';
 
 export abstract class AbstractGrant {
     protected config : Config;
@@ -33,8 +33,8 @@ export abstract class AbstractGrant {
     constructor(config: Config) {
         this.config = config;
 
-        if (this.config.redis.enabled) {
-            const redis = useClient(this.config.redis.alias);
+        if (isConfigRedisEnabled(this.config.redis)) {
+            const redis = useClient();
 
             this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
             this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });

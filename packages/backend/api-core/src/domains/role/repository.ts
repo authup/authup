@@ -16,7 +16,7 @@ import {
 import { buildKeyPath } from 'redis-extension';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
-import { CachePrefix } from '../../redis/constants';
+import { CachePrefix } from '../../constants';
 
 export class RoleRepository extends Repository<RoleEntity> {
     constructor(instance: DataSource | EntityManager) {
