@@ -7,7 +7,7 @@
 
 import { Client, setClient, setConfig } from 'redis-extension';
 
-export function isConfigRedisEnabled(data: string | boolean | Client) : boolean {
+export function isRedisEnabled(data: string | boolean | Client): boolean {
     if (typeof data === 'boolean') {
         return data;
     }
@@ -15,7 +15,7 @@ export function isConfigRedisEnabled(data: string | boolean | Client) : boolean 
     return typeof data !== 'undefined';
 }
 
-export function applyConfigRedisOption(data: string | boolean | Client) : void {
+export function configureRedis(data: string | boolean | Client): void {
     if (
         typeof data === 'boolean' ||
         typeof data === 'undefined'

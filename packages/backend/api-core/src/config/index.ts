@@ -10,4 +10,3 @@ export * from './find';
 export * from './module';
 export * from './extend';
 export * from './type';
-export * from './utils';

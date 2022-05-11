@@ -11,12 +11,13 @@ import {
     OAuth2RefreshTokenEntity,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { isConfigRedisEnabled, useConfig } from '../../../config';
+import { useConfig } from '../../../config';
 import { CachePrefix } from '../../../constants';
+import { isRedisEnabled } from '../../../utils';
 
 export async function startOAuth2TokenWatcher() {
     const config = await useConfig();
-    if (!isConfigRedisEnabled(config.redis)) {
+    if (!isRedisEnabled(config.redis)) {
         return;
     }
 

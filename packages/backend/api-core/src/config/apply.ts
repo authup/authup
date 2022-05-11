@@ -6,8 +6,8 @@
  */
 
 import { Config } from './type';
-import { applyConfigRedisOption } from './utils';
+import { configureRedis } from '../utils';
 
 export function applyConfig(config: Config) {
-    applyConfigRedisOption(config.redis);
+    configureRedis(config.redis);
 }

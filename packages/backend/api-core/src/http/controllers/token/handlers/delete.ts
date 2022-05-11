@@ -15,8 +15,9 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../../domains';
 import { validateOAuth2Token } from '../../../oauth2';
 import { useDataSource } from '../../../../database';
-import { isConfigRedisEnabled, useConfig } from '../../../../config';
+import { useConfig } from '../../../../config';
 import { CachePrefix } from '../../../../constants';
+import { isRedisEnabled } from '../../../../utils';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
@@ -44,7 +45,7 @@ export async function deleteTokenRouteHandler(
     const dataSource = await useDataSource();
 
     const config = await useConfig();
-    if (isConfigRedisEnabled(config.redis)) {
+    if (isRedisEnabled(config.redis)) {
         const redis = useClient();
 
         if (redis) {

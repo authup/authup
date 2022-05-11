@@ -6,8 +6,8 @@
  */
 
 import { DatabaseOptions, DatabaseSeedOptions } from '../type';
-import { requireBooleanFromEnv, requireFromEnv } from '../../config/utils';
 import { Subset } from '../../types';
+import { requireBooleanFromEnv, requireFromEnv } from '../../utils';
 
 export function extendDatabaseOptions(options: Subset<DatabaseOptions>) : DatabaseOptions {
     if (!options.seed) {

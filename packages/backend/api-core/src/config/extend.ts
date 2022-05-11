@@ -8,10 +8,10 @@
 import path from 'path';
 import { Config } from './type';
 import { ConfigDefault } from './constants';
-import { requireFromEnv, requireIntegerFromEnv } from './utils';
 import { extendDatabaseOptions } from '../database';
 import { extendMiddlewareOptions } from '../http';
 import { Subset } from '../types';
+import { requireFromEnv, requireIntegerFromEnv } from '../utils';
 
 export function extendConfig(
     config: Subset<Config>,
