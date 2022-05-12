@@ -50,7 +50,7 @@
         "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.3.6",
-        "typeorm-extension": "^2.1.1",
+        "typeorm-extension": "^2.1.2",
         "yargs": "^17.4.1"
     },
     "devDependencies": {
