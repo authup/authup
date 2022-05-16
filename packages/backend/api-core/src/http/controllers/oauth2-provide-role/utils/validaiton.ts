@@ -43,7 +43,10 @@ export async function runOauth2ProviderRoleValidation(
     const externalPromise = await check('external_id')
         .exists()
         .isLength({ min: 3, max: 36 });
+
     if (operation === CRUDOperation.UPDATE) externalPromise.optional();
+
+    await externalPromise.run(req);
 
     // ----------------------------------------------
 

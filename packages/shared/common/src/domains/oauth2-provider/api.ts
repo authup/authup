@@ -8,7 +8,7 @@
 import { BuildInput, buildQuery } from '@trapi/query';
 import { ClientDriverInstance } from '@trapi/client';
 import { OAuth2Provider } from './entity';
-import { nullifyEmptyObjectProperties } from '../../utils';
+import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
 import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 import { buildOAuth2ProviderAuthorizePath } from './utils';
 
@@ -20,7 +20,7 @@ export class OAuth2ProviderAPI implements DomainAPI<OAuth2Provider> {
     }
 
     getAuthorizeUri(baseUrl: string, id: OAuth2Provider['id']): string {
-        return new URL(buildOAuth2ProviderAuthorizePath(id), baseUrl).href;
+        return removeDuplicateForwardSlashesFromURL(`${baseUrl}/${buildOAuth2ProviderAuthorizePath(id)}`);
     }
 
     async getMany(record?: BuildInput<OAuth2Provider>): Promise<CollectionResourceResponse<OAuth2Provider>> {
