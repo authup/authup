@@ -112,12 +112,12 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
 
     res.cookie(CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
-        maxAge: determineAccessTokenMaxAge(config.tokenMaxAge),
+        maxAge: determineAccessTokenMaxAge(config.tokenMaxAge) * 1000,
     });
 
     res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
         ...cookieOptions,
-        maxAge: determineRefreshTokenMaxAge(config.tokenMaxAge),
+        maxAge: determineRefreshTokenMaxAge(config.tokenMaxAge) * 1000,
     });
 
     return res.redirect(config.webUrl);

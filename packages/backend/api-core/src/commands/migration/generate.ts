@@ -8,8 +8,15 @@
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 import fs from 'fs';
+import { MigrationGenerateCommand } from 'typeorm/commands/MigrationGenerateCommand';
 import { MigrationGenerateCommandContext } from '../type';
 import { useConfig } from '../../config';
+
+class GenerateCommand extends MigrationGenerateCommand {
+    static prettify(query: string) {
+        return this.prettifyQuery(query);
+    }
+}
 
 export async function migrationGenerateCommand(context: MigrationGenerateCommandContext) {
     const config = await useConfig();
@@ -37,6 +44,17 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
 
     try {
         const sqlInMemory = await dataSource.driver.createSchemaBuilder().log();
+
+        sqlInMemory.upQueries.forEach((upQuery) => {
+            upQuery.query = GenerateCommand.prettify(
+                upQuery.query,
+            );
+        });
+        sqlInMemory.downQueries.forEach((downQuery) => {
+            downQuery.query = GenerateCommand.prettify(
+                downQuery.query,
+            );
+        });
 
         sqlInMemory.upQueries.forEach((upQuery) => {
             upStatements.push(`        await queryRunner.query(\`${upQuery.query.replace(/`/g, '\\`')}\`${queryParams(upQuery.parameters)});`);
