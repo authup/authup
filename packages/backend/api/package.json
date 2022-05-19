@@ -51,7 +51,7 @@
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.3.6",
         "typeorm-extension": "^2.1.2",
-        "yargs": "^17.5.0"
+        "yargs": "^17.5.1"
     },
     "devDependencies": {
         "@types/change-case": "^2.3.1",
