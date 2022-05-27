@@ -17,7 +17,7 @@ export function buildExpressValidationErrorMessage<
     if (names.length > 1) {
         return `The parameters ${names.join(', ')} is invalid.`;
     }
-    return `The parameter ${names[0]} is invalid.`;
+    return `The parameter ${String(names[0])} is invalid.`;
 }
 
 export function matchedValidationData(
