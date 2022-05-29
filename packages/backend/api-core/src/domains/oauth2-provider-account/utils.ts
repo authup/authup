@@ -162,12 +162,13 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
 
         return user;
     } catch (e) {
+        const code : string | undefined = hasOwnProperty(e, 'code') && typeof e.code === 'string' ?
+            e.code :
+            undefined;
+
         if (
-            hasOwnProperty(e, 'code') &&
-            (
-                e.code === 'ER_DUP_ENTRY' ||
-                e.code === 'SQLITE_CONSTRAINT_UNIQUE'
-            )
+            code === 'ER_DUP_ENTRY' ||
+            code === 'SQLITE_CONSTRAINT_UNIQUE'
         ) {
             return createUser(data, names);
         }

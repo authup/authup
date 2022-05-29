@@ -35,7 +35,11 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         result.data.password = await repository.hashPassword(result.data.password);
     }
 
-    let entity = await repository.findOneBy({ id });
+    const query = repository.createQueryBuilder('user')
+        .addSelect('user.email')
+        .where('user.id = :id', { id });
+
+    let entity = await query.getOne();
     if (!entity) {
         throw new NotFoundError();
     }
