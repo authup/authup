@@ -38,10 +38,10 @@ export type DatabaseRootSeederRunResponse = {
 };
 
 function getPermissions(options: DatabaseSeedOptions) {
-    return [
+    return Array.from(new Set([
         ...Object.values(PermissionID),
         ...(options.permissions ? options.permissions : []),
-    ];
+    ]));
 }
 
 export class DatabaseSeeder implements Seeder {
