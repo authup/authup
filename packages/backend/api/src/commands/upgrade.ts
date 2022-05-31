@@ -38,8 +38,7 @@ export class UpgradeCommand implements CommandModule {
 
         try {
             await upgradeCommand({
-                spinner,
-                migrationsGenerate: true,
+                spinner
             });
 
             process.exit(0);

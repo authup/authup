@@ -11,6 +11,9 @@ import 'reflect-metadata';
 import yargs from 'yargs';
 import dotenv from 'dotenv';
 import { CheckCommand } from './commands/check';
+import { MigrationGenerateCommand } from './commands/migration-generate';
+import { MigrationRevertCommand } from './commands/migration-revert';
+import { MigrationStatusCommand } from './commands/migration-status';
 import { ResetCommand } from './commands/reset';
 import { SetupCommand } from './commands/setup';
 import { UpgradeCommand } from './commands/upgrade';
@@ -23,6 +26,9 @@ yargs
     .usage('Usage: $0 <command> [options]')
     .demandCommand(1)
     .command(new CheckCommand())
+    .command(new MigrationGenerateCommand())
+    .command(new MigrationRevertCommand())
+    .command(new MigrationStatusCommand())
     .command(new ResetCommand())
     .command(new SetupCommand())
     .command(new StartCommand())
