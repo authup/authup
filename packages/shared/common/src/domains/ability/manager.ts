@@ -40,8 +40,15 @@ export class AbilityManager {
     // Permission(s)
     // ----------------------------------------------
 
-    hasPermission(id: string) : boolean {
-        return typeof this.findPermission(id) !== 'undefined';
+    hasPermission(id: string | string[]) : boolean {
+        const ids = Array.isArray(id) ? id : [id];
+        for (let i = 0; i < ids.length; i++) {
+            if (this.findPermission(ids[i])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     setPermissions(permissions: PermissionMeta[]) {

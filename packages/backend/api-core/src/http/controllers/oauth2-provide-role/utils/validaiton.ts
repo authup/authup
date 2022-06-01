@@ -60,7 +60,10 @@ export async function runOauth2ProviderRoleValidation(
     // ----------------------------------------------
 
     await extendExpressValidationResultWithRole(result);
-    if (result.meta.role) {
+    if (
+        result.meta.role &&
+        result.meta.role.realm_id
+    ) {
         if (!isPermittedForResourceRealm(req.realmId, result.meta.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
