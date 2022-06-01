@@ -8,8 +8,6 @@
 import { DataSource } from 'typeorm';
 import { UpgradeCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
-import { migrationGenerateCommand } from './migration';
-import { useConfig } from '../config';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     if (context.spinner) {
@@ -38,25 +36,10 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
             context.spinner.start('Execute migrations.');
         }
 
-        await dataSource.runMigrations({ transaction: 'all' });
+        await dataSource.runMigrations();
 
         if (context.spinner) {
             context.spinner.succeed('Executed migrations.');
-        }
-
-        if (context.migrationsGenerate) {
-            await migrationGenerateCommand({
-                ...context,
-                dataSource,
-            });
-
-            if (context.spinner) {
-                context.spinner.start('Execute migrations.');
-            }
-            await dataSource.runMigrations({ transaction: 'all' });
-            if (context.spinner) {
-                context.spinner.succeed('Executed migrations.');
-            }
         }
     } finally {
         await dataSource.destroy();

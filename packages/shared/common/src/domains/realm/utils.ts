@@ -18,6 +18,8 @@ export function isPermittedForResourceRealm(
 ) : boolean {
     if (!realmId) return false;
 
+    if (!resourceRealmId) return true;
+
     if (realmId === MASTER_REALM_ID) return true;
 
     return Array.isArray(resourceRealmId) ?

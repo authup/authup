@@ -80,7 +80,7 @@ export async function setupCommand(context?: SetupCommandContext) {
                 context.spinner.start('Creating database.');
             }
 
-            await createDatabase({ options });
+            await createDatabase({ options, synchronize: false });
 
             if (context.spinner) {
                 context.spinner.succeed('Created database.');
@@ -93,12 +93,13 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         try {
             if (context.spinner) {
-                context.spinner.start('Synchronize database schema.');
+                context.spinner.start('Execute database migrations.');
             }
 
-            await dataSource.synchronize();
+            await dataSource.runMigrations();
+
             if (context.spinner) {
-                context.spinner.succeed('Synchronized database schema.');
+                context.spinner.succeed('Executed database migrations.');
             }
 
             if (context.databaseSeed) {
