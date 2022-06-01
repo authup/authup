@@ -14,9 +14,8 @@ import { Config } from './type';
 export async function findConfig(directoryPath?: string) : Promise<Config> {
     directoryPath ??= process.cwd();
 
-    const fileInfo = await locateFile('authelion.config', {
-        extensions: ['.ts', '.js', '.json'],
-        paths: directoryPath,
+    const fileInfo = await locateFile('authelion.config.{ts,js,json}', {
+        path: directoryPath,
     });
 
     if (!fileInfo) {
@@ -34,9 +33,8 @@ export async function findConfig(directoryPath?: string) : Promise<Config> {
 export function findConfigSync(directoryPath?: string) {
     directoryPath ??= process.cwd();
 
-    const fileInfo = locateFileSync('authelion.config', {
-        extensions: ['.ts', '.js', '.json'],
-        paths: directoryPath,
+    const fileInfo = locateFileSync('authelion.config.{ts,js,json}', {
+        path: directoryPath,
     });
 
     if (!fileInfo) {
