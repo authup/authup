@@ -65,11 +65,11 @@
         "rollup-plugin-includepaths": "^0.2.4",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-styles": "^4.0.0",
-        "rollup-plugin-typescript2": "^0.31.1",
+        "rollup-plugin-typescript2": "^0.32.0",
         "rollup-plugin-vue": "^6.0.0",
         "rollup-plugin-vue2": "^0.8.1",
         "ttypescript": "^1.5.13",
-        "vue": "^2.6.14",
+        "vue": "^3.2.37",
         "vuelidate": "^0.7.7"
     },
     "dependencies": {
