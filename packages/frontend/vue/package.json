@@ -46,7 +46,7 @@
         "@authelion/common": "^0.0.10",
         "@babel/core": "^7.18.5",
         "@babel/preset-env": "^7.18.2",
-        "@babel/preset-typescript": "^7.17.12",
+        "@babel/preset-typescript": "^7.18.6",
         "@fortawesome/fontawesome-free": "^6.1.1",
         "@rollup/plugin-alias": "^3.1.2",
         "@rollup/plugin-babel": "^5.3.1",
