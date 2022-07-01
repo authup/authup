@@ -44,13 +44,9 @@ export async function startCommand(context?: StartCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const options = await buildDataSourceOptions();
+    const options = context.dataSourceOptions || await buildDataSourceOptions();
     const dataSource = new DataSource(options);
     await dataSource.initialize();
-
-    if (config.env === 'development') {
-        await dataSource.synchronize();
-    }
 
     setDataSource(dataSource);
 

@@ -19,7 +19,7 @@ export async function checkCommand(context?: CheckCommandContext) {
         context.spinner.start('Establish database connection.');
     }
 
-    const dataSourceOptions = await buildDataSourceOptions();
+    const dataSourceOptions = context.dataSourceOptions || await buildDataSourceOptions();
     const connection = new DataSource(dataSourceOptions);
 
     await connection.initialize();

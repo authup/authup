@@ -73,7 +73,7 @@ export async function setupCommand(context?: SetupCommandContext) {
         /**
          * Setup database with schema & seeder
          */
-        const options = await buildDataSourceOptions();
+        const options = context.dataSourceOptions || await buildDataSourceOptions();
 
         if (context.database) {
             if (context.spinner) {

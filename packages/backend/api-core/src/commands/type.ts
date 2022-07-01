@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
 export type Spinner = {
     start(text?: string) : Spinner,
@@ -18,7 +18,9 @@ export type Spinner = {
 };
 
 export type CommandContext = {
-    spinner?: Spinner
+    spinner?: Spinner,
+
+    dataSourceOptions?: DataSourceOptions
 };
 
 export type StartCommandContext = CommandContext;
@@ -33,7 +35,9 @@ export type SetupCommandContext = CommandContext & {
 };
 
 export type UpgradeCommandContext = CommandContext & {
-    migrationsGenerate?: boolean
+    migrationsGenerate?: boolean,
+    dataSource?: DataSource,
+    dataSourceDestroyOnCompletion?: boolean
 };
 
 export type ResetCommandContext = CommandContext;
