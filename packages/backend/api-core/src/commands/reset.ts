@@ -18,6 +18,7 @@ export async function resetCommand(context?: ResetCommandContext) {
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
     await dropDatabase({ options });
+
     if (context.spinner) {
         context.spinner.succeed('Executed database reset.');
     }

@@ -18,6 +18,9 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
 
     if (context.dataSource) {
         dataSource = context.dataSource;
+        if (!dataSource.isInitialized) {
+            await dataSource.initialize();
+        }
     } else {
         const options = context.dataSourceOptions || await buildDataSourceOptions();
 
