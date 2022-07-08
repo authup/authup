@@ -25,6 +25,10 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
 
     if (context.tokenCache) {
         data = await context.tokenCache.get(context.token);
+
+        if (context.logger) {
+            context.logger.info(`The token ${context.token} could be verified from cache.`);
+        }
     }
 
     if (!data) {
