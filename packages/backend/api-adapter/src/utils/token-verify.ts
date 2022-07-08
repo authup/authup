@@ -11,11 +11,13 @@ import {
     TokenError, TokenVerificationPayload, hasOwnProperty,
 } from '@authelion/common';
 import { isClientError } from '@trapi/client';
+import { Logger } from '../socket';
 
 export type TokenVerifyContext = {
     token: string,
     tokenAPIClient: TokenAPI,
-    tokenCache?: Cache<string>
+    tokenCache?: Cache<string>,
+    logger?: Logger
 };
 
 export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVerificationPayload> {
@@ -30,6 +32,9 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
 
         try {
             payload = await context.tokenAPIClient.verify(context.token);
+            if (context.logger) {
+                context.logger.info(`The token ${context.token} could be verified.`);
+            }
         } catch (e) {
             if (
                 isClientError(e) &&
@@ -38,12 +43,24 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
                 hasOwnProperty(e.response.data, 'code') &&
                 hasOwnProperty(e.response.data, 'message')
             ) {
+                if (context.logger) {
+                    context.logger.debug(e.response.data.message as string, {
+                        error: e,
+                    });
+                }
+
                 throw new TokenError({
                     statusCode: e.response.status,
                     code: e.response.data.code as string | number,
                     message: e.response.data.message as string,
                 });
             } else {
+                if (context.logger) {
+                    context.logger.debug(`The token ${context.token} could not be verified.`, {
+                        error: e,
+                    });
+                }
+
                 throw new TokenError({
                     previous: e,
                 });

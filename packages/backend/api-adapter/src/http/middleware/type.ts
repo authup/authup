@@ -7,11 +7,13 @@
 
 import { ClientDriverInstance } from '@trapi/client';
 import { Client } from 'redis-extension';
+import { Logger } from '../../socket';
 
 export type HTTPMiddlewareContext = {
     http: ClientDriverInstance,
     redis?: Client | boolean
     redisPrefix?: string,
+    logger?: Logger,
 
     cookieHandler?: (cookies: any) => string | undefined
 };

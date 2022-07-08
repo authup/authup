@@ -62,6 +62,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
                 token: header.token,
                 tokenCache,
                 tokenAPIClient,
+                logger: context.logger,
             });
         } catch (e) {
             next(e);
