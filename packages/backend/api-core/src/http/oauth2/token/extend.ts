@@ -6,8 +6,8 @@
  */
 
 import {
-    OAuth2TokenSubKind,
-    OAuth2TokenVerification, PermissionMeta, Robot,
+    AbilityConfig,
+    OAuth2TokenSubKind, OAuth2TokenVerification, Robot,
     TokenError,
     TokenVerificationPayload,
 } from '@authelion/common';
@@ -58,7 +58,7 @@ export async function extendOAuth2Token(token: OAuth2TokenVerification) {
                 throw TokenError.targetInactive(OAuth2TokenSubKind.ROBOT);
             }
 
-            let permissions : PermissionMeta[] | undefined;
+            let permissions : AbilityConfig[] | undefined;
 
             if (entity.user_id) {
                 const userRepository = new UserRepository(dataSource);
@@ -111,7 +111,7 @@ export async function extendOAuth2Token(token: OAuth2TokenVerification) {
                 throw TokenError.targetInactive(OAuth2TokenSubKind.USER);
             }
 
-            const permissions : PermissionMeta[] = await userRepository.getOwnedPermissions(entity.id);
+            const permissions : AbilityConfig[] = await userRepository.getOwnedPermissions(entity.id);
 
             data.target = {
                 kind: OAuth2TokenSubKind.USER,

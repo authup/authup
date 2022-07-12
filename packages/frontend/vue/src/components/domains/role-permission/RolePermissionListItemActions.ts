@@ -8,7 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { RolePermission } from '@authelion/common';
 import { ComponentListItemData } from '@vue-layout/utils';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 
 export type RolePermissionListItemActionsProperties = {
     items?: RolePermission[],
@@ -53,7 +53,7 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
         },
         async init() {
             try {
-                const response = await useHTTPClient().rolePermission.getMany({
+                const response = await useAPIClient().rolePermission.getMany({
                     filters: {
                         role_id: this.roleId,
                         permission_id: this.permissionId,
@@ -80,7 +80,7 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
             this.busy = true;
 
             try {
-                const item = await useHTTPClient().rolePermission.create({
+                const item = await useAPIClient().rolePermission.create({
                     role_id: this.roleId,
                     permission_id: this.permissionId,
                 });
@@ -102,7 +102,7 @@ export const RolePermissionListItemActions = Vue.extend<ComponentListItemData<Ro
             this.busy = true;
 
             try {
-                const item = await useHTTPClient().rolePermission.delete(this.item.id);
+                const item = await useAPIClient().rolePermission.delete(this.item.id);
 
                 this.item = null;
 

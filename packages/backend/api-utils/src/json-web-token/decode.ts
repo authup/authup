@@ -10,21 +10,21 @@ import { TokenError, hasOwnProperty } from '@authelion/common';
 import { TokenDecodeContext } from './type';
 
 /**
- * Decode JWT with no verification.
+ * Decode a JWT token with no verification.
  *
  * @param token
  * @param context
  *
  * @throws TokenError
  */
-export async function decodeToken<T extends string | object | Buffer | Record<string, any>>(
+export async function decodeToken(
     token: string,
     context?: TokenDecodeContext,
-): Promise<T> {
+): Promise<string | Record<string, any>> {
     context ??= {};
 
     try {
-        return await decode(token, context.options) as T;
+        return decode(token, context.options);
     } catch (e) {
         if (
             e &&

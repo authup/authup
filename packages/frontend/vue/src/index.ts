@@ -5,16 +5,16 @@ import Vue, { Component, PluginFunction } from 'vue';
 // Import vue components
 import * as components from './components';
 import { InstallOptions } from './type';
-import { setHTTPClient } from './utils';
+import { setAPIClient } from './utils';
 
-export { setHTTPClient, useHTTPClient } from './utils';
+export { setAPIClient, useAPIClient } from './utils';
 
 // install function executed by Vue.use()
 const install: PluginFunction<any> = function install(instance: typeof Vue, options?: InstallOptions) {
     options = options || {};
 
     if (options.httpClient) {
-        setHTTPClient(options.httpClient);
+        setAPIClient(options.httpClient);
     }
 
     Object.entries(components).forEach(([componentName, component]) => {

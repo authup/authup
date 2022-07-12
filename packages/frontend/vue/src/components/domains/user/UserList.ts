@@ -23,7 +23,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useHTTPClient } from '../../../utils';
+import { mergeDeep, useAPIClient } from '../../../utils';
 
 export const UserList = Vue.extend<
 ComponentListData<User>,
@@ -103,7 +103,7 @@ ComponentListProperties<User>
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().user.getMany(mergeDeep({
+                const response = await useAPIClient().user.getMany(mergeDeep({
                     include: {
                         realm: true,
                     },

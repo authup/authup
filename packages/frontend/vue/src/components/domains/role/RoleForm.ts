@@ -11,7 +11,7 @@ import { Role } from '@authelion/common';
 import {
     ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/utils';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -100,11 +100,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await useHTTPClient().role.update(this.entity.id, this.form);
+                    response = await useAPIClient().role.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().role.create(this.form);
+                    response = await useAPIClient().role.create(this.form);
 
                     this.$emit('created', response);
                 }

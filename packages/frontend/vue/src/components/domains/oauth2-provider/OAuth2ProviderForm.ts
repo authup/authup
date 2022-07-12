@@ -16,7 +16,7 @@ import {
     buildFormInput,
     buildFormSubmit,
 } from '@vue-layout/utils';
-import { createNanoID, useHTTPClient } from '../../../utils';
+import { createNanoID, useAPIClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { initPropertiesFromSource } from '../../utils/proprety';
@@ -181,11 +181,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await useHTTPClient().oauth2Provider.update(this.entity.id, this.form);
+                    response = await useAPIClient().oauth2Provider.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().oauth2Provider.create(this.form);
+                    response = await useAPIClient().oauth2Provider.create(this.form);
 
                     this.$emit('created', response);
                 }

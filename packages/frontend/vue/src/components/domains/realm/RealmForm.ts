@@ -15,7 +15,7 @@ import {
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/utils';
-import { createNanoID, useHTTPClient } from '../../../utils';
+import { createNanoID, useAPIClient } from '../../../utils';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
@@ -117,11 +117,11 @@ Properties
             try {
                 let response;
                 if (this.isEditing) {
-                    response = await useHTTPClient().realm.update(this.entity.id, this.form);
+                    response = await useAPIClient().realm.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().realm.create(this.form);
+                    response = await useAPIClient().realm.create(this.form);
 
                     this.$emit('created', response);
                 }

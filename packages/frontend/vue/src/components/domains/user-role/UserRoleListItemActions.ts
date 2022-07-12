@@ -8,7 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { UserRole } from '@authelion/common';
 import { ComponentListItemData } from '@vue-layout/utils';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 
 export type UserRoleListItemActionsProperties = {
     items?: UserRole[],
@@ -53,7 +53,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
         },
         async init() {
             try {
-                const response = await useHTTPClient().userRole.getMany({
+                const response = await useAPIClient().userRole.getMany({
                     filters: {
                         role_id: this.roleId,
                         user_id: this.userId,
@@ -78,7 +78,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             this.busy = true;
 
             try {
-                const userRole = await useHTTPClient().userRole.create({
+                const userRole = await useAPIClient().userRole.create({
                     role_id: this.roleId,
                     user_id: this.userId,
                 });
@@ -100,7 +100,7 @@ export const UserRoleListItemActions = Vue.extend<ComponentListItemData<UserRole
             this.busy = true;
 
             try {
-                const userRole = await useHTTPClient().userRole.delete(this.item.id);
+                const userRole = await useAPIClient().userRole.delete(this.item.id);
 
                 this.item = null;
 

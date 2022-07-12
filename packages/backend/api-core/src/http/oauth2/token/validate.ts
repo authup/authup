@@ -30,12 +30,12 @@ export async function validateOAuth2Token(
 ) : Promise<OAuth2TokenVerification> {
     const config = await useConfig();
 
-    const tokenPayload : OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload = await verifyToken(
+    const tokenPayload = await verifyToken(
         token,
         {
             keyPair: config.keyPair,
         },
-    );
+    ) as OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload;
 
     const dataSource = await useDataSource();
     const redis = isRedisEnabled(config.redis) ?

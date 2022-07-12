@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HTTPClient } from '@authelion/common';
+import { APIlient } from '@authelion/common';
 
-let instance : undefined | HTTPClient;
+let instance : undefined | APIlient;
 
-export function setHTTPClient(client: HTTPClient) {
+export function setAPIClient(client: APIlient) {
     instance = client;
 }
 
-export function useHTTPClient() {
+export function useAPIClient() {
     if (typeof instance === 'undefined') {
         throw new Error();
     }

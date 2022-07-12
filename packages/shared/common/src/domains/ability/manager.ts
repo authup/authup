@@ -6,19 +6,19 @@
  */
 
 import { Ability, AbilityBuilder, Subject } from '@casl/ability';
-import { AbilityItem, AbilityMeta, PermissionMeta } from './type';
+import { AbilityConfig, AbilityItem, AbilityMeta } from './type';
 import { buildAbilityMetaFromName, transformAbilityStringSubject } from './utils';
 
 export class AbilityManager {
     protected ability: Ability;
 
-    protected permissions: PermissionMeta[];
+    protected permissions: AbilityConfig[];
 
     protected items: AbilityItem[];
 
     // ----------------------------------------------
 
-    constructor(permissions: PermissionMeta[] = []) {
+    constructor(permissions: AbilityConfig[] = []) {
         this.setPermissions(permissions);
     }
 
@@ -32,7 +32,8 @@ export class AbilityManager {
 
     // ----------------------------------------------
 
-    hasAbilityMeta(meta: AbilityMeta) : boolean {
+    // todo: meta: AbilityMeta | AbilityConfiguration | string
+    hasAbility(meta: AbilityMeta) : boolean {
         return this.ability.can(meta.action, meta.subject);
     }
 
@@ -51,7 +52,7 @@ export class AbilityManager {
         return false;
     }
 
-    setPermissions(permissions: PermissionMeta[]) {
+    setPermissions(permissions: AbilityConfig[]) {
         this.permissions = permissions;
         this.update();
     }
@@ -60,7 +61,7 @@ export class AbilityManager {
         return this.permissions;
     }
 
-    findPermission(id: string) : PermissionMeta | undefined {
+    findPermission(id: string) : AbilityConfig | undefined {
         const index = this.permissions.findIndex((permission) => permission.id === id);
 
         return index === -1 ? undefined : this.permissions[index];

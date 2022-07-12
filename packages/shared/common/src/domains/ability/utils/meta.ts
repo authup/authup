@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { pascalCase } from 'change-case';
-import { AbilityMeta, PermissionMeta } from '../type';
+import { AbilityConfig, AbilityMeta } from '../type';
 import { AbilityError } from '../../../error';
 import { PermissionRelation } from '../../permission';
 import { buildPermissionMetaCondition } from './condition';
@@ -37,7 +37,7 @@ export function buildAbilityMetaFromName(
     };
 }
 
-export function buildPermissionMetaFromRelation(entity: PermissionRelation) : PermissionMeta {
+export function buildPermissionMetaFromRelation(entity: PermissionRelation) : AbilityConfig {
     return {
         id: entity.permission_id,
         condition: buildPermissionMetaCondition(entity.condition),

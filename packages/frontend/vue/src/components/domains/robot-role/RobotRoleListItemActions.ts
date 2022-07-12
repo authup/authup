@@ -8,7 +8,7 @@
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { RobotRole } from '@authelion/common';
 import { ComponentListItemData } from '@vue-layout/utils';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 
 export type RobotRoleListItemActionsProperties = {
     items?: RobotRole[],
@@ -58,7 +58,7 @@ RobotRoleListItemActionsProperties
         },
         async init() {
             try {
-                const response = await useHTTPClient().robotRole.getMany({
+                const response = await useAPIClient().robotRole.getMany({
                     filters: {
                         role_id: this.roleId,
                         robot_id: this.robotId,
@@ -85,7 +85,7 @@ RobotRoleListItemActionsProperties
             this.busy = true;
 
             try {
-                const userRole = await useHTTPClient().robotRole.create({
+                const userRole = await useAPIClient().robotRole.create({
                     role_id: this.roleId,
                     robot_id: this.robotId,
                 });
@@ -107,7 +107,7 @@ RobotRoleListItemActionsProperties
             this.busy = true;
 
             try {
-                const userRole = await useHTTPClient().robotRole.delete(this.item.id);
+                const userRole = await useAPIClient().robotRole.delete(this.item.id);
 
                 this.item = null;
 

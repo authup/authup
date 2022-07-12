@@ -6,10 +6,10 @@
  */
 
 import {
+    AbilityConfig,
     AbilityManager,
     HeaderError,
-    OAuth2TokenKind,
-    OAuth2TokenSubKind, PermissionMeta,
+    OAuth2TokenKind, OAuth2TokenSubKind,
     TokenError,
 } from '@authelion/common';
 import {
@@ -64,7 +64,7 @@ async function verifyBasicAuthorizationHeader(
     request: ExpressRequest,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : PermissionMeta[] = [];
+    let permissions : AbilityConfig[] = [];
 
     const config = await useConfig();
     const dataSource = await useDataSource();

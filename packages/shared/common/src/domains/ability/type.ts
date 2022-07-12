@@ -15,7 +15,7 @@ export type AbilityMeta = {
     subject: Subject
 };
 
-export type PermissionMeta<T extends Record<string, any> = Record<string, any>> = {
+export type AbilityConfig<T extends Record<string, any> = Record<string, any>> = {
     id: string,
     negation?: boolean,
     condition?: Condition<T> | null,
@@ -24,7 +24,7 @@ export type PermissionMeta<T extends Record<string, any> = Record<string, any>> 
     power?: number | null
 };
 
-export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityMeta & PermissionMeta<T>;
+export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityMeta & AbilityConfig<T>;
 
 // -------------------------------------------------------------------
 

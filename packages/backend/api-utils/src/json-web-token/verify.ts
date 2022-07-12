@@ -18,10 +18,10 @@ import { TokenVerifyContext } from './type';
  *
  * @throws TokenError
  */
-export async function verifyToken<T extends string | object | Buffer | Record<string, any>>(
+export async function verifyToken(
     token: string,
     context?: TokenVerifyContext,
-): Promise<T> {
+): Promise<string | Record<string, any>> {
     context ??= {};
 
     const keyPair: KeyPair = await useKeyPair(context.keyPair);
@@ -31,12 +31,12 @@ export async function verifyToken<T extends string | object | Buffer | Record<st
         if (context.secret) {
             context.options.algorithms = context.options.algorithms || ['HS256', 'HS384', 'HS512'];
 
-            return await verify(token, context.secret, context.options) as T;
+            return verify(token, context.secret, context.options);
         }
 
         context.options.algorithms = context.options.algorithms || ['RS256', 'RS384', 'RS512'];
 
-        return await verify(token, keyPair.publicKey, context.options) as T;
+        return verify(token, keyPair.publicKey, context.options);
     } catch (e) {
         if (
             e &&

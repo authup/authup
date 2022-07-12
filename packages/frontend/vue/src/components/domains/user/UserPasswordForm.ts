@@ -13,7 +13,7 @@ import Vue, {
 } from 'vue';
 import { User } from '@authelion/common';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -74,7 +74,7 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             this.busy = true;
 
             try {
-                const user = await useHTTPClient().user.update(this.id, {
+                const user = await useAPIClient().user.update(this.id, {
                     password: this.form.password,
                     password_repeat: this.form.password_repeat,
                 });

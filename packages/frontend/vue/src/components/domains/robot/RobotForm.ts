@@ -16,7 +16,7 @@ import {
     ComponentFormData, ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
 } from '@vue-layout/utils';
 import {
-    createNanoID, useHTTPClient,
+    createNanoID, useAPIClient,
 } from '../../../utils';
 import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
@@ -154,14 +154,14 @@ Properties
                 if (this.isEditing) {
                     const { secret, ...form } = this.form;
 
-                    response = await useHTTPClient().robot.update(this.entity.id, {
+                    response = await useAPIClient().robot.update(this.entity.id, {
                         ...form,
                         ...(this.isSecretHashed ? { } : { secret }),
                     });
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().robot.create({
+                    response = await useAPIClient().robot.create({
                         ...this.form,
                     });
 

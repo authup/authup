@@ -25,7 +25,7 @@ export async function createOauth2ProviderAccount(
     provider: OAuth2Provider,
     tokenResponse: OAuth2TokenResponse,
 ) : Promise<OAuth2ProviderAccount> {
-    const accessTokenPayload : KeycloakJWTPayload = await decodeToken(tokenResponse.access_token);
+    const accessTokenPayload = await decodeToken(tokenResponse.access_token) as KeycloakJWTPayload;
 
     const dataSource = await useDataSource();
     const accountRepository = dataSource.getRepository(OAuth2ProviderAccountEntity);

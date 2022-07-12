@@ -11,8 +11,16 @@ import { createKeyPair } from './create';
 
 const keyPairCache : Record<string, KeyPair> = {};
 
-export async function useKeyPair(context: KeyPairContext) : Promise<KeyPair> {
-    context = extendKeyPairContext(context);
+export async function useKeyPair(value?: KeyPairContext | string) : Promise<KeyPair> {
+    let context : KeyPairContext;
+
+    if (typeof value === 'string') {
+        context = extendKeyPairContext({
+            privateName: value,
+        });
+    } else {
+        context = extendKeyPairContext(value || {});
+    }
 
     if (Object.prototype.hasOwnProperty.call(keyPairCache, context.privateName)) {
         return keyPairCache[context.privateName];

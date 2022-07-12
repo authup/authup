@@ -22,7 +22,7 @@ import {
     buildListSearch,
 } from '@vue-layout/utils';
 import {
-    mergeDeep, useHTTPClient,
+    mergeDeep, useAPIClient,
 } from '../../../utils';
 
 type Properties = ComponentListProperties<OAuth2Provider> & {
@@ -127,7 +127,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().oauth2Provider.getMany(mergeDeep({
+                const response = await useAPIClient().oauth2Provider.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

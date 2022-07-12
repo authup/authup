@@ -10,7 +10,7 @@ import Vue, {
 } from 'vue';
 import { BvMsgBoxData, BvMsgBoxOptions } from 'bootstrap-vue';
 import { useDomainAPI } from '@authelion/common';
-import { mergeDeep, useHTTPClient } from '../../utils';
+import { mergeDeep, useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../language/singleton';
 
 enum ElementType {
@@ -81,7 +81,7 @@ AuthEntityDeleteProperties
         async delete() {
             if (this.busy) return;
 
-            const domainApi = useDomainAPI(useHTTPClient(), this.entityType);
+            const domainApi = useDomainAPI(useAPIClient(), this.entityType);
             if (!domainApi) {
                 return;
             }

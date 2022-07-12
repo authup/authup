@@ -7,7 +7,7 @@
 
 import { NextFunction, Request } from 'express';
 import {
-    AbilityManager, PermissionMeta, Realm, Robot, User,
+    AbilityConfig, AbilityManager, Realm, Robot, User,
 } from '@authelion/common';
 
 export interface ExpressRequest extends Request {
@@ -22,7 +22,7 @@ export interface ExpressRequest extends Request {
     token?: string,
 
     ability: AbilityManager,
-    permissions: PermissionMeta[],
+    permissions: AbilityConfig[],
 }
 
 export interface ExpressResponse extends Response {

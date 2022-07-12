@@ -9,10 +9,14 @@ import {
     ClientError,
     Config,
 } from '@trapi/client';
-import { HTTPClient } from '@authelion/common';
+import { APIlient, hasOwnProperty } from '@authelion/common';
 
 const interceptor = (error: ClientError) => {
-    if (typeof error?.response?.data?.message === 'string') {
+    if (
+        typeof error?.response?.data === 'object' &&
+        hasOwnProperty(error.response.data, 'message') &&
+        typeof error.response.data.message === 'string'
+    ) {
         error.message = error.response.data.message;
         throw error;
     }
@@ -28,7 +32,7 @@ const apiConfig : Config = {
 };
 
 export function useAPI() {
-    const api = new HTTPClient(apiConfig);
+    const api = new APIlient(apiConfig);
 
     api.mountResponseInterceptor((r) => r, interceptor);
     return api;

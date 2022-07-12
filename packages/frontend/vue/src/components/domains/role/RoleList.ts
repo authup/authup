@@ -20,7 +20,7 @@ import {
     buildListNoMore,
     buildListPagination, buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useHTTPClient } from '../../../utils';
+import { mergeDeep, useAPIClient } from '../../../utils';
 
 export const RoleList = Vue.extend<
 ComponentListData<Role>,
@@ -102,7 +102,7 @@ ComponentListProperties<Role>
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().role.getMany(mergeDeep({
+                const response = await useAPIClient().role.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

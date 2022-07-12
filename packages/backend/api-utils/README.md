@@ -1,4 +1,4 @@
-# @authelion/api-utils 🛡
+# @authelion/api-utils 🛠
 
 [![npm version](https://badge.fury.io/js/@authelion%2Fapi-utils.svg)](https://badge.fury.io/js/@authelion%2Fapi-utils)
 [![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)

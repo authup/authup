@@ -18,7 +18,7 @@ import {
     ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
 } from '@vue-layout/utils';
 import { buildRealmSelectForm } from '../realm/render/select';
-import { useHTTPClient } from '../../../utils';
+import { useAPIClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -170,11 +170,11 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
                     }
 
                     if (this.isEditing) {
-                        const user = await useHTTPClient().user.update(this.entity.id, { ...properties });
+                        const user = await useAPIClient().user.update(this.entity.id, { ...properties });
 
                         this.$emit('updated', user);
                     } else {
-                        const user = await useHTTPClient().user.create(properties);
+                        const user = await useAPIClient().user.create(properties);
 
                         this.$emit('created', user);
                     }

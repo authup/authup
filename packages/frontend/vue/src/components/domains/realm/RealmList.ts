@@ -19,7 +19,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useHTTPClient } from '../../../utils';
+import { mergeDeep, useAPIClient } from '../../../utils';
 
 export const RealmList = Vue.extend<
 ComponentListData<Realm>,
@@ -101,7 +101,7 @@ ComponentListProperties<Realm>
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().realm.getMany(mergeDeep({
+                const response = await useAPIClient().realm.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

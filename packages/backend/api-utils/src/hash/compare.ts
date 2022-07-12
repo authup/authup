@@ -7,6 +7,6 @@
 
 import { compare as compareMethod } from 'bcrypt';
 
-export async function compare(data: string, encrypted: string) : Promise<boolean> {
-    return compareMethod(data, encrypted);
+export async function compare(value: string, hashedValue: string) : Promise<boolean> {
+    return compareMethod(value, hashedValue);
 }

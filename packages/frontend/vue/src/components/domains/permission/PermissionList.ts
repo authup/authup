@@ -20,7 +20,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useHTTPClient } from '../../../utils';
+import { mergeDeep, useAPIClient } from '../../../utils';
 
 export const PermissionList = Vue.extend<
 ComponentListData<Permission>,
@@ -102,7 +102,7 @@ ComponentListProperties<Permission>
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().permission.getMany(mergeDeep({
+                const response = await useAPIClient().permission.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,
