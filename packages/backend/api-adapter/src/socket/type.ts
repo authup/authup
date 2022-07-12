@@ -57,3 +57,17 @@ export interface Handshake {
         [key: string]: any;
     };
 }
+
+export type LeveledLogMethod = {
+    (message: string, ...meta: any[]): Logger;
+    (message: any): Logger;
+    [key: string]: any
+};
+
+export type Logger = {
+    error: LeveledLogMethod,
+    warn: LeveledLogMethod,
+    info: LeveledLogMethod,
+    debug: LeveledLogMethod,
+    [key: string]: any
+};

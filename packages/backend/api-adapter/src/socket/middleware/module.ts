@@ -28,6 +28,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
                 token,
                 tokenCache,
                 tokenAPIClient,
+                logger: context.logger,
             });
         } catch (e) {
             return next(e);
