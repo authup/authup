@@ -4,7 +4,7 @@
     "description": "This is a simple standalone api application.",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/index.ts",
+        "cli": "nodemon dist/index.js",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [
@@ -47,6 +47,7 @@
         "dotenv": "^16.0.1",
         "express": "^4.18.1",
         "mysql": "^2.18.1",
+        "nodemon": "^2.0.19",
         "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.3.7",
