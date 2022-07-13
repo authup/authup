@@ -28,11 +28,11 @@ export function extendConfig(
     }
 
     if (!config.selfUrl) {
-        config.selfUrl = requireFromEnv('SELF_URL', `http://127.0.0.1:${config.port}/`);
+        config.selfUrl = requireFromEnv('SELF_URL', `http://0.0.0.0:${config.port}/`);
     }
 
     if (!config.webUrl) {
-        config.webUrl = requireFromEnv('WEB_URL', `http://127.0.0.1:${config.port}/`);
+        config.webUrl = requireFromEnv('WEB_URL', `http://0.0.0.0:${config.port}/`);
     }
 
     if (config.rootPath) {

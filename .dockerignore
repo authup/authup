@@ -1,0 +1,6 @@
+.nuxt
+docker
+dist
+node_modules
+writable
+.env
