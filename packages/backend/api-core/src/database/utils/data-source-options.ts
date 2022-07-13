@@ -7,7 +7,7 @@
 import { buildDataSourceOptions as build } from 'typeorm-extension';
 import path from 'path';
 import { DataSourceOptions } from 'typeorm';
-import { Config, useConfig } from '../../config';
+import { useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
@@ -22,13 +22,6 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         dataSourceOptions = await build({
             directory: config.rootPath,
         });
-
-        Object.assign(dataSourceOptions, {
-            migrations: [
-                path.join(config.rootPath, config.writableDirectory, 'migrations', '*{.ts,.js}'),
-            ],
-            logging: ['error'],
-        } as Partial<DataSourceOptions>);
     } catch (e) {
         dataSourceOptions = {
             name: 'default',
@@ -40,9 +33,12 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
             ),
             subscribers: [],
             migrations: [],
-            logging: ['error'],
         };
     }
+
+    Object.assign(dataSourceOptions, {
+        logging: ['error'],
+    } as Partial<DataSourceOptions>);
 
     if (isRedisEnabled(config.redis)) {
         Object.assign(dataSourceOptions, {

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { MongoQuery, guard } from '@ucast/mongo2js';
 import { Ability, AbilityBuilder, Subject } from '@casl/ability';
 
 import {
@@ -12,7 +13,7 @@ import {
     AbilityItemConfig,
     AbilityItemMeta,
 } from './type';
-import { buildAbilityMetaFromName, transformAbilityStringSubject } from './utils';
+import { buildAbilityMetaFromName, buildNameFromAbilityMeta, transformAbilityStringSubject } from './utils';
 
 export class AbilityManager {
     protected ability: Ability;
@@ -27,22 +28,34 @@ export class AbilityManager {
 
     // ----------------------------------------------
 
+    /**
+     * Check if permission is assigned with field and condition restriction.
+     *
+     * @param action
+     * @param subject
+     * @param field
+     */
     can(action: string, subject: Subject, field?: string) : boolean {
         subject = transformAbilityStringSubject(subject);
 
         return this.ability.can(action, subject, field);
     }
 
-    has(meta: AbilityItemMeta | AbilityItemMeta[] | string | string[]) : boolean {
-        if (Array.isArray(meta)) {
-            return meta.some((item) => this.has(item));
+    /**
+     * Check if permission is assigned without field or condition restriction.
+     *
+     * @param value
+     */
+    has(value: AbilityItemMeta | AbilityItemMeta[] | string | string[]) : boolean {
+        if (Array.isArray(value)) {
+            return value.some((item) => this.has(item));
         }
 
-        if (typeof meta === 'string') {
-            meta = buildAbilityMetaFromName(meta);
+        if (typeof value !== 'string') {
+            value = buildNameFromAbilityMeta(value);
         }
 
-        return this.ability.can(meta.action, meta.subject);
+        return this.items.some((item) => item.id === value && !item.negation);
     }
 
     // ----------------------------------------------
@@ -53,7 +66,12 @@ export class AbilityManager {
         return ids.some((item) => this.has(item));
     }
 
-    // todo: rename to 'satisfyCondition(predicate: (item: AbilityItem) => boolean | Partial<AbilityItem>)
+    satisfy(predicate: MongoQuery<AbilityItem> = {}) {
+        const item = this.getOne(predicate);
+
+        return !!item;
+    }
+
     findPermission(id: string) : AbilityItem | undefined {
         const index = this.items.findIndex((permission) => permission.id === id);
 
@@ -61,7 +79,52 @@ export class AbilityManager {
     }
 
     // ----------------------------------------------
-    // Power
+
+    getTarget(value: MongoQuery<AbilityItem> | string) : string | null {
+        let predicate : MongoQuery<AbilityItem>;
+
+        if (typeof value === 'string') {
+            predicate = { id: { $eq: value } };
+        } else {
+            predicate = value;
+        }
+
+        predicate.target = { $eq: undefined };
+        let item = this.getOne(predicate);
+        if (item) {
+            return item.target;
+        }
+
+        predicate.target = { $eq: null };
+        item = this.getOne(predicate);
+        if (item) {
+            return item.target;
+        }
+
+        delete predicate.target;
+        item = this.getOne(predicate);
+        return item ? item.target : undefined;
+    }
+
+    matchTarget(id: string, target?: string) {
+        const predicates : MongoQuery<AbilityItem>[] = [
+            {
+                id: {
+                    $eq: id,
+                },
+                target: { $eq: target },
+            },
+            {
+                id: {
+                    $eq: id,
+                },
+                target: { $eq: null },
+            },
+        ];
+
+        return predicates.some((predicate) => this.satisfy(predicate));
+    }
+
     // ----------------------------------------------
 
     getPower(
@@ -94,6 +157,24 @@ export class AbilityManager {
     }
 
     // ----------------------------------------------
+
+    getMany() : AbilityItem[] {
+        return this.items;
+    }
+
+    getOne(predicate: MongoQuery<AbilityItem>) : AbilityItem | undefined {
+        const test = guard<AbilityItem>(predicate);
+
+        for (let i = 0; i < this.items.length; i++) {
+            if (
+                test(this.items[i])
+            ) {
+                return this.items[i];
+            }
+        }
+
+        return undefined;
+    }
 
     set(input: AbilityItemConfig[] | AbilityItemConfig, merge?: boolean) {
         const configurations = Array.isArray(input) ?

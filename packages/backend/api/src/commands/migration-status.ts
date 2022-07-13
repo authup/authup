@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildDataSourceOptions } from '@authelion/api-core';
 import { CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
+
+import { buildDataSourceOptions } from '../database/utils';
 
 export class MigrationStatusCommand implements CommandModule {
     command = 'migration:status';
@@ -16,9 +17,6 @@ export class MigrationStatusCommand implements CommandModule {
 
     async handler(args: any) {
         const options = await buildDataSourceOptions();
-        Object.assign(options, {
-            logging: 'all',
-        });
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();

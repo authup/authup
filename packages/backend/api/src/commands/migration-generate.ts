@@ -7,8 +7,10 @@
 
 import { CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
-import { buildDataSourceOptions, migrationGenerateCommand } from '@authelion/api-core';
+import { migrationGenerateCommand } from '@authelion/api-core';
 import path from 'path';
+
+import { buildDataSourceOptions } from '../database/utils';
 
 export class MigrationGenerateCommand implements CommandModule {
     command = 'migration:generate';

@@ -37,6 +37,10 @@ export function buildAbilityMetaFromName(
     };
 }
 
+export function buildNameFromAbilityMeta(meta: AbilityItemMeta) : string {
+    return `${meta.subject}_${meta.subject}`;
+}
+
 export function buildPermissionMetaFromRelation(entity: PermissionRelation) : AbilityItemConfig {
     return {
         id: entity.permission_id,

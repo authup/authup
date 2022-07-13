@@ -9,6 +9,8 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { findConfig, setConfig, upgradeCommand } from '@authelion/api-core';
 import * as ora from 'ora';
 
+import { buildDataSourceOptions } from '../database/utils';
+
 interface UpgradeArguments extends Arguments {
     root: string;
 }
@@ -32,6 +34,8 @@ export class UpgradeCommand implements CommandModule {
         const config = await findConfig(args.root);
         setConfig(config);
 
+        const dataSourceOptions = await buildDataSourceOptions();
+
         const spinner = ora.default({
             spinner: 'dots',
         });
@@ -39,6 +43,7 @@ export class UpgradeCommand implements CommandModule {
         try {
             await upgradeCommand({
                 spinner,
+                dataSourceOptions,
             });
 
             process.exit(0);

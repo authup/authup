@@ -9,6 +9,8 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { findConfig, setConfig, setupCommand } from '@authelion/api-core';
 import * as ora from 'ora';
 
+import { buildDataSourceOptions } from '../database/utils';
+
 interface SetupArguments extends Arguments {
     root: string;
     keyPair: boolean;
@@ -60,6 +62,8 @@ export class SetupCommand implements CommandModule {
         const config = await findConfig(args.root);
         setConfig(config);
 
+        const dataSourceOptions = await buildDataSourceOptions();
+
         const spinner = ora.default({
             spinner: 'dots',
         });
@@ -67,6 +71,7 @@ export class SetupCommand implements CommandModule {
         try {
             await setupCommand({
                 spinner,
+                dataSourceOptions,
                 ...args,
             });
         } catch (e) {
