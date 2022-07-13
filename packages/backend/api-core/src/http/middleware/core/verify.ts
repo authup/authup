@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityConfig,
+    AbilityItemConfig,
     AbilityManager,
     HeaderError,
     OAuth2TokenKind, OAuth2TokenSubKind,
@@ -64,7 +64,7 @@ async function verifyBasicAuthorizationHeader(
     request: ExpressRequest,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : AbilityConfig[] = [];
+    let permissions : AbilityItemConfig[] = [];
 
     const config = await useConfig();
     const dataSource = await useDataSource();

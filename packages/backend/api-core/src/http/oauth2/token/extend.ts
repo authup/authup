@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityConfig,
+    AbilityItemConfig,
     OAuth2TokenSubKind, OAuth2TokenVerification, Robot,
     TokenError,
     TokenVerificationPayload,
@@ -58,7 +58,7 @@ export async function extendOAuth2Token(token: OAuth2TokenVerification) {
                 throw TokenError.targetInactive(OAuth2TokenSubKind.ROBOT);
             }
 
-            let permissions : AbilityConfig[] | undefined;
+            let permissions : AbilityItemConfig[] | undefined;
 
             if (entity.user_id) {
                 const userRepository = new UserRepository(dataSource);
@@ -111,7 +111,7 @@ export async function extendOAuth2Token(token: OAuth2TokenVerification) {
                 throw TokenError.targetInactive(OAuth2TokenSubKind.USER);
             }
 
-            const permissions : AbilityConfig[] = await userRepository.getOwnedPermissions(entity.id);
+            const permissions : AbilityItemConfig[] = await userRepository.getOwnedPermissions(entity.id);
 
             data.target = {
                 kind: OAuth2TokenSubKind.USER,

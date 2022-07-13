@@ -9,7 +9,7 @@ import {
     DataSource, EntityManager, In, InstanceChecker, Repository,
 } from 'typeorm';
 import {
-    AbilityConfig,
+    AbilityItemConfig,
     Role,
     buildPermissionMetaFromRelation,
 } from '@authelion/common';
@@ -25,7 +25,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
     async getOwnedPermissionsByMany(
         ids: Role['id'][],
-    ) : Promise<AbilityConfig[]> {
+    ) : Promise<AbilityItemConfig[]> {
         const permissions = [];
 
         for (let i = 0; i < ids.length; i++) {
@@ -37,7 +37,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
     async getOwnedPermissions(
         id: Role['id'],
-    ) : Promise<AbilityConfig[]> {
+    ) : Promise<AbilityItemConfig[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
 
         const entities = await repository.find({
@@ -53,7 +53,7 @@ export class RoleRepository extends Repository<RoleEntity> {
             },
         });
 
-        const result : AbilityConfig[] = [];
+        const result : AbilityItemConfig[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push(buildPermissionMetaFromRelation(entities[i]));
         }

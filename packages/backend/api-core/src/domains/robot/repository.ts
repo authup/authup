@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityConfig, Robot,
+    AbilityItemConfig, Robot,
     Role, buildPermissionMetaFromRelation, createNanoID,
 } from '@authelion/common';
 
@@ -28,8 +28,8 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getOwnedPermissions(
         id: Robot['id'],
-    ) : Promise<AbilityConfig[]> {
-        const permissions : AbilityConfig[] = await this.getSelfOwnedPermissions(id);
+    ) : Promise<AbilityItemConfig[]> {
+        const permissions : AbilityItemConfig[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)
@@ -58,7 +58,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<AbilityConfig[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<AbilityItemConfig[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
@@ -74,7 +74,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        const result : AbilityConfig[] = [];
+        const result : AbilityItemConfig[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push(buildPermissionMetaFromRelation(entities[i]));
         }

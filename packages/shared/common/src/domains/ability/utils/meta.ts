@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { pascalCase } from 'change-case';
-import { AbilityConfig, AbilityMeta } from '../type';
+import { AbilityItemConfig, AbilityItemMeta } from '../type';
 import { AbilityError } from '../../../error';
 import { PermissionRelation } from '../../permission';
 import { buildPermissionMetaCondition } from './condition';
@@ -22,7 +22,7 @@ import { buildPermissionMetaFields } from './fields';
 export function buildAbilityMetaFromName(
     name: string,
     delimiter = '_',
-) : AbilityMeta {
+) : AbilityItemMeta {
     const parts : string[] = name.split(delimiter);
     if (parts.length < 2) {
         throw AbilityError.buildMeta();
@@ -37,7 +37,7 @@ export function buildAbilityMetaFromName(
     };
 }
 
-export function buildPermissionMetaFromRelation(entity: PermissionRelation) : AbilityConfig {
+export function buildPermissionMetaFromRelation(entity: PermissionRelation) : AbilityItemConfig {
     return {
         id: entity.permission_id,
         condition: buildPermissionMetaCondition(entity.condition),

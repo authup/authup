@@ -87,7 +87,7 @@ export default defineConfig({
                     text: 'Getting Started',
                     collapsible: false,
                     items: [
-                        {text: 'Permission Management', link: '/packages/common/ability-manager'},
+                        {text: 'Permission Management', link: '/packages/common/permission-management'},
                         {text: 'API Client', link: '/packages/common/api-client'},
 
                     ]

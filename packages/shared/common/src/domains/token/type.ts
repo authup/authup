@@ -12,18 +12,18 @@ import {
     OAuth2TokenSubKind,
 } from '../oauth2-access-token';
 import { OAuth2TokenVerificationExtended } from '../oauth2';
-import { AbilityConfig } from '../ability';
+import { AbilityItemConfig } from '../ability';
 
 type TokenTargetRobot = {
     kind: `${OAuth2TokenSubKind.ROBOT}`,
     entity: Robot,
-    permissions: AbilityConfig[]
+    permissions: AbilityItemConfig[]
 };
 
 type TokenTargetUser = {
     kind: `${OAuth2TokenSubKind.USER}`,
     entity: User,
-    permissions: AbilityConfig[]
+    permissions: AbilityItemConfig[]
 };
 
 export type TokenVerificationPayload = OAuth2TokenVerificationExtended<TokenTargetRobot | TokenTargetUser>;

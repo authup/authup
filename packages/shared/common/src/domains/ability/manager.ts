@@ -6,20 +6,23 @@
  */
 
 import { Ability, AbilityBuilder, Subject } from '@casl/ability';
-import { AbilityConfig, AbilityItem, AbilityMeta } from './type';
+
+import {
+    AbilityItem,
+    AbilityItemConfig,
+    AbilityItemMeta,
+} from './type';
 import { buildAbilityMetaFromName, transformAbilityStringSubject } from './utils';
 
 export class AbilityManager {
     protected ability: Ability;
 
-    protected permissions: AbilityConfig[];
-
     protected items: AbilityItem[];
 
     // ----------------------------------------------
 
-    constructor(permissions: AbilityConfig[] = []) {
-        this.setPermissions(permissions);
+    constructor(input: AbilityItemConfig[] | AbilityItemConfig = []) {
+        this.set(input);
     }
 
     // ----------------------------------------------
@@ -30,41 +33,31 @@ export class AbilityManager {
         return this.ability.can(action, subject, field);
     }
 
-    // ----------------------------------------------
+    has(meta: AbilityItemMeta | AbilityItemMeta[] | string | string[]) : boolean {
+        if (Array.isArray(meta)) {
+            return meta.some((item) => this.has(item));
+        }
 
-    // todo: meta: AbilityMeta | AbilityConfiguration | string
-    hasAbility(meta: AbilityMeta) : boolean {
+        if (typeof meta === 'string') {
+            meta = buildAbilityMetaFromName(meta);
+        }
+
         return this.ability.can(meta.action, meta.subject);
     }
 
     // ----------------------------------------------
-    // Permission(s)
-    // ----------------------------------------------
 
     hasPermission(id: string | string[]) : boolean {
         const ids = Array.isArray(id) ? id : [id];
-        for (let i = 0; i < ids.length; i++) {
-            if (this.findPermission(ids[i])) {
-                return true;
-            }
-        }
 
-        return false;
+        return ids.some((item) => this.has(item));
     }
 
-    setPermissions(permissions: AbilityConfig[]) {
-        this.permissions = permissions;
-        this.update();
-    }
+    // todo: rename to 'satisfyCondition(predicate: (item: AbilityItem) => boolean | Partial<AbilityItem>)
+    findPermission(id: string) : AbilityItem | undefined {
+        const index = this.items.findIndex((permission) => permission.id === id);
 
-    getPermissions() {
-        return this.permissions;
-    }
-
-    findPermission(id: string) : AbilityConfig | undefined {
-        const index = this.permissions.findIndex((permission) => permission.id === id);
-
-        return index === -1 ? undefined : this.permissions[index];
+        return index === -1 ? undefined : this.items[index];
     }
 
     // ----------------------------------------------
@@ -101,12 +94,32 @@ export class AbilityManager {
     }
 
     // ----------------------------------------------
-    // Ability
-    // ----------------------------------------------
+
+    set(input: AbilityItemConfig[] | AbilityItemConfig, merge?: boolean) {
+        const configurations = Array.isArray(input) ?
+            input :
+            [input];
+
+        const items : AbilityItem[] = [];
+
+        for (let i = 0; i < configurations.length; i++) {
+            items[i] = {
+                ...configurations[i],
+                ...buildAbilityMetaFromName(configurations[i].id),
+            };
+        }
+
+        if (merge) {
+            // todo: check if unique !
+            this.items = [...this.items, ...items];
+        } else {
+            this.items = items;
+        }
+
+        this.update();
+    }
 
     protected update() : void {
-        this.build();
-
         if (this.items.length === 0) {
             if (typeof this.ability === 'undefined') {
                 this.ability = new Ability();
@@ -135,18 +148,5 @@ export class AbilityManager {
         } else {
             this.ability = new Ability(rules);
         }
-    }
-
-    protected build() {
-        const items : AbilityItem[] = [];
-
-        for (let i = 0; i < this.permissions.length; i++) {
-            items[i] = {
-                ...this.permissions[i],
-                ...buildAbilityMetaFromName(this.permissions[i].id),
-            };
-        }
-
-        this.items = items;
     }
 }

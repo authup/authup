@@ -6,16 +6,18 @@
  */
 
 import { Subject } from '@casl/ability';
+
 import {
     ArrayInstruction, BaseInstruction, BooleanInstruction, InstructionOnInstruction,
 } from './constants';
 
-export type AbilityMeta = {
+export type AbilityItemMeta = {
     action: string,
     subject: Subject
 };
 
-export type AbilityConfig<T extends Record<string, any> = Record<string, any>> = {
+// maybe PermissionConfig ?
+export type AbilityItemConfig<T extends Record<string, any> = Record<string, any>> = {
     id: string,
     negation?: boolean,
     condition?: Condition<T> | null,
@@ -24,7 +26,7 @@ export type AbilityConfig<T extends Record<string, any> = Record<string, any>> =
     power?: number | null
 };
 
-export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityMeta & AbilityConfig<T>;
+export type AbilityItem<T extends Record<string, any> = Record<any, any>> = AbilityItemMeta & AbilityItemConfig<T>;
 
 // -------------------------------------------------------------------
 

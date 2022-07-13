@@ -21,7 +21,7 @@ describe('src/json-web-token', () => {
                 directory,
             },
         });
-        const decoded : Record<string, any> = await decodeToken(signedText);
+        const decoded = await decodeToken(signedText) as Record<string, any>;
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
@@ -44,7 +44,7 @@ describe('src/json-web-token', () => {
             keyPair: keyPairOptions,
         });
 
-        const decoded : Record<string, any> = await decodeToken(signedText);
+        const decoded = await decodeToken(signedText) as Record<string, any>;
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
