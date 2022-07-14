@@ -52,7 +52,7 @@
         "pascal-case": "^3.1.2",
         "redis-extension": "^1.0.1",
         "reflect-metadata": "^0.1.13",
-        "swagger-ui-express": "^4.4.0"
+        "swagger-ui-express": "^4.5.0"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
