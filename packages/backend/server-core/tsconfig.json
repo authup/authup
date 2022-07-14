@@ -1,0 +1,10 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@authelion/common": ["./packages/shared/common/src"],
+            "@authelion/server-utils": ["./packages/backend/server-utils/src"]
+        }
+    }
+}
+
