@@ -62,9 +62,9 @@ export async function runUserPermissionValidation(
         result.data.target = result.meta.permission.target;
     }
 
-    const ownedPermission = req.ability.findPermission(PermissionID.USER_PERMISSION_ADD);
-    if (ownedPermission.target) {
-        result.data.target = ownedPermission.target;
+    const permissionTarget = req.ability.getTarget(PermissionID.USER_PERMISSION_ADD);
+    if (permissionTarget) {
+        result.data.target = permissionTarget;
     }
 
     // ----------------------------------------------

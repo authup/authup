@@ -14,7 +14,7 @@ import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
 export async function createRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.ROBOT_ROLE_ADD)) {
+    if (!req.ability.has(PermissionID.ROBOT_ROLE_ADD)) {
         throw new NotFoundError();
     }
 

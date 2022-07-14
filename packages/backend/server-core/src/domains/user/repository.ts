@@ -9,9 +9,9 @@ import {
     DataSource, EntityManager, In, InstanceChecker, Repository,
 } from 'typeorm';
 import {
-    AbilityItemConfig,
+    AbilityDescriptor,
     Role, User,
-    UserRole, buildPermissionMetaFromRelation, createNanoID,
+    UserRole, buildPermissionDescriptorFromRelation, createNanoID,
 } from '@authelion/common';
 
 import { compare, hash } from '@authelion/server-utils';
@@ -60,8 +60,8 @@ export class UserRepository extends Repository<UserEntity> {
 
     async getOwnedPermissions(
         id: User['id'],
-    ) : Promise<AbilityItemConfig[]> {
-        const permissions : AbilityItemConfig[] = await this.getSelfOwnedPermissions(id);
+    ) : Promise<AbilityDescriptor[]> {
+        const permissions : AbilityDescriptor[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
@@ -90,7 +90,7 @@ export class UserRepository extends Repository<UserEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<AbilityItemConfig[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<AbilityDescriptor[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
@@ -106,9 +106,9 @@ export class UserRepository extends Repository<UserEntity> {
             },
         });
 
-        const result : AbilityItemConfig[] = [];
+        const result : AbilityDescriptor[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildPermissionMetaFromRelation(entities[i]));
+            result.push(buildPermissionDescriptorFromRelation(entities[i]));
         }
 
         return result;

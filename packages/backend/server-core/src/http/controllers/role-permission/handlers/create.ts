@@ -22,7 +22,7 @@ import { useDataSource } from '../../../../database';
  * @param res
  */
 export async function createRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.ROLE_PERMISSION_ADD)) {
+    if (!req.ability.has(PermissionID.ROLE_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

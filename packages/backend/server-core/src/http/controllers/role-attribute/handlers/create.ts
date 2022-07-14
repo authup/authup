@@ -23,7 +23,7 @@ export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: 
     }
 
     if (
-        !req.ability.hasPermission(PermissionID.ROLE_EDIT) ||
+        !req.ability.has(PermissionID.ROLE_EDIT) ||
         !isPermittedForResourceRealm(req.realmId, result.data.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to set an attribute for this role...');

@@ -5,8 +5,8 @@ application.
 
 ### Standalone
 
-To use authelion as standalone application, read the [api](../packages/api/index.md) package documentation.
+To use authelion as standalone application, read the [server](../packages/server/index.md) package documentation.
 
 ### Extension
 
-To use Authelion as extension to an existent (express & typeorm) application, read the [api-core](../packages/api-core/index.md) package documentation.
+To use Authelion as extension to an existent (express & typeorm) application, read the [server-core](../packages/server-core/index.md) package documentation.

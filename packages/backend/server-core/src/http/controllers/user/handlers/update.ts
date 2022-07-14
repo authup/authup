@@ -17,7 +17,7 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const { id } = req.params;
 
     if (
-        !req.ability.hasPermission(PermissionID.USER_EDIT) &&
+        !req.ability.has(PermissionID.USER_EDIT) &&
         req.user.id !== id
     ) {
         throw new ForbiddenError('You are not authorized to modify a user.');

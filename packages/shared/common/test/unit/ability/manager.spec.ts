@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityItemConfig, AbilityManager } from '../../../src';
+import { AbilityDescriptor, AbilityManager } from '../../../src';
 
-const testPermissions : AbilityItemConfig[] = [
+const testPermissions : AbilityDescriptor[] = [
     {
-        id: 'user_add', negation: false, power: 999, target: 'test',
+        id: 'user_add', inverse: false, power: 777, target: 'test',
     },
     {
-        id: 'user_add', negation: false, power: 777,
+        id: 'user_add', inverse: false, power: 999,
     },
     {
-        id: 'user_drop', negation: false, power: 777, target: 'test',
+        id: 'user_drop', inverse: false, power: 777, target: 'test',
     },
 ];
 
@@ -61,45 +61,45 @@ describe('src/ability/manager.ts', () => {
         expect(match).toBeTruthy();
     });
 
-    fit('should get target', () => {
+    it('should get target', () => {
         manager.set(testPermissions);
 
         let target = manager.getTarget('user_drop');
         expect(target).toEqual('test');
 
         target = manager.getTarget('user_add');
-        expect(target).toEqual(undefined);
+        expect(target).toEqual(null);
     });
 
     it('can and can not', () => {
         manager.set(testPermissions);
 
-        expect(manager.can('add', 'user')).toBe(true);
-        expect(manager.can('drop', 'user')).toBe(true);
-        expect(manager.can('do', 'something')).toBe(false);
+        expect(manager.verify('user_add')).toBe(true);
+        expect(manager.verify('user_drop')).toBe(true);
+        expect(manager.verify('something_do')).toBe(false);
     });
 
     it('get power', () => {
         manager.set(testPermissions);
 
-        expect(manager.getPower('add', 'user')).toBe(999);
-        expect(manager.getPower('drop', 'user')).toBe(777);
-        expect(manager.getPower('do', 'something')).toBeUndefined();
-        expect(manager.getPower('do', undefined)).toBeUndefined();
+        expect(manager.getPower('user_add')).toBe(999);
+        expect(manager.getPower({ id: 'user_add', target: 'test' })).toEqual(777);
+        expect(manager.getPower('user_drop')).toBe(777);
+        expect(manager.getPower('do')).toBeUndefined();
     });
 
     it('get permission', () => {
         manager.set(testPermissions);
 
-        expect(manager.findPermission('user_add')).toBeDefined();
-        expect(manager.findPermission('something_do')).toBeUndefined();
+        expect(manager.getOne('user_add')).toBeDefined();
+        expect(manager.getOne('something_do')).toBeUndefined();
     });
 
     it('has permission', () => {
         manager.set(testPermissions);
 
-        expect(manager.hasPermission('user_add')).toBeTruthy();
-        expect(manager.hasPermission('something_do')).toBeFalsy();
+        expect(manager.has('user_add')).toBeTruthy();
+        expect(manager.has('something_do')).toBeFalsy();
     });
 
     it('clear and check empty permisisons', () => {

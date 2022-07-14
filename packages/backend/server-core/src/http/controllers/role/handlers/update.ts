@@ -16,7 +16,7 @@ import { useDataSource } from '../../../../database';
 export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.ROLE_EDIT)) {
+    if (!req.ability.has(PermissionID.ROLE_EDIT)) {
         throw new NotFoundError();
     }
 
@@ -43,8 +43,7 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_EDIT);
-    if (ownedPermission.target !== entity.target) {
+    if (!req.ability.matchTarget(PermissionID.ROLE_EDIT, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role target.');
     }
 

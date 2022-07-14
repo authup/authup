@@ -15,7 +15,7 @@ import { useDataSource } from '../../../../database';
 export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.REALM_DROP)) {
+    if (!req.ability.has(PermissionID.REALM_DROP)) {
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }
 

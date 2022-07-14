@@ -14,7 +14,7 @@ import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.USER_ADD)) {
+    if (!req.ability.has(PermissionID.USER_ADD)) {
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 

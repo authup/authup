@@ -18,7 +18,7 @@ import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
 export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.REALM_ADD)) {
+    if (!req.ability.has(PermissionID.REALM_ADD)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 

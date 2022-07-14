@@ -21,7 +21,7 @@ import { useDataSource } from '../../../../database';
  * @param res
  */
 export async function createRobotPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.ROBOT_PERMISSION_ADD)) {
+    if (!req.ability.has(PermissionID.ROBOT_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

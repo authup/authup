@@ -42,7 +42,7 @@ export async function getManyOauth2ProviderRouteHandler(req: ExpressRequest, res
 
     if (
         req.ability &&
-        req.ability.hasPermission(PermissionID.REALM_EDIT)
+        req.ability.has(PermissionID.REALM_EDIT)
     ) {
         applyFields(
             query,
@@ -86,7 +86,7 @@ export async function getOneOauth2ProviderRouteHandler(req: ExpressRequest, res:
 
     if (
         req.ability &&
-        req.ability.hasPermission(PermissionID.REALM_EDIT)
+        req.ability.has(PermissionID.REALM_EDIT)
     ) {
         applyFields(
             query,

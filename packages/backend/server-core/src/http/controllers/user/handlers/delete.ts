@@ -14,7 +14,7 @@ import { useDataSource } from '../../../../database';
 export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.USER_DROP)) {
+    if (!req.ability.has(PermissionID.USER_DROP)) {
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 

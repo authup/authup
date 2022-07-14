@@ -11,4 +11,13 @@ hero:
        - theme: alt
          text: View on GitHub
          link: https://github.com/tada5hi/authelion
+
+features:
+    - icon: ⚡
+      title: Fast
+      details: Bleeding edge techniques using asynchronous I/O and Event-driven programming
+    - icon: 🔒
+      title: Secure
+      details: Secured with industry level encryption algorithms
+---
 ---

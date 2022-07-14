@@ -16,7 +16,7 @@ import { PermissionEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 
 export async function createOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.PERMISSION_ADD)) {
+    if (!req.ability.has(PermissionID.PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

@@ -46,8 +46,8 @@ export async function runUserValidation(
     await nameChain.run(req);
 
     if (
-        req.ability.hasPermission(PermissionID.USER_ADD) ||
-        req.ability.hasPermission(PermissionID.USER_EDIT)
+        req.ability.has(PermissionID.USER_ADD) ||
+        req.ability.has(PermissionID.USER_EDIT)
     ) {
         await check('name_locked')
             .isBoolean()
@@ -98,8 +98,8 @@ export async function runUserValidation(
     // ----------------------------------------------
 
     if (
-        req.ability.hasPermission(PermissionID.USER_ADD) ||
-        req.ability.hasPermission(PermissionID.USER_EDIT)
+        req.ability.has(PermissionID.USER_ADD) ||
+        req.ability.has(PermissionID.USER_EDIT)
     ) {
         await check('active')
             .isBoolean()

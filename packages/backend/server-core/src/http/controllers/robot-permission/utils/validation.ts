@@ -62,9 +62,9 @@ export async function runRobotPermissionValidation(
         result.data.target = result.meta.permission.target;
     }
 
-    const ownedPermission = req.ability.findPermission(PermissionID.ROBOT_PERMISSION_ADD);
-    if (ownedPermission.target) {
-        result.data.target = ownedPermission.target;
+    const permissionTarget = req.ability.getTarget(PermissionID.ROBOT_PERMISSION_ADD);
+    if (permissionTarget) {
+        result.data.target = permissionTarget;
     }
 
     // ----------------------------------------------

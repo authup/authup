@@ -29,7 +29,7 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         throw new NotFoundError();
     }
 
-    if (!req.ability.hasPermission(PermissionID.ROBOT_EDIT)) {
+    if (!req.ability.has(PermissionID.ROBOT_EDIT)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

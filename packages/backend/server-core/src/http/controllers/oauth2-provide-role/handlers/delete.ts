@@ -17,7 +17,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
 ) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
+    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 

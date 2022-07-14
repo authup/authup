@@ -14,7 +14,7 @@ import { useDataSource } from '../../../../database';
 export async function deleteUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.USER_ROLE_DROP)) {
+    if (!req.ability.has(PermissionID.USER_ROLE_DROP)) {
         throw new ForbiddenError();
     }
 

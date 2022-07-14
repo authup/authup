@@ -20,7 +20,7 @@ import { useDataSource } from '../../../../database';
 export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.ROLE_PERMISSION_DROP)) {
+    if (!req.ability.has(PermissionID.ROLE_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -40,8 +40,7 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_PERMISSION_DROP);
-    if (ownedPermission.target !== entity.target) {
+    if (req.ability.matchTarget(PermissionID.ROLE_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role-permission target.');
     }
 

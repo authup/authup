@@ -8,6 +8,7 @@
 
 **Table of Contents**
 
+- [Features](#features)
 - [Packages](#Packages)
   - [Shared](#shared)
     - [Common](#authelioncommon-)
@@ -19,6 +20,8 @@
   - [Frontend](#frontend)
     - [Vue](#authelionvue-)
 - [Installation & Usage](#installation--usage)
+
+## Features
 
 ## Packages
 

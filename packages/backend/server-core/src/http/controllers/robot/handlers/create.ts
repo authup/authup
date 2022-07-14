@@ -19,7 +19,7 @@ import { useDataSource } from '../../../../database';
 export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const result = await runRobotValidation(req, CRUDOperation.CREATE);
 
-    if (!req.ability.hasPermission(PermissionID.ROBOT_ADD)) {
+    if (!req.ability.has(PermissionID.ROBOT_ADD)) {
         result.data.user_id = req.userId;
     } else if (
         result.data.user_id &&

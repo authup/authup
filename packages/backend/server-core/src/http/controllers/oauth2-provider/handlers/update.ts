@@ -16,7 +16,7 @@ import { useDataSource } from '../../../../database';
 export async function updateOauth2ProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
+    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 

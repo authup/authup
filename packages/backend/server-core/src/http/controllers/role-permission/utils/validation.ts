@@ -63,9 +63,9 @@ export async function runRolePermissionValidation(
         result.data.target = result.meta.permission.target;
     }
 
-    const ownedPermission = req.ability.findPermission(PermissionID.ROLE_PERMISSION_ADD);
-    if (ownedPermission.target) {
-        result.data.target = ownedPermission.target;
+    const permissionTarget = req.ability.getTarget(PermissionID.ROLE_PERMISSION_ADD);
+    if (permissionTarget) {
+        result.data.target = permissionTarget;
     }
 
     await extendExpressValidationResultWithRole(result);

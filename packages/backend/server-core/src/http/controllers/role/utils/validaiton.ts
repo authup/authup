@@ -17,7 +17,7 @@ import {
 } from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
 import { RoleValidationResult } from '../type';
-import { extendExpressValidationResultWithRealm } from '../../realm/utils/extend';
+import { extendExpressValidationResultWithRealm } from '../../realm';
 import { CRUDOperation } from '../../../constants';
 
 export async function runRoleValidation(
@@ -88,14 +88,14 @@ export async function runRoleValidation(
     }
 
     if (operation === CRUDOperation.CREATE) {
-        const ownedPermission = req.ability.findPermission(PermissionID.ROLE_ADD);
-        if (ownedPermission.target) {
-            result.data.target = ownedPermission.target;
+        const permissionTarget = req.ability.getTarget(PermissionID.ROLE_ADD);
+        if (permissionTarget) {
+            result.data.target = permissionTarget;
         }
     } else {
-        const ownedPermission = req.ability.findPermission(PermissionID.ROLE_EDIT);
-        if (ownedPermission.target) {
-            result.data.target = ownedPermission.target;
+        const permissionTarget = req.ability.getTarget(PermissionID.ROLE_EDIT);
+        if (permissionTarget) {
+            result.data.target = permissionTarget;
         }
     }
 

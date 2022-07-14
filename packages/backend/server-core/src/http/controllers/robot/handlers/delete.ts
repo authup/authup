@@ -24,7 +24,7 @@ export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressR
         throw new NotFoundError();
     }
 
-    if (!req.ability.hasPermission(PermissionID.ROBOT_DROP)) {
+    if (!req.ability.has(PermissionID.ROBOT_DROP)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

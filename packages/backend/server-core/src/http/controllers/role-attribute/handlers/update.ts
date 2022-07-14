@@ -33,7 +33,7 @@ export async function updateRoleAttributeRouteHandler(req: ExpressRequest, res: 
     entity = repository.merge(entity, result.data);
 
     if (
-        !req.ability.hasPermission(PermissionID.ROLE_EDIT) ||
+        !req.ability.has(PermissionID.ROLE_EDIT) ||
         !isPermittedForResourceRealm(req.realmId, entity.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to update an attribute for this role...');

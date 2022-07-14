@@ -14,7 +14,7 @@ import { useDataSource } from '../../../../database';
 export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.ROBOT_ROLE_DROP)) {
+    if (!req.ability.has(PermissionID.ROBOT_ROLE_DROP)) {
         throw new ForbiddenError();
     }
 

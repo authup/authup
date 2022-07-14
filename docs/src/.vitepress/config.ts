@@ -26,10 +26,10 @@ export default defineConfig({
                 text: 'Packages',
                 activeMatch: '/packages/',
                 items: [
-                    { text: 'API', link: '/packages/api/' },
-                    { text: 'API-Adapter', link: '/packages/api-adapter/' },
-                    { text: 'API-Core', link: '/packages/api-core/' },
-                    { text: 'API-Utils', link: '/packages/api-utils/' },
+                    { text: 'Server', link: '/packages/server/' },
+                    { text: 'Server-Adapter', link: '/packages/server-adapter/' },
+                    { text: 'Server-Core', link: '/packages/server-core/' },
+                    { text: 'Server-Utils', link: '/packages/server-utils/' },
                     { text: 'Common', link: '/packages/common/' },
                     { text: 'Vue', link: '/packages/vue/' },
                 ]
@@ -76,10 +76,10 @@ export default defineConfig({
             ],
             '/packages/common/': [
                 {
-                    text: 'Introduction',
+                    text: 'Common',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/common/'},
+                        {text: 'Introduction', link: '/packages/common/'},
                         {text: 'Installation', link: '/packages/common/installation.md'},
                     ]
                 },
@@ -87,7 +87,7 @@ export default defineConfig({
                     text: 'Getting Started',
                     collapsible: false,
                     items: [
-                        {text: 'Permission Management', link: '/packages/common/permission-management'},
+                        {text: 'Ability Manager', link: '/packages/common/ability-manager'},
                         {text: 'API Client', link: '/packages/common/api-client'},
 
                     ]
@@ -96,93 +96,99 @@ export default defineConfig({
                     text: 'API Reference',
                     collapsible: false,
                     items: [
-                        {text: 'API Client', link: '/packages/common/api-client'},
-                        {text: 'Error', link: '/packages/common/api-client'},
+                        {text: 'Ability', link: '/packages/common/ability-api-reference'},
+                        {text: 'Error', link: '/packages/common/error-api-reference'},
                     ]
                 },
             ],
-            '/packages/api-core/': [
+            '/packages/server-core/': [
                 {
-                    text: 'Introduction',
+                    text: 'Server Core',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/api-core/'},
+                        {text: 'Introduction', link: '/packages/server-core/'},
                     ]
                 },
                 {
                     text: 'Getting Started',
                     collapsible: false,
                     items: [
-                        {text: 'Installation', link: '/packages/api-core/installation'},
-                        {text: 'Configuration', link: '/packages/api-core/configuration'},
-                        {text: 'Database', link: '/packages/api-core/database'},
-                        {text: 'HTTP', link: '/packages/api-core/http'},
-                        {text: 'Aggregators', link: '/packages/api-core/aggregators'},
+                        {text: 'Installation', link: '/packages/server-core/installation'},
+                        {text: 'Configuration', link: '/packages/server-core/configuration'},
+                        {text: 'Database', link: '/packages/server-core/database'},
+                        {text: 'HTTP', link: '/packages/server-core/http'},
+                        {text: 'Aggregators', link: '/packages/server-core/aggregators'},
+                    ]
+                },
+                {
+                    text: 'Database',
+                    items: [
+                        {text: 'Defining Relations', link: '/packages/server-core/defining-relations'}
                     ]
                 },
                 {
                     text: 'API Reference',
                     items: [
-                        {text: 'Config', link: '/packages/api-core/api-reference-config'},
-                        {text: 'Database', link: '/packages/api-core/api-reference-database'},
-                        {text: 'HTTP', link: '/packages/api-core/api-reference-http'},
+                        {text: 'Config', link: '/packages/server-core/api-reference-config'},
+                        {text: 'Database', link: '/packages/server-core/api-reference-database'},
+                        {text: 'HTTP', link: '/packages/server-core/api-reference-http'},
                     ]
                 },
             ],
-            '/packages/api/': [
+            '/packages/server/': [
                 {
-                    text: 'Introduction',
+                    text: 'Server',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/api/'},
-                        {text: 'Getting Started', link: '/packages/api/getting-started'},
-                        {text: 'Deploying', link: '/packages/api/deploying'},
+                        {text: 'Introduction', link: '/packages/server/'},
+                        {text: 'Getting Started', link: '/packages/server/getting-started'},
+                        {text: 'Deploying', link: '/packages/server/deploying'},
                     ]
                 },
             ],
-            '/packages/api-adapter/': [
+            '/packages/server-adapter/': [
                 {
-                    text: 'Introduction',
+                    text: 'Server Adapter',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/api-adapter/'},
-                        {text: 'Installation', link: '/packages/api-adapter/installation'},
+                        {text: 'Overview', link: '/packages/server-adapter/'},
+                        {text: 'Installation', link: '/packages/server-adapter/installation'},
                     ]
                 },
                 {
                     text: 'Middlewares',
                     collapsible: false,
                     items: [
-                        {text: 'HTTP', link: '/packages/api-adapter/http'},
-                        {text: 'Socket', link: '/packages/api-adapter/socket'},
+                        {text: 'HTTP', link: '/packages/server-adapter/http'},
+                        {text: 'Socket', link: '/packages/server-adapter/socket'},
                     ]
                 },
             ],
-            '/packages/api-utils/': [
+            '/packages/server-utils/': [
                 {
-                    text: 'Introduction',
+                    text: 'Server Utils',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/api-utils/'},
-                        {text: 'Installation', link: '/packages/api-utils/installation'},
+                        {text: 'Introduction', link: '/packages/server-utils/'},
+                        {text: 'Installation', link: '/packages/server-utils/installation'},
                     ]
                 },
                 {
                     text: 'API-Reference',
                     collapsible: false,
                     items: [
-                        {text: 'KeyPair', link: '/packages/api-utils/key-pair'},
-                        {text: 'Sign & Verify', link: '/packages/api-utils/sign-verify'},
-                        {text: 'Hash', link: '/packages/api-utils/hash'},
+                        {text: 'KeyPair', link: '/packages/server-utils/key-pair'},
+                        {text: 'Sign & Verify', link: '/packages/server-utils/sign-verify'},
+                        {text: 'Hash', link: '/packages/server-utils/hash'},
                     ]
                 },
             ],
             '/packages/vue/': [
                 {
-                    text: 'Introduction',
+                    text: 'Vue',
                     collapsible: false,
                     items: [
-                        {text: 'Overview', link: '/packages/frontend/vue/'},
+                        {text: 'Introduction', link: '/packages/frontend/vue/'},
                         {text: 'Installation', link: '/packages/frontend/vue/installation'}
                     ]
                 },

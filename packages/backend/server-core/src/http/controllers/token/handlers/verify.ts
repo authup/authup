@@ -33,7 +33,7 @@ export async function verifyTokenRouteHandler(
     }
 
     const hasPermission = req.ability &&
-        req.ability.hasPermission(PermissionID.TOKEN_VERIFY);
+        req.ability.has(PermissionID.TOKEN_VERIFY);
 
     if (
         req.token !== id &&

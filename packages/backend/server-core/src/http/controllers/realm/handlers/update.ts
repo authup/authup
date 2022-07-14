@@ -19,7 +19,7 @@ import { useDataSource } from '../../../../database';
 export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
-    if (!req.ability.hasPermission(PermissionID.REALM_EDIT)) {
+    if (!req.ability.has(PermissionID.REALM_EDIT)) {
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 

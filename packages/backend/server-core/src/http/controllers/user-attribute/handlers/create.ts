@@ -26,7 +26,7 @@ export async function createUserAttributeRouteHandler(req: ExpressRequest, res: 
         result.data.user_id !== req.userId
     ) {
         if (
-            !req.ability.hasPermission(PermissionID.USER_EDIT) ||
+            !req.ability.has(PermissionID.USER_EDIT) ||
             !isPermittedForResourceRealm(req.realmId, result.data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');

@@ -16,7 +16,7 @@ import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.ROLE_ADD)) {
+    if (!req.ability.has(PermissionID.ROLE_ADD)) {
         throw new ForbiddenError();
     }
 

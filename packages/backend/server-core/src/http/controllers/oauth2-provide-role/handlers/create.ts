@@ -16,7 +16,7 @@ import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
 export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.hasPermission(PermissionID.PROVIDER_EDIT)) {
+    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 

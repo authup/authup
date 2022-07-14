@@ -41,8 +41,8 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
     });
 
     if (
-        !req.ability.hasPermission(PermissionID.ROBOT_EDIT) &&
-        !req.ability.hasPermission(PermissionID.ROBOT_DROP)
+        !req.ability.has(PermissionID.ROBOT_EDIT) &&
+        !req.ability.has(PermissionID.ROBOT_DROP)
     ) {
         if (req.userId) {
             query.andWhere('robot.user_id = :userId', { userId: req.userId });
@@ -109,8 +109,8 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     if (
         req.robotId !== entity.id &&
-        !req.ability.hasPermission(PermissionID.ROBOT_DROP) &&
-        !req.ability.hasPermission(PermissionID.ROBOT_EDIT)
+        !req.ability.has(PermissionID.ROBOT_DROP) &&
+        !req.ability.has(PermissionID.ROBOT_EDIT)
     ) {
         if (
             !entity.user_id
