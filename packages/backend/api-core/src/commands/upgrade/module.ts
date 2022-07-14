@@ -6,6 +6,7 @@
  */
 
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { setupDatabaseSchema } from 'typeorm-extension';
 import { UpgradeCommandContext } from '../type';
 import { DatabaseSeeder, buildDataSourceOptions } from '../../database';
 
@@ -40,39 +41,19 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
     }
 
     try {
-        let migrationsAmount = 0;
-        if (dataSource.options.migrations) {
-            migrationsAmount = Array.isArray(dataSource.options.migrations) ?
-                dataSource.options.migrations.length :
-                Object.keys(dataSource.options.migrations).length;
+        if (context.spinner) {
+            context.spinner.start('Execute schema setup.');
         }
 
-        if (migrationsAmount === 0) {
-            if (context.spinner) {
-                context.spinner.start('Execute synchronization.');
-            }
+        await setupDatabaseSchema(dataSource);
 
-            await dataSource.synchronize();
-
-            if (context.spinner) {
-                context.spinner.succeed('Executed synchronization.');
-            }
-        } else {
-            if (context.spinner) {
-                context.spinner.start('Execute migrations.');
-            }
-
-            await dataSource.runMigrations();
-
-            if (context.spinner) {
-                context.spinner.succeed('Executed migrations.');
-            }
+        if (context.spinner) {
+            context.spinner.start('Executed schema setup.');
         }
 
         if (context.spinner) {
             context.spinner.start('Execute seeder.');
         }
-
         const seeder = new DatabaseSeeder();
         await seeder.run(dataSource);
 
