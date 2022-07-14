@@ -22,7 +22,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     if (context.spinner) {
         context.spinner.info(`Environment: ${config.env}`);
-        context.spinner.info(`WritableDirectory: ${path.join(config.rootPath, config.writableDirectory)}`);
+        context.spinner.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
         context.spinner.info(`URL: ${config.selfUrl}`);
         context.spinner.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
         context.spinner.info(`Web-URL: ${config.webUrl}`);

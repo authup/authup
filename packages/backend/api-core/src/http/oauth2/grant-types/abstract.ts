@@ -13,7 +13,6 @@ import {
 } from '@authelion/common';
 import { Cache, useClient } from 'redis-extension';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
-import path from 'path';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
 import { AccessTokenIssueContext } from './type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../domains';
@@ -50,7 +49,7 @@ export abstract class AbstractGrant {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
             request: context.request,
             keyPairOptions: {
-                directory: path.join(this.config.rootPath, this.config.writableDirectory),
+                directory: this.config.writableDirectoryPath,
             },
             selfUrl: this.config.selfUrl,
             maxAge,

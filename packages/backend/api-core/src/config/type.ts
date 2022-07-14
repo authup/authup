@@ -41,9 +41,12 @@ export type Config = {
      */
     rootPath: string,
     /**
+     * Relative or absolute path.
+     * If the path is relative, the rootPath will be appended.
+     *
      * default: writable
      */
-    writableDirectory: string
+    writableDirectoryPath: string
 
     /**
      * default: http://127.0.0.1:3010

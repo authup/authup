@@ -17,6 +17,10 @@ COPY ./entrypoint.sh ./entrypoint.sh
 
 RUN chmod +x ./entrypoint.sh
 
+RUN mkdir -p writable
+
+ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
+
 EXPOSE 3010
 
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]

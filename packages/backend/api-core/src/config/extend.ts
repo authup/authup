@@ -43,13 +43,14 @@ export function extendConfig(
         config.rootPath = directoryPath;
     }
 
-    if (!config.writableDirectory) {
-        config.writableDirectory = requireFromEnv('WRITABLE_DIRECTORY', ConfigDefault.WRITABLE_DIRECTORY);
+    if (!config.writableDirectoryPath) {
+        config.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH', ConfigDefault.WRITABLE_DIRECTORY);
     }
 
-    config.writableDirectory = config.writableDirectory.replace(/\//g, path.sep);
-
-    const writableDirectoryPath = path.join(config.rootPath, config.writableDirectory);
+    config.writableDirectoryPath = config.writableDirectoryPath.replace(/\//g, path.sep);
+    if (!path.isAbsolute(config.writableDirectoryPath)) {
+        config.writableDirectoryPath = path.join(config.rootPath, config.writableDirectoryPath);
+    }
 
     config.database = extendDatabaseOptions(config.database || {});
 
@@ -73,7 +74,7 @@ export function extendConfig(
 
     config.middleware = extendMiddlewareOptions(
         config.middleware || {},
-        writableDirectoryPath,
+        config.writableDirectoryPath,
     );
 
     if (!config.keyPair) {
@@ -81,7 +82,7 @@ export function extendConfig(
     }
 
     if (!config.keyPair.directory) {
-        config.keyPair.directory = writableDirectoryPath;
+        config.keyPair.directory = config.writableDirectoryPath;
     }
 
     return config as Config;

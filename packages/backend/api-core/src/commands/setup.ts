@@ -36,7 +36,7 @@ export async function setupCommand(context?: SetupCommandContext) {
 
     const writableDirectoryPath = path.join(
         config.rootPath,
-        config.writableDirectory,
+        config.writableDirectoryPath,
     );
 
     if (context.keyPair) {
@@ -60,7 +60,7 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         await generateSwaggerDocumentation({
             rootPath: config.rootPath,
-            writableDirectory: config.writableDirectory,
+            writableDirectory: config.writableDirectoryPath,
             baseUrl: config.selfUrl,
         });
 

@@ -22,7 +22,7 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
     const config = await useConfig();
 
     if (!context.directory) {
-        context.directory = path.join(config.writableDirectory, 'migrations');
+        context.directory = path.join(config.writableDirectoryPath, 'migrations');
     }
 
     context.directory = path.isAbsolute(context.directory) ?
