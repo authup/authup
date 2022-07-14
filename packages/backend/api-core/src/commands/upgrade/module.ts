@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { UpgradeCommandContext } from '../type';
 import { DatabaseSeeder, buildDataSourceOptions } from '../../database';
 
@@ -29,8 +29,7 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
             synchronize: false,
             migrationsRun: false,
             dropSchema: false,
-            logging: [],
-        });
+        } as DataSourceOptions);
 
         dataSource = new DataSource(options);
         await dataSource.initialize();
@@ -41,14 +40,33 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
     }
 
     try {
-        if (context.spinner) {
-            context.spinner.start('Execute migrations.');
+        let migrationsAmount = 0;
+        if (dataSource.options.migrations) {
+            migrationsAmount = Array.isArray(dataSource.options.migrations) ?
+                dataSource.options.migrations.length :
+                Object.keys(dataSource.options.migrations).length;
         }
 
-        await dataSource.runMigrations();
+        if (migrationsAmount === 0) {
+            if (context.spinner) {
+                context.spinner.start('Execute synchronization.');
+            }
 
-        if (context.spinner) {
-            context.spinner.succeed('Executed migrations.');
+            await dataSource.synchronize();
+
+            if (context.spinner) {
+                context.spinner.succeed('Executed synchronization.');
+            }
+        } else {
+            if (context.spinner) {
+                context.spinner.start('Execute migrations.');
+            }
+
+            await dataSource.runMigrations();
+
+            if (context.spinner) {
+                context.spinner.succeed('Executed migrations.');
+            }
         }
 
         if (context.spinner) {

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 import { createDatabase } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { createKeyPair } from '@authelion/api-utils';
@@ -107,8 +106,11 @@ export async function setupCommand(context?: SetupCommandContext) {
 
                 if (context.spinner) {
                     context.spinner.succeed('Seeded database.');
-                    context.spinner.info(`Robot ID: ${seederData.robot.id}`);
-                    context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
+
+                    if (seederData.robot) {
+                        context.spinner.info(`Robot ID: ${seederData.robot.id}`);
+                        context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
+                    }
                 }
             }
         } catch (e) {
