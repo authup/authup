@@ -47,8 +47,8 @@ export function extendConfig(
         config.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH', ConfigDefault.WRITABLE_DIRECTORY);
     }
 
-    config.writableDirectoryPath = config.writableDirectoryPath.replace(/\//g, path.sep);
     if (!path.isAbsolute(config.writableDirectoryPath)) {
+        config.writableDirectoryPath = config.writableDirectoryPath.replace(/\//g, path.sep);
         config.writableDirectoryPath = path.join(config.rootPath, config.writableDirectoryPath);
     }
 

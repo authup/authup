@@ -27,7 +27,6 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
             name: 'default',
             type: 'better-sqlite3',
             database: path.join(
-                config.rootPath,
                 config.writableDirectoryPath,
                 config.env === 'test' ? 'test.sql' : 'db.sql',
             ),

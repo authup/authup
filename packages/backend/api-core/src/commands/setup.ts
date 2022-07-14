@@ -34,18 +34,13 @@ export async function setupCommand(context?: SetupCommandContext) {
 
     const config = await useConfig();
 
-    const writableDirectoryPath = path.join(
-        config.rootPath,
-        config.writableDirectoryPath,
-    );
-
     if (context.keyPair) {
         if (context.spinner) {
             context.spinner.start('Generating rsa key-pair.');
         }
 
         await createKeyPair({
-            directory: writableDirectoryPath,
+            directory: config.writableDirectoryPath,
         });
 
         if (context.spinner) {
@@ -60,7 +55,7 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         await generateSwaggerDocumentation({
             rootPath: config.rootPath,
-            writableDirectory: config.writableDirectoryPath,
+            writableDirectoryPath: config.writableDirectoryPath,
             baseUrl: config.selfUrl,
         });
 

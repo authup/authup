@@ -7,6 +7,6 @@
 
 export type SwaggerDocumentCreateContext = {
     rootPath: string,
-    writableDirectory: string,
+    writableDirectoryPath: string,
     baseUrl?: string
 };

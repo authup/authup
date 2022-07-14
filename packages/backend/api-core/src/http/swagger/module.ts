@@ -46,7 +46,7 @@ export async function generateSwaggerDocumentation(
         description: packageJson.description,
         basePath: '/',
         version: packageJson.version,
-        outputDirectory: path.join(context.rootPath, context.writableDirectory),
+        outputDirectory: context.writableDirectoryPath,
         securityDefinitions: {
             bearer: {
                 name: 'Bearer',
