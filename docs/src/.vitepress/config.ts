@@ -129,7 +129,7 @@ export default defineConfig({
                     items: [
                         {text: 'Introduction', link: '/packages/server/'},
                         {text: 'Getting Started', link: '/packages/server/getting-started'},
-                        {text: 'Deploying', link: '/packages/server/deploying'},
+                        {text: 'Docker', link: '/packages/server/docker'},
                     ]
                 },
             ],

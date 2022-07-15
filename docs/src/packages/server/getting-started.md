@@ -1,7 +1,7 @@
 # Getting started 
 
 This section will help to spin up an authentication- & authorization-server **locally**.
-To deploy the server for production, it is recommended to use the docker [image](deploying.md),
+To deploy the server for production, it is recommended to use the docker [image](docker.md),
 which can also be used for local usage. 
 
 ## Step. 1: Create a new project
