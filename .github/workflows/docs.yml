@@ -14,14 +14,11 @@ jobs:
               with:
                   node-version: 16
 
-            - name: Change directory
-              run: cd ./docs
-
             - name: Install
-              run: npm ci
+              run: cd ./docs && npm ci
 
             - name: Build
-              run: npm run build
+              run: cd ./docs && npm run build
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
