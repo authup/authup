@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
     title: 'Authelion',
-    base: '/authelion/',
+    base: '/',
     themeConfig: {
         socialLinks: [
             { icon: 'github', link: 'https://github.com/tada5hi/authelion' },

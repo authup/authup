@@ -1,7 +1,7 @@
 # Backend
 
 The **server-core** extension package, which can be integrated into an existent application,
-is the heart 🧡 of the authelion ecosystem and is used by the **server** package, to provide a standalone variant. 
+is the heart 🧡 of the authelion ecosystem and is used by the **server** package, to provide a standalone solution. 
 
 Therefore, it is important to decide if a [standalone](#standalone) or [extension](#extension) solution for backend side
 is the right choice.
