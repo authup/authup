@@ -20,4 +20,4 @@ This package requires the following `dependencies` to be installed in addition:
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/vue](https://tada5hi.github.io/authelion/packages/vue)
+To read the docs, visit [https://authelion.net/packages/vue](https://authelion.net/packages/vue)

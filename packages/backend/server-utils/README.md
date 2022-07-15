@@ -13,4 +13,4 @@ The main propose of this package, is to provide general utilities for authorizat
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/server-utils](https://tada5hi.github.io/authelion/packages/server-utils)
+To read the docs, visit [https://authelion.net/packages/server-utils](https://authelion.net/packages/server-utils)

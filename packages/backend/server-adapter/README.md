@@ -18,4 +18,4 @@ based services. These middlewares provide a way to validate and verify the reque
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/server-adapter](https://tada5hi.github.io/authelion/packages/server-adapter)
+To read the docs, visit [https://authelion.net/packages/server-adapter](https://authelion.net/packages/server-adapter)

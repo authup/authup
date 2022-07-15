@@ -14,4 +14,4 @@ should therefore only be used on the server-side.
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/server-core](https://tada5hi.github.io/authelion/packages/server-core)
+To read the docs, visit [https://authelion.net/packages/server-core](https://authelion.net/packages/server-core)

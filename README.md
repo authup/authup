@@ -22,4 +22,4 @@
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/](https://tada5hi.github.io/authelion/)
+To read the docs, visit [https://authelion.net](https://authelion.net)

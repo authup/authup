@@ -13,4 +13,4 @@ The main propose of this package, is to provide general classes, interfaces & ty
 
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/common](https://tada5hi.github.io/authelion/packages/common)
+To read the docs, visit [https://authelion.net/packages/common](https://authelion.net/packages/common)

@@ -10,8 +10,9 @@ This package contains an authentication & authorization server.
 **Table of Contents**
 
 - [Documentation](#documentation)
+
   
 ## Documentation
 
-To read the docs, visit [https://tada5hi.github.io/authelion/packages/server](https://tada5hi.github.io/authelion/packages/server)
+To read the docs, visit [https://authelion.net/packages/server](https://authelion.net/packages/server)
 
