@@ -1,4 +1,4 @@
-# Resource interaction & integration
+# Shared
 
 To integrate authelion into an ecosystem, the [common](../packages/common/index.md) package exposes an **API Client** to 
 simply run CRUD operations for domain resources.

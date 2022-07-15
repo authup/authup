@@ -10,3 +10,6 @@ The packages provide:
 - routes & controllers for [express]()
 - models, seeds & many more for [typeorm]()
 
+::: info
+It is recommended to create Database migrations after a new version of the package is released.
+:::

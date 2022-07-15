@@ -5,74 +5,17 @@
 [![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
 
-The main propose of this package, is to provide middlewares for microservices, which are based on a http (express) or (web-) socket (socket.io) server.
+The main propose of this package, is to provide middlewares for:
+
+- http &
+- (web-) socket
+
+based services. These middlewares provide a way to validate and verify the request and inject information about the corresponding token owner.
 
 **Table of Contents**
 
-- [Installation](#installation)
-- [Usage](#usage)
-  - [HTTP](#http)
-  - [Socket](#socket)
-## Installation
+- [Documentation](#documentation)
 
-```bash
-npm install @authelion/server-adapter --save
-```
+## Documentation
 
-## Usage
-
-### HTTP
-
-```typescript
-import express from 'express';
-import { setupHTTPMiddleware } from "@authelion/server-adapter";
-import { setConfig, useClient } from "redis-extension";
-import axios from 'axios';
-
-// setup express server
-const server = expres();
-
-// setup redis connection
-setConfig('default', {connectionString: 'redis://127.0.0.1'});
-
-// retrieve redis instance
-const redis = useClient('default');
-
-// set bearer token or achieve it on another way e.g. response interceptor ;)
-axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';
-
-// setup socket middleware for socket server
-server.use(setupHTTPMiddleware({
-    redis,
-    redisPrefix: 'token',
-    http: axios
-}));
-```
-
-### Socket
-
-```typescript
-import { Server } from 'socket.io';
-import { setupSocketMiddleware } from "@authelion/server-adapter";
-import { setConfig, useClient } from "redis-extension";
-import axios from 'axios';
-
-// setup socket.io server
-const server = new Server();
-
-// setup redis connection
-setConfig('default', {connectionString: 'redis://127.0.0.1'});
-
-// retrieve redis instance
-const redis = useClient('default');
-
-// set bearer token or achieve it on another way e.g. response interceptor ;)
-axios.defaults.headers.common['Authorization'] = 'AUTH_TOKEN';
-
-// setup socket middleware for socket server
-server.use(setupSocketMiddleware({
-    redis,
-    redisPrefix: 'token',
-    http: axios
-}));
-```
+To read the docs, visit [https://tada5hi.github.io/authelion/packages/server-adapter](https://tada5hi.github.io/authelion/packages/server-adapter)

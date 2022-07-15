@@ -19,14 +19,14 @@ import {
     BearerAuthorizationHeader,
 } from '@trapi/client';
 import { NotFoundError } from '@typescript-error/http';
-import path from 'path';
 import { ExpressRequest } from '../../type';
 import { extendOAuth2Token, validateOAuth2Token } from '../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { Config, useConfig } from '../../../config';
+import { useConfig } from '../../../config';
+import { buildDatabaseOptionsFromConfig } from '../../../database/options/utils';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
@@ -67,12 +67,13 @@ async function verifyBasicAuthorizationHeader(
     let permissions : AbilityDescriptor[] = [];
 
     const config = await useConfig();
+    const databaseOptions = buildDatabaseOptionsFromConfig(config);
     const dataSource = await useDataSource();
 
     if (
         config.env === 'test' &&
-        header.username === config.database.seed.admin.username &&
-        header.password === config.database.seed.admin.password
+        header.username === databaseOptions.seed.admin.username &&
+        header.password === databaseOptions.seed.admin.password
     ) {
         const userRepository = new UserRepository(dataSource);
         const entity = await userRepository.findOneBy({

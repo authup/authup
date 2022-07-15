@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import defu from 'defu';
 import { Config } from './type';
-import { findConfig, findConfigSync } from './find';
+import { findConfigSync, loadConfig } from './find';
 import { extendConfig } from './extend';
 import { Subset } from '../types';
 import { applyConfig } from './apply';
@@ -20,7 +21,7 @@ export async function useConfig(directoryPath?: string) : Promise<Config> {
     }
 
     if (!instancePromise) {
-        instancePromise = findConfig(directoryPath);
+        instancePromise = loadConfig(directoryPath);
     }
 
     instance = await instancePromise;
@@ -41,7 +42,11 @@ export function useConfigSync(directoryPath?: string) : Config {
 }
 
 export function setConfig(value: Subset<Config>) : Config {
-    instance = extendConfig(value);
+    if (instance) {
+        instance = defu(instance, value);
+    } else {
+        instance = extendConfig(value);
+    }
     applyConfig(instance);
 
     return instance;

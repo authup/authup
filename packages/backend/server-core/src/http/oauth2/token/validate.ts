@@ -23,17 +23,18 @@ import {
 import { useDataSource } from '../../../database';
 import { useConfig } from '../../../config';
 import { CachePrefix } from '../../../constants';
-import { isRedisEnabled } from '../../../utils';
+import { buildKeyPairOptionsFromConfig, isRedisEnabled } from '../../../utils';
 
 export async function validateOAuth2Token(
     token: string,
 ) : Promise<OAuth2TokenVerification> {
     const config = await useConfig();
+    const keyPairOptions = buildKeyPairOptionsFromConfig(config);
 
     const tokenPayload = await verifyToken(
         token,
         {
-            keyPair: config.keyPair,
+            keyPair: keyPairOptions,
         },
     ) as OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload;
 

@@ -8,8 +8,6 @@
 import {
     OAuth2TokenSubKind,
     TokenError,
-    determineAccessTokenMaxAge,
-    determineRefreshTokenMaxAge,
 } from '@authelion/common';
 import { Cache, useClient } from 'redis-extension';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
@@ -44,15 +42,13 @@ export abstract class AbstractGrant {
     // -----------------------------------------------------
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<OAuth2AccessTokenEntity> {
-        const maxAge = determineAccessTokenMaxAge(this.config.tokenMaxAge);
-
         const tokenBuilder = new Oauth2AccessTokenBuilder({
             request: context.request,
             keyPairOptions: {
                 directory: this.config.writableDirectoryPath,
             },
             selfUrl: this.config.selfUrl,
-            maxAge,
+            maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
         tokenBuilder.setRealm(context.realm);
@@ -75,24 +71,22 @@ export abstract class AbstractGrant {
         const token = await tokenBuilder.create();
 
         if (this.accessTokenCache) {
-            await this.accessTokenCache.set(token.id, token, { seconds: maxAge });
+            await this.accessTokenCache.set(token.id, token, { seconds: this.config.tokenMaxAgeAccessToken });
         }
 
         return token;
     }
 
     protected async issueRefreshToken(accessToken: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
-        const maxAge : number = determineRefreshTokenMaxAge(this.config.tokenMaxAge);
-
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
             accessToken,
-            maxAge,
+            maxAge: this.config.tokenMaxAgeRefreshToken,
         });
 
         const token = await tokenBuilder.create();
 
         if (this.refreshTokenCache) {
-            await this.refreshTokenCache.set(token.id, token, { seconds: maxAge });
+            await this.refreshTokenCache.set(token.id, token, { seconds: this.config.tokenMaxAgeRefreshToken });
         }
 
         return token;

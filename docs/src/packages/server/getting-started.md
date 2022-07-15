@@ -86,11 +86,36 @@ Setup the authentication & authorization service.
 $ npm run setup
 ```
 
+The output should be similar, with other values for the `Robot ID` and `Robot Secret`:
+```shell
+✔ Generated rsa key-pair.
+✔ Created database.
+✔ Synchronized database schema.
+✔ Seeded database.
+ℹ Robot ID: 51dc4d96-f122-47a8-92f4-f0643dae9be5
+ℹ Robot Secret: d1l33354crj1kyo58dbpflned2ocnw2yez69
+```
+
+
 Finally, start the service:
 
 ```shell
 $ npm run start
 ```
 
-The service will spin up at the following address: `http://localhost:3010`. 
-The swagger documentation is available at: `http://localhost:3010/docs`.
+It will output the following information on startup:
+
+```shell
+ℹ Environment: development
+ℹ WritableDirectory: writable
+ℹ URL: http://127.0.0.1:3010/
+ℹ Docs-URL: http://127.0.0.1:3010/docs
+ℹ Web-URL: http://127.0.0.1:3000/
+✔ Initialised controllers & middlewares.
+✔ Established database connection.
+✔ Built & started token aggregator.
+✔ Startup completed.
+```
+
+The service will spin up at the following address: `http://127.0.0.1:3010`. 
+The swagger documentation is available at: `http://127.0.0.1:3010/docs`.

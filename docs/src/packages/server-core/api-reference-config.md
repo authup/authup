@@ -1,13 +1,56 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
+# Config
 
-import { Client } from 'redis-extension';
+## `setConfig`
 
-export type Config = {
+The `setConfig()` method, specify options for all submodules:
+
+**Type**
+```ts
+function setConfig(value: Subset<Config>) : Config;
+```
+
+**Example**
+```ts
+setConfig({
+    port: 3010,
+    adminUsername: 'admin',
+    adminPassword: 'start123',
+    robotEnabled: true,
+    permissions: ['data_add', 'data_edit']
+})
+```
+**Type References**
+- [Config](api-reference-http#config)
+
+## `useConfig`
+
+The asynchronous `useConfig()` method returns the configuration obect. If no configuration is set,
+the method attempts to load the configuration file or initialize the configuration by environment variables.
+
+**Type**
+```ts
+async function useConfig(value: Subset<Config>) : Promise<Config>;
+```
+**Type References**
+- [Config](api-reference-http#config)
+
+## `useConfigSync`
+
+The synchronous `useConfigSync()` method returns the configuration obect. If no configuration is set,
+the method attempts to load the configuration file or initialize the configuration by environment variables.
+
+**Type**
+```ts
+function useConfigSync(value: Subset<Config>) : Config;
+```
+**Type References**
+- [Config](api-reference-http#config)
+
+## `Config`
+
+**Type**
+```typescript
+type Config = {
     /**
      * default: 'development'
      */
@@ -124,3 +167,4 @@ export type Config = {
      */
     middlewareSwaggerDirectoryPath: string;
 };
+```

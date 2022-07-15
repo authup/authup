@@ -9,13 +9,13 @@ import {
     OAuth2TokenResponse,
     OAuth2TokenSubKind, RobotError,
 } from '@authelion/common';
-import path from 'path';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../../domains';
 import { Grant } from './type';
 import { useDataSource } from '../../../database';
 import { ExpressRequest } from '../../type';
+import { buildKeyPairOptionsFromConfig } from '../../../utils';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
@@ -30,8 +30,9 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             realm: entity.realm_id,
         });
 
+        const keyPairOptions = buildKeyPairOptionsFromConfig(this.config);
         const response = new OAuth2BearerTokenResponse({
-            keyPairOptions: this.config.keyPair,
+            keyPairOptions,
             accessToken,
         });
 

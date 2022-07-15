@@ -6,3 +6,4 @@
  */
 
 export * from './extend';
+export * from './utils';

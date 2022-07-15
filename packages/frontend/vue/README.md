@@ -16,17 +16,8 @@ This package requires the following `dependencies` to be installed in addition:
 
 **Table of Contents**
 
-- [Installation](#installation)
+- [Documentation](#documentation)
 
-## Installation
+## Documentation
 
-```bash
-npm install @authelion/vue --save-dev
-```
-
----
-**Important NOTE**
-
-The `README.md` is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
-
----
+To read the docs, visit [https://tada5hi.github.io/authelion/packages/vue](https://tada5hi.github.io/authelion/packages/vue)

@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { findConfig, resetCommand, setConfig } from '@authelion/server-core';
+import { loadConfig, resetCommand, setConfig } from '@authelion/server-core';
 import * as ora from 'ora';
 
 import { buildDataSourceOptions } from '../database/utils';
@@ -30,7 +30,7 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        const config = await findConfig(args.root);
+        const config = await loadConfig(args.root);
         setConfig(config);
 
         const dataSourceOptions = await buildDataSourceOptions();

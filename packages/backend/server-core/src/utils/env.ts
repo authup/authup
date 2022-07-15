@@ -1,3 +1,16 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { hasOwnProperty } from '@authelion/common';
+
+export function hasEnv(key: string) : boolean {
+    return hasOwnProperty(process.env, key);
+}
+
 export function requireFromEnv(key: string, alt?: any) {
     if (
         typeof process.env[key] === 'undefined' &&
@@ -32,12 +45,6 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
     return alt ?? !!value;
 }
 
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
 export function requireIntegerFromEnv(key: string, alt?: number): number | undefined {
     const value = requireFromEnv(key, alt);
     const intValue = parseInt(value, 10);

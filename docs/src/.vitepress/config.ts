@@ -48,29 +48,16 @@ export default defineConfig({
                     text: 'Introduction',
                     collapsible: false,
                     items: [
-                        {text: 'What is Authelion?', link: '/guide/'}
+                        {text: 'What is Authelion?', link: '/guide/'},
                     ]
                 },
                 {
-                    text: 'Backend',
+                    text: 'Packages',
                     collapsible: false,
                     items: [
-                        {text: 'Extension or Standalone?', link: '/guide/extension-or-standalone'},
-                        {text: 'Microservice Support', link: '/guide/microservices'},
-                    ]
-                },
-                {
-                    text: 'Frontend',
-                    collapsible: false,
-                    items: [
-                        {text: 'Supported Frameworks', link: '/guide/supported-frameworks'},
-                    ]
-                },
-                {
-                    text: 'Shared',
-                    collapsible: false,
-                    items: [
-                        {text: 'Resource interaction & integration', link: '/guide/resource-interaction-integration'}
+                        {text: 'Backend', link: '/guide/backend'},
+                        {text: 'Frontend', link: '/guide/frontend'},
+                        {text: 'Shared', link: '/guide/shared'},
                     ]
                 },
             ],
@@ -123,7 +110,7 @@ export default defineConfig({
                 {
                     text: 'Database',
                     items: [
-                        {text: 'Defining Relations', link: '/packages/server-core/defining-relations'}
+                        {text: 'Defining Entity Relations', link: '/packages/server-core/defining-relations'}
                     ]
                 },
                 {

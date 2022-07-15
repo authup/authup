@@ -12,6 +12,7 @@ import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
 import { DatabaseSeeder, buildDataSourceOptions } from '../database';
 import { useConfig } from '../config';
+import { buildDatabaseOptionsFromConfig } from '../database/options/utils';
 
 export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};
@@ -101,7 +102,8 @@ export async function setupCommand(context?: SetupCommandContext) {
                     context.spinner.start('Seeding database.');
                 }
 
-                const seeder = new DatabaseSeeder(config.database.seed);
+                const databaseOptions = buildDatabaseOptionsFromConfig(config);
+                const seeder = new DatabaseSeeder(databaseOptions.seed);
                 const seederData = await seeder.run(dataSource);
 
                 if (context.spinner) {

@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { findConfig, setConfig, startCommand } from '@authelion/server-core';
+import { loadConfig, setConfig, startCommand } from '@authelion/server-core';
 import * as ora from 'ora';
 
 import { buildDataSourceOptions } from '../database/utils';
@@ -30,7 +30,7 @@ export class StartCommand implements CommandModule {
     }
 
     async handler(args: StartArguments) {
-        const config = await findConfig(args.root);
+        const config = await loadConfig(args.root);
         setConfig(config);
 
         const dataSourceOptions = await buildDataSourceOptions();

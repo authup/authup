@@ -17,7 +17,6 @@ import {
     User,
     UserRole,
     createNanoID,
-    mergeDeep,
 } from '@authelion/common';
 import { hash } from '@authelion/server-utils';
 import {
@@ -30,7 +29,8 @@ import {
     useRobotEventEmitter,
 } from '../../domains';
 import { DatabaseSeedOptions } from '../type';
-import { useConfigSync } from '../../config';
+import { useConfig } from '../../config';
+import { buildDatabaseOptionsFromConfig } from '../options/utils';
 
 export type DatabaseRootSeederRunResponse = {
     robot?: Robot,
@@ -45,19 +45,21 @@ function getPermissions(options: DatabaseSeedOptions) {
 }
 
 export class DatabaseSeeder implements Seeder {
-    protected options: DatabaseSeedOptions;
+    protected options?: DatabaseSeedOptions;
 
     constructor(options?: DatabaseSeedOptions) {
-        const config = useConfigSync();
-
-        if (options) {
-            this.options = mergeDeep({}, options, config.database.seed);
-        } else {
-            this.options = config.database.seed;
-        }
+        this.options = options;
     }
 
     public async run(dataSource: DataSource) : Promise<any> {
+        const { options } = this;
+
+        if (!options) {
+            const config = await useConfig();
+            const databaseOptions = buildDatabaseOptionsFromConfig(config);
+            this.options = databaseOptions.seed;
+        }
+
         const response : DatabaseRootSeederRunResponse = {};
 
         /**
@@ -102,21 +104,21 @@ export class DatabaseSeeder implements Seeder {
          */
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
-            name: this.options.admin.username,
+            name: options.admin.username,
         });
 
         if (!user) {
             user = userRepository.create({
-                name: this.options.admin.username,
-                password: await hash(this.options.admin.password || 'start123'),
+                name: options.admin.username,
+                password: await hash(options.admin.password || 'start123'),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
                 active: true,
             });
 
             response.user = user;
-        } else if (this.options.admin.passwordReset) {
-            user.password = await hash(this.options.admin.password || 'start123');
+        } else if (options.admin.passwordReset) {
+            user.password = await hash(options.admin.password || 'start123');
             user.active = true;
         }
 
@@ -145,7 +147,7 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Create all permissions
          */
-        let permissionIds : string[] = getPermissions(this.options);
+        let permissionIds : string[] = getPermissions(options);
 
         const permissionRepository = dataSource.getRepository(PermissionEntity);
 
@@ -170,7 +172,7 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Assign all permissions to default role.
          */
-        permissionIds = getPermissions(this.options);
+        permissionIds = getPermissions(options);
         const rolePermissionRepository = dataSource.getRepository(RolePermissionEntity);
 
         const existingRolePermissions = await rolePermissionRepository.findBy({
@@ -207,7 +209,7 @@ export class DatabaseSeeder implements Seeder {
             name: 'SYSTEM',
         });
 
-        const secret = this.options.robot.secret || createNanoID(undefined, 64);
+        const secret = options.robot.secret || createNanoID(undefined, 64);
         if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',
@@ -219,7 +221,7 @@ export class DatabaseSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
-        } else if (this.options.robot.secretReset) {
+        } else if (options.robot.secretReset) {
             robot.secret = await hash(secret);
 
             await robotRepository.save(robot);
@@ -239,7 +241,7 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Assign all permissions to default robot.
          */
-        permissionIds = getPermissions(this.options);
+        permissionIds = getPermissions(options);
         const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
 
         const existingRobotPermissions = await robotPermissionRepository.findBy({

@@ -6,7 +6,7 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { findConfig, setConfig, setupCommand } from '@authelion/server-core';
+import { loadConfig, setConfig, setupCommand } from '@authelion/server-core';
 import * as ora from 'ora';
 
 import { buildDataSourceOptions } from '../database/utils';
@@ -59,7 +59,7 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = await findConfig(args.root);
+        const config = await loadConfig(args.root);
         setConfig(config);
 
         const dataSourceOptions = await buildDataSourceOptions();

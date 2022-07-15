@@ -8,10 +8,7 @@
 import path from 'path';
 import { Config } from './type';
 import { ConfigDefault } from './constants';
-import { extendDatabaseOptions } from '../database';
-import { extendMiddlewareOptions } from '../http';
 import { Subset } from '../types';
-import { requireFromEnv, requireIntegerFromEnv } from '../utils';
 
 export function extendConfig(
     config: Subset<Config>,
@@ -19,71 +16,44 @@ export function extendConfig(
 ): Config {
     directoryPath ??= process.cwd();
 
-    if (!config.env) {
-        config.env = requireFromEnv('NODE_ENV', 'development');
+    config.env = config.env || ConfigDefault.ENV;
+
+    config.port = config.port || ConfigDefault.PORT;
+
+    config.selfUrl = config.selfUrl || `http://0.0.0.0:${config.port}/`;
+
+    config.webUrl = config.selfUrl || `http://0.0.0.0:${config.port}/`;
+
+    config.rootPath = config.rootPath || directoryPath;
+    if (!path.isAbsolute(config.rootPath)) {
+        config.rootPath = path.join(directoryPath, config.rootPath);
     }
 
-    if (!config.port) {
-        config.port = parseInt(requireFromEnv('PORT', ConfigDefault.PORT), 10);
-    }
-
-    if (!config.selfUrl) {
-        config.selfUrl = requireFromEnv('SELF_URL', `http://0.0.0.0:${config.port}/`);
-    }
-
-    if (!config.webUrl) {
-        config.webUrl = requireFromEnv('WEB_URL', `http://0.0.0.0:${config.port}/`);
-    }
-
-    if (config.rootPath) {
-        if (!path.isAbsolute(config.rootPath)) {
-            config.rootPath = path.join(directoryPath, config.rootPath);
-        }
-    } else {
-        config.rootPath = directoryPath;
-    }
-
-    if (!config.writableDirectoryPath) {
-        config.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH', ConfigDefault.WRITABLE_DIRECTORY);
-    }
-
+    config.writableDirectoryPath = config.writableDirectoryPath || ConfigDefault.WRITABLE_DIRECTORY_PATH;
     if (!path.isAbsolute(config.writableDirectoryPath)) {
         config.writableDirectoryPath = config.writableDirectoryPath.replace(/\//g, path.sep);
         config.writableDirectoryPath = path.join(config.rootPath, config.writableDirectoryPath);
     }
 
-    config.database = extendDatabaseOptions(config.database || {});
+    config.tokenMaxAgeAccessToken = config.tokenMaxAgeAccessToken || 3600;
+    config.tokenMaxAgeRefreshToken = config.tokenMaxAgeRefreshToken || config.tokenMaxAgeAccessToken;
 
-    if (!config.tokenMaxAge) {
-        const refreshTokenMaxAge = requireIntegerFromEnv('REFRESH_TOKEN_MAX_AGE', 0);
-        const accessTokenMaxAge = requireIntegerFromEnv('ACCESS_TOKEN_MAX_AGE', 0);
+    config.redis = config.redis ?? false;
 
-        if (accessTokenMaxAge || refreshTokenMaxAge) {
-            if (!refreshTokenMaxAge && accessTokenMaxAge) {
-                config.tokenMaxAge = accessTokenMaxAge;
-            }
+    // -------------------------------------------------
 
-            if (accessTokenMaxAge && refreshTokenMaxAge) {
-                config.tokenMaxAge = {
-                    accessToken: accessTokenMaxAge,
-                    refreshToken: refreshTokenMaxAge,
-                };
-            }
-        }
-    }
+    config.adminUsername = config.adminUsername || ConfigDefault.ADMIN_USERNAME;
+    config.adminPassword = config.adminPassword || ConfigDefault.ADMIN_PASSWORD;
 
-    config.middleware = extendMiddlewareOptions(
-        config.middleware || {},
-        config.writableDirectoryPath,
-    );
+    config.robotEnabled = config.robotEnabled ?? false;
 
-    if (!config.keyPair) {
-        config.keyPair = {};
-    }
+    // -------------------------------------------------
 
-    if (!config.keyPair.directory) {
-        config.keyPair.directory = config.writableDirectoryPath;
-    }
+    config.middlewareBodyParser = config.middlewareBodyParser ?? true;
+    config.middlewareCookieParser = config.middlewareCookieParser ?? true;
+    config.middlewareResponse = config.middlewareResponse ?? true;
+    config.middlewareSwaggerEnabled = config.middlewareSwaggerEnabled ?? true;
+    config.middlewareSwaggerDirectoryPath = config.middlewareSwaggerDirectoryPath || config.writableDirectoryPath;
 
     return config as Config;
 }

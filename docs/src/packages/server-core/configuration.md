@@ -9,6 +9,7 @@ before registering any sub-modul (http or database) is used.
 ::: 
 
 All options inherit **default** values, so it is not mandatory to pass any option at all.
+To get an insight of a full list of options, which can be passed to the method, check out the [API Reference](api-reference-config.md#config).
 
 ```typescript
 import { setConfig } from '@authelion/server-core';
@@ -16,21 +17,41 @@ import { setConfig } from '@authelion/server-core';
 setConfig({
     env: 'development',
     port: 3010,
-    database: {
-        admin: {
-            username: 'admin',
-            password: 'start123'
-        },
-        robot: {
-            enabled: true,
-            secret: false
-        }
-    },
-    tokenMaxAge: {
-        accessToken: 3600, // 1 hour
-        refreshToken: 36000 // 10 hours
-    },
+    /* ... */
 })
 ```
 
-To get an insight of a full list of options, which can be passed to the method, check out the [API Reference]().
+## Extend loaded config
+
+It is also possible to extend the configuration found on the file system and from the environment variables.
+
+```typescript
+import { loadConfig, setConfig } from '@authelion/server-core';
+
+(async () => {
+    const config = await loadConfig();
+    
+    setConfig({
+        ...config,
+        env: 'development',
+        port: 3010
+    })
+})();
+```
+
+## Environment Variables
+
+It is also possible to fill the configuration values by **env** key value pairs.
+
+- `NODE_ENV`
+- `PORT`
+- `SELF_URL`
+- `WEB_URL`
+- `WRITABLE_DIRECTORY_PATH`
+- `ACCESS_TOKEN_MAX_AGE`
+- `REFRESH_TOKEN_MAX_AGE`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `ROBOT_ENABLED`
+- `ROBOT_SECRET`
+- `PERMISSIONS`

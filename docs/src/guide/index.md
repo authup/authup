@@ -1,15 +1,21 @@
 # What is Authelion?
 
-Authelion is a collection of packages for authentication & authorization.
+Authelion a collection of packages for authentication & authorization.
 These packages are grouped into the following categories: 
 
-- backend
-- frontend
-- shared 
+- [Backend](backend.md)
+- [Frontend](frontend.md)
+- [Shared](shared.md)
 
-::: info Hint
-For the minimal usage it is **not** necessary to use any **frontend** or **shared** package at all.
-:::
+For the minimal usage it is **only** necessary to use the standalone [server](../packages/server/index.md) package or
+the [server-core](../packages/server-core/index) extension package for an existent application.
+
+---
+**Important NOTE**
+
+The guide is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
+
+---
 
 ## Features
 

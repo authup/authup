@@ -3,7 +3,7 @@ layout: home
 hero:
     name: Authelion
     text: Authentication- & Authorization
-    tagline: Authelion is a collection of different packages for frontend and backend authentication & authorization.
+    tagline: Authelion a collection of packages for frontend and backend authentication & authorization.
     actions:
        - theme: brand
          text: Get Started

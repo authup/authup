@@ -6,45 +6,52 @@
  */
 
 import {
-    loadScriptFileExport, loadScriptFileExportSync, locateFile, locateFileSync,
+    loadScriptFileExport,
+    loadScriptFileExportSync,
+    locateFiles,
+    locateFilesSync,
 } from 'locter';
+import defu from 'defu';
 import { extendConfig } from './extend';
 import { Config } from './type';
+import { readEnvConfig } from './env';
 
-export async function findConfig(directoryPath?: string) : Promise<Config> {
+export async function loadConfig(directoryPath?: string) : Promise<Config> {
     directoryPath ??= process.cwd();
 
-    const fileInfo = await locateFile('authelion.config.{ts,js,json}', {
+    const items : Partial<Config>[] = [];
+    items.push(readEnvConfig());
+
+    const fileInfos = await locateFiles('authelion.config.{ts,js,json}', {
         path: directoryPath,
     });
 
-    if (!fileInfo) {
-        return extendConfig({}, directoryPath);
+    for (let i = 0; i < fileInfos.length; i++) {
+        const fileExport = await loadScriptFileExport(fileInfos[i]);
+        if (fileExport.key === 'default') {
+            items.push(fileExport.value);
+        }
     }
 
-    const fileExport = await loadScriptFileExport(fileInfo);
-    if (fileExport.key !== 'default') {
-        return extendConfig({}, directoryPath);
-    }
-
-    return extendConfig(fileExport.value, directoryPath);
+    return extendConfig(defu({}, ...items), directoryPath);
 }
 
 export function findConfigSync(directoryPath?: string) {
     directoryPath ??= process.cwd();
 
-    const fileInfo = locateFileSync('authelion.config.{ts,js,json}', {
+    const items : Partial<Config>[] = [];
+    items.push(readEnvConfig());
+
+    const fileInfos = locateFilesSync('authelion.config.{ts,js,json}', {
         path: directoryPath,
     });
 
-    if (!fileInfo) {
-        return extendConfig({}, directoryPath);
+    for (let i = 0; i < fileInfos.length; i++) {
+        const fileExport = loadScriptFileExportSync(fileInfos[i]);
+        if (fileExport.key === 'default') {
+            items.push(fileExport.value);
+        }
     }
 
-    const fileExport = loadScriptFileExportSync(fileInfo);
-    if (fileExport.key !== 'default') {
-        return extendConfig({}, directoryPath);
-    }
-
-    return extendConfig(fileExport.value, directoryPath);
+    return extendConfig(defu({}, ...items), directoryPath);
 }
