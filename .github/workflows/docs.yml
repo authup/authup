@@ -21,7 +21,8 @@ jobs:
               run: cd ./docs && npm run build
 
             - name: CNAME
-              run: cd ./docs/src/.vitepress/dist/ \
+              run: |
+                    cd ./docs/src/.vitepress/dist/
                     touch CNAME \
                     echo 'animesu.net' > CNAME
 
