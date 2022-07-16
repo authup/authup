@@ -24,7 +24,7 @@ jobs:
               run: |
                     cd ./docs/src/.vitepress/dist/
                     touch CNAME \
-                    echo 'animesu.net' > CNAME
+                    echo 'authelion.net' > CNAME
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
