@@ -20,6 +20,11 @@ jobs:
             - name: Build
               run: cd ./docs && npm run build
 
+            - name: CNAME
+              run: cd ./docs/src/.vitepress/dist/ \
+                    touch CNAME \
+                    echo 'animesu.net' > CNAME
+
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
               with:
