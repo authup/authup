@@ -4,7 +4,7 @@
 
 **Type**
 ```typescript
-import { OAuth2Client, Robot, User } from '@authelion/common';
+import { OAuth2Client, Realm, Robot, User } from '@authelion/common';
 
 interface OAuth2AccessToken {
     id: string,
@@ -35,6 +35,7 @@ interface OAuth2AccessToken {
 
 **References**
 - [OAuth2Client](#oauth2client)
+- [Realm](#realm)
 - [Robot](#robot)
 - [User](#user)
 
@@ -118,7 +119,7 @@ interface OAuth2Provider {
 
 **Type**
 ```typescript
-import { OAuth2Provider, User } from '@authelion/common';
+import { OAuth2Provider, Realm , User } from '@authelion/common';
 
 interface OAuth2ProviderAccount {
     id: string;
@@ -154,13 +155,14 @@ interface OAuth2ProviderAccount {
 ```
 **References**
 - [OAuth2Provider](#oauth2provider)
+- [Realm](#realm)
 - [User](#user)
 
 ## `OAuth2ProviderRole`
 
 **Type**
 ```typescript
-import { OAuth2Provider, Role } from '@authelion/common';
+import { OAuth2Provider, Realm, Role } from '@authelion/common';
 
 interface OAuth2ProviderRole {
     id: string;
@@ -193,6 +195,7 @@ interface OAuth2ProviderRole {
 
 **References**
 - [OAuth2Provider](#oauth2provider)
+- [Realm](#realm)
 - [Role](#role)
 
 ## `OAuth2RefreshToken`

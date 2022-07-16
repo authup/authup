@@ -23,7 +23,7 @@ import { OAuth2ProviderEntity } from '../oauth2-provider';
 @Index(['provider_id', 'user_id'], { unique: true })
 export class OAuth2ProviderAccountEntity implements OAuth2ProviderAccount {
     @PrimaryGeneratedColumn()
-        id: number;
+        id: string;
 
     @Column({ type: 'text', nullable: true, default: null })
         access_token: string;
