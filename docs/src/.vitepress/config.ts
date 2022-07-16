@@ -76,7 +76,7 @@ export default defineConfig({
                     items: [
                         {text: 'Ability Manager', link: '/packages/common/ability-manager'},
                         {text: 'API Client', link: '/packages/common/api-client'},
-
+                        {text: 'Domains', link: '/packages/common/domains'},
                     ]
                 },
                 {
@@ -84,6 +84,7 @@ export default defineConfig({
                     collapsible: false,
                     items: [
                         {text: 'Ability', link: '/packages/common/ability-api-reference'},
+                        {text: 'Domains', link: '/packages/common/domains-api-reference'},
                         {text: 'Error', link: '/packages/common/error-api-reference'},
                     ]
                 },
@@ -110,7 +111,7 @@ export default defineConfig({
                 {
                     text: 'Database',
                     items: [
-                        {text: 'Defining Entity Relations', link: '/packages/server-core/defining-relations'}
+                        {text: 'Entities', link: '/packages/server-core/entities'}
                     ]
                 },
                 {

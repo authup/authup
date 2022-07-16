@@ -9,7 +9,7 @@ import { User } from '../user';
 import { OAuth2Provider } from '../oauth2-provider';
 
 export interface OAuth2ProviderAccount {
-    id: number;
+    id: string;
 
     access_token: string;
 

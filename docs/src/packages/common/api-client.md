@@ -23,22 +23,29 @@ const client = new APIClient({
 The API-Client provides the following domain clients, which are accessible by the respective
 instance property.
 
-The following domain APIs with the corresponding property name exist:
-- OAuth2ProviderAPI: `oauth2Provider`
-- OAuth2ProviderRoleAPI: `oauth2ProviderRole`
-- PermissionAPI: `permission`
-- RealmAPI: `realm`
-- RobotAPI: `robot`
-- RobotPermissionAPI: `robotPermission`
-- RobotRoleAPI: `robotRole`
-- RoleAPI: `role`
-- RoleAttributeAPI: `roleAttribute`
-- RolePermissionAPI: `rolePermission`
-- TokenAPI: `token`
-- UserAPI: `user`
-- UserAttributeAPI: `userAttribute`
-- UserPermissionAPI: `userPermission`
-- UserRoleAPI: `userRole`
+The instance property is named after the APIClient name in `camelCase`.
+
+For example:
+
+**Realm**: realm
+
+```typescript
+import { APIClient } from '@authelion/common';
+
+const client = new APIClient(/* ... */);
+
+(async () => {
+    const response = await client.realm.create({
+        name: 'Test Realm'
+    });
+
+    console.log(response);
+    // { id: 'xxx', name: 'Test Realm', ... }
+})();
+
+```
+
+Checkout the [domain](domains.md) section for available APIClients.
 
 ## Request & Responses
 

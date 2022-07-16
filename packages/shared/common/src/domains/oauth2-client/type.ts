@@ -25,5 +25,4 @@ export interface OAuth2Client {
     user_id: User['id'] | null,
 
     user: User | null
-
 }

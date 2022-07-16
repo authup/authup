@@ -1,0 +1,55 @@
+# Domains
+
+The following domains, provide at least a structural type and in many cases much more.
+If an APIClient is available for a domain, than it is named after the Type suffixed with the `API` keyword.
+
+- `OAuth2AccessToken`
+    - **Type**: [Reference](domains-api-reference.md#oauth2accesstoken)
+- `OAuth2Client`
+    - **Type**: [Reference](domains-api-reference.md#oauth2client)
+- `OAuth2Provider`
+    - **Type**: [Reference](domains-api-reference.md#oauth2provider)
+    - **APIClient**: [Reference]()
+- `OAuth2ProviderAccount`
+    - **Type**: [Reference](domains-api-reference.md#oauth2provideraccount)
+- `OAuth2ProviderRole`
+    - **Type**: [Reference](domains-api-reference.md#oauth2providerrole)
+    - **APIClient**: [Reference]()
+- `OAuth2RefreshToken`
+    - **Type**: [Reference](domains-api-reference.md#oauth2refreshtoken)
+- `Permission`
+    - **Type**: [Reference](domains-api-reference.md#permission)
+    - **APIClient**: [Reference]()
+- `Realm`
+    - **Type**: [Reference](domains-api-reference.md#realm)
+    - **APIClient**: [Reference]()
+- `Robot`
+    - **Type**: [Reference](domains-api-reference.md#robot)
+    - **APIClient**: [Reference]()
+- `RobotPermission`
+    - **Type**: [Reference](domains-api-reference.md#robotpermission)
+    - **APIClient**: [Reference]()
+- `RobotRole`
+    - **Type**: [Reference](domains-api-reference.md#robotrole)
+    - **APIClient**: [Reference]()
+- `Role`
+    - **Type**: [Reference](domains-api-reference.md#role)
+    - **APIClient**: [Reference]()
+- `RoleAttribute`
+    - **Type**: [Reference](domains-api-reference.md#roleattribute)
+    - **APIClient**: [Reference]()
+- `RolePermission`
+    - **Type**: [Reference](domains-api-reference.md#rolepermission)
+    - **APIClient**: [Reference]()
+- `User`
+    - **Type**: [Reference](domains-api-reference.md#user)
+    - **APIClient**: [Reference]()
+- `UserAttribute`
+    - **Type**: [Reference](domains-api-reference.md#userattribute)
+    - **APIClient**: [Reference]()
+- `UserPermission`
+    - **Type**: [Reference](domains-api-reference.md#userpermission)
+    - **APIClient**: [Reference]()
+- `UserRole`
+    - **Type**: [Reference](domains-api-reference.md#userrole)
+    - **APIClient**: [Reference]()

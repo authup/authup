@@ -10,12 +10,11 @@ These packages are grouped into the following categories:
 For the minimal usage it is **only** necessary to use the standalone [server](../packages/server/index.md) package or
 the [server-core](../packages/server-core/index) extension package for an existent application.
 
----
-**Important NOTE**
+::: warning **Important NOTE**
 
 The guide is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
+:::
 
----
 
 ## Features
 
