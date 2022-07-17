@@ -3,9 +3,33 @@
 This package is shipped with a management system for permissions,
 which scales between a **claim based** and **subject/attribute based** authorization.
 
-The data ([AbilityDescriptor(s)]()) to initialize 
+The data ([AbilityDescriptor(s)](ability-api-reference.md#abilitydescriptor)) to initialize 
 the `AbilityManager` can be serialized as json for example and shared between frontend and backend services,
 to provide the same features on both sides.
+
+---
+
+The **AbilityDescriptors** can be extracted from the Payload of the `/token` endpoint response (`AUTHORIZATION` header **required**)
+
+**ResponsePayload**
+
+```json
+{
+    ...,
+    "target": {
+        "permissions": [
+            {
+                "condition": null,
+                "id": "data_add",
+                "negation": false,
+                "power": 999,
+                "target": null
+            }
+        ]
+    },
+    ...
+}
+```
 
 ## Define Abilities
 

@@ -21,7 +21,7 @@ import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('oauth2-provider')
 @Controller('/oauth2-provider-roles')
-export class Oauth2ProviderRoleController {
+export class OAuth2ProviderRoleController {
     @Get('', [])
     async getProviders(
         @Request() req: any,

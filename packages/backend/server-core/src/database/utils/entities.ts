@@ -6,13 +6,14 @@
  */
 
 import { DataSourceOptions } from 'typeorm';
-import { OAuth2AccessTokenEntity } from '../../domains/oauth2-access-token';
-import { OAuth2ClientEntity } from '../../domains/oauth2-client';
-import { OAuth2RefreshTokenEntity } from '../../domains/oauth2-refresh-token';
 import {
+    OAuth2AccessTokenEntity,
+    OAuth2AuthorizationCodeEntity,
+    OAuth2ClientEntity,
     OAuth2ProviderAccountEntity,
     OAuth2ProviderEntity,
     OAuth2ProviderRoleEntity,
+    OAuth2RefreshTokenEntity,
     PermissionEntity,
     RealmEntity,
     RobotEntity,
@@ -27,6 +28,7 @@ export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(opt
     return {
         ...options,
         entities: [
+            OAuth2AuthorizationCodeEntity,
             OAuth2AccessTokenEntity,
             OAuth2ClientEntity,
             OAuth2RefreshTokenEntity,

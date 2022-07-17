@@ -6,6 +6,14 @@
  */
 
 export enum PermissionID {
+    CLIENT_ADD = 'client_add',
+    CLIENT_DROP = 'client_drop',
+    CLIENT_EDIT = 'client_edit',
+
+    PROVIDER_ADD = 'provider_add',
+    PROVIDER_DROP = 'provider_drop',
+    PROVIDER_EDIT = 'provider_edit',
+
     PERMISSION_ADD = 'permission_add',
     PERMISSION_DROP = 'permission_drop',
     PERMISSION_EDIT = 'permission_edit',
@@ -33,10 +41,6 @@ export enum PermissionID {
     ROLE_PERMISSION_DROP = 'role_permission_drop',
 
     TOKEN_VERIFY = 'token_verify',
-
-    PROVIDER_ADD = 'provider_add',
-    PROVIDER_DROP = 'provider_drop',
-    PROVIDER_EDIT = 'provider_edit',
 
     USER_ADD = 'user_add',
     USER_DROP = 'user_drop',

@@ -20,7 +20,7 @@ import {
 } from '@trapi/client';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { extendOAuth2Token, validateOAuth2Token } from '../../oauth2';
+import { extendOAuth2Token, validateOAuth2Token } from '../../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';

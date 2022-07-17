@@ -8,6 +8,7 @@
 export * from './json-web-token';
 export * from './oauth2';
 export * from './oauth2-access-token';
+export * from './oauth2-authorization-code';
 export * from './oauth2-client';
 export * from './oauth2-provider';
 export * from './oauth2-provider-account';

@@ -6,12 +6,15 @@
  */
 
 export enum OAuth2TokenGrant {
+    AUTHORIZATION_CODE = 'authorization_code',
+    CLIENT_CREDENTIALS = 'client_credentials',
     PASSWORD = 'password',
     ROBOT_CREDENTIALS = 'robot_credentials',
     REFRESH_TOKEN = 'refresh_token',
 }
 
 export enum OAuth2TokenSubKind {
+    CLIENT = 'client',
     USER = 'user',
     ROBOT = 'robot',
 }

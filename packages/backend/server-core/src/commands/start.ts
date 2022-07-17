@@ -12,7 +12,7 @@ import { setDataSource } from 'typeorm-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
-import { buildOAuth2TokenAggregator } from '../aggregators';
+import { buildOAuth2Aggregator } from '../aggregators';
 import { useConfig } from '../config';
 
 export async function startCommand(context?: StartCommandContext) {
@@ -56,7 +56,7 @@ export async function startCommand(context?: StartCommandContext) {
         context.spinner.start('Build & start token aggregator.');
     }
 
-    const { start } = buildOAuth2TokenAggregator();
+    const { start } = buildOAuth2Aggregator();
 
     await start();
 

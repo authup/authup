@@ -11,5 +11,6 @@ export * from './config';
 export * from './database';
 export * from './domains';
 export * from './http';
+export * from './oauth2';
 export * from './types';
 export * from './utils';

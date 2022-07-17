@@ -6,21 +6,26 @@
  */
 
 import { User } from '../user';
+import { Realm } from '../realm';
 
 export interface OAuth2Client {
     id: string,
 
     secret: string,
 
-    redirect_url: string | null,
+    redirect_uri: string | null,
 
     grant_types: string | null,
 
     scope: string | null,
 
-    is_confidential: boolean
+    is_confidential: boolean,
 
     // ------------------------------------------------------------------
+
+    realm_id: Realm['id'],
+
+    realm: Realm,
 
     user_id: User['id'] | null,
 

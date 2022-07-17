@@ -94,18 +94,25 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static requestInvalid() {
+    static requestInvalid(message?: string) {
         return new TokenError({
-            message: 'The request is missing a required parameter, includes an invalid parameter value, ' +
-                'includes a parameter more than once, or is otherwise malformed.',
+            message: message || 'The request is missing a required parameter, includes an unsupported parameter value, ' +
+                'repeats a parameter, or is otherwise malformed.',
             hint: 'Check that all parameters have been provided correctly',
         });
     }
 
     static scopeInvalid() {
         return new TokenError({
-            message: 'The scope is malformed or invalid.',
+            message: ' The requested scope is invalid, unknown, malformed, or exceeds the scope granted by the resource owner.',
             code: ErrorCode.TOKEN_SCOPE_INVALID,
+        });
+    }
+
+    static redirectUriMismatch() {
+        return new TokenError({
+            message: 'The redirect URI is missing or do not match',
+            code: ErrorCode.TOKEN_REDIRECT_URI_MISMATCH,
         });
     }
 

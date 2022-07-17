@@ -15,6 +15,7 @@ export enum ErrorCode {
 
     ENTITY_INACTIVE = 'inactive_entity',
 
+    TOKEN_REDIRECT_URI_MISMATCH = 'redirect_uri_mismatch',
     TOKEN_INVALID = 'invalid_token',
     TOKEN_INACTIVE = 'inactive_token',
     TOKEN_EXPIRED = 'expired_token',

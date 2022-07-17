@@ -8,8 +8,9 @@
 import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
-import { OAuth2Client, User } from '@authelion/common';
+import { OAuth2Client, Realm, User } from '@authelion/common';
 import { UserEntity } from '../user';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_clients' })
 export class OAuth2ClientEntity implements OAuth2Client {
@@ -17,12 +18,15 @@ export class OAuth2ClientEntity implements OAuth2Client {
         id: string;
 
     @Column({
-        type: 'varchar', length: 256, select: false, nullable: true,
+        type: 'varchar',
+        length: 256,
+        select: false,
+        nullable: true,
     })
         secret: string | null;
 
     @Column({ type: 'varchar', length: 512, nullable: true })
-        redirect_url: string | null;
+        redirect_uri: string | null;
 
     @Column({ type: 'varchar', length: 512, nullable: true })
         grant_types: string | null;
@@ -33,11 +37,19 @@ export class OAuth2ClientEntity implements OAuth2Client {
         scope: string | null;
 
     @Column({
-        type: 'boolean', default: true,
+        type: 'boolean',
+        default: true,
     })
         is_confidential: boolean;
 
     // ------------------------------------------------------------------
+
+    @Column({ nullable: true, default: null })
+        realm_id: Realm['id'];
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
+        realm: RealmEntity;
 
     @Column({ nullable: true, default: null })
         user_id: User['id'] | null;

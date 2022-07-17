@@ -20,7 +20,7 @@ import { CookieOptions } from 'express';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
-import { InternalGrantType } from '../../../oauth2/grant-types/internal';
+import { InternalGrantType } from '../../../../oauth2/grant-types/internal';
 import { useDataSource } from '../../../../database';
 import { useConfig } from '../../../../config';
 
