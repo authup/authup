@@ -5,6 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './access';
-export * from './id';
-export * from './refresh';
+export * from './type';

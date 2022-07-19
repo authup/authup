@@ -6,6 +6,7 @@
  */
 
 export enum CachePrefix {
+    OAUTH2_AUTHORIZATION_CODE = 'oauth2_authorization_code',
     OAUTH2_ACCESS_TOKEN = 'oauth2_access_token',
     OAUTH2_REFRESH_TOKEN = 'oauth2_refresh_token',
 

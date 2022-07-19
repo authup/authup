@@ -7,12 +7,13 @@
 
 import {
     PermissionID,
+    TokenVerificationPayload, getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import {
     ForbiddenError, NotFoundError,
 } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
-import { extendOAuth2Token, validateOAuth2Token } from '../../../../../oauth2';
+import { getOAuth2TokenSubMeta, validateOAuth2Token } from '../../../../../oauth2';
 
 export async function verifyTokenRouteHandler(
     req: ExpressRequest,
@@ -42,9 +43,11 @@ export async function verifyTokenRouteHandler(
     }
 
     const token = await validateOAuth2Token(id);
-    const response = await extendOAuth2Token(token);
 
     return res.respond({
-        data: response,
+        data: {
+            ...token,
+            sub: await getOAuth2TokenSubMeta(token),
+        } as TokenVerificationPayload,
     });
 }

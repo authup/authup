@@ -6,36 +6,20 @@
  */
 
 import {
-    OAuth2Client, OAuth2TokenResponse, OAuth2TokenSubKind, Realm, Robot, TokenMaxAgeType, User,
+    OAuth2SubKind, OAuth2TokenResponse,
 } from '@authelion/common';
 import { ExpressRequest } from '../../http';
 
-export type AccessTokenContextOAuth2ClientEntity = {
-    kind: OAuth2TokenSubKind.CLIENT,
-    data: OAuth2Client | OAuth2Client['id']
-};
-
-export type AccessTokenContextUserEntity = {
-    kind: OAuth2TokenSubKind.USER,
-    data: User | User['id']
-};
-
-export type AccessTokenContextRobotEntity = {
-    kind: OAuth2TokenSubKind.ROBOT,
-    data: Robot | Robot['id']
-};
-
 export type AccessTokenIssueContext = {
-    request: ExpressRequest,
+    remoteAddress: string,
 
-    entity: AccessTokenContextOAuth2ClientEntity |
-    AccessTokenContextUserEntity |
-    AccessTokenContextRobotEntity,
+    sub: string,
+    subKind: `${OAuth2SubKind}`,
 
-    realm: Realm['id'] | Realm,
+    realmId: string,
 
-    scope?: string | string[],
-    client?: OAuth2Client['id'] | OAuth2Client,
+    scope?: string,
+    clientId?: string,
 };
 
 // -----------------------------------------------------

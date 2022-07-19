@@ -15,3 +15,9 @@ export enum OAuth2TokenKind {
     ID_TOKEN = 'id_token',
     REFRESH = 'refresh_token',
 }
+
+export enum OAuth2SubKind {
+    CLIENT = 'client',
+    USER = 'user',
+    ROBOT = 'robot',
+}

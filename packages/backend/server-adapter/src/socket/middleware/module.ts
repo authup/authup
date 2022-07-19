@@ -34,21 +34,21 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        switch (data.target.kind) {
+        switch (data.sub.kind) {
             case 'robot':
-                socket.data.robotId = data.target.entity.id;
-                socket.data.robot = data.target.entity;
+                socket.data.robotId = data.sub.entity.id;
+                socket.data.robot = data.sub.entity;
                 break;
             case 'user':
-                socket.data.userId = data.target.entity.id;
-                socket.data.user = data.target.entity;
+                socket.data.userId = data.sub.entity.id;
+                socket.data.user = data.sub.entity;
                 break;
         }
 
-        socket.data.realmId = data.target.entity.realm_id;
+        socket.data.realmId = data.sub.entity.realm_id;
         socket.data.token = token;
-        socket.data.permissions = data.target.permissions;
-        socket.data.ability = new AbilityManager(data.target.permissions);
+        socket.data.permissions = data.sub.permissions;
+        socket.data.ability = new AbilityManager(data.sub.permissions);
 
         return next();
     };

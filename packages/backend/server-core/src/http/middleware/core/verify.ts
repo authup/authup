@@ -8,9 +8,8 @@
 import {
     AbilityDescriptor,
     AbilityManager,
-    HeaderError,
-    OAuth2TokenKind, OAuth2TokenSubKind,
-    TokenError,
+    HeaderError, OAuth2SubKind,
+    OAuth2TokenKind, TokenError,
 } from '@authelion/common';
 import {
     AuthorizationHeader,
@@ -20,13 +19,12 @@ import {
 } from '@trapi/client';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { extendOAuth2Token, validateOAuth2Token } from '../../../oauth2';
+import { getOAuth2TokenSubMeta, validateOAuth2Token } from '../../../oauth2';
 import {
     RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
-import { useDataSource } from '../../../database';
+import { buildDatabaseOptionsFromConfig, useDataSource } from '../../../database';
 import { useConfig } from '../../../config';
-import { buildDatabaseOptionsFromConfig } from '../../../database/options/utils';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
@@ -41,20 +39,20 @@ async function verifyBearerAuthorizationHeader(
     request.token = header.token;
     request.realmId = token.entity.realm_id;
 
-    const tokenExtended = await extendOAuth2Token(token);
+    const sub = await getOAuth2TokenSubMeta(token);
 
-    request.ability = new AbilityManager(tokenExtended.target.permissions);
+    request.ability = new AbilityManager(sub.permissions);
 
-    switch (tokenExtended.target.kind) {
-        case OAuth2TokenSubKind.USER: {
-            request.user = tokenExtended.target.entity as UserEntity;
-            request.userId = tokenExtended.target.entity.id;
+    switch (sub.kind) {
+        case OAuth2SubKind.USER: {
+            request.user = sub.entity as UserEntity;
+            request.userId = sub.entity.id;
             break;
         }
-        case OAuth2TokenSubKind.ROBOT: {
-            request.robot = tokenExtended.target.entity as RobotEntity;
-            request.robotId = tokenExtended.target.entity.id;
-            request.userId = tokenExtended.target.entity.user_id;
+        case OAuth2SubKind.ROBOT: {
+            request.robot = sub.entity as RobotEntity;
+            request.robotId = sub.entity.id;
+            request.userId = sub.entity.user_id;
             break;
         }
     }
@@ -69,6 +67,8 @@ async function verifyBasicAuthorizationHeader(
     const config = await useConfig();
     const databaseOptions = buildDatabaseOptionsFromConfig(config);
     const dataSource = await useDataSource();
+
+    // todo: OAuth2 client verification ?
 
     if (
         config.env === 'test' &&

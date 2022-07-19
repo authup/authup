@@ -6,3 +6,5 @@
  */
 
 export * from './scope';
+export * from './sub';
+export * from './sub-kind';

@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { OAuth2AuthorizationCodeResponseType, isOAuth2ScopeAllowed } from '@authelion/common';
+import { OAuth2AuthorizationResponseType, TokenError, isOAuth2ScopeAllowed } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import {
     ExpressValidationError,
@@ -25,11 +25,23 @@ export async function runAuthorizeValidation(
         meta: {},
     };
 
-    // todo: accept space seperated response types ;)
-    // accept multiple response types
     await check('response_type')
         .exists()
-        .isIn(Object.values(OAuth2AuthorizationCodeResponseType))
+        .isString()
+        .notEmpty()
+        .custom((value) => {
+            const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
+            const responseTypes = value.split(' ');
+
+            for (let i = 0; i < responseTypes.length; i++) {
+                if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
+                    throw TokenError.responseTypeUnsupported();
+                }
+            }
+
+            return true;
+        })
+        .isIn(Object.values(OAuth2AuthorizationResponseType))
         .run(req);
 
     await check('redirect_uri')

@@ -71,7 +71,14 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<TokenVe
             }
         }
 
-        let secondsDiff : number = payload.payload.exp - (new Date().getTime() / 1000);
+        let expires : number;
+        if (typeof payload.entity.expires === 'string') {
+            expires = Date.parse(payload.entity.expires);
+        } else {
+            expires = payload.entity.expires.getTime();
+        }
+
+        let secondsDiff : number = expires - Date.now();
         secondsDiff = parseInt(secondsDiff.toString(), 10);
 
         if (secondsDiff <= 0) {

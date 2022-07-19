@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenSubKind } from '../oauth2-access-token';
 import { User } from '../user';
 import { Robot } from '../robot';
+import { OAuth2SubKind } from '../oauth2';
 
 export type JWTPayload = {
     /**
@@ -18,8 +18,7 @@ export type JWTPayload = {
     /**
      * Self: Subject type (robot | user)
      */
-    sub_kind?: OAuth2TokenSubKind.USER |
-    OAuth2TokenSubKind.ROBOT,
+    sub_kind?: `${OAuth2SubKind}`,
 
     /**
      * Audience

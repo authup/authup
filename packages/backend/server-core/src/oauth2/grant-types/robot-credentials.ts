@@ -6,9 +6,9 @@
  */
 
 import {
-    OAuth2Scope,
+    OAuth2Scope, OAuth2SubKind,
     OAuth2TokenResponse,
-    OAuth2TokenSubKind, RobotError,
+    RobotError,
 } from '@authelion/common';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
@@ -23,13 +23,11 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         const entity = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            request,
+            remoteAddress: request.ip,
             scope: OAuth2Scope.GLOBAL,
-            entity: {
-                kind: OAuth2TokenSubKind.ROBOT,
-                data: entity,
-            },
-            realm: entity.realm_id,
+            subKind: OAuth2SubKind.ROBOT,
+            sub: entity.id,
+            realmId: entity.realm_id,
         });
 
         const keyPairOptions = buildKeyPairOptionsFromConfig(this.config);

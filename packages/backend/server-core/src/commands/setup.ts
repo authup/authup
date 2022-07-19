@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createDatabase } from 'typeorm-extension';
+import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { createKeyPair } from '@authelion/server-utils';
 import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
-import { DatabaseSeeder, buildDataSourceOptions } from '../database';
+import { DatabaseSeeder, buildDataSourceOptions, buildDatabaseOptionsFromConfig } from '../database';
 import { useConfig } from '../config';
-import { buildDatabaseOptionsFromConfig } from '../database/options/utils';
 
 export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};
@@ -88,13 +87,13 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         try {
             if (context.spinner) {
-                context.spinner.start('Execute database migrations.');
+                context.spinner.start('Execute schema setup.');
             }
 
-            await dataSource.runMigrations();
+            await setupDatabaseSchema(dataSource);
 
             if (context.spinner) {
-                context.spinner.succeed('Executed database migrations.');
+                context.spinner.succeed('Executed schema setup.');
             }
 
             if (context.databaseSeed) {

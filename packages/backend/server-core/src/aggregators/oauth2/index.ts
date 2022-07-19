@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './cleaner';
+export * from './cleaner/module';
 export * from './module';
-export * from './watcher';
+export * from './type';
+export { cleanUp } from './cleaner';
+export { runOAuth2CleanerInInterval } from './cleaner';
+export { runOAuth2CleanerByEvent } from './cleaner';

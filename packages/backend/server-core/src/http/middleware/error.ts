@@ -50,6 +50,10 @@ export function errorMiddleware(
         console.error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
     }
 
+    if (process.env.NODE_ENV === 'test') {
+        console.error(error);
+    }
+
     if (baseError.getOption('decorateMessage')) {
         baseError.message = 'An error occurred.';
     }

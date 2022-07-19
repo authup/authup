@@ -5,6 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './builder';
-export * from './extend';
+export * from './sub-meta';
 export * from './validate';

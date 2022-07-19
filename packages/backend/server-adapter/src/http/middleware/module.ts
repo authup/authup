@@ -70,21 +70,21 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             return;
         }
 
-        switch (data.target.kind) {
+        switch (data.sub.kind) {
             case 'robot':
-                req.robotId = data.target.entity.id;
-                req.robot = data.target.entity;
+                req.robotId = data.sub.entity.id;
+                req.robot = data.sub.entity;
                 break;
             case 'user':
-                req.userId = data.target.entity.id;
-                req.user = data.target.entity;
+                req.userId = data.sub.entity.id;
+                req.user = data.sub.entity;
                 break;
         }
 
-        req.realmId = data.target.entity.realm_id;
+        req.realmId = data.sub.entity.realm_id;
         req.token = header.token;
-        req.permissions = data.target.permissions;
-        req.ability = new AbilityManager(data.target.permissions);
+        req.permissions = data.sub.permissions;
+        req.ability = new AbilityManager(data.sub.permissions);
 
         next();
     };

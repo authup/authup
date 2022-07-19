@@ -8,7 +8,7 @@
 import { User } from '../user';
 import { OAuth2Client } from '../oauth2-client';
 import { Realm } from '../realm';
-import { OAuth2AuthorizationCodeResponseType } from './constants';
+import { OAuth2AuthorizationResponseType } from './constants';
 
 export interface OAuth2AuthorizationCode {
     id: string,
@@ -37,7 +37,7 @@ export interface OAuth2AuthorizationCode {
 }
 
 export type OAuth2AuthorizationCodeRequest = {
-    response_type?: `${OAuth2AuthorizationCodeResponseType}`,
+    response_type?: `${OAuth2AuthorizationResponseType}`,
     client_id?: string,
     redirect_uri?: string,
     scope?: string,

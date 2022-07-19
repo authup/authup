@@ -9,24 +9,28 @@ import { User } from '../user';
 import { Robot } from '../robot';
 import {
     OAuth2TokenGrant,
-    OAuth2TokenSubKind,
+
 } from '../oauth2-access-token';
-import { OAuth2TokenVerificationExtended } from '../oauth2';
+import { OAuth2SubKind, OAuth2TokenVerification } from '../oauth2';
 import { AbilityDescriptor } from '../../ability-manager';
 
-type TokenTargetRobot = {
-    kind: `${OAuth2TokenSubKind.ROBOT}`,
+export type TokenRobotMeta = {
+    kind: `${OAuth2SubKind.ROBOT}`,
     entity: Robot,
     permissions: AbilityDescriptor[]
 };
 
-type TokenTargetUser = {
-    kind: `${OAuth2TokenSubKind.USER}`,
+export type TokenUserMeta = {
+    kind: `${OAuth2SubKind.USER}`,
     entity: User,
     permissions: AbilityDescriptor[]
 };
 
-export type TokenVerificationPayload = OAuth2TokenVerificationExtended<TokenTargetRobot | TokenTargetUser>;
+export type TokenSubMeta = TokenUserMeta | TokenRobotMeta;
+
+export type TokenVerificationPayload = OAuth2TokenVerification & {
+    sub: TokenSubMeta
+};
 
 // ------------------------------------------------------
 

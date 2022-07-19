@@ -6,9 +6,9 @@
  */
 
 import {
-    OAuth2Scope,
+    OAuth2Scope, OAuth2SubKind,
     OAuth2TokenResponse,
-    OAuth2TokenSubKind, UserError,
+    UserError,
 } from '@authelion/common';
 import { AbstractGrant } from './abstract';
 import { UserEntity, UserRepository } from '../../domains';
@@ -22,13 +22,11 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const user = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            request,
+            remoteAddress: request.ip,
             scope: OAuth2Scope.GLOBAL,
-            entity: {
-                kind: OAuth2TokenSubKind.USER,
-                data: user,
-            },
-            realm: user.realm_id,
+            sub: user.id,
+            subKind: OAuth2SubKind.USER,
+            realmId: user.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

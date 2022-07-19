@@ -7,7 +7,7 @@
 
 import { BadRequestError, ErrorOptions, mergeErrorOptions } from '@typescript-error/http';
 import { ErrorCode } from '../constants';
-import { OAuth2TokenSubKind } from '../../domains';
+import { OAuth2SubKind } from '../../domains';
 
 export class TokenError extends BadRequestError {
     constructor(options?: ErrorOptions) {
@@ -104,7 +104,7 @@ export class TokenError extends BadRequestError {
 
     static scopeInvalid() {
         return new TokenError({
-            message: ' The requested scope is invalid, unknown, malformed, or exceeds the scope granted by the resource owner.',
+            message: ' The requested scope is invalid, unknown or malformed.',
             code: ErrorCode.TOKEN_SCOPE_INVALID,
         });
     }
@@ -116,7 +116,13 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static targetInactive(kind: `${OAuth2TokenSubKind}`) {
+    static responseTypeUnsupported() {
+        return new TokenError({
+            message: 'The authorization server does not support obtaining an access token using this method.',
+        });
+    }
+
+    static targetInactive(kind: `${OAuth2SubKind}`) {
         return new TokenError({
             message: `The target token ${kind} is not active.`,
         });

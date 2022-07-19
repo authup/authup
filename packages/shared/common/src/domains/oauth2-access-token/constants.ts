@@ -12,9 +12,3 @@ export enum OAuth2TokenGrant {
     ROBOT_CREDENTIALS = 'robot_credentials',
     REFRESH_TOKEN = 'refresh_token',
 }
-
-export enum OAuth2TokenSubKind {
-    CLIENT = 'client',
-    USER = 'user',
-    ROBOT = 'robot',
-}

@@ -30,8 +30,3 @@ export type OAuth2TokenResponse = {
 
 export type OAuth2TokenVerification = OAuth2AccessTokenVerification |
 OAuth2RefreshTokenVerification;
-
-export type OAuth2TokenVerificationExtended<T extends Record<string, any>> =
-    OAuth2TokenVerification & {
-        target?: T
-    };

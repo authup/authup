@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Scope, OAuth2TokenResponse, OAuth2TokenSubKind, TokenError, UserError,
+    OAuth2Scope, OAuth2SubKind, OAuth2TokenResponse, TokenError, UserError,
 } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
 import { AbstractGrant } from './abstract';
@@ -21,13 +21,12 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            request,
+            remoteAddress: request.ip,
             scope: OAuth2Scope.GLOBAL,
-            entity: {
-                kind: OAuth2TokenSubKind.CLIENT,
-                data: client,
-            },
-            realm: client.realm_id,
+            sub: client.id,
+            subKind: OAuth2SubKind.CLIENT,
+            realmId: client.realm_id,
+            clientId: client.id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

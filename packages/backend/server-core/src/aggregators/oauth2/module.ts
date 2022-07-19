@@ -5,14 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { runOAuth2TokenCleaner } from './cleaner';
-import { startOAuth2TokenWatcher } from './watcher';
+import { runOAuth2Cleaner } from './cleaner';
+import { OAuth2AggregatorContext } from './type';
 
-export function buildOAuth2Aggregator() {
+export function buildOAuth2Aggregator(context?: OAuth2AggregatorContext) {
+    context ??= {};
+    context.cleaner ??= true;
+
     function start() {
         return Promise.resolve()
-            .then(() => runOAuth2TokenCleaner())
-            .then(() => startOAuth2TokenWatcher());
+            .then(() => {
+                if (context.cleaner) {
+                    return runOAuth2Cleaner(context.logger);
+                }
+
+                return Promise.resolve();
+            });
     }
 
     return {

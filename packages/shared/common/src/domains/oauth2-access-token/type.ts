@@ -34,7 +34,7 @@ export interface OAuth2AccessToken {
 
     realm: Realm,
 
-    expires: Date,
+    expires: Date | string,
 
     scope: string | null
 }
@@ -52,6 +52,5 @@ export type OAuth2TokenGrantType = `${OAuth2TokenGrant}`;
 
 export type OAuth2AccessTokenVerification = {
     kind: `${OAuth2TokenKind.ACCESS}`,
-    entity: OAuth2AccessToken,
-    payload: OAuth2AccessTokenPayload
+    entity: OAuth2AccessToken
 };

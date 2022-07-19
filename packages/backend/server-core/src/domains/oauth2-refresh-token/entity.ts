@@ -6,19 +6,20 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
+    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2AccessToken, OAuth2Client, OAuth2RefreshToken, Realm,
+    OAuth2AccessToken, OAuth2Client, OAuth2RefreshToken, Realm, Robot, User,
 } from '@authelion/common';
 import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
 import { OAuth2ClientEntity } from '../oauth2-client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';
+import { UserEntity } from '../user';
 
 @Entity({ name: 'auth_refresh_tokens' })
 export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
-    @PrimaryColumn({ type: 'uuid' })
+    @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({
@@ -39,6 +40,20 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     @ManyToOne(() => OAuth2ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
         client: OAuth2ClientEntity | null;
+
+    @Column({ nullable: true, default: null })
+        user_id: User['id'] | null;
+
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'user_id' })
+        user: UserEntity | null;
+
+    @Column({ nullable: true, default: null })
+        robot_id: Robot['id'] | null;
+
+    @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'robot_id' })
+        robot: RobotEntity | null;
 
     @Column({ nullable: true, default: null })
         access_token_id: OAuth2AccessToken['id'] | null;

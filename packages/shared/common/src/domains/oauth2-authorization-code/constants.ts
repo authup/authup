@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum OAuth2AuthorizationCodeResponseType {
+export enum OAuth2AuthorizationResponseType {
+    NONE = 'none',
     CODE = 'code',
+    TOKEN = 'token',
+    ID_TOKEN = 'id_token',
 }

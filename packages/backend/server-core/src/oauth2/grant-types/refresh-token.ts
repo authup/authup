@@ -8,7 +8,8 @@
 import {
     OAuth2RefreshTokenVerification,
     OAuth2TokenKind,
-    OAuth2TokenResponse, TokenError,
+    OAuth2TokenResponse,
+    TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
@@ -22,14 +23,15 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
         const token = await this.validate(request);
 
+        const subKind = getOAuth2SubKindByEntity(token.entity);
+        const sub = getOAuth2SubByEntity(token.entity);
+
         const accessToken = await this.issueAccessToken({
-            request,
-            scope: token.payload.scope,
-            entity: {
-                kind: token.payload.sub_kind,
-                data: token.payload.sub,
-            },
-            realm: token.entity.realm_id,
+            remoteAddress: request.ip,
+            scope: token.entity.scope,
+            sub,
+            subKind,
+            realmId: token.entity.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);
@@ -54,13 +56,20 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
             throw TokenError.kindInvalid();
         }
 
-        if (token.payload.expire_time < Date.now()) {
+        let expires : number;
+        if (typeof token.entity.expires === 'string') {
+            expires = Date.parse(token.entity.expires);
+        } else {
+            expires = token.entity.expires.getTime();
+        }
+
+        if (expires < Date.now()) {
             throw TokenError.refreshTokenInvalid();
         }
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
-        const entity = await repository.findOneBy({ id: token.payload.refresh_token_id });
+        const entity = await repository.findOneBy({ id: token.entity.id });
 
         if (!entity) {
             throw TokenError.refreshTokenInvalid();
@@ -70,11 +79,13 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         // -------------------------------------------------
 
-        const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
-        const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.payload.access_token_id });
+        if (token.entity.access_token_id) {
+            const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
+            const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.entity.access_token_id });
 
-        if (accessTokenEntity) {
-            await accessTokenRepository.remove(accessTokenEntity);
+            if (accessTokenEntity) {
+                await accessTokenRepository.remove(accessTokenEntity);
+            }
         }
 
         return token;

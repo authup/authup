@@ -10,17 +10,14 @@ import {
     CookieName,
     HTTPOAuth2Client,
     OAuth2TokenResponse,
-    OAuth2TokenSubKind,
     buildOAuth2ProviderAuthorizeCallbackPath,
-    determineAccessTokenMaxAge,
-    determineRefreshTokenMaxAge,
 } from '@authelion/common';
 import { URL } from 'url';
 import { CookieOptions } from 'express';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
-import { InternalGrantType } from '../../../../oauth2/grant-types/internal';
+import { InternalGrantType } from '../../../../oauth2';
 import { useDataSource } from '../../../../database';
 import { useConfig } from '../../../../config';
 
@@ -95,16 +92,12 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
     const grant = new InternalGrantType(config);
 
-    const token = await grant
-        .setEntity({
-            kind: OAuth2TokenSubKind.USER,
-            data: account.user_id,
-        })
-        .setRealm(provider.realm_id)
-        .run(req);
+    req.userId = account.user_id;
+    req.realmId = provider.realm_id;
+
+    const token = await grant.run(req);
 
     const cookieOptions : CookieOptions = {
-
         ...(process.env.NODE_ENV === 'production' ? {
             domain: new URL(config.webUrl).hostname,
         } : {}),

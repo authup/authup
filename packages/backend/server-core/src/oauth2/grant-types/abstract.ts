@@ -5,43 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    OAuth2TokenSubKind,
-    TokenError,
-} from '@authelion/common';
-import { Cache, useClient } from 'redis-extension';
-import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../token';
+import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
 import { AccessTokenIssueContext } from './type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
 import { Config } from '../../config';
-import { CachePrefix } from '../../constants';
-import { isRedisEnabled } from '../../utils';
+import { OAuth2AccessTokenCache, OAuth2RefreshTokenCache } from '../cache';
 
 export abstract class AbstractGrant {
     protected config : Config;
 
-    protected accessTokenCache : Cache<string>;
+    protected accessTokenCache : OAuth2AccessTokenCache;
 
-    protected refreshTokenCache : Cache<string>;
+    protected refreshTokenCache : OAuth2RefreshTokenCache;
 
     // -----------------------------------------------------
 
     constructor(config: Config) {
         this.config = config;
 
-        if (isRedisEnabled(this.config.redis)) {
-            const redis = useClient();
-
-            this.accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
-            this.refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
-        }
+        this.accessTokenCache = new OAuth2AccessTokenCache();
+        this.refreshTokenCache = new OAuth2RefreshTokenCache();
     }
 
     // -----------------------------------------------------
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<OAuth2AccessTokenEntity> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            request: context.request,
             keyPairOptions: {
                 directory: this.config.writableDirectoryPath,
             },
@@ -49,43 +38,28 @@ export abstract class AbstractGrant {
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
-        tokenBuilder.setRealm(context.realm);
+        const token = await tokenBuilder.create({
+            realmId: context.realmId,
+            sub: context.sub,
+            subKind: context.subKind,
+            remoteAddress: context.remoteAddress,
+            scope: context.scope,
+            clientId: context.clientId,
+        });
 
-        switch (context.entity.kind) {
-            case OAuth2TokenSubKind.ROBOT:
-                tokenBuilder.setRobot(context.entity.data);
-                break;
-            case OAuth2TokenSubKind.USER:
-                tokenBuilder.setUser(context.entity.data);
-                break;
-        }
-
-        tokenBuilder.setClient(context.client);
-
-        if (context.scope) {
-            tokenBuilder.addScope(context.scope);
-        }
-
-        const token = await tokenBuilder.create();
-
-        if (this.accessTokenCache) {
-            await this.accessTokenCache.set(token.id, token, { seconds: this.config.tokenMaxAgeAccessToken });
-        }
+        await this.accessTokenCache.set(token);
 
         return token;
     }
 
     protected async issueRefreshToken(accessToken: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
-            accessToken,
             maxAge: this.config.tokenMaxAgeRefreshToken,
         });
 
-        const token = await tokenBuilder.create();
+        const token = await tokenBuilder.create({ accessToken });
 
-        if (this.refreshTokenCache) {
-            await this.refreshTokenCache.set(token.id, token, { seconds: this.config.tokenMaxAgeRefreshToken });
-        }
+        await this.refreshTokenCache.set(token);
 
         return token;
     }

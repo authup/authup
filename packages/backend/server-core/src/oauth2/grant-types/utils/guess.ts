@@ -57,11 +57,13 @@ export function guessOauth2GrantTypeByRequest(
     if (!clientId && !clientSecret) {
         const { authorization: headerValue } = request.headers;
 
-        const header = parseAuthorizationHeader(headerValue);
+        if (headerValue) {
+            const header = parseAuthorizationHeader(headerValue);
 
-        if (header.type === AuthorizationHeaderType.BASIC) {
-            clientId = header.username;
-            clientSecret = header.password;
+            if (header.type === AuthorizationHeaderType.BASIC) {
+                clientId = header.username;
+                clientSecret = header.password;
+            }
         }
     }
 

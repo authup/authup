@@ -10,11 +10,13 @@ import { OAuth2Client } from '../oauth2-client';
 import { OAuth2TokenKind } from '../oauth2';
 import { JWTPayload } from '../json-web-token';
 import { Realm } from '../realm';
+import { User } from '../user';
+import { Robot } from '../robot';
 
 export interface OAuth2RefreshToken {
     id: string;
 
-    expires: Date;
+    expires: Date | string;
 
     scope: string | null;
 
@@ -23,6 +25,14 @@ export interface OAuth2RefreshToken {
     client_id: OAuth2Client['id'] | null;
 
     client: OAuth2Client | null;
+
+    user_id: User['id'] | null,
+
+    user: User | null,
+
+    robot_id: Robot['id'] | null,
+
+    robot: Robot | null,
 
     access_token_id: OAuth2AccessToken['id'] | null;
 
@@ -43,6 +53,5 @@ export type OAuth2RefreshTokenPayload = JWTPayload & {
 
 export type OAuth2RefreshTokenVerification = {
     kind: `${OAuth2TokenKind.REFRESH}`,
-    entity: OAuth2RefreshToken,
-    payload: OAuth2RefreshTokenPayload
+    entity: OAuth2RefreshToken
 };
