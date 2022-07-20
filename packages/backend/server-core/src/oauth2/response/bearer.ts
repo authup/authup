@@ -6,10 +6,11 @@
  */
 
 import {
-    OAuth2RefreshTokenPayload, OAuth2SubKind,
+    OAuth2RefreshTokenPayload,
     OAuth2TokenKind,
     OAuth2TokenResponse,
-
+    getOAuth2SubByEntity,
+    getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { signToken } from '@authelion/server-utils';
 import { OAuth2BearerResponseContext } from './type';
@@ -43,10 +44,8 @@ export class OAuth2BearerTokenResponse {
                 realm_id: this.context.refreshToken.realm_id,
                 refresh_token_id: this.context.refreshToken.id,
                 access_token_id: this.context.accessToken.id,
-                sub: this.context.accessToken.user_id || this.context.accessToken.robot_id,
-                sub_kind: this.context.accessToken.user_id ?
-                    OAuth2SubKind.USER :
-                    OAuth2SubKind.ROBOT,
+                sub: getOAuth2SubByEntity(this.context.accessToken),
+                sub_kind: getOAuth2SubKindByEntity(this.context.accessToken),
                 ...(this.context.accessToken.client_id ? { client_id: this.context.accessToken.client_id } : {}),
                 ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
             };

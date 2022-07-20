@@ -7,17 +7,22 @@
 
 import {
     AbilityDescriptor,
+    OAuth2AccessTokenVerification,
+    OAuth2RefreshTokenVerification,
     OAuth2SubKind,
-    OAuth2TokenVerification,
+    OAuth2SubMeta,
     Robot,
     TokenError,
-    TokenSubMeta,
     getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
 import { buildKeyPath } from 'redis-extension';
 import {
-    RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
+    OAuth2ClientEntity,
+    RobotRepository,
+    UserAttributeEntity,
+    UserRepository,
+    transformUserAttributes,
 } from '../../domains';
 import { useDataSource } from '../../database';
 import { CachePrefix } from '../../constants';
@@ -29,11 +34,37 @@ import { CachePrefix } from '../../constants';
  * @throws TokenError
  * @throws NotFoundError
  */
-export async function getOAuth2TokenSubMeta(token: OAuth2TokenVerification) : Promise<TokenSubMeta> {
+export async function getOAuth2TokenSubMeta(token: OAuth2AccessTokenVerification | OAuth2RefreshTokenVerification) : Promise<OAuth2SubMeta> {
     const dataSource = await useDataSource();
 
     const subKind = getOAuth2SubKindByEntity(token.entity);
     switch (subKind) {
+        case OAuth2SubKind.CLIENT: {
+            const repository = dataSource.getRepository(OAuth2ClientEntity);
+
+            const entity : OAuth2ClientEntity | undefined = await repository.findOne({
+                where: {
+                    id: token.entity.client_id,
+                },
+                cache: {
+                    milliseconds: 60.000,
+                    id: buildKeyPath({
+                        prefix: CachePrefix.ROBOT,
+                        id: token.entity.client_id,
+                    }),
+                },
+            });
+
+            if (!entity) {
+                throw new NotFoundError();
+            }
+
+            return {
+                kind: OAuth2SubKind.CLIENT,
+                entity,
+                permissions: [],
+            };
+        }
         case OAuth2SubKind.USER: {
             const repository = new UserRepository(dataSource);
 

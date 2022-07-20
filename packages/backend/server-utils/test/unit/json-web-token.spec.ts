@@ -7,7 +7,7 @@
 
 import path from 'path';
 import {
-    KeyPairContext, decodeToken, deleteKeyPair, signToken,
+    KeyPairOptions, decodeToken, deleteKeyPair, signToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
@@ -33,7 +33,7 @@ describe('src/json-web-token', () => {
 
     it('should sign and decrypt json webtoken with passphrase', async () => {
         const data = { text: 'secretText' };
-        const keyPairOptions : KeyPairContext = {
+        const keyPairOptions : Partial<KeyPairOptions> = {
             passphrase: 'start123',
             privateName: 'private-passphrase',
             publicName: 'public-passphrase',

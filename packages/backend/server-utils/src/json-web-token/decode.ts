@@ -6,8 +6,9 @@
  */
 
 import { decode } from 'jsonwebtoken';
-import { TokenError, hasOwnProperty } from '@authelion/common';
+import { TokenError } from '@authelion/common';
 import { TokenDecodeContext } from './type';
+import { handleJWTError } from './utils';
 
 /**
  * Decode a JWT token with no verification.
@@ -20,30 +21,14 @@ import { TokenDecodeContext } from './type';
 export async function decodeToken(
     token: string,
     context?: TokenDecodeContext,
-): Promise<string | Record<string, any>> {
+): Promise<string | Record<string, any> | null> {
     context ??= {};
 
     try {
         return decode(token, context.options);
     } catch (e) {
-        if (
-            e &&
-            hasOwnProperty(e, 'name')
-        ) {
-            switch (e.name) {
-                case 'TokenExpiredError':
-                    throw TokenError.expired();
-                case 'NotBeforeError':
-                    throw TokenError.notActiveBefore(e.date);
-                case 'JsonWebTokenError':
-                    throw TokenError.payloadInvalid(e.message);
-            }
-        }
+        handleJWTError(e);
 
-        throw new TokenError({
-            previous: e,
-            decorateMessage: true,
-            logMessage: true,
-        });
+        throw e;
     }
 }

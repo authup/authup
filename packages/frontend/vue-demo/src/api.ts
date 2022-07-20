@@ -9,7 +9,7 @@ import {
     ClientError,
     Config,
 } from '@trapi/client';
-import { APIlient, hasOwnProperty } from '@authelion/common';
+import { HTTPClient, hasOwnProperty } from '@authelion/common';
 
 const interceptor = (error: ClientError) => {
     if (
@@ -32,7 +32,7 @@ const apiConfig : Config = {
 };
 
 export function useAPI() {
-    const api = new APIlient(apiConfig);
+    const api = new HTTPClient(apiConfig);
 
     api.mountResponseInterceptor((r) => r, interceptor);
     return api;

@@ -7,14 +7,14 @@
 
 import path from 'path';
 import {
-    createKeyPair, deleteKeyPair, loadKeyPair, saveKeyPair,
+    KeyPair, createKeyPair, deleteKeyPair, loadKeyPair,
 } from '../../src';
 
 describe('sc/key-pair', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
     it('should create key-pair', async () => {
-        let keyPair = await createKeyPair({
+        let keyPair : KeyPair | undefined = await createKeyPair({
             save: false,
         });
 
@@ -31,13 +31,15 @@ describe('sc/key-pair', () => {
             directory,
         });
 
-        let keyPair = await loadKeyPair({
+        let keyPair : KeyPair | undefined = await loadKeyPair({
             directory,
         });
 
         expect(keyPair).toBeDefined();
-        expect(keyPair.privateKey).toBeDefined();
-        expect(keyPair.publicKey).toBeDefined();
+        if (keyPair) {
+            expect(keyPair.privateKey).toBeDefined();
+            expect(keyPair.publicKey).toBeDefined();
+        }
 
         await deleteKeyPair({
             directory,

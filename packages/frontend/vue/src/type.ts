@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIlient } from '@authelion/common';
+import { HTTPClient } from '@authelion/common';
 
 export type InstallOptions = {
-    httpClient?: APIlient
+    httpClient?: HTTPClient
 };

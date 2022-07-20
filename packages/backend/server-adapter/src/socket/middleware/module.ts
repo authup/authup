@@ -5,14 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager, TokenAPI, TokenVerificationPayload } from '@authelion/common';
+import {
+    AbilityManager, OAuth2API, OAuth2SubKind, OAuth2TokenVerification,
+} from '@authelion/common';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
 import { initTokenCache, verifyToken } from '../../utils';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
     const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new TokenAPI(context.http);
+    const tokenAPIClient = new OAuth2API(context.http);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
@@ -21,7 +23,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next();
         }
 
-        let data : TokenVerificationPayload | undefined;
+        let data : OAuth2TokenVerification | undefined;
 
         try {
             data = await verifyToken({
@@ -35,11 +37,15 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
         }
 
         switch (data.sub.kind) {
-            case 'robot':
+            case OAuth2SubKind.CLIENT:
+                socket.data.clientId = data.sub.entity.id;
+                socket.data.client = data.sub.entity;
+                break;
+            case OAuth2SubKind.ROBOT:
                 socket.data.robotId = data.sub.entity.id;
                 socket.data.robot = data.sub.entity;
                 break;
-            case 'user':
+            case OAuth2SubKind.USER:
                 socket.data.userId = data.sub.entity.id;
                 socket.data.user = data.sub.entity;
                 break;

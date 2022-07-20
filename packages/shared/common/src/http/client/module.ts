@@ -7,23 +7,23 @@
 
 import { Client, Config } from '@trapi/client';
 import {
+    OAuth2API,
     OAuth2ProviderAPI,
     OAuth2ProviderRoleAPI,
     PermissionAPI,
     RealmAPI,
     RobotAPI,
     RobotPermissionAPI,
-    RobotRoleAPI,
-    RoleAPI, RoleAttributeAPI,
+    RobotRoleAPI, RoleAPI,
+    RoleAttributeAPI,
     RolePermissionAPI,
-    TokenAPI,
     UserAPI,
     UserAttributeAPI,
     UserPermissionAPI,
     UserRoleAPI,
 } from '../../domains';
 
-export class APIlient extends Client {
+export class HTTPClient extends Client {
     public readonly oauth2Provider : OAuth2ProviderAPI;
 
     public readonly oauth2ProviderRole : OAuth2ProviderRoleAPI;
@@ -44,7 +44,7 @@ export class APIlient extends Client {
 
     public readonly rolePermission : RolePermissionAPI;
 
-    public readonly token : TokenAPI;
+    public readonly token : OAuth2API;
 
     public readonly user : UserAPI;
 
@@ -72,7 +72,7 @@ export class APIlient extends Client {
         this.roleAttribute = new RoleAttributeAPI(this.driver);
         this.rolePermission = new RolePermissionAPI(this.driver);
 
-        this.token = new TokenAPI(this.driver);
+        this.token = new OAuth2API(this.driver);
 
         this.user = new UserAPI(this.driver);
         this.userAttribute = new UserAttributeAPI(this.driver);

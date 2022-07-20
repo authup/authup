@@ -8,15 +8,15 @@
 import { createPublicKey } from 'crypto';
 import path from 'path';
 import fs from 'fs';
-import { KeyPair, KeyPairContext } from './type';
-import { buildKeyFileName, decryptRSAPrivateKey, extendKeyPairContext } from './utils';
+import { KeyPair, KeyPairOptions } from './type';
+import { buildKeyFileName, decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
 import { KeyPairKind } from './constants';
 import { saveKeyPair } from './save';
 
-export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | undefined> {
-    context = extendKeyPairContext(context);
+export async function loadKeyPair(context?: Partial<KeyPairOptions>) : Promise<KeyPair | undefined> {
+    const options = extendKeyPairOptions(context);
 
-    const privateKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context));
+    const privateKeyPath : string = path.resolve(options.directory, buildKeyFileName(KeyPairKind.PRIVATE, options));
 
     try {
         await fs.promises.stat(privateKeyPath);
@@ -27,16 +27,16 @@ export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | 
     const privateKeyBuffer = await fs.promises.readFile(privateKeyPath);
     let privateKey = privateKeyBuffer.toString();
     if (
-        context.passphrase ||
-        context.options.privateKeyEncoding.passphrase
+        options.passphrase ||
+        options.privateKeyEncoding.passphrase
     ) {
         privateKey = decryptRSAPrivateKey(
-            context,
+            options,
             privateKey,
         );
     }
 
-    const publicKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context));
+    const publicKeyPath : string = path.resolve(options.directory, buildKeyFileName(KeyPairKind.PUBLIC, options));
 
     let publicKey : string;
 
@@ -47,13 +47,13 @@ export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | 
     } catch (e) {
         const publicKeyObject = createPublicKey({
             key: privateKey,
-            format: context.options.privateKeyEncoding.format,
-            type: context.options.publicKeyEncoding.type,
+            format: options.privateKeyEncoding.format,
+            type: options.publicKeyEncoding.type,
         });
 
         const stringOrBuffer = publicKeyObject.export({
-            format: context.options.publicKeyEncoding.format,
-            type: context.options.publicKeyEncoding.type,
+            format: options.publicKeyEncoding.format,
+            type: options.publicKeyEncoding.type,
         });
         if (typeof stringOrBuffer !== 'string') {
             publicKey = stringOrBuffer.toString();
@@ -61,11 +61,11 @@ export async function loadKeyPair(context?: KeyPairContext) : Promise<KeyPair | 
             publicKey = stringOrBuffer;
         }
 
-        if (context.save) {
+        if (options.save) {
             await saveKeyPair({
                 privateKey,
                 publicKey,
-            }, context);
+            }, options);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,30 +7,29 @@
 
 import { ClientDriverInstance } from '@trapi/client';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { TokenGrantPayload, TokenVerificationPayload } from './type';
+import { OAuth2GrantPayload, OAuth2TokenResponse, OAuth2TokenVerification } from './type';
 import { SingleResourceResponse } from '../type';
-import { OAuth2TokenResponse } from '../oauth2';
 
-export class TokenAPI {
+export class OAuth2API {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 
-    async verify(token: string): Promise<SingleResourceResponse<TokenVerificationPayload>> {
+    async verifyToken(token: string): Promise<SingleResourceResponse<OAuth2TokenVerification>> {
         const response = await this.client.get(`token/${token}`);
 
         return response.data;
     }
 
-    async delete(): Promise<void> {
+    async deleteToken(): Promise<void> {
         const response = await this.client.delete('token');
 
         return response.data;
     }
 
-    async create(data: TokenGrantPayload): Promise<SingleResourceResponse<OAuth2TokenResponse>> {
+    async createToken(data: OAuth2GrantPayload): Promise<SingleResourceResponse<OAuth2TokenResponse>> {
         const response = await this.client.post('token', nullifyEmptyObjectProperties(data));
 
         return response.data;

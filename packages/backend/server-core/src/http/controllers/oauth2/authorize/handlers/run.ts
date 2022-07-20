@@ -19,12 +19,12 @@ import {
 } from '../../../../../oauth2';
 import { buildKeyPairOptionsFromConfig } from '../../../../../utils';
 
-export async function confirmAuthorizationRouteHandler(
+export async function runAuthorizationRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
 ) : Promise<any> {
-    if (req.robotId) {
-        throw TokenError.requestInvalid('Only users are permitted to use the authorize login flow.');
+    if (!req.userId) {
+        throw TokenError.requestInvalid('Only users are permitted to use the authorization code flow.');
     }
 
     const result = await runAuthorizeValidation(req);

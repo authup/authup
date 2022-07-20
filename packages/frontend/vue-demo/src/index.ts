@@ -25,7 +25,7 @@ import Dev from './components/index.vue';
 (async () => {
     const api = useAPI();
 
-    const token = await api.token.create({
+    const token = await api.token.createToken({
         username: 'admin',
         password: 'start123',
     });

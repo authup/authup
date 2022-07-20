@@ -29,6 +29,8 @@ export class Oauth2RefreshTokenBuilder {
             scope: context.accessToken.scope,
             access_token_id: context.accessToken.id,
             realm_id: context.accessToken.realm_id,
+            user_id: context.accessToken.user_id,
+            robot_id: context.accessToken.robot_id,
         });
 
         await repository.insert(entity);

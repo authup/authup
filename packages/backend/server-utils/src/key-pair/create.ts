@@ -6,15 +6,15 @@
  */
 
 import { generateKeyPair } from 'crypto';
-import { KeyPair, KeyPairContext } from './type';
-import { decryptRSAPrivateKey, extendKeyPairContext } from './utils';
+import { KeyPair, KeyPairOptions } from './type';
+import { decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
 import { saveKeyPair } from './save';
 
-export async function createKeyPair(context?: KeyPairContext) : Promise<KeyPair> {
-    context = extendKeyPairContext(context);
+export async function createKeyPair(context?: Partial<KeyPairOptions>) : Promise<KeyPair> {
+    const options = extendKeyPairOptions(context);
 
     const keyPair : KeyPair = await new Promise((resolve: (value: KeyPair) => void, reject) => {
-        const callback = (err: Error, publicKey: string, privateKey: string) => {
+        const callback = (err: (Error | null), publicKey: string, privateKey: string) => {
             if (err) reject(err);
 
             resolve({
@@ -22,48 +22,48 @@ export async function createKeyPair(context?: KeyPairContext) : Promise<KeyPair>
                 publicKey,
             });
         };
-        switch (context.type) {
+        switch (options.type) {
             case 'dsa':
                 generateKeyPair(
-                    context.type,
-                    context.options,
+                    options.type,
+                    options,
                     callback,
                 );
                 break;
             case 'ec':
                 generateKeyPair(
-                    context.type,
-                    context.options,
+                    options.type,
+                    options,
                     callback,
                 );
                 break;
             case 'rsa':
                 generateKeyPair(
-                    context.type,
-                    context.options,
+                    options.type,
+                    options,
                     callback,
                 );
                 break;
             case 'rsa-pss':
                 generateKeyPair(
-                    context.type,
-                    context.options,
+                    options.type,
+                    options,
                     callback,
                 );
                 break;
         }
     });
 
-    if (context.save) {
-        await saveKeyPair(keyPair, context);
+    if (options.save) {
+        await saveKeyPair(keyPair, options);
     }
 
     if (
-        context.passphrase ||
-        context.options.privateKeyEncoding.passphrase
+        options.passphrase ||
+        options.privateKeyEncoding.passphrase
     ) {
         keyPair.privateKey = decryptRSAPrivateKey(
-            context,
+            options,
             keyPair.privateKey,
         );
     }

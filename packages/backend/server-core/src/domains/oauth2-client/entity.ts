@@ -20,25 +20,48 @@ export class OAuth2ClientEntity implements OAuth2Client {
     @Column({
         type: 'varchar',
         length: 256,
+    })
+        name: string;
+
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
+        description: string | null;
+
+    @Column({
+        type: 'varchar',
+        length: 256,
         select: false,
         nullable: true,
     })
         secret: string | null;
 
-    @Column({ type: 'varchar', length: 512, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 2000,
+        nullable: true,
+    })
         redirect_uri: string | null;
 
-    @Column({ type: 'varchar', length: 512, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 512,
+        nullable: true,
+    })
         grant_types: string | null;
 
     @Column({
-        type: 'varchar', length: 512, nullable: true, default: null,
+        type: 'varchar',
+        length: 512,
+        nullable: true,
+        default: null,
     })
         scope: string | null;
 
     @Column({
         type: 'boolean',
-        default: true,
+        default: false,
     })
         is_confidential: boolean;
 

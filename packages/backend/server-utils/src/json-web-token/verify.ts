@@ -9,6 +9,7 @@ import { verify } from 'jsonwebtoken';
 import { TokenError, hasOwnProperty } from '@authelion/common';
 import { KeyPair, useKeyPair } from '../key-pair';
 import { TokenVerifyContext } from './type';
+import { handleJWTError } from './utils';
 
 /**
  * Verify JWT.
@@ -38,25 +39,8 @@ export async function verifyToken(
 
         return verify(token, keyPair.publicKey, context.options);
     } catch (e) {
-        if (
-            e &&
-            hasOwnProperty(e, 'name')
-        ) {
-            switch (e.name) {
-                case 'TokenExpiredError':
-                    throw TokenError.expired();
-                case 'NotBeforeError':
-                    throw TokenError.notActiveBefore(e.date);
-                case 'JsonWebTokenError':
-                    throw TokenError.payloadInvalid(e.message);
-            }
-        }
+        handleJWTError(e);
 
-        throw new TokenError({
-            statusCode: 401,
-            previous: e,
-            decorateMessage: true,
-            logMessage: true,
-        });
+        throw e;
     }
 }

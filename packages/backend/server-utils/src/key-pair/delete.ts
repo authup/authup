@@ -7,15 +7,15 @@
 
 import path from 'path';
 import fs from 'fs';
-import { KeyPairContext } from './type';
-import { buildKeyFileName, extendKeyPairContext } from './utils';
+import { KeyPairOptions } from './type';
+import { buildKeyFileName, extendKeyPairOptions } from './utils';
 import { KeyPairKind } from './constants';
 
-export async function deleteKeyPair(context?: KeyPairContext) : Promise<void> {
-    context = extendKeyPairContext(context);
+export async function deleteKeyPair(context?: Partial<KeyPairOptions>) : Promise<void> {
+    const options = extendKeyPairOptions(context);
 
-    const privateKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PRIVATE, context));
-    const publicKeyPath : string = path.resolve(context.directory, buildKeyFileName(KeyPairKind.PUBLIC, context));
+    const privateKeyPath : string = path.resolve(options.directory, buildKeyFileName(KeyPairKind.PRIVATE, options));
+    const publicKeyPath : string = path.resolve(options.directory, buildKeyFileName(KeyPairKind.PUBLIC, options));
 
     try {
         await Promise.all([privateKeyPath, publicKeyPath]

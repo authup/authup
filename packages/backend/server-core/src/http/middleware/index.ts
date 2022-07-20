@@ -7,7 +7,7 @@
 
 export * from './core';
 export * from './error';
-export * from './extend';
 export * from './response';
 export * from './type';
 export * from './module';
+export * from './utils';

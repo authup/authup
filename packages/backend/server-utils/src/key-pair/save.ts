@@ -7,12 +7,12 @@
 
 import path from 'path';
 import fs from 'fs';
-import { KeyPair, KeyPairContext } from './type';
-import { buildKeyFileName, extendKeyPairContext } from './utils';
+import { KeyPair, KeyPairOptions } from './type';
+import { buildKeyFileName, extendKeyPairOptions } from './utils';
 import { KeyPairKind } from './constants';
 
-export async function saveKeyPair(keyPair: KeyPair, context?: KeyPairContext) : Promise<KeyPair> {
-    context = extendKeyPairContext(context);
+export async function saveKeyPair(keyPair: KeyPair, context?: KeyPairOptions) : Promise<KeyPair> {
+    context = extendKeyPairOptions(context);
 
     await Promise.all(
         [

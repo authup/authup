@@ -6,44 +6,52 @@
  */
 
 import path from 'path';
-import { KeyPairContext } from '../type';
+import { hasOwnProperty } from '@authelion/common';
+import { KeyPairOptions } from '../type';
 
-export function extendKeyPairContext(
-    context?: KeyPairContext,
-) : KeyPairContext {
-    context = context ?? {};
+export function extendKeyPairOptions(
+    options?: Partial<KeyPairOptions>,
+) : KeyPairOptions {
+    options = options ?? {};
 
-    context.directory = context.directory || process.cwd();
-    context.directory = path.isAbsolute(context.directory) ?
-        context.directory :
-        path.resolve(process.cwd(), context.directory);
+    options.directory = options.directory || process.cwd();
+    options.directory = path.isAbsolute(options.directory) ?
+        options.directory :
+        path.resolve(process.cwd(), options.directory);
 
-    context.type ??= 'rsa';
-    context.options ??= {
-        modulusLength: 2048,
-        privateKeyEncoding: {
+    options.type ??= 'rsa';
+
+    if (
+        options.type === 'rsa' ||
+        options.type === 'rsa-pss' ||
+        options.type === 'dsa'
+    ) {
+        options.modulusLength = 2048;
+    }
+
+    if (!options.privateKeyEncoding) {
+        options.privateKeyEncoding = {
             type: 'pkcs8',
             format: 'pem',
-        },
-        publicKeyEncoding: {
+        };
+    }
+
+    if (!options.publicKeyEncoding) {
+        options.publicKeyEncoding = {
             type: 'spki',
             format: 'pem',
-        },
-    };
-
-    if (context.passphrase) {
-        context.options.privateKeyEncoding.passphrase = context.passphrase;
+        };
     }
 
     if (
-        context.options.privateKeyEncoding.passphrase &&
-        !context.options.privateKeyEncoding.cipher
+        options.privateKeyEncoding.passphrase &&
+        !options.privateKeyEncoding.cipher
     ) {
-        context.options.privateKeyEncoding.cipher = 'aes-256-cbc';
+        options.privateKeyEncoding.cipher = 'aes-256-cbc';
     }
 
-    context.save = typeof context.save === 'undefined' ||
-        !!context.save;
+    options.save = typeof options.save === 'undefined' ||
+        options.save;
 
-    return context;
+    return options as KeyPairOptions;
 }

@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Client } from '@authelion/common';
 import { ExpressValidationResult } from '../../express-validation';
-import { RealmEntity } from '../../../domains';
+import { OAuth2ClientEntity, RealmEntity } from '../../../domains';
 
-export type OAuth2ClientValidationResult = ExpressValidationResult<OAuth2Client, {
+export type OAuth2ClientValidationResult = ExpressValidationResult<OAuth2ClientEntity, {
     realm?: RealmEntity
 }>;

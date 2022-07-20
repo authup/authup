@@ -15,7 +15,7 @@ your application.
 
 ```typescript
 import {
-    buildOAuth2TokenAggregator,
+    buildOAuth2Aggregator,
     setEntitiesForDataSourceOptions,
     setSubscribersForDataSourceOptions
 } from '@authelion/server-core';
@@ -41,7 +41,7 @@ import {
 
     // ------------------------------------
     
-    const { start } = buildOAuth2TokenAggregator();
+    const { start } = buildOAuth2Aggregator();
 
     await start();
 })();

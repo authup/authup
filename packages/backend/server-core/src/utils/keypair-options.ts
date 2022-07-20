@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { KeyPairContext } from '@authelion/server-utils';
+import { KeyPairOptions } from '@authelion/server-utils';
 import { Config } from '../config';
 
-export function buildKeyPairOptionsFromConfig(config: Config) : KeyPairContext {
+export function buildKeyPairOptionsFromConfig(config: Config) : Partial<KeyPairOptions> {
     return {
         directory: config.writableDirectoryPath,
         passphrase: config.keyPairPassphrase,

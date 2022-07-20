@@ -6,8 +6,8 @@
  */
 
 import {
-    PermissionID,
-    TokenVerificationPayload, getOAuth2SubKindByEntity,
+    OAuth2TokenVerification,
+    PermissionID, getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import {
     ForbiddenError, NotFoundError,
@@ -48,6 +48,6 @@ export async function verifyTokenRouteHandler(
         data: {
             ...token,
             sub: await getOAuth2TokenSubMeta(token),
-        } as TokenVerificationPayload,
+        } as OAuth2TokenVerification,
     });
 }

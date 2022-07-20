@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function getOAuth2SubByEntity<T extends { robot_id: string | null, user_id: string | null }>(entity: T) : string {
-    return entity.robot_id || entity.user_id;
+export function getOAuth2SubByEntity<T extends {
+    robot_id: string | null,
+    user_id: string | null,
+    client_id: string | null
+}>(entity: T) : string {
+    return entity.robot_id || entity.user_id || entity.client_id;
 }

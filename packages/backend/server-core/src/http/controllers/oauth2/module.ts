@@ -11,27 +11,18 @@ import {
 } from '@decorators/express';
 import { OAuth2Provider, OAuth2TokenResponse } from '@authelion/common';
 import { createTokenRouteHandler, deleteTokenRouteHandler, verifyTokenRouteHandler } from './token';
-import { checkAuthorizationCodeRouteHandler } from './authorize';
-import { confirmAuthorizationRouteHandler } from './authorize/handlers/confirm';
+import { runAuthorizationRouteHandler } from './authorize';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('oauth2')
 @Controller('')
 export class OAuth2Controller {
-    @Get('/authorize', [])
-    async checkAuthorization(
-        @Request() req: any,
-            @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
-        return checkAuthorizationCodeRouteHandler(req, res);
-    }
-
     @Post('/authorize', [ForceLoggedInMiddleware])
     async confirmAuthorization(
         @Request() req: any,
             @Response() res: any,
     ): Promise<OAuth2Provider[]> {
-        return confirmAuthorizationRouteHandler(req, res);
+        return runAuthorizationRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------

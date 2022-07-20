@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { KeyPairContext } from '@authelion/server-utils';
+import { KeyPairOptions } from '@authelion/server-utils';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
 
 export type OAuth2BearerResponseContext = {
-    keyPairOptions?: Partial<KeyPairContext>,
+    keyPairOptions?: Partial<KeyPairOptions>,
     accessToken: OAuth2AccessTokenEntity,
     refreshToken?: OAuth2RefreshTokenEntity,
     idToken?: string

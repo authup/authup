@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIlient } from '@authelion/common';
+import { HTTPClient } from '@authelion/common';
 
 declare module '*.vue' {
     import Vue from 'vue';
@@ -17,10 +17,10 @@ declare module 'vue/types/vue' {
     // Global properties can be declared
     // on the `VueConstructor` interface
     interface VueConstructor {
-        $authApi: APIlient
+        $authApi: HTTPClient
     }
 
     interface Vue {
-        $authApi: APIlient
+        $authApi: HTTPClient
     }
 }

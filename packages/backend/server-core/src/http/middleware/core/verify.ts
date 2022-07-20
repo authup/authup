@@ -21,7 +21,7 @@ import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import { getOAuth2TokenSubMeta, validateOAuth2Token } from '../../../oauth2';
 import {
-    RobotEntity, RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
+    OAuth2ClientRepository, RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { buildDatabaseOptionsFromConfig, useDataSource } from '../../../database';
 import { useConfig } from '../../../config';
@@ -44,15 +44,19 @@ async function verifyBearerAuthorizationHeader(
     request.ability = new AbilityManager(sub.permissions);
 
     switch (sub.kind) {
+        case OAuth2SubKind.CLIENT: {
+            request.client = sub.entity;
+            request.clientId = sub.entity.id;
+            break;
+        }
         case OAuth2SubKind.USER: {
-            request.user = sub.entity as UserEntity;
+            request.user = sub.entity;
             request.userId = sub.entity.id;
             break;
         }
         case OAuth2SubKind.ROBOT: {
-            request.robot = sub.entity as RobotEntity;
+            request.robot = sub.entity;
             request.robotId = sub.entity.id;
-            request.userId = sub.entity.user_id;
             break;
         }
     }
@@ -67,8 +71,6 @@ async function verifyBasicAuthorizationHeader(
     const config = await useConfig();
     const databaseOptions = buildDatabaseOptionsFromConfig(config);
     const dataSource = await useDataSource();
-
-    // todo: OAuth2 client verification ?
 
     if (
         config.env === 'test' &&
@@ -105,12 +107,22 @@ async function verifyBasicAuthorizationHeader(
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!
-        request.ability = new AbilityManager([]);
+        request.ability = new AbilityManager();
 
         request.realmId = robot.realm_id;
         request.robot = robot;
         request.robotId = robot.id;
-        request.userId = robot.user_id;
+    }
+
+    const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
+    const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
+    if (oauth2Client) {
+        // allow authentication but not authorization with basic auth for robots!
+        request.ability = new AbilityManager();
+
+        request.realmId = oauth2Client.realm_id;
+        request.clientId = oauth2Client.id;
+        request.client = oauth2Client;
     }
 }
 

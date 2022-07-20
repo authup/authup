@@ -6,22 +6,22 @@
  */
 
 import { createPrivateKey } from 'crypto';
-import { KeyPairContext } from '../type';
+import { KeyPairOptions } from '../type';
 
 export function decryptRSAPrivateKey(
-    context: KeyPairContext,
+    context: KeyPairOptions,
     key: string | Buffer,
 ) : string {
     const privateKey = createPrivateKey({
-        type: context.options.privateKeyEncoding.type,
-        format: context.options.privateKeyEncoding.format,
+        type: context.privateKeyEncoding.type,
+        format: context.privateKeyEncoding.format,
         key,
-        passphrase: context.options.privateKeyEncoding.passphrase || context.passphrase,
+        passphrase: context.privateKeyEncoding.passphrase || context.passphrase,
     });
 
     let content = privateKey.export({
-        type: context.options.privateKeyEncoding.type,
-        format: context.options.privateKeyEncoding.format,
+        type: context.privateKeyEncoding.type,
+        format: context.privateKeyEncoding.format,
     });
 
     if (typeof content !== 'string') {

@@ -8,8 +8,8 @@
 import {
     AbilityManager,
     CookieName,
-    TokenAPI,
-    TokenVerificationPayload,
+    OAuth2API, OAuth2SubKind,
+    OAuth2TokenVerification,
 } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
@@ -19,7 +19,7 @@ import { initTokenCache, verifyToken } from '../../utils';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
     const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new TokenAPI(context.http);
+    const tokenAPIClient = new OAuth2API(context.http);
 
     return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = req.headers;
@@ -55,7 +55,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             throw new BadRequestError('Only Bearer tokens are accepted as authentication method.');
         }
 
-        let data : TokenVerificationPayload | undefined;
+        let data : OAuth2TokenVerification | undefined;
 
         try {
             data = await verifyToken({
@@ -71,11 +71,15 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
         }
 
         switch (data.sub.kind) {
-            case 'robot':
+            case OAuth2SubKind.CLIENT:
+                req.clientId = data.sub.entity.id;
+                req.client = data.sub.entity;
+                break;
+            case OAuth2SubKind.ROBOT:
                 req.robotId = data.sub.entity.id;
                 req.robot = data.sub.entity;
                 break;
-            case 'user':
+            case OAuth2SubKind.USER:
                 req.userId = data.sub.entity.id;
                 req.user = data.sub.entity;
                 break;

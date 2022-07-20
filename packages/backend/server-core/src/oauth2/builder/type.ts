@@ -8,7 +8,7 @@
 import {
     OAuth2AccessToken, OAuth2SubKind,
 } from '@authelion/common';
-import { KeyPairContext } from '@authelion/server-utils';
+import { KeyPairOptions } from '@authelion/server-utils';
 import { ExpressRequest } from '../../http';
 
 export type OAuth2AbstractBuilderContext = {
@@ -16,7 +16,7 @@ export type OAuth2AbstractBuilderContext = {
 };
 
 export type OAuth2AccessTokenBuilderContext = OAuth2AbstractBuilderContext & {
-    keyPairOptions?: Partial<KeyPairContext>
+    keyPairOptions?: Partial<KeyPairOptions>
     selfUrl: string,
 };
 

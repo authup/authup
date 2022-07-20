@@ -18,71 +18,69 @@ export type KeyPair = {
 };
 
 export type RSAKeyPairGenerator = {
-    type?: 'rsa',
-    options?: RSAKeyPairOptions<'pem', 'pem'>
-};
+    type: 'rsa'
+} & RSAKeyPairOptions<'pem', 'pem'>;
 
 export type RSAPSSKeyPairGenerator = {
-    type?: 'rsa-pss',
-    options?: RSAPSSKeyPairOptions<'pem', 'pem'>
-};
+    type: 'rsa-pss',
+} & RSAPSSKeyPairOptions<'pem', 'pem'>;
 
 export type DSAKeyPairGenerator = {
-    type?: 'dsa',
-    options?: DSAKeyPairOptions<'pem', 'pem'>
-};
+    type: 'dsa'
+} & DSAKeyPairOptions<'pem', 'pem'>;
 
 export type ECKeyPairGenerator = {
-    type?: 'ec',
-    options?: ECKeyPairOptions<'pem', 'pem'>,
-};
+    type: 'ec',
+} & ECKeyPairOptions<'pem', 'pem'>;
 
 export type KeyPairGenerator = DSAKeyPairGenerator |
 RSAKeyPairGenerator |
 RSAPSSKeyPairGenerator |
 ECKeyPairGenerator;
 
-export type KeyPairContext = {
+export type KeyPairBaseOptions = {
     /**
      * Directory where to save key-pair.
      *
      * default: process.cwd()
      */
-    directory?: string,
+    directory: string,
     /**
      * Private key name
      *
      * default: private
      */
-    privateName?: string,
+    privateName: string,
     /**
      * Extension for private key.
      *
      * default: pem
      */
-    privateExtension?: string,
+    privateExtension: string,
     /**
      * Public key name
      *
      * default: public
      */
-    publicName?: string,
+    publicName: string,
     /**
      * Extension for public key.
      *
      * default: pem
      */
-    publicExtension?: string,
+    publicExtension: string,
     /**
      * Passphrase for private key.
      *
      * default: undefined
      */
-    passphrase?: string,
+    passphrase: string,
     /**
      * Save key-pair to file system.
      *
      * default: true
      */
-    save?: boolean
-} & KeyPairGenerator;
+    save: boolean
+};
+
+export type KeyPairOptions = KeyPairBaseOptions & KeyPairGenerator;

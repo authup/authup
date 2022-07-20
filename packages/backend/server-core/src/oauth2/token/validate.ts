@@ -7,9 +7,10 @@
 
 import {
     OAuth2AccessTokenPayload,
+    OAuth2AccessTokenVerification,
     OAuth2RefreshTokenPayload,
+    OAuth2RefreshTokenVerification,
     OAuth2TokenKind,
-    OAuth2TokenVerification,
     TokenError,
 } from '@authelion/common';
 import { verifyToken } from '@authelion/server-utils';
@@ -19,7 +20,7 @@ import { OAuth2AccessTokenCache, OAuth2RefreshTokenCache } from '../cache';
 
 export async function validateOAuth2Token(
     token: string,
-) : Promise<OAuth2TokenVerification> {
+) : Promise<OAuth2AccessTokenVerification | OAuth2RefreshTokenVerification> {
     const config = await useConfig();
     const keyPairOptions = buildKeyPairOptionsFromConfig(config);
 
@@ -30,36 +31,28 @@ export async function validateOAuth2Token(
         },
     ) as OAuth2AccessTokenPayload | OAuth2RefreshTokenPayload;
 
-    let result : OAuth2TokenVerification;
-
     switch (tokenPayload.kind) {
         case OAuth2TokenKind.ACCESS: {
             const cache = new OAuth2AccessTokenCache();
 
             const entity = await cache.get(tokenPayload.access_token_id);
 
-            result = {
+            return {
                 kind: OAuth2TokenKind.ACCESS,
                 entity,
             };
-            break;
         }
         case OAuth2TokenKind.REFRESH: {
             const cache = new OAuth2RefreshTokenCache();
 
             const entity = await cache.get(tokenPayload.refresh_token_id);
 
-            result = {
+            return {
                 kind: OAuth2TokenKind.REFRESH,
                 entity,
             };
-            break;
         }
     }
 
-    if (!result) {
-        throw new TokenError();
-    }
-
-    return result;
+    throw new TokenError();
 }

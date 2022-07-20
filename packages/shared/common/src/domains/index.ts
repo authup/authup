@@ -22,7 +22,6 @@ export * from './robot-role';
 export * from './role';
 export * from './role-attribute';
 export * from './role-permission';
-export * from './token';
 export * from './third-party';
 export * from './user';
 export * from './user-attribute';

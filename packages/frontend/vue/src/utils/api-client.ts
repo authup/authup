@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIlient } from '@authelion/common';
+import { HTTPClient } from '@authelion/common';
 
-let instance : undefined | APIlient;
+let instance : undefined | HTTPClient;
 
-export function setAPIClient(client: APIlient) {
+export function setAPIClient(client: HTTPClient) {
     instance = client;
 }
 

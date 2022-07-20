@@ -27,11 +27,18 @@ export async function runOauth2ClientValidation(
         meta: {},
     };
 
+    await check('name')
+        .exists()
+        .notEmpty()
+        .isString()
+        .isLength({ min: 3, max: 256 })
+        .run(req);
+
     await check('secret')
         .exists()
         .notEmpty()
         .isString()
-        .isLength({ min: 3, max: 128 })
+        .isLength({ min: 3, max: 256 })
         .optional({ nullable: true })
         .run(req);
 

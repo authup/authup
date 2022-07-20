@@ -9,20 +9,22 @@ import {
     Express, NextFunction, Request, Response,
 } from 'express';
 import {
-    AbilityManager, Realm, Robot, User,
+    AbilityManager, OAuth2Client, Realm, Robot, User,
 } from '@authelion/common';
-import { RobotEntity, UserEntity } from '../domains';
 
 export interface ExpressAppInterface extends Express {
 
 }
 
 export interface ExpressRequest extends Request {
-    user?: UserEntity,
+    user?: User,
     userId?: User['id'],
 
-    robot?: RobotEntity,
+    robot?: Robot,
     robotId?: Robot['id'],
+
+    client?: OAuth2Client,
+    clientId?: OAuth2Client['id']
 
     realmId?: Realm['id'],
 
