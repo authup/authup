@@ -8,17 +8,13 @@
 import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import { KeyPairOptions } from '../key-pair';
 
-export type TokenBaseContext<T> = {
-    options?: T,
+export type TokenBaseOptions = {
+    keyPair?: Partial<KeyPairOptions>,
     secret?: string
 };
 
-export type TokenSignContext = TokenBaseContext<SignOptions> & {
-    keyPair?: Partial<KeyPairOptions>
-};
+export type TokenSignOptions = TokenBaseOptions & SignOptions;
 
-export type TokenVerifyContext = TokenBaseContext<VerifyOptions> & {
-    keyPair?: Partial<KeyPairOptions>
-};
+export type TokenVerifyOptions = TokenBaseOptions & VerifyOptions;
 
-export type TokenDecodeContext = TokenBaseContext<DecodeOptions>;
+export type TokenDecodeOptions = DecodeOptions;

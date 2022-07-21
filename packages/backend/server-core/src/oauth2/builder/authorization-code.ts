@@ -65,9 +65,7 @@ export class OAuth2AuthorizationCodeBuilder {
             tokenPayload,
             {
                 keyPair: this.context.keyPairOptions,
-                options: {
-                    expiresIn: this.context.maxAge,
-                },
+                expiresIn: this.context.maxAge,
             },
         );
     }

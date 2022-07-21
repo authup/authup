@@ -7,25 +7,25 @@
 
 import { decode } from 'jsonwebtoken';
 import { TokenError } from '@authelion/common';
-import { TokenDecodeContext } from './type';
+import { TokenDecodeOptions } from './type';
 import { handleJWTError } from './utils';
 
 /**
  * Decode a JWT token with no verification.
  *
  * @param token
- * @param context
+ * @param options
  *
  * @throws TokenError
  */
 export async function decodeToken(
     token: string,
-    context?: TokenDecodeContext,
+    options?: TokenDecodeOptions,
 ): Promise<string | Record<string, any> | null> {
-    context ??= {};
+    options ??= {};
 
     try {
-        return decode(token, context.options);
+        return decode(token, options);
     } catch (e) {
         handleJWTError(e);
 

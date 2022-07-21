@@ -7,18 +7,20 @@
 
 import { URL } from 'url';
 import { DataSource } from 'typeorm';
-import path from 'path';
 import { setDataSource } from 'typeorm-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
-import { useConfig } from '../config';
+import { setConfig, useConfig } from '../config';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
     const config = await useConfig();
+    config.adminPasswordReset ??= false;
+    config.robotSecretReset ??= false;
+    setConfig(config);
 
     if (context.spinner) {
         context.spinner.info(`Environment: ${config.env}`);
@@ -26,19 +28,21 @@ export async function startCommand(context?: StartCommandContext) {
         context.spinner.info(`URL: ${config.selfUrl}`);
         context.spinner.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
         context.spinner.info(`Web-URL: ${config.webUrl}`);
-
-        context.spinner.start('Initialise controllers & middlewares.');
     }
+
     /*
     HTTP Server & Express App
     */
+
+    if (context.spinner) {
+        context.spinner.start('Initialise controllers & middlewares.');
+    }
+
     const expressApp = createExpressApp();
 
     if (context.spinner) {
         context.spinner.succeed('Initialised controllers & middlewares.');
     }
-
-    const httpServer = createHttpServer({ expressApp });
 
     if (context.spinner) {
         context.spinner.start('Establish database connection.');
@@ -53,17 +57,17 @@ export async function startCommand(context?: StartCommandContext) {
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');
 
-        context.spinner.start('Build & start token aggregator.');
+        context.spinner.start('Starting aggregators.');
     }
 
     const { start } = buildOAuth2Aggregator();
-
     await start();
 
     if (context.spinner) {
-        context.spinner.succeed('Built & started token aggregator.');
+        context.spinner.succeed('Started aggregators.');
     }
 
+    const httpServer = createHttpServer({ expressApp });
     httpServer.listen(config.port, '0.0.0.0', () => {
         if (context.spinner) {
             context.spinner.succeed('Startup completed.');

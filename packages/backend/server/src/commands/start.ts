@@ -8,6 +8,7 @@
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { loadConfig, setConfig, startCommand } from '@authelion/server-core';
 import * as ora from 'ora';
+import { DataSourceOptions } from 'typeorm';
 
 import { buildDataSourceOptions } from '../database/utils';
 
@@ -34,6 +35,12 @@ export class StartCommand implements CommandModule {
         setConfig(config);
 
         const dataSourceOptions = await buildDataSourceOptions();
+
+        if (process.env.NODE_ENV === 'test') {
+            Object.assign(dataSourceOptions, {
+                migrations: [],
+            } as DataSourceOptions);
+        }
 
         const spinner = ora.default({
             spinner: 'dots',

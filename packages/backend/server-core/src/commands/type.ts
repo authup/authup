@@ -6,6 +6,7 @@
  */
 
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { Config } from '../config';
 
 export type Spinner = {
     start(text?: string) : Spinner,

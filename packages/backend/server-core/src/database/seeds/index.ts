@@ -30,7 +30,7 @@ import {
 } from '../../domains';
 import { DatabaseSeedOptions } from '../type';
 import { useConfig } from '../../config';
-import { buildDatabaseOptionsFromConfig } from '../options/utils';
+import { buildDatabaseOptionsFromConfig } from '../options';
 
 export type DatabaseRootSeederRunResponse = {
     robot?: Robot,

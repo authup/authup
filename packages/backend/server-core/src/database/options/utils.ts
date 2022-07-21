@@ -20,11 +20,12 @@ export function buildDatabaseOptionsFromConfig(config: Config) : DatabaseOptions
             admin: {
                 username: config.adminUsername || ConfigDefault.ADMIN_USERNAME,
                 password: config.adminPassword || ConfigDefault.ADMIN_PASSWORD,
-                passwordReset: true,
+                passwordReset: config.adminPasswordReset,
             },
             robot: {
                 enabled: config.robotEnabled ?? false,
                 secret: config.robotSecret,
+                secretReset: config.robotSecretReset,
             },
             permissions,
         },

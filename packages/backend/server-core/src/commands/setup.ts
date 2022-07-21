@@ -101,6 +101,9 @@ export async function setupCommand(context?: SetupCommandContext) {
                     context.spinner.start('Seeding database.');
                 }
 
+                config.adminPasswordReset ??= true;
+                config.robotSecretReset ??= true;
+
                 const databaseOptions = buildDatabaseOptionsFromConfig(config);
                 const seeder = new DatabaseSeeder(databaseOptions.seed);
                 const seederData = await seeder.run(dataSource);

@@ -7,21 +7,21 @@ use an internal runtime cache, if the key was once loaded before.
 
 - **Type**
     ```ts
-    async function useKeyPair(value?: KeyPairContext | string) : Promise<KeyPair>;
+    async function useKeyPair(value?: Partial<KeyPairOptions> | string) : Promise<KeyPair>;
     ```
 - **Example**
     ```typescript
     import {
           useKeyPair,
-          KeyPairContext 
+          KeyPairOptions 
       } from '@authelion/server-utils';
     
-    const context: KeyPairContext = {
+    const options: Partial<KeyPairOptions> = {
         /* ... */
     }
     
     (async () => {
-        const keyPair = await useKeyPair(context);
+        const keyPair = await useKeyPair(options);
     
         console.log(keyPair);
         // {privateKey: 'xxx', publicKey: 'xxx'}
@@ -29,7 +29,7 @@ use an internal runtime cache, if the key was once loaded before.
     ```
 - **Type References**
     - [KeyPair](#keypair)
-    - [KeyPairContext](#keypaircontext)
+    - [KeyPairOptions](#keypairoptions)
 
 ## `createKeyPair`
 
@@ -37,21 +37,21 @@ The method `createKeyPair()` can be used to create a key-pair.
 
 - **Type**
     ```ts
-    async function createKeyPair(context?: KeyPairContext) : Promise<KeyPair>;
+    async function createKeyPair(options?: Partial<KeyPairOptions>) : Promise<KeyPair>;
     ```
 - **Example**
     ```typescript
     import {
         createKeyPair,
-        KeyPairContext 
+        KeyPairOptions 
     } from '@authelion/server-utils';
     
-    const context: KeyPairContext = {
+    const options: Partial<KeyPairOptions> = {
         /* ... */
     }
     
     (async () => {
-        const keyPair = await createKeyPair(context);
+        const keyPair = await createKeyPair(options);
     
         console.log(keyPair);
         // {privateKey: 'xxx', publicKey: 'xxx'}
@@ -59,7 +59,7 @@ The method `createKeyPair()` can be used to create a key-pair.
     ```
 - **References**
     - [KeyPair](#keypair)
-    - [KeyPairContext](#keypaircontext)
+    - [KeyPairOptions](#keypairoptions)
 
 ## `deleteKeyPair`
 
@@ -67,26 +67,26 @@ The method `deleteKeyPair()` will attempt to delete the specified key-pair on di
 
 - **Type**
     ```ts
-    async function deleteKeyPair(context?: KeyPairContext) : Promise<void>;
+    async function deleteKeyPair(options?: Partial<KeyPairOptions>) : Promise<void>;
     ```
 - **Example**
     ```typescript
     import {
         deleteKeyPair,
-        KeyPairContext 
+        KeyPairOptions 
     } from '@authelion/server-utils';
       
-    const context: KeyPairContext = {
+    const options: Partial<KeyPairOptions> = {
         /* ... */
     }
       
     (async () => {
-        await deleteKeyPair(context);
+        await deleteKeyPair(options);
     })();
     ```
 - **References**
     - [KeyPair](#keypair)
-    - [KeyPairContext](#keypaircontext)
+    - [KeyPairOptions](#keypairoptions)
 
 ## `KeyPair`
 
@@ -97,52 +97,57 @@ type KeyPair = {
 };
 ```
 
-## `KeyPairContext`
+## `KeyPairOptions`
 ```typescript
-export type KeyPairContext = {
+export type KeyPairOptions = KeyPairBaseOptions & KeyPairGenerator;
+```
+
+## `KeyPairBaseOptions`
+```typescript
+export type KeyPairBaseOptions = {
     /**
      * Directory where to save key-pair.
      *
      * default: process.cwd()
      */
-    directory?: string,
+    directory: string,
     /**
      * Private key name
      *
      * default: private
      */
-    privateName?: string,
+    privateName: string,
     /**
      * Extension for private key.
      *
      * default: pem
      */
-    privateExtension?: string,
+    privateExtension: string,
     /**
      * Public key name
      *
      * default: public
      */
-    publicName?: string,
+    publicName: string,
     /**
      * Extension for public key.
      *
      * default: pem
      */
-    publicExtension?: string,
+    publicExtension: string,
     /**
      * Passphrase for private key.
      *
      * default: undefined
      */
-    passphrase?: string,
+    passphrase: string,
     /**
      * Save key-pair to file system.
      *
      * default: true
      */
-    save?: boolean
-} & KeyPairGenerator;
+    save: boolean
+};
 ```
 
 ## `KeyPairGenerator`
@@ -155,28 +160,24 @@ import {
     RSAPSSKeyPairOptions,
 } from 'crypto';
 
-type KeyPairGenerator = DSAKeyPairGenerator |
-RSAKeyPairGenerator |
-RSAPSSKeyPairGenerator |
-ECKeyPairGenerator;
+export type KeyPairGenerator = DSAKeyPairGenerator |
+    RSAKeyPairGenerator |
+    RSAPSSKeyPairGenerator |
+    ECKeyPairGenerator;
 
-type RSAKeyPairGenerator = {
-    type?: 'rsa',
-    options?: RSAKeyPairOptions<'pem', 'pem'>
-};
+export type RSAKeyPairGenerator = {
+    type: 'rsa'
+} & RSAKeyPairOptions<'pem', 'pem'>;
 
-type RSAPSSKeyPairGenerator = {
-    type?: 'rsa-pss',
-    options?: RSAPSSKeyPairOptions<'pem', 'pem'>
-};
+export type RSAPSSKeyPairGenerator = {
+    type: 'rsa-pss',
+} & RSAPSSKeyPairOptions<'pem', 'pem'>;
 
-type DSAKeyPairGenerator = {
-    type?: 'dsa',
-    options?: DSAKeyPairOptions<'pem', 'pem'>
-};
+export type DSAKeyPairGenerator = {
+    type: 'dsa'
+} & DSAKeyPairOptions<'pem', 'pem'>;
 
-type ECKeyPairGenerator = {
-    type?: 'ec',
-    options?: ECKeyPairOptions<'pem', 'pem'>,
-};
+export type ECKeyPairGenerator = {
+    type: 'ec',
+} & ECKeyPairOptions<'pem', 'pem'>;
 ```

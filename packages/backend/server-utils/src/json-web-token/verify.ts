@@ -8,36 +8,35 @@
 import { verify } from 'jsonwebtoken';
 import { TokenError, hasOwnProperty } from '@authelion/common';
 import { KeyPair, useKeyPair } from '../key-pair';
-import { TokenVerifyContext } from './type';
+import { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';
 
 /**
  * Verify JWT.
  *
  * @param token
- * @param context
+ * @param options
  *
  * @throws TokenError
  */
 export async function verifyToken(
     token: string,
-    context?: TokenVerifyContext,
+    options?: TokenVerifyOptions,
 ): Promise<string | Record<string, any>> {
-    context ??= {};
+    options ??= {};
 
-    const keyPair: KeyPair = await useKeyPair(context.keyPair);
-    context.options ??= {};
+    const keyPair: KeyPair = await useKeyPair(options.keyPair);
 
     try {
-        if (context.secret) {
-            context.options.algorithms = context.options.algorithms || ['HS256', 'HS384', 'HS512'];
+        if (options.secret) {
+            options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
 
-            return verify(token, context.secret, context.options);
+            return verify(token, options.secret, options);
         }
 
-        context.options.algorithms = context.options.algorithms || ['RS256', 'RS384', 'RS512'];
+        options.algorithms = options.algorithms || ['RS256', 'RS384', 'RS512'];
 
-        return verify(token, keyPair.publicKey, context.options);
+        return verify(token, keyPair.publicKey, options);
     } catch (e) {
         handleJWTError(e);
 

@@ -66,6 +66,11 @@ export type Config = {
     adminPassword: string,
 
     /**
+     * default: undefined
+     */
+    adminPasswordReset?: boolean,
+
+    /**
      * default: false
      */
     robotEnabled: boolean,
@@ -74,6 +79,11 @@ export type Config = {
      * default: undefined
      */
     robotSecret?: string,
+
+    /**
+     * default: undefined
+     */
+    robotSecretReset?: boolean,
 
     /**
      * default: []

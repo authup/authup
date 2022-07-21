@@ -56,9 +56,7 @@ export class OAuth2BearerTokenResponse {
                 refreshTokenPayload,
                 {
                     keyPair: this.context.keyPairOptions,
-                    options: {
-                        expiresIn: secondsDiff,
-                    },
+                    expiresIn: secondsDiff,
                 },
             );
         }

@@ -8,7 +8,7 @@ The method `signToken()` can be used to sign a payload.
 ```ts
 async function signToken(
     payload: string | object | Buffer | Record<string, any>,
-    context?: TokenSignContext
+    options?: TokenSignOptions
 ): Promise<string>;
 ```
 
@@ -23,15 +23,13 @@ import {
     const tokenSigned = await signToken(
         token, 
         {
-            options: {
-                expiresIn: 3600
-            }
+            expiresIn: 3600
         }
     );
 });
 ```
 **References**
-- [TokenSignContext](#tokensigncontext)
+- [TokenSignOptions](#tokensignoptions)
 
 ## `decodeToken`
 
@@ -41,8 +39,8 @@ The method `decodeToken()` can be used to decode the payload of a JWT token with
 ```typescript
 async function decodeToken(
     token: string,
-    context?: TokenDecodeContext,
-): Promise<string | Record<string, any>>;
+    options?: TokenDecodeOptions,
+): Promise<string | Record<string, any> | null>;
 ```
 
 **Example**
@@ -60,7 +58,7 @@ import {
 });
 ```
 **References**
-- [TokenSignContext](#tokensigncontext)
+- [TokenSignOptions](#tokensignoptions)
 
 ## `verifyToken`
 
@@ -70,8 +68,8 @@ The method `decodeToken()` can be used to decode and verify a JWT token.
 ```ts
 async function verifyToken(
     token: string,
-    context?: TokenVerifyContext
-): Promise<string | Record<string, any>>;
+    options?: TokenVerifyOptions
+): Promise<string | Record<string, any> | null>;
 ```
 **Example**
 ```typescript
@@ -88,59 +86,54 @@ import {
 });
 ```
 **References**
-- [TokenSignContext](#tokensigncontext)
+- [TokenSignOptions](#tokensignoptions)
 
-## `TokenBaseContext`
+## `TokenBaseOptions`
 
 ```typescript
-type TokenBaseContext<T> = {
-    options?: T,
+import { KeyPairOptions } from '@authelion/server-utils';
+
+type TokenBaseOptions = {
+    keyPair?: Partial<KeyPairOptions>,
     secret?: string
 };
 ```
 
 **References**
-- [KeyPairContext](key-pair.md#keypaircontext)
+- [KeyPairOptions](key-pair.md#keypairoptions)
 
-## `TokenSignContext`
+## `TokenSignOptions`
 
 ```typescript
 import { SignOptions } from 'jsonwebtoken';
-import { KeyPairContext, TokenBaseContext } from '@authelion/server-utils';
+import { TokenBaseOptions } from '@authelion/server-utils';
 
-type TokenSignContext = TokenBaseContext<SignOptions> & {
-    keyPair?: Partial<KeyPairContext>
-};
+type TokenSignOptions = TokenBaseOptions & SignOptions;
 ```
 
 **References**
-- [KeyPairContext](key-pair.md#keypaircontext)
-- [TokenBaseContext](#tokenbasecontext)
+- [TokenBaseOptions](#tokenbaseoptions)
 
-## `TokenVerifyContext`
+## `TokenVerifyOptions`
 
 ```typescript
 import { VerifyOptions } from 'jsonwebtoken';
-import { KeyPairContext, TokenBaseContext } from '@authelion/server-utils';
+import { TokenBaseOptions } from '@authelion/server-utils';
 
-type TokenVerifyContext = TokenBaseContext<VerifyOptions> & {
-    keyPair?: Partial<KeyPairContext>
-};
+type TokenVerifyOptions = TokenBaseOptions & VerifyOptions;
 ```
 
 **References**
-- [KeyPairContext](key-pair.md#keypaircontext)
-- [TokenBaseContext](#tokenbasecontext)
+- [TokenBaseOptions](#tokenbaseoptions)
 
-## `TokenDecodeContext`
+## `TokenDecodeOptions`
 
 ```typescript
-import { VerifyOptions } from 'jsonwebtoken';
-import { KeyPairContext, TokenBaseContext } from '@authelion/server-utils';
+import { DecodeOptions } from 'jsonwebtoken';
+import { KeyPairOptions } from '@authelion/server-utils';
 
-type TokenDecodeContext = TokenBaseContext<DecodeOptions>;
+type TokenDecodeOptions = DecodeOptions;
 ```
 
 **References**
-- [KeyPairContext](key-pair.md#keypaircontext)
-- [TokenBaseContext](#tokenbasecontext)
+- [KeyPairOptions](key-pair.md#keypairoptions)

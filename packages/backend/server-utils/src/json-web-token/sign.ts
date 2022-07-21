@@ -7,23 +7,22 @@
 
 import { sign } from 'jsonwebtoken';
 import { KeyPair, useKeyPair } from '../key-pair';
-import { TokenSignContext } from './type';
+import { TokenSignOptions } from './type';
 
 export async function signToken<T extends string | object | Buffer | Record<string, any>>(
     payload: T,
-    context?: TokenSignContext,
+    options?: TokenSignOptions,
 ): Promise<string> {
-    context ??= {};
-    context.options ??= {};
-    context.options.expiresIn = context.options.expiresIn || 3600;
+    options ??= {};
+    options.expiresIn = options.expiresIn || 3600;
 
-    if (context.secret) {
-        context.options.algorithm = context.options.algorithm || 'HS256';
-        return sign(payload, context.secret, context.options);
+    if (options.secret) {
+        options.algorithm = options.algorithm || 'HS256';
+        return sign(payload, options.secret, options);
     }
 
-    const keyPair: KeyPair = await useKeyPair(context.keyPair);
-    context.options.algorithm = context.options.algorithm || 'RS256';
+    const keyPair: KeyPair = await useKeyPair(options.keyPair);
+    options.algorithm = options.algorithm || 'RS256';
 
-    return sign(payload, keyPair.privateKey, context.options);
+    return sign(payload, keyPair.privateKey, options);
 }

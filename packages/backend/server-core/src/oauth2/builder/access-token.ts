@@ -71,9 +71,7 @@ export class Oauth2AccessTokenBuilder {
             tokenPayload,
             {
                 keyPair: this.context.keyPairOptions,
-                options: {
-                    expiresIn: this.context.maxAge,
-                },
+                expiresIn: this.context.maxAge,
             },
         );
     }
