@@ -9,4 +9,3 @@ export * from './event';
 export * from './interval';
 export * from './module';
 export * from './utils';
-export * from './event';
