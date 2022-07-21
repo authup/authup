@@ -6,22 +6,24 @@
  */
 
 import { sign } from 'jsonwebtoken';
-import { KeyPair, useKeyPair } from '../key-pair';
+import { useKeyPair } from '../key-pair';
 import { TokenSignOptions } from './type';
 
 export async function signToken<T extends string | object | Buffer | Record<string, any>>(
     payload: T,
-    options?: TokenSignOptions,
+    context?: TokenSignOptions,
 ): Promise<string> {
-    options ??= {};
-    options.expiresIn = options.expiresIn || 3600;
+    context ??= {};
+    context.expiresIn = context.expiresIn || 3600;
 
-    if (options.secret) {
+    const { secret, keyPair: keyPairOptions, ...options } = context;
+
+    if (secret) {
         options.algorithm = options.algorithm || 'HS256';
-        return sign(payload, options.secret, options);
+        return sign(payload, secret, options);
     }
 
-    const keyPair: KeyPair = await useKeyPair(options.keyPair);
+    const keyPair = await useKeyPair(keyPairOptions);
     options.algorithm = options.algorithm || 'RS256';
 
     return sign(payload, keyPair.privateKey, options);

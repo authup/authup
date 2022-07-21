@@ -15,27 +15,28 @@ import { handleJWTError } from './utils';
  * Verify JWT.
  *
  * @param token
- * @param options
+ * @param context
  *
  * @throws TokenError
  */
 export async function verifyToken(
     token: string,
-    options?: TokenVerifyOptions,
+    context?: TokenVerifyOptions,
 ): Promise<string | Record<string, any>> {
-    options ??= {};
+    context ??= {};
 
-    const keyPair: KeyPair = await useKeyPair(options.keyPair);
+    const { keyPair: keyPairOptions, secret, ...options } = context;
 
     try {
-        if (options.secret) {
+        if (secret) {
             options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
 
-            return verify(token, options.secret, options);
+            return verify(token, secret, options);
         }
 
         options.algorithms = options.algorithms || ['RS256', 'RS384', 'RS512'];
 
+        const keyPair: KeyPair = await useKeyPair(keyPairOptions);
         return verify(token, keyPair.publicKey, options);
     } catch (e) {
         handleJWTError(e);
