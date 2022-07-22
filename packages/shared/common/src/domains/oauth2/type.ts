@@ -34,24 +34,24 @@ export type OAuth2TokenResponse = {
 // -----------------------------------------------------------------
 
 export type TokenClientMeta = {
-    kind: `${OAuth2SubKind.CLIENT}`,
+    kind: `${OAuth2SubKind.CLIENT}` | OAuth2SubKind.CLIENT,
     entity: OAuth2Client,
     permissions: AbilityDescriptor[]
 };
 
 export type TokenRobotMeta = {
-    kind: `${OAuth2SubKind.ROBOT}`,
+    kind: `${OAuth2SubKind.ROBOT}` | OAuth2SubKind.ROBOT,
     entity: Robot,
     permissions: AbilityDescriptor[]
 };
 
-export type TokenUserMeta = {
-    kind: `${OAuth2SubKind.USER}`,
+export type OAuth2UserMeta = {
+    kind: `${OAuth2SubKind.USER}` | OAuth2SubKind.USER,
     entity: User,
     permissions: AbilityDescriptor[]
 };
 
-export type OAuth2SubMeta = TokenClientMeta | TokenUserMeta | TokenRobotMeta;
+export type OAuth2SubMeta = TokenClientMeta | OAuth2UserMeta | TokenRobotMeta;
 
 export type OAuth2TokenVerification = (
     OAuth2AccessTokenVerification |
