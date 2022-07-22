@@ -1,6 +1,6 @@
 {
     "name": "@authelion/common",
-    "version": "0.0.11",
+    "version": "0.1.0",
     "description": "Typescript auth type, interface & constants package.",
     "main": "dist/index.js",
     "files": [
