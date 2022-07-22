@@ -18,11 +18,6 @@ export type Config = {
     port: number,
 
     /**
-     * default: 2 (info)
-     */
-    logLevel: number,
-
-    /**
      * default: http://127.0.0.1:3010
      */
     selfUrl: string,

@@ -9,7 +9,6 @@ export enum ConfigDefault {
     ENV = 'development',
     PORT = 3010,
     WRITABLE_DIRECTORY_PATH = 'writable',
-    LOG_LEVEL = 2,
 
     ADMIN_USERNAME = 'admin',
     ADMIN_PASSWORD = 'start123',

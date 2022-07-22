@@ -16,7 +16,7 @@ export function buildOAuth2Aggregator(context?: OAuth2AggregatorContext) {
         return Promise.resolve()
             .then(() => {
                 if (context.cleaner) {
-                    return runOAuth2Cleaner(context.logger);
+                    return runOAuth2Cleaner();
                 }
 
                 return Promise.resolve();

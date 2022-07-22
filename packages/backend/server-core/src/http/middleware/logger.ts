@@ -10,7 +10,6 @@ import { useConfigSync } from '../../config';
 import { useLogger } from '../../config/logger/module';
 
 export function createLoggerMiddleware() {
-    const config = useConfigSync();
     const logger = useLogger();
 
     return (
@@ -18,10 +17,7 @@ export function createLoggerMiddleware() {
         response: ExpressResponse,
         next: ExpressNextFunction,
     ) => {
-        if (
-            logger &&
-            config.logLevel <= 3
-        ) {
+        if (logger) {
             const startTime = Date.now();
 
             response.on('finish', () => {

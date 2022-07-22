@@ -2,9 +2,11 @@ import { Cache, useClient } from 'redis-extension';
 import { CachePrefix } from '../../../constants';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { Logger } from '../../../config';
+import { useLogger } from '../../../config/logger/module';
 
-export async function runOAuth2CleanerByEvent(logger?: Logger) {
+export async function runOAuth2CleanerByEvent() {
+    const logger = useLogger();
+
     const redis = useClient();
 
     const authorizationCodeCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
@@ -14,7 +16,7 @@ export async function runOAuth2CleanerByEvent(logger?: Logger) {
         await repository.delete(data.id);
 
         if (logger) {
-            logger.info(`Removing expired authorization-code: #${data.id}`);
+            logger.debug(`Removing expired authorization-code: #${data.id}`);
         }
     });
 

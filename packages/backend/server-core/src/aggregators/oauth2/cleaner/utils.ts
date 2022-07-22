@@ -7,11 +7,13 @@
 import { LessThan } from 'typeorm';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { Logger } from '../../../config';
+import { useLogger } from '../../../config/logger/module';
 
-export async function cleanUp(logger?: Logger) {
+export async function cleanUp() {
+    const logger = useLogger();
+
     if (logger) {
-        logger.info('Checking for expired access-tokens, refresh-tokens & authorization-codes...');
+        logger.debug('Checking for expired access-tokens, refresh-tokens & authorization-codes...');
     }
 
     // ------------------------------------------------------------------------------

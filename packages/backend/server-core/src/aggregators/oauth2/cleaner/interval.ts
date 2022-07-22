@@ -1,9 +1,8 @@
 import cron from 'node-cron';
 import { cleanUp } from './utils';
-import { Logger } from '../../../config';
 
-export async function runOAuth2CleanerInInterval(logger?: Logger) {
+export async function runOAuth2CleanerInInterval() {
     cron.schedule('* * * * *', async () => {
-        await cleanUp(logger);
+        await cleanUp();
     });
 }

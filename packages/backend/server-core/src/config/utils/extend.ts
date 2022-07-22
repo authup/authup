@@ -18,8 +18,6 @@ export function extendConfig(
 
     config.env = config.env || ConfigDefault.ENV;
 
-    config.logLevel = config.logLevel || ConfigDefault.LOG_LEVEL;
-
     config.port = config.port || ConfigDefault.PORT;
 
     config.selfUrl = config.selfUrl || `http://0.0.0.0:${config.port}/`;
