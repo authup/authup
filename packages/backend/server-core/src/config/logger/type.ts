@@ -15,6 +15,8 @@ export type Logger = {
     error: LeveledLogMethod,
     warn: LeveledLogMethod,
     info: LeveledLogMethod,
+    http: LeveledLogMethod,
+    verbose: LeveledLogMethod,
     debug: LeveledLogMethod,
     [key: string]: any
 };

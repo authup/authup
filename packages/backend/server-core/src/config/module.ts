@@ -7,10 +7,10 @@
 
 import defu from 'defu';
 import { Config } from './type';
-import { findConfigSync, loadConfig } from './find';
-import { extendConfig } from './extend';
+import { findConfigSync, loadConfig } from './utils/find';
+import { extendConfig } from './utils/extend';
 import { Subset } from '../types';
-import { applyConfig } from './apply';
+import { applyConfig } from './utils/apply';
 
 let instance : Config | undefined;
 let instancePromise : Promise<Config> | undefined;

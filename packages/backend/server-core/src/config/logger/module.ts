@@ -5,9 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Logger } from '../../config';
+import { Logger } from './type';
 
-export type OAuth2AggregatorContext = {
-    cleaner?: boolean,
-    logger?: Logger
-};
+let instance: Logger;
+
+export function useLogger() {
+    return instance;
+}
+
+export function setLogger(logger: Logger) {
+    instance = logger;
+}

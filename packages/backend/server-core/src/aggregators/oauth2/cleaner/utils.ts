@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { LessThan } from 'typeorm';
-import { Logger } from '../../../types';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { Logger } from '../../../config';
 
 export async function cleanUp(logger?: Logger) {
     if (logger) {

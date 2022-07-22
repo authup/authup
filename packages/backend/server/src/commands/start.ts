@@ -10,6 +10,8 @@ import { loadConfig, setConfig, startCommand } from '@authelion/server-core';
 import * as ora from 'ora';
 import { DataSourceOptions } from 'typeorm';
 
+import { createLogger, format, transports } from 'winston';
+import path from 'path';
 import { buildDataSourceOptions } from '../database/utils';
 
 interface StartArguments extends Arguments {
@@ -42,11 +44,28 @@ export class StartCommand implements CommandModule {
             } as DataSourceOptions);
         }
 
+        const logger = createLogger({
+            format: format.combine(
+                format.json(),
+                format.timestamp(),
+            ),
+            transports: [
+                new transports.Console({
+                    level: 'debug',
+                }),
+                new transports.File({
+                    filename: path.join(config.writableDirectoryPath, 'error.log'),
+                    level: 'warn',
+                }),
+            ],
+        });
+
         const spinner = ora.default({
             spinner: 'dots',
         });
 
         await startCommand({
+            logger,
             spinner,
             dataSourceOptions,
         });

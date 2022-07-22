@@ -5,9 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config } from './type';
-import { configureRedis } from '../utils';
-
-export function applyConfig(config: Config) {
-    configureRedis(config.redis);
-}
+export * from './type';

@@ -1,8 +1,8 @@
 import { Cache, useClient } from 'redis-extension';
-import { Logger } from '../../../types';
 import { CachePrefix } from '../../../constants';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { Logger } from '../../../config';
 
 export async function runOAuth2CleanerByEvent(logger?: Logger) {
     const redis = useClient();

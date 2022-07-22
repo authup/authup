@@ -18,6 +18,7 @@ import {
 } from '../index';
 import { useConfigSync } from '../../config';
 import { buildMiddlewareOptionsFromConfig } from './utils';
+import { createLoggerMiddleware } from './logger';
 
 export function registerMiddlewares(
     router: Application,
@@ -31,6 +32,8 @@ export function registerMiddlewares(
     } else {
         options = configOptions;
     }
+
+    router.use(createLoggerMiddleware());
 
     if (options.bodyParser) {
         router.use(urlencoded({ extended: false }));

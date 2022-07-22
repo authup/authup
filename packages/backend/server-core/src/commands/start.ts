@@ -13,6 +13,7 @@ import { StartCommandContext } from './type';
 import { buildDataSourceOptions } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
 import { setConfig, useConfig } from '../config';
+import { setLogger } from '../config/logger/module';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
@@ -21,6 +22,10 @@ export async function startCommand(context?: StartCommandContext) {
     config.adminPasswordReset ??= false;
     config.robotSecretReset ??= false;
     setConfig(config);
+
+    if (context.logger) {
+        setLogger(context.logger);
+    }
 
     if (context.spinner) {
         context.spinner.info(`Environment: ${config.env}`);

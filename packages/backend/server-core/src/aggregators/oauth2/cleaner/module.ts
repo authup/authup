@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Logger } from '../../../types';
-import { useConfig } from '../../../config';
+import { Logger, useConfig } from '../../../config';
 import { isRedisEnabled } from '../../../utils';
 import { cleanUp } from './utils';
 import { runOAuth2CleanerInInterval } from './interval';

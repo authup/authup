@@ -6,9 +6,9 @@
  */
 
 import path from 'path';
-import { Config } from './type';
-import { ConfigDefault } from './constants';
-import { Subset } from '../types';
+import { Config } from '../type';
+import { ConfigDefault } from '../constants';
+import { Subset } from '../../types';
 
 export function extendConfig(
     config: Subset<Config>,
@@ -17,6 +17,8 @@ export function extendConfig(
     directoryPath ??= process.cwd();
 
     config.env = config.env || ConfigDefault.ENV;
+
+    config.logLevel = config.logLevel || ConfigDefault.LOG_LEVEL;
 
     config.port = config.port || ConfigDefault.PORT;
 
