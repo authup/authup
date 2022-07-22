@@ -22,7 +22,6 @@ export function createLoggerMiddleware() {
 
             response.on('finish', () => {
                 logger.http({
-                    timestamp: Date.now(),
                     processingTime: Date.now() - startTime,
                     httpVersion: request.httpVersion,
                     remoteAddress: request.ip,

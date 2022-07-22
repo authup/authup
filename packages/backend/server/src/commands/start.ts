@@ -46,8 +46,8 @@ export class StartCommand implements CommandModule {
 
         const logger = createLogger({
             format: format.combine(
-                format.json(),
                 format.timestamp(),
+                format.json(),
             ),
             transports: [
                 new transports.Console({
