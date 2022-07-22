@@ -18,6 +18,6 @@ export class Default1658507549205 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-
+        return Promise.resolve();
     }
 }
