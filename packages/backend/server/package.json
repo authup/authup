@@ -4,7 +4,7 @@
     "description": "This is a simple standalone api application.",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "node dist/index.js",
+        "cli": "ts-node src/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [

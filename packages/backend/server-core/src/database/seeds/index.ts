@@ -52,12 +52,12 @@ export class DatabaseSeeder implements Seeder {
     }
 
     public async run(dataSource: DataSource) : Promise<any> {
-        const { options } = this;
+        let { options } = this;
 
         if (!options) {
             const config = await useConfig();
             const databaseOptions = buildDatabaseOptionsFromConfig(config);
-            this.options = databaseOptions.seed;
+            options = databaseOptions.seed;
         }
 
         const response : DatabaseRootSeederRunResponse = {};
