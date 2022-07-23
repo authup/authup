@@ -11,16 +11,15 @@ import Vue, {
 import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
-import { Realm, Robot } from '@authelion/common';
+import { Realm, Robot, createNanoID } from '@authelion/common';
 import {
     ComponentFormData, ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
 } from '@vue-layout/utils';
 import {
-    createNanoID, useAPIClient,
+    useHTTPClient,
 } from '../../../utils';
 import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
-import { buildRealmSelectForm } from '../realm/render/select';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { RealmList } from '../realm';
@@ -154,14 +153,14 @@ Properties
                 if (this.isEditing) {
                     const { secret, ...form } = this.form;
 
-                    response = await useAPIClient().robot.update(this.entity.id, {
+                    response = await useHTTPClient().robot.update(this.entity.id, {
                         ...form,
                         ...(this.isSecretHashed ? { } : { secret }),
                     });
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useAPIClient().robot.create({
+                    response = await useHTTPClient().robot.create({
                         ...this.form,
                     });
 

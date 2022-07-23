@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { Robot, User } from '@authelion/common';
+import { Robot, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
@@ -20,7 +20,7 @@ import {
     buildListNoMore,
     buildListPagination, buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 
 export const RobotList = Vue.extend<
 ComponentListData<Robot>,
@@ -102,7 +102,7 @@ ComponentListProperties<Robot>
             this.busy = true;
 
             try {
-                const response = await useAPIClient().robot.getMany(mergeDeep({
+                const response = await useHTTPClient().robot.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

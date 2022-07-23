@@ -209,7 +209,7 @@ export class DatabaseSeeder implements Seeder {
             name: 'SYSTEM',
         });
 
-        const secret = options.robot.secret || createNanoID(undefined, 64);
+        const secret = options.robot.secret || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',

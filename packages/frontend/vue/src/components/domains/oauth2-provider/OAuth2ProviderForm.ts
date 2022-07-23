@@ -9,14 +9,14 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { OAuth2Provider } from '@authelion/common';
+import { OAuth2Provider, createNanoID } from '@authelion/common';
 import {
     ComponentFormData,
     ComponentFormMethods,
     buildFormInput,
     buildFormSubmit,
 } from '@vue-layout/utils';
-import { createNanoID, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 import { OAuth2ProviderRoleList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { initPropertiesFromSource } from '../../utils/proprety';
@@ -181,11 +181,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await useAPIClient().oauth2Provider.update(this.entity.id, this.form);
+                    response = await useHTTPClient().oauth2Provider.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useAPIClient().oauth2Provider.create(this.form);
+                    response = await useHTTPClient().oauth2Provider.create(this.form);
 
                     this.$emit('created', response);
                 }

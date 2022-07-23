@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode,
 } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { User } from '@authelion/common';
+import { User, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
@@ -23,7 +23,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 
 export const UserList = Vue.extend<
 ComponentListData<User>,
@@ -103,7 +103,7 @@ ComponentListProperties<User>
             this.busy = true;
 
             try {
-                const response = await useAPIClient().user.getMany(mergeDeep({
+                const response = await useHTTPClient().user.getMany(mergeDeep({
                     include: {
                         realm: true,
                     },

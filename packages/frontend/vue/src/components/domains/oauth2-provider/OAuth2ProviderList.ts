@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from '@trapi/query';
-import { OAuth2Provider } from '@authelion/common';
+import { OAuth2Provider, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
@@ -22,7 +22,7 @@ import {
     buildListSearch,
 } from '@vue-layout/utils';
 import {
-    mergeDeep, useAPIClient,
+    useHTTPClient,
 } from '../../../utils';
 
 type Properties = ComponentListProperties<OAuth2Provider> & {
@@ -127,7 +127,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await useAPIClient().oauth2Provider.getMany(mergeDeep({
+                const response = await useHTTPClient().oauth2Provider.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

@@ -7,9 +7,17 @@
 
 import { customAlphabet } from 'nanoid';
 
-export function createNanoID(alphabet?: string, len = 21) : string {
-    if (alphabet) {
-        return customAlphabet(alphabet, len)();
+export function createNanoID(alphabet?: string) : string;
+export function createNanoID(len?: number) : string;
+export function createNanoID(alphabet?: string, len?: number) : string;
+export function createNanoID(alphabetOrLen?: string | number, len?: number) : string {
+    if (typeof alphabetOrLen === 'string') {
+        return customAlphabet(alphabetOrLen, len || 21)();
     }
-    return customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', len)();
+
+    if (typeof alphabetOrLen === 'number') {
+        return customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', alphabetOrLen)();
+    }
+
+    return customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', len || 21)();
 }

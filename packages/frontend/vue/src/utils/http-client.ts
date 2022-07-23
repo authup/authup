@@ -9,11 +9,11 @@ import { HTTPClient } from '@authelion/common';
 
 let instance : undefined | HTTPClient;
 
-export function setAPIClient(client: HTTPClient) {
+export function setHTTPClient(client: HTTPClient) {
     instance = client;
 }
 
-export function useAPIClient() {
+export function useHTTPClient() {
     if (typeof instance === 'undefined') {
         throw new Error();
     }

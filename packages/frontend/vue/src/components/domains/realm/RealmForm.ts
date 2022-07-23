@@ -8,14 +8,14 @@ import {
     maxLength, minLength, required,
 } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Realm } from '@authelion/common';
+import { Realm, createNanoID } from '@authelion/common';
 import {
     ComponentFormData,
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/utils';
-import { createNanoID, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
@@ -117,11 +117,11 @@ Properties
             try {
                 let response;
                 if (this.isEditing) {
-                    response = await useAPIClient().realm.update(this.entity.id, this.form);
+                    response = await useHTTPClient().realm.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useAPIClient().realm.create(this.form);
+                    response = await useHTTPClient().realm.create(this.form);
 
                     this.$emit('created', response);
                 }

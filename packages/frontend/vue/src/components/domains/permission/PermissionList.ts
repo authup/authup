@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Permission } from '@authelion/common';
+import { Permission, mergeDeep } from '@authelion/common';
 import { BuildInput } from '@trapi/query';
 import {
     ComponentListData,
@@ -20,7 +20,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 
 export const PermissionList = Vue.extend<
 ComponentListData<Permission>,
@@ -102,7 +102,7 @@ ComponentListProperties<Permission>
             this.busy = true;
 
             try {
-                const response = await useAPIClient().permission.getMany(mergeDeep({
+                const response = await useHTTPClient().permission.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

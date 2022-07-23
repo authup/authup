@@ -70,7 +70,7 @@ export class RobotEntity implements Robot {
     @BeforeInsert()
     setName() {
         if (!this.name || this.name.length === 0) {
-            this.name = createNanoID(undefined, 36);
+            this.name = createNanoID(36);
         }
     }
 }

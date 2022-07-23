@@ -149,7 +149,7 @@ export class UserRepository extends Repository<UserEntity> {
     }> {
         const entity = this.create(data);
 
-        const password = entity.password || createNanoID(undefined, 64);
+        const password = entity.password || createNanoID(64);
         entity.password = await this.hashPassword(password);
 
         return {

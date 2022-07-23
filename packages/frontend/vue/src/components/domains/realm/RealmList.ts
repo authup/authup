@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { Realm } from '@authelion/common';
+import { Realm, mergeDeep } from '@authelion/common';
 import { BuildInput } from '@trapi/query';
 import {
     ComponentListData,
@@ -19,7 +19,7 @@ import {
     buildListPagination,
     buildListSearch,
 } from '@vue-layout/utils';
-import { mergeDeep, useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 
 export const RealmList = Vue.extend<
 ComponentListData<Realm>,
@@ -101,7 +101,7 @@ ComponentListProperties<Realm>
             this.busy = true;
 
             try {
-                const response = await useAPIClient().realm.getMany(mergeDeep({
+                const response = await useHTTPClient().realm.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,

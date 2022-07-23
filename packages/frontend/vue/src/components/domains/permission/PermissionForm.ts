@@ -9,7 +9,7 @@ import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import { Permission } from '@authelion/common';
 import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
-import { useAPIClient } from '../../../utils';
+import { useHTTPClient } from '../../../utils';
 import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -89,10 +89,10 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
                 let response;
 
                 if (this.isEditing) {
-                    response = await useAPIClient().permission.update(this.entityProperty.id, this.form);
+                    response = await useHTTPClient().permission.update(this.entityProperty.id, this.form);
                     this.$emit('updated', response);
                 } else {
-                    response = await useAPIClient().permission.create(this.form);
+                    response = await useHTTPClient().permission.create(this.form);
                     this.$emit('created', response);
                 }
             } catch (e) {
