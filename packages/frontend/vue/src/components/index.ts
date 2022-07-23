@@ -5,5 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './core';
-export * from './domains';
+export * from './AuthEntityDelete';
+export * from './oauth2-provider';
+export * from './oauth2-provider-role';
+export * from './permission';
+export * from './permission-robot';
+export * from './permission-role';
+export * from './realm';
+export * from './robot';
+export * from './robot-permission';
+export * from './robot-role';
+export * from './role';
+export * from './role-permission';
+export * from './role-robot';
+export * from './role-user';
+export * from './user';
+export * from './user-role';
