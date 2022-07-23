@@ -7,10 +7,10 @@
 
 import Vue, { CreateElement, VNode } from 'vue';
 import { Role } from '@authelion/common';
+import { SlotName } from '@vue-layout/utils';
 import { RolePermissionAssignmentListItemActions } from '../role-permission';
 import { RoleList } from '../role';
 import { RolePermissionListItemActionsProperties } from '../role-permission/RolePermissionAssignmentListItemActions';
-import {SlotName} from "@vue-layout/utils";
 
 export type Properties = {
     entityId: string
