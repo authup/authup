@@ -7,5 +7,6 @@
 
 export * from './api';
 export * from './constants';
+export * from './openid';
 export * from './type';
 export * from './utils';

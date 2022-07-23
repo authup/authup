@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import morgan from 'morgan';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
-import { useConfigSync } from '../../config';
 import { useLogger } from '../../config/logger/module';
 
 export function createLoggerMiddleware() {
@@ -18,25 +18,42 @@ export function createLoggerMiddleware() {
         next: ExpressNextFunction,
     ) => {
         if (logger) {
-            const startTime = Date.now();
+            morgan(
+                (tokens, req: ExpressRequest, res: ExpressResponse) => {
+                    const parts = [
+                        tokens['remote-addr'](req, res),
+                    ];
 
-            response.on('finish', () => {
-                logger.http({
-                    processingTime: Date.now() - startTime,
-                    httpVersion: request.httpVersion,
-                    remoteAddress: request.ip,
-                    remoteFamily: request.socket.remoteFamily,
-                    method: request.method,
-                    url: request.url,
-                    rawHeaders: request.rawHeaders,
-                    response: {
-                        statusCode: response.statusCode,
-                        statusMessage: response.statusMessage,
+                    if (req.userId || req.robotId || req.clientId) {
+                        if (req.userId) {
+                            parts.push(`user#${req.userId}`);
+                        } else if (req.robotId) {
+                            parts.push(`robot#${req.robotId}`);
+                        } else {
+                            parts.push(`client#${req.client.id}`);
+                        }
+                    }
+
+                    return [
+                        ...parts,
+                        '-',
+                        tokens.method(req, res),
+                        tokens.url(req, res),
+                        tokens.status(req, res),
+                        '-',
+                        `${tokens['response-time'](req, res)}ms`,
+                    ].join(' ');
+                },
+                {
+                    stream: {
+                        write(message) {
+                            logger.http(message.replace('\n', ''));
+                        },
                     },
-                });
-            });
+                },
+            )(request, response, next);
+        } else {
+            next();
         }
-
-        next();
     };
 }

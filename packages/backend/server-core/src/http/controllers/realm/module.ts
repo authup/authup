@@ -13,10 +13,11 @@ import { Realm } from '@authelion/common';
 import {
     createRealmRouteHandler, deleteRealmRouteHandler,
     getManyRealmRouteHandler,
-    getOneRealmRouteHandler,
+    getOneRealmRouteHandler, getRealmCertsRouteHandler,
     updateRealmRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
+import { getRealmOpenIdConfigurationRouteHandler } from './handlers/openid';
 
 @SwaggerTags('realm')
 @Controller('/realms')
@@ -45,6 +46,24 @@ export class RealmController {
             @Response() res: any,
     ): Promise<Realm> {
         return getOneRealmRouteHandler(req, res);
+    }
+
+    @Get('/:id/.well_known/openid-configuration', [])
+    async getOpenIdConfiguration(
+        @Params('id') id: string,
+            @Request() req: any,
+            @Response() res: any,
+    ): Promise<Realm> {
+        return getRealmOpenIdConfigurationRouteHandler(req, res);
+    }
+
+    @Get('/:id/certs', [])
+    async getCerts(
+        @Params('id') id: string,
+            @Request() req: any,
+            @Response() res: any,
+    ): Promise<Realm> {
+        return getRealmCertsRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])

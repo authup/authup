@@ -8,5 +8,5 @@
 export * from './builder';
 export * from './token';
 export * from './grant-types';
-export * from './open-id';
+export * from './openid';
 export * from './response';

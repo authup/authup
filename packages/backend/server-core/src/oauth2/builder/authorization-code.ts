@@ -17,7 +17,7 @@ import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCr
 import { OAuth2AuthorizationCodeEntity } from '../../domains';
 import { useDataSource } from '../../database';
 import { OAuth2AuthorizationCodeCache } from '../cache';
-import { getOpenIDClaimsForScope } from '../open-id';
+import { getOpenIDClaimsForScope } from '../openid';
 
 export class OAuth2AuthorizationCodeBuilder {
     protected context: OAuth2AuthorizationCodeBuilderContext;
