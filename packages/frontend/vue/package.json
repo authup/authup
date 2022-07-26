@@ -61,7 +61,7 @@
         "bootstrap-vue": "^2.22.0",
         "ilingo": "^2.0.2",
         "rimraf": "^3.0.2",
-        "rollup": "^2.77.0",
+        "rollup": "^2.77.1",
         "rollup-plugin-includepaths": "^0.2.4",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-styles": "^4.0.0",
