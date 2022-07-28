@@ -9,7 +9,7 @@ import {
     AbilityManager,
     CookieName,
     OAuth2API, OAuth2SubKind,
-    OAuth2TokenVerification,
+    OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
@@ -55,7 +55,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             throw new BadRequestError('Only Bearer tokens are accepted as authentication method.');
         }
 
-        let data : OAuth2TokenVerification | undefined;
+        let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
             data = await verifyToken({
@@ -70,25 +70,22 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             return;
         }
 
-        switch (data.sub.kind) {
+        switch (data.sub_kind) {
             case OAuth2SubKind.CLIENT:
-                req.clientId = data.sub.entity.id;
-                req.client = data.sub.entity;
+                req.clientId = data.sub;
                 break;
             case OAuth2SubKind.ROBOT:
-                req.robotId = data.sub.entity.id;
-                req.robot = data.sub.entity;
+                req.robotId = data.sub;
                 break;
             case OAuth2SubKind.USER:
-                req.userId = data.sub.entity.id;
-                req.user = data.sub.entity;
+                req.userId = data.sub;
                 break;
         }
 
-        req.realmId = data.sub.entity.realm_id;
+        req.realmId = data.realm_id;
         req.token = header.token;
-        req.permissions = data.sub.permissions;
-        req.ability = new AbilityManager(data.sub.permissions);
+        req.permissions = data.permissions;
+        req.ability = new AbilityManager(data.permissions);
 
         next();
     };

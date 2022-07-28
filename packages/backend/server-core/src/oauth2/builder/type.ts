@@ -8,21 +8,19 @@
 import {
     OAuth2AccessToken, OAuth2SubKind,
 } from '@authelion/common';
-import { KeyPairOptions } from '@authelion/server-utils';
-import { ExpressRequest } from '../../http';
 
 export type OAuth2AbstractBuilderContext = {
     maxAge?: number,
 };
 
 export type OAuth2AccessTokenBuilderContext = OAuth2AbstractBuilderContext & {
-    keyPairOptions?: Partial<KeyPairOptions>
     selfUrl: string,
 };
 
 export type OAuth2AccessTokenBuilderCreateContext = {
     sub: string,
     subKind: `${OAuth2SubKind}`,
+    subName: string,
 
     realmId: string,
 

@@ -29,6 +29,12 @@ export interface OAuth2Client {
 
     // ------------------------------------------------------------------
 
+    created_at: Date | string,
+
+    updated_at: Date | string,
+
+    // ------------------------------------------------------------------
+
     realm_id: Realm['id'],
 
     realm: Realm,

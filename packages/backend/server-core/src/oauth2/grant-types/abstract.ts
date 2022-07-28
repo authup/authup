@@ -31,9 +31,6 @@ export abstract class AbstractGrant {
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<OAuth2AccessTokenEntity> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
             selfUrl: this.config.selfUrl,
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
@@ -42,6 +39,7 @@ export abstract class AbstractGrant {
             realmId: context.realmId,
             sub: context.sub,
             subKind: context.subKind,
+            subName: context.subName,
             remoteAddress: context.remoteAddress,
             scope: context.scope,
             clientId: context.clientId,

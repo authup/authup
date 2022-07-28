@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2SubKind, OAuth2TokenResponse,
+    OAuth2SubKind, OAuth2TokenGrantResponse,
 } from '@authelion/common';
 import { ExpressRequest } from '../../http';
 
@@ -14,6 +14,7 @@ export type AccessTokenIssueContext = {
     remoteAddress: string,
 
     sub: string,
+    subName: string,
     subKind: `${OAuth2SubKind}`,
 
     realmId: string,
@@ -25,5 +26,5 @@ export type AccessTokenIssueContext = {
 // -----------------------------------------------------
 
 export interface Grant {
-    run(request: ExpressRequest) : Promise<OAuth2TokenResponse>;
+    run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse>;
 }

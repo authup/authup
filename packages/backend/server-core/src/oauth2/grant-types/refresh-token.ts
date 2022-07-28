@@ -6,40 +6,39 @@
  */
 
 import {
-    OAuth2RefreshTokenVerification,
+    OAuth2TokenGrantResponse,
     OAuth2TokenKind,
-    OAuth2TokenResponse,
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
 import { Grant } from './type';
-import { validateOAuth2Token } from '../token';
+import { loadOAuth2SubEntity, loadOAuth2TokenEntity } from '../token';
 import { useDataSource } from '../../database';
 import { ExpressRequest } from '../../http';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
         const token = await this.validate(request);
 
-        const subKind = getOAuth2SubKindByEntity(token.entity);
-        const sub = getOAuth2SubByEntity(token.entity);
+        const subKind = getOAuth2SubKindByEntity(token);
+        const sub = getOAuth2SubByEntity(token);
+
+        const subDetails = await loadOAuth2SubEntity(subKind, sub);
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: request.ip,
-            scope: token.entity.scope,
+            scope: token.scope,
             sub,
             subKind,
-            realmId: token.entity.realm_id,
+            subName: subDetails.name,
+            realmId: token.realm_id,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);
 
         const response = new OAuth2BearerTokenResponse({
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
             accessToken,
             refreshToken,
         });
@@ -47,20 +46,16 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<OAuth2RefreshTokenVerification> {
+    async validate(request: ExpressRequest) : Promise<OAuth2RefreshTokenEntity> {
         const { refresh_token: refreshToken } = request.body;
 
-        const token = await validateOAuth2Token(refreshToken);
-
-        if (token.kind !== OAuth2TokenKind.REFRESH) {
-            throw TokenError.kindInvalid();
-        }
+        const token = await loadOAuth2TokenEntity(OAuth2TokenKind.REFRESH, refreshToken);
 
         let expires : number;
-        if (typeof token.entity.expires === 'string') {
-            expires = Date.parse(token.entity.expires);
+        if (typeof token.expires === 'string') {
+            expires = Date.parse(token.expires);
         } else {
-            expires = token.entity.expires.getTime();
+            expires = token.expires.getTime();
         }
 
         if (expires < Date.now()) {
@@ -69,7 +64,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
-        const entity = await repository.findOneBy({ id: token.entity.id });
+        const entity = await repository.findOneBy({ id: token.id });
 
         if (!entity) {
             throw TokenError.refreshTokenInvalid();
@@ -79,9 +74,9 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         // -------------------------------------------------
 
-        if (token.entity.access_token_id) {
+        if (token.access_token_id) {
             const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
-            const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.entity.access_token_id });
+            const accessTokenEntity = await accessTokenRepository.findOneBy({ id: token.access_token_id });
 
             if (accessTokenEntity) {
                 await accessTokenRepository.remove(accessTokenEntity);

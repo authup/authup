@@ -13,7 +13,7 @@ import { Realm } from '@authelion/common';
 import {
     createRealmRouteHandler, deleteRealmRouteHandler,
     getManyRealmRouteHandler,
-    getOneRealmRouteHandler, getRealmCertsRouteHandler,
+    getOneRealmRouteHandler, getRealmJwksRouteHandler,
     updateRealmRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -57,13 +57,13 @@ export class RealmController {
         return getRealmOpenIdConfigurationRouteHandler(req, res);
     }
 
-    @Get('/:id/certs', [])
+    @Get('/:id/jwks', [])
     async getCerts(
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
     ): Promise<Realm> {
-        return getRealmCertsRouteHandler(req, res);
+        return getRealmJwksRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])

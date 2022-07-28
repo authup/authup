@@ -6,14 +6,14 @@
  */
 
 import {
-    OAuth2RefreshTokenPayload,
+    OAuth2TokenGrantResponse,
     OAuth2TokenKind,
-    OAuth2TokenResponse,
+    OAuth2TokenPayload,
     getOAuth2SubByEntity,
     getOAuth2SubKindByEntity,
 } from '@authelion/common';
-import { signToken } from '@authelion/server-utils';
 import { OAuth2BearerResponseContext } from './type';
+import { signOAuth2TokenWithKey, useRealmKey } from '../../domains';
 
 export class OAuth2BearerTokenResponse {
     protected context : OAuth2BearerResponseContext;
@@ -26,8 +26,8 @@ export class OAuth2BearerTokenResponse {
 
     // ------------------------------------------------
 
-    async build() : Promise<OAuth2TokenResponse> {
-        const response : OAuth2TokenResponse = {
+    async build() : Promise<OAuth2TokenGrantResponse> {
+        const response : OAuth2TokenGrantResponse = {
             access_token: this.context.accessToken.content,
             expires_in: Math.ceil((this.context.accessToken.expires.getTime() - Date.now()) / 1000),
             token_type: 'Bearer',
@@ -39,24 +39,24 @@ export class OAuth2BearerTokenResponse {
         }
 
         if (this.context.refreshToken) {
-            const refreshTokenPayload : Partial<OAuth2RefreshTokenPayload> = {
+            const refreshTokenPayload : Partial<OAuth2TokenPayload> = {
+                jti: this.context.refreshToken.id,
                 kind: OAuth2TokenKind.REFRESH,
                 realm_id: this.context.refreshToken.realm_id,
-                refresh_token_id: this.context.refreshToken.id,
-                access_token_id: this.context.accessToken.id,
                 sub: getOAuth2SubByEntity(this.context.accessToken),
                 sub_kind: getOAuth2SubKindByEntity(this.context.accessToken),
+                scope: this.context.accessToken.scope,
                 ...(this.context.accessToken.client_id ? { client_id: this.context.accessToken.client_id } : {}),
                 ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
             };
 
-            const secondsDiff = Math.ceil((this.context.refreshToken.expires.getTime() - Date.now()) / 1000);
-
-            response.refresh_token = await signToken(
+            const key = await useRealmKey(this.context.refreshToken.realm_id);
+            response.refresh_token = await signOAuth2TokenWithKey(
                 refreshTokenPayload,
+                key,
                 {
-                    keyPair: this.context.keyPairOptions,
-                    expiresIn: secondsDiff,
+                    keyid: key.id,
+                    expiresIn: Math.ceil((this.context.refreshToken.expires.getTime() - Date.now()) / 1000),
                 },
             );
         }

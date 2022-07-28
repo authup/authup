@@ -15,6 +15,8 @@ export enum CachePrefix {
     USER_OWNED_PERMISSIONS = 'user_owned_permissions',
     USER_OWNED_ROLES = 'user_owned_roles',
 
+    KEY = 'key',
+
     ROBOT = 'robot',
     ROBOT_OWNED_PERMISSIONS = 'robot_owned_permissions',
     ROBOT_OWNED_ROLES = 'robot_owned_roles',

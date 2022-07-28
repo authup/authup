@@ -6,15 +6,14 @@
  */
 
 import {
-    JWTPayload,
     OAuth2TokenKind,
+    OAuth2TokenPayload,
     hasOAuth2OpenIDScope,
     transformOAuth2ScopeToArray,
 } from '@authelion/common';
-import { signToken } from '@authelion/server-utils';
 import { randomBytes } from 'crypto';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';
-import { OAuth2AuthorizationCodeEntity } from '../../domains';
+import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useRealmKey } from '../../domains';
 import { useDataSource } from '../../database';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { getOpenIDClaimsForScope } from '../openid';
@@ -36,9 +35,9 @@ export class OAuth2AuthorizationCodeBuilder {
     // -----------------------------------------------------
 
     public async generateOpenIdToken(
-        context: Pick<JWTPayload, 'remote_address' | 'sub' | 'realm_id' | 'scope' | 'client_id'> & { subEntity: Record<string, any> },
+        context: Pick<OAuth2TokenPayload, 'remote_address' | 'sub' | 'realm_id' | 'scope' | 'client_id'> & { subEntity: Record<string, any> },
     ) : Promise<string> {
-        let payload : Partial<JWTPayload> = {};
+        let payload : Partial<OAuth2TokenPayload> = {};
 
         if (payload.scope) {
             const scopes = transformOAuth2ScopeToArray(context.scope);
@@ -50,7 +49,7 @@ export class OAuth2AuthorizationCodeBuilder {
             }
         }
 
-        const tokenPayload: Partial<JWTPayload> = {
+        const tokenPayload: Partial<OAuth2TokenPayload> = {
             iss: this.context.selfUrl,
             sub: context.sub,
             remote_address: context.remote_address,
@@ -61,10 +60,12 @@ export class OAuth2AuthorizationCodeBuilder {
             auth_time: this.authTime,
         };
 
-        return signToken(
+        const key = await useRealmKey(context.realm_id);
+        return signOAuth2TokenWithKey(
             tokenPayload,
+            key,
             {
-                keyPair: this.context.keyPairOptions,
+                keyid: key.id,
                 expiresIn: this.context.maxAge,
             },
         );

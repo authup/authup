@@ -6,25 +6,39 @@
  */
 
 import { sign } from 'jsonwebtoken';
-import { useKeyPair } from '../key-pair';
+import { KeyType, TokenError } from '@authelion/common';
+import { isKeyPair, useKeyPair } from '../key-pair';
 import { TokenSignOptions } from './type';
 
-export async function signToken<T extends string | object | Buffer | Record<string, any>>(
-    payload: T,
-    context?: TokenSignOptions,
+export async function signToken(
+    payload: string | object | Buffer | Record<string, any>,
+    context: TokenSignOptions,
 ): Promise<string> {
-    context ??= {};
     context.expiresIn = context.expiresIn || 3600;
 
-    const { secret, keyPair: keyPairOptions, ...options } = context;
+    switch (context.type) {
+        case KeyType.RSA:
+        case KeyType.EC: {
+            const { type, keyPair, ...options } = context;
+            const { privateKey } = isKeyPair(keyPair) ?
+                keyPair :
+                await useKeyPair(keyPair);
 
-    if (secret) {
-        options.algorithm = options.algorithm || 'HS256';
-        return sign(payload, secret, options);
+            if (type === KeyType.RSA) {
+                options.algorithm = options.algorithm || 'RS256';
+            } else {
+                options.algorithm = options.algorithm || 'ES256';
+            }
+
+            return sign(payload, privateKey, options);
+        }
+        case KeyType.OCT: {
+            const { type, secret, ...options } = context;
+            options.algorithm = options.algorithm || 'HS256';
+
+            return sign(payload, secret, options);
+        }
     }
 
-    const keyPair = await useKeyPair(keyPairOptions);
-    options.algorithm = options.algorithm || 'RS256';
-
-    return sign(payload, keyPair.privateKey, options);
+    throw new TokenError();
 }

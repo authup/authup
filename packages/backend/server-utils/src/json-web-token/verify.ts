@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { verify } from 'jsonwebtoken';
-import { TokenError, hasOwnProperty } from '@authelion/common';
-import { KeyPair, useKeyPair } from '../key-pair';
+import { Jwt, JwtPayload, verify } from 'jsonwebtoken';
+import { KeyType, TokenError } from '@authelion/common';
+import { isKeyPair, useKeyPair } from '../key-pair';
 import { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';
 
@@ -19,28 +19,46 @@ import { handleJWTError } from './utils';
  *
  * @throws TokenError
  */
+export async function verifyToken(token: string, context: TokenVerifyOptions & { complete: true }): Promise<string | Jwt>;
+export async function verifyToken(token: string, context: TokenVerifyOptions): Promise<JwtPayload | string>;
 export async function verifyToken(
     token: string,
-    context?: TokenVerifyOptions,
-): Promise<string | Record<string, any>> {
-    context ??= {};
-
-    const { keyPair: keyPairOptions, secret, ...options } = context;
-
+    context: TokenVerifyOptions,
+): Promise<JwtPayload | Jwt | string> {
     try {
-        if (secret) {
-            options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
+        switch (context.type) {
+            case KeyType.RSA:
+            case KeyType.EC: {
+                const { type, keyPair, ...options } = context;
+                const { publicKey } = isKeyPair(keyPair) ?
+                    keyPair :
+                    await useKeyPair(keyPair);
 
-            return verify(token, secret, options);
+                if (type === KeyType.RSA) {
+                    options.algorithms = options.algorithms || ['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512'];
+                } else {
+                    options.algorithms = options.algorithms || ['ES256', 'ES384', 'ES512'];
+                }
+
+                return verify(token, publicKey, {
+                    ...options,
+                });
+            }
+            case KeyType.OCT: {
+                const { type, secret, ...options } = context;
+
+                options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
+
+                return verify(token, secret, {
+                    ...options,
+                });
+            }
         }
-
-        options.algorithms = options.algorithms || ['RS256', 'RS384', 'RS512'];
-
-        const keyPair: KeyPair = await useKeyPair(keyPairOptions);
-        return verify(token, keyPair.publicKey, options);
     } catch (e) {
         handleJWTError(e);
 
         throw e;
     }
+
+    throw new TokenError({ message: 'Invalid type.' });
 }

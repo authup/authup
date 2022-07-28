@@ -6,51 +6,57 @@
  */
 
 import {
-    AbilityDescriptor,
-    OAuth2AccessTokenVerification,
-    OAuth2RefreshTokenVerification,
     OAuth2SubKind,
-    OAuth2SubMeta,
-    Robot,
     TokenError,
-    getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
 import { buildKeyPath } from 'redis-extension';
 import {
     OAuth2ClientEntity,
-    RobotRepository,
-    UserAttributeEntity,
-    UserRepository,
-    transformUserAttributes,
+    RobotEntity,
+    RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
 } from '../../domains';
 import { useDataSource } from '../../database';
 import { CachePrefix } from '../../constants';
 
+type Payload<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
+    T extends `${OAuth2SubKind.USER}` | OAuth2SubKind.USER ?
+        UserEntity :
+        T extends `${OAuth2SubKind.ROBOT}` | OAuth2SubKind.ROBOT ?
+            RobotEntity :
+            T extends `${OAuth2SubKind.CLIENT}` | OAuth2SubKind.CLIENT ?
+                OAuth2ClientEntity :
+                never;
+
 /**
  *
- * @param token
  *
  * @throws TokenError
  * @throws NotFoundError
+ * @param kind
+ * @param id
  */
-export async function getOAuth2TokenSubMeta(token: OAuth2AccessTokenVerification | OAuth2RefreshTokenVerification) : Promise<OAuth2SubMeta> {
+export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind>(
+    kind: `${OAuth2SubKind}`,
+    id: string,
+) : Promise<Payload<T>> {
+    let payload : UserEntity | RobotEntity | OAuth2ClientEntity;
+
     const dataSource = await useDataSource();
 
-    const subKind = getOAuth2SubKindByEntity(token.entity);
-    switch (subKind) {
+    switch (kind) {
         case OAuth2SubKind.CLIENT: {
             const repository = dataSource.getRepository(OAuth2ClientEntity);
 
-            const entity : OAuth2ClientEntity | undefined = await repository.findOne({
+            const entity = await repository.findOne({
                 where: {
-                    id: token.entity.client_id,
+                    id,
                 },
                 cache: {
                     milliseconds: 60.000,
                     id: buildKeyPath({
                         prefix: CachePrefix.ROBOT,
-                        id: token.entity.client_id,
+                        id,
                     }),
                 },
             });
@@ -59,21 +65,18 @@ export async function getOAuth2TokenSubMeta(token: OAuth2AccessTokenVerification
                 throw new NotFoundError();
             }
 
-            return {
-                kind: OAuth2SubKind.CLIENT,
-                entity,
-                permissions: [],
-            };
+            payload = entity;
+            break;
         }
         case OAuth2SubKind.USER: {
             const repository = new UserRepository(dataSource);
 
             const query = repository.createQueryBuilder('user')
                 .addSelect('user.email')
-                .where('user.id = :id', { id: token.entity.user_id })
+                .where('user.id = :id', { id })
                 .cache(buildKeyPath({
                     prefix: CachePrefix.USER,
-                    id: token.entity.user_id,
+                    id,
                 }), 60.000);
 
             const entity = await query.getOne();
@@ -102,26 +105,21 @@ export async function getOAuth2TokenSubMeta(token: OAuth2AccessTokenVerification
                 throw TokenError.targetInactive(OAuth2SubKind.USER);
             }
 
-            const permissions : AbilityDescriptor[] = await repository.getOwnedPermissions(entity.id);
-
-            return {
-                kind: OAuth2SubKind.USER,
-                entity,
-                permissions: permissions || [],
-            };
+            payload = entity;
+            break;
         }
         case OAuth2SubKind.ROBOT: {
             const repository = new RobotRepository(dataSource);
 
-            const entity : Robot | undefined = await repository.findOne({
+            const entity = await repository.findOne({
                 where: {
-                    id: token.entity.robot_id,
+                    id,
                 },
                 cache: {
                     milliseconds: 60.000,
                     id: buildKeyPath({
                         prefix: CachePrefix.ROBOT,
-                        id: token.entity.robot_id,
+                        id,
                     }),
                 },
             });
@@ -134,22 +132,14 @@ export async function getOAuth2TokenSubMeta(token: OAuth2AccessTokenVerification
                 throw TokenError.targetInactive(OAuth2SubKind.ROBOT);
             }
 
-            let permissions : AbilityDescriptor[] | undefined;
-
-            if (entity.user_id) {
-                const userRepository = new UserRepository(dataSource);
-                permissions = await userRepository.getOwnedPermissions(entity.user_id);
-            } else {
-                permissions = await repository.getOwnedPermissions(entity.id);
-            }
-
-            return {
-                kind: OAuth2SubKind.ROBOT,
-                entity,
-                permissions: permissions || [],
-            };
+            payload = entity;
+            break;
         }
     }
 
-    throw TokenError.subKindInvalid();
+    if (!payload) {
+        throw new NotFoundError();
+    }
+
+    return payload as Payload<T>;
 }

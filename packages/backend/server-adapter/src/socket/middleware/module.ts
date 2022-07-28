@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityManager, OAuth2API, OAuth2SubKind, OAuth2TokenVerification,
+    AbilityManager, OAuth2API, OAuth2SubKind, OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
@@ -23,7 +23,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next();
         }
 
-        let data : OAuth2TokenVerification | undefined;
+        let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
             data = await verifyToken({
@@ -36,25 +36,22 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        switch (data.sub.kind) {
+        switch (data.sub_kind) {
             case OAuth2SubKind.CLIENT:
-                socket.data.clientId = data.sub.entity.id;
-                socket.data.client = data.sub.entity;
+                socket.data.clientId = data.sub;
                 break;
             case OAuth2SubKind.ROBOT:
-                socket.data.robotId = data.sub.entity.id;
-                socket.data.robot = data.sub.entity;
+                socket.data.robotId = data.sub;
                 break;
             case OAuth2SubKind.USER:
-                socket.data.userId = data.sub.entity.id;
-                socket.data.user = data.sub.entity;
+                socket.data.userId = data.sub;
                 break;
         }
 
-        socket.data.realmId = data.sub.entity.realm_id;
+        socket.data.realmId = data.realm_id;
         socket.data.token = token;
-        socket.data.permissions = data.sub.permissions;
-        socket.data.ability = new AbilityManager(data.sub.permissions);
+        socket.data.permissions = data.permissions;
+        socket.data.ability = new AbilityManager(data.permissions);
 
         return next();
     };

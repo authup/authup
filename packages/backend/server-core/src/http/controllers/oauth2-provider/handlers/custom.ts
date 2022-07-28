@@ -9,7 +9,7 @@ import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
     HTTPOAuth2Client,
-    OAuth2TokenResponse,
+    OAuth2TokenGrantResponse,
     buildOAuth2ProviderAuthorizeCallbackPath,
 } from '@authelion/common';
 import { URL } from 'url';
@@ -84,7 +84,7 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
         redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
     }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
 
-    const tokenResponse : OAuth2TokenResponse = await oauth2Client.getTokenWithAuthorizeGrant({
+    const tokenResponse : OAuth2TokenGrantResponse = await oauth2Client.getTokenWithAuthorizeGrant({
         code: code as string,
         state: state as string,
     });

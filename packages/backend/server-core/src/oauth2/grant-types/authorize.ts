@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2SubKind, OAuth2TokenResponse, TokenError } from '@authelion/common';
+import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authelion/common';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { ExpressRequest } from '../../http';
@@ -14,13 +14,14 @@ import { useDataSource } from '../../database';
 import { OAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
         const authorizationCode = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: request.ip,
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
+            subName: authorizationCode.user.name,
             realmId: authorizationCode.realm_id,
             scope: authorizationCode.scope,
             clientId: authorizationCode.client_id,
@@ -32,9 +33,6 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             accessToken,
             refreshToken,
             idToken: authorizationCode.id_token,
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
         });
 
         return response.build();

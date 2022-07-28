@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './json-web-token';
+export * from './key';
 export * from './oauth2';
 export * from './oauth2-access-token';
 export * from './oauth2-authorization-code';

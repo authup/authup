@@ -6,7 +6,7 @@
  */
 
 import {
-    Cache, Client, KeyPathID, useClient,
+    Cache, KeyPathID, useClient,
 } from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authelion/common';
 import { isRedisEnabled } from '../../utils';

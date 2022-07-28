@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import mkdirp from 'mkdirp';
 import path from 'path';
 import fs from 'fs';
 import { KeyPair, KeyPairOptions } from './type';
@@ -13,6 +14,8 @@ import { KeyPairKind } from './constants';
 
 export async function saveKeyPair(keyPair: KeyPair, context?: KeyPairOptions) : Promise<KeyPair> {
     context = extendKeyPairOptions(context);
+
+    await mkdirp(context.directory);
 
     await Promise.all(
         [

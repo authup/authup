@@ -6,7 +6,7 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
+    Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
 import { OAuth2Client, Realm, User } from '@authelion/common';
 import { UserEntity } from '../user';
@@ -64,6 +64,14 @@ export class OAuth2ClientEntity implements OAuth2Client {
         default: false,
     })
         is_confidential: boolean;
+
+    // ------------------------------------------------------------------
+
+    @CreateDateColumn()
+        created_at: Date;
+
+    @UpdateDateColumn()
+        updated_at: Date;
 
     // ------------------------------------------------------------------
 

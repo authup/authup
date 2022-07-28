@@ -11,13 +11,8 @@ import {
 } from '@authelion/common';
 
 export interface ExpressRequest extends Request {
-    user?: User,
     userId?: User['id'],
-
-    robot?: Robot,
     robotId?: Robot['id'],
-
-    client?: OAuth2Client,
     clientId?: OAuth2Client['id']
 
     realmId?: Realm['id'],

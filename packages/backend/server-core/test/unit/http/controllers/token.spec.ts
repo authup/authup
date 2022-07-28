@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, OAuth2TokenResponse } from '@authelion/common';
+import { ErrorCode, OAuth2TokenGrantResponse } from '@authelion/common';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 import { createSuperTestUser, updateSuperTestUser } from '../../../utils/domains/user';
@@ -39,7 +39,7 @@ describe('src/http/controllers/token', () => {
         expect(response.body.expires_in).toBeDefined();
         expect(response.body.refresh_token).toBeDefined();
 
-        const tokenPayload : OAuth2TokenResponse = response.body;
+        const tokenPayload : OAuth2TokenGrantResponse = response.body;
 
         response = await superTest
             .post('/token')
@@ -163,7 +163,7 @@ describe('src/http/controllers/token', () => {
                 password: 'start123',
             });
 
-        const tokenPayload : OAuth2TokenResponse = response.body;
+        const tokenPayload : OAuth2TokenGrantResponse = response.body;
 
         response = await superTest
             .delete(`/token/${tokenPayload.refresh_token}`)

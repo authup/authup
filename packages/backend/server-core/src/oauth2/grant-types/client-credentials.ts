@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind, OAuth2TokenResponse, TokenError, UserError,
+    OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
 } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
 import { AbstractGrant } from './abstract';
@@ -17,7 +17,7 @@ import { OAuth2ClientEntity } from '../../domains';
 import { useDataSource } from '../../database';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
@@ -25,6 +25,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             scope: OAuth2Scope.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
+            subName: client.name,
             realmId: client.realm_id,
             clientId: client.id,
         });
@@ -34,9 +35,6 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const response = new OAuth2BearerTokenResponse({
             accessToken,
             refreshToken,
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
         });
 
         return response.build();

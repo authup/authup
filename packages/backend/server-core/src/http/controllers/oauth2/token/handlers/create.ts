@@ -7,7 +7,7 @@
 
 /* istanbul ignore next */
 import {
-    OAuth2TokenGrant, OAuth2TokenResponse, TokenError,
+    OAuth2TokenGrant, OAuth2TokenGrantResponse, TokenError,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import {
@@ -64,7 +64,7 @@ export async function createTokenRouteHandler(
         }
     }
 
-    const tokenResponse : OAuth2TokenResponse = await grant.run(req);
+    const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
 
     return res.respond({
         data: tokenResponse,

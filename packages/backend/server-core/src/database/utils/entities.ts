@@ -7,6 +7,7 @@
 
 import { DataSourceOptions } from 'typeorm';
 import {
+    KeyEntity,
     OAuth2AccessTokenEntity,
     OAuth2AuthorizationCodeEntity,
     OAuth2ClientEntity,
@@ -28,6 +29,8 @@ export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(opt
     return {
         ...options,
         entities: [
+            KeyEntity,
+
             OAuth2AuthorizationCodeEntity,
             OAuth2AccessTokenEntity,
             OAuth2ClientEntity,

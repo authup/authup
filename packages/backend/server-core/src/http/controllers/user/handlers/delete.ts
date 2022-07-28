@@ -18,7 +18,7 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 
-    if (req.user.id === id) {
+    if (req.userId === id) {
         throw new BadRequestError('The own user can not be deleted.');
     }
 

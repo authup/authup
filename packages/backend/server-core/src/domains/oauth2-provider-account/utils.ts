@@ -9,11 +9,11 @@ import {
     KeycloakJWTPayload,
     OAuth2Provider,
     OAuth2ProviderAccount,
-    OAuth2TokenResponse,
+    OAuth2TokenGrantResponse,
+    TokenError,
     User,
     createNanoID,
-    hasOwnProperty,
-    isValidUserName,
+    hasOwnProperty, isValidUserName,
 } from '@authelion/common';
 import { decodeToken } from '@authelion/server-utils';
 import { UserEntity, UserRepository } from '../user';
@@ -23,22 +23,26 @@ import { useDataSource } from '../../database';
 
 export async function createOauth2ProviderAccount(
     provider: OAuth2Provider,
-    tokenResponse: OAuth2TokenResponse,
+    tokenResponse: OAuth2TokenGrantResponse,
 ) : Promise<OAuth2ProviderAccount> {
-    const accessTokenPayload = await decodeToken(tokenResponse.access_token) as KeycloakJWTPayload;
+    const payload : string | KeycloakJWTPayload = decodeToken(tokenResponse.access_token);
+
+    if (typeof payload === 'string') {
+        throw TokenError.payloadInvalid();
+    }
 
     const dataSource = await useDataSource();
     const accountRepository = dataSource.getRepository(OAuth2ProviderAccountEntity);
     let account = await accountRepository.findOne({
         where: {
-            provider_user_id: accessTokenPayload.sub,
+            provider_user_id: payload.sub,
             provider_id: provider.id,
         },
         relations: ['user'],
     });
 
-    const expiresIn : number = (accessTokenPayload.exp - accessTokenPayload.iat);
-    const expireDate: Date = new Date((accessTokenPayload.iat * 1000) + (expiresIn * 1000));
+    const expiresIn : number = (payload.exp - payload.iat);
+    const expireDate: Date = new Date((payload.iat * 1000) + (expiresIn * 1000));
 
     if (account) {
         account = accountRepository.merge(account, {
@@ -49,9 +53,9 @@ export async function createOauth2ProviderAccount(
         });
     } else {
         const names : string[] = [
-            accessTokenPayload.preferred_username,
-            accessTokenPayload.nickname,
-            accessTokenPayload.sub,
+            payload.preferred_username,
+            payload.nickname,
+            payload.sub,
         ].filter((n) => n);
 
         const user = await createUser({
@@ -60,7 +64,7 @@ export async function createOauth2ProviderAccount(
 
         account = accountRepository.create({
             provider_id: provider.id,
-            provider_user_id: accessTokenPayload.sub,
+            provider_user_id: payload.sub,
             provider_user_name: names.shift(),
             access_token: tokenResponse.access_token,
             refresh_token: tokenResponse.refresh_token,
@@ -76,32 +80,32 @@ export async function createOauth2ProviderAccount(
     const roles : string[] = [];
 
     if (
-        accessTokenPayload.roles &&
-        Array.isArray(accessTokenPayload.roles)
+        payload.roles &&
+        Array.isArray(payload.roles)
     ) {
-        accessTokenPayload.roles = accessTokenPayload.roles
+        payload.roles = payload.roles
             .filter((n) => typeof n === 'string');
 
         if (
-            accessTokenPayload.roles &&
-            accessTokenPayload.roles.length > 0
+            payload.roles &&
+            payload.roles.length > 0
         ) {
-            roles.push(...accessTokenPayload.roles);
+            roles.push(...payload.roles);
         }
     }
 
     if (
-        accessTokenPayload.realm_access?.roles &&
-        Array.isArray(accessTokenPayload.realm_access?.roles)
+        payload.realm_access?.roles &&
+        Array.isArray(payload.realm_access?.roles)
     ) {
-        accessTokenPayload.realm_access.roles = accessTokenPayload.realm_access?.roles
+        payload.realm_access.roles = payload.realm_access?.roles
             .filter((n) => typeof n === 'string');
 
         if (
-            accessTokenPayload.realm_access.roles &&
-            accessTokenPayload.realm_access.roles.length > 0
+            payload.realm_access.roles &&
+            payload.realm_access.roles.length > 0
         ) {
-            roles.push(...accessTokenPayload.realm_access.roles);
+            roles.push(...payload.realm_access.roles);
         }
     }
 

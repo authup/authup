@@ -5,62 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessTokenVerification, OAuth2TokenGrant } from '../oauth2-access-token';
-import { OAuth2RefreshTokenVerification } from '../oauth2-refresh-token';
+import { JwtPayload } from 'jsonwebtoken';
+import { OAuth2TokenGrant } from '../oauth2-access-token';
 import { AbilityDescriptor } from '../../ability-manager';
-import { OAuth2Client } from '../oauth2-client';
-import { User } from '../user';
-import { Robot } from '../robot';
-import { OAuth2SubKind } from './constants';
-
-export type OAuth2TokenResponse = {
-    access_token: string,
-
-    refresh_token?: string,
-
-    expires_in: number,
-
-    token_type: string,
-
-    id_token?: string,
-
-    mac_key?: string,
-
-    mac_algorithm?: string,
-
-    scope?: string
-};
-
-// -----------------------------------------------------------------
-
-export type TokenClientMeta = {
-    kind: `${OAuth2SubKind.CLIENT}` | OAuth2SubKind.CLIENT,
-    entity: OAuth2Client,
-    permissions: AbilityDescriptor[]
-};
-
-export type TokenRobotMeta = {
-    kind: `${OAuth2SubKind.ROBOT}` | OAuth2SubKind.ROBOT,
-    entity: Robot,
-    permissions: AbilityDescriptor[]
-};
-
-export type OAuth2UserMeta = {
-    kind: `${OAuth2SubKind.USER}` | OAuth2SubKind.USER,
-    entity: User,
-    permissions: AbilityDescriptor[]
-};
-
-export type OAuth2SubMeta = TokenClientMeta | OAuth2UserMeta | TokenRobotMeta;
-
-export type OAuth2TokenVerification = (
-    OAuth2AccessTokenVerification |
-    OAuth2RefreshTokenVerification
-) & {
-    sub: OAuth2SubMeta
-};
-
-// ------------------------------------------------------
+import { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2PasswordGrantPayload = {
     grant_type?: OAuth2TokenGrant.PASSWORD,
@@ -82,3 +30,135 @@ export type OAuth2RobotCredentialsGrantPayload = {
 export type OAuth2GrantPayload = OAuth2PasswordGrantPayload |
 OAuth2RefreshTokenGrantPayload |
 OAuth2RobotCredentialsGrantPayload;
+
+export type OAuth2TokenGrantResponse = {
+    access_token: string,
+
+    refresh_token?: string,
+
+    expires_in: number,
+
+    token_type: string,
+
+    id_token?: string,
+
+    mac_key?: string,
+
+    mac_algorithm?: string,
+
+    scope?: string
+};
+
+// -----------------------------------------------------------------
+
+export type OAuth2TokenPayload = JwtPayload & {
+    /**
+     * Token type
+     */
+    kind: `${OAuth2TokenKind}`,
+
+    /**
+     * Subject (userId | robotId | clientId)
+     */
+    sub?: string,
+
+    /**
+     * Self: Subject type (robot | user | client)
+     */
+    sub_kind?: `${OAuth2SubKind}`,
+
+    /**
+     * Subject name
+     */
+    sub_name?: string,
+
+    /**
+     * Audience
+     */
+    aud?: string | string[],
+
+    /**
+     * Issuer (token endpoint, f.e "https://...")
+     */
+    iss?: string,
+
+    /**
+     * Expires At
+     */
+    exp: number,
+
+    /**
+     * Not before
+     */
+    nbf?: number,
+
+    /**
+     * Issued At
+     */
+    iat?: number,
+
+    /**
+     * (JWT ID) Claim
+     */
+    jti?: string | number,
+
+    /**
+     * Scopes (f.e: "scope1 scope2")
+     */
+    scope?: string,
+
+    /**
+     * client id
+     */
+    client_id?: string,
+
+    /**
+     * OpenID: roles
+     */
+    roles?: string[],
+
+    /**
+     * OpenID: sub active?
+     */
+    active?: boolean;
+
+    /**
+     * OpenID: email
+     */
+    email?: string;
+
+    /**
+     * OpenID: email_verified
+     */
+    email_verified?: boolean;
+
+    /**
+     * OpenID: preferred_username
+     */
+    preferred_username?: string
+
+    /**
+     * OpenID: nickname
+     */
+    nickname?: string
+
+    /**
+     * Self: realm_id
+     */
+    realm_id?: string,
+
+    /**
+     * Self: remote address
+     */
+    remote_address?: string
+
+    /**
+     * Additional parameters
+     */
+    [key: string]: any
+};
+
+export type OAuth2TokenIntrospectionResponse = {
+    active: boolean,
+    permissions?: AbilityDescriptor[],
+} & Partial<OAuth2TokenPayload>;

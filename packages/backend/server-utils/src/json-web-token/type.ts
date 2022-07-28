@@ -6,15 +6,38 @@
  */
 
 import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
-import { KeyPairOptions } from '../key-pair';
+import * as Buffer from 'buffer';
+import { KeyType } from '@authelion/common';
+import { KeyPair, KeyPairOptions } from '../key-pair';
 
-export type TokenBaseOptions = {
-    keyPair?: Partial<KeyPairOptions>,
-    secret?: string
-};
+export type TokenSignOptions = ({
+    type: `${KeyType.RSA}` | KeyType.RSA,
+    algorithm?: 'RS256' | 'RS384' | 'RS512' |
+    'PS256' | 'PS384' | 'PS512',
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.EC}` | KeyType.EC,
+    algorithm?: 'ES256' | 'ES384' | 'ES512',
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.OCT}` | KeyType.OCT,
+    algorithm?: 'HS256' | 'HS384' | 'HS512',
+    secret: string | Buffer
+}) & Omit<SignOptions, 'algorithm'>;
 
-export type TokenSignOptions = TokenBaseOptions & SignOptions;
-
-export type TokenVerifyOptions = TokenBaseOptions & VerifyOptions;
+export type TokenVerifyOptions = ({
+    type: `${KeyType.RSA}` | KeyType.RSA,
+    algorithms?: ('RS256' | 'RS384' | 'RS512' |
+    'PS256' | 'PS384' | 'PS512')[],
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.EC}` | KeyType.EC,
+    algorithms?: ('ES256' | 'ES384' | 'ES512')[],
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.OCT}` | KeyType.OCT,
+    algorithms?: ('HS256' | 'HS384' | 'HS512')[],
+    secret: string | Buffer
+}) & Omit<VerifyOptions, 'algorithms'>;
 
 export type TokenDecodeOptions = DecodeOptions;

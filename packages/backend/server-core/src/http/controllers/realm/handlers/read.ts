@@ -11,7 +11,10 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 
-export async function getManyRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRealmRouteHandler(
+    req: ExpressRequest,
+    res: ExpressResponse,
+) : Promise<any> {
     const { filter, page, sort } = req.query;
 
     const dataSource = await useDataSource();

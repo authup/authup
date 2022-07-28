@@ -6,5 +6,5 @@
  */
 
 export * from './create';
-export * from './verify';
+export * from './introspect';
 export * from './delete';

@@ -7,7 +7,7 @@
 
 import {
     OAuth2Scope, OAuth2SubKind,
-    OAuth2TokenResponse,
+    OAuth2TokenGrantResponse,
     UserError,
 } from '@authelion/common';
 import { AbstractGrant } from './abstract';
@@ -18,7 +18,7 @@ import { useDataSource } from '../../database';
 import { ExpressRequest } from '../../http';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenResponse> {
+    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
         const user = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
@@ -26,6 +26,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             scope: OAuth2Scope.GLOBAL,
             sub: user.id,
             subKind: OAuth2SubKind.USER,
+            subName: user.name,
             realmId: user.realm_id,
         });
 
@@ -34,9 +35,6 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const response = new OAuth2BearerTokenResponse({
             accessToken,
             refreshToken,
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
         });
 
         return response.build();

@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { decode } from 'jsonwebtoken';
+import {
+    Jwt,
+    JwtPayload,
+    decode,
+} from 'jsonwebtoken';
 import { TokenError } from '@authelion/common';
 import { TokenDecodeOptions } from './type';
 import { handleJWTError } from './utils';
@@ -18,14 +22,18 @@ import { handleJWTError } from './utils';
  *
  * @throws TokenError
  */
-export async function decodeToken(
+export function decodeToken(token: string, options: TokenDecodeOptions & { complete: true }): null | Jwt;
+export function decodeToken(token: string, options?: TokenDecodeOptions): JwtPayload | string | null;
+export function decodeToken(
     token: string,
     options?: TokenDecodeOptions,
-): Promise<string | Record<string, any> | null> {
+): JwtPayload | string | null {
     options ??= {};
 
     try {
-        return decode(token, options);
+        return decode(token, {
+            ...options,
+        });
     } catch (e) {
         handleJWTError(e);
 

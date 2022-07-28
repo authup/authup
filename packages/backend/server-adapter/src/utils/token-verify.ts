@@ -8,7 +8,7 @@
 import { Cache } from 'redis-extension';
 import {
     OAuth2API,
-    OAuth2TokenVerification, TokenError, hasOwnProperty,
+    OAuth2TokenIntrospectionResponse, TokenError, hasOwnProperty,
 } from '@authelion/common';
 import { isClientError } from '@trapi/client';
 import { Logger } from '../socket';
@@ -20,8 +20,8 @@ export type TokenVerifyContext = {
     logger?: Logger
 };
 
-export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2TokenVerification> {
-    let data : OAuth2TokenVerification | undefined;
+export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {
+    let data : OAuth2TokenIntrospectionResponse | undefined;
 
     if (context.tokenCache) {
         data = await context.tokenCache.get(context.token);
@@ -32,7 +32,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2T
     }
 
     if (!data) {
-        let payload : OAuth2TokenVerification;
+        let payload : OAuth2TokenIntrospectionResponse;
 
         try {
             payload = await context.tokenAPIClient.verifyToken(context.token);

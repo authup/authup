@@ -8,8 +8,10 @@
 import {
     AbilityDescriptor,
     AbilityManager,
-    HeaderError, OAuth2SubKind,
-    OAuth2TokenKind, TokenError,
+    HeaderError,
+    OAuth2SubKind,
+    OAuth2TokenKind,
+    TokenError,
 } from '@authelion/common';
 import {
     AuthorizationHeader,
@@ -19,9 +21,18 @@ import {
 } from '@trapi/client';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
-import { getOAuth2TokenSubMeta, validateOAuth2Token } from '../../../oauth2';
 import {
-    OAuth2ClientRepository, RobotRepository, UserAttributeEntity, UserRepository, transformUserAttributes,
+    extractOAuth2TokenPayload,
+    loadOAuth2SubEntity,
+    loadOAuth2SubPermissions,
+} from '../../../oauth2';
+import {
+    OAuth2ClientEntity,
+    OAuth2ClientRepository,
+    RobotEntity,
+    RobotRepository,
+    UserAttributeEntity,
+    UserEntity, UserRepository, transformUserAttributes,
 } from '../../../domains';
 import { buildDatabaseOptionsFromConfig, useDataSource } from '../../../database';
 import { useConfig } from '../../../config';
@@ -30,33 +41,34 @@ async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
     header: BearerAuthorizationHeader,
 ) {
-    const token = await validateOAuth2Token(header.token);
-
-    if (token.kind !== OAuth2TokenKind.ACCESS) {
+    const payload = await extractOAuth2TokenPayload(header.token);
+    if (payload.kind !== OAuth2TokenKind.ACCESS) {
         throw TokenError.accessTokenRequired();
     }
 
     request.token = header.token;
-    request.realmId = token.entity.realm_id;
+    request.realmId = payload.realm_id;
 
-    const sub = await getOAuth2TokenSubMeta(token);
+    // todo: remove sub from request object
+    const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub);
+    const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    request.ability = new AbilityManager(sub.permissions);
+    request.ability = new AbilityManager(permissions);
 
-    switch (sub.kind) {
+    switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
-            request.client = sub.entity;
-            request.clientId = sub.entity.id;
+            request.client = sub as OAuth2ClientEntity;
+            request.clientId = payload.sub;
             break;
         }
         case OAuth2SubKind.USER: {
-            request.user = sub.entity;
-            request.userId = sub.entity.id;
+            request.user = sub as UserEntity;
+            request.userId = payload.sub;
             break;
         }
         case OAuth2SubKind.ROBOT: {
-            request.robot = sub.entity;
-            request.robotId = sub.entity.id;
+            request.robot = sub as RobotEntity;
+            request.robotId = payload.sub;
             break;
         }
     }

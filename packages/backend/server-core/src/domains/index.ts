@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './key';
 export * from './oauth2-access-token';
 export * from './oauth2-authorization-code';
 export * from './oauth2-client';

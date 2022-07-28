@@ -7,7 +7,7 @@
 
 import {
     OAuth2AuthorizationResponseType,
-    OAuth2SubKind, TokenError, buildHTTPQuery,
+    OAuth2SubKind, buildHTTPQuery,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { runAuthorizeValidation } from '../utils';
@@ -15,18 +15,13 @@ import { useConfig } from '../../../../../config';
 import {
     OAuth2AuthorizationCodeBuilder,
     Oauth2AccessTokenBuilder,
-    getOauth2AuthorizeResponseTypesByRequest,
+    getOauth2AuthorizeResponseTypesByRequest, loadOAuth2SubEntity,
 } from '../../../../../oauth2';
-import { buildKeyPairOptionsFromConfig } from '../../../../../utils';
 
 export async function runAuthorizationRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
 ) : Promise<any> {
-    if (!req.userId) {
-        throw TokenError.requestInvalid('Only users are permitted to use the authorization code flow.');
-    }
-
     const result = await runAuthorizeValidation(req);
 
     const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
@@ -35,7 +30,6 @@ export async function runAuthorizationRouteHandler(
 
     const config = await useConfig();
     const codeBuilder = new OAuth2AuthorizationCodeBuilder({
-        keyPairOptions: buildKeyPairOptionsFromConfig(config),
         selfUrl: config.selfUrl,
         maxAge: config.tokenMaxAgeAccessToken,
     });
@@ -43,17 +37,17 @@ export async function runAuthorizationRouteHandler(
     let accessToken : string | undefined;
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            keyPairOptions: {
-                directory: this.config.writableDirectoryPath,
-            },
             selfUrl: this.config.selfUrl,
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
+
+        const subDetails = await loadOAuth2SubEntity(OAuth2SubKind.USER, req.userId);
 
         const token = await tokenBuilder.create({
             remoteAddress: req.ip,
             sub: req.userId,
             subKind: OAuth2SubKind.USER,
+            subName: subDetails.name,
             realmId: req.realmId,
             clientId: result.data.client_id,
             scope: result.data.scope,
