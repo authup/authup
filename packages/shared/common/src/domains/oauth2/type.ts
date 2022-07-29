@@ -113,36 +113,6 @@ export type OAuth2TokenPayload = JwtPayload & {
     client_id?: string,
 
     /**
-     * OpenID: roles
-     */
-    roles?: string[],
-
-    /**
-     * OpenID: sub active?
-     */
-    active?: boolean;
-
-    /**
-     * OpenID: email
-     */
-    email?: string;
-
-    /**
-     * OpenID: email_verified
-     */
-    email_verified?: boolean;
-
-    /**
-     * OpenID: preferred_username
-     */
-    preferred_username?: string
-
-    /**
-     * OpenID: nickname
-     */
-    nickname?: string
-
-    /**
      * Self: realm_id
      */
     realm_id?: string,

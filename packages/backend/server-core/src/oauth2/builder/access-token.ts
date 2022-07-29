@@ -51,14 +51,13 @@ export class Oauth2AccessTokenBuilder {
     // -----------------------------------------------------
 
     public async generateToken(
-        context: Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'sub_name' | 'remote_address' | 'client_id' | 'realm_id' | 'scope'>,
+        context: Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'remote_address' | 'client_id' | 'realm_id' | 'scope'>,
     ) : Promise<string> {
         const tokenPayload: Partial<OAuth2TokenPayload> = {
             jti: this.getId(),
             iss: this.context.selfUrl,
             sub: context.sub,
             sub_kind: context.sub_kind,
-            sub_name: context.sub_name,
             remote_address: context.remote_address,
             kind: OAuth2TokenKind.ACCESS,
             aud: context.client_id,
@@ -113,7 +112,6 @@ export class Oauth2AccessTokenBuilder {
                     scope: context.scope,
                     sub: context.sub,
                     sub_kind: context.subKind,
-                    sub_name: context.subName,
                     realm_id: context.realmId,
                     remote_address: context.remoteAddress,
                     client_id: context.clientId,

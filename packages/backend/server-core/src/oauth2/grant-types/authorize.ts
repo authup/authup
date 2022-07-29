@@ -21,7 +21,6 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             remoteAddress: request.ip,
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
-            subName: authorizationCode.user.name,
             realmId: authorizationCode.realm_id,
             scope: authorizationCode.scope,
             clientId: authorizationCode.client_id,

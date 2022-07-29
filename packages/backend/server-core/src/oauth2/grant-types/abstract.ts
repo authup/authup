@@ -39,7 +39,6 @@ export abstract class AbstractGrant {
             realmId: context.realmId,
             sub: context.sub,
             subKind: context.subKind,
-            subName: context.subName,
             remoteAddress: context.remoteAddress,
             scope: context.scope,
             clientId: context.clientId,

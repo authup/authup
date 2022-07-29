@@ -14,7 +14,6 @@ export type AccessTokenIssueContext = {
     remoteAddress: string,
 
     sub: string,
-    subName: string,
     subKind: `${OAuth2SubKind}`,
 
     realmId: string,

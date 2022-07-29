@@ -15,7 +15,7 @@ import { useConfig } from '../../../../../config';
 import {
     OAuth2AuthorizationCodeBuilder,
     Oauth2AccessTokenBuilder,
-    getOauth2AuthorizeResponseTypesByRequest, loadOAuth2SubEntity,
+    getOauth2AuthorizeResponseTypesByRequest,
 } from '../../../../../oauth2';
 
 export async function runAuthorizationRouteHandler(
@@ -41,13 +41,10 @@ export async function runAuthorizationRouteHandler(
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
-        const subDetails = await loadOAuth2SubEntity(OAuth2SubKind.USER, req.userId);
-
         const token = await tokenBuilder.create({
             remoteAddress: req.ip,
             sub: req.userId,
             subKind: OAuth2SubKind.USER,
-            subName: subDetails.name,
             realmId: req.realmId,
             clientId: result.data.client_id,
             scope: result.data.scope,

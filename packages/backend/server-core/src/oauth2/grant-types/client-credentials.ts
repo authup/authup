@@ -25,7 +25,6 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             scope: OAuth2Scope.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
-            subName: client.name,
             realmId: client.realm_id,
             clientId: client.id,
         });

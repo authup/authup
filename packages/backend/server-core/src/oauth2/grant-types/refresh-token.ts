@@ -14,7 +14,7 @@ import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
 import { Grant } from './type';
-import { loadOAuth2SubEntity, loadOAuth2TokenEntity } from '../token';
+import { extractOAuth2TokenPayload, loadOAuth2TokenEntity } from '../token';
 import { useDataSource } from '../../database';
 import { ExpressRequest } from '../../http';
 
@@ -25,14 +25,11 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const subKind = getOAuth2SubKindByEntity(token);
         const sub = getOAuth2SubByEntity(token);
 
-        const subDetails = await loadOAuth2SubEntity(subKind, sub);
-
         const accessToken = await this.issueAccessToken({
             remoteAddress: request.ip,
             scope: token.scope,
             sub,
             subKind,
-            subName: subDetails.name,
             realmId: token.realm_id,
         });
 
@@ -49,7 +46,8 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async validate(request: ExpressRequest) : Promise<OAuth2RefreshTokenEntity> {
         const { refresh_token: refreshToken } = request.body;
 
-        const token = await loadOAuth2TokenEntity(OAuth2TokenKind.REFRESH, refreshToken);
+        const payload = await extractOAuth2TokenPayload(refreshToken);
+        const token = await loadOAuth2TokenEntity(OAuth2TokenKind.REFRESH, payload.jti);
 
         let expires : number;
         if (typeof token.expires === 'string') {

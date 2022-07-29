@@ -20,7 +20,6 @@ export type OAuth2AccessTokenBuilderContext = OAuth2AbstractBuilderContext & {
 export type OAuth2AccessTokenBuilderCreateContext = {
     sub: string,
     subKind: `${OAuth2SubKind}`,
-    subName: string,
 
     realmId: string,
 

@@ -26,7 +26,6 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             scope: OAuth2Scope.GLOBAL,
             sub: user.id,
             subKind: OAuth2SubKind.USER,
-            subName: user.name,
             realmId: user.realm_id,
         });
 

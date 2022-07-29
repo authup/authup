@@ -40,11 +40,16 @@ export async function introspectTokenRouteHandler(
         .run(req);
 
     const validation = validationResult(req);
-    if (!validation.isEmpty()) {
+    if (!validation.isEmpty() && !req.token) {
         throw new ExpressValidationError(validation);
     }
 
+    // todo: use header authorization token if no token param provided
+
     const validationData = matchedValidationData(req, { includeOptionals: true }) as { token: string };
+    if (!validationData.token) {
+        validationData.token = req.token;
+    }
 
     if (
         req.token !== validationData.token &&

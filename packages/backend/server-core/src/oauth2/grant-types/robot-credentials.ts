@@ -25,7 +25,6 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             remoteAddress: request.ip,
             scope: OAuth2Scope.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
-            subName: entity.name,
             sub: entity.id,
             realmId: entity.realm_id,
         });
