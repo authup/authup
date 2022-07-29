@@ -18,6 +18,7 @@ import {
 } from '../../domains';
 import { useDataSource } from '../../database';
 import { CachePrefix } from '../../constants';
+import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
     T extends `${OAuth2SubKind.USER}` | OAuth2SubKind.USER ?
@@ -35,31 +36,32 @@ export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
  * @throws NotFoundError
  * @param kind
  * @param id
+ * @param scope
  */
 export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind>(
     kind: `${OAuth2SubKind}`,
     id: string,
+    scope?: string,
 ) : Promise<OAuth2SubEntity<T>> {
     let payload : UserEntity | RobotEntity | OAuth2ClientEntity;
 
     const dataSource = await useDataSource();
 
+    const fields = resolveOAuth2SubAttributesForScope(kind, scope);
+
     switch (kind) {
         case OAuth2SubKind.CLIENT: {
             const repository = dataSource.getRepository(OAuth2ClientEntity);
 
-            const entity = await repository.findOne({
-                where: {
-                    id,
-                },
-                cache: {
-                    milliseconds: 60.000,
-                    id: buildKeyPath({
-                        prefix: CachePrefix.ROBOT,
-                        id,
-                    }),
-                },
-            });
+            const query = repository.createQueryBuilder('client')
+                .where('client.id = :id', { id })
+                .cache(true);
+
+            for (let i = 0; i < fields.length; i++) {
+                query.addSelect(`client.${fields[i]}`);
+            }
+
+            const entity = await query.getOne();
 
             if (!entity) {
                 throw new NotFoundError();
@@ -72,12 +74,12 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const repository = new UserRepository(dataSource);
 
             const query = repository.createQueryBuilder('user')
-                .addSelect('user.email')
                 .where('user.id = :id', { id })
-                .cache(buildKeyPath({
-                    prefix: CachePrefix.USER,
-                    id,
-                }), 60.000);
+                .cache(true);
+
+            for (let i = 0; i < fields.length; i++) {
+                query.addSelect(`user.${fields[i]}`);
+            }
 
             const entity = await query.getOne();
 
@@ -111,18 +113,15 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
         case OAuth2SubKind.ROBOT: {
             const repository = new RobotRepository(dataSource);
 
-            const entity = await repository.findOne({
-                where: {
-                    id,
-                },
-                cache: {
-                    milliseconds: 60.000,
-                    id: buildKeyPath({
-                        prefix: CachePrefix.ROBOT,
-                        id,
-                    }),
-                },
-            });
+            const query = repository.createQueryBuilder('robot')
+                .where('robot.id = :id', { id })
+                .cache(true);
+
+            for (let i = 0; i < fields.length; i++) {
+                query.addSelect(`robot.${fields[i]}`);
+            }
+
+            const entity = await query.getOne();
 
             if (!entity) {
                 throw new NotFoundError();

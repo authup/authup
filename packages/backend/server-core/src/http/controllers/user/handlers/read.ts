@@ -10,10 +10,11 @@ import {
 } from 'typeorm-extension';
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { PermissionID, isSelfId } from '@authelion/common';
+import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
 import { useDataSource } from '../../../../database';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
@@ -79,6 +80,11 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
         isSelfId(id) &&
         req.userId
     ) {
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
+        for (let i = 0; i < attributes.length; i++) {
+            query.addSelect(`user.${attributes[i]}`);
+        }
+
         query.where('user.id = :id', { id: req.userId });
     } else {
         query.where(new Brackets((q2) => {

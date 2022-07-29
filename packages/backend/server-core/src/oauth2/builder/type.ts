@@ -35,7 +35,6 @@ export type OAuth2AuthorizationCodeBuilderContext = OAuth2AccessTokenBuilderCont
 
 export type OAuth2AuthorizationCodeBuilderCreateContext = {
     sub: string,
-    subEntity: Record<string, any>,
     subKind: `${OAuth2SubKind}`,
 
     realmId: string,

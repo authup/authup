@@ -6,17 +6,17 @@
  */
 
 import {
+    OAuth2OpenIdTokenPayload,
     OAuth2TokenKind,
-    OAuth2TokenPayload,
-    hasOAuth2OpenIDScope,
-    transformOAuth2ScopeToArray,
+    OAuth2TokenPayload, hasOAuth2OpenIDScope,
 } from '@authelion/common';
 import { randomBytes } from 'crypto';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useRealmKey } from '../../domains';
 import { useDataSource } from '../../database';
 import { OAuth2AuthorizationCodeCache } from '../cache';
-import { getUserClaimsForScope } from '../openid';
+import { resolveOpenIdClaimsFromSubEntity } from '../openid';
+import { loadOAuth2SubEntity } from '../token';
 
 export class OAuth2AuthorizationCodeBuilder {
     protected context: OAuth2AuthorizationCodeBuilderContext;
@@ -35,21 +35,14 @@ export class OAuth2AuthorizationCodeBuilder {
     // -----------------------------------------------------
 
     public async generateOpenIdToken(
-        context: Pick<OAuth2TokenPayload, 'remote_address' | 'sub' | 'realm_id' | 'scope' | 'client_id'> & { subEntity: Record<string, any> },
+        context: Pick<OAuth2TokenPayload, 'remote_address' | 'sub' | 'sub_kind' | 'realm_id' | 'scope' | 'client_id'>,
     ) : Promise<string> {
-        let payload : Partial<OAuth2TokenPayload> = {};
+        const payload : Partial<OAuth2OpenIdTokenPayload> = resolveOpenIdClaimsFromSubEntity(
+            context.sub_kind,
+            await loadOAuth2SubEntity(context.sub_kind, context.sub, context.scope),
+        );
 
-        if (payload.scope) {
-            const scopes = transformOAuth2ScopeToArray(context.scope);
-            for (let i = 0; i < scopes.length; i++) {
-                payload = {
-                    ...payload,
-                    ...getUserClaimsForScope(scopes[i], payload.user),
-                };
-            }
-        }
-
-        const tokenPayload: Partial<OAuth2TokenPayload> = {
+        const tokenPayload: Partial<OAuth2OpenIdTokenPayload> = {
             iss: this.context.selfUrl,
             sub: context.sub,
             remote_address: context.remote_address,
@@ -58,6 +51,7 @@ export class OAuth2AuthorizationCodeBuilder {
             client_id: context.client_id,
             realm_id: context.realm_id,
             auth_time: this.authTime,
+            ...payload,
         };
 
         const key = await useRealmKey(context.realm_id);
@@ -91,10 +85,10 @@ export class OAuth2AuthorizationCodeBuilder {
         if (hasOAuth2OpenIDScope(entity.scope)) {
             entity.id_token = await this.generateOpenIdToken({
                 sub: context.sub,
+                sub_kind: context.subKind,
                 realm_id: context.realmId,
                 remote_address: context.remoteAddress,
                 client_id: context.clientId,
-                subEntity: context.subEntity,
             });
         }
 

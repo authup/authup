@@ -56,7 +56,6 @@ export async function runAuthorizationRouteHandler(
     const code = await codeBuilder.create({
         sub: req.userId,
         subKind: OAuth2SubKind.USER,
-        subEntity: req.user,
         remoteAddress: req.ip,
         realmId: req.realmId,
         clientId: result.data.client_id,

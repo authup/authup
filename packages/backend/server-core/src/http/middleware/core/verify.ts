@@ -8,10 +8,10 @@
 import {
     AbilityDescriptor,
     AbilityManager,
-    HeaderError,
+    HeaderError, OAuth2Scope,
     OAuth2SubKind,
     OAuth2TokenKind,
-    TokenError,
+    TokenError, transformOAuth2ScopeToArray,
 } from '@authelion/common';
 import {
     AuthorizationHeader,
@@ -47,10 +47,11 @@ async function verifyBearerAuthorizationHeader(
     }
 
     request.token = header.token;
+    request.scopes = transformOAuth2ScopeToArray(payload.scope);
+
     request.realmId = payload.realm_id;
 
-    // todo: remove sub from request object
-    const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub);
+    const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
     request.ability = new AbilityManager(permissions);
@@ -107,10 +108,12 @@ async function verifyBasicAuthorizationHeader(
 
         permissions = await userRepository.getOwnedPermissions(entity.id);
 
+        request.ability = new AbilityManager(permissions);
+        request.scopes = [OAuth2Scope.GLOBAL];
+
         request.user = entity;
         request.userId = entity.id;
         request.realmId = entity.realm_id;
-        request.ability = new AbilityManager(permissions);
 
         return;
     }
@@ -120,6 +123,7 @@ async function verifyBasicAuthorizationHeader(
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!
         request.ability = new AbilityManager();
+        request.scopes = [OAuth2Scope.GLOBAL];
 
         request.realmId = robot.realm_id;
         request.robot = robot;
@@ -131,6 +135,7 @@ async function verifyBasicAuthorizationHeader(
     if (oauth2Client) {
         // allow authentication but not authorization with basic auth for robots!
         request.ability = new AbilityManager();
+        request.scopes = [OAuth2Scope.GLOBAL];
 
         request.realmId = oauth2Client.realm_id;
         request.clientId = oauth2Client.id;

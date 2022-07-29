@@ -29,6 +29,7 @@ export interface ExpressRequest extends Request {
     realmId?: Realm['id'],
 
     token?: string,
+    scopes?: string[],
 
     ability: AbilityManager
 }

@@ -17,8 +17,8 @@ import {
 } from 'express-validator';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import {
-    extractOAuth2TokenPayload,
-    loadOAuth2SubPermissions, loadOAuth2TokenEntity,
+    extractOAuth2TokenPayload, loadOAuth2SubEntity,
+    loadOAuth2SubPermissions, loadOAuth2TokenEntity, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../../oauth2';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
 
@@ -43,8 +43,6 @@ export async function introspectTokenRouteHandler(
     if (!validation.isEmpty() && !req.token) {
         throw new ExpressValidationError(validation);
     }
-
-    // todo: use header authorization token if no token param provided
 
     const validationData = matchedValidationData(req, { includeOptionals: true }) as { token: string };
     if (!validationData.token) {
@@ -82,6 +80,10 @@ export async function introspectTokenRouteHandler(
             active: true,
             permissions,
             ...payload,
+            ...resolveOpenIdClaimsFromSubEntity(
+                payload.sub_kind,
+                await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
+            ),
         } as OAuth2TokenIntrospectionResponse,
     });
 }

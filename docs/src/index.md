@@ -13,6 +13,9 @@ hero:
          link: https://github.com/tada5hi/authelion
 
 features:
+    - icon: 🔋
+      title: Clustering
+      details: Scalability and availability
     - icon: ⚡
       title: Fast
       details: Bleeding edge techniques using asynchronous I/O and Event-driven programming

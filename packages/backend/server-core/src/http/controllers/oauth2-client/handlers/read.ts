@@ -10,10 +10,11 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { PermissionID, isSelfId } from '@authelion/common';
+import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
 
 export async function getManyOauth2ClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
@@ -83,6 +84,11 @@ export async function getOneOauth2ClientRouteHandler(req: ExpressRequest, res: E
         isSelfId(id) &&
         req.clientId
     ) {
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, req.scopes);
+        for (let i = 0; i < attributes.length; i++) {
+            query.addSelect(`client.${attributes[i]}`);
+        }
+
         query.where('client.id = :id', { id });
     } else {
         query.where(new Brackets((q2) => {

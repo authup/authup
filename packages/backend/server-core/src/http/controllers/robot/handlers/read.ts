@@ -12,11 +12,12 @@ import {
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     MASTER_REALM_ID,
-    PermissionID, isSelfId,
+    OAuth2SubKind, PermissionID, isSelfId,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
@@ -94,6 +95,11 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
         isSelfId(id) &&
         req.robotId
     ) {
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, req.scopes);
+        for (let i = 0; i < attributes.length; i++) {
+            query.addSelect(`robot.${attributes[i]}`);
+        }
+
         query.where('robot.id = :id', { id });
     } else {
         query.where(new Brackets((q2) => {
