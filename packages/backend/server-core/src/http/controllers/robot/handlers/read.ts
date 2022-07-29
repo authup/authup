@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Brackets } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
-    MASTER_REALM_ID, PermissionID,
+    MASTER_REALM_ID,
+    PermissionID, isSelfId,
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
@@ -86,8 +88,19 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
-    const query = repository.createQueryBuilder('robot')
-        .where('robot.id = :id', { id });
+    const query = repository.createQueryBuilder('robot');
+
+    if (
+        isSelfId(id) &&
+        req.robotId
+    ) {
+        query.where('robot.id = :id', { id });
+    } else {
+        query.where(new Brackets((q2) => {
+            q2.where('robot.id = :id', { id });
+            q2.orWhere('robot.name LIKE :name', { name: id });
+        }));
+    }
 
     applyFields(query, fields, {
         defaultAlias: 'robot',

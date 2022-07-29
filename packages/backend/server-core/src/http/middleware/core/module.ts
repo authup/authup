@@ -7,10 +7,8 @@
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
 import { CookieName } from '@authelion/common';
-import path from 'path';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { verifyAuthorizationHeader } from './verify';
-import { Config, useConfig } from '../../../config';
 
 function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefined {
     return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?

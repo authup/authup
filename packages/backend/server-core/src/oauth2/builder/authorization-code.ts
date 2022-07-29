@@ -16,7 +16,7 @@ import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCr
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useRealmKey } from '../../domains';
 import { useDataSource } from '../../database';
 import { OAuth2AuthorizationCodeCache } from '../cache';
-import { getOpenIDClaimsForScope } from '../openid';
+import { getUserClaimsForScope } from '../openid';
 
 export class OAuth2AuthorizationCodeBuilder {
     protected context: OAuth2AuthorizationCodeBuilderContext;
@@ -44,7 +44,7 @@ export class OAuth2AuthorizationCodeBuilder {
             for (let i = 0; i < scopes.length; i++) {
                 payload = {
                     ...payload,
-                    ...getOpenIDClaimsForScope(scopes[i], payload.user),
+                    ...getUserClaimsForScope(scopes[i], payload.user),
                 };
             }
         }

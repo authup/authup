@@ -8,8 +8,9 @@
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
+import { Brackets } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
 import { useDataSource } from '../../../../database';
@@ -73,6 +74,18 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const userRepository = new UserRepository(dataSource);
     const query = await userRepository.createQueryBuilder('user')
         .andWhere('user.id = :id', { id });
+
+    if (
+        isSelfId(id) &&
+        req.userId
+    ) {
+        query.where('user.id = :id', { id: req.userId });
+    } else {
+        query.where(new Brackets((q2) => {
+            q2.where('user.id = :id', { id });
+            q2.orWhere('user.name LIKE :name', { name: id });
+        }));
+    }
 
     onlyRealmPermittedQueryResources(query, req.realmId);
 

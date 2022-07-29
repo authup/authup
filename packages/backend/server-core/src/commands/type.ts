@@ -18,8 +18,6 @@ export type CommandContext = {
 export type StartCommandContext = CommandContext;
 
 export type SetupCommandContext = CommandContext & {
-    keyPair?: boolean,
-
     database?: boolean,
     databaseSeed?: boolean,
 
@@ -33,10 +31,6 @@ export type UpgradeCommandContext = CommandContext & {
 };
 
 export type ResetCommandContext = CommandContext;
-
-export type CheckCommandContext = CommandContext & {
-    databaseSeed?: boolean
-};
 
 export type MigrationGenerateCommandContext = CommandContext & {
     name?: string,

@@ -14,7 +14,6 @@ import { buildDataSourceOptions } from '../database/utils';
 
 interface SetupArguments extends Arguments {
     root: string;
-    keyPair: boolean;
     database: boolean;
     databaseSeed: boolean;
     documentation: boolean;
@@ -32,11 +31,6 @@ export class SetupCommand implements CommandModule {
                 alias: 'r',
                 default: process.cwd(),
                 describe: 'Path to the project root directory.',
-            })
-
-            .option('keyPair', {
-                describe: 'Create key-pair.',
-                type: 'boolean',
             })
 
             .option('database', {

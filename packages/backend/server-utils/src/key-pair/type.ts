@@ -78,7 +78,7 @@ export type KeyPairBaseOptions = {
     /**
      * Save key-pair to file system.
      *
-     * default: true
+     * default: false
      */
     save: boolean
 };

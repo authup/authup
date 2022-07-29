@@ -7,7 +7,7 @@
 
 import { KeyPairKind } from '../constants';
 import { KeyPairOptions } from '../type';
-import { extendKeyPairOptions } from './context';
+import { extendKeyPairOptions } from './options';
 
 export function buildKeyFileName(
     type: `${KeyPairKind}`,

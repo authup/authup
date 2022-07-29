@@ -7,7 +7,6 @@
 
 import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
-import { createKeyPair } from '@authelion/server-utils';
 import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
 import { DatabaseSeeder, buildDataSourceOptions, buildDatabaseOptionsFromConfig } from '../database';
@@ -17,35 +16,19 @@ export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};
 
     if (
-        typeof context.keyPair === 'undefined' &&
         typeof context.database === 'undefined' &&
         typeof context.databaseSeed === 'undefined' &&
         typeof context.documentation === 'undefined'
     ) {
         // eslint-disable-next-line no-multi-assign
-        context.keyPair = context.database = context.databaseSeed = context.documentation = true;
+        context.database = context.databaseSeed = context.documentation = true;
     }
 
-    context.keyPair ??= true;
     context.database ??= true;
     context.databaseSeed ??= true;
     context.documentation ??= true;
 
     const config = await useConfig();
-
-    if (context.keyPair) {
-        if (context.spinner) {
-            context.spinner.start('Generating rsa key-pair.');
-        }
-
-        await createKeyPair({
-            directory: config.writableDirectoryPath,
-        });
-
-        if (context.spinner) {
-            context.spinner.succeed('Generated rsa key-pair.');
-        }
-    }
 
     if (context.documentation) {
         if (context.spinner) {

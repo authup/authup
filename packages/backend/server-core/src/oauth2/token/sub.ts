@@ -19,7 +19,7 @@ import {
 import { useDataSource } from '../../database';
 import { CachePrefix } from '../../constants';
 
-type Payload<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
+export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
     T extends `${OAuth2SubKind.USER}` | OAuth2SubKind.USER ?
         UserEntity :
         T extends `${OAuth2SubKind.ROBOT}` | OAuth2SubKind.ROBOT ?
@@ -39,7 +39,7 @@ type Payload<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
 export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind>(
     kind: `${OAuth2SubKind}`,
     id: string,
-) : Promise<Payload<T>> {
+) : Promise<OAuth2SubEntity<T>> {
     let payload : UserEntity | RobotEntity | OAuth2ClientEntity;
 
     const dataSource = await useDataSource();
@@ -141,5 +141,5 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
         throw new NotFoundError();
     }
 
-    return payload as Payload<T>;
+    return payload as OAuth2SubEntity<T>;
 }

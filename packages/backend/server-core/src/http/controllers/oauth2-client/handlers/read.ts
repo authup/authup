@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Brackets } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
@@ -76,8 +77,19 @@ export async function getOneOauth2ClientRouteHandler(req: ExpressRequest, res: E
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2ClientEntity);
 
-    const query = repository.createQueryBuilder('client')
-        .where('client.id = :id', { id });
+    const query = repository.createQueryBuilder('client');
+
+    if (
+        isSelfId(id) &&
+        req.clientId
+    ) {
+        query.where('client.id = :id', { id });
+    } else {
+        query.where(new Brackets((q2) => {
+            q2.where('client.id = :id', { id });
+            q2.orWhere('client.name LIKE :name', { name: id });
+        }));
+    }
 
     applyRelations(query, include, {
         defaultAlias: 'client',

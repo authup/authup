@@ -29,6 +29,7 @@ describe('sc/key-pair', () => {
     it('should save, load & delete key-pair', async () => {
         await createKeyPair({
             directory,
+            save: true,
         });
 
         let keyPair : KeyPair | undefined = await loadKeyPair({

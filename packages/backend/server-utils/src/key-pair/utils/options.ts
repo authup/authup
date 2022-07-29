@@ -50,8 +50,5 @@ export function extendKeyPairOptions(
         options.privateKeyEncoding.cipher = 'aes-256-cbc';
     }
 
-    options.save = typeof options.save === 'undefined' ||
-        options.save;
-
     return options as KeyPairOptions;
 }

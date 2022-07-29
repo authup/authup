@@ -29,26 +29,3 @@ export class ForceUserLoggedInMiddleware implements Middleware {
         return forceUserLoggedIn(request, response, next);
     }
 }
-
-export function forceLoggedIn(
-    req: ExpressRequest,
-    res: ExpressResponse,
-    next: ExpressNextFunction,
-) {
-    if (
-        typeof req.userId === 'undefined' &&
-        typeof req.robotId === 'undefined' &&
-        typeof req.clientId === 'undefined'
-    ) {
-        throw new UnauthorizedError();
-    }
-
-    next();
-}
-
-export class ForceLoggedInMiddleware implements Middleware {
-    // eslint-disable-next-line class-methods-use-this
-    public use(request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) {
-        return forceLoggedIn(request, response, next);
-    }
-}
