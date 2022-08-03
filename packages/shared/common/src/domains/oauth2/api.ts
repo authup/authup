@@ -18,7 +18,7 @@ export class OAuth2API {
     }
 
     async verifyToken(token: string): Promise<SingleResourceResponse<OAuth2TokenIntrospectionResponse>> {
-        const response = await this.client.get(`token/${token}`);
+        const response = await this.client.post('token', { token });
 
         return response.data;
     }

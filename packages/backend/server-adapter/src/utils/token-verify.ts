@@ -71,14 +71,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2T
             }
         }
 
-        let expires : number;
-        if (typeof payload.entity.expires === 'string') {
-            expires = Date.parse(payload.entity.expires);
-        } else {
-            expires = payload.entity.expires.getTime();
-        }
-
-        let secondsDiff : number = expires - Date.now();
+        let secondsDiff : number = payload.exp - Date.now();
         secondsDiff = parseInt(secondsDiff.toString(), 10);
 
         if (secondsDiff <= 0) {

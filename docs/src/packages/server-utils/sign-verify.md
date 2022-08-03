@@ -6,6 +6,10 @@ The method `signToken()` can be used to sign a payload.
 
 **Type**
 ```ts
+import {
+    TokenSignOptions
+} from '@authelion/server-utils';
+
 async function signToken(
     payload: string | object | Buffer | Record<string, any>,
     options?: TokenSignOptions
@@ -16,7 +20,7 @@ async function signToken(
 ```typescript
 import {
     signToken
-} from "@authelion/server-utils";
+} from '@authelion/server-utils';
 
 (async () => {
     const token : Record<string, any> = {foo: 'bar'};
@@ -38,6 +42,11 @@ The method `decodeToken()` can be used to decode the payload of a JWT token with
 
 **Type**
 ```typescript
+import {
+    TokenDecodeOptions
+} from '@authelion/server-utils';
+import { Jwt, JwtPayload } from 'jsonwebtoken';
+
 export function decodeToken(
     token: string, 
     options: TokenDecodeOptions & { complete: true }
@@ -48,10 +57,10 @@ export function decodeToken(
     options?: TokenDecodeOptions
 ): JwtPayload | string | null;
 
-async function decodeToken(
+function decodeToken(
     token: string,
     options?: TokenDecodeOptions,
-): Promise<string | Record<string, any> | null>;
+): string | JwtPayload | null;
 ```
 
 **Example**
@@ -62,7 +71,7 @@ import {
 
 (async () => {
     const tokenSigned = '...';
-    const tokenVerified = await decodeToken(tokenSigned);
+    const tokenVerified = decodeToken(tokenSigned);
 
     console.log(tokenVerified);
     // {iat: 1642942322, exp: 1642945922, foo: 'bar', ... }
@@ -77,6 +86,11 @@ The method `decodeToken()` can be used to decode and verify a JWT token.
 
 **Type**
 ```ts
+import {
+    TokenVerifyOptions
+} from '@authelion/server-utils';
+import { Jwt, JwtPayload } from 'jsonwebtoken';
+
 export async function verifyToken(
     token: string, 
     context: TokenVerifyOptions & { complete: true }
@@ -111,53 +125,63 @@ import {
 
 ## `TokenSignOptions`
 
+:::info Hint
+The type is simplified for better readability.
+:::
+
 ```typescript
-import { SignOptions } from 'jsonwebtoken';
 import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
+import { SignOptions } from 'jsonwebtoken';
 
 export type TokenSignOptions = ({
-    type: `${KeyType.RSA}` | KeyType.RSA,
+    type: 'rsa',
     algorithm?: 'RS256' | 'RS384' | 'RS512' |
         'PS256' | 'PS384' | 'PS512',
     keyPair: KeyPair | Partial<KeyPairOptions> | string
 } | {
-    type: `${KeyType.EC}` | KeyType.EC,
+    type: 'ec',
     algorithm?: 'ES256' | 'ES384' | 'ES512',
     keyPair: KeyPair | Partial<KeyPairOptions> | string
 } | {
-    type: `${KeyType.OCT}` | KeyType.OCT,
+    type: 'oct',
     algorithm?: 'HS256' | 'HS384' | 'HS512',
     secret: string | Buffer
 }) & Omit<SignOptions, 'algorithm'>;
 ```
 
 **References**
+- [KeyPair](key-pair.md#keypair)
 - [KeyPairOptions](key-pair.md#keypairoptions)
 
 ## `TokenVerifyOptions`
 
+:::info Hint
+The type is simplified for better readability.
+:::
+
 ```typescript
-import { VerifyOptions } from 'jsonwebtoken';
 import { KeyType } from '@authelion/common';
 import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
+import { VerifyOptions } from 'jsonwebtoken';
 
 export type TokenVerifyOptions = ({
-    type: `${KeyType.RSA}` | KeyType.RSA,
+    type: 'rsa',
     algorithms?: ('RS256' | 'RS384' | 'RS512' |
         'PS256' | 'PS384' | 'PS512')[],
     keyPair: KeyPair | Partial<KeyPairOptions> | string
 } | {
-    type: `${KeyType.EC}` | KeyType.EC,
+    type: 'ec',
     algorithms?: ('ES256' | 'ES384' | 'ES512')[],
     keyPair: KeyPair | Partial<KeyPairOptions> | string
 } | {
-    type: `${KeyType.OCT}` | KeyType.OCT,
+    type: 'oct',
     algorithms?: ('HS256' | 'HS384' | 'HS512')[],
     secret: string | Buffer
 }) & Omit<VerifyOptions, 'algorithms'>;
 ```
 
 **References**
+- [KeyPair](key-pair.md#keypair)
 - [KeyPairOptions](key-pair.md#keypairoptions)
 
 ## `TokenDecodeOptions`
