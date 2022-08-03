@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index, JoinColumn, ManyToOne,
+    Entity, JoinColumn, ManyToOne,
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -16,14 +16,14 @@ import { Realm, User, UserAttribute } from '@authelion/common';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 
-@Unique(['key', 'user_id'])
+@Unique(['name', 'user_id'])
 @Entity({ name: 'auth_user_attributes' })
 export class UserAttributeEntity implements UserAttribute {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        key: string;
+        name: string;
 
     @Column({ type: 'text' })
         value: string;

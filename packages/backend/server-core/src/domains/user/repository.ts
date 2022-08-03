@@ -6,12 +6,18 @@
  */
 
 import {
-    DataSource, EntityManager, In, InstanceChecker, Repository,
+    DataSource,
+    EntityManager, FindOptionsWhere,
+    In,
+    InstanceChecker,
+    Repository,
 } from 'typeorm';
 import {
     AbilityDescriptor,
     Role, User,
-    UserRole, buildPermissionDescriptorFromRelation, createNanoID,
+    UserRole,
+    buildPermissionDescriptorFromRelation,
+    createNanoID,
 } from '@authelion/common';
 
 import { compare, hash } from '@authelion/server-utils';
@@ -21,10 +27,40 @@ import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
 import { CachePrefix } from '../../constants';
+import { UserAttributeEntity, transformUserAttributes } from '../user-attribute';
 
 export class UserRepository extends Repository<UserEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(UserEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+    }
+
+    async appendAttributes(
+        entity: Partial<Omit<User, 'id'> & Pick<User, 'id'>>,
+        names?: string[],
+    ) : Promise<Partial<User>> {
+        const attributeRepository = this.manager.getRepository(UserAttributeEntity);
+        const where : FindOptionsWhere<UserAttributeEntity> = {
+            user_id: entity.id,
+        };
+
+        if (names) {
+            where.name = In(names);
+        }
+
+        const rawAttributes = await attributeRepository.find({
+            where: {
+                user_id: entity.id,
+            },
+            cache: 60.000,
+        });
+
+        const attributes = transformUserAttributes(rawAttributes);
+        const keys = Object.keys(attributes);
+        for (let i = 0; i < keys.length; i++) {
+            entity[keys[i]] = attributes[keys[i]];
+        }
+
+        return entity;
     }
 
     async syncRoles(

@@ -25,7 +25,7 @@ export async function runRoleAttributeValidation(
     };
 
     if (operation === CRUDOperation.CREATE) {
-        await check('key')
+        await check('name')
             .exists()
             .notEmpty()
             .isString()

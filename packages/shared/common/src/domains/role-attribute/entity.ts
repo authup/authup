@@ -11,7 +11,7 @@ import { Role } from '../role';
 export interface RoleAttribute {
     id: string;
 
-    key: string;
+    name: string;
 
     value: string | null;
 

@@ -76,14 +76,14 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
     const query = await userRepository.createQueryBuilder('user')
         .andWhere('user.id = :id', { id });
 
-    if (
-        isSelfId(id) &&
-        req.userId
-    ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
+    let attributes : string[] = [];
+
+    if (isSelfId(id) && req.userId) {
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`user.${attributes[i]}`);
         }
+
+        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
 
         query.where('user.id = :id', { id: req.userId });
     } else {
@@ -114,6 +114,10 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (isSelfId(id) && req.userId) {
+        await userRepository.appendAttributes(entity, attributes);
     }
 
     return res.respond({ data: entity });

@@ -6,7 +6,7 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn,
+    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn,
 } from 'typeorm';
 import {
     OAuth2AccessToken, OAuth2Client, Realm, Robot,

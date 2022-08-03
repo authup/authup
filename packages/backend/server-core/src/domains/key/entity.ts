@@ -6,21 +6,26 @@
  */
 
 import {
-    Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
+    Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
 import {
     Key,
-    KeyStatus,
     KeyType,
     Realm,
 } from '@authelion/common';
 import { RealmEntity } from '../realm';
 
+@Index([
+    'priority',
+    'realm_id',
+    'type',
+])
 @Entity({ name: 'auth_keys' })
 export class KeyEntity implements Key {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    @Index()
     @Column({
         type: 'varchar',
         length: 64,
@@ -41,13 +46,6 @@ export class KeyEntity implements Key {
         default: null,
     })
         signature_algorithm: Key['signature_algorithm'];
-
-    @Column({
-        type: 'varchar',
-        length: 64,
-        default: null,
-    })
-        status: `${KeyStatus}`;
 
     @Column({
         type: 'varchar',
@@ -74,6 +72,7 @@ export class KeyEntity implements Key {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ nullable: true, default: null })
         realm_id: Realm['id'];
 

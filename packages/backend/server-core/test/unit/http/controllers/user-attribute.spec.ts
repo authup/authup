@@ -27,16 +27,16 @@ describe('src/http/controllers/user-attribute', () => {
         const response = await superTest
             .post('/user-attributes')
             .send({
-                key: 'foo',
+                name: 'foo',
                 value: 'bar',
-            })
+            } as UserAttribute)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
 
         const body = response.body as UserAttribute;
         expect(body).toBeDefined();
-        expect(body.key).toEqual('foo');
+        expect(body.name).toEqual('foo');
         expect(body.value).toEqual('bar');
     });
 });

@@ -6,7 +6,7 @@
  */
 
 import { Algorithm } from 'jsonwebtoken';
-import { KeyStatus, KeyType } from './constants';
+import { KeyType } from './constants';
 import { Realm } from '../realm';
 
 export interface Key {
@@ -26,8 +26,6 @@ export interface Key {
      * Usage priority.
      */
     priority: number,
-
-    status: `${KeyStatus}`,
 
     /**
      * aka private key

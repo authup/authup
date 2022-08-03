@@ -10,14 +10,12 @@ import {
     TokenError,
 } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
-import { buildKeyPath } from 'redis-extension';
 import {
     OAuth2ClientEntity,
     RobotEntity,
-    RobotRepository, UserAttributeEntity, UserEntity, UserRepository, transformUserAttributes,
+    RobotRepository, UserEntity, UserRepository,
 } from '../../domains';
 import { useDataSource } from '../../database';
-import { CachePrefix } from '../../constants';
 import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
@@ -87,21 +85,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                 throw new NotFoundError();
             }
 
-            const userAttributeRepository = dataSource.getRepository(UserAttributeEntity);
-            const userAttributes = await userAttributeRepository.find({
-                where: {
-                    user_id: entity.id,
-                },
-                cache: {
-                    id: buildKeyPath({
-                        prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                        id: entity.id,
-                    }),
-                    milliseconds: 60.000,
-                },
-            });
-
-            entity.extra = transformUserAttributes(userAttributes);
+            await repository.appendAttributes(entity, fields);
 
             if (!entity.active) {
                 throw TokenError.targetInactive(OAuth2SubKind.USER);

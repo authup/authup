@@ -57,6 +57,7 @@ export class RobotEntity implements Robot {
     @JoinColumn({ name: 'user_id' })
         user: User | null;
 
+    @Index()
     @Column({ default: MASTER_REALM_ID })
         realm_id: Realm['id'];
 

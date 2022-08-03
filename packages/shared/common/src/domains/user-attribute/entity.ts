@@ -11,7 +11,7 @@ import { Realm } from '../realm';
 export interface UserAttribute {
     id: string;
 
-    key: string;
+    name: string;
 
     value: string | null;
 

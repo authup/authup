@@ -19,9 +19,3 @@ export enum KeyType {
      */
     EC = 'ec',
 }
-
-export enum KeyStatus {
-    ACTIVE = 'active',
-    PASSIVE = 'passive',
-    DISABLED = 'disabled',
-}

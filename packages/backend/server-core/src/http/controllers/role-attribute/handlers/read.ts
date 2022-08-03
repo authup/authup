@@ -24,7 +24,7 @@ export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res:
 
     applyFilters(query, filter, {
         defaultAlias: 'roleAttribute',
-        allowed: ['id', 'key', 'role_id', 'realm_id'],
+        allowed: ['id', 'name', 'role_id', 'realm_id'],
     });
 
     applySort(query, sort, {

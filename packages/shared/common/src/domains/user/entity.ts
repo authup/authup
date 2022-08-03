@@ -62,6 +62,7 @@ export interface User {
 
     realm: Realm;
 
-    // extra user attributes :)
-    extra?: Record<string, any>;
+    // ------------------------------------------------------------------
+
+    [key: string]: any
 }

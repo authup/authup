@@ -99,12 +99,7 @@ async function verifyBasicAuthorizationHeader(
             throw new NotFoundError();
         }
 
-        const userAttributeRepository = dataSource.getRepository(UserAttributeEntity);
-        const userAttributes = await userAttributeRepository.findBy({
-            user_id: entity.id,
-        });
-
-        entity.extra = transformUserAttributes(userAttributes);
+        await userRepository.appendAttributes(entity);
 
         permissions = await userRepository.getOwnedPermissions(entity.id);
 

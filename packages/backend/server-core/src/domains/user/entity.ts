@@ -23,6 +23,7 @@ export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    @Index()
     @Column({ type: 'varchar', length: 128, unique: true })
         name: string;
 
@@ -38,6 +39,7 @@ export class UserEntity implements User {
     @Column({ type: 'varchar', length: 128 })
         display_name: string;
 
+    @Index()
     @Column({
         type: 'varchar', length: 256, default: null, nullable: true, select: false,
     })
@@ -107,6 +109,7 @@ export class UserEntity implements User {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column()
         realm_id: Realm['id'];
 
@@ -129,6 +132,4 @@ export class UserEntity implements User {
             this.display_name = this.name;
         }
     }
-
-    extra?: Record<string, any>;
 }

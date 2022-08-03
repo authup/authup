@@ -28,12 +28,12 @@ export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res:
 
     applyFilters(query, filter, {
         defaultAlias: 'userAttribute',
-        allowed: ['id', 'key', 'user_id', 'realm_id'],
+        allowed: ['id', 'name', 'user_id', 'realm_id'],
     });
 
     applySort(query, sort, {
         defaultAlias: 'userAttribute',
-        allowed: ['id', 'key', 'user_id', 'realm_id', 'created_at', 'updated_at'],
+        allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });

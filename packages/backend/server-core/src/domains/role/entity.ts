@@ -14,13 +14,13 @@ import {
 } from 'typeorm';
 import { Realm, Role } from '@authelion/common';
 import { RealmEntity } from '../realm';
-import { RoleAttributeEntity } from '../role-attribute';
 
 @Entity({ name: 'auth_roles' })
 export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    @Index()
     @Column({ type: 'varchar', length: 64, unique: true })
         name: string;
 
@@ -32,9 +32,7 @@ export class RoleEntity implements Role {
 
     // ------------------------------------------------------------------
 
-    @OneToMany(() => RoleAttributeEntity, (entity) => entity.role_id)
-        attributes: RoleAttributeEntity[];
-
+    @Index()
     @Column({ nullable: true })
         realm_id: Realm['id'] | null;
 

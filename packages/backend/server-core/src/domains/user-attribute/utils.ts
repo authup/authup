@@ -11,7 +11,7 @@ export function transformUserAttributes(data: UserAttribute[]) : Record<string, 
     const attributes : Record<string, any> = {};
 
     for (let i = 0; i < data.length; i++) {
-        attributes[data[i].key] = data[i].value;
+        attributes[data[i].name] = data[i].value;
     }
 
     return attributes;

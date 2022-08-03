@@ -22,7 +22,7 @@ export async function runUserAttributeValidation(
     };
 
     if (operation === CRUDOperation.CREATE) {
-        await check('key')
+        await check('name')
             .exists()
             .notEmpty()
             .isString()

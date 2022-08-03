@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index, JoinColumn, ManyToOne,
+    Entity, JoinColumn, ManyToOne,
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
@@ -18,14 +18,14 @@ import {
 import { RealmEntity } from '../realm';
 import { RoleEntity } from '../role';
 
-@Unique(['key', 'role_id'])
+@Unique(['name', 'role_id'])
 @Entity({ name: 'auth_role_attributes' })
 export class RoleAttributeEntity implements RoleAttribute {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        key: string;
+        name: string;
 
     @Column({ type: 'text' })
         value: string;
@@ -42,7 +42,7 @@ export class RoleAttributeEntity implements RoleAttribute {
     @Column()
         role_id: Role['id'];
 
-    @ManyToOne(() => RoleEntity, (entity) => entity.attributes, { onDelete: 'CASCADE' })
+    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
         role: RoleEntity;
 
