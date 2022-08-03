@@ -25,7 +25,7 @@ import { RealmEntity } from '../realm';
 @Entity({ name: 'auth_robot_roles' })
 @Index(['role_id', 'robot_id'], { unique: true })
 export class RobotRoleEntity implements RobotRole {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn('uuid')
         id: string;
 
     // ------------------------------------------------------------------
