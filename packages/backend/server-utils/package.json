@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-utils",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Authelion http & socket server utils.",
     "main": "dist/index.js",
     "files": [
@@ -43,7 +43,7 @@
         "mkdirp": "^1.0.4"
     },
     "devDependencies": {
-        "@authelion/common": "^0.1.0",
+        "@authelion/common": "^0.2.0",
         "@types/bcrypt": "^5.0.0",
         "@types/mkdirp": "^1.0.2"
     },
