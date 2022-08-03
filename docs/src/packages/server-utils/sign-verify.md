@@ -23,6 +23,7 @@ import {
     const tokenSigned = await signToken(
         token, 
         {
+            type: 'rsa',
             expiresIn: 3600
         }
     );
@@ -37,6 +38,16 @@ The method `decodeToken()` can be used to decode the payload of a JWT token with
 
 **Type**
 ```typescript
+export function decodeToken(
+    token: string, 
+    options: TokenDecodeOptions & { complete: true }
+): null | Jwt;
+
+export function decodeToken(
+    token: string, 
+    options?: TokenDecodeOptions
+): JwtPayload | string | null;
+
 async function decodeToken(
     token: string,
     options?: TokenDecodeOptions,
@@ -66,10 +77,20 @@ The method `decodeToken()` can be used to decode and verify a JWT token.
 
 **Type**
 ```ts
+export async function verifyToken(
+    token: string, 
+    context: TokenVerifyOptions & { complete: true }
+): Promise<string | Jwt>;
+
+export async function verifyToken(
+    token: string,
+    context: TokenVerifyOptions
+): Promise<JwtPayload | string>;
+
 async function verifyToken(
     token: string,
     options?: TokenVerifyOptions
-): Promise<string | Record<string, any> | null>;
+): Promise<JwtPayload | Jwt | string>;
 ```
 **Example**
 ```typescript
@@ -88,52 +109,61 @@ import {
 **References**
 - [TokenSignOptions](#tokensignoptions)
 
-## `TokenBaseOptions`
-
-```typescript
-import { KeyPairOptions } from '@authelion/server-utils';
-
-type TokenBaseOptions = {
-    keyPair?: Partial<KeyPairOptions>,
-    secret?: string
-};
-```
-
-**References**
-- [KeyPairOptions](key-pair.md#keypairoptions)
-
 ## `TokenSignOptions`
 
 ```typescript
 import { SignOptions } from 'jsonwebtoken';
-import { TokenBaseOptions } from '@authelion/server-utils';
+import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
 
-type TokenSignOptions = TokenBaseOptions & SignOptions;
+export type TokenSignOptions = ({
+    type: `${KeyType.RSA}` | KeyType.RSA,
+    algorithm?: 'RS256' | 'RS384' | 'RS512' |
+        'PS256' | 'PS384' | 'PS512',
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.EC}` | KeyType.EC,
+    algorithm?: 'ES256' | 'ES384' | 'ES512',
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.OCT}` | KeyType.OCT,
+    algorithm?: 'HS256' | 'HS384' | 'HS512',
+    secret: string | Buffer
+}) & Omit<SignOptions, 'algorithm'>;
 ```
 
 **References**
-- [TokenBaseOptions](#tokenbaseoptions)
+- [KeyPairOptions](key-pair.md#keypairoptions)
 
 ## `TokenVerifyOptions`
 
 ```typescript
 import { VerifyOptions } from 'jsonwebtoken';
-import { TokenBaseOptions } from '@authelion/server-utils';
+import { KeyType } from '@authelion/common';
+import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
 
-type TokenVerifyOptions = TokenBaseOptions & VerifyOptions;
+export type TokenVerifyOptions = ({
+    type: `${KeyType.RSA}` | KeyType.RSA,
+    algorithms?: ('RS256' | 'RS384' | 'RS512' |
+        'PS256' | 'PS384' | 'PS512')[],
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.EC}` | KeyType.EC,
+    algorithms?: ('ES256' | 'ES384' | 'ES512')[],
+    keyPair: KeyPair | Partial<KeyPairOptions> | string
+} | {
+    type: `${KeyType.OCT}` | KeyType.OCT,
+    algorithms?: ('HS256' | 'HS384' | 'HS512')[],
+    secret: string | Buffer
+}) & Omit<VerifyOptions, 'algorithms'>;
 ```
 
 **References**
-- [TokenBaseOptions](#tokenbaseoptions)
+- [KeyPairOptions](key-pair.md#keypairoptions)
 
 ## `TokenDecodeOptions`
 
 ```typescript
 import { DecodeOptions } from 'jsonwebtoken';
-import { KeyPairOptions } from '@authelion/server-utils';
 
 type TokenDecodeOptions = DecodeOptions;
 ```
-
-**References**
-- [KeyPairOptions](key-pair.md#keypairoptions)

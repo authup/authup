@@ -8,7 +8,6 @@ import { KeyPair, KeyPairOptions } from './type';
 import { extendKeyPairOptions } from './utils';
 import { loadKeyPair } from './load';
 import { createKeyPair } from './create';
-import { KeyPairKind } from './constants';
 
 const keyPairCache : Record<string, KeyPair> = {};
 

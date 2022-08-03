@@ -24,7 +24,7 @@ export async function verifyToken(token: string, context: TokenVerifyOptions): P
 export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
-): Promise<JwtPayload | Jwt | string> {
+) : Promise<JwtPayload | Jwt | string> {
     try {
         switch (context.type) {
             case KeyType.RSA:
