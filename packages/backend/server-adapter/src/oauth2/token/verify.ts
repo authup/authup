@@ -1,33 +1,30 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache } from 'redis-extension';
 import {
-    OAuth2API,
-    OAuth2TokenIntrospectionResponse, TokenError, hasOwnProperty,
+    OAuth2TokenIntrospectionResponse,
+    TokenError,
+    hasOwnProperty,
 } from '@authelion/common';
-import { isClientError } from '@trapi/client';
-import { Logger } from '../socket';
+import { isClientError } from 'hapic';
+import { useOAuth2Client } from '../client';
+import { TokenVerifyContext } from './type';
+import { useOAuth2TokenCache } from './cache';
 
-export type TokenVerifyContext = {
-    token: string,
-    tokenAPIClient: OAuth2API,
-    tokenCache?: Cache<string>,
-    logger?: Logger
-};
+export async function verifyOAuth2Token(token: string, context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {
+    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
 
-export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {
     let data : OAuth2TokenIntrospectionResponse | undefined;
 
-    if (context.tokenCache) {
-        data = await context.tokenCache.get(context.token);
+    if (cache) {
+        data = await cache.get(token);
 
         if (context.logger) {
-            context.logger.info(`The token ${context.token} could be verified from cache.`);
+            context.logger.info(`The token ${token} could be verified from cache.`);
         }
     }
 
@@ -35,9 +32,10 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2T
         let payload : OAuth2TokenIntrospectionResponse;
 
         try {
-            payload = await context.tokenAPIClient.verifyToken(context.token);
+            const oauth2Client = await useOAuth2Client(context.oauth2);
+            payload = await oauth2Client.token.introspect(token);
             if (context.logger) {
-                context.logger.info(`The token ${context.token} could be verified.`);
+                context.logger.info(`The token ${token} could be verified.`);
             }
         } catch (e) {
             if (
@@ -60,7 +58,7 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2T
                 });
             } else {
                 if (context.logger) {
-                    context.logger.debug(`The token ${context.token} could not be verified.`, {
+                    context.logger.debug(`The token ${token} could not be verified.`, {
                         error: e,
                     });
                 }
@@ -78,8 +76,8 @@ export async function verifyToken(context: TokenVerifyContext) : Promise<OAuth2T
             throw TokenError.expired();
         }
 
-        if (context.tokenCache) {
-            await context.tokenCache.set(context.token, payload, { seconds: secondsDiff });
+        if (cache) {
+            await cache.set(token, payload, { seconds: secondsDiff });
         }
 
         data = payload;

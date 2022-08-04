@@ -6,7 +6,7 @@
  */
 
 import { BadRequestError } from '@typescript-error/http';
-import { AuthorizationHeaderType } from '@trapi/client';
+import { AuthorizationHeaderType } from 'hapic';
 import { ErrorOptions, mergeErrorOptions } from '@typescript-error/core';
 import { ErrorCode } from '../constants';
 

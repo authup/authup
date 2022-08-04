@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, Config } from '@trapi/client';
+import { Client as BaseClient, Config } from 'hapic';
 import {
-    OAuth2API,
     OAuth2ProviderAPI,
     OAuth2ProviderRoleAPI,
     PermissionAPI,
@@ -23,7 +22,7 @@ import {
     UserRoleAPI,
 } from '../../domains';
 
-export class HTTPClient extends Client {
+export class HTTPClient extends BaseClient {
     public readonly oauth2Provider : OAuth2ProviderAPI;
 
     public readonly oauth2ProviderRole : OAuth2ProviderRoleAPI;
@@ -43,8 +42,6 @@ export class HTTPClient extends Client {
     public readonly roleAttribute : RoleAttributeAPI;
 
     public readonly rolePermission : RolePermissionAPI;
-
-    public readonly token : OAuth2API;
 
     public readonly user : UserAPI;
 
@@ -71,8 +68,6 @@ export class HTTPClient extends Client {
         this.role = new RoleAPI(this.driver);
         this.roleAttribute = new RoleAttributeAPI(this.driver);
         this.rolePermission = new RolePermissionAPI(this.driver);
-
-        this.token = new OAuth2API(this.driver);
 
         this.user = new UserAPI(this.driver);
         this.userAttribute = new UserAttributeAPI(this.driver);

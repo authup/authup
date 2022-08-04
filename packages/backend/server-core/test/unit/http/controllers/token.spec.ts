@@ -55,7 +55,7 @@ describe('src/http/controllers/token', () => {
 
         // original access-token should not be there anymore!
         response = await superTest
-            .get('/token')
+            .get('/token/introspect')
             .auth(tokenPayload.access_token, { type: 'bearer' })
             .send({
                 token: tokenPayload.access_token,
@@ -183,7 +183,7 @@ describe('src/http/controllers/token', () => {
         expect(response.status).toEqual(200);
 
         response = await superTest
-            .get('/token')
+            .get('/token/introspect')
             .auth(tokenPayload.access_token, { type: 'bearer' });
 
         expect(response.status).toEqual(200);

@@ -27,8 +27,16 @@ export class OAuth2Controller {
 
     // ----------------------------------------------------------
 
-    @Get('/token', [])
-    async getToken(
+    @Get('/token/introspect', [])
+    async getIntrospectToken(
+        @Request() req: any,
+            @Response() res: any,
+    ): Promise<OAuth2Provider[]> {
+        return introspectTokenRouteHandler(req, res);
+    }
+
+    @Post('/token/introspect', [])
+    async postIntrospectToken(
         @Request() req: any,
             @Response() res: any,
     ): Promise<OAuth2Provider[]> {

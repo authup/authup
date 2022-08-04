@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
+import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { CookieName } from '@authelion/common';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { verifyAuthorizationHeader } from './verify';

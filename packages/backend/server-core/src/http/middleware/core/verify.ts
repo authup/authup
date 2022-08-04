@@ -18,7 +18,7 @@ import {
     AuthorizationHeaderType,
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
-} from '@trapi/client';
+} from 'hapic';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest } from '../../type';
 import {

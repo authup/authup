@@ -6,7 +6,7 @@
  */
 
 import { OAuth2TokenGrant, OAuth2TokenGrantType } from '@authelion/common';
-import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
+import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import { ExpressRequest } from '../../../http';
 
 export function guessOauth2GrantTypeByRequest(

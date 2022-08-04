@@ -49,7 +49,7 @@ export async function getRealmOpenIdConfigurationRouteHandler(req: ExpressReques
 
         token_endpoint: new URL('token', config.selfUrl).href,
 
-        introspection_endpoint: new URL('token', config.selfUrl).href,
+        introspection_endpoint: new URL('token/introspect', config.selfUrl).href,
 
         revocation_endpoint: new URL('token', config.selfUrl).href,
 

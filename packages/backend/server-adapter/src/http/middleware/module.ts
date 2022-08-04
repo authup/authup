@@ -7,20 +7,16 @@
 
 import {
     AbilityManager,
-    CookieName,
-    OAuth2API, OAuth2SubKind,
+    CookieName, OAuth2SubKind,
     OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
-import { parseAuthorizationHeader, stringifyAuthorizationHeader } from '@trapi/client';
+import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { HTTPMiddlewareContext } from './type';
-import { initTokenCache, verifyToken } from '../../utils';
+import { verifyOAuth2Token } from '../../oauth2';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
-    const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new OAuth2API(context.http);
-
     return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = req.headers;
 
@@ -58,12 +54,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
         let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
-            data = await verifyToken({
-                token: header.token,
-                tokenCache,
-                tokenAPIClient,
-                logger: context.logger,
-            });
+            data = await verifyOAuth2Token(header.token, context);
         } catch (e) {
             next(e);
 

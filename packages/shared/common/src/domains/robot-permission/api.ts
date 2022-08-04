@@ -6,7 +6,7 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import { ClientDriverInstance } from '@trapi/client';
+import { ClientDriverInstance } from 'hapic';
 import { RobotPermission } from './entity';
 import {
     CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,

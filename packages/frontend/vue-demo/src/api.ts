@@ -7,8 +7,7 @@
 
 import {
     ClientError,
-    Config,
-} from '@trapi/client';
+} from 'hapic';
 import { HTTPClient, hasOwnProperty } from '@authelion/common';
 
 const interceptor = (error: ClientError) => {
@@ -24,15 +23,13 @@ const interceptor = (error: ClientError) => {
     throw new Error('A network error occurred.');
 };
 
-const apiConfig : Config = {
-    driver: {
-        baseURL: 'http://localhost:3010/',
-        withCredentials: true,
-    },
-};
-
 export function useAPI() {
-    const api = new HTTPClient(apiConfig);
+    const api = new HTTPClient({
+        driver: {
+            baseURL: 'http://localhost:3010/',
+            withCredentials: true,
+        },
+    });
 
     api.mountResponseInterceptor((r) => r, interceptor);
     return api;

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from '@trapi/client';
+import { ClientDriverInstance } from 'hapic';
 import { BuildInput, buildQuery } from '@trapi/query';
 import { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';

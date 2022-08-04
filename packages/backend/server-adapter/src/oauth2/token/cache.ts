@@ -7,23 +7,27 @@
 
 import { Cache, Client, useClient } from 'redis-extension';
 
-export function initTokenCache(
+let instance : Cache<string> | undefined;
+
+export function useOAuth2TokenCache(
     redis: Client | boolean,
     redisPrefix?: string,
 ) : Cache<string> | undefined {
-    let tokenCache : Cache<string> | undefined;
+    if (typeof instance !== 'undefined' || !redis) {
+        return instance;
+    }
 
     if (redis) {
         redis = typeof redis === 'boolean' ?
             useClient('default') :
             redis;
 
-        tokenCache = new Cache<string>({
+        instance = new Cache<string>({
             redis,
         }, {
             prefix: redisPrefix || 'token',
         });
     }
 
-    return tokenCache;
+    return instance;
 }

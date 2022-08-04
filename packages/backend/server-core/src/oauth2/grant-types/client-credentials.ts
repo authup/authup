@@ -8,7 +8,7 @@
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
 } from '@authelion/common';
-import { AuthorizationHeaderType, parseAuthorizationHeader } from '@trapi/client';
+import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { ExpressRequest } from '../../http';

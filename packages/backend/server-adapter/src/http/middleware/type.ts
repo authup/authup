@@ -5,15 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from '@trapi/client';
-import { Client } from 'redis-extension';
-import { Logger } from '../../socket';
+import { TokenVerifyContext } from '../../oauth2/token';
 
-export type HTTPMiddlewareContext = {
-    http: ClientDriverInstance,
-    redis?: Client | boolean
-    redisPrefix?: string,
-    logger?: Logger,
-
+export type HTTPMiddlewareContext = TokenVerifyContext & {
     cookieHandler?: (cookies: any) => string | undefined
 };

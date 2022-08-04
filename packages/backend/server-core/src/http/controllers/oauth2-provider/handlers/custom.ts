@@ -8,12 +8,12 @@
 import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
-    HTTPOAuth2Client,
     OAuth2TokenGrantResponse,
     buildOAuth2ProviderAuthorizeCallbackPath,
 } from '@authelion/common';
 import { URL } from 'url';
 import { CookieOptions } from 'express';
+import { Client, removeDuplicateForwardSlashesFromURL } from '@hapic/oauth2';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
@@ -40,15 +40,15 @@ export async function authorizeURLOauth2ProviderRouteHandler(
 
     const config = await useConfig();
 
-    const oauth2Client = new HTTPOAuth2Client({
-        client_id: provider.client_id,
-        token_host: provider.token_host,
-        authorize_host: provider.authorize_host,
-        authorize_path: provider.authorize_path,
-        redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
+    const oauth2Client = new Client({
+        options: {
+            client_id: provider.client_id,
+            authorization_endpoint: removeDuplicateForwardSlashesFromURL(provider.authorize_host + provider.authorize_path),
+            redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
+        },
     });
 
-    return res.redirect(oauth2Client.buildAuthorizeURL({}));
+    return res.redirect(oauth2Client.authorize.buildURL({}));
 }
 
 /* istanbul ignore next */
@@ -74,17 +74,19 @@ export async function authorizeCallbackOauth2ProviderRouteHandler(
     const config = await useConfig();
     const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
-    const oauth2Client = new HTTPOAuth2Client({
-        client_id: provider.client_id,
-        client_secret: provider.client_secret,
+    const oauth2Client = new Client({
+        ...(proxyConfig ? { driver: { proxy: proxyConfig } } : {}),
+        options: {
+            client_id: provider.client_id,
+            client_secret: provider.client_secret,
 
-        token_host: provider.token_host,
-        token_path: provider.token_path,
+            token_endpoint: removeDuplicateForwardSlashesFromURL(provider.token_host + provider.token_path),
 
-        redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
-    }, proxyConfig ? { driver: { proxy: proxyConfig } } : {});
+            redirect_uri: `${config.selfUrl}${buildOAuth2ProviderAuthorizeCallbackPath(provider.id)}`,
+        },
+    });
 
-    const tokenResponse : OAuth2TokenGrantResponse = await oauth2Client.getTokenWithAuthorizeGrant({
+    const tokenResponse : OAuth2TokenGrantResponse = await oauth2Client.token.createWithAuthorizeGrant({
         code: code as string,
         state: state as string,
     });

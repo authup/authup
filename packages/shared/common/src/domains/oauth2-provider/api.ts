@@ -6,7 +6,7 @@
  */
 
 import { BuildInput, buildQuery } from '@trapi/query';
-import { ClientDriverInstance } from '@trapi/client';
+import { ClientDriverInstance } from 'hapic';
 import { OAuth2Provider } from './entity';
 import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
 import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';

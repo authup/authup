@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HTTPOAuth2Client, MASTER_REALM_ID, OAuth2Provider } from '@authelion/common';
+import { MASTER_REALM_ID, OAuth2Provider } from '@authelion/common';
+import { Client, removeDuplicateForwardSlashesFromURL } from '@hapic/oauth2';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 import { useConfig } from '../../../../src';
@@ -109,14 +110,14 @@ describe('src/http/controllers/oauth2-provider', () => {
 
         const config = await useConfig();
 
-        const oauth2Client = new HTTPOAuth2Client({
-            client_id: provider.client_id,
-            token_host: provider.token_host,
-            authorize_host: provider.authorize_host,
-            authorize_path: provider.authorize_path,
-            redirect_uri: `${config.selfUrl}/oauth2-providers/${provider.id}/authorize-callback`,
+        const oauth2Client = new Client({
+            options: {
+                client_id: provider.client_id,
+                authorization_endpoint: removeDuplicateForwardSlashesFromURL(provider.authorize_host + provider.authorize_path),
+                redirect_uri: `${config.selfUrl}/oauth2-providers/${provider.id}/authorize-callback`,
+            },
         });
 
-        expect(response.header.location).toEqual(oauth2Client.buildAuthorizeURL());
+        expect(response.header.location).toEqual(oauth2Client.authorize.buildURL());
     });
 });

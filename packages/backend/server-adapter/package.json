@@ -37,9 +37,10 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@trapi/client": "^2.0.11",
+        "@hapic/oauth2": "^0.0.1-alpha.1",
         "@types/express": "^4.17.13",
         "@typescript-error/http": "^1.1.4",
+        "hapic": "^0.0.1-alpha.0",
         "redis-extension": "^1.0.0"
     },
     "devDependencies": {

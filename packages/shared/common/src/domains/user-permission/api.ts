@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from '@trapi/client';
+import { ClientDriverInstance } from 'hapic';
 import { BuildInput, buildQuery } from '@trapi/query';
 import { UserPermission } from './entity';
 import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';

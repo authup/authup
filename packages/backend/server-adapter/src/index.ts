@@ -7,4 +7,4 @@
 
 export * from './http';
 export * from './socket';
-export * from './utils';
+export * from './oauth2';

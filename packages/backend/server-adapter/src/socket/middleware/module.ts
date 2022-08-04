@@ -6,15 +6,16 @@
  */
 
 import {
-    AbilityManager, OAuth2API, OAuth2SubKind, OAuth2TokenIntrospectionResponse,
+    AbilityManager,
+    OAuth2SubKind,
+    OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
-import { initTokenCache, verifyToken } from '../../utils';
+import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
-    const tokenCache = initTokenCache(context.redis, context.redisPrefix);
-    const tokenAPIClient = new OAuth2API(context.http);
+    const tokenCache = useOAuth2TokenCache(context.redis, context.redisPrefix);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
@@ -26,12 +27,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
         let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
-            data = await verifyToken({
-                token,
-                tokenCache,
-                tokenAPIClient,
-                logger: context.logger,
-            });
+            data = await verifyOAuth2Token(token, context);
         } catch (e) {
             return next(e);
         }

@@ -9,6 +9,7 @@ import Vue, { VNode } from 'vue';
 import { BootstrapVue } from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
 import AuthVue, { setHTTPClient } from '@authelion/vue';
+import { Client } from '@hapic/oauth2';
 import { useAPI } from './api';
 
 // CSS
@@ -25,7 +26,10 @@ import Dev from './components/index.vue';
 (async () => {
     const api = useAPI();
 
-    const token = await api.token.createToken({
+    const client = new Client();
+    await client.useOpenIDDiscovery(api.getUri());
+
+    const token = await client.token.createWithPasswordGrant({
         username: 'admin',
         password: 'start123',
     });
