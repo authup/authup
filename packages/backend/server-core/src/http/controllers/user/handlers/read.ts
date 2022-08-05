@@ -78,12 +78,16 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     let attributes : string[] = [];
 
-    if (isSelfId(id) && req.userId) {
+    if (
+        isSelfId(id) &&
+        req.userId
+    ) {
+        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
+
         for (let i = 0; i < attributes.length; i++) {
+            // todo: only select valid entity attributes :)
             query.addSelect(`user.${attributes[i]}`);
         }
-
-        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
 
         query.where('user.id = :id', { id: req.userId });
     } else {
