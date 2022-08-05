@@ -62,7 +62,6 @@ export async function setupCommand(context?: SetupCommandContext) {
         }
 
         const dataSource = new DataSource(options);
-
         await dataSource.initialize();
 
         try {
@@ -83,8 +82,6 @@ export async function setupCommand(context?: SetupCommandContext) {
             }
 
             throw e;
-        } finally {
-            await dataSource.destroy();
         }
 
         try {
@@ -115,8 +112,8 @@ export async function setupCommand(context?: SetupCommandContext) {
             }
 
             throw e;
-        } finally {
-            await dataSource.destroy();
         }
+
+        await dataSource.destroy();
     }
 }

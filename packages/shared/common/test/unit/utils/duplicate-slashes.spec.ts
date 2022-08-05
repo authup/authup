@@ -7,7 +7,7 @@
 
 import { removeDuplicateForwardSlashesFromURL } from '../../../src';
 
-describe('src/utils/index.ts', () => {
+describe('src/utils/duplicate-slashes.ts', () => {
     it('should build safe url', () => {
         let url = removeDuplicateForwardSlashesFromURL('https://example.com//path/123');
         expect(url).toEqual('https://example.com/path/123');
