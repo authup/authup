@@ -15,6 +15,7 @@ import { buildDataSourceOptions } from '../database/utils';
 interface SetupArguments extends Arguments {
     root: string;
     database: boolean;
+    databaseSchema: boolean;
     databaseSeed: boolean;
     documentation: boolean;
 }

@@ -43,7 +43,7 @@ export async function setupCommand(context?: SetupCommandContext) {
         }
     }
 
-    if (context.database || context.databaseSeed) {
+    if (context.database || context.databaseSchema || context.databaseSeed) {
         /**
          * Setup database with schema & seeder
          */

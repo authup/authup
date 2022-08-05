@@ -7,10 +7,10 @@
 
 import defu from 'defu';
 import { Config } from './type';
-import { findConfigSync, loadConfig } from './utils/find';
-import { extendConfig } from './utils/extend';
+import {
+    applyConfig, extendConfig, findConfigSync, loadConfig,
+} from './utils';
 import { Subset } from '../types';
-import { applyConfig } from './utils/apply';
 
 let instance : Config | undefined;
 let instancePromise : Promise<Config> | undefined;
@@ -43,10 +43,18 @@ export function useConfigSync(directoryPath?: string) : Config {
 
 export function setConfig(value: Subset<Config>) : Config {
     if (instance) {
-        instance = defu(instance, value);
+        // redis client instance can not be merged ;)
+        const { redis, ...rest } = value;
+
+        instance = defu(instance, rest);
+
+        if (redis) {
+            instance.redis = redis;
+        }
     } else {
         instance = extendConfig(value);
     }
+
     applyConfig(instance);
 
     return instance;
