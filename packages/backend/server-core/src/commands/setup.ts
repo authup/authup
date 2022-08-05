@@ -18,15 +18,12 @@ export async function setupCommand(context?: SetupCommandContext) {
     if (
         typeof context.database === 'undefined' &&
         typeof context.databaseSeed === 'undefined' &&
+        typeof context.databaseSchema === 'undefined' &&
         typeof context.documentation === 'undefined'
     ) {
         // eslint-disable-next-line no-multi-assign
-        context.database = context.databaseSeed = context.documentation = true;
+        context.database = context.databaseSeed = context.databaseSchema = context.documentation = true;
     }
-
-    context.database ??= true;
-    context.databaseSeed ??= true;
-    context.documentation ??= true;
 
     const config = await useConfig();
 
@@ -69,16 +66,28 @@ export async function setupCommand(context?: SetupCommandContext) {
         await dataSource.initialize();
 
         try {
+            if (context.databaseSchema) {
+                if (context.spinner) {
+                    context.spinner.start('Execute schema setup.');
+                }
+
+                await setupDatabaseSchema(dataSource);
+
+                if (context.spinner) {
+                    context.spinner.succeed('Executed schema setup.');
+                }
+            }
+        } catch (e) {
             if (context.spinner) {
-                context.spinner.start('Execute schema setup.');
+                context.spinner.fail('Setup of the database schema failed.');
             }
 
-            await setupDatabaseSchema(dataSource);
+            throw e;
+        } finally {
+            await dataSource.destroy();
+        }
 
-            if (context.spinner) {
-                context.spinner.succeed('Executed schema setup.');
-            }
-
+        try {
             if (context.databaseSeed) {
                 if (context.spinner) {
                     context.spinner.start('Seeding database.');
@@ -102,8 +111,9 @@ export async function setupCommand(context?: SetupCommandContext) {
             }
         } catch (e) {
             if (context.spinner) {
-                context.spinner.fail('Synchronizing or seeding the database failed.');
+                context.spinner.fail('Seeding the database failed.');
             }
+
             throw e;
         } finally {
             await dataSource.destroy();

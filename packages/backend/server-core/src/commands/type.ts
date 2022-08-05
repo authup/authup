@@ -19,6 +19,7 @@ export type StartCommandContext = CommandContext;
 
 export type SetupCommandContext = CommandContext & {
     database?: boolean,
+    databaseSchema?: boolean,
     databaseSeed?: boolean,
 
     documentation?: boolean

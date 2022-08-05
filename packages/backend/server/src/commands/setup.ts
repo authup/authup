@@ -39,6 +39,12 @@ export class SetupCommand implements CommandModule {
                 type: 'boolean',
             })
 
+            .option('databaseSchema', {
+                alias: 'db:schema',
+                describe: 'Setup the schema of database.',
+                type: 'boolean',
+            })
+
             .option('databaseSeed', {
                 alias: 'db:seed',
                 describe: 'Seed database.',
