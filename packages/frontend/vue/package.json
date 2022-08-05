@@ -78,7 +78,7 @@
         "regenerator-runtime": "^0.13.9"
     },
     "peerDependencies": {
-        "@authelion/common": "^0.1.0",
+        "@authelion/common": "^0.x",
         "@trapi/query": "^2.x",
         "bootstrap-vue": "^2.x",
         "ilingo": "^2.x",
