@@ -19,9 +19,9 @@ const includePathOptions = {
         vue: 'node_modules/vue/dist/vue.common.js',
     },
     external: [
-        '@trapi/query',
         '@authelion/common',
         'ilingo',
+        'rapiq',
         'vue',
         'vuelidate',
         'vuelidate/lib/validators',
@@ -73,9 +73,9 @@ const baseConfig = {
 const external = [
     // list external dependencies, exactly the way it is written in the import statement.
     // eg. 'jquery'
-    '@trapi/query',
     '@authelion/common',
     'ilingo',
+    'rapiq',
     'vue',
     'vuelidate',
     'vuelidate/lib/validators',

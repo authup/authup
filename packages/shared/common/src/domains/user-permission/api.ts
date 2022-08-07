@@ -6,7 +6,7 @@
  */
 
 import { ClientDriverInstance } from 'hapic';
-import { BuildInput, buildQuery } from '@trapi/query';
+import { BuildInput, buildQuery } from 'rapiq';
 import { UserPermission } from './entity';
 import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
 import { nullifyEmptyObjectProperties } from '../../utils';

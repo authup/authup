@@ -6,7 +6,7 @@
  */
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { BuildInput } from '@trapi/query';
+import { BuildInput } from 'rapiq';
 import { Role, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,

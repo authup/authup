@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { Realm, mergeDeep } from '@authelion/common';
-import { BuildInput } from '@trapi/query';
+import { BuildInput } from 'rapiq';
 import {
     ComponentListData,
     ComponentListProperties,
