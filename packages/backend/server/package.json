@@ -50,7 +50,7 @@
         "ora": "^4.0.3",
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.3.7",
-        "typeorm-extension": "^2.1.5",
+        "typeorm-extension": "^2.1.6",
         "winston": "^3.8.1",
         "yargs": "^17.5.1"
     },
@@ -58,7 +58,7 @@
         "@types/change-case": "^2.3.1",
         "@types/express": "^4.17.12",
         "@types/jest": "^27.5.0",
-        "@types/yargs": "^17.0.10",
+        "@types/yargs": "^17.0.11",
         "ts-jest": "^27.1.4",
         "ts-node": "^10.8.2"
     },

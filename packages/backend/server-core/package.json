@@ -42,7 +42,7 @@
     "dependencies": {
         "@authelion/server-utils": "^0.2.3",
         "@decorators/express": "^2.6.0",
-        "@hapic/oauth2": "^0.0.1-alpha.1",
+        "@hapic/oauth2": "^0.0.1-alpha.3",
         "@trapi/swagger": "^0.2.17",
         "@types/morgan": "^1.9.3",
         "@typescript-error/http": "^1.1.4",
@@ -79,7 +79,7 @@
         "supertest": "^6.2.4",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.7",
-        "typeorm-extension": "^2.1.5"
+        "typeorm-extension": "^2.1.6"
     },
     "publishConfig": {
         "access": "public"
