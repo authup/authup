@@ -79,9 +79,9 @@
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
-        "@trapi/query": "^2.x",
         "bootstrap-vue": "^2.x",
         "ilingo": "^2.x",
+        "rapiq": "^0.x",
         "vue": "^2.x",
         "vuelidate": "^0.x"
     },
