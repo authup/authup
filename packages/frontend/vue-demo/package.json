@@ -41,7 +41,7 @@
         "@hapic/oauth2": "^0.0.1-alpha.3",
         "bootstrap": "^4.6.1",
         "bootstrap-vue": "^2.22.0",
-        "hapic": "^0.0.1-alpha.1",
+        "hapic": "^0.0.2",
         "ilingo": "^2.0.2",
         "vue": "^2.7.4",
         "vuelidate": "^0.7.7"
