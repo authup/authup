@@ -10,7 +10,7 @@ import { DataSource } from 'typeorm';
 import { setDataSource } from 'typeorm-extension';
 import { createExpressApp, createHttpServer } from '../http';
 import { StartCommandContext } from './type';
-import { buildDataSourceOptions } from '../database';
+import { DatabaseSeeder, buildDataSourceOptions } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
 import { setConfig, useConfig } from '../config';
 import { setLogger } from '../config/logger/module';
@@ -61,7 +61,12 @@ export async function startCommand(context?: StartCommandContext) {
 
     if (context.spinner) {
         context.spinner.succeed('Established database connection.');
+    }
 
+    const seeder = new DatabaseSeeder();
+    await seeder.run(dataSource);
+
+    if (context.spinner) {
         context.spinner.start('Starting aggregators.');
     }
 

@@ -8,7 +8,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { setupDatabaseSchema } from 'typeorm-extension';
 import { UpgradeCommandContext } from '../type';
-import { DatabaseSeeder, buildDataSourceOptions } from '../../database';
+import { buildDataSourceOptions } from '../../database';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     if (context.spinner) {
@@ -49,16 +49,6 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
 
         if (context.spinner) {
             context.spinner.start('Executed schema setup.');
-        }
-
-        if (context.spinner) {
-            context.spinner.start('Execute seeder.');
-        }
-        const seeder = new DatabaseSeeder();
-        await seeder.run(dataSource);
-
-        if (context.spinner) {
-            context.spinner.succeed('Executed seeder.');
         }
     } finally {
         if (!context.dataSource || context.dataSourceDestroyOnCompletion) {
