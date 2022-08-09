@@ -20,9 +20,9 @@ export function extendConfig(
 
     config.port = config.port || ConfigDefault.PORT;
 
-    config.selfUrl = config.selfUrl || `http://0.0.0.0:${config.port}/`;
+    config.selfUrl = config.selfUrl || `http://127.0.0.1:${config.port}/`;
 
-    config.webUrl = config.selfUrl || `http://0.0.0.0:${config.port}/`;
+    config.webUrl = config.selfUrl || `http://127.0.0.1:${config.port}/`;
 
     config.rootPath = config.rootPath || directoryPath;
     if (!path.isAbsolute(config.rootPath)) {

@@ -70,8 +70,6 @@ export class StartCommand implements CommandModule {
                 spinner,
                 dataSourceOptions,
             });
-
-            process.exit(0);
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);

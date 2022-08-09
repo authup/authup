@@ -7,13 +7,13 @@
 
 import { UserAttribute } from '@authelion/common';
 import { useSuperTest } from '../../../utils/supertest';
-import { DatabaseRootSeederRunResponse } from '../../../../src';
+import { DatabaseRootSeederResult } from '../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
 describe('src/http/controllers/user-attribute', () => {
     const superTest = useSuperTest();
 
-    let seederResponse: DatabaseRootSeederRunResponse | undefined;
+    let seederResponse: DatabaseRootSeederResult | undefined;
 
     beforeAll(async () => {
         seederResponse = await useTestDatabase();
