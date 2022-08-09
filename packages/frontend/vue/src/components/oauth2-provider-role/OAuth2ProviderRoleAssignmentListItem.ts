@@ -7,7 +7,7 @@
 
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { OAuth2ProviderRole, Role } from '@authelion/common';
+import { IdentityProviderRole, Role } from '@authelion/common';
 import { ComponentFormData, buildFormInput } from '@vue-layout/utils';
 import { useHTTPClient } from '../../utils';
 
@@ -19,7 +19,7 @@ export type OAuth2ProviderRoleListItemProperties = {
 };
 
 export const OAuth2ProviderRoleAssignmentListItem = Vue.extend<
-ComponentFormData<OAuth2ProviderRole>,
+ComponentFormData<IdentityProviderRole>,
 any,
 any,
 OAuth2ProviderRoleListItemProperties

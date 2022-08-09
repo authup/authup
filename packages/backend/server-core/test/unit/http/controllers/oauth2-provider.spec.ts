@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, OAuth2Provider } from '@authelion/common';
+import { MASTER_REALM_ID, OAuth2IdentityProvider } from '@authelion/common';
 import { Client, removeDuplicateForwardSlashesFromURL } from '@hapic/oauth2';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -22,7 +22,7 @@ describe('src/http/controllers/oauth2-provider', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<OAuth2Provider> = {
+    const details : Partial<OAuth2IdentityProvider> = {
         name: 'keycloak',
         authorize_path: '/protocol/openid-connect/auth',
         client_id: 'pht',

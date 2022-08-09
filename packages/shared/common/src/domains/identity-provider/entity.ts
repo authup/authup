@@ -30,11 +30,7 @@ export interface IdentityProvider {
     realm: Realm;
 }
 
-export interface OAuth2Provider {
-    id: string;
-
-    name: string;
-
+export interface OAuth2IdentityProvider extends IdentityProvider {
     open_id: boolean;
 
     client_id: string;
@@ -56,12 +52,4 @@ export interface OAuth2Provider {
     user_info_path: string;
 
     scope: string;
-
-    created_at: Date;
-
-    updated_at: Date;
-
-    realm_id: string;
-
-    realm: Realm;
 }

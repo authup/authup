@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from 'rapiq';
-import { OAuth2Provider, mergeDeep } from '@authelion/common';
+import { OAuth2IdentityProvider, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
@@ -25,14 +25,14 @@ import {
     useHTTPClient,
 } from '../../utils';
 
-type Properties = ComponentListProperties<OAuth2Provider> & {
+type Properties = ComponentListProperties<OAuth2IdentityProvider> & {
     mapItems?: () => void,
     filterItems?: () => void
 };
 
 export const OAuth2ProviderList = Vue.extend<
-ComponentListData<OAuth2Provider>,
-ComponentListMethods<OAuth2Provider>,
+ComponentListData<OAuth2IdentityProvider>,
+ComponentListMethods<OAuth2IdentityProvider>,
 any,
 Properties
 >({
@@ -42,7 +42,7 @@ Properties
         mapItems: Function,
         filterItems: Function,
         query: {
-            type: Object as PropType<BuildInput<OAuth2Provider>>,
+            type: Object as PropType<BuildInput<OAuth2IdentityProvider>>,
             default() {
                 return {};
             },
@@ -148,10 +148,10 @@ Properties
             this.busy = false;
         },
 
-        handleCreated(item: OAuth2Provider, options?: ComponentListHandlerMethodOptions<OAuth2Provider>) {
+        handleCreated(item: OAuth2IdentityProvider, options?: ComponentListHandlerMethodOptions<OAuth2IdentityProvider>) {
             options = options || {};
 
-            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
+            const index = this.items.findIndex((el: OAuth2IdentityProvider) => el.id === item.id);
             if (index === -1) {
                 if (options.unshift) {
                     this.items.unshift(item);
@@ -160,17 +160,17 @@ Properties
                 }
             }
         },
-        handleUpdated(item: OAuth2Provider) {
-            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
+        handleUpdated(item: OAuth2IdentityProvider) {
+            const index = this.items.findIndex((el: OAuth2IdentityProvider) => el.id === item.id);
             if (index !== -1) {
-                const keys : (keyof OAuth2Provider)[] = Object.keys(item) as (keyof OAuth2Provider)[];
+                const keys : (keyof OAuth2IdentityProvider)[] = Object.keys(item) as (keyof OAuth2IdentityProvider)[];
                 for (let i = 0; i < keys.length; i++) {
                     Vue.set(this.items[index], keys[i], item[keys[i]]);
                 }
             }
         },
-        handleDeleted(item: OAuth2Provider) {
-            const index = this.items.findIndex((el: OAuth2Provider) => el.id === item.id);
+        handleDeleted(item: OAuth2IdentityProvider) {
+            const index = this.items.findIndex((el: OAuth2IdentityProvider) => el.id === item.id);
             if (index !== -1) {
                 this.items.splice(index, 1);
                 this.meta.total--;

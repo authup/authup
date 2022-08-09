@@ -7,51 +7,51 @@
 
 import { BuildInput, buildQuery } from 'rapiq';
 import { ClientDriverInstance } from 'hapic';
-import { OAuth2Provider } from './entity';
+import { IdentityProvider } from './entity';
 import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
 import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
-import { buildOAuth2ProviderAuthorizePath } from './utils';
+import { buildIdentityProviderAuthorizePath } from './utils';
 
-export class OAuth2ProviderAPI implements DomainAPI<OAuth2Provider> {
+export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {
     protected client: ClientDriverInstance;
 
     constructor(client: ClientDriverInstance) {
         this.client = client;
     }
 
-    getAuthorizeUri(baseUrl: string, id: OAuth2Provider['id']): string {
-        return removeDuplicateForwardSlashesFromURL(`${baseUrl}/${buildOAuth2ProviderAuthorizePath(id)}`);
+    getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {
+        return removeDuplicateForwardSlashesFromURL(`${baseUrl}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
-    async getMany(record?: BuildInput<OAuth2Provider>): Promise<CollectionResourceResponse<OAuth2Provider>> {
-        const response = await this.client.get(`oauth2-providers${buildQuery(record)}`);
+    async getMany(record?: BuildInput<IdentityProvider>): Promise<CollectionResourceResponse<IdentityProvider>> {
+        const response = await this.client.get(`identity-providers${buildQuery(record)}`);
 
         return response.data;
     }
 
     async getOne(
-        id: OAuth2Provider['id'],
-        record?: BuildInput<OAuth2Provider>,
-    ): Promise<SingleResourceResponse<OAuth2Provider>> {
-        const response = await this.client.get(`oauth2-providers/${id}${buildQuery(record)}`);
+        id: IdentityProvider['id'],
+        record?: BuildInput<IdentityProvider>,
+    ): Promise<SingleResourceResponse<IdentityProvider>> {
+        const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
-    async delete(id: OAuth2Provider['id']): Promise<SingleResourceResponse<OAuth2Provider>> {
-        const response = await this.client.delete(`oauth2-providers/${id}`);
+    async delete(id: IdentityProvider['id']): Promise<SingleResourceResponse<IdentityProvider>> {
+        const response = await this.client.delete(`identity-providers/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
-        const response = await this.client.post('oauth2-providers', nullifyEmptyObjectProperties(data));
+    async create(data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
+        const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: OAuth2Provider['id'], data: Partial<OAuth2Provider>): Promise<SingleResourceResponse<OAuth2Provider>> {
-        const response = await this.client.post(`oauth2-providers/${id}`, nullifyEmptyObjectProperties(data));
+    async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
+        const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

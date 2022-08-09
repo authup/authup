@@ -7,13 +7,13 @@
 
 import { DataSourceOptions } from 'typeorm';
 import {
+    IdentityProviderAccountEntity,
+    IdentityProviderEntity,
+    IdentityProviderRoleEntity,
     KeyEntity,
     OAuth2AccessTokenEntity,
     OAuth2AuthorizationCodeEntity,
     OAuth2ClientEntity,
-    OAuth2ProviderAccountEntity,
-    OAuth2ProviderEntity,
-    OAuth2ProviderRoleEntity,
     OAuth2RefreshTokenEntity,
     PermissionEntity,
     RealmEntity,
@@ -36,9 +36,9 @@ export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(opt
             OAuth2ClientEntity,
             OAuth2RefreshTokenEntity,
 
-            OAuth2ProviderEntity,
-            OAuth2ProviderAccountEntity,
-            OAuth2ProviderRoleEntity,
+            IdentityProviderEntity,
+            IdentityProviderAccountEntity,
+            IdentityProviderRoleEntity,
             PermissionEntity,
             RealmEntity,
             RobotEntity,

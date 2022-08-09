@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { OAuth2Provider, createNanoID } from '@authelion/common';
+import { OAuth2IdentityProvider, createNanoID } from '@authelion/common';
 import {
     ComponentFormData,
     ComponentFormMethods,
@@ -26,14 +26,14 @@ import { buildVuelidateTranslator } from '../../language/utils';
 type Properties = {
     [key: string]: any;
 
-    entity?: OAuth2Provider,
+    entity?: OAuth2IdentityProvider,
     realmId?: string,
     translatorLocale?: string
 };
 
 export const OAuth2ProviderForm = Vue.extend<
-ComponentFormData<OAuth2Provider>,
-ComponentFormMethods<OAuth2Provider>,
+ComponentFormData<OAuth2IdentityProvider>,
+ComponentFormMethods<OAuth2IdentityProvider>,
 any,
 Properties
 >({
@@ -41,7 +41,7 @@ Properties
     components: { OAuth2ProviderRoleList: OAuth2ProviderRoleAssignmentList },
     props: {
         entity: {
-            type: Object as PropType<OAuth2Provider>,
+            type: Object as PropType<OAuth2IdentityProvider>,
             required: false,
             default: undefined,
         },
@@ -163,7 +163,7 @@ Properties
             }
 
             if (this.entity) {
-                initPropertiesFromSource<OAuth2Provider>(this.entity, this.form);
+                initPropertiesFromSource<OAuth2IdentityProvider>(this.entity, this.form);
             }
 
             if (this.isNameEmpty) {

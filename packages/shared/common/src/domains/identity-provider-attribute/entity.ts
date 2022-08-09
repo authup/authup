@@ -5,6 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export interface IdentityProviderAttribute {
+import { Realm } from '../realm';
+import { IdentityProvider } from '../identity-provider';
 
+export interface IdentityProviderAttribute {
+    id: string;
+
+    name: string;
+
+    value: string | null;
+
+    // ------------------------------------------------------------------
+
+    provider_id: IdentityProvider['id'];
+
+    provider: IdentityProvider;
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
+
+    // ------------------------------------------------------------------
+
+    created_at: string;
+
+    updated_at: string;
 }

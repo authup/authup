@@ -7,8 +7,8 @@
 
 import { Client as BaseClient, Config } from 'hapic';
 import {
-    OAuth2ProviderAPI,
-    OAuth2ProviderRoleAPI,
+    IdentityProviderAPI,
+    IdentityProviderRoleAPI,
     PermissionAPI,
     RealmAPI,
     RobotAPI,
@@ -23,9 +23,9 @@ import {
 } from '../../domains';
 
 export class HTTPClient extends BaseClient {
-    public readonly oauth2Provider : OAuth2ProviderAPI;
+    public readonly oauth2Provider : IdentityProviderAPI;
 
-    public readonly oauth2ProviderRole : OAuth2ProviderRoleAPI;
+    public readonly oauth2ProviderRole : IdentityProviderRoleAPI;
 
     public readonly permission : PermissionAPI;
 
@@ -54,8 +54,8 @@ export class HTTPClient extends BaseClient {
     constructor(config: Config) {
         super(config);
 
-        this.oauth2Provider = new OAuth2ProviderAPI(this.driver);
-        this.oauth2ProviderRole = new OAuth2ProviderRoleAPI(this.driver);
+        this.oauth2Provider = new IdentityProviderAPI(this.driver);
+        this.oauth2ProviderRole = new IdentityProviderRoleAPI(this.driver);
 
         this.permission = new PermissionAPI(this.driver);
 

@@ -9,7 +9,7 @@ import { SwaggerTags } from '@trapi/swagger';
 import {
     Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
-import { OAuth2Provider, OAuth2TokenGrantResponse, Realm } from '@authelion/common';
+import { OAuth2IdentityProvider, OAuth2TokenGrantResponse, Realm } from '@authelion/common';
 import { createTokenRouteHandler, deleteTokenRouteHandler, introspectTokenRouteHandler } from './token';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
@@ -23,7 +23,7 @@ export class OAuth2Controller {
     async confirmAuthorization(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
+    ): Promise<OAuth2IdentityProvider[]> {
         return runAuthorizationRouteHandler(req, res);
     }
 
@@ -33,7 +33,7 @@ export class OAuth2Controller {
     async getIntrospectToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
+    ): Promise<OAuth2IdentityProvider[]> {
         return introspectTokenRouteHandler(req, res);
     }
 
@@ -41,7 +41,7 @@ export class OAuth2Controller {
     async postIntrospectToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
+    ): Promise<OAuth2IdentityProvider[]> {
         return introspectTokenRouteHandler(req, res);
     }
 
@@ -58,7 +58,7 @@ export class OAuth2Controller {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
+    ): Promise<OAuth2IdentityProvider[]> {
         return deleteTokenRouteHandler(req, res);
     }
 
@@ -66,7 +66,7 @@ export class OAuth2Controller {
     async deleteToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Provider[]> {
+    ): Promise<OAuth2IdentityProvider[]> {
         return deleteTokenRouteHandler(req, res);
     }
 
