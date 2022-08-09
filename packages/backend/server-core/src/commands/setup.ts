@@ -9,7 +9,12 @@ import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { SetupCommandContext } from './type';
 import { generateSwaggerDocumentation } from '../http';
-import { DatabaseSeeder, buildDataSourceOptions, buildDatabaseOptionsFromConfig } from '../database';
+import {
+    DatabaseSeeder,
+    buildDataSourceOptions,
+    buildDatabaseOptionsFromConfig,
+    saveSeedResult,
+} from '../database';
 import { useConfig } from '../config';
 
 export async function setupCommand(context?: SetupCommandContext) {
@@ -101,8 +106,7 @@ export async function setupCommand(context?: SetupCommandContext) {
                     context.spinner.succeed('Seeded database.');
 
                     if (seederData.robot) {
-                        context.spinner.info(`Robot ID: ${seederData.robot.id}`);
-                        context.spinner.info(`Robot Secret: ${seederData.robot.secret}`);
+                        await saveSeedResult(config.writableDirectoryPath, seederData);
                     }
                 }
             }

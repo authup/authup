@@ -46,7 +46,7 @@ export function setConfig(value: Subset<Config>) : Config {
         // redis client instance can not be merged ;)
         const { redis, ...rest } = value;
 
-        instance = defu(instance, rest);
+        instance = defu(rest, instance);
 
         if (redis) {
             instance.redis = redis;

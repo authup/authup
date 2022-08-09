@@ -12,7 +12,7 @@ import {
     DataSource, DataSourceOptions,
 } from 'typeorm';
 import {
-    DatabaseRootSeederRunResponse,
+    DatabaseRootSeederResult,
     DatabaseSeeder,
     buildDataSourceOptions,
     buildDatabaseOptionsFromConfig,
@@ -32,7 +32,7 @@ async function buildOptions() {
     } as DataSourceOptions;
 }
 
-export async function useTestDatabase() : Promise<DatabaseRootSeederRunResponse> {
+export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
     const config = await useConfig();
 
     const options = await buildOptions();

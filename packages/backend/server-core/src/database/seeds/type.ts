@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './utils';
-export * from './type';
+import { Robot, User } from '@authelion/common';
+
+export type DatabaseRootSeederResult = {
+    robot?: Robot,
+    user?: User
+};
