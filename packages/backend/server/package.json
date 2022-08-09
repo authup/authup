@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server",
-    "version": "0.2.12",
+    "version": "0.2.13",
     "description": "This is a simple standalone api application.",
     "main": "dist/index.js",
     "scripts": {
