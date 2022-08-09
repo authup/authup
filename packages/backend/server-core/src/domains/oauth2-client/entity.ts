@@ -8,12 +8,12 @@
 import {
     Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import { OAuth2Client, Realm, User } from '@authelion/common';
+import { Client, Realm, User } from '@authelion/common';
 import { UserEntity } from '../user';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_clients' })
-export class OAuth2ClientEntity implements OAuth2Client {
+export class OAuth2ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 

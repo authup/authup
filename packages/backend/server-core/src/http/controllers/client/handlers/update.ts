@@ -13,7 +13,7 @@ import { OAuth2ClientEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
-export async function updateOauth2ClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function updateClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
 
     if (!req.ability.has(PermissionID.CLIENT_EDIT)) {

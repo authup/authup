@@ -11,7 +11,7 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 
-export async function deleteOauth2ClientRouteHandler(
+export async function deleteClientRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
 ) : Promise<any> {

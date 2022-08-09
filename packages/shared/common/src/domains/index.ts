@@ -9,7 +9,7 @@ export * from './key';
 export * from './oauth2';
 export * from './oauth2-access-token';
 export * from './oauth2-authorization-code';
-export * from './oauth2-client';
+export * from './client';
 export * from './oauth2-provider';
 export * from './oauth2-provider-account';
 export * from './oauth2-provider-role';

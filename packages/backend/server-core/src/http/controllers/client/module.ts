@@ -10,26 +10,26 @@ import {
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
 import {
-    OAuth2Client,
+    Client,
 } from '@authelion/common';
 import {
-    createOauth2ClientRouteHandler,
-    deleteOauth2ClientRouteHandler,
-    getManyOauth2ClientRouteHandler,
-    getOneOauth2ClientRouteHandler,
-    updateOauth2ClientRouteHandler,
+    createClientRouteHandler,
+    deleteClientRouteHandler,
+    getManyClientRouteHandler,
+    getOneClientRouteHandler,
+    updateClientRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('oauth2')
-@Controller('/oauth2-client')
-export class OAuth2ClientController {
+@Controller('/client')
+export class ClientController {
     @Get('', [])
     async getClients(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Client[]> {
-        return getManyOauth2ClientRouteHandler(req, res);
+    ): Promise<Client[]> {
+        return getManyClientRouteHandler(req, res);
     }
 
     @Get('/:id', [])
@@ -37,18 +37,18 @@ export class OAuth2ClientController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2Client> {
-        return getOneOauth2ClientRouteHandler(req, res);
+    ): Promise<Client> {
+        return getOneClientRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])
     async editClient(
         @Params('id') id: string,
-            @Body() user: NonNullable<OAuth2Client>,
+            @Body() user: NonNullable<Client>,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2Client> {
-        return updateOauth2ClientRouteHandler(req, res);
+    ) : Promise<Client> {
+        return updateClientRouteHandler(req, res);
     }
 
     @Delete('/:id', [ForceLoggedInMiddleware])
@@ -56,16 +56,16 @@ export class OAuth2ClientController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2Client> {
-        return deleteOauth2ClientRouteHandler(req, res);
+    ) : Promise<Client> {
+        return deleteClientRouteHandler(req, res);
     }
 
     @Post('', [ForceLoggedInMiddleware])
     async addClient(
-        @Body() user: NonNullable<OAuth2Client>,
+        @Body() user: NonNullable<Client>,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2Client> {
-        return createOauth2ClientRouteHandler(req, res);
+    ) : Promise<Client> {
+        return createClientRouteHandler(req, res);
     }
 }

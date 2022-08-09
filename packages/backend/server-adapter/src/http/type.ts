@@ -7,13 +7,13 @@
 
 import { NextFunction, Request } from 'express';
 import {
-    AbilityDescriptor, AbilityManager, OAuth2Client, Realm, Robot, User,
+    AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
 } from '@authelion/common';
 
 export interface ExpressRequest extends Request {
     userId?: User['id'],
     robotId?: Robot['id'],
-    clientId?: OAuth2Client['id']
+    clientId?: Client['id']
 
     realmId?: Realm['id'],
 

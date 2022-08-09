@@ -3,6 +3,6 @@ import { cleanUp } from './utils';
 
 export async function runOAuth2CleanerInInterval() {
     cron.schedule('* * * * *', async () => {
-        await cleanUp();
+        await cleanUp(true);
     });
 }

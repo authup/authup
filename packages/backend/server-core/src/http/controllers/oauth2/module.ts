@@ -9,10 +9,12 @@ import { SwaggerTags } from '@trapi/swagger';
 import {
     Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
-import { OAuth2Provider, OAuth2TokenGrantResponse } from '@authelion/common';
+import { OAuth2Provider, OAuth2TokenGrantResponse, Realm } from '@authelion/common';
 import { createTokenRouteHandler, deleteTokenRouteHandler, introspectTokenRouteHandler } from './token';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
+import { getJwkRouteHandler, getJwksRouteHandler } from './jwks/handlers';
+import { getOpenIdConfigurationRouteHandler } from './openid/handlers';
 
 @SwaggerTags('oauth2')
 @Controller('')
@@ -66,5 +68,34 @@ export class OAuth2Controller {
             @Response() res: any,
     ): Promise<OAuth2Provider[]> {
         return deleteTokenRouteHandler(req, res);
+    }
+
+    // ----------------------------------------------------------
+
+    @Get('/.well_known/openid-configuration', [])
+    async getOpenIdConfiguration(
+        @Request() req: any,
+            @Response() res: any,
+    ): Promise<Realm[]> {
+        return getOpenIdConfigurationRouteHandler(req, res);
+    }
+
+    // ----------------------------------------------------------
+
+    @Get('/jwks', [])
+    async getManyJwks(
+        @Request() req: any,
+            @Response() res: any,
+    ): Promise<Realm[]> {
+        return getJwksRouteHandler(req, res);
+    }
+
+    @Get('/jwks/:id', [])
+    async getOneJwks(
+        @Params('id') id: string,
+            @Request() req: any,
+            @Response() res: any,
+    ): Promise<Realm[]> {
+        return getJwkRouteHandler(req, res);
     }
 }

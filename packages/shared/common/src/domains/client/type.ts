@@ -10,7 +10,7 @@ import { Realm } from '../realm';
 
 // todo: add avatar/icon ?
 
-export interface OAuth2Client {
+export interface Client {
     id: string,
 
     name: string,

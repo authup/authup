@@ -9,10 +9,10 @@ import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 import { useLogger } from '../../../config/logger/module';
 
-export async function cleanUp() {
+export async function cleanUp(log?: boolean) {
     const logger = useLogger();
 
-    if (logger) {
+    if (logger && log) {
         logger.debug('Checking for expired access-tokens, refresh-tokens & authorization-codes...');
     }
 

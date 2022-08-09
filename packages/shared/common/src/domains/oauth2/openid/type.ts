@@ -64,6 +64,11 @@ export type OAuth2OpenIDProviderMetadata = {
      * The service documentation URL.
      */
     service_documentation?: string,
+
+    /**
+     * The OpenID Connect UserInfo endpoint URL.
+     */
+    userinfo_endpoint?: string
 };
 
 export type OAuth2OpenIdTokenPayload = OAuth2TokenPayload & {

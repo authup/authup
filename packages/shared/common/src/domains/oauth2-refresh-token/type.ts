@@ -6,7 +6,7 @@
  */
 
 import { OAuth2AccessToken } from '../oauth2-access-token';
-import { OAuth2Client } from '../oauth2-client';
+import { Client } from '../client';
 import { Realm } from '../realm';
 import { User } from '../user';
 import { Robot } from '../robot';
@@ -20,9 +20,9 @@ export interface OAuth2RefreshToken {
 
     // ------------------------------------------------------------------
 
-    client_id: OAuth2Client['id'] | null;
+    client_id: Client['id'] | null;
 
-    client: OAuth2Client | null;
+    client: Client | null;
 
     user_id: User['id'] | null,
 

@@ -9,7 +9,7 @@ import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
-    OAuth2AccessToken, OAuth2Client, OAuth2RefreshToken, Realm, Robot, User,
+    Client, OAuth2AccessToken, OAuth2RefreshToken, Realm, Robot, User,
 } from '@authelion/common';
 import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
 import { OAuth2ClientEntity } from '../oauth2-client';
@@ -35,7 +35,7 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     // ------------------------------------------------------------------
 
     @Column({ nullable: true, default: null })
-        client_id: OAuth2Client['id'] | null;
+        client_id: Client['id'] | null;
 
     @ManyToOne(() => OAuth2ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })

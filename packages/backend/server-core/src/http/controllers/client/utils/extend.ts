@@ -6,13 +6,13 @@
  */
 
 import { BadRequestError } from '@typescript-error/http';
-import { OAuth2Client } from '@authelion/common';
+import { Client } from '@authelion/common';
 import { ExpressValidationResult, buildExpressValidationErrorMessage } from '../../../express-validation';
 import { OAuth2ClientEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 
 type ExpressValidationResultExtendedWithOAuth2Client = ExpressValidationResult<{
-    client_id: OAuth2Client['id']
+    client_id: Client['id']
 }, {
     client?: OAuth2ClientEntity
 }>;

@@ -16,7 +16,7 @@ import { OAuth2ClientEntity } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
 
-export async function getManyOauth2ClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
+export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
         page, filter, fields, include, sort,
     } = req.query;
@@ -71,7 +71,7 @@ export async function getManyOauth2ClientRouteHandler(req: ExpressRequest, res: 
     });
 }
 
-export async function getOneOauth2ClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
+export async function getOneClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const { fields, include } = req.query;
     const { id } = req.params;
 

@@ -15,7 +15,7 @@ import {
 } from '../../../../express-validation';
 import { AuthorizeValidationResult } from '../type';
 import { ExpressRequest } from '../../../../type';
-import { extendExpressValidationResultWithOAuth2Client } from '../../../oauth2-client';
+import { extendExpressValidationResultWithOAuth2Client } from '../../../client';
 
 export async function runAuthorizeValidation(
     req: ExpressRequest,

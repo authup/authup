@@ -15,7 +15,7 @@ import { OAuth2ClientEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
-export async function createOauth2ClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createClientRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.has(PermissionID.CLIENT_ADD)) {
         throw new ForbiddenError();
     }

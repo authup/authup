@@ -6,7 +6,7 @@
  */
 
 import { User } from '../user';
-import { OAuth2Client } from '../oauth2-client';
+import { Client } from '../client';
 import { Robot } from '../robot';
 import { Realm } from '../realm';
 import { OAuth2TokenGrant } from './constants';
@@ -16,9 +16,9 @@ export interface OAuth2AccessToken {
 
     content: string,
 
-    client_id: OAuth2Client['id'] | null,
+    client_id: Client['id'] | null,
 
-    client: OAuth2Client | null,
+    client: Client | null,
 
     user_id: User['id'] | null,
 

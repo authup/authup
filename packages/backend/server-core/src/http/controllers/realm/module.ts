@@ -11,13 +11,15 @@ import {
 import { SwaggerTags } from '@trapi/swagger';
 import { Realm } from '@authelion/common';
 import {
-    createRealmRouteHandler, deleteRealmRouteHandler,
+    createRealmRouteHandler,
+    deleteRealmRouteHandler,
     getManyRealmRouteHandler,
-    getOneRealmRouteHandler, getRealmJwksRouteHandler,
+    getOneRealmRouteHandler,
+    getRealmJwksRouteHandler,
+    getRealmOpenIdConfigurationRouteHandler,
     updateRealmRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
-import { getRealmOpenIdConfigurationRouteHandler } from './handlers/openid';
 
 @SwaggerTags('realm')
 @Controller('/realms')

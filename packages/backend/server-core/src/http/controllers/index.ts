@@ -6,7 +6,7 @@
  */
 
 export * from './oauth2';
-export * from './oauth2-client';
+export * from './client';
 export * from './oauth2-provider';
 export * from './oauth2-provide-role';
 export * from './permission';

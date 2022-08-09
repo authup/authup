@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Client, OAuth2OpenIdTokenPayload, OAuth2SubKind, Robot, User, hasOwnProperty,
+    Client, OAuth2OpenIdTokenPayload, OAuth2SubKind, Robot, User, hasOwnProperty,
 } from '@authelion/common';
 
 type AttributeMap<T extends Record<string, any>> = Record<
@@ -65,7 +65,7 @@ export function resolveOpenIdClaimsFromSubEntity(
             return extractAttributesByAttributeMap(attributeMap as AttributeMap<Record<string, any>>, attributes);
         }
         case OAuth2SubKind.CLIENT: {
-            const attributeMap : AttributeMap<OAuth2Client> = {
+            const attributeMap : AttributeMap<Client> = {
                 name: 'name',
                 nickname: 'name',
                 preferred_username: 'name',

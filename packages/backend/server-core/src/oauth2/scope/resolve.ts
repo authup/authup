@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Client, OAuth2Scope, OAuth2SubKind, Robot, User, hasOwnProperty, transformOAuth2ScopeToArray,
+    Client, OAuth2Scope, OAuth2SubKind, Robot, User, hasOwnProperty, transformOAuth2ScopeToArray,
 } from '@authelion/common';
 
 type ScopeSubFields<
@@ -24,7 +24,7 @@ const robotFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`
     [OAuth2Scope.IDENTITY]: ['name'],
 };
 
-const clientFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`, OAuth2Client>>> = {
+const clientFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`, Client>>> = {
     [OAuth2Scope.IDENTITY]: ['name'],
 };
 
