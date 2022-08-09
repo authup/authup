@@ -64,10 +64,19 @@ export class StartCommand implements CommandModule {
             spinner: 'dots',
         });
 
-        await startCommand({
-            logger,
-            spinner,
-            dataSourceOptions,
-        });
+        try {
+            await startCommand({
+                logger,
+                spinner,
+                dataSourceOptions,
+            });
+
+            process.exit(0);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.log(e);
+
+            process.exit(1);
+        }
     }
 }
