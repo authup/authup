@@ -10,13 +10,15 @@
 import 'reflect-metadata';
 import yargs from 'yargs';
 import dotenv from 'dotenv';
-import { MigrationGenerateCommand } from './commands/migration-generate';
-import { MigrationRevertCommand } from './commands/migration-revert';
-import { MigrationStatusCommand } from './commands/migration-status';
-import { ResetCommand } from './commands/reset';
-import { SetupCommand } from './commands/setup';
-import { UpgradeCommand } from './commands/upgrade';
-import { StartCommand } from './commands/start';
+import {
+    MigrationGenerateCommand,
+    MigrationRevertCommand,
+    MigrationStatusCommand,
+    ResetCommand,
+    SetupCommand,
+    StartCommand,
+    UpgradeCommand,
+} from './commands';
 
 dotenv.config();
 
