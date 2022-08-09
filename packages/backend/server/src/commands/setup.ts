@@ -85,6 +85,7 @@ export class SetupCommand implements CommandModule {
         } catch (e) {
             // eslint-disable-next-line no-console
             console.log(e);
+
             process.exit(1);
         }
 
