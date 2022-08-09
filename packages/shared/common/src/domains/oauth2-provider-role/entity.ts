@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Provider } from '../oauth2-provider';
+import { OAuth2Provider } from '../identity-provider';
 import { Role } from '../role';
 import { Realm } from '../realm';
 

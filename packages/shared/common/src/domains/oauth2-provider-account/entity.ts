@@ -6,7 +6,7 @@
  */
 
 import { User } from '../user';
-import { OAuth2Provider } from '../oauth2-provider';
+import { OAuth2Provider } from '../identity-provider';
 
 export interface OAuth2ProviderAccount {
     id: string;

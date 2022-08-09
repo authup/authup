@@ -6,6 +6,29 @@
  */
 
 import { Realm } from '../realm';
+import { IdentityProviderFlow, IdentityProviderType } from './constants';
+
+export interface IdentityProvider {
+    id: string,
+
+    name: string,
+
+    sub: string;
+
+    type: `${IdentityProviderType}`;
+
+    flow: `${IdentityProviderFlow}`;
+
+    enabled: boolean;
+
+    created_at: Date | string;
+
+    updated_at: Date | string;
+
+    realm_id: Realm['id'];
+
+    realm: Realm;
+}
 
 export interface OAuth2Provider {
     id: string;

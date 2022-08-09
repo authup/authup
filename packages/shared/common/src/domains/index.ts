@@ -10,7 +10,7 @@ export * from './oauth2';
 export * from './oauth2-access-token';
 export * from './oauth2-authorization-code';
 export * from './client';
-export * from './oauth2-provider';
+export * from './identity-provider';
 export * from './oauth2-provider-account';
 export * from './oauth2-provider-role';
 export * from './oauth2-refresh-token';
