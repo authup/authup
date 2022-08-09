@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-core",
-    "version": "0.2.8",
+    "version": "0.2.9",
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
