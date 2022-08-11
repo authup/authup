@@ -31,8 +31,7 @@ import {
     OAuth2ClientRepository,
     RobotEntity,
     RobotRepository,
-    UserAttributeEntity,
-    UserEntity, UserRepository, transformUserAttributes,
+    UserEntity, UserRepository,
 } from '../../../domains';
 import { buildDatabaseOptionsFromConfig, useDataSource } from '../../../database';
 import { useConfig } from '../../../config';

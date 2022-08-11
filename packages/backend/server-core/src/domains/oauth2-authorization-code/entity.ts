@@ -14,7 +14,7 @@ import {
 } from '@authelion/common';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
-import { OAuth2ClientEntity } from '../oauth2-client';
+import { OAuth2ClientEntity } from '../client';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_authorization_codes' })

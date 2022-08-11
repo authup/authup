@@ -10,9 +10,9 @@ import { HTTPClient } from '../http';
 export function useDomainAPI(client: HTTPClient, name: string) {
     switch (name) {
         case 'oauth2Provider':
-            return client.oauth2Provider;
+            return client.identityProvider;
         case 'oauth2ProviderRole':
-            return client.oauth2ProviderRole;
+            return client.identityProviderRole;
         case 'permission':
             return client.permission;
         case 'realm':

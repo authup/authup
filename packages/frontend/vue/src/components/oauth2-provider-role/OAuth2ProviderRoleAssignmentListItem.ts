@@ -7,7 +7,7 @@
 
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
 import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { OAuth2ProviderRole, Role } from '@authelion/common';
+import { IdentityProviderRole, Role } from '@authelion/common';
 import { ComponentFormData, buildFormInput } from '@vue-layout/utils';
 import { useHTTPClient } from '../../utils';
 
@@ -19,7 +19,7 @@ export type OAuth2ProviderRoleListItemProperties = {
 };
 
 export const OAuth2ProviderRoleAssignmentListItem = Vue.extend<
-ComponentFormData<OAuth2ProviderRole>,
+ComponentFormData<IdentityProviderRole>,
 any,
 any,
 OAuth2ProviderRoleListItemProperties
@@ -92,7 +92,7 @@ OAuth2ProviderRoleListItemProperties
             this.loaded = false;
 
             try {
-                const { data } = await useHTTPClient().oauth2ProviderRole.getMany({
+                const { data } = await useHTTPClient().identityProviderRole.getMany({
                     filter: {
                         role_id: this.role.id,
                         provider_id: this.entityId,
@@ -121,13 +121,13 @@ OAuth2ProviderRoleListItemProperties
                 let response;
 
                 if (this.item) {
-                    response = await useHTTPClient().oauth2ProviderRole.update(this.item.id, {
+                    response = await useHTTPClient().identityProviderRole.update(this.item.id, {
                         ...this.form,
                     });
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().oauth2ProviderRole.create({
+                    response = await useHTTPClient().identityProviderRole.create({
                         ...this.form,
                         role_id: this.role.id,
                         provider_id: this.entityId,
@@ -151,7 +151,7 @@ OAuth2ProviderRoleListItemProperties
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().oauth2ProviderRole.delete(this.item.id);
+                const response = await useHTTPClient().identityProviderRole.delete(this.item.id);
 
                 this.item = null;
 

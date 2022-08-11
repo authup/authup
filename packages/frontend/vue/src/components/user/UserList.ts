@@ -29,7 +29,7 @@ export const UserList = Vue.extend<
 ComponentListData<User>,
 ComponentListMethods<User>,
 any,
-ComponentListProperties<User>
+ComponentListProperties<BuildInput<User>>
 >({
     name: 'UserList',
     components: { Pagination },

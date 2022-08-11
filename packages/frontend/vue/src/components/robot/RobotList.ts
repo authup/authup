@@ -26,7 +26,7 @@ export const RobotList = Vue.extend<
 ComponentListData<Robot>,
 ComponentListMethods<Robot>,
 any,
-ComponentListProperties<Robot>
+ComponentListProperties<BuildInput<Robot>>
 >({
     name: 'RobotList',
     components: { Pagination },

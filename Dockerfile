@@ -24,4 +24,4 @@ ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
 EXPOSE 3010
 
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
-CMD ["cli", "start"]
+CMD ["start"]

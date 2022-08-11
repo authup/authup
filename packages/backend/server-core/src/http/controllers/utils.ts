@@ -8,8 +8,8 @@
 import { Application } from 'express';
 import { attachControllers } from '@decorators/express';
 import { RobotController } from './robot';
-import { OAuth2ProviderRoleController } from './oauth2-provide-role';
-import { OAuth2ProviderController, registerOauth2ProviderController } from './oauth2-provider';
+import { OAuth2ProviderRoleController } from './identity-provide-role';
+import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
 import { PermissionController } from './permission';
 import { RealmController } from './realm';
 import { RoleController } from './role';
@@ -31,7 +31,7 @@ export function registerControllers(
         OAuth2Controller,
         ClientController,
         OAuth2ProviderRoleController,
-        OAuth2ProviderController,
+        IdentityProviderController,
         PermissionController,
         RobotController,
         RobotPermissionController,
@@ -46,5 +46,5 @@ export function registerControllers(
         UserRoleController,
     ]);
 
-    registerOauth2ProviderController(router);
+    registerIdentityProviderController(router);
 }

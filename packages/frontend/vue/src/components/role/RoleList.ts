@@ -26,7 +26,7 @@ export const RoleList = Vue.extend<
 ComponentListData<Role>,
 ComponentListMethods<Role>,
 any,
-ComponentListProperties<Role>
+ComponentListProperties<BuildInput<Role>>
 >({
     name: 'RoleList',
     components: { Pagination },
