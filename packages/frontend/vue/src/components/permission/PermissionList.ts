@@ -26,7 +26,7 @@ export const PermissionList = Vue.extend<
 ComponentListData<Permission>,
 ComponentListMethods<Permission>,
 any,
-ComponentListProperties<Permission>
+ComponentListProperties<BuildInput<Permission>>
 >({
     name: 'PermissionList',
     components: { Pagination },

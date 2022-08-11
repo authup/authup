@@ -5,13 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, OAuth2IdentityProvider } from '@authelion/common';
-import { Client, removeDuplicateForwardSlashesFromURL } from '@hapic/oauth2';
+import {
+    IdentityProviderProtocol,
+    MASTER_REALM_ID,
+    OAuth2IdentityProvider,
+    buildIdentityProviderAuthorizePath,
+} from '@authelion/common';
+import { Client } from '@hapic/oauth2';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 import { useConfig } from '../../../../src';
 
-describe('src/http/controllers/oauth2-provider', () => {
+describe('src/http/controllers/identity-provider', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -24,18 +29,19 @@ describe('src/http/controllers/oauth2-provider', () => {
 
     const details : Partial<OAuth2IdentityProvider> = {
         name: 'keycloak',
-        authorize_path: '/protocol/openid-connect/auth',
-        client_id: 'pht',
+        sub: 'keycloak',
+        enabled: true,
+        protocol: IdentityProviderProtocol.OAUTH2,
+        client_id: 'client',
         client_secret: 'start123',
-        open_id: true,
-        token_host: 'https://keycloak-pht.tada5hi.net/auth/realms/master/',
-        token_path: '/protocol/openid-connect/token',
+        token_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/token',
+        authorize_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/auth',
         realm_id: MASTER_REALM_ID,
     };
 
     it('should read collection', async () => {
         const response = await superTest
-            .get('/oauth2-providers')
+            .get('/identity-providers')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -46,7 +52,7 @@ describe('src/http/controllers/oauth2-provider', () => {
 
     it('should create, read, update, delete resource', async () => {
         let response = await superTest
-            .post('/oauth2-providers')
+            .post('/identity-providers')
             .send(details)
             .auth('admin', 'start123');
 
@@ -61,7 +67,7 @@ describe('src/http/controllers/oauth2-provider', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .get(`/oauth2-providers/${response.body.id}`)
+            .get(`/identity-providers/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -70,9 +76,10 @@ describe('src/http/controllers/oauth2-provider', () => {
         // ---------------------------------------------------------
 
         details.name = 'TestA';
+        details.client_secret = 'start1234';
 
         response = await superTest
-            .post(`/oauth2-providers/${response.body.id}`)
+            .post(`/identity-providers/${response.body.id}`)
             .send(details)
             .auth('admin', 'start123');
 
@@ -87,7 +94,7 @@ describe('src/http/controllers/oauth2-provider', () => {
         // ---------------------------------------------------------
 
         response = await superTest
-            .delete(`/oauth2-providers/${response.body.id}`)
+            .delete(`/identity-providers/${response.body.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -95,14 +102,14 @@ describe('src/http/controllers/oauth2-provider', () => {
 
     it('should build authorize url', async () => {
         let response = await superTest
-            .post('/oauth2-providers')
+            .post('/identity-providers')
             .send(details)
             .auth('admin', 'start123');
 
-        const provider = response.body;
+        const provider : OAuth2IdentityProvider = response.body;
 
         response = await superTest
-            .get(`/oauth2-providers/${response.body.id}/authorize-url`)
+            .get(buildIdentityProviderAuthorizePath(provider.id))
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(302);
@@ -110,14 +117,14 @@ describe('src/http/controllers/oauth2-provider', () => {
 
         const config = await useConfig();
 
-        const oauth2Client = new Client({
+        const identityClient = new Client({
             options: {
                 client_id: provider.client_id,
-                authorization_endpoint: removeDuplicateForwardSlashesFromURL(provider.authorize_host + provider.authorize_path),
-                redirect_uri: `${config.selfUrl}/oauth2-providers/${provider.id}/authorize-callback`,
+                authorization_endpoint: provider.authorize_url,
+                redirect_uri: `${config.selfUrl}/identity-providers/${provider.id}/authorize-callback`,
             },
         });
 
-        expect(response.header.location).toEqual(oauth2Client.authorize.buildURL());
+        expect(response.header.location).toEqual(identityClient.authorize.buildURL());
     });
 });

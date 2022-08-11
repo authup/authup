@@ -6,7 +6,7 @@
  */
 
 import { Realm } from '../realm';
-import { IdentityProviderFlow, IdentityProviderType } from './constants';
+import { IdentityProviderProtocol, IdentityProviderProtocolConfig } from './constants';
 
 export interface IdentityProvider {
     id: string,
@@ -15,9 +15,9 @@ export interface IdentityProvider {
 
     sub: string;
 
-    type: `${IdentityProviderType}`;
+    protocol: `${IdentityProviderProtocol}`;
 
-    flow: `${IdentityProviderFlow}`;
+    protocol_config: `${IdentityProviderProtocolConfig}` | null;
 
     enabled: boolean;
 
@@ -28,28 +28,4 @@ export interface IdentityProvider {
     realm_id: Realm['id'];
 
     realm: Realm;
-}
-
-export interface OAuth2IdentityProvider extends IdentityProvider {
-    open_id: boolean;
-
-    client_id: string;
-
-    client_secret: string;
-
-    token_host: string;
-
-    token_path: string;
-
-    token_revoke_path: string;
-
-    authorize_host: string;
-
-    authorize_path: string;
-
-    user_info_host: string;
-
-    user_info_path: string;
-
-    scope: string;
 }

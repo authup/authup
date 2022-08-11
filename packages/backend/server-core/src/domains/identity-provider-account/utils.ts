@@ -10,10 +10,10 @@ import {
     KeycloakJWTPayload,
     OAuth2IdentityProvider,
     OAuth2TokenGrantResponse,
+    OpenIDConnectIdentityProvider,
     TokenError,
     User,
-    createNanoID,
-    hasOwnProperty, isValidUserName,
+    createNanoID, hasOwnProperty, isValidUserName,
 } from '@authelion/common';
 import { decodeToken } from '@authelion/server-utils';
 import { UserEntity, UserRepository } from '../user';
@@ -22,7 +22,7 @@ import { IdentityProviderRoleEntity } from '../identity-provider-role';
 import { useDataSource } from '../../database';
 
 export async function createOauth2ProviderAccount(
-    provider: OAuth2IdentityProvider,
+    provider: OAuth2IdentityProvider | OpenIDConnectIdentityProvider,
     tokenResponse: OAuth2TokenGrantResponse,
 ) : Promise<IdentityProviderAccount> {
     const payload : string | KeycloakJWTPayload = decodeToken(tokenResponse.access_token);

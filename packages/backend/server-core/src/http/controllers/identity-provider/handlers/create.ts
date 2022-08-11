@@ -11,7 +11,7 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderValidation } from '../utils';
-import { IdentityProviderEntity } from '../../../../domains';
+import { IdentityProviderRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
@@ -23,13 +23,16 @@ export async function createIdentityProviderRouteHandler(req: ExpressRequest, re
     const result = await runOauth2ProviderValidation(req, CRUDOperation.CREATE);
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
+    const repository = new IdentityProviderRepository(dataSource);
 
-    const provider = repository.create(result.data);
+    const entity = repository.create(result.data);
 
-    await repository.save(provider);
+    await repository.save(entity);
+
+    await repository.saveAttributes(entity.id, result.attributes);
+    repository.appendAttributes(entity, result.attributes);
 
     return res.respond({
-        data: provider,
+        data: entity,
     });
 }

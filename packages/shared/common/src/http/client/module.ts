@@ -23,9 +23,9 @@ import {
 } from '../../domains';
 
 export class HTTPClient extends BaseClient {
-    public readonly oauth2Provider : IdentityProviderAPI;
+    public readonly identityProvider : IdentityProviderAPI;
 
-    public readonly oauth2ProviderRole : IdentityProviderRoleAPI;
+    public readonly identityProviderRole : IdentityProviderRoleAPI;
 
     public readonly permission : PermissionAPI;
 
@@ -54,8 +54,8 @@ export class HTTPClient extends BaseClient {
     constructor(config: Config) {
         super(config);
 
-        this.oauth2Provider = new IdentityProviderAPI(this.driver);
-        this.oauth2ProviderRole = new IdentityProviderRoleAPI(this.driver);
+        this.identityProvider = new IdentityProviderAPI(this.driver);
+        this.identityProviderRole = new IdentityProviderRoleAPI(this.driver);
 
         this.permission = new PermissionAPI(this.driver);
 

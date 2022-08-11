@@ -5,10 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum IdentityProviderType {
+export enum IdentityProviderProtocol {
     LDAP = 'ldap',
     OAUTH2 = 'oauth2',
     OIDC = 'oidc',
+}
+
+export enum IdentityProviderProtocolConfig {
+    FACEBOOK = 'facebook',
+    GITHUB = 'github',
+    GITLAB = 'gitlab',
+    GOOGLE = 'google',
+    PAYPAL = 'paypal',
+    STACKOVERFLOW = 'stackoverflow',
+    TWITTER = 'twitter',
 }
 
 export enum IdentityProviderFlow {

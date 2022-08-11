@@ -13,8 +13,9 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import { IdentityProvider, Realm } from '@authelion/common';
-import { IdentityProviderFlow, IdentityProviderType } from '@authelion/common/src/domains/identity-provider/constants';
+import {
+    IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig, Realm,
+} from '@authelion/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_identity_providers' })
@@ -30,10 +31,10 @@ export class IdentityProviderEntity implements IdentityProvider {
         name: string;
 
     @Column({ type: 'varchar', length: 64 })
-        type: `${IdentityProviderType}`;
+        protocol: `${IdentityProviderProtocol}`;
 
-    @Column({ type: 'varchar', length: 64 })
-        flow : `${IdentityProviderFlow}`;
+    @Column({ type: 'varchar', length: 64, nullable: true })
+        protocol_config: `${IdentityProviderProtocolConfig}` | null;
 
     @Column({ type: 'boolean', default: true })
         enabled: boolean;

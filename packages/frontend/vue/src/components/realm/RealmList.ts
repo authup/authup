@@ -25,7 +25,7 @@ export const RealmList = Vue.extend<
 ComponentListData<Realm>,
 any,
 any,
-ComponentListProperties<Realm>
+ComponentListProperties<BuildInput<Realm>>
 >({
     name: 'RealmList',
     components: { Pagination },

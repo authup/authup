@@ -11,7 +11,7 @@ import {
 import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { IdentityProviderEntity } from '../../../../domains';
+import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { useDataSource } from '../../../../database';
 
 export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
@@ -74,7 +74,7 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
     const { id } = req.params;
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
+    const repository = new IdentityProviderRepository(dataSource);
 
     const query = repository.createQueryBuilder('provider')
         .where('provider.id = :id', { id });
@@ -98,13 +98,20 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
         );
     }
 
-    const result = await query.getOne();
+    const entity = await query.getOne();
 
-    if (!result) {
+    if (!entity) {
         throw new NotFoundError();
     }
 
+    if (
+        req.ability &&
+        req.ability.has(PermissionID.REALM_EDIT)
+    ) {
+        await repository.extendEntity(entity);
+    }
+
     return res.respond({
-        data: result,
+        data: entity,
     });
 }

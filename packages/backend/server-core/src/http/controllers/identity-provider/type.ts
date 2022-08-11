@@ -11,4 +11,6 @@ import { RealmEntity } from '../../../domains';
 
 export type IdentityProviderValidationResult = ExpressValidationResult<IdentityProvider, {
     realm?: RealmEntity
-}>;
+}> & {
+    attributes: Record<string, any>
+};

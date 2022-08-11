@@ -6,9 +6,9 @@
  */
 
 export function buildIdentityProviderAuthorizeCallbackPath(id: string | number) {
-    return `/oauth2-providers/${id}/authorize-callback`;
+    return `/identity-providers/${id}/authorize-callback`;
 }
 
 export function buildIdentityProviderAuthorizePath(id: string | number) {
-    return `/oauth2-providers/${id}/authorize-url`;
+    return `/identity-providers/${id}/authorize-url`;
 }

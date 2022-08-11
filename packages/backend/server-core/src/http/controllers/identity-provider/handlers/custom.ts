@@ -8,14 +8,15 @@
 import { NotFoundError } from '@typescript-error/http';
 import {
     CookieName,
+    IdentityProviderProtocol,
     OAuth2TokenGrantResponse,
     buildIdentityProviderAuthorizeCallbackPath,
 } from '@authelion/common';
 import { URL } from 'url';
 import { CookieOptions } from 'express';
-import { Client, removeDuplicateForwardSlashesFromURL } from '@hapic/oauth2';
+import { Client } from '@hapic/oauth2';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { IdentityProviderEntity, createOauth2ProviderAccount } from '../../../../domains';
+import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../../oauth2';
 import { useDataSource } from '../../../../database';
@@ -28,14 +29,24 @@ export async function authorizeURLIdentityProviderRouteHandler(
     const { id } = req.params;
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
-    const provider = await repository.createQueryBuilder('provider')
+    const repository = new IdentityProviderRepository(dataSource);
+    const entity = await repository.createQueryBuilder('provider')
         .leftJoinAndSelect('provider.realm', 'realm')
         .where('provider.id = :id', { id })
         .getOne();
 
-    if (!provider) {
+    if (!entity) {
         throw new NotFoundError();
+    }
+
+    const provider = await repository.extendEntity(entity);
+
+    if (
+        provider.protocol !== IdentityProviderProtocol.OAUTH2 &&
+        provider.protocol !== IdentityProviderProtocol.OIDC
+    ) {
+        throw new Error();
+        // todo: better error :)
     }
 
     const config = await useConfig();
@@ -43,8 +54,8 @@ export async function authorizeURLIdentityProviderRouteHandler(
     const oauth2Client = new Client({
         options: {
             client_id: provider.client_id,
-            authorization_endpoint: removeDuplicateForwardSlashesFromURL(provider.authorize_host + provider.authorize_path),
-            redirect_uri: `${config.selfUrl}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
+            authorization_endpoint: provider.authorize_url,
+            redirect_uri: `${config.selfUrl}${buildIdentityProviderAuthorizeCallbackPath(entity.id)}`,
         },
     });
 
@@ -60,15 +71,24 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const { code, state } = req.query;
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
-    const provider = await repository.createQueryBuilder('provider')
-        .addSelect('provider.client_secret')
+    const repository = new IdentityProviderRepository(dataSource);
+    const entity = await repository.createQueryBuilder('provider')
         .leftJoinAndSelect('provider.realm', 'realm')
         .where('provider.id = :id', { id })
         .getOne();
 
-    if (!provider) {
+    if (!entity) {
         throw new NotFoundError();
+    }
+
+    const provider = await repository.extendEntity(entity);
+
+    if (
+        provider.protocol !== IdentityProviderProtocol.OAUTH2 &&
+        provider.protocol !== IdentityProviderProtocol.OIDC
+    ) {
+        throw new Error();
+        // todo: better error :)
     }
 
     const config = await useConfig();
@@ -80,7 +100,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
             client_id: provider.client_id,
             client_secret: provider.client_secret,
 
-            token_endpoint: removeDuplicateForwardSlashesFromURL(provider.token_host + provider.token_path),
+            token_endpoint: provider.token_url,
 
             redirect_uri: `${config.selfUrl}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
         },
@@ -95,7 +115,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const grant = new InternalGrantType(config);
 
     req.userId = account.user_id;
-    req.realmId = provider.realm_id;
+    req.realmId = entity.realm_id;
 
     const token = await grant.run(req);
 

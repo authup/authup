@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isPermittedForResourceRealm } from '@authelion/common';
+import { IdentityProviderProtocol, IdentityProviderProtocolConfig, isPermittedForResourceRealm } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 import { extendExpressValidationResultWithRealm } from '../../realm';
@@ -17,88 +17,56 @@ import {
 } from '../../../express-validation';
 import { IdentityProviderValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
+import {
+    extractLdapIdentityProviderProtocolAttributes,
+    extractOAuth2IdentityProviderProtocolAttributes,
+    extractOidcConnectIdentityProviderProtocolAttributes,
+    validateLdapIdentityProviderProtocol,
+    validateOAuth2IdentityProviderProtocol,
+    validateOidcIdentityProviderProtocol,
+} from '../../../../domains/identity-provider/protocol';
 
 export async function runOauth2ProviderValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<IdentityProviderValidationResult> {
     const result : IdentityProviderValidationResult = {
+        attributes: {},
         data: {},
         meta: {},
     };
 
-    await check('name')
+    await check('sub')
         .exists()
         .notEmpty()
         .isString()
         .isLength({ min: 5, max: 30 })
         .run(req);
 
-    await check('open_id')
+    await check('name')
+        .exists()
+        .notEmpty()
+        .isString()
+        .isLength({ min: 5, max: 128 })
+        .run(req);
+
+    await check('protocol')
+        .exists()
+        .notEmpty()
+        .isIn(Object.values(IdentityProviderProtocol))
+        .run(req);
+
+    await check('protocol_config')
+        .exists()
+        .notEmpty()
+        .isIn(Object.values(IdentityProviderProtocolConfig))
+        .optional({ nullable: true })
+        .run(req);
+
+    await check('enabled')
         .exists()
         .notEmpty()
         .isBoolean()
-        .run(req);
-
-    await check('token_host')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 512 })
-        .run(req);
-
-    await check('token_path')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 256 })
-        .optional({ nullable: true })
-        .run(req);
-    await check('token_revoke_path')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 256 })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('authorize_host')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 512 })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('authorize_path')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 256 })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('scope')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 512 })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('client_id')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 128 })
-        .run(req);
-
-    await check('client_secret')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 128 })
-        .optional({ nullable: true })
         .run(req);
 
     if (operation === CRUDOperation.CREATE) {
@@ -117,6 +85,29 @@ export async function runOauth2ProviderValidation(
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
+
+    // ----------------------------------------------
+
+    switch (result.data.protocol) {
+        case IdentityProviderProtocol.OAUTH2: {
+            result.attributes = validateOAuth2IdentityProviderProtocol(
+                extractOAuth2IdentityProviderProtocolAttributes(req.body),
+            );
+            break;
+        }
+        case IdentityProviderProtocol.OIDC: {
+            result.attributes = validateOidcIdentityProviderProtocol(
+                extractOidcConnectIdentityProviderProtocolAttributes(req.body),
+            );
+            break;
+        }
+        case IdentityProviderProtocol.LDAP: {
+            result.attributes = validateLdapIdentityProviderProtocol(
+                extractLdapIdentityProviderProtocolAttributes(req.body),
+            );
+            break;
+        }
+    }
 
     // ----------------------------------------------
 

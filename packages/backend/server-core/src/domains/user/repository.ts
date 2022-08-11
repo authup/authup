@@ -27,7 +27,8 @@ import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
 import { CachePrefix } from '../../constants';
-import { UserAttributeEntity, transformUserAttributes } from '../user-attribute';
+import { UserAttributeEntity } from '../user-attribute';
+import { appendAttributes, transformAttributesToRecord } from '../utils';
 
 export class UserRepository extends Repository<UserEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -54,11 +55,8 @@ export class UserRepository extends Repository<UserEntity> {
             cache: 60.000,
         });
 
-        const attributes = transformUserAttributes(rawAttributes);
-        const keys = Object.keys(attributes);
-        for (let i = 0; i < keys.length; i++) {
-            entity[keys[i]] = attributes[keys[i]];
-        }
+        const attributes = transformAttributesToRecord(rawAttributes);
+        appendAttributes(entity, attributes);
 
         return entity;
     }

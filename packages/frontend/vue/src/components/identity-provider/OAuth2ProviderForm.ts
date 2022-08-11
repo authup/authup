@@ -9,17 +9,16 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import { OAuth2IdentityProvider, createNanoID } from '@authelion/common';
+import { IdentityProviderProtocol, OAuth2IdentityProvider, createNanoID } from '@authelion/common';
 import {
     ComponentFormData,
     ComponentFormMethods,
     buildFormInput,
     buildFormSubmit,
 } from '@vue-layout/utils';
-import { useHTTPClient } from '../../utils';
+import { initPropertiesFromSource, useHTTPClient } from '../../utils';
 import { OAuth2ProviderRoleAssignmentList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
-import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -58,26 +57,17 @@ Properties
         return {
             form: {
                 name: '',
-                open_id: false,
-                token_host: '',
-                token_path: '',
-                authorize_host: '',
-                authorize_path: '',
+                slug: '',
+                protocol: IdentityProviderProtocol.OAUTH2,
+                enabled: true,
+                realm_id: '',
+
+                token_url: '',
+                authorize_url: '',
                 scope: '',
                 client_id: '',
                 client_secret: '',
-                realm_id: '',
             },
-            schemes: [
-                {
-                    id: 'oauth2',
-                    name: 'OAuth2',
-                },
-                {
-                    id: 'openid',
-                    name: 'Open ID',
-                },
-            ],
             realm: {
                 items: [],
                 busy: false,
@@ -91,23 +81,28 @@ Properties
             name: {
                 required,
                 minLength: minLength(5),
+                maxLength: maxLength(128),
+            },
+            slug: {
+                required,
+                minLength: minLength(5),
                 maxLength: maxLength(36),
             },
-            open_id: {
+            enabled: {
                 required,
             },
-            token_host: {
+            realm_id: {
+                required,
+            },
+
+            token_url: {
                 required,
                 minLength: minLength(5),
-                maxLength: maxLength(512),
+                maxLength: maxLength(2000),
             },
-            token_path: {
+            authorize_url: {
                 minLength: minLength(5),
-                maxLength: maxLength(256),
-            },
-            authorize_host: {
-                minLength: minLength(5),
-                maxLength: maxLength(512),
+                maxLength: maxLength(2000),
             },
             authorize_path: {
                 minLength: minLength(5),
@@ -126,9 +121,6 @@ Properties
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
-            realm_id: {
-                required,
-            },
         },
     },
     computed: {
@@ -139,8 +131,8 @@ Properties
         isRealmLocked() {
             return !!this.realmId;
         },
-        isNameEmpty() {
-            return !this.form.name || this.form.name.length === 0;
+        isSlugEmpty() {
+            return !this.form.slug || this.form.slug.length === 0;
         },
         updatedAt() {
             return this.entity ? this.entity.updated_at : undefined;
@@ -166,7 +158,7 @@ Properties
                 initPropertiesFromSource<OAuth2IdentityProvider>(this.entity, this.form);
             }
 
-            if (this.isNameEmpty) {
+            if (this.isSlugEmpty) {
                 this.generateID();
             }
         },
@@ -181,11 +173,11 @@ Properties
                 let response;
 
                 if (this.isEditing) {
-                    response = await useHTTPClient().oauth2Provider.update(this.entity.id, this.form);
+                    response = await useHTTPClient().identityProvider.update(this.entity.id, this.form);
 
                     this.$emit('updated', response);
                 } else {
-                    response = await useHTTPClient().oauth2Provider.create(this.form);
+                    response = await useHTTPClient().identityProvider.create(this.form);
 
                     this.$emit('created', response);
                 }
@@ -198,7 +190,7 @@ Properties
             this.busy = false;
         },
         generateID() {
-            this.form.name = createNanoID();
+            this.form.slug = createNanoID();
         },
     },
     render(createElement: CreateElement): VNode {
@@ -219,19 +211,14 @@ Properties
         }, [
             h('b-form-checkbox', {
                 model: {
-                    value: vm.form.open_id,
+                    value: vm.form.enabled,
                     callback(v: boolean) {
-                        vm.form.open_id = v;
+                        vm.form.enabled = v;
                     },
-                    expression: 'form.open_id',
+                    expression: 'form.enabled',
                 },
             } as VNodeData, [
                 'Enabled?',
-            ]),
-            h('div', {
-                staticClass: 'alert alert-sm alert-info mt-1',
-            }, [
-                'If enabled the server will try to pull additional information from the authentication server.',
             ]),
         ]);
 
@@ -309,22 +296,10 @@ Properties
                     ]),
                     buildFormInput(vm, h, {
                         validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                        title: 'Host',
-                        propName: 'token_host',
+                        title: 'URL',
+                        propName: 'token_url',
                         attrs: {
                             placeholder: 'https://...',
-                        },
-                    }),
-                    buildFormInput(vm, h, {
-                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                        title: [
-                            'Path',
-                            ' ',
-                            h('small', { staticClass: 'text-success' }, '(optional)'),
-                        ],
-                        propName: 'token_path',
-                        attrs: {
-                            placeholder: 'oauth/token',
                         },
                     }),
                 ]),
@@ -339,25 +314,13 @@ Properties
                     buildFormInput(vm, h, {
                         validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
                         title: [
-                            'Host',
+                            'URL',
                             ' ',
                             h('small', { staticClass: 'text-success' }, '(optional)'),
                         ],
-                        propName: 'authorize_host',
+                        propName: 'authorize_url',
                         attrs: {
-                            placeholder: vm.$v.form.token_host.$model || 'https://...',
-                        },
-                    }),
-                    buildFormInput(vm, h, {
-                        validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                        title: [
-                            'Path',
-                            ' ',
-                            h('small', { staticClass: 'text-success' }, '(optional)'),
-                        ],
-                        propName: 'authorize_path',
-                        attrs: {
-                            placeholder: 'oauth/authorize',
+                            placeholder: vm.$v.form.token_url.$model || 'https://...',
                         },
                     }),
                 ]),

@@ -7,7 +7,7 @@
 
 import Vue, { CreateElement, PropType, VNode } from 'vue';
 import { BuildInput } from 'rapiq';
-import { OAuth2IdentityProvider, mergeDeep } from '@authelion/common';
+import { IdentityProvider, OAuth2IdentityProvider, mergeDeep } from '@authelion/common';
 import {
     ComponentListData,
     ComponentListHandlerMethodOptions,
@@ -25,24 +25,24 @@ import {
     useHTTPClient,
 } from '../../utils';
 
-type Properties = ComponentListProperties<OAuth2IdentityProvider> & {
+type Properties = ComponentListProperties<BuildInput<IdentityProvider>> & {
     mapItems?: () => void,
     filterItems?: () => void
 };
 
-export const OAuth2ProviderList = Vue.extend<
+export const IdentityProviderList = Vue.extend<
 ComponentListData<OAuth2IdentityProvider>,
 ComponentListMethods<OAuth2IdentityProvider>,
 any,
 Properties
 >({
-    name: 'OAuth2ProviderList',
+    name: 'IdentityProviderList',
     components: { Pagination },
     props: {
         mapItems: Function,
         filterItems: Function,
         query: {
-            type: Object as PropType<BuildInput<OAuth2IdentityProvider>>,
+            type: Object as PropType<BuildInput<IdentityProvider>>,
             default() {
                 return {};
             },
@@ -81,21 +81,6 @@ Properties
             itemBusy: false,
         };
     },
-    computed: {
-        formattedItems() {
-            let { items } = this;
-
-            if (typeof this.filterItems === 'function') {
-                items = items.filter(this.filterItems);
-            }
-
-            if (typeof this.mapItems === 'function') {
-                items = items.map(this.mapItems);
-            }
-
-            return items;
-        },
-    },
     watch: {
         q(val, oldVal) {
             if (val === oldVal) return;
@@ -127,7 +112,7 @@ Properties
             this.busy = true;
 
             try {
-                const response = await useHTTPClient().oauth2Provider.getMany(mergeDeep({
+                const response = await useHTTPClient().identityProvider.getMany(mergeDeep({
                     page: {
                         limit: this.meta.limit,
                         offset: this.meta.offset,
@@ -200,4 +185,4 @@ Properties
     },
 });
 
-export default OAuth2ProviderList;
+export default IdentityProviderList;

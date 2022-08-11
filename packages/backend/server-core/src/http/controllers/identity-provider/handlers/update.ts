@@ -9,7 +9,7 @@ import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderValidation } from '../utils';
-import { IdentityProviderEntity } from '../../../../domains';
+import { IdentityProviderRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 import { useDataSource } from '../../../../database';
 
@@ -26,7 +26,7 @@ export async function updateIdentityProviderRouteHandler(req: ExpressRequest, re
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
+    const repository = new IdentityProviderRepository(dataSource);
 
     let entity = await repository.findOneBy({ id });
     if (!entity) {
@@ -40,6 +40,9 @@ export async function updateIdentityProviderRouteHandler(req: ExpressRequest, re
     entity = repository.merge(entity, result.data);
 
     await repository.save(entity);
+
+    await repository.saveAttributes(entity.id, result.attributes);
+    await repository.extendEntity(entity);
 
     return res.respond({
         data: entity,
