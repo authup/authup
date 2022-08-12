@@ -32,7 +32,16 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
         allowed: [
             'id',
             'name',
+            'name_locked',
+            'first_name',
+            'last_name',
             'display_name',
+            'avatar',
+            'cover',
+            'active',
+            'created_at',
+            'updated_at',
+            'realm_id',
             ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
         ],
     });
@@ -99,15 +108,24 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     onlyRealmPermittedQueryResources(query, req.realmId);
 
-    if (
-        req.ability.has(PermissionID.USER_EDIT) ||
-        id === req.userId
-    ) {
-        applyFields(query, fields, {
-            defaultAlias: 'user',
-            allowed: ['email'],
-        });
-    }
+    applyFields(query, fields, {
+        defaultAlias: 'user',
+        allowed: [
+            'id',
+            'name',
+            'name_locked',
+            'first_name',
+            'last_name',
+            'display_name',
+            'avatar',
+            'cover',
+            'active',
+            'created_at',
+            'updated_at',
+            'realm_id',
+            ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
+        ],
+    });
 
     applyRelations(query, include, {
         defaultAlias: 'user',

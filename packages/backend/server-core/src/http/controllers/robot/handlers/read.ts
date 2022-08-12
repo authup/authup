@@ -65,6 +65,16 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         allowed: [
             'secret',
         ],
+        default: [
+            'id',
+            'name',
+            'description',
+            'active',
+            'user_id',
+            'realm_id',
+            'created_at',
+            'updated_at',
+        ],
     });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
@@ -112,6 +122,16 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
         defaultAlias: 'robot',
         allowed: [
             'secret',
+        ],
+        default: [
+            'id',
+            'name',
+            'description',
+            'active',
+            'user_id',
+            'realm_id',
+            'created_at',
+            'updated_at',
         ],
     });
 

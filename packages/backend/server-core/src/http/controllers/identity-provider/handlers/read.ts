@@ -40,19 +40,24 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
         defaultAlias: 'provider',
     });
 
-    if (
-        req.ability &&
-        req.ability.has(PermissionID.REALM_EDIT)
-    ) {
-        applyFields(
-            query,
-            fields,
-            {
-                defaultAlias: 'provider',
-                allowed: ['client_secret'],
-            },
-        );
-    }
+    applyFields(
+        query,
+        fields,
+        {
+            defaultAlias: 'provider',
+            allowed: [
+                'id',
+                'sub',
+                'name',
+                'protocol',
+                'protocol_config',
+                'enabled',
+                'realm_id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+    );
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 
@@ -84,19 +89,24 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
         allowed: ['realm'],
     });
 
-    if (
-        req.ability &&
-        req.ability.has(PermissionID.REALM_EDIT)
-    ) {
-        applyFields(
-            query,
-            fields,
-            {
-                defaultAlias: 'provider',
-                allowed: ['client_secret'],
-            },
-        );
-    }
+    applyFields(
+        query,
+        fields,
+        {
+            defaultAlias: 'provider',
+            allowed: [
+                'id',
+                'sub',
+                'name',
+                'protocol',
+                'protocol_config',
+                'enabled',
+                'realm_id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+    );
 
     const entity = await query.getOne();
 
@@ -106,7 +116,7 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
 
     if (
         req.ability &&
-        req.ability.has(PermissionID.REALM_EDIT)
+        req.ability.has(PermissionID.PROVIDER_EDIT)
     ) {
         await repository.extendEntity(entity);
     }

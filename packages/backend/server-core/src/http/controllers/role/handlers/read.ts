@@ -24,7 +24,15 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
 
     applyFields(query, fields, {
         defaultAlias: 'role',
-        allowed: ['id', 'name', 'target', 'description', 'created_at', 'updated_at'],
+        allowed: [
+            'id',
+            'name',
+            'target',
+            'description',
+            'realm_id',
+            'created_at',
+            'updated_at',
+        ],
     });
 
     applyFilters(query, filter, {
@@ -62,7 +70,15 @@ export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     applyFields(query, fields, {
         defaultAlias: 'role',
-        allowed: ['id', 'name', 'target', 'description', 'created_at', 'updated_at'],
+        allowed: [
+            'id',
+            'name',
+            'target',
+            'description',
+            'realm_id',
+            'created_at',
+            'updated_at',
+        ],
     });
 
     const entity = await query.getOne();

@@ -42,19 +42,28 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
         defaultAlias: 'client',
     });
 
-    if (
-        req.ability &&
-        req.ability.has(PermissionID.CLIENT_EDIT)
-    ) {
-        applyFields(
-            query,
-            fields,
-            {
-                defaultAlias: 'client',
-                allowed: ['client_secret'],
-            },
-        );
-    }
+    applyFields(
+        query,
+        fields,
+        {
+            defaultAlias: 'client',
+            default: [
+                'name',
+                'description',
+                'redirect_uri',
+                'grant_types',
+                'scope',
+                'is_confidential',
+                'realm_id',
+                'user_id',
+                'updated_at',
+                'created_at',
+            ],
+            allowed: [
+                ...(req.ability.has(PermissionID.CLIENT_EDIT) ? ['secret'] : []),
+            ],
+        },
+    );
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 
@@ -102,19 +111,28 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         allowed: ['realm'],
     });
 
-    if (
-        req.ability &&
-        req.ability.has(PermissionID.CLIENT_EDIT)
-    ) {
-        applyFields(
-            query,
-            fields,
-            {
-                defaultAlias: 'client',
-                allowed: ['secret'],
-            },
-        );
-    }
+    applyFields(
+        query,
+        fields,
+        {
+            defaultAlias: 'client',
+            default: [
+                'name',
+                'description',
+                'redirect_uri',
+                'grant_types',
+                'scope',
+                'is_confidential',
+                'realm_id',
+                'user_id',
+                'updated_at',
+                'created_at',
+            ],
+            allowed: [
+                ...(req.ability.has(PermissionID.CLIENT_EDIT) ? ['secret'] : []),
+            ],
+        },
+    );
 
     const result = await query.getOne();
 
