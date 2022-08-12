@@ -40,7 +40,7 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    if (req.ability.matchTarget(PermissionID.ROLE_PERMISSION_DROP, entity.target)) {
+    if (!req.ability.matchTarget(PermissionID.ROLE_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role-permission target.');
     }
 
