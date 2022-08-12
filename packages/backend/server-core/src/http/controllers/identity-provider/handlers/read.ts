@@ -45,7 +45,7 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
         fields,
         {
             defaultAlias: 'provider',
-            allowed: [
+            default: [
                 'id',
                 'sub',
                 'name',
@@ -94,7 +94,7 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
         fields,
         {
             defaultAlias: 'provider',
-            allowed: [
+            default: [
                 'id',
                 'sub',
                 'name',

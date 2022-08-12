@@ -29,7 +29,7 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
 
     applyFields(query, fields, {
         defaultAlias: 'user',
-        allowed: [
+        default: [
             'id',
             'name',
             'name_locked',
@@ -42,6 +42,8 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
             'created_at',
             'updated_at',
             'realm_id',
+        ],
+        allowed: [
             ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
         ],
     });
@@ -110,7 +112,7 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     applyFields(query, fields, {
         defaultAlias: 'user',
-        allowed: [
+        default: [
             'id',
             'name',
             'name_locked',
@@ -123,6 +125,8 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
             'created_at',
             'updated_at',
             'realm_id',
+        ],
+        allowed: [
             ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
         ],
     });

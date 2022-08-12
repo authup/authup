@@ -20,7 +20,6 @@ export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Index()
     @Column({ type: 'varchar', length: 64, unique: true })
         name: string;
 
