@@ -6,7 +6,7 @@
  */
 
 import { JwtPayload } from 'jsonwebtoken';
-import { OAuth2TokenGrant } from '../oauth2-access-token';
+import { OAuth2TokenGrant } from '../access-token';
 import { AbilityDescriptor } from '../../ability-manager';
 import { OAuth2SubKind, OAuth2TokenKind } from './constants';
 

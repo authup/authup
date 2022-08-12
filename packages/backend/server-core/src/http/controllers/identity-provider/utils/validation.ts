@@ -6,7 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { IdentityProviderProtocol, IdentityProviderProtocolConfig, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    IdentityProviderProtocol,
+    IdentityProviderProtocolConfig,
+    isPermittedForResourceRealm, isValidIdentityProviderSub,
+    isValidRealmName,
+} from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 import { extendExpressValidationResultWithRealm } from '../../realm';
@@ -40,7 +45,15 @@ export async function runOauth2ProviderValidation(
         .exists()
         .notEmpty()
         .isString()
-        .isLength({ min: 5, max: 30 })
+        .isLength({ min: 3, max: 36 })
+        .custom((value) => {
+            const isValid = isValidIdentityProviderSub(value);
+            if (!isValid) {
+                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+            }
+
+            return isValid;
+        })
         .run(req);
 
     await check('name')

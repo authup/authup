@@ -6,14 +6,14 @@
  */
 
 export * from './key';
-export * from './oauth2-access-token';
-export * from './oauth2-authorization-code';
+export * from './access-token';
+export * from './authorization-code';
 export * from './client';
 export * from './identity-provider';
 export * from './identity-provider-attribute';
 export * from './identity-provider-account';
 export * from './identity-provider-role';
-export * from './oauth2-refresh-token';
+export * from './refresh-token';
 export * from './permission';
 export * from './realm';
 export * from './robot';

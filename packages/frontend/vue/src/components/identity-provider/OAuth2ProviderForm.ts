@@ -16,7 +16,7 @@ import {
     buildFormInput,
     buildFormSubmit,
 } from '@vue-layout/utils';
-import { initPropertiesFromSource, useHTTPClient } from '../../utils';
+import { alphaNumHyphenUnderscore, initPropertiesFromSource, useHTTPClient } from '../../utils';
 import { OAuth2ProviderRoleAssignmentList } from '../oauth2-provider-role';
 import { buildRealmSelectForm } from '../realm/render/select';
 import { useAuthIlingo } from '../../language/singleton';
@@ -85,7 +85,8 @@ Properties
             },
             slug: {
                 required,
-                minLength: minLength(5),
+                alphaNumHyphenUnderscore,
+                minLength: minLength(3),
                 maxLength: maxLength(36),
             },
             enabled: {
@@ -101,12 +102,9 @@ Properties
                 maxLength: maxLength(2000),
             },
             authorize_url: {
+                required,
                 minLength: minLength(5),
                 maxLength: maxLength(2000),
-            },
-            authorize_path: {
-                minLength: minLength(5),
-                maxLength: maxLength(256),
             },
             scope: {
                 minLength: minLength(3),
@@ -133,6 +131,9 @@ Properties
         },
         isSlugEmpty() {
             return !this.form.slug || this.form.slug.length === 0;
+        },
+        isNameEmpty() {
+            return !this.form.name || this.form.name.length === 0;
         },
         updatedAt() {
             return this.entity ? this.entity.updated_at : undefined;
@@ -190,7 +191,13 @@ Properties
             this.busy = false;
         },
         generateID() {
+            const isSame : boolean = this.form.slug === this.form.name ||
+                (this.isSlugEmpty && this.isNameEmpty);
+
             this.form.slug = createNanoID();
+            if (isSame) {
+                this.form.name = this.form.slug;
+            }
         },
     },
     render(createElement: CreateElement): VNode {
@@ -235,8 +242,8 @@ Properties
                 ]),
                 buildFormInput(vm, h, {
                     validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                    title: 'Name',
-                    propName: 'name',
+                    title: 'Slug',
+                    propName: 'slug',
                 }),
                 h('div', {
                     staticClass: 'mb-3',
@@ -256,6 +263,11 @@ Properties
                         'Generate',
                     ]),
                 ]),
+                buildFormInput(vm, h, {
+                    validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
+                    title: 'Name',
+                    propName: 'name',
+                }),
                 realm,
                 openID,
             ]),
@@ -280,7 +292,7 @@ Properties
             ]),
         ]);
 
-        const secondRow = h(
+        const thirdRow = h(
             'div',
             {
                 staticClass: 'row',
@@ -296,7 +308,7 @@ Properties
                     ]),
                     buildFormInput(vm, h, {
                         validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                        title: 'URL',
+                        title: 'Endpoint',
                         propName: 'token_url',
                         attrs: {
                             placeholder: 'https://...',
@@ -313,11 +325,7 @@ Properties
                     ]),
                     buildFormInput(vm, h, {
                         validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-                        title: [
-                            'URL',
-                            ' ',
-                            h('small', { staticClass: 'text-success' }, '(optional)'),
-                        ],
+                        title: 'Endpoint',
                         propName: 'authorize_url',
                         attrs: {
                             placeholder: vm.$v.form.token_url.$model || 'https://...',
@@ -361,7 +369,7 @@ Properties
         }, [
             firstRow,
             h('hr'),
-            secondRow,
+            thirdRow,
             h('hr'),
             roleList, // roleList will provide hr
             submit,

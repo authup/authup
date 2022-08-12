@@ -50,7 +50,7 @@ export class RealmController {
         return getOneRealmRouteHandler(req, res);
     }
 
-    @Get('/:id/.well_known/openid-configuration', [])
+    @Get('/:id/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
         @Params('id') id: string,
             @Request() req: any,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessToken } from '../oauth2-access-token';
+import { OAuth2AccessToken } from '../access-token';
 import { Client } from '../client';
 import { Realm } from '../realm';
 import { User } from '../user';

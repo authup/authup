@@ -72,7 +72,7 @@ export class OAuth2Controller {
 
     // ----------------------------------------------------------
 
-    @Get('/.well_known/openid-configuration', [])
+    @Get('/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
         @Request() req: any,
             @Response() res: any,

@@ -11,7 +11,7 @@ import {
 import {
     Client, OAuth2AccessToken, OAuth2RefreshToken, Realm, Robot, User,
 } from '@authelion/common';
-import { OAuth2AccessTokenEntity } from '../oauth2-access-token';
+import { OAuth2AccessTokenEntity } from '../access-token';
 import { OAuth2ClientEntity } from '../client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';

@@ -15,9 +15,7 @@ import {
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/utils';
-import { useHTTPClient } from '../../utils';
-import { alphaNumHyphenUnderscore } from '../../utils/vuelidate';
-import { initPropertiesFromSource } from '../../utils/proprety';
+import { alphaNumHyphenUnderscore, initPropertiesFromSource, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -61,7 +59,7 @@ Properties
             id: {
                 required,
                 alphaNumHyphenUnderscore,
-                minLength: minLength(5),
+                minLength: minLength(3),
                 maxLength: maxLength(36),
             },
             name: {
