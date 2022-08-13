@@ -6,30 +6,8 @@
  */
 
 import { JwtPayload } from 'jsonwebtoken';
-import { OAuth2TokenGrant } from '../access-token';
 import { AbilityDescriptor } from '../../ability-manager';
 import { OAuth2SubKind, OAuth2TokenKind } from './constants';
-
-export type OAuth2PasswordGrantPayload = {
-    grant_type?: OAuth2TokenGrant.PASSWORD,
-    username: string,
-    password: string
-};
-
-export type OAuth2RefreshTokenGrantPayload = {
-    grant_type?: OAuth2TokenGrant.REFRESH_TOKEN,
-    refresh_token: string
-};
-
-export type OAuth2RobotCredentialsGrantPayload = {
-    grant_type?: OAuth2TokenGrant.ROBOT_CREDENTIALS,
-    id: string,
-    secret: string
-};
-
-export type OAuth2GrantPayload = OAuth2PasswordGrantPayload |
-OAuth2RefreshTokenGrantPayload |
-OAuth2RobotCredentialsGrantPayload;
 
 export type OAuth2TokenGrantResponse = {
     access_token: string,
@@ -132,3 +110,22 @@ export type OAuth2TokenIntrospectionResponse = {
     active: boolean,
     permissions?: AbilityDescriptor[],
 } & Partial<OAuth2TokenPayload>;
+
+export type OAuth2JsonWebKey = {
+    alg?: string,
+    kid?: string,
+    crv?: string | undefined;
+    d?: string | undefined;
+    dp?: string | undefined;
+    dq?: string | undefined;
+    e?: string | undefined;
+    k?: string | undefined;
+    kty?: string | undefined;
+    n?: string | undefined;
+    p?: string | undefined;
+    q?: string | undefined;
+    qi?: string | undefined;
+    x?: string | undefined;
+    y?: string | undefined;
+    [key: string]: unknown;
+};

@@ -9,7 +9,7 @@ import {
     Body, Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
-import { Realm } from '@authelion/common';
+import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata, Realm } from '@authelion/common';
 import {
     createRealmRouteHandler,
     deleteRealmRouteHandler,
@@ -55,7 +55,7 @@ export class RealmController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Realm> {
+    ): Promise<OAuth2OpenIDProviderMetadata> {
         return getRealmOpenIdConfigurationRouteHandler(req, res);
     }
 
@@ -64,7 +64,7 @@ export class RealmController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Realm> {
+    ): Promise<OAuth2JsonWebKey[]> {
         return getRealmJwksRouteHandler(req, res);
     }
 

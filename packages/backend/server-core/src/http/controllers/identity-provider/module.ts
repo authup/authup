@@ -10,7 +10,7 @@ import {
 } from '@decorators/express';
 import { SwaggerTags } from '@trapi/swagger';
 import {
-    OAuth2IdentityProvider,
+    IdentityProvider,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authelion/common';
@@ -34,7 +34,7 @@ export class IdentityProviderController {
     async getProviders(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<IdentityProvider[]> {
         return getManyIdentityProviderRouteHandler(req, res);
     }
 
@@ -43,17 +43,17 @@ export class IdentityProviderController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider> {
+    ): Promise<IdentityProvider> {
         return getOneIdentityProviderRouteHandler(req, res);
     }
 
     @Post('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @Params('id') id: string,
-            @Body() user: NonNullable<OAuth2IdentityProvider>,
+            @Body() user: NonNullable<IdentityProvider>,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2IdentityProvider> {
+    ) : Promise<IdentityProvider> {
         return updateIdentityProviderRouteHandler(req, res);
     }
 
@@ -62,16 +62,16 @@ export class IdentityProviderController {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2IdentityProvider> {
+    ) : Promise<IdentityProvider> {
         return deleteIdentityProviderRouteHandler(req, res);
     }
 
     @Post('', [ForceLoggedInMiddleware])
     async addProvider(
-        @Body() user: NonNullable<OAuth2IdentityProvider>,
+        @Body() user: NonNullable<IdentityProvider>,
             @Request() req: any,
             @Response() res: any,
-    ) : Promise<OAuth2IdentityProvider> {
+    ) : Promise<IdentityProvider> {
         return createIdentityProviderRouteHandler(req, res);
     }
 }

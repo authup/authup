@@ -6,14 +6,13 @@
  */
 
 import { URL } from 'url';
-import { DataSource } from 'typeorm';
-import { setDataSource } from 'typeorm-extension';
-import { createExpressApp, createHttpServer } from '../http';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
+import { createExpressApp, createHttpServer, generateSwaggerDocumentation } from '../http';
 import { StartCommandContext } from './type';
-import { DatabaseSeeder, buildDataSourceOptions } from '../database';
+import { DatabaseSeeder, buildDataSourceOptions, buildDatabaseOptionsFromConfig } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
-import { setConfig, useConfig } from '../config';
-import { setLogger } from '../config/logger/module';
+import { setConfig, setLogger, useConfig } from '../config';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
@@ -50,10 +49,31 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     if (context.spinner) {
-        context.spinner.start('Establish database connection.');
+        context.spinner.start('Generating documentation.');
+    }
+
+    await generateSwaggerDocumentation({
+        rootPath: config.rootPath,
+        writableDirectoryPath: config.writableDirectoryPath,
+        baseUrl: config.selfUrl,
+    });
+
+    if (context.spinner) {
+        context.spinner.start('Generated documentation.');
     }
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
+
+    await createDatabase({ options, synchronize: false, ifNotExist: true });
+
+    Object.assign(options, {
+        logging: ['error'],
+    } as DataSourceOptions);
+
+    if (context.spinner) {
+        context.spinner.start('Establish database connection.');
+    }
+
     const dataSource = new DataSource(options);
     await dataSource.initialize();
 
@@ -63,7 +83,18 @@ export async function startCommand(context?: StartCommandContext) {
         context.spinner.succeed('Established database connection.');
     }
 
-    const seeder = new DatabaseSeeder();
+    if (context.spinner) {
+        context.spinner.start('Initialise database schema.');
+    }
+
+    await setupDatabaseSchema(dataSource);
+
+    if (context.spinner) {
+        context.spinner.succeed('Initialised database schema.');
+    }
+
+    const databaseOptions = buildDatabaseOptionsFromConfig(config);
+    const seeder = new DatabaseSeeder(databaseOptions.seed);
     await seeder.run(dataSource);
 
     if (context.spinner) {

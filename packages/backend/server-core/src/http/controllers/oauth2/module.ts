@@ -9,12 +9,16 @@ import { SwaggerTags } from '@trapi/swagger';
 import {
     Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
-import { OAuth2IdentityProvider, OAuth2TokenGrantResponse, Realm } from '@authelion/common';
+import {
+    OAuth2AccessToken, OAuth2JsonWebKey,
+    OAuth2OpenIDProviderMetadata, OAuth2RefreshToken,
+    OAuth2TokenGrantResponse,
+} from '@authelion/common';
 import { createTokenRouteHandler, deleteTokenRouteHandler, introspectTokenRouteHandler } from './token';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
-import { getJwkRouteHandler, getJwksRouteHandler } from './jwks/handlers';
-import { getOpenIdConfigurationRouteHandler } from './openid/handlers';
+import { getJwkRouteHandler, getJwksRouteHandler } from './jwks';
+import { getOpenIdConfigurationRouteHandler } from './openid';
 
 @SwaggerTags('oauth2')
 @Controller('')
@@ -23,7 +27,7 @@ export class OAuth2Controller {
     async confirmAuthorization(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<void> {
         return runAuthorizationRouteHandler(req, res);
     }
 
@@ -33,7 +37,7 @@ export class OAuth2Controller {
     async getIntrospectToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<Record<string, any>> {
         return introspectTokenRouteHandler(req, res);
     }
 
@@ -41,7 +45,7 @@ export class OAuth2Controller {
     async postIntrospectToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<Record<string, any>> {
         return introspectTokenRouteHandler(req, res);
     }
 
@@ -58,7 +62,7 @@ export class OAuth2Controller {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<OAuth2AccessToken | OAuth2RefreshToken> {
         return deleteTokenRouteHandler(req, res);
     }
 
@@ -66,7 +70,7 @@ export class OAuth2Controller {
     async deleteToken(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<OAuth2IdentityProvider[]> {
+    ): Promise<OAuth2AccessToken | OAuth2RefreshToken> {
         return deleteTokenRouteHandler(req, res);
     }
 
@@ -76,7 +80,7 @@ export class OAuth2Controller {
     async getOpenIdConfiguration(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<Realm[]> {
+    ): Promise<OAuth2OpenIDProviderMetadata[]> {
         return getOpenIdConfigurationRouteHandler(req, res);
     }
 
@@ -86,7 +90,7 @@ export class OAuth2Controller {
     async getManyJwks(
         @Request() req: any,
             @Response() res: any,
-    ): Promise<Realm[]> {
+    ): Promise<OAuth2JsonWebKey[]> {
         return getJwksRouteHandler(req, res);
     }
 
@@ -95,7 +99,7 @@ export class OAuth2Controller {
         @Params('id') id: string,
             @Request() req: any,
             @Response() res: any,
-    ): Promise<Realm[]> {
+    ): Promise<OAuth2JsonWebKey> {
         return getJwkRouteHandler(req, res);
     }
 }
