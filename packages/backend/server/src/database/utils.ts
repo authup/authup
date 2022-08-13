@@ -11,6 +11,7 @@ import { buildDataSourceOptions as _buildDataSourceOptions } from '@authelion/se
 
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const dataSourceOptions = await _buildDataSourceOptions();
+
     Object.assign(dataSourceOptions, {
         migrations: [
             path.join(__dirname, 'migrations', '*{.ts,.js}'),
