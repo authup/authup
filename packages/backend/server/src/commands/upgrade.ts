@@ -18,7 +18,7 @@ interface UpgradeArguments extends Arguments {
 export class UpgradeCommand implements CommandModule {
     command = 'upgrade';
 
-    describe = 'Run upgrade operation.';
+    describe = 'Upgrade the server.';
 
     // eslint-disable-next-line class-methods-use-this
     builder(args: Argv) {

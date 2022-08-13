@@ -23,7 +23,7 @@ interface SetupArguments extends Arguments {
 export class SetupCommand implements CommandModule {
     command = 'setup';
 
-    describe = 'Run initial setup operation.';
+    describe = 'Setup the server.';
 
     // eslint-disable-next-line class-methods-use-this
     builder(args: Argv) {

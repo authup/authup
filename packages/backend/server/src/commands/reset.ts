@@ -18,7 +18,7 @@ interface ResetArguments extends Arguments {
 export class ResetCommand implements CommandModule {
     command = 'reset';
 
-    describe = 'Run reset operation.';
+    describe = 'Reset the server.';
 
     builder(args: Argv) {
         return args
