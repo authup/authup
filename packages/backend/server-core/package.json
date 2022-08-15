@@ -53,7 +53,7 @@
         "hapic": "^0.0.2",
         "locter": "^0.2.2",
         "morgan": "^1.10.0",
-        "node-cron": "^3.0.1",
+        "node-cron": "^3.0.2",
         "pascal-case": "^3.1.2",
         "redis-extension": "^1.0.1",
         "reflect-metadata": "^0.1.13",
