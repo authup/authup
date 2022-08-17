@@ -48,7 +48,7 @@
         "@typescript-error/http": "^1.1.4",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
-        "defu": "^6.0.0",
+        "defu": "^6.1.0",
         "express-validator": "^6.14.2",
         "hapic": "^0.0.2",
         "locter": "^0.2.2",
