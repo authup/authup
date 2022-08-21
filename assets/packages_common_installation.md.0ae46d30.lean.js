@@ -1,1 +1,0 @@
-import{_ as a,o as n,c as t,f as e}from"./app.d762ea07.js";const u=JSON.parse('{"title":"Installation","description":"","frontmatter":{},"headers":[],"relativePath":"packages/common/installation.md"}'),s={name:"packages/common/installation.md"},o=e("",3),c=[o];function l(i,p,r,_,d,h){return n(),t("div",null,c)}var f=a(s,[["render",l]]);export{u as __pageData,f as default};

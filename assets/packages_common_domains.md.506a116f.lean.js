@@ -1,0 +1,1 @@
+import{_ as e,o as i,c as o,f as r}from"./app.dbceec0b.js";const m=JSON.parse('{"title":"Domains","description":"","frontmatter":{},"headers":[],"relativePath":"packages/common/domains.md"}'),n={name:"packages/common/domains.md"},l=r("",3),t=[l];function s(a,c,d,f,u,g){return i(),o("div",null,t)}const h=e(n,[["render",s]]);export{m as __pageData,h as default};
