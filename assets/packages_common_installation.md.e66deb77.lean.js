@@ -1,1 +1,0 @@
-import{_ as a,o as n,c as t,f as s}from"./app.dbceec0b.js";const u=JSON.parse('{"title":"Installation","description":"","frontmatter":{},"headers":[],"relativePath":"packages/common/installation.md"}'),e={name:"packages/common/installation.md"},o=s("",3),c=[o];function l(i,p,r,_,d,h){return n(),t("div",null,c)}const f=a(e,[["render",l]]);export{u as __pageData,f as default};
