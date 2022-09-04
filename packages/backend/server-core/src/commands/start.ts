@@ -59,7 +59,7 @@ export async function startCommand(context?: StartCommandContext) {
     });
 
     if (context.spinner) {
-        context.spinner.start('Generated documentation.');
+        context.spinner.succeed('Generated documentation.');
     }
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();

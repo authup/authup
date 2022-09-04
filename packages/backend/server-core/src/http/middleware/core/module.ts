@@ -6,7 +6,7 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import { CookieName } from '@authelion/common';
+import { AbilityManager, CookieName } from '@authelion/common';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 import { verifyAuthorizationHeader } from './verify';
 
@@ -25,6 +25,8 @@ function unsetCookies(res: ExpressResponse) {
 export function createMiddleware() {
     return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
         let { authorization: headerValue } = request.headers;
+
+        request.ability = new AbilityManager();
 
         try {
             const cookie = parseRequestAccessTokenCookie(request);
