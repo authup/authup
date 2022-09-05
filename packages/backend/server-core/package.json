@@ -58,7 +58,6 @@
         "redis-extension": "^1.0.1",
         "reflect-metadata": "^0.1.13",
         "swagger-ui-express": "^4.5.0",
-        "validator": "^13.7.0",
         "zod": "^3.18.0"
     },
     "peerDependencies": {
