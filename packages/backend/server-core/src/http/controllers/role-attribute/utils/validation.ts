@@ -6,23 +6,21 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { getCustomRepository } from 'typeorm';
-import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
-import { RoleAttributeValidationResult } from '../type';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { RoleRepository } from '../../../../domains';
+import {
+    ExpressValidationError,
+    ExpressValidationResult, extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
+    matchedValidationData,
+} from '../../../express-validation';
+import { RoleAttributeEntity, RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { extendExpressValidationResultWithRole } from '../../role/utils/extend';
 
 export async function runRoleAttributeValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<RoleAttributeValidationResult> {
-    const result : RoleAttributeValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<RoleAttributeEntity>> {
+    const result : ExpressValidationResult<RoleAttributeEntity> = initExpressValidationResult();
 
     if (operation === CRUDOperation.CREATE) {
         await check('name')
@@ -57,12 +55,15 @@ export async function runRoleAttributeValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRole(result);
+    await extendExpressValidationResultWithRelation(result, RoleEntity, {
+        id: 'role_id',
+        entity: 'role',
+    });
 
     if (operation === CRUDOperation.CREATE) {
-        if (result.meta.role) {
-            result.data.realm_id = result.meta.role.realm_id;
-            result.data.role_id = result.meta.role.id;
+        if (result.relation.role) {
+            result.data.realm_id = result.relation.role.realm_id;
+            result.data.role_id = result.relation.role.id;
         } else {
             result.data.realm_id = req.realmId;
             result.data.role_id = req.userId;

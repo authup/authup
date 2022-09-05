@@ -11,22 +11,21 @@ import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest } from '../../../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRobot } from '../../robot';
-import { extendExpressValidationResultWithPermission } from '../../permission';
-import { RobotPermissionValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
+import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '../../../../domains';
 
 export async function runRobotPermissionValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<RobotPermissionValidationResult> {
-    const result : RobotPermissionValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<RobotPermissionEntity>> {
+    const result : ExpressValidationResult<RobotPermissionEntity> = initExpressValidationResult();
+
     if (operation === CRUDOperation.CREATE) {
         await check('robot_id')
             .exists()
@@ -57,9 +56,13 @@ export async function runRobotPermissionValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithPermission(result);
-    if (result.meta.permission.target) {
-        result.data.target = result.meta.permission.target;
+    await extendExpressValidationResultWithRelation(result, PermissionEntity, {
+        id: 'permission_id',
+        entity: 'permission',
+    });
+
+    if (result.relation.permission.target) {
+        result.data.target = result.relation.permission.target;
     }
 
     const permissionTarget = req.ability.getTarget(PermissionID.ROBOT_PERMISSION_ADD);
@@ -69,15 +72,19 @@ export async function runRobotPermissionValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRobot(result);
-    if (result.meta.robot) {
+    await extendExpressValidationResultWithRelation(result, RobotEntity, {
+        id: 'robot_id',
+        entity: 'robot',
+    });
+
+    if (result.relation.robot) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.meta.robot.realm_id)
+            !isPermittedForResourceRealm(req.realmId, result.relation.robot.realm_id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
 
-        result.data.robot_realm_id = result.meta.robot.realm_id;
+        result.data.robot_realm_id = result.relation.robot.realm_id;
     }
 
     // ----------------------------------------------

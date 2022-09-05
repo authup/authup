@@ -5,16 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check } from 'express-validator';
+import { check, validationResult } from 'express-validator';
 import { isValidRealmName } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 import { CRUDOperation } from '../../../constants';
+import {
+    ExpressValidationError,
+    ExpressValidationResult,
+    initExpressValidationResult, matchedValidationData,
+} from '../../../express-validation';
+import { RealmEntity } from '../../../../domains';
 
 export async function runRealmValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) {
+) : Promise<ExpressValidationResult<RealmEntity>> {
+    const result : ExpressValidationResult<RealmEntity> = initExpressValidationResult();
+
     if (operation === CRUDOperation.CREATE) {
         await check('id')
             .exists()
@@ -49,4 +57,17 @@ export async function runRealmValidation(
         .isLength({ min: 5, max: 4096 })
         .optional({ nullable: true })
         .run(req);
+
+    // ----------------------------------------------
+
+    const validation = validationResult(req);
+    if (!validation.isEmpty()) {
+        throw new ExpressValidationError(validation);
+    }
+
+    result.data = matchedValidationData(req, { includeOptionals: true });
+
+    // ----------------------------------------------
+
+    return result;
 }

@@ -7,10 +7,8 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
-import { matchedData, validationResult } from 'express-validator';
-import { PermissionID, Realm } from '@authelion/common';
+import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
 import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
@@ -23,15 +21,8 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
-    await runRealmValidation(req, CRUDOperation.UPDATE);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
-    if (!data) {
+    const result = await runRealmValidation(req, CRUDOperation.UPDATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
@@ -43,7 +34,7 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new NotFoundError();
     }
 
-    entity = repository.merge(entity, data);
+    entity = repository.merge(entity, result.data);
 
     await repository.save(entity);
 

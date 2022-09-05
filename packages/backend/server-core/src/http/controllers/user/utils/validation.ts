@@ -12,22 +12,21 @@ import {
 import { BadRequestError } from '@typescript-error/http';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
 import { ExpressRequest } from '../../../type';
-import { UserValidationResult } from '../type';
-import { extendExpressValidationResultWithRealm } from '../../realm';
 import { CRUDOperation } from '../../../constants';
+import { RealmEntity, UserEntity } from '../../../../domains';
 
 export async function runUserValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<UserValidationResult> {
-    const result : UserValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<UserEntity>> {
+    const result : ExpressValidationResult<UserEntity> = initExpressValidationResult();
 
     const nameChain = check('name')
         .exists()
@@ -139,9 +138,13 @@ export async function runUserValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRealm(result);
-    if (result.meta.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.realm.id)) {
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'realm_id',
+        entity: 'realm',
+    });
+
+    if (result.relation.realm) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }

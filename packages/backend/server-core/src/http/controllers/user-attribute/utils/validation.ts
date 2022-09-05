@@ -7,19 +7,20 @@
 
 import { check, validationResult } from 'express-validator';
 import { ExpressRequest } from '../../../type';
-import { UserAttributeValidationResult } from '../type';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { extendExpressValidationResultWithUser } from '../../user';
+import {
+    ExpressValidationError,
+    ExpressValidationResult, extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
+    matchedValidationData,
+} from '../../../express-validation';
 import { CRUDOperation } from '../../../constants';
+import { UserAttributeEntity, UserEntity } from '../../../../domains';
 
 export async function runUserAttributeValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<UserAttributeValidationResult> {
-    const result : UserAttributeValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<UserAttributeEntity>> {
+    const result : ExpressValidationResult<UserAttributeEntity> = initExpressValidationResult();
 
     if (operation === CRUDOperation.CREATE) {
         await check('name')
@@ -53,11 +54,14 @@ export async function runUserAttributeValidation(
     result.data = matchedValidationData(req, { includeOptionals: true });
 
     if (operation === CRUDOperation.CREATE) {
-        await extendExpressValidationResultWithUser(result);
+        await extendExpressValidationResultWithRelation(result, UserEntity, {
+            id: 'user_id',
+            entity: 'user',
+        });
 
-        if (result.meta.user) {
-            result.data.realm_id = result.meta.user.realm_id;
-            result.data.user_id = result.meta.user.id;
+        if (result.relation.user) {
+            result.data.realm_id = result.relation.user.realm_id;
+            result.data.user_id = result.relation.user.id;
         } else {
             result.data.realm_id = req.realmId;
             result.data.user_id = req.userId;

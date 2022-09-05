@@ -9,24 +9,23 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest } from '../../../type';
-import { UserPermissionValidationResult } from '../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithUser } from '../../user';
-import { extendExpressValidationResultWithPermission } from '../../permission';
 import { CRUDOperation } from '../../../constants';
+import { PermissionEntity, UserEntity, UserPermissionEntity } from '../../../../domains';
 
 export async function runUserPermissionValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<UserPermissionValidationResult> {
-    const result : UserPermissionValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<UserPermissionEntity>> {
+    const result : ExpressValidationResult<UserPermissionEntity> = initExpressValidationResult();
+
     if (operation === CRUDOperation.CREATE) {
         await check('user_id')
             .exists()
@@ -57,9 +56,13 @@ export async function runUserPermissionValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithPermission(result);
-    if (result.meta.permission.target) {
-        result.data.target = result.meta.permission.target;
+    await extendExpressValidationResultWithRelation(result, PermissionEntity, {
+        id: 'permission_id',
+        entity: 'permission',
+    });
+
+    if (result.relation.permission.target) {
+        result.data.target = result.relation.permission.target;
     }
 
     const permissionTarget = req.ability.getTarget(PermissionID.USER_PERMISSION_ADD);
@@ -69,15 +72,19 @@ export async function runUserPermissionValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithUser(result);
-    if (result.meta.user) {
+    await extendExpressValidationResultWithRelation(result, UserEntity, {
+        id: 'user_id',
+        entity: 'user',
+    });
+
+    if (result.relation.user) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.meta.user.realm_id)
+            !isPermittedForResourceRealm(req.realmId, result.relation.user.realm_id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('user_id'));
         }
 
-        result.data.user_realm_id = result.meta.user.realm_id;
+        result.data.user_realm_id = result.relation.user.realm_id;
     }
 
     // ----------------------------------------------

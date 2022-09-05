@@ -6,24 +6,30 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { OAuth2AuthorizationResponseType, TokenError, isOAuth2ScopeAllowed } from '@authelion/common';
+import {
+    OAuth2AuthorizationCodeRequest,
+    OAuth2AuthorizationResponseType,
+    TokenError,
+    isOAuth2ScopeAllowed,
+} from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../../express-validation';
-import { AuthorizeValidationResult } from '../type';
 import { ExpressRequest } from '../../../../type';
-import { extendExpressValidationResultWithOAuth2Client } from '../../../client';
+import { OAuth2ClientEntity } from '../../../../../domains';
 
 export async function runAuthorizeValidation(
     req: ExpressRequest,
-) : Promise<AuthorizeValidationResult> {
-    const result : AuthorizeValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<OAuth2AuthorizationCodeRequest & { client: OAuth2ClientEntity, client_id: string }>> {
+    const result : ExpressValidationResult<OAuth2AuthorizationCodeRequest & {
+        client: OAuth2ClientEntity, client_id: string
+    }> = initExpressValidationResult();
 
     await check('response_type')
         .exists()
@@ -86,13 +92,16 @@ export async function runAuthorizeValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithOAuth2Client(result);
+    await extendExpressValidationResultWithRelation(result, OAuth2ClientEntity, {
+        id: 'client_id',
+        entity: 'client',
+    });
 
     if (
-        result.meta.client &&
+        result.relation.client &&
         result.data.scope
     ) {
-        if (!isOAuth2ScopeAllowed(result.meta.client.scope, result.data.scope)) {
+        if (!isOAuth2ScopeAllowed(result.relation.client.scope, result.data.scope)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('scope'));
         }
     }

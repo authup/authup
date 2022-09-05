@@ -9,24 +9,21 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@typescript-error/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest } from '../../../type';
-import { RobotRoleValidationResult } from '../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
-    matchedValidationData,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult, matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRobot } from '../../robot';
-import { extendExpressValidationResultWithRole } from '../../role';
 import { CRUDOperation } from '../../../constants';
+import { RobotEntity, RobotRoleEntity, RoleEntity } from '../../../../domains';
 
 export async function runRobotRoleValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<RobotRoleValidationResult> {
-    const result : RobotRoleValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<RobotRoleEntity>> {
+    const result : ExpressValidationResult<RobotRoleEntity> = initExpressValidationResult();
 
     if (operation === CRUDOperation.CREATE) {
         await check('robot_id')
@@ -51,25 +48,33 @@ export async function runRobotRoleValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRole(result);
+    await extendExpressValidationResultWithRelation(result, RoleEntity, {
+        id: 'role_realm_id',
+        entity: 'role',
+    });
+
     if (
-        result.meta.role &&
-        result.meta.role.realm_id
+        result.relation.role &&
+        result.relation.role.realm_id
     ) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.role.realm_id)) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
-        result.data.role_realm_id = result.meta.role.realm_id;
+        result.data.role_realm_id = result.relation.role.realm_id;
     }
 
-    await extendExpressValidationResultWithRobot(result);
-    if (result.meta.robot) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.robot.realm_id)) {
+    await extendExpressValidationResultWithRelation(result, RobotEntity, {
+        id: 'robot_id',
+        entity: 'robot',
+    });
+
+    if (result.relation.robot) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.robot.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
 
-        result.data.robot_realm_id = result.meta.robot.realm_id;
+        result.data.robot_realm_id = result.relation.robot.realm_id;
     }
 
     // ----------------------------------------------

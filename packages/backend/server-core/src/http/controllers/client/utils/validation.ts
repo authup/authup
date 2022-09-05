@@ -9,23 +9,21 @@ import { check, validationResult } from 'express-validator';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
-import { extendExpressValidationResultWithRealm } from '../../realm';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
-    matchedValidationData,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult, matchedValidationData,
 } from '../../../express-validation';
-import { OAuth2ClientValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
+import { OAuth2ClientEntity, RealmEntity } from '../../../../domains';
 
 export async function runOauth2ClientValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<OAuth2ClientValidationResult> {
-    const result : OAuth2ClientValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<OAuth2ClientEntity>> {
+    const result : ExpressValidationResult<OAuth2ClientEntity> = initExpressValidationResult();
 
     await check('name')
         .exists()
@@ -91,9 +89,15 @@ export async function runOauth2ClientValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRealm(result);
-    if (result.meta.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.realm.id)) {
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'realm_id',
+        entity: 'realm',
+    });
+
+    // ----------------------------------------------
+
+    if (result.relation.realm) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }

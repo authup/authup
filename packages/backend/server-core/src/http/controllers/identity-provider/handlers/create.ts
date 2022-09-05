@@ -29,8 +29,8 @@ export async function createIdentityProviderRouteHandler(req: ExpressRequest, re
 
     await repository.save(entity);
 
-    await repository.saveAttributes(entity.id, result.attributes);
-    repository.appendAttributes(entity, result.attributes);
+    await repository.saveAttributes(entity.id, result.meta.attributes);
+    repository.appendAttributes(entity, result.meta.attributes);
 
     return res.respond({
         data: entity,

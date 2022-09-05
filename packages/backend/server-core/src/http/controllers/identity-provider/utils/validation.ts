@@ -9,18 +9,19 @@ import { check, validationResult } from 'express-validator';
 import {
     IdentityProviderProtocol,
     IdentityProviderProtocolConfig,
-    isPermittedForResourceRealm, isValidIdentityProviderSub,
-    isValidRealmName,
+    isPermittedForResourceRealm,
+    isValidIdentityProviderSub,
 } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
-import { extendExpressValidationResultWithRealm } from '../../realm';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { IdentityProviderValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
 import {
     extractLdapIdentityProviderProtocolAttributes,
@@ -30,16 +31,13 @@ import {
     validateOAuth2IdentityProviderProtocol,
     validateOidcIdentityProviderProtocol,
 } from '../../../../domains/identity-provider/protocol';
+import { IdentityProviderEntity, RealmEntity } from '../../../../domains';
 
 export async function runOauth2ProviderValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<IdentityProviderValidationResult> {
-    const result : IdentityProviderValidationResult = {
-        attributes: {},
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}>> {
+    const result : ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}> = initExpressValidationResult();
 
     await check('sub')
         .exists()
@@ -103,19 +101,19 @@ export async function runOauth2ProviderValidation(
 
     switch (result.data.protocol) {
         case IdentityProviderProtocol.OAUTH2: {
-            result.attributes = validateOAuth2IdentityProviderProtocol(
+            result.meta.attributes = validateOAuth2IdentityProviderProtocol(
                 extractOAuth2IdentityProviderProtocolAttributes(req.body),
             );
             break;
         }
         case IdentityProviderProtocol.OIDC: {
-            result.attributes = validateOidcIdentityProviderProtocol(
+            result.meta.attributes = validateOidcIdentityProviderProtocol(
                 extractOidcConnectIdentityProviderProtocolAttributes(req.body),
             );
             break;
         }
         case IdentityProviderProtocol.LDAP: {
-            result.attributes = validateLdapIdentityProviderProtocol(
+            result.meta.attributes = validateLdapIdentityProviderProtocol(
                 extractLdapIdentityProviderProtocolAttributes(req.body),
             );
             break;
@@ -124,9 +122,13 @@ export async function runOauth2ProviderValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRealm(result);
-    if (result.meta.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.realm.id)) {
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'realm_id',
+        entity: 'realm',
+    });
+
+    if (result.relation.realm) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }

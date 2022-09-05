@@ -22,22 +22,15 @@ export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressR
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
-    await runRealmValidation(req, CRUDOperation.CREATE);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
-    if (!data) {
+    const result = await runRealmValidation(req, CRUDOperation.CREATE);
+    if (!result.data) {
         return res.respondAccepted();
     }
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
-    const entity = repository.create(data);
+    const entity = repository.create(result.data);
 
     await repository.save(entity);
 

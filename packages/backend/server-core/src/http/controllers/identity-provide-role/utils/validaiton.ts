@@ -10,23 +10,21 @@ import { isPermittedForResourceRealm } from '@authelion/common';
 import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 import { CRUDOperation } from '../../../constants';
-import { OAuth2ProviderRoleValidationResult } from '../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRole } from '../../role';
-import { extendExpressValidationResultWithOAuth2Provider } from '../../identity-provider';
+import { IdentityProviderEntity, IdentityProviderRoleEntity, RoleEntity } from '../../../../domains';
 
 export async function runIdentityProviderRoleValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<OAuth2ProviderRoleValidationResult> {
-    const result : OAuth2ProviderRoleValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<IdentityProviderRoleEntity>> {
+    const result : ExpressValidationResult<IdentityProviderRoleEntity> = initExpressValidationResult();
 
     if (operation === CRUDOperation.CREATE) {
         await check('provider_id')
@@ -59,25 +57,33 @@ export async function runIdentityProviderRoleValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRole(result);
+    await extendExpressValidationResultWithRelation(result, RoleEntity, {
+        id: 'role_id',
+        entity: 'role',
+    });
+
     if (
-        result.meta.role &&
-        result.meta.role.realm_id
+        result.relation.role &&
+        result.relation.role.realm_id
     ) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.role.realm_id)) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
-        result.data.role_realm_id = result.meta.role.realm_id;
+        result.data.role_realm_id = result.relation.role.realm_id;
     }
 
-    await extendExpressValidationResultWithOAuth2Provider(result);
-    if (result.meta.provider) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.provider.realm_id)) {
+    await extendExpressValidationResultWithRelation(result, IdentityProviderEntity, {
+        id: 'provider_id',
+        entity: 'provider',
+    });
+
+    if (result.relation.provider) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.provider.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('provider_id'));
         }
 
-        result.data.provider_realm_id = result.meta.provider.realm_id;
+        result.data.provider_realm_id = result.relation.provider.realm_id;
     }
 
     return result;

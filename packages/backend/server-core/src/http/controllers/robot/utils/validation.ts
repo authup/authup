@@ -11,21 +11,20 @@ import { BadRequestError } from '@typescript-error/http';
 import { ExpressRequest } from '../../../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRealm } from '../../realm/utils/extend';
-import { RobotValidationResult } from '../type';
 import { CRUDOperation } from '../../../constants';
+import { RealmEntity, RobotEntity } from '../../../../domains';
 
 export async function runRobotValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<RobotValidationResult> {
-    const result : RobotValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<RobotEntity>> {
+    const result : ExpressValidationResult<RobotEntity> = initExpressValidationResult();
 
     await check('secret')
         .exists()
@@ -77,10 +76,14 @@ export async function runRobotValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRealm(result);
-    if (result.meta.realm) {
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'realm_id',
+        entity: 'realm',
+    });
+
+    if (result.relation.realm) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.meta.realm.id)
+            !isPermittedForResourceRealm(req.realmId, result.relation.realm.id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }

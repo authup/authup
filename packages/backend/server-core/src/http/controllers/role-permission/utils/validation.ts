@@ -9,24 +9,22 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest } from '../../../type';
-import { RolePermissionValidationResult } from '../type';
 import {
     ExpressValidationError,
+    ExpressValidationResult,
     buildExpressValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
+    initExpressValidationResult,
     matchedValidationData,
 } from '../../../express-validation';
-import { extendExpressValidationResultWithRole } from '../../role';
-import { extendExpressValidationResultWithPermission } from '../../permission';
 import { CRUDOperation } from '../../../constants';
+import { PermissionEntity, RoleEntity, RolePermissionEntity } from '../../../../domains';
 
 export async function runRolePermissionValidation(
     req: ExpressRequest,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<RolePermissionValidationResult> {
-    const result : RolePermissionValidationResult = {
-        data: {},
-        meta: {},
-    };
+) : Promise<ExpressValidationResult<RolePermissionEntity>> {
+    const result : ExpressValidationResult<RolePermissionEntity> = initExpressValidationResult();
 
     if (operation === CRUDOperation.CREATE) {
         await check('role_id')
@@ -58,9 +56,13 @@ export async function runRolePermissionValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithPermission(result);
-    if (result.meta.permission) {
-        result.data.target = result.meta.permission.target;
+    await extendExpressValidationResultWithRelation(result, PermissionEntity, {
+        id: 'permission_id',
+        entity: 'permission',
+    });
+
+    if (result.relation.permission) {
+        result.data.target = result.relation.permission.target;
     }
 
     const permissionTarget = req.ability.getTarget(PermissionID.ROLE_PERMISSION_ADD);
@@ -68,13 +70,17 @@ export async function runRolePermissionValidation(
         result.data.target = permissionTarget;
     }
 
-    await extendExpressValidationResultWithRole(result);
-    if (result.meta.role) {
-        if (!isPermittedForResourceRealm(req.realmId, result.meta.role.realm_id)) {
+    await extendExpressValidationResultWithRelation(result, RoleEntity, {
+        id: 'role_id',
+        entity: 'role',
+    });
+
+    if (result.relation.role) {
+        if (!isPermittedForResourceRealm(req.realmId, result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
-        result.data.role_realm_id = result.meta.role.realm_id;
+        result.data.role_realm_id = result.relation.role.realm_id;
     }
 
     // ----------------------------------------------
