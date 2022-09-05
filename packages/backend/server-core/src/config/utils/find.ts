@@ -15,6 +15,8 @@ import defu from 'defu';
 import { extendConfig } from './extend';
 import { Config } from '../type';
 import { readEnvConfig } from '../env';
+import { validateConfig } from '../validator';
+import { useLogger } from '../logger';
 
 export async function loadConfig(directoryPath?: string) : Promise<Config> {
     directoryPath ??= process.cwd();
@@ -22,14 +24,19 @@ export async function loadConfig(directoryPath?: string) : Promise<Config> {
     const items : Partial<Config>[] = [];
     items.push(readEnvConfig());
 
-    const fileInfos = await locateFiles('authelion.config.{ts,js,json}', {
+    const fileInfos = await locateFiles('authelion.{ts,js,json}', {
         path: directoryPath,
     });
 
     for (let i = 0; i < fileInfos.length; i++) {
         const fileExport = await loadScriptFileExport(fileInfos[i]);
         if (fileExport.key === 'default') {
-            items.push(fileExport.value);
+            try {
+                validateConfig(fileExport.value);
+                items.push(fileExport.value);
+            } catch (e) {
+                useLogger().error(`The configuration file ${fileInfos[i].name} (path: ${fileInfos[i].path}) is not valid.`);
+            }
         }
     }
 
@@ -42,14 +49,19 @@ export function findConfigSync(directoryPath?: string) {
     const items : Partial<Config>[] = [];
     items.push(readEnvConfig());
 
-    const fileInfos = locateFilesSync('authelion.config.{ts,js,json}', {
+    const fileInfos = locateFilesSync('authelion.{ts,js,json}', {
         path: directoryPath,
     });
 
     for (let i = 0; i < fileInfos.length; i++) {
         const fileExport = loadScriptFileExportSync(fileInfos[i]);
         if (fileExport.key === 'default') {
-            items.push(fileExport.value);
+            try {
+                validateConfig(fileExport.value);
+                items.push(fileExport.value);
+            } catch (e) {
+                useLogger().error(`The configuration file ${fileInfos[i].name} (path: ${fileInfos[i].path}) is not valid.`);
+            }
         }
     }
 

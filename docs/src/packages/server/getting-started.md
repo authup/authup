@@ -34,17 +34,15 @@ All options have either default values or are generated automatically 🔥.
 :::
 
 To overwrite the default (generated) config property values,
-create a `authelion.config.js` file in the root directory with the following content:
+create a `authelion.{js,json,ts}` file in the root directory with the following content:
 
 ```typescript
 module.exports = {
     port: 3010,
     
-    admin: {
-        username: 'admin',
-        password: 'start123'
-    },
-
+    adminUsername: 'admin',
+    adminPassword: 'start123',
+    
     selfUrl: 'http://127.0.0.1:3010/',
     webUrl: 'http://127.0.0.1:3000/',
     
