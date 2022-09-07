@@ -13,7 +13,9 @@ import { isRedisEnabled } from '../../utils';
 import { useConfig } from '../../config';
 import { CachePrefix } from '../../constants';
 
-export abstract class OAuth2AbstractCache<T extends Record<string, any> & { id: string, expires?: Date }> {
+export abstract class OAuth2AbstractCache<
+    T extends Record<string, any> & { id: string, expires?: Date | string | number },
+> {
     protected prefix: string;
 
     protected driver : Cache<T['id'], T> | undefined;
@@ -28,7 +30,9 @@ export abstract class OAuth2AbstractCache<T extends Record<string, any> & { id: 
             return;
         }
 
-        const seconds = Math.ceil((entity.expires.getTime() - Date.now()) / 1000);
+        const date = this.toDate(entity.expires);
+
+        const seconds = Math.ceil((date.getTime() - Date.now()) / 1000);
         await driver.set(
             { id: entity.id } as KeyPathID<T['id'], T>,
             entity,
@@ -80,7 +84,7 @@ export abstract class OAuth2AbstractCache<T extends Record<string, any> & { id: 
     protected async isExpired(entity: T) : Promise<boolean> {
         if (
             hasOwnProperty(entity, 'expires') &&
-            entity.expires.getTime() < Date.now()
+            this.toDate(entity.expires).getTime() < Date.now()
         ) {
             const driver = await this.useDriver();
             if (driver) {
@@ -110,6 +114,14 @@ export abstract class OAuth2AbstractCache<T extends Record<string, any> & { id: 
         }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
 
         return this.driver;
+    }
+
+    protected toDate(input: string | number | Date) : Date {
+        if (input instanceof Date) {
+            return input;
+        }
+
+        return new Date(input);
     }
 
     abstract loadDBEntity(id: T['id']) : Promise<T>;
