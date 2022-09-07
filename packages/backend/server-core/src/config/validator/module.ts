@@ -25,6 +25,11 @@ const configValidation = zod.object({
     tokenMaxAgeAccessToken: zod.number().nonnegative(),
     tokenMaxAgeRefreshToken: zod.number().nonnegative(),
     redis: configRedisValidation,
+
+    registration: zod.boolean(),
+    emailVerification: zod.boolean(),
+    forgotPassword: zod.boolean(),
+
     adminUsername: zod.string().min(3).max(128),
     adminPassword: zod.string().min(3).max(256),
     adminPasswordReset: zod.boolean().optional(),

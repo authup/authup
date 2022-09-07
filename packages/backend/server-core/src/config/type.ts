@@ -56,6 +56,29 @@ export type Config = {
     // -------------------------------------------------
 
     /**
+     * Enable registration.
+     *
+     * default: false
+     */
+    registration: boolean,
+
+    /**
+     * Email verification required for registration or login with identity provider.
+     *
+     * default: false
+     */
+    emailVerification: boolean,
+
+    /**
+     * Allow password reset?
+     *
+     * default: false
+     */
+    forgotPassword: boolean,
+
+    // -------------------------------------------------
+
+    /**
      * default: 'admin'
      */
     adminUsername: string,

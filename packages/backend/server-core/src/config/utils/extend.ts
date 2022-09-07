@@ -42,6 +42,11 @@ export function extendConfig(
 
     // -------------------------------------------------
 
+    config.registration = config.registration ?? false;
+    config.emailVerification = config.emailVerification ?? false;
+
+    // -------------------------------------------------
+
     config.adminUsername = config.adminUsername || ConfigDefault.ADMIN_USERNAME;
     config.adminPassword = config.adminPassword || ConfigDefault.ADMIN_PASSWORD;
 
