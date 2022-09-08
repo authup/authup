@@ -6,12 +6,11 @@
  */
 
 import { Transporter, createTransport } from 'nodemailer';
-import { SMTPConfigInput } from './type';
-import { buildSMTPConfig } from './utils';
-import { useLogger } from '../config';
+import { SMTPOptionsInput, buildSMTPOptions } from '../config';
+import { useLogger } from '../logger';
 
-export function createSMTPClient(input: SMTPConfigInput) : Transporter {
-    const config = buildSMTPConfig(input);
+export function createSMTPClient(input: SMTPOptionsInput) : Transporter {
+    const config = buildSMTPOptions(input);
 
     let auth: Record<string, any> | undefined;
     if (config.user && config.password) {

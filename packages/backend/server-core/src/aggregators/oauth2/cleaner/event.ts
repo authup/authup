@@ -2,7 +2,7 @@ import { Cache, useClient } from 'redis-extension';
 import { CachePrefix } from '../../../constants';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { useLogger } from '../../../config/logger/module';
+import { useLogger } from '../../../logger/module';
 
 export async function runOAuth2CleanerByEvent() {
     const logger = useLogger();

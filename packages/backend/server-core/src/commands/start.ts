@@ -10,46 +10,50 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
 import { createExpressApp, createHttpServer, generateSwaggerDocumentation } from '../http';
 import { StartCommandContext } from './type';
-import { DatabaseSeeder, buildDataSourceOptions, buildDatabaseOptionsFromConfig } from '../database';
+import { DatabaseSeeder, buildDataSourceOptions } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
-import { setConfig, setLogger, useConfig } from '../config';
+import {
+    buildDatabaseOptionsFromConfig, setConfig, useConfig,
+} from '../config';
+import { setLogger } from '../logger';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
     const config = await useConfig();
-    config.adminPasswordReset ??= false;
-    config.robotSecretReset ??= false;
+    config.databaseAdminPasswordReset ??= false;
+    config.databaseRobotSecretReset ??= false;
+
     setConfig(config);
 
     if (context.logger) {
         setLogger(context.logger);
     }
 
-    if (context.spinner) {
-        context.spinner.info(`Environment: ${config.env}`);
-        context.spinner.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
-        context.spinner.info(`URL: ${config.selfUrl}`);
-        context.spinner.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
-        context.spinner.info(`Web-URL: ${config.webUrl}`);
+    if (context.logger) {
+        context.logger.info(`Environment: ${config.env}`);
+        context.logger.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
+        context.logger.info(`URL: ${config.selfUrl}`);
+        context.logger.info(`Docs-URL: ${new URL('docs', config.selfUrl).href}`);
+        context.logger.info(`Web-URL: ${config.webUrl}`);
     }
 
     /*
     HTTP Server & Express App
     */
 
-    if (context.spinner) {
-        context.spinner.start('Initialise controllers & middlewares.');
+    if (context.logger) {
+        context.logger.info('Initialise controllers & middlewares.');
     }
 
     const expressApp = createExpressApp();
 
-    if (context.spinner) {
-        context.spinner.succeed('Initialised controllers & middlewares.');
+    if (context.logger) {
+        context.logger.info('Initialised controllers & middlewares.');
     }
 
-    if (context.spinner) {
-        context.spinner.start('Generating documentation.');
+    if (context.logger) {
+        context.logger.info('Generating documentation.');
     }
 
     await generateSwaggerDocumentation({
@@ -58,8 +62,8 @@ export async function startCommand(context?: StartCommandContext) {
         baseUrl: config.selfUrl,
     });
 
-    if (context.spinner) {
-        context.spinner.succeed('Generated documentation.');
+    if (context.logger) {
+        context.logger.info('Generated documentation.');
     }
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
@@ -70,8 +74,8 @@ export async function startCommand(context?: StartCommandContext) {
         logging: ['error'],
     } as DataSourceOptions);
 
-    if (context.spinner) {
-        context.spinner.start('Establish database connection.');
+    if (context.logger) {
+        context.logger.info('Establish database connection.');
     }
 
     const dataSource = new DataSource(options);
@@ -79,39 +83,39 @@ export async function startCommand(context?: StartCommandContext) {
 
     setDataSource(dataSource);
 
-    if (context.spinner) {
-        context.spinner.succeed('Established database connection.');
+    if (context.logger) {
+        context.logger.info('Established database connection.');
     }
 
-    if (context.spinner) {
-        context.spinner.start('Initialise database schema.');
+    if (context.logger) {
+        context.logger.info('Initialise database schema.');
     }
 
     await setupDatabaseSchema(dataSource);
 
-    if (context.spinner) {
-        context.spinner.succeed('Initialised database schema.');
+    if (context.logger) {
+        context.logger.info('Initialised database schema.');
     }
 
     const databaseOptions = buildDatabaseOptionsFromConfig(config);
-    const seeder = new DatabaseSeeder(databaseOptions.seed);
+    const seeder = new DatabaseSeeder(databaseOptions);
     await seeder.run(dataSource);
 
-    if (context.spinner) {
-        context.spinner.start('Starting aggregators.');
+    if (context.logger) {
+        context.logger.info('Starting aggregators.');
     }
 
     const { start } = buildOAuth2Aggregator();
     await start();
 
-    if (context.spinner) {
-        context.spinner.succeed('Started aggregators.');
+    if (context.logger) {
+        context.logger.info('Started aggregators.');
     }
 
     const httpServer = createHttpServer({ expressApp });
     httpServer.listen(config.port, '0.0.0.0', () => {
-        if (context.spinner) {
-            context.spinner.succeed('Startup completed.');
+        if (context.logger) {
+            context.logger.info('Startup completed.');
         }
     });
 }

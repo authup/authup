@@ -47,24 +47,38 @@ export function readEnvConfig() : Partial<Config> {
 
     // -------------------------------------------------
 
+    if (hasEnv('REGISTRATION')) {
+        config.registration = requireBooleanFromEnv('REGISTRATION');
+    }
+
+    if (hasEnv('EMAIL_VERIFICATION')) {
+        config.emailVerification = requireBooleanFromEnv('EMAIL_VERIFICATION');
+    }
+
+    if (hasEnv('FORGOT_PASSWORD')) {
+        config.forgotPassword = requireBooleanFromEnv('FORGOT_PASSWORD');
+    }
+
+    // -------------------------------------------------
+
     if (hasEnv('ADMIN_USERNAME')) {
-        config.adminUsername = requireFromEnv('ADMIN_USERNAME');
+        config.databaseAdminUsername = requireFromEnv('ADMIN_USERNAME');
     }
 
     if (hasEnv('ADMIN_PASSWORD')) {
-        config.adminPassword = requireFromEnv('ADMIN_PASSWORD');
+        config.databaseAdminPassword = requireFromEnv('ADMIN_PASSWORD');
     }
 
     if (hasEnv('ROBOT_ENABLED')) {
-        config.robotEnabled = requireBooleanFromEnv('ROBOT_ENABLED');
+        config.databaseRobotEnabled = requireBooleanFromEnv('ROBOT_ENABLED');
     }
 
     if (hasEnv('ROBOT_SECRET')) {
-        config.adminPassword = requireFromEnv('ROBOT_SECRET');
+        config.databaseAdminPassword = requireFromEnv('ROBOT_SECRET');
     }
 
     if (hasEnv('PERMISSIONS')) {
-        config.permissions = requireFromEnv('PERMISSIONS');
+        config.databasePermissions = requireFromEnv('PERMISSIONS');
     }
 
     // -------------------------------------------------

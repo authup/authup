@@ -44,13 +44,13 @@ export function extendConfig(
 
     config.registration = config.registration ?? false;
     config.emailVerification = config.emailVerification ?? false;
+    config.forgotPassword = config.forgotPassword ?? false;
 
     // -------------------------------------------------
 
-    config.adminUsername = config.adminUsername || ConfigDefault.ADMIN_USERNAME;
-    config.adminPassword = config.adminPassword || ConfigDefault.ADMIN_PASSWORD;
-
-    config.robotEnabled = config.robotEnabled ?? false;
+    config.databaseAdminUsername = config.databaseAdminUsername || ConfigDefault.ADMIN_USERNAME;
+    config.databaseAdminPassword = config.databaseAdminPassword || ConfigDefault.ADMIN_PASSWORD;
+    config.databaseRobotEnabled = config.databaseRobotEnabled ?? false;
 
     // -------------------------------------------------
 

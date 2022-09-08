@@ -6,6 +6,28 @@
  */
 
 import { Client } from 'redis-extension';
+import { SMTPOptions } from './smtp';
+import { DatabaseOptions } from './database';
+import { MiddlewareOptions } from './http';
+
+export type ConfigKeyPrefixAdd<Key, Prefix extends string> = Key extends string ?
+    `${Prefix}${Capitalize<Key>}` :
+    never;
+
+export type ConfigKeyPrefixRemove<
+    PrefixedKey,
+    Prefix extends string,
+    > = PrefixedKey extends ConfigKeyPrefixAdd<infer Key, Prefix> ?
+        (
+            Key extends string ?
+            `${Uncapitalize<Key>}` :
+                never
+        ) :
+        never;
+
+export type ConfigKeyPrefixOptions<O extends object, P extends string> = {
+    [K in keyof O as ConfigKeyPrefixAdd<K, P>]: O[K]
+};
 
 export type Config = {
     /**
@@ -79,43 +101,6 @@ export type Config = {
     // -------------------------------------------------
 
     /**
-     * default: 'admin'
-     */
-    adminUsername: string,
-
-    /**
-     * default: 'start123'
-     */
-    adminPassword: string,
-
-    /**
-     * default: undefined
-     */
-    adminPasswordReset?: boolean,
-
-    /**
-     * default: false
-     */
-    robotEnabled: boolean,
-
-    /**
-     * default: undefined
-     */
-    robotSecret?: string,
-
-    /**
-     * default: undefined
-     */
-    robotSecretReset?: boolean,
-
-    /**
-     * default: []
-     */
-    permissions?: string[] | string,
-
-    // -------------------------------------------------
-
-    /**
      * default: undefined
      */
     keyPairPassphrase?: string,
@@ -128,32 +113,8 @@ export type Config = {
     /**
      * default: '.pem'
      */
-    keyPairPrivateExtension?: string,
-
-    // -------------------------------------------------
-
-    /**
-     * default: true
-     */
-    middlewareBodyParser: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareCookieParser: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareResponse: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareSwaggerEnabled: boolean;
-
-    /**
-     * default: config.writableDirectoryPath
-     */
-    middlewareSwaggerDirectoryPath: string;
-};
+    keyPairPrivateExtension?: string
+} &
+ConfigKeyPrefixOptions<DatabaseOptions, 'database'> &
+ConfigKeyPrefixOptions<MiddlewareOptions, 'middleware'> &
+ConfigKeyPrefixOptions<SMTPOptions, 'smtp'>;

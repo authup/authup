@@ -10,6 +10,4 @@ export * from './loggedin';
 export * from './error';
 export * from './logger';
 export * from './response';
-export * from './type';
 export * from './module';
-export * from './utils';

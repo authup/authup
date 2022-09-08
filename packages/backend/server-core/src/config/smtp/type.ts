@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type SMTPConfig = {
+export type SMTPOptions = {
     host: string,
 
     port?: number,
@@ -27,4 +27,5 @@ export type SMTPConfig = {
     replyToDisplayName?: string
 };
 
-export type SMTPConfigInput = Pick<SMTPConfig, 'host' | 'from'> & Partial<Omit<SMTPConfig, 'host' | 'from'>>;
+export type SMTPOptionsInput = Pick<SMTPOptions, 'host' | 'from'> &
+Partial<Omit<SMTPOptions, 'host' | 'from'>>;

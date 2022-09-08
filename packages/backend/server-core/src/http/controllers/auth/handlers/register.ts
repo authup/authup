@@ -13,13 +13,21 @@ import { ExpressValidationError, matchedValidationData } from '../../../express-
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { useDataSource } from '../../../../database';
 import { UserRepository } from '../../../../domains';
-import { useConfig } from '../../../../config';
+import { buildSMTPOptionsFromConfig, hasConfigSMTPOptions, useConfig } from '../../../../config';
+import { createSMTPClient } from '../../../../smtp';
 
 export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();
 
     if (!config.registration) {
         throw new ServerError('User registration is not enabled.');
+    }
+
+    if (
+        config.emailVerification &&
+        !hasConfigSMTPOptions(config)
+    ) {
+        throw new ServerError('SMTP options are not defined.');
     }
 
     await check('email')
@@ -76,7 +84,18 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
     await repository.save(entity);
 
     if (config.emailVerification) {
-        // todo: send email
+        const smtpOptions = buildSMTPOptionsFromConfig(config);
+        const smtpClient = createSMTPClient(smtpOptions);
+
+        await smtpClient.sendMail({
+            from: smtpOptions.from,
+            to: entity.email,
+            subject: 'Registration - Activation code',
+            html: `
+                <p>Please use the code below to activate your account and start using the site.</p>
+                <p>${entity.activate_hash}</p>
+                `,
+        });
     }
 
     return res.respond({

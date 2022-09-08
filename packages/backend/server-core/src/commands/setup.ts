@@ -12,10 +12,9 @@ import { generateSwaggerDocumentation } from '../http';
 import {
     DatabaseSeeder,
     buildDataSourceOptions,
-    buildDatabaseOptionsFromConfig,
     saveSeedResult,
 } from '../database';
-import { useConfig } from '../config';
+import { buildDatabaseOptionsFromConfig, useConfig } from '../config';
 
 export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};
@@ -33,8 +32,8 @@ export async function setupCommand(context?: SetupCommandContext) {
     const config = await useConfig();
 
     if (context.documentation) {
-        if (context.spinner) {
-            context.spinner.start('Generating documentation.');
+        if (context.logger) {
+            context.logger.info('Generating documentation.');
         }
 
         await generateSwaggerDocumentation({
@@ -43,8 +42,8 @@ export async function setupCommand(context?: SetupCommandContext) {
             baseUrl: config.selfUrl,
         });
 
-        if (context.spinner) {
-            context.spinner.start('Generated documentation.');
+        if (context.logger) {
+            context.logger.info('Generated documentation.');
         }
     }
 
@@ -55,14 +54,14 @@ export async function setupCommand(context?: SetupCommandContext) {
         const options = context.dataSourceOptions || await buildDataSourceOptions();
 
         if (context.database) {
-            if (context.spinner) {
-                context.spinner.start('Creating database.');
+            if (context.logger) {
+                context.logger.info('Creating database.');
             }
 
             await createDatabase({ options, synchronize: false });
 
-            if (context.spinner) {
-                context.spinner.succeed('Created database.');
+            if (context.logger) {
+                context.logger.info('Created database.');
             }
         }
 
@@ -71,19 +70,19 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         try {
             if (context.databaseSchema) {
-                if (context.spinner) {
-                    context.spinner.start('Execute schema setup.');
+                if (context.logger) {
+                    context.logger.info('Execute schema setup.');
                 }
 
                 await setupDatabaseSchema(dataSource);
 
-                if (context.spinner) {
-                    context.spinner.succeed('Executed schema setup.');
+                if (context.logger) {
+                    context.logger.info('Executed schema setup.');
                 }
             }
         } catch (e) {
-            if (context.spinner) {
-                context.spinner.fail('Setup of the database schema failed.');
+            if (context.logger) {
+                context.logger.fail('Setup of the database schema failed.');
             }
 
             throw e;
@@ -91,19 +90,19 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         try {
             if (context.databaseSeed) {
-                if (context.spinner) {
-                    context.spinner.start('Seeding database.');
+                if (context.logger) {
+                    context.logger.info('Seeding database.');
                 }
 
-                config.adminPasswordReset ??= true;
-                config.robotSecretReset ??= true;
+                config.databaseAdminPasswordReset ??= true;
+                config.databaseRobotSecretReset ??= true;
 
                 const databaseOptions = buildDatabaseOptionsFromConfig(config);
-                const seeder = new DatabaseSeeder(databaseOptions.seed);
+                const seeder = new DatabaseSeeder(databaseOptions);
                 const seederData = await seeder.run(dataSource);
 
-                if (context.spinner) {
-                    context.spinner.succeed('Seeded database.');
+                if (context.logger) {
+                    context.logger.info('Seeded database.');
 
                     if (seederData.robot) {
                         await saveSeedResult(config.writableDirectoryPath, seederData);
@@ -111,8 +110,8 @@ export async function setupCommand(context?: SetupCommandContext) {
                 }
             }
         } catch (e) {
-            if (context.spinner) {
-                context.spinner.fail('Seeding the database failed.');
+            if (context.logger) {
+                context.logger.fail('Seeding the database failed.');
             }
 
             throw e;

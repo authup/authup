@@ -11,8 +11,8 @@ import { UpgradeCommandContext } from '../type';
 import { buildDataSourceOptions } from '../../database';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
-    if (context.spinner) {
-        context.spinner.start('Establish database connection.');
+    if (context.logger) {
+        context.logger.info('Establish database connection.');
     }
 
     let dataSource : DataSource;
@@ -36,19 +36,19 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         await dataSource.initialize();
     }
 
-    if (context.spinner) {
-        context.spinner.succeed('Established database connection.');
+    if (context.logger) {
+        context.logger.info('Established database connection.');
     }
 
     try {
-        if (context.spinner) {
-            context.spinner.start('Execute schema setup.');
+        if (context.logger) {
+            context.logger.info('Execute schema setup.');
         }
 
         await setupDatabaseSchema(dataSource);
 
-        if (context.spinner) {
-            context.spinner.start('Executed schema setup.');
+        if (context.logger) {
+            context.logger.info('Executed schema setup.');
         }
     } finally {
         if (!context.dataSource || context.dataSourceDestroyOnCompletion) {

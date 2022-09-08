@@ -28,12 +28,10 @@ import {
     UserRoleEntity,
     useRobotEventEmitter,
 } from '../../domains';
-import { DatabaseSeedOptions } from '../type';
-import { useConfig } from '../../config';
-import { buildDatabaseOptionsFromConfig } from '../options';
+import { DatabaseOptions, buildDatabaseOptionsFromConfig, useConfig } from '../../config';
 import { DatabaseRootSeederResult } from './type';
 
-function getPermissions(options: DatabaseSeedOptions) {
+function getPermissions(options: DatabaseOptions) {
     return Array.from(new Set([
         ...Object.values(PermissionID),
         ...(options.permissions ? options.permissions : []),
@@ -41,9 +39,9 @@ function getPermissions(options: DatabaseSeedOptions) {
 }
 
 export class DatabaseSeeder implements Seeder {
-    protected options?: DatabaseSeedOptions;
+    protected options?: DatabaseOptions;
 
-    constructor(options?: DatabaseSeedOptions) {
+    constructor(options?: DatabaseOptions) {
         this.options = options;
     }
 
@@ -52,8 +50,7 @@ export class DatabaseSeeder implements Seeder {
 
         if (!options) {
             const config = await useConfig();
-            const databaseOptions = buildDatabaseOptionsFromConfig(config);
-            options = databaseOptions.seed;
+            options = buildDatabaseOptionsFromConfig(config);
         }
 
         const response : DatabaseRootSeederResult = {};
@@ -100,21 +97,21 @@ export class DatabaseSeeder implements Seeder {
          */
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
-            name: options.admin.username,
+            name: options.adminUsername,
         });
 
         if (!user) {
             user = userRepository.create({
-                name: options.admin.username,
-                password: await hash(options.admin.password || 'start123'),
+                name: options.adminUsername,
+                password: await hash(options.adminPassword || 'start123'),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: MASTER_REALM_ID,
                 active: true,
             });
 
             response.user = user;
-        } else if (options.admin.passwordReset) {
-            user.password = await hash(options.admin.password || 'start123');
+        } else if (options.adminPasswordReset) {
+            user.password = await hash(options.adminPassword || 'start123');
             user.active = true;
         }
 
@@ -205,7 +202,7 @@ export class DatabaseSeeder implements Seeder {
             name: 'SYSTEM',
         });
 
-        const secret = options.robot.secret || createNanoID(64);
+        const secret = options.robotSecret || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',
@@ -217,7 +214,7 @@ export class DatabaseSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
-        } else if (options.robot.secretReset) {
+        } else if (options.robotSecretReset) {
             robot.secret = await hash(secret);
 
             await robotRepository.save(robot);

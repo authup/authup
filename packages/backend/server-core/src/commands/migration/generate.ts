@@ -35,8 +35,8 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
 
     const { dataSource } = context;
 
-    if (context.spinner) {
-        context.spinner.start('Generate migrations.');
+    if (context.logger) {
+        context.logger.info('Generate migrations.');
     }
 
     const upStatements: string[] = []; const
@@ -72,8 +72,8 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
         upStatements.length === 0 &&
         downStatements.length === 0
     ) {
-        if (context.spinner) {
-            context.spinner.succeed('Generated no migrations.');
+        if (context.logger) {
+            context.logger.info('Generated no migrations.');
         }
     }
 
@@ -93,8 +93,8 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
 
     await fs.promises.writeFile(filePath, fileContent, { encoding: 'utf-8' });
 
-    if (context.spinner) {
-        context.spinner.succeed('Generated migrations.');
+    if (context.logger) {
+        context.logger.info('Generated migrations.');
     }
 }
 

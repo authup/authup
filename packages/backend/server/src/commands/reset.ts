@@ -7,7 +7,6 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { loadConfig, resetCommand, setConfig } from '@authelion/server-core';
-import * as ora from 'ora';
 
 import { buildDataSourceOptions } from '../database/utils';
 
@@ -35,12 +34,7 @@ export class ResetCommand implements CommandModule {
 
         const dataSourceOptions = await buildDataSourceOptions();
 
-        const spinner = ora.default({
-            spinner: 'dots',
-        });
-
         await resetCommand({
-            spinner,
             dataSourceOptions,
         });
 

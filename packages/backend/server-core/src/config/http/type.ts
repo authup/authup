@@ -5,14 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type MiddlewareSwaggerOptions = {
-    enabled?: boolean,
-    directory?: string
-};
-
 export type MiddlewareOptions = {
     bodyParser?: boolean,
     cookieParser?: boolean,
     response?: boolean,
-    swagger?: MiddlewareSwaggerOptions
+    swaggerEnabled?: boolean,
+    swaggerDirectoryPath?: string
 };

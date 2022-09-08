@@ -7,7 +7,6 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { loadConfig, setConfig, startCommand } from '@authelion/server-core';
-import * as ora from 'ora';
 import { DataSourceOptions } from 'typeorm';
 
 import { createLogger, format, transports } from 'winston';
@@ -60,14 +59,9 @@ export class StartCommand implements CommandModule {
             ],
         });
 
-        const spinner = ora.default({
-            spinner: 'dots',
-        });
-
         try {
             await startCommand({
                 logger,
-                spinner,
                 dataSourceOptions,
             });
         } catch (e) {

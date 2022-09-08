@@ -7,7 +7,7 @@
 import { LessThan } from 'typeorm';
 import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { useLogger } from '../../../config/logger/module';
+import { useLogger } from '../../../logger/module';
 
 export async function cleanUp(log?: boolean) {
     const logger = useLogger();

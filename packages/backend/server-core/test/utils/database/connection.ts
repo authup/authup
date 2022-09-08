@@ -45,7 +45,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
     setDataSource(dataSource);
 
     const databaseOptions = await buildDatabaseOptionsFromConfig(config);
-    const core = new DatabaseSeeder(databaseOptions.seed);
+    const core = new DatabaseSeeder(databaseOptions);
 
     return core.run(dataSource);
 }

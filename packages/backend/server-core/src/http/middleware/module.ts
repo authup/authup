@@ -12,12 +12,10 @@ import path from 'path';
 import { existsSync } from 'fs';
 import { mergeDeep } from '@authelion/common';
 import {
-    MiddlewareOptions,
     createMiddleware,
     responseMiddleware,
 } from '../index';
-import { useConfigSync } from '../../config';
-import { buildMiddlewareOptionsFromConfig } from './utils';
+import { MiddlewareOptions, buildMiddlewareOptionsFromConfig, useConfigSync } from '../../config';
 import { createLoggerMiddleware } from './logger';
 
 export function registerMiddlewares(
@@ -53,10 +51,9 @@ export function registerMiddlewares(
     //--------------------------------------------------------------------
 
     if (
-        options.swagger &&
-        options.swagger.enabled
+        options.swaggerEnabled
     ) {
-        const basePath = options.swagger.directory || path.join(process.cwd(), 'writable');
+        const basePath = options.swaggerDirectoryPath || path.join(process.cwd(), 'writable');
 
         const swaggerDocumentPath: string = path.join(basePath, 'swagger.json');
 

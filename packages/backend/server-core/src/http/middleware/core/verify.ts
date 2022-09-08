@@ -33,8 +33,8 @@ import {
     RobotRepository,
     UserEntity, UserRepository,
 } from '../../../domains';
-import { buildDatabaseOptionsFromConfig, useDataSource } from '../../../database';
-import { useConfig } from '../../../config';
+import { useDataSource } from '../../../database';
+import { buildDatabaseOptionsFromConfig, useConfig } from '../../../config';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
@@ -86,8 +86,8 @@ async function verifyBasicAuthorizationHeader(
 
     if (
         config.env === 'test' &&
-        header.username === databaseOptions.seed.admin.username &&
-        header.password === databaseOptions.seed.admin.password
+        header.username === databaseOptions.adminUsername &&
+        header.password === databaseOptions.adminPassword
     ) {
         const userRepository = new UserRepository(dataSource);
         const entity = await userRepository.findOneBy({

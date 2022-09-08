@@ -7,7 +7,6 @@
 
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { loadConfig, setConfig, setupCommand } from '@authelion/server-core';
-import * as ora from 'ora';
 
 import { DataSourceOptions } from 'typeorm';
 import { buildDataSourceOptions } from '../database/utils';
@@ -72,13 +71,8 @@ export class SetupCommand implements CommandModule {
             } as DataSourceOptions);
         }
 
-        const spinner = ora.default({
-            spinner: 'dots',
-        });
-
         try {
             await setupCommand({
-                spinner,
                 dataSourceOptions,
                 ...args,
             });

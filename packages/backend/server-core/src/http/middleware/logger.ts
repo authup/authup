@@ -7,7 +7,7 @@
 
 import morgan from 'morgan';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
-import { useLogger } from '../../config/logger/module';
+import { useLogger } from '../../logger';
 
 export function createLoggerMiddleware() {
     const logger = useLogger();

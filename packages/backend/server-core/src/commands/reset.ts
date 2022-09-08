@@ -12,14 +12,14 @@ import { ResetCommandContext } from './type';
 export async function resetCommand(context?: ResetCommandContext) {
     context = context || {};
 
-    if (context.spinner) {
-        context.spinner.start('Executing database reset.');
+    if (context.logger) {
+        context.logger.info('Executing database reset.');
     }
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
     await dropDatabase({ options });
 
-    if (context.spinner) {
-        context.spinner.succeed('Executed database reset.');
+    if (context.logger) {
+        context.logger.info('Executed database reset.');
     }
 }

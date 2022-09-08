@@ -28,18 +28,17 @@ export function requireFromEnv(key: string, alt?: any) {
 export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | undefined {
     const value = requireFromEnv(key, alt);
 
-    if (typeof value === 'string') {
-        if (value.toLowerCase() === 'true') {
+    switch (value) {
+        case true:
+        case 'true':
+        case 't':
+        case '1':
             return true;
-        }
-
-        if (value.toLowerCase() === 'false') {
+        case false:
+        case 'false':
+        case 'f':
+        case '0':
             return false;
-        }
-    }
-
-    if (typeof value === 'boolean') {
-        return value;
     }
 
     return alt ?? !!value;
@@ -48,6 +47,7 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
 export function requireIntegerFromEnv(key: string, alt?: number): number | undefined {
     const value = requireFromEnv(key, alt);
     const intValue = parseInt(value, 10);
+
     if (Number.isNaN(intValue)) {
         return alt;
     }

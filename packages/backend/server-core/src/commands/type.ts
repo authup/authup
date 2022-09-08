@@ -6,10 +6,9 @@
  */
 
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { Logger, Spinner } from '../config';
+import { Logger } from '../logger';
 
 export type CommandContext = {
-    spinner?: Spinner,
     logger?: Logger,
 
     dataSourceOptions?: DataSourceOptions
