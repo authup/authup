@@ -6,6 +6,5 @@
  */
 
 export * from './env';
-export * from './keypair-options';
 export * from './proxy-connection-string';
 export * from './redis';

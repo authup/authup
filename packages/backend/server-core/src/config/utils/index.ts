@@ -9,3 +9,4 @@ export * from './apply';
 export * from './extend';
 export * from './find';
 export * from './prefix';
+export * from './validate';

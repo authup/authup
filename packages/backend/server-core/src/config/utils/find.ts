@@ -15,7 +15,7 @@ import defu from 'defu';
 import { extendConfig } from './extend';
 import { Config } from '../type';
 import { readEnvConfig } from '../env';
-import { validateConfig } from '../validation';
+import { validateConfig } from './validate';
 import { useLogger } from '../../logger';
 
 export async function loadConfig(directoryPath?: string) : Promise<Config> {

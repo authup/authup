@@ -6,7 +6,7 @@
  */
 
 import { Client } from 'redis-extension';
-import { SMTPOptions } from './smtp';
+import { SMTPOptionsInput } from './smtp';
 import { DatabaseOptions } from './database';
 import { MiddlewareOptions } from './http';
 
@@ -96,25 +96,8 @@ export type Config = {
      *
      * default: false
      */
-    forgotPassword: boolean,
-
-    // -------------------------------------------------
-
-    /**
-     * default: undefined
-     */
-    keyPairPassphrase?: string,
-
-    /**
-     * default: 'private'
-     */
-    keyPairPrivateName?: string,
-
-    /**
-     * default: '.pem'
-     */
-    keyPairPrivateExtension?: string
+    forgotPassword: boolean
 } &
 ConfigKeyPrefixOptions<DatabaseOptions, 'database'> &
 ConfigKeyPrefixOptions<MiddlewareOptions, 'middleware'> &
-ConfigKeyPrefixOptions<SMTPOptions, 'smtp'>;
+ConfigKeyPrefixOptions<SMTPOptionsInput, 'smtp'>;
