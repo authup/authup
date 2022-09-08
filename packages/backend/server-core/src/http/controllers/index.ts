@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './oauth2';
+export * from './auth';
 export * from './client';
 export * from './identity-provider';
 export * from './identity-provide-role';

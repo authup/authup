@@ -6,5 +6,13 @@
  */
 
 export function isValidUserName(name: string) : boolean {
-    return /^[A-Za-z0-9-_]{3,36}$/.test(name);
+    if (/\s/g.test(name)) {
+        return false;
+    }
+
+    return /^[A-Za-z0-9-_]{3,36}$/.test(name) &&
+        name.toLowerCase().indexOf('bot') === -1 &&
+        name.toLowerCase().indexOf('system') === -1 &&
+        name.toLowerCase() !== 'everyone' &&
+        name.toLowerCase() !== 'here';
 }
