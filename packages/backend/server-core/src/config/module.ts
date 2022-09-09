@@ -6,14 +6,15 @@
  */
 
 import defu from 'defu';
-import { Config } from './type';
+import { Config, ConfigInput } from './type';
 import {
-    applyConfig, extendConfig, findConfigSync, loadConfig,
+    findConfig,
+    findConfigSync,
 } from './utils';
-import { Subset } from '../types';
+import { buildConfig } from './build';
 
 let instance : Config | undefined;
-let instancePromise : Promise<Config> | undefined;
+let instancePromise : Promise<ConfigInput> | undefined;
 
 export async function useConfig(directoryPath?: string) : Promise<Config> {
     if (typeof instance !== 'undefined') {
@@ -21,11 +22,10 @@ export async function useConfig(directoryPath?: string) : Promise<Config> {
     }
 
     if (!instancePromise) {
-        instancePromise = loadConfig(directoryPath);
+        instancePromise = findConfig(directoryPath);
     }
 
-    instance = await instancePromise;
-    applyConfig(instance);
+    instance = buildConfig(await instancePromise);
 
     return instance;
 }
@@ -35,27 +35,26 @@ export function useConfigSync(directoryPath?: string) : Config {
         return instance;
     }
 
-    instance = findConfigSync(directoryPath);
-    applyConfig(instance);
+    instance = buildConfig(findConfigSync(directoryPath));
 
     return instance;
 }
 
-export function setConfig(value: Subset<Config>) : Config {
+export function setConfig(value: ConfigInput) : Config {
     if (instance) {
         // redis client instance can not be merged ;)
         const { redis, ...rest } = value;
 
-        instance = defu(rest, instance);
+        const merged = defu(rest, instance);
 
         if (redis) {
-            instance.redis = redis;
+            merged.redis = redis;
         }
-    } else {
-        instance = extendConfig(value);
-    }
 
-    applyConfig(instance);
+        instance = buildConfig(merged);
+    } else {
+        instance = buildConfig(value);
+    }
 
     return instance;
 }

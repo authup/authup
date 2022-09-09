@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useConfig } from '../../../config';
-import { isRedisEnabled } from '../../../utils';
+import { hasClient, hasConfig } from 'redis-extension';
 import { cleanUp } from './utils';
 import { runOAuth2CleanerInInterval } from './interval';
 import { runOAuth2CleanerByEvent } from './event';
@@ -14,8 +13,7 @@ import { runOAuth2CleanerByEvent } from './event';
 export async function runOAuth2Cleaner() {
     await cleanUp();
 
-    const config = await useConfig();
-    if (isRedisEnabled(config.redis)) {
+    if (hasConfig() || hasClient()) {
         await runOAuth2CleanerByEvent();
     } else {
         await runOAuth2CleanerInInterval();

@@ -7,11 +7,11 @@
 import { buildDataSourceOptions as build } from 'typeorm-extension';
 import path from 'path';
 import { DataSourceOptions } from 'typeorm';
+import { hasClient, hasConfig } from 'redis-extension';
 import { useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
-import { isRedisEnabled } from '../../utils';
 
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const config = await useConfig();
@@ -39,7 +39,7 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         logging: ['error'],
     } as Partial<DataSourceOptions>);
 
-    if (isRedisEnabled(config.redis)) {
+    if (hasClient() || hasConfig()) {
         Object.assign(dataSourceOptions, {
             cache: {
                 provider(dataSource) {

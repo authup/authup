@@ -6,7 +6,9 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { loadConfig, setConfig, upgradeCommand } from '@authelion/server-core';
+import {
+    upgradeCommand, useConfig,
+} from '@authelion/server-core';
 
 import { buildDataSourceOptions } from '../database/utils';
 
@@ -30,8 +32,7 @@ export class UpgradeCommand implements CommandModule {
     }
 
     async handler(args: UpgradeArguments) {
-        const config = await loadConfig(args.root);
-        setConfig(config);
+        await useConfig(args.root);
 
         const dataSourceOptions = await buildDataSourceOptions();
 

@@ -13,8 +13,10 @@ import { ExpressValidationError, matchedValidationData } from '../../../express-
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { useDataSource } from '../../../../database';
 import { UserRepository } from '../../../../domains';
-import { buildSMTPOptionsFromConfig, hasConfigSMTPOptions, useConfig } from '../../../../config';
-import { createSMTPClient } from '../../../../smtp';
+import {
+    useConfig,
+} from '../../../../config';
+import { useSMTPClient } from '../../../../smtp';
 
 export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();
@@ -25,7 +27,7 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
 
     if (
         config.emailVerification &&
-        !hasConfigSMTPOptions(config)
+        !config.smtp
     ) {
         throw new ServerError('SMTP options are not defined.');
     }
@@ -84,11 +86,9 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
     await repository.save(entity);
 
     if (config.emailVerification) {
-        const smtpOptions = buildSMTPOptionsFromConfig(config);
-        const smtpClient = createSMTPClient(smtpOptions);
+        const smtpClient = useSMTPClient();
 
         await smtpClient.sendMail({
-            from: smtpOptions.from,
             to: entity.email,
             subject: 'Registration - Activation code',
             html: `

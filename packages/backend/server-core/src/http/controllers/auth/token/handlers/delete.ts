@@ -9,15 +9,15 @@ import {
     CookieName,
     OAuth2TokenKind,
 } from '@authelion/common';
-import { buildKeyPath, useClient } from 'redis-extension';
+import {
+    buildKeyPath, hasClient, hasConfig, useClient,
+} from 'redis-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../../../domains';
 import { extractOAuth2TokenPayload, loadOAuth2TokenEntity } from '../../../../../oauth2';
 import { useDataSource } from '../../../../../database';
-import { useConfig } from '../../../../../config';
 import { CachePrefix } from '../../../../../constants';
-import { isRedisEnabled } from '../../../../../utils';
 
 export async function deleteTokenRouteHandler(
     req: ExpressRequest,
@@ -40,8 +40,7 @@ export async function deleteTokenRouteHandler(
     const entity = await loadOAuth2TokenEntity(payload.kind, payload.jti);
     const dataSource = await useDataSource();
 
-    const config = await useConfig();
-    if (isRedisEnabled(config.redis)) {
+    if (hasClient() || hasConfig()) {
         const redis = useClient();
 
         switch (payload.kind) {

@@ -12,17 +12,14 @@ import {
     locateFilesSync,
 } from 'locter';
 import defu from 'defu';
-import { extendConfig } from './extend';
-import { Config } from '../type';
-import { readEnvConfig } from '../env';
+import { ConfigInput } from '../type';
 import { validateConfig } from './validate';
 import { useLogger } from '../../logger';
 
-export async function loadConfig(directoryPath?: string) : Promise<Config> {
+export async function findConfig(directoryPath?: string) : Promise<ConfigInput> {
     directoryPath ??= process.cwd();
 
-    const items : Partial<Config>[] = [];
-    items.push(readEnvConfig());
+    const items : ConfigInput[] = [];
 
     const fileInfos = await locateFiles('authelion.{ts,js,json}', {
         path: directoryPath,
@@ -40,14 +37,13 @@ export async function loadConfig(directoryPath?: string) : Promise<Config> {
         }
     }
 
-    return extendConfig(defu({}, ...items), directoryPath);
+    return defu({}, ...items);
 }
 
 export function findConfigSync(directoryPath?: string) {
     directoryPath ??= process.cwd();
 
-    const items : Partial<Config>[] = [];
-    items.push(readEnvConfig());
+    const items : ConfigInput[] = [];
 
     const fileInfos = locateFilesSync('authelion.{ts,js,json}', {
         path: directoryPath,
@@ -65,5 +61,5 @@ export function findConfigSync(directoryPath?: string) {
         }
     }
 
-    return extendConfig(defu({}, ...items), directoryPath);
+    return defu({}, ...items);
 }

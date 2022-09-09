@@ -15,20 +15,30 @@ import {
     createMiddleware,
     responseMiddleware,
 } from '../index';
-import { MiddlewareOptions, buildMiddlewareOptionsFromConfig, useConfigSync } from '../../config';
+import {
+    MiddlewareOptions,
+    MiddlewareOptionsInput,
+    buildMiddlewareOptions,
+    useConfigSync,
+} from '../../config';
 import { createLoggerMiddleware } from './logger';
 
 export function registerMiddlewares(
     router: Application,
-    options?: MiddlewareOptions,
+    input?: MiddlewareOptionsInput,
 ) {
-    const config = useConfigSync();
-    const configOptions = buildMiddlewareOptionsFromConfig(config);
+    let options : MiddlewareOptions;
 
-    if (options) {
-        options = mergeDeep({}, configOptions, options);
+    const config = useConfigSync();
+
+    if (input) {
+        options = mergeDeep(
+            {},
+            config.middleware,
+            buildMiddlewareOptions(input),
+        );
     } else {
-        options = configOptions;
+        options = config.middleware;
     }
 
     router.use(createLoggerMiddleware());
@@ -50,9 +60,7 @@ export function registerMiddlewares(
 
     //--------------------------------------------------------------------
 
-    if (
-        options.swaggerEnabled
-    ) {
+    if (options.swaggerEnabled) {
         const basePath = options.swaggerDirectoryPath || path.join(process.cwd(), 'writable');
 
         const swaggerDocumentPath: string = path.join(basePath, 'swagger.json');

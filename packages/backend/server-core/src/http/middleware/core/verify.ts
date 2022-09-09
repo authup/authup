@@ -34,7 +34,9 @@ import {
     UserEntity, UserRepository,
 } from '../../../domains';
 import { useDataSource } from '../../../database';
-import { buildDatabaseOptionsFromConfig, useConfig } from '../../../config';
+import {
+    useConfig,
+} from '../../../config';
 
 async function verifyBearerAuthorizationHeader(
     request: ExpressRequest,
@@ -81,13 +83,12 @@ async function verifyBasicAuthorizationHeader(
     let permissions : AbilityDescriptor[] = [];
 
     const config = await useConfig();
-    const databaseOptions = buildDatabaseOptionsFromConfig(config);
     const dataSource = await useDataSource();
 
     if (
         config.env === 'test' &&
-        header.username === databaseOptions.adminUsername &&
-        header.password === databaseOptions.adminPassword
+        header.username === config.database.adminUsername &&
+        header.password === config.database.adminPassword
     ) {
         const userRepository = new UserRepository(dataSource);
         const entity = await userRepository.findOneBy({

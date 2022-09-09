@@ -6,31 +6,39 @@
  */
 
 import { Transporter, createTransport } from 'nodemailer';
-import { SMTPOptionsInput, buildSMTPOptions } from '../config';
+import { SmtpConfig } from './type';
 import { useLogger } from '../logger';
 
-export function createSMTPClient(input: SMTPOptionsInput) : Transporter {
-    const config = buildSMTPOptions(input);
+export function createSmtpClient(options?: SmtpConfig | string) : Transporter {
+    let transport : Transporter;
 
-    let auth: Record<string, any> | undefined;
-    if (config.user && config.password) {
-        auth = {
-            type: 'login',
-            user: config.user,
-            pass: config.password,
-        };
+    options = options || {};
+
+    if (typeof options === 'string') {
+        transport = createTransport(options);
+    } else if (options.connectionString) {
+        transport = createTransport(options.connectionString);
+    } else {
+        let auth: Record<string, any> | undefined;
+        if (options.user && options.password) {
+            auth = {
+                type: 'login',
+                user: options.user,
+                pass: options.password,
+            };
+        }
+
+        transport = createTransport({
+            host: options.host,
+            port: options.port,
+            auth,
+            secure: options.ssl,
+            opportunisticTLS: options.starttls,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
     }
-
-    const transport = createTransport({
-        host: config.host,
-        port: config.port,
-        auth,
-        secure: config.ssl,
-        opportunisticTLS: config.starttls,
-        tls: {
-            rejectUnauthorized: false,
-        },
-    });
 
     transport.on('error', (e) => {
         useLogger().error(e.message);

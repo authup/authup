@@ -6,7 +6,9 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { loadConfig, setConfig, setupCommand } from '@authelion/server-core';
+import {
+    setupCommand, useConfig,
+} from '@authelion/server-core';
 
 import { DataSourceOptions } from 'typeorm';
 import { buildDataSourceOptions } from '../database/utils';
@@ -60,8 +62,7 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = await loadConfig(args.root);
-        setConfig(config);
+        await useConfig(args.root);
 
         const dataSourceOptions = await buildDataSourceOptions();
 

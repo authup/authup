@@ -10,12 +10,14 @@ import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
 import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'crypto';
-import { buildSMTPOptionsFromConfig, hasConfigSMTPOptions, useConfig } from '../../../../config';
+import {
+    useConfig,
+} from '../../../../config';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
 import { useDataSource } from '../../../../database';
 import { UserRepository } from '../../../../domains';
-import { createSMTPClient } from '../../../../smtp';
+import { useSMTPClient } from '../../../../smtp';
 
 export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();
@@ -28,8 +30,8 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
         throw new ServerError('Email verification is not enabled, but required to reset a password.');
     }
 
-    if (!hasConfigSMTPOptions(config)) {
-        throw new ServerError('SMTP options are not defined.');
+    if (!config.smtp) {
+        throw new ServerError('SMTP modul is not configured.');
     }
 
     await oneOf([
@@ -67,11 +69,9 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
     entity.reset_expires = new Date(Date.now() + (1000 * 60 * 30));
     entity.reset_hash = randomBytes(32).toString('hex');
 
-    const smtpOptions = buildSMTPOptionsFromConfig(config);
-    const smtpClient = createSMTPClient(smtpOptions);
+    const smtpClient = useSMTPClient();
 
     await smtpClient.sendMail({
-        from: smtpOptions.from,
         to: entity.email,
         subject: 'Forgot Password - Reset code',
         html: `

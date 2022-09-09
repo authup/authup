@@ -15,8 +15,6 @@ import {
     DatabaseRootSeederResult,
     DatabaseSeeder,
     buildDataSourceOptions,
-    buildDatabaseOptionsFromConfig,
-    useConfig,
     useDataSource,
 } from '../../../src';
 
@@ -33,8 +31,6 @@ async function buildOptions() {
 }
 
 export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
-    const config = await useConfig();
-
     const options = await buildOptions();
     await createDatabase({ options });
 
@@ -44,8 +40,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
 
     setDataSource(dataSource);
 
-    const databaseOptions = await buildDatabaseOptionsFromConfig(config);
-    const core = new DatabaseSeeder(databaseOptions);
+    const core = new DatabaseSeeder();
 
     return core.run(dataSource);
 }

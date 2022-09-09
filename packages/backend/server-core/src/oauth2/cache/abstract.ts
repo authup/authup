@@ -6,11 +6,9 @@
  */
 
 import {
-    Cache, KeyPathID, useClient,
+    Cache, KeyPathID, hasClient, hasConfig, useClient,
 } from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authelion/common';
-import { isRedisEnabled } from '../../utils';
-import { useConfig } from '../../config';
 import { CachePrefix } from '../../constants';
 
 export abstract class OAuth2AbstractCache<
@@ -104,8 +102,7 @@ export abstract class OAuth2AbstractCache<
             return this.driver;
         }
 
-        const config = await useConfig();
-        if (!isRedisEnabled(config.redis)) {
+        if (!hasClient() && !hasConfig()) {
             return undefined;
         }
 

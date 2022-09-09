@@ -41,3 +41,10 @@ export type DatabaseOptions = {
      */
     permissions: string[],
 };
+
+export type DatabaseOptionsInput = Partial<Omit<DatabaseOptions, 'permissions'>> & {
+    /**
+     * default: []
+     */
+    permissions?: string[] | string
+};

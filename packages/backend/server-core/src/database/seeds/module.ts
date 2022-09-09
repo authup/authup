@@ -14,21 +14,22 @@ import {
     Robot,
     RobotPermission,
     RolePermission,
-    User,
     UserRole,
     createNanoID,
 } from '@authelion/common';
 import { hash } from '@authelion/server-utils';
 import {
     PermissionEntity,
-    RealmEntity, RobotEntity, RobotPermissionEntity,
+    RealmEntity,
+    RobotEntity,
+    RobotPermissionEntity,
     RoleEntity,
     RolePermissionEntity,
     UserRepository,
     UserRoleEntity,
     useRobotEventEmitter,
 } from '../../domains';
-import { DatabaseOptions, buildDatabaseOptionsFromConfig, useConfig } from '../../config';
+import { DatabaseOptions, useConfig } from '../../config';
 import { DatabaseRootSeederResult } from './type';
 
 function getPermissions(options: DatabaseOptions) {
@@ -50,7 +51,7 @@ export class DatabaseSeeder implements Seeder {
 
         if (!options) {
             const config = await useConfig();
-            options = buildDatabaseOptionsFromConfig(config);
+            options = config.database;
         }
 
         const response : DatabaseRootSeederResult = {};

@@ -12,19 +12,13 @@ import { createExpressApp, createHttpServer, generateSwaggerDocumentation } from
 import { StartCommandContext } from './type';
 import { DatabaseSeeder, buildDataSourceOptions } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
-import {
-    buildDatabaseOptionsFromConfig, setConfig, useConfig,
-} from '../config';
+import { useConfig } from '../config';
 import { setLogger } from '../logger';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
     const config = await useConfig();
-    config.databaseAdminPasswordReset ??= false;
-    config.databaseRobotSecretReset ??= false;
-
-    setConfig(config);
 
     if (context.logger) {
         setLogger(context.logger);
@@ -97,8 +91,7 @@ export async function startCommand(context?: StartCommandContext) {
         context.logger.info('Initialised database schema.');
     }
 
-    const databaseOptions = buildDatabaseOptionsFromConfig(config);
-    const seeder = new DatabaseSeeder(databaseOptions);
+    const seeder = new DatabaseSeeder(config.database);
     await seeder.run(dataSource);
 
     if (context.logger) {

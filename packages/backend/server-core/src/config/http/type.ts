@@ -6,9 +6,11 @@
  */
 
 export type MiddlewareOptions = {
-    bodyParser?: boolean,
-    cookieParser?: boolean,
-    response?: boolean,
-    swaggerEnabled?: boolean,
-    swaggerDirectoryPath?: string
+    bodyParser: boolean,
+    cookieParser: boolean,
+    response: boolean,
+    swaggerEnabled: boolean,
+    swaggerDirectoryPath: string
 };
+
+export type MiddlewareOptionsInput = Partial<MiddlewareOptions>;

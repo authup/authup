@@ -6,7 +6,9 @@
  */
 
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { loadConfig, setConfig, startCommand } from '@authelion/server-core';
+import {
+    startCommand, useConfig,
+} from '@authelion/server-core';
 import { DataSourceOptions } from 'typeorm';
 
 import { createLogger, format, transports } from 'winston';
@@ -32,8 +34,7 @@ export class StartCommand implements CommandModule {
     }
 
     async handler(args: StartArguments) {
-        const config = await loadConfig(args.root);
-        setConfig(config);
+        const config = await useConfig(args.root);
 
         const dataSourceOptions = await buildDataSourceOptions();
 

@@ -11,7 +11,7 @@ export function hasEnv(key: string) : boolean {
     return hasOwnProperty(process.env, key);
 }
 
-export function requireFromEnv(key: string, alt?: any) {
+export function requireFromEnv<T>(key: string, alt?: T) : T | string {
     if (
         typeof process.env[key] === 'undefined' &&
         typeof alt === 'undefined'
@@ -46,7 +46,7 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
 
 export function requireIntegerFromEnv(key: string, alt?: number): number | undefined {
     const value = requireFromEnv(key, alt);
-    const intValue = parseInt(value, 10);
+    const intValue = parseInt(`${value}`, 10);
 
     if (Number.isNaN(intValue)) {
         return alt;

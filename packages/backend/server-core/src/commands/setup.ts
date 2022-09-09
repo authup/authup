@@ -14,7 +14,7 @@ import {
     buildDataSourceOptions,
     saveSeedResult,
 } from '../database';
-import { buildDatabaseOptionsFromConfig, useConfig } from '../config';
+import { useConfig } from '../config';
 
 export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};
@@ -94,11 +94,11 @@ export async function setupCommand(context?: SetupCommandContext) {
                     context.logger.info('Seeding database.');
                 }
 
-                config.databaseAdminPasswordReset ??= true;
-                config.databaseRobotSecretReset ??= true;
-
-                const databaseOptions = buildDatabaseOptionsFromConfig(config);
-                const seeder = new DatabaseSeeder(databaseOptions);
+                const seeder = new DatabaseSeeder({
+                    ...config.database,
+                    adminPasswordReset: true,
+                    robotSecretReset: true,
+                });
                 const seederData = await seeder.run(dataSource);
 
                 if (context.logger) {
