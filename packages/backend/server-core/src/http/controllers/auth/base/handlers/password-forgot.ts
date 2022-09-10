@@ -12,12 +12,12 @@ import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'crypto';
 import {
     useConfig,
-} from '../../../../config';
-import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { useDataSource } from '../../../../database';
-import { UserRepository } from '../../../../domains';
-import { useSMTPClient } from '../../../../smtp';
+} from '../../../../../config';
+import { ExpressRequest, ExpressResponse } from '../../../../type';
+import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
+import { useDataSource } from '../../../../../database';
+import { UserRepository } from '../../../../../domains';
+import { useSMTPClient } from '../../../../../smtp';
 
 export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();

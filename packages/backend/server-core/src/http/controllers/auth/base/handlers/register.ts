@@ -9,15 +9,15 @@ import { check, validationResult } from 'express-validator';
 import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
 import { BadRequestError, ServerError } from '@typescript-error/http';
 import { randomBytes } from 'crypto';
-import { ExpressValidationError, matchedValidationData } from '../../../express-validation';
-import { ExpressRequest, ExpressResponse } from '../../../type';
-import { useDataSource } from '../../../../database';
-import { UserRepository } from '../../../../domains';
+import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
+import { ExpressRequest, ExpressResponse } from '../../../../type';
+import { useDataSource } from '../../../../../database';
+import { UserRepository } from '../../../../../domains';
 import {
     useConfig,
-} from '../../../../config';
-import { useSMTPClient } from '../../../../smtp';
-import { useLogger } from '../../../../logger';
+} from '../../../../../config';
+import { useSMTPClient } from '../../../../../smtp';
+import { useLogger } from '../../../../../logger';
 
 export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();

@@ -22,7 +22,7 @@ import {
     createAuthPasswordForgotRouteHandler,
     createAuthPasswordResetRouteHandler,
     createAuthRegisterRouteHandler,
-} from './handlers';
+} from './base';
 
 @SwaggerTags('auth')
 @Controller('')
