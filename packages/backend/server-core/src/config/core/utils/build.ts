@@ -28,7 +28,9 @@ export function buildCoreOptionsFromConfig(config: ConfigInput) : CoreOptions {
                 writableDirectoryPath: config.writableDirectoryPath,
                 tokenMaxAgeAccessToken: config.tokenMaxAgeAccessToken,
                 tokenMaxAgeRefreshToken: config.tokenMaxAgeRefreshToken,
+
                 redis: config.redis,
+                smtp: config.smtp,
 
                 registration: config.registration,
                 emailVerification: config.emailVerification,

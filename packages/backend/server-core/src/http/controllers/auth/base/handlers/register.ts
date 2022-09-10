@@ -17,6 +17,7 @@ import {
     useConfig,
 } from '../../../../config';
 import { useSMTPClient } from '../../../../smtp';
+import { useLogger } from '../../../../logger';
 
 export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();
@@ -86,9 +87,9 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
     await repository.save(entity);
 
     if (config.emailVerification) {
-        const smtpClient = useSMTPClient();
+        const smtpClient = await useSMTPClient();
 
-        await smtpClient.sendMail({
+        const info = await smtpClient.sendMail({
             to: entity.email,
             subject: 'Registration - Activation code',
             html: `
@@ -96,6 +97,11 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
                 <p>${entity.activate_hash}</p>
                 `,
         });
+
+        const logger = useLogger();
+        if (logger) {
+            useLogger().debug(`Message #${info.messageId} has been sent!`);
+        }
     }
 
     return res.respond({

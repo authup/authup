@@ -12,6 +12,8 @@ import { useConfig } from '../../../../../config';
 export async function getOpenIdConfigurationRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const config = await useConfig();
 
+    // todo: this can be cached :)
+
     const configuration : OAuth2OpenIDProviderMetadata = {
         issuer: config.selfUrl,
 

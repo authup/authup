@@ -6,11 +6,11 @@
  */
 
 import { ErrorCode, OAuth2TokenGrantResponse } from '@authelion/common';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
-import { createSuperTestUser, updateSuperTestUser } from '../../../utils/domains/user';
-import { DatabaseRootSeederResult } from '../../../../src';
-import { updateSuperTestRobot } from '../../../utils/domains/robot';
+import { useSuperTest } from '../../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import { createSuperTestUser, updateSuperTestUser } from '../../../../utils/domains/user';
+import { DatabaseRootSeederResult } from '../../../../../src';
+import { updateSuperTestRobot } from '../../../../utils/domains/robot';
 
 describe('src/http/controllers/token', () => {
     const superTest = useSuperTest();

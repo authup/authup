@@ -7,34 +7,8 @@
 
 import { CoreOptions } from '../type';
 import {
-    hasEnv, requireBooleanFromEnv, requireFromEnv, requireIntegerFromEnv,
+    hasEnv, requireBoolOrStringFromEnv, requireBooleanFromEnv, requireFromEnv, requireIntegerFromEnv,
 } from '../../../utils';
-
-export function extractRedisOptionFromEnv() : string | boolean {
-    if (hasEnv('REDIS')) {
-        const envValue = requireBooleanFromEnv('REDIS', null);
-        if (envValue === null) {
-            return requireFromEnv('REDIS');
-        }
-
-        return envValue;
-    }
-
-    return undefined;
-}
-
-export function extractSmtpOptionFromEnv() : string | boolean {
-    if (hasEnv('SMTP')) {
-        const envValue = requireBooleanFromEnv('SMTP', null);
-        if (envValue === null) {
-            return requireFromEnv('SMTP');
-        }
-
-        return envValue;
-    }
-
-    return undefined;
-}
 
 export function extractCoreOptionsFromEnv() : Partial<CoreOptions> {
     const options : Partial<CoreOptions> = {};
@@ -67,14 +41,12 @@ export function extractCoreOptionsFromEnv() : Partial<CoreOptions> {
         options.tokenMaxAgeAccessToken = requireIntegerFromEnv('REFRESH_TOKEN_MAX_AGE');
     }
 
-    const redis = extractRedisOptionFromEnv();
-    if (typeof redis !== 'undefined') {
-        options.redis = redis;
+    if (hasEnv('REDIS')) {
+        options.redis = requireBoolOrStringFromEnv('REDIS');
     }
 
-    const smtp = extractSmtpOptionFromEnv();
-    if (typeof smtp !== 'undefined') {
-        options.smtp = smtp;
+    if (hasEnv('SMTP')) {
+        options.smtp = requireBoolOrStringFromEnv('SMTP');
     }
 
     // -------------------------------------------------

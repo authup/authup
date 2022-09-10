@@ -60,8 +60,11 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
+    const query = repository.createQueryBuilder('user');
+    const entity = await query
+        .addSelect('user.email')
+        .getOne();
 
-    const entity = await repository.findOneBy(where);
     if (!entity) {
         throw new NotFoundError();
     }
@@ -69,7 +72,7 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
     entity.reset_expires = new Date(Date.now() + (1000 * 60 * 30));
     entity.reset_hash = randomBytes(32).toString('hex');
 
-    const smtpClient = useSMTPClient();
+    const smtpClient = await useSMTPClient();
 
     await smtpClient.sendMail({
         to: entity.email,

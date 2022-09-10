@@ -44,6 +44,22 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
     return alt ?? !!value;
 }
 
+export function requireBoolOrStringFromEnv(
+    key: string,
+    alt?: boolean | string,
+) : boolean | string | undefined {
+    if (hasEnv(key)) {
+        const value = requireBooleanFromEnv(key, undefined);
+        if (typeof value === 'undefined') {
+            return requireFromEnv(key, alt);
+        }
+
+        return value;
+    }
+
+    return alt;
+}
+
 export function requireIntegerFromEnv(key: string, alt?: number): number | undefined {
     const value = requireFromEnv(key, alt);
     const intValue = parseInt(`${value}`, 10);

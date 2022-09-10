@@ -16,6 +16,12 @@ import { buildConfig } from './build';
 let instance : Config | undefined;
 let instancePromise : Promise<ConfigInput> | undefined;
 
+/**
+ * Load and build the configuration asynchronous.
+ *
+ * @param directoryPath
+ */
+
 export async function useConfig(directoryPath?: string) : Promise<Config> {
     if (typeof instance !== 'undefined') {
         return instance;
@@ -30,6 +36,11 @@ export async function useConfig(directoryPath?: string) : Promise<Config> {
     return instance;
 }
 
+/**
+ * Load and build the configuration synchronous.
+ *
+ * @param directoryPath
+ */
 export function useConfigSync(directoryPath?: string) : Config {
     if (typeof instance !== 'undefined') {
         return instance;
@@ -40,6 +51,11 @@ export function useConfigSync(directoryPath?: string) : Config {
     return instance;
 }
 
+/**
+ * Set or extend an existing configuration.
+ *
+ * @param value
+ */
 export function setConfig(value: ConfigInput) : Config {
     if (instance) {
         // redis client instance can not be merged ;)
@@ -57,4 +73,11 @@ export function setConfig(value: ConfigInput) : Config {
     }
 
     return instance;
+}
+
+/**
+ * Reset configuration.
+ */
+export function resetConfig() {
+    instance = undefined;
 }

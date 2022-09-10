@@ -5,18 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Transporter } from 'nodemailer';
+import { Transporter, createTestAccount } from 'nodemailer';
 import { createSmtpClient } from './module';
 import { useSmtpConfig } from './config';
+import { SmtpConfig } from './type';
 
 let instance : Transporter | undefined;
 
-export function useSMTPClient() : Transporter {
-    if (typeof instance === 'undefined') {
+export async function useSMTPClient() : Promise<Transporter> {
+    if (typeof instance !== 'undefined') {
         return instance;
     }
 
-    const options = useSmtpConfig();
+    let options : SmtpConfig | string;
+    if (process.env.NODE_ENV === 'test') {
+        const testAccount = await createTestAccount();
+
+        options = {
+            host: 'smtp.ethereal.email',
+            port: 587,
+            ssl: false,
+            user: testAccount.user,
+            password: testAccount.pass,
+        };
+    } else {
+        options = useSmtpConfig();
+    }
+
     instance = createSmtpClient(options);
 
     return instance;
