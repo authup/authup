@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
+import {
+    applyFilters, applyPagination, applySort, useDataSource,
+} from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyRealmRouteHandler(
     req: ExpressRequest,

@@ -12,9 +12,9 @@ import {
     OAuth2TokenKind,
     OAuth2TokenPayload, hasOwnProperty,
 } from '@authelion/common';
-import { OAuth2AccessTokenEntity, signOAuth2TokenWithKey, useRealmKey } from '../../domains';
+import { useDataSource } from 'typeorm-extension';
+import { OAuth2AccessTokenEntity, signOAuth2TokenWithKey, useKey } from '../../domains';
 import { OAuth2AccessTokenBuilderContext, OAuth2AccessTokenBuilderCreateContext } from './type';
-import { useDataSource } from '../../database';
 import { OAuth2AccessTokenCache } from '../cache';
 
 export class Oauth2AccessTokenBuilder {
@@ -66,7 +66,7 @@ export class Oauth2AccessTokenBuilder {
             scope: context.scope,
         };
 
-        const key = await useRealmKey(context.realm_id);
+        const key = await useKey({ realm_id: context.realm_id });
         return signOAuth2TokenWithKey(
             tokenPayload,
             key,

@@ -13,10 +13,10 @@ import {
     buildKeyPath, hasClient, hasConfig, useClient,
 } from 'redis-extension';
 import { BadRequestError, NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../../../../domains';
 import { extractOAuth2TokenPayload, loadOAuth2TokenEntity } from '../../../../../oauth2';
-import { useDataSource } from '../../../../../database';
 import { CachePrefix } from '../../../../../constants';
 
 export async function deleteTokenRouteHandler(

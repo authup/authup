@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { LessThan } from 'typeorm';
-import { useDataSource } from '../../../database';
+import { useDataSource } from 'typeorm-extension';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { useLogger } from '../../../logger/module';
+import { useLogger } from '../../../logger';
 
 export async function cleanUp(log?: boolean) {
     const logger = useLogger();

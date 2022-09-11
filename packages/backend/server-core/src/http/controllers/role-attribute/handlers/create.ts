@@ -10,11 +10,11 @@ import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runRoleAttributeValidation } from '../utils';
 import { RoleAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const result = await runRoleAttributeValidation(req, CRUDOperation.CREATE);

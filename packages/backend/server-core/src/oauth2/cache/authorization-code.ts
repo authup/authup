@@ -6,9 +6,9 @@
  */
 
 import { NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { OAuth2AbstractCache } from './abstract';
 import { OAuth2AuthorizationCodeEntity } from '../../domains';
-import { useDataSource } from '../../database';
 import { CachePrefix } from '../../constants';
 
 export class OAuth2AuthorizationCodeCache extends OAuth2AbstractCache<OAuth2AuthorizationCodeEntity> {

@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 import { Realm, User, UserAttribute } from '@authelion/common';
 import { RealmEntity } from '../realm';
-import { UserEntity } from '../user';
+import { UserEntity } from '../user/entity';
 
 @Unique(['name', 'user_id'])
 @Entity({ name: 'auth_user_attributes' })
@@ -40,7 +40,7 @@ export class UserAttributeEntity implements UserAttribute {
     @Column()
         user_id: User['id'];
 
-    @ManyToOne(() => UserEntity, (entity) => entity.attributes, { onDelete: 'CASCADE' })
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
         user: UserEntity;
 

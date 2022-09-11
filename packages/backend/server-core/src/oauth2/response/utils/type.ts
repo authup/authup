@@ -6,7 +6,7 @@
  */
 
 import { OAuth2AuthorizationResponseType, TokenError } from '@authelion/common';
-import { ExpressRequest } from '../../../http';
+import { ExpressRequest } from '../../../http/type';
 
 export function getOauth2AuthorizeResponseTypesByRequest(
     request: ExpressRequest,

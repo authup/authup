@@ -8,8 +8,8 @@
 import {
     AbilityDescriptor, OAuth2Scope, OAuth2SubKind, transformOAuth2ScopeToArray,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, UserRepository } from '../../domains';
-import { useDataSource } from '../../database';
 
 export async function loadOAuth2SubPermissions(
     kind: `${OAuth2SubKind}`,

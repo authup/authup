@@ -8,10 +8,10 @@
 import defu from 'defu';
 import { Config, ConfigInput } from './type';
 import {
+    buildConfig,
     findConfig,
     findConfigSync,
 } from './utils';
-import { buildConfig } from './build';
 
 let instance : Config | undefined;
 let instancePromise : Promise<ConfigInput> | undefined;

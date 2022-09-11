@@ -10,13 +10,13 @@ import {
     OAuth2TokenKind,
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
 import { Grant } from './type';
 import { extractOAuth2TokenPayload, loadOAuth2TokenEntity } from '../token';
-import { useDataSource } from '../../database';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {

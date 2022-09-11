@@ -8,8 +8,8 @@
 import { JsonWebKey, createPublicKey } from 'crypto';
 import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { useDataSource } from '../../../../database';
 import { KeyEntity } from '../../../../domains';
 
 export async function getRealmJwksRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

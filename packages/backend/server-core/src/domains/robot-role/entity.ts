@@ -19,7 +19,7 @@ import {
     Realm, Robot, RobotRole, Role,
 } from '@authelion/common';
 import { RoleEntity } from '../role';
-import { RobotEntity } from '../robot';
+import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_robot_roles' })

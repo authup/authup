@@ -6,7 +6,7 @@
  */
 import { pascalCase } from 'change-case';
 import { AbilityID } from '../type';
-import { AbilityError } from '../../error';
+import { AbilityError } from '../error';
 
 /**
  * Build ability-meta object from permission name.

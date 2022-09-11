@@ -6,16 +6,14 @@
  */
 
 import { ForbiddenError } from '@typescript-error/http';
-import { matchedData, validationResult } from 'express-validator';
 import {
     PermissionID, Realm,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { ExpressValidationError } from '../../../express-validation';
 import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.has(PermissionID.REALM_ADD)) {

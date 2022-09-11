@@ -9,9 +9,9 @@ import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
 import { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
-import { useDataSource } from '../../../../../database';
 import { UserRepository } from '../../../../../domains';
 
 export async function createAuthPasswordResetRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../domains';
 import { OAuth2RefreshTokenBuilderContext, OAuth2RefreshTokenBuilderCreateContext } from './type';
-import { useDataSource } from '../../database';
 import { OAuth2RefreshTokenCache } from '../cache';
 
 export class Oauth2RefreshTokenBuilder {

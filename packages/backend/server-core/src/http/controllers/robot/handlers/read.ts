@@ -8,6 +8,7 @@
 import { Brackets } from 'typeorm';
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
@@ -16,7 +17,6 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

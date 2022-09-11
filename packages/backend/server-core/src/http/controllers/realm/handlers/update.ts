@@ -8,11 +8,11 @@
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 
 import { PermissionID } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;

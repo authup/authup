@@ -7,11 +7,11 @@
 
 import {
     applyFilters, applyPagination, applySort,
+    useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRoleEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { page, filter, sort } = req.query;

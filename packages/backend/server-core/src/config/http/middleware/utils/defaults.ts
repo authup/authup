@@ -6,9 +6,9 @@
  */
 
 import path from 'path';
-import { MiddlewareOptions } from '../type';
+import { HTTPMiddlewareOptions } from '../type';
 
-export function extendMiddlewareOptionsWithDefaults(input: Partial<MiddlewareOptions>) : MiddlewareOptions {
+export function extendHTTPMiddlewareOptionsWithDefaults(input: Partial<HTTPMiddlewareOptions>) : HTTPMiddlewareOptions {
     return {
         bodyParser: input.bodyParser ?? true,
         cookieParser: input.cookieParser ?? true,

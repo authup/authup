@@ -6,11 +6,11 @@
  */
 
 import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 import { OAuth2AuthorizationCodeEntity } from '../../domains';
-import { useDataSource } from '../../database';
 import { OAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {

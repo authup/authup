@@ -13,7 +13,7 @@ import {
     Grant,
 } from './type';
 import { OAuth2BearerTokenResponse } from '../response';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest): Promise<OAuth2TokenGrantResponse> {

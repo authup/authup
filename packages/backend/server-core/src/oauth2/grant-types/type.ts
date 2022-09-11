@@ -8,7 +8,7 @@
 import {
     OAuth2SubKind, OAuth2TokenGrantResponse,
 } from '@authelion/common';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 
 export type AccessTokenIssueContext = {
     remoteAddress: string,

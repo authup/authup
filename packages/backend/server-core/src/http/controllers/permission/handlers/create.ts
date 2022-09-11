@@ -10,10 +10,10 @@ import { check, matchedData, validationResult } from 'express-validator';
 import {
     Permission, PermissionID,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressValidationError } from '../../../express-validation';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { PermissionEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function createOnePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     if (!req.ability.has(PermissionID.PERMISSION_ADD)) {

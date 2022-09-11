@@ -9,9 +9,9 @@ import { check, validationResult } from 'express-validator';
 import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
 import { BadRequestError, ServerError } from '@typescript-error/http';
 import { randomBytes } from 'crypto';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
-import { useDataSource } from '../../../../../database';
 import { UserRepository } from '../../../../../domains';
 import {
     useConfig,

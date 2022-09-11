@@ -6,17 +6,20 @@
  */
 
 import {
-    KeyType,
+    KeyType, Realm,
     unwrapPrivateKeyPem,
     unwrapPublicKeyPem,
 } from '@authelion/common';
 import {
     createKeyPair,
 } from '@authelion/server-utils';
-import { KeyEntity } from '../../key';
-import { useDataSource } from '../../../database';
+import { FindOptionsWhere } from 'typeorm';
+import { useDataSource } from 'typeorm-extension';
+import { KeyEntity } from '../entity';
 
-export async function useRealmKey(realmId: string) : Promise<KeyEntity> {
+export async function useKey(
+    where: FindOptionsWhere<KeyEntity> & { realm_id: Realm['id']},
+) : Promise<KeyEntity> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
 
@@ -28,9 +31,7 @@ export async function useRealmKey(realmId: string) : Promise<KeyEntity> {
             encryption_key: true,
             decryption_key: true,
         },
-        where: {
-            realm_id: realmId,
-        },
+        where,
         cache: 60.000,
     });
 
@@ -43,7 +44,7 @@ export async function useRealmKey(realmId: string) : Promise<KeyEntity> {
             type: KeyType.RSA,
             decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
             encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
-            realm_id: realmId,
+            realm_id: where.realm_id,
             signature_algorithm: 'RS256',
         });
 

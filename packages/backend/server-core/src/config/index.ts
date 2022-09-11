@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './build';
 export * from './core';
 export * from './database';
-export * from './http';
+export * from './http/middleware';
 export * from './module';
 export * from './type';
 export * from './utils';

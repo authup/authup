@@ -9,12 +9,12 @@ import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
 } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
+import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2ClientEntity } from '../../domains';
-import { useDataSource } from '../../database';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {

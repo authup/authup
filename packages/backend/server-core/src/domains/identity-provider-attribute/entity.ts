@@ -15,7 +15,7 @@ import {
 import {
     IdentityProvider, IdentityProviderAttribute,
 } from '@authelion/common';
-import { IdentityProviderEntity } from '../identity-provider';
+import { IdentityProviderEntity } from '../identity-provider/entity';
 
 @Unique(['name', 'provider_id'])
 @Entity({ name: 'auth_identity_provider_attributes' })

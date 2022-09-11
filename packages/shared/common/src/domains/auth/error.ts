@@ -6,8 +6,8 @@
  */
 
 import { BadRequestError, ErrorOptions, mergeErrorOptions } from '@typescript-error/http';
-import { ErrorCode } from '../constants';
-import { OAuth2SubKind } from '../../domains';
+import { ErrorCode } from '../../error';
+import { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
     constructor(options?: ErrorOptions) {

@@ -7,11 +7,11 @@
 
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.has(PermissionID.USER_ADD)) {

@@ -10,7 +10,7 @@ import {
     TokenError,
 } from '@authelion/common';
 import { decodeToken } from '@authelion/server-utils';
-import { useDataSource } from '../../database';
+import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../domains';
 
 export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {

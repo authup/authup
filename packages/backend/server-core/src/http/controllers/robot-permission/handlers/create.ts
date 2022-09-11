@@ -7,12 +7,12 @@
 
 import { ForbiddenError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
 import { runRobotPermissionValidation } from '../utils';
-import { useDataSource } from '../../../../database';
 
 /**
  * Add an permission by id to a specific user.

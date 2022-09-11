@@ -7,11 +7,11 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runOauth2ProviderValidation } from '../utils';
 import { IdentityProviderRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function updateIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;

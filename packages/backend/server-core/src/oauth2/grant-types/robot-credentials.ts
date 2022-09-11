@@ -10,12 +10,12 @@ import {
     OAuth2TokenGrantResponse,
     RobotError,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../domains';
 import { Grant } from './type';
-import { useDataSource } from '../../database';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {

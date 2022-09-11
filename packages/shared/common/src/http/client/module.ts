@@ -6,6 +6,7 @@
  */
 
 import { Client as BaseClient, Config } from 'hapic';
+
 import {
     IdentityProviderAPI,
     IdentityProviderRoleAPI,

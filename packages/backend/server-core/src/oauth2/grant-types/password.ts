@@ -10,12 +10,12 @@ import {
     OAuth2TokenGrantResponse,
     UserError,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { UserEntity, UserRepository } from '../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
-import { useDataSource } from '../../database';
-import { ExpressRequest } from '../../http';
+import { ExpressRequest } from '../../http/type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
     async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {

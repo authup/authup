@@ -19,7 +19,7 @@ import {
     Realm, Role, User, UserRole,
 } from '@authelion/common';
 import { RoleEntity } from '../role';
-import { UserEntity } from '../user';
+import { UserEntity } from '../user/entity';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_user_roles' })

@@ -6,7 +6,7 @@
  */
 
 import { BaseError, ErrorOptions, mergeErrorOptions } from '@typescript-error/core';
-import { ErrorCode } from '../constants';
+import { ErrorCode } from '../error';
 
 export class AbilityError extends BaseError {
     constructor(options?: ErrorOptions) {

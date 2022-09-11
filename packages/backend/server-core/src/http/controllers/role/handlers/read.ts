@@ -7,11 +7,11 @@
 
 import {
     applyFields, applyFilters, applyPagination, applySort,
+    useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {

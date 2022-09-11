@@ -8,9 +8,9 @@
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 
 import { PermissionID } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;

@@ -10,12 +10,12 @@ import {
     TokenError,
 } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import {
     OAuth2ClientEntity,
     RobotEntity,
     RobotRepository, UserEntity, UserRepository,
 } from '../../domains';
-import { useDataSource } from '../../database';
 import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =

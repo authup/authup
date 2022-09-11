@@ -7,9 +7,9 @@
 
 import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRoleEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
     req: ExpressRequest,

@@ -10,12 +10,12 @@ import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
 import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'crypto';
+import { useDataSource } from 'typeorm-extension';
 import {
     useConfig,
 } from '../../../../../config';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
-import { useDataSource } from '../../../../../database';
 import { UserRepository } from '../../../../../domains';
 import { useSMTPClient } from '../../../../../smtp';
 

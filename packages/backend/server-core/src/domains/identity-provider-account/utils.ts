@@ -16,10 +16,10 @@ import {
     createNanoID, hasOwnProperty, isValidUserName,
 } from '@authelion/common';
 import { decodeToken } from '@authelion/server-utils';
+import { useDataSource } from 'typeorm-extension';
 import { UserEntity, UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 import { IdentityProviderRoleEntity } from '../identity-provider-role';
-import { useDataSource } from '../../database';
 
 export async function createOauth2ProviderAccount(
     provider: OAuth2IdentityProvider | OpenIDConnectIdentityProvider,

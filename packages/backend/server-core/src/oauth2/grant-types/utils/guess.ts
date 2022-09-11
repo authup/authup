@@ -7,7 +7,7 @@
 
 import { OAuth2TokenGrant, OAuth2TokenGrantType } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import { ExpressRequest } from '../../../http';
+import { ExpressRequest } from '../../../http/type';
 
 export function guessOauth2GrantTypeByRequest(
     request: ExpressRequest,

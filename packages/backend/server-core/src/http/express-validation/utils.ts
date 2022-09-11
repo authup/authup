@@ -9,9 +9,9 @@ import { MatchedDataOptions, matchedData } from 'express-validator';
 import { deleteUndefinedObjectProperties } from '@authelion/common';
 import { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest } from '../type';
 import { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
-import { useDataSource } from '../../database';
 
 export function buildExpressValidationErrorMessage<
     T extends Record<string, any> = Record<string, any>,

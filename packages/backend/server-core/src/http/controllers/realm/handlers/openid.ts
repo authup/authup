@@ -7,9 +7,9 @@
 
 import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authelion/common';
 import { NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { useConfig } from '../../../../config';
-import { useDataSource } from '../../../../database';
 import { RealmEntity } from '../../../../domains';
 
 export async function getRealmOpenIdConfigurationRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {

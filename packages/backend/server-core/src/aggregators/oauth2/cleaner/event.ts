@@ -1,8 +1,8 @@
 import { Cache, useClient } from 'redis-extension';
+import { useDataSource } from 'typeorm-extension';
 import { CachePrefix } from '../../../constants';
-import { useDataSource } from '../../../database';
 import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
-import { useLogger } from '../../../logger/module';
+import { useLogger } from '../../../logger';
 
 export async function runOAuth2CleanerByEvent() {
     const logger = useLogger();

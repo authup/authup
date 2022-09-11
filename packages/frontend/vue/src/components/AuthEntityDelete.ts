@@ -9,7 +9,7 @@ import Vue, {
     CreateElement, PropType, VNode, VNodeData,
 } from 'vue';
 import { BvMsgBoxData, BvMsgBoxOptions } from 'bootstrap-vue';
-import { mergeDeep, useDomainAPI } from '@authelion/common';
+import { mergeDeep, useHTTPClientAPI } from '@authelion/common';
 import { useHTTPClient } from '../utils';
 import { useAuthIlingo } from '../language/singleton';
 
@@ -81,7 +81,7 @@ AuthEntityDeleteProperties
         async delete() {
             if (this.busy) return;
 
-            const domainApi = useDomainAPI(useHTTPClient(), this.entityType);
+            const domainApi = useHTTPClientAPI(useHTTPClient(), this.entityType);
             if (!domainApi) {
                 return;
             }

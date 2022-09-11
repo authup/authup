@@ -6,12 +6,19 @@
  */
 
 import defu from 'defu';
-import { ConfigInput } from '../../type';
 import { DatabaseOptions, DatabaseOptionsInput } from '../type';
 import { extendDatabaseOptionsWithDefaults } from './defaults';
 import { extractDatabaseOptionsFromEnv } from './env';
+import { validateDatabaseOptionsInput } from './validate';
 
-export function buildDatabaseOptions(input: DatabaseOptionsInput) : DatabaseOptions {
+export function buildDatabaseOptions(options?: DatabaseOptionsInput) : DatabaseOptions {
+    const input = validateDatabaseOptionsInput(
+        defu(
+            extractDatabaseOptionsFromEnv(),
+            options || {},
+        ),
+    );
+
     let permissions : string[] = [];
 
     if (input.permissions) {
@@ -24,13 +31,4 @@ export function buildDatabaseOptions(input: DatabaseOptionsInput) : DatabaseOpti
         ...input,
         permissions,
     });
-}
-
-export function buildDatabaseOptionsFromConfig(config: ConfigInput) : DatabaseOptions {
-    return buildDatabaseOptions(
-        defu(
-            extractDatabaseOptionsFromEnv(),
-            config.database || {},
-        ),
-    );
 }

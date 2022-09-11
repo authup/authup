@@ -10,13 +10,12 @@ import {
     Column,
     CreateDateColumn,
     Entity, Index, JoinColumn,
-    ManyToOne, OneToMany,
+    ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Realm, User } from '@authelion/common';
 import { RealmEntity } from '../realm';
-import { UserAttributeEntity } from '../user-attribute';
 
 @Entity({ name: 'auth_users' })
 export class UserEntity implements User {
@@ -115,9 +114,6 @@ export class UserEntity implements User {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
-
-    @OneToMany(() => UserAttributeEntity, (entity) => entity.user_id)
-        attributes: UserAttributeEntity[];
 
     // ------------------------------------------------------------------
 

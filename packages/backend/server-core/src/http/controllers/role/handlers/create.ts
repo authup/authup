@@ -9,11 +9,11 @@ import { ForbiddenError } from '@typescript-error/http';
 import {
     PermissionID,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { runRoleValidation } from '../utils';
 import { RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
-import { useDataSource } from '../../../../database';
 
 export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     if (!req.ability.has(PermissionID.ROLE_ADD)) {

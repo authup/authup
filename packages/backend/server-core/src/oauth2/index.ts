@@ -10,3 +10,4 @@ export * from './token';
 export * from './grant-types';
 export * from './openid';
 export * from './response';
+export * from './scope';

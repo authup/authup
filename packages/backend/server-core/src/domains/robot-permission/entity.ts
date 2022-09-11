@@ -18,7 +18,7 @@ import {
     Permission, Realm, Robot, RobotPermission,
 } from '@authelion/common';
 import { PermissionEntity } from '../permission';
-import { RobotEntity } from '../robot';
+import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_robot_permissions' })

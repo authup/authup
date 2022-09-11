@@ -6,12 +6,13 @@
  */
 
 import { Brackets } from 'typeorm';
-import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
+import {
+    applyFilters, applyPagination, applySort, useDataSource,
+} from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page, sort } = req.query;

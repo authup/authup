@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MiddlewareOptionsInput } from '../type';
+import { HTTPMiddlewareOptionsInput } from '../type';
 
-export function extractMiddlewareOptionsFromEnv(input?: MiddlewareOptionsInput) : MiddlewareOptionsInput {
+export function extractHTTPMiddlewareOptionsFromEnv(input?: HTTPMiddlewareOptionsInput) : HTTPMiddlewareOptionsInput {
     return {
         ...(input || {}),
     };

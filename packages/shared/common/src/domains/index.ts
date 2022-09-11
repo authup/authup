@@ -6,7 +6,7 @@
  */
 
 export * from './key';
-export * from './oauth2';
+export * from './auth';
 export * from './access-token';
 export * from './authorization-code';
 export * from './attempt-activation';
@@ -33,4 +33,3 @@ export * from './user-permission';
 export * from './user-role';
 
 export * from './type';
-export * from './utils';

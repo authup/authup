@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination, applySort } from 'typeorm-extension';
+import {
+    applyFilters, applyPagination, applySort, useDataSource,
+} from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { filter, page, sort } = req.query;

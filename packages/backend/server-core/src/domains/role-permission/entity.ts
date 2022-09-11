@@ -17,7 +17,7 @@ import {
 import {
     Permission, Realm, Role, RolePermission,
 } from '@authelion/common';
-import { RoleEntity } from '../role';
+import { RoleEntity } from '../role/entity';
 import { PermissionEntity } from '../permission';
 import { RealmEntity } from '../realm';
 

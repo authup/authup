@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HTTPClient } from '../http';
+import { HTTPClient } from './module';
 
-export function useDomainAPI(client: HTTPClient, name: string) {
+export function useHTTPClientAPI(client: HTTPClient, name: string) {
     switch (name) {
         case 'oauth2Provider':
             return client.identityProvider;

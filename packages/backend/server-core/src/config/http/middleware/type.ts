@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type MiddlewareOptions = {
+export type HTTPMiddlewareOptions = {
     bodyParser: boolean,
     cookieParser: boolean,
     response: boolean,
@@ -13,4 +13,4 @@ export type MiddlewareOptions = {
     swaggerDirectoryPath: string
 };
 
-export type MiddlewareOptionsInput = Partial<MiddlewareOptions>;
+export type HTTPMiddlewareOptionsInput = Partial<HTTPMiddlewareOptions>;

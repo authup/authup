@@ -6,15 +6,15 @@
  */
 
 import { DatabaseOptions, DatabaseOptionsInput } from './database';
-import { MiddlewareOptions, MiddlewareOptionsInput } from './http';
+import { HTTPMiddlewareOptions, HTTPMiddlewareOptionsInput } from './http/middleware';
 import { CoreOptions, CoreOptionsInput } from './core';
 
 export type Config = CoreOptions & {
     database: DatabaseOptions,
-    middleware: MiddlewareOptions
+    middleware: HTTPMiddlewareOptions
 };
 
 export type ConfigInput = CoreOptionsInput & {
     database?: DatabaseOptionsInput,
-    middleware?: MiddlewareOptionsInput
+    middleware?: HTTPMiddlewareOptionsInput
 };

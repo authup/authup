@@ -11,9 +11,9 @@ import {
     OAuth2TokenPayload, hasOAuth2OpenIDScope,
 } from '@authelion/common';
 import { randomBytes } from 'crypto';
+import { useDataSource } from 'typeorm-extension';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useRealmKey } from '../../domains';
-import { useDataSource } from '../../database';
+import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../domains';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { resolveOpenIdClaimsFromSubEntity } from '../openid';
 import { loadOAuth2SubEntity } from '../token';
@@ -54,7 +54,7 @@ export class OAuth2AuthorizationCodeBuilder {
             ...payload,
         };
 
-        const key = await useRealmKey(context.realm_id);
+        const key = await useKey({ realm_id: context.realm_id });
         return signOAuth2TokenWithKey(
             tokenPayload,
             key,

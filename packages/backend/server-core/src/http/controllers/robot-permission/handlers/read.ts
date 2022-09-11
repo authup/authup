@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination } from 'typeorm-extension';
+import { applyFilters, applyPagination, useDataSource } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotPermissionEntity } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 /**
  * Receive user permissions of a specific user.

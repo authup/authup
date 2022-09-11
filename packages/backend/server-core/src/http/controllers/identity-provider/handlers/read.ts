@@ -7,12 +7,12 @@
 
 import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@typescript-error/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {

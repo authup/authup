@@ -6,7 +6,7 @@
  */
 
 import {
-    createDatabase, dropDatabase, setDataSource, unsetDataSource,
+    createDatabase, dropDatabase, setDataSource, unsetDataSource, useDataSource,
 } from 'typeorm-extension';
 import {
     DataSource, DataSourceOptions,
@@ -15,7 +15,6 @@ import {
     DatabaseRootSeederResult,
     DatabaseSeeder,
     buildDataSourceOptions,
-    useDataSource,
 } from '../../../src';
 
 async function buildOptions() {

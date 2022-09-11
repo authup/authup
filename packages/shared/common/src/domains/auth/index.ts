@@ -6,6 +6,7 @@
  */
 
 export * from './constants';
+export * from './error';
 export * from './openid';
 export * from './type';
 export * from './utils';

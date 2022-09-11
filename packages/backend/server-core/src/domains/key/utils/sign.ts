@@ -7,7 +7,7 @@
 
 import { TokenSignOptions, signToken } from '@authelion/server-utils';
 import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authelion/common';
-import { KeyEntity } from '../index';
+import { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(
     payload: string | object | Buffer | Record<string, any>,

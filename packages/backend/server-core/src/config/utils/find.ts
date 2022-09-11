@@ -13,8 +13,6 @@ import {
 } from 'locter';
 import defu from 'defu';
 import { ConfigInput } from '../type';
-import { validateConfig } from './validate';
-import { useLogger } from '../../logger';
 
 export async function findConfig(directoryPath?: string) : Promise<ConfigInput> {
     directoryPath ??= process.cwd();
@@ -28,12 +26,7 @@ export async function findConfig(directoryPath?: string) : Promise<ConfigInput> 
     for (let i = 0; i < fileInfos.length; i++) {
         const fileExport = await loadScriptFileExport(fileInfos[i]);
         if (fileExport.key === 'default') {
-            try {
-                validateConfig(fileExport.value);
-                items.push(fileExport.value);
-            } catch (e) {
-                useLogger().error(`The configuration file ${fileInfos[i].name} (path: ${fileInfos[i].path}) is not valid.`);
-            }
+            items.push(fileExport.value);
         }
     }
 
@@ -52,12 +45,7 @@ export function findConfigSync(directoryPath?: string) {
     for (let i = 0; i < fileInfos.length; i++) {
         const fileExport = loadScriptFileExportSync(fileInfos[i]);
         if (fileExport.key === 'default') {
-            try {
-                validateConfig(fileExport.value);
-                items.push(fileExport.value);
-            } catch (e) {
-                useLogger().error(`The configuration file ${fileInfos[i].name} (path: ${fileInfos[i].path}) is not valid.`);
-            }
+            items.push(fileExport.value);
         }
     }
 

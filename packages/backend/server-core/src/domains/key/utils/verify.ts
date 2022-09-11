@@ -9,7 +9,7 @@ import { TokenVerifyOptions, verifyToken } from '@authelion/server-utils';
 import {
     KeyType, OAuth2TokenPayload, wrapPrivateKeyPem, wrapPublicKeyPem,
 } from '@authelion/common';
-import { KeyEntity } from '../index';
+import { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(
     token: string,

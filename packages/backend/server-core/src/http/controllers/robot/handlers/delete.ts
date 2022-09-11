@@ -9,9 +9,9 @@ import { ForbiddenError, NotFoundError } from '@typescript-error/http';
 import {
     PermissionID,
 } from '@authelion/common';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity, useRobotEventEmitter } from '../../../../domains';
-import { useDataSource } from '../../../../database';
 
 export async function deleteRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;

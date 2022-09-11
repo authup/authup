@@ -20,6 +20,7 @@ import {
     BearerAuthorizationHeader,
 } from 'hapic';
 import { NotFoundError } from '@typescript-error/http';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest } from '../../type';
 import {
     extractOAuth2TokenPayload,
@@ -33,7 +34,6 @@ import {
     RobotRepository,
     UserEntity, UserRepository,
 } from '../../../domains';
-import { useDataSource } from '../../../database';
 import {
     useConfig,
 } from '../../../config';

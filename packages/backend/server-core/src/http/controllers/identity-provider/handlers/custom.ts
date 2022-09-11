@@ -15,11 +15,11 @@ import {
 import { URL } from 'url';
 import { CookieOptions } from 'express';
 import { Client } from '@hapic/oauth2';
+import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../../oauth2';
-import { useDataSource } from '../../../../database';
 import { useConfig } from '../../../../config';
 
 export async function authorizeURLIdentityProviderRouteHandler(

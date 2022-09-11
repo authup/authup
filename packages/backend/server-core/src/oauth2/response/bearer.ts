@@ -13,7 +13,7 @@ import {
     getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { OAuth2BearerResponseContext } from './type';
-import { signOAuth2TokenWithKey, useRealmKey } from '../../domains';
+import { signOAuth2TokenWithKey, useKey } from '../../domains';
 
 export class OAuth2BearerTokenResponse {
     protected context : OAuth2BearerResponseContext;
@@ -50,7 +50,7 @@ export class OAuth2BearerTokenResponse {
                 ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
             };
 
-            const key = await useRealmKey(this.context.refreshToken.realm_id);
+            const key = await useKey({ realm_id: this.context.refreshToken.realm_id });
             response.refresh_token = await signOAuth2TokenWithKey(
                 refreshTokenPayload,
                 key,

@@ -5,13 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientOptions } from '@hapic/oauth2';
-import { Client } from 'redis-extension';
-import { Logger } from '../../socket';
+import { Logger, VerifyContext } from '../../type';
 
-export type TokenVerifyContext = {
-    oauth2: string | ClientOptions,
-    redis?: Client | boolean
-    redisPrefix?: string,
-    logger?: Logger,
-};
+export type TokenVerifyContext = VerifyContext;

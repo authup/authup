@@ -6,5 +6,4 @@
  */
 
 export * from './client';
-export * from './token/cache';
-export * from './token/verify';
+export * from './token';

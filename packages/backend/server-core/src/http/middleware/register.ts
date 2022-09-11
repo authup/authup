@@ -12,22 +12,20 @@ import path from 'path';
 import { existsSync } from 'fs';
 import { mergeDeep } from '@authelion/common';
 import {
-    createMiddleware,
-    responseMiddleware,
-} from '../index';
-import {
-    MiddlewareOptions,
-    MiddlewareOptionsInput,
-    buildMiddlewareOptions,
+    HTTPMiddlewareOptions,
+    HTTPMiddlewareOptionsInput,
+    buildHTTPMiddlewareOptions,
     useConfigSync,
 } from '../../config';
 import { createLoggerMiddleware } from './logger';
+import { responseMiddleware } from './response';
+import { createMiddleware } from './core';
 
 export function registerMiddlewares(
     router: Application,
-    input?: MiddlewareOptionsInput,
+    input?: HTTPMiddlewareOptionsInput,
 ) {
-    let options : MiddlewareOptions;
+    let options : HTTPMiddlewareOptions;
 
     const config = useConfigSync();
 
@@ -35,7 +33,7 @@ export function registerMiddlewares(
         options = mergeDeep(
             {},
             config.middleware,
-            buildMiddlewareOptions(input),
+            buildHTTPMiddlewareOptions(input),
         );
     } else {
         options = config.middleware;
