@@ -1,0 +1,36 @@
+name: 'Install'
+description: 'Prepares the repo for a job by checking out and installing dependencies'
+inputs:
+    node-version:
+        description: 'The node version to setup'
+        required: true
+    registry-url:
+        description: 'Define registry-url'
+        required: false
+
+runs:
+    using: 'composite'
+    steps:
+        -   name: echo github.ref
+            shell: bash
+            run: echo ${{ github.ref }}
+
+        -   name: Use Node.js ${{ inputs.node-version }}
+            id: install-cache
+            uses: actions/setup-node@v3
+            with:
+                node-version: ${{ inputs.node-version }}
+                registry-url: ${{ inputs.registry-url }}
+
+        -   name: Use cache
+            uses: actions/cache@v3
+            with:
+                path: |
+                    node_modules
+                    */*/node_modules
+                key: ${{ runner.os }}-${{ hashFiles('**/package.json') }}
+
+        - name: Install
+          shell: bash
+          run: |
+              npm ci

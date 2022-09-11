@@ -4,37 +4,144 @@
 name: CI
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    push:
+        branches: [ master ]
+    pull_request:
+        branches:
+            - '**'
+
+env:
+    PRIMARY_NODE_VERSION: 18
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
-  build:
+    install:
+        name: Checkout and Install
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Install
+              uses: ./.github/actions/install
+              with:
+                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
-    runs-on: ubuntu-latest
+    build:
+        name: Build Packages
+        needs: [install]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Install
+              uses: ./.github/actions/install
+              with:
+                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
+            - name: Build
+              uses: ./.github/actions/build
 
-    strategy:
-      matrix:
-        node-version: [16.x]
+    lint:
+        name: lint Packages
+        needs: [build]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
 
-    steps:
-      - uses: actions/checkout@v3
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
+            -   name: Build
+                uses: ./.github/actions/build
 
-      - name: Build and install packages
-        run: |
-          npm ci
-          npm run build
+            -   name: Lint
+                run: |
+                    npm run lint
 
-      - name: Run tests
-        run: |
-          npm run test
+    tests:
+        name: Test Packages
+        needs: [build]
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [ 16, 18 ]
+                package: [
+                    'backend/server-core',
+                    'shared/common'
+                ]
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
+                with:
+                    fetch-depth: 2
 
-      - name: Run linter
-        run: |
-          npm run lint
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ matrix.node-version }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Run tests
+                run: |
+                  npm run test:coverage
+
+            -   name: Store coverage for uploading
+                if: env.PRIMARY_NODE_VERSION == matrix.node-version
+                uses: actions/upload-artifact@v3
+                with:
+                    name: ${{ matrix.package }}-coverage
+                    path: packages/${{ matrix.package }}/coverage/lcov.info
+                    # Sadly 1 day is the minimum
+                    retention-days: 1
+    coverage:
+        name: Upload Codecov Coverage
+        needs: [ tests ]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
+
+            -   name: Download coverage reports
+                uses: actions/download-artifact@v3
+                with:
+                    path: coverage
+
+            -   name: Publish code coverage report
+                uses: codecov/codecov-action@v3
+                with:
+                    token: ${{ secrets.codecov }}
+                    files: coverage/**/lcov.info
+                    flags: unittest
+                    name: codecov
+
+    publish:
+        name: Publish canary version
+        needs: [lint, tests]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
+                with:
+                    fetch-depth: 2
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   run: |
+                    git fetch --prune --unshallow
+                    - name: Publish all packages to npm
+                    run: npx lerna publish --loglevel=verbose --canary --exact --force-publish --yes
+                    env:
+                        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

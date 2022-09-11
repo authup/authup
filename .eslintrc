@@ -13,9 +13,6 @@
     "rules": {
         "class-methods-use-this": "off",
         "dot-notation": "off",
-        "import/no-cycle": [2, {
-            "maxDepth": 1
-        }],
         "no-use-before-define": "off",
         "no-underscore-dangle": "off",
         "no-shadow": "off",
