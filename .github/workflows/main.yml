@@ -69,7 +69,6 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                node-version: [ 16, 18 ]
                 package: [
                     'backend/server-core',
                     'shared/common'
@@ -83,7 +82,7 @@ jobs:
             -   name: Install
                 uses: ./.github/actions/install
                 with:
-                    node-version: ${{ matrix.node-version }}
+                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
             -   name: Build
                 uses: ./.github/actions/build
