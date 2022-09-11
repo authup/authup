@@ -90,36 +90,7 @@ jobs:
 
             -   name: Run tests
                 run: |
-                  npm run test:coverage --workspace=packages/${{matrix.package}} --if-present
-
-            -   name: Store coverage for uploading
-                if: env.PRIMARY_NODE_VERSION == matrix.node-version
-                uses: actions/upload-artifact@v3
-                with:
-                    name: ${{ matrix.package }}-coverage
-                    path: packages/${{ matrix.package }}/coverage/lcov.info
-                    # Sadly 1 day is the minimum
-                    retention-days: 1
-    coverage:
-        name: Upload Codecov Coverage
-        needs: [ tests ]
-        runs-on: ubuntu-latest
-        steps:
-            -   name: Checkout
-                uses: actions/checkout@v3
-
-            -   name: Download coverage reports
-                uses: actions/download-artifact@v3
-                with:
-                    path: coverage
-
-            -   name: Publish code coverage report
-                uses: codecov/codecov-action@v3
-                with:
-                    token: ${{ secrets.codecov }}
-                    files: coverage/**/lcov.info
-                    flags: unittest
-                    name: codecov
+                  npm run test --workspace=packages/${{matrix.package}} --if-present
 
     publish:
         name: Publish canary version
