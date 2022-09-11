@@ -113,6 +113,6 @@ jobs:
                     git fetch --prune --unshallow
 
             -   name: Publish all packages to npm
-                run: npx lerna publish --loglevel=verbose --canary --exact --force-publish --yes
+                run: npx lerna publish --loglevel=verbose --canary --exact --force-publish --yes --registry=https://registry.npmjs.org
                 env:
                     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
