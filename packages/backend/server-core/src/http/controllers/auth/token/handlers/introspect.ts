@@ -7,11 +7,7 @@
 
 import {
     OAuth2TokenIntrospectionResponse,
-    PermissionID,
 } from '@authelion/common';
-import {
-    ForbiddenError,
-} from '@typescript-error/http';
 import {
     ValidationChain, body, oneOf, param, query, validationResult,
 } from 'express-validator';
@@ -47,16 +43,6 @@ export async function introspectTokenRouteHandler(
     const validationData = matchedValidationData(req, { includeOptionals: true }) as { token: string };
     if (!validationData.token) {
         validationData.token = req.token;
-    }
-
-    if (
-        req.token !== validationData.token &&
-        (
-            !req.ability ||
-            !req.ability.has(PermissionID.TOKEN_VERIFY)
-        )
-    ) {
-        throw new ForbiddenError();
     }
 
     const payload = await extractOAuth2TokenPayload(validationData.token);
