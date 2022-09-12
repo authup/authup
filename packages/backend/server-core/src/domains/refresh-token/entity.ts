@@ -31,6 +31,11 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     })
         scope: string | null;
 
+    @Column({
+        nullable: true, default: null, type: 'uuid',
+    })
+        access_token: string | null;
+
     // ------------------------------------------------------------------
 
     @Column({ nullable: true, default: null })
@@ -53,11 +58,6 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'robot_id' })
         robot: RobotEntity | null;
-
-    @Column({
-        nullable: true, default: null, type: 'varchar', length: 64,
-    })
-        access_token: string | null;
 
     @Column()
         realm_id: Realm['id'] | null;
