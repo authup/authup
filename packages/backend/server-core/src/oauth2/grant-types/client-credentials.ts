@@ -33,6 +33,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
+            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
             refreshToken,
         });
 

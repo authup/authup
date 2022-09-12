@@ -6,7 +6,7 @@
  */
 import { LessThan } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 import { useLogger } from '../../../logger';
 
 export async function cleanUp(log?: boolean) {
@@ -22,14 +22,6 @@ export async function cleanUp(log?: boolean) {
     const authorizationCodeRepository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);
 
     await authorizationCodeRepository
-        .delete({
-            expires: LessThan(new Date()),
-        });
-
-    // ------------------------------------------------------------------------------
-
-    const accessTokenRepository = dataSource.getRepository(OAuth2AccessTokenEntity);
-    await accessTokenRepository
         .delete({
             expires: LessThan(new Date()),
         });

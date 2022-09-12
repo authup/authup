@@ -6,6 +6,5 @@
  */
 
 export * from './abstract';
-export * from './access-token';
 export * from './authorization-code';
 export * from './refresh-token';

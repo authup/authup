@@ -6,7 +6,6 @@
  */
 
 export * from './key';
-export * from './access-token';
 export * from './authorization-code';
 export * from './client';
 export * from './identity-provider';

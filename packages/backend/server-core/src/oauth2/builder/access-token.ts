@@ -5,28 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { OAuth2TokenKind, OAuth2TokenPayload } from '@authelion/common';
 import { randomUUID } from 'crypto';
-import {
-    OAuth2AccessToken,
-    OAuth2SubKind,
-    OAuth2TokenKind,
-    OAuth2TokenPayload, hasOwnProperty,
-} from '@authelion/common';
-import { useDataSource } from 'typeorm-extension';
-import { OAuth2AccessTokenEntity, signOAuth2TokenWithKey, useKey } from '../../domains';
 import { OAuth2AccessTokenBuilderContext, OAuth2AccessTokenBuilderCreateContext } from './type';
-import { OAuth2AccessTokenCache } from '../cache';
 
 export class Oauth2AccessTokenBuilder {
-    static MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS = 10;
-
     // -----------------------------------------------------
 
     protected context: OAuth2AccessTokenBuilderContext;
-
-    // -----------------------------------------------------
-
-    protected id?: OAuth2AccessToken['id'];
 
     // -----------------------------------------------------
 
@@ -36,107 +22,20 @@ export class Oauth2AccessTokenBuilder {
 
     // -----------------------------------------------------
 
-    getId() {
-        if (!this.id) {
-            this.id = randomUUID();
-        }
-
-        return this.id;
-    }
-
-    resetId() {
-        this.id = undefined;
-    }
-
-    // -----------------------------------------------------
-
-    public async generateToken(
-        context: Pick<OAuth2TokenPayload, 'sub' | 'sub_kind' | 'remote_address' | 'client_id' | 'realm_id' | 'scope'>,
-    ) : Promise<string> {
-        const tokenPayload: Partial<OAuth2TokenPayload> = {
-            jti: this.getId(),
+    public async create(
+        context: OAuth2AccessTokenBuilderCreateContext,
+    ) : Promise<Partial<OAuth2TokenPayload>> {
+        return {
+            jti: randomUUID(),
             iss: this.context.selfUrl,
             sub: context.sub,
-            sub_kind: context.sub_kind,
-            remote_address: context.remote_address,
+            sub_kind: context.subKind,
+            remote_address: context.remoteAddress,
             kind: OAuth2TokenKind.ACCESS,
-            aud: context.client_id,
-            client_id: context.client_id,
-            realm_id: context.realm_id,
-            scope: context.scope,
-        };
-
-        const key = await useKey({ realm_id: context.realm_id });
-        return signOAuth2TokenWithKey(
-            tokenPayload,
-            key,
-            {
-                keyid: key.id,
-                expiresIn: this.context.maxAge,
-            },
-        );
-    }
-
-    public async create(context: OAuth2AccessTokenBuilderCreateContext) : Promise<OAuth2AccessTokenEntity> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
-
-        const entity = repository.create({
+            aud: context.clientId,
             client_id: context.clientId,
             realm_id: context.realmId,
-            expires: new Date(Date.now() + (1000 * (this.context.maxAge || 3600))),
             scope: context.scope,
-        });
-
-        switch (context.subKind) {
-            case OAuth2SubKind.USER: {
-                entity.user_id = context.sub;
-                break;
-            }
-            case OAuth2SubKind.ROBOT: {
-                entity.robot_id = context.sub;
-                break;
-            }
-            case OAuth2SubKind.CLIENT: {
-                entity.client_id = context.sub;
-                break;
-            }
-        }
-
-        let maxGenerationAttempts = Oauth2AccessTokenBuilder.MAX_RANDOM_TOKEN_GENERATION_ATTEMPTS;
-
-        while (maxGenerationAttempts-- > 0) {
-            try {
-                entity.id = this.getId();
-                entity.content = await this.generateToken({
-                    scope: context.scope,
-                    sub: context.sub,
-                    sub_kind: context.subKind,
-                    realm_id: context.realmId,
-                    remote_address: context.remoteAddress,
-                    client_id: context.clientId,
-                });
-
-                await repository.insert(entity);
-                break;
-            } catch (e) {
-                if (
-                    hasOwnProperty(e, 'code') &&
-                    (
-                        e.code === 'ER_DUP_ENTRY' ||
-                        e.code === 'SQLITE_CONSTRAINT_UNIQUE'
-                    )
-                ) {
-                    this.resetId();
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        const cache = new OAuth2AccessTokenCache();
-        await cache.set(entity);
-
-        return entity;
+        };
     }
 }

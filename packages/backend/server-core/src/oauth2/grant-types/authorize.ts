@@ -30,6 +30,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
+            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
             refreshToken,
             idToken: authorizationCode.id_token,
         });

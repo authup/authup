@@ -6,6 +6,5 @@
  */
 
 export * from './sub';
-export * from './entity';
 export * from './permissions';
 export * from './extract';

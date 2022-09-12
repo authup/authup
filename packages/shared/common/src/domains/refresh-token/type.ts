@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessToken } from '../access-token';
 import { Client } from '../client';
 import { Realm } from '../realm';
 import { User } from '../user';
@@ -32,9 +31,7 @@ export interface OAuth2RefreshToken {
 
     robot: Robot | null,
 
-    access_token_id: OAuth2AccessToken['id'] | null;
-
-    access_token: OAuth2AccessToken | null;
+    access_token: string | null;
 
     realm_id: Realm['id'];
 

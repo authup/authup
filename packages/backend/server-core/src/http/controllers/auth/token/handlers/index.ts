@@ -7,4 +7,3 @@
 
 export * from './create';
 export * from './introspect';
-export * from './delete';

@@ -31,6 +31,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
+            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
         });
 
         return response.build();

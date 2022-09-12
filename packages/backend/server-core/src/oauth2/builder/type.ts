@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2AccessToken, OAuth2SubKind,
+    OAuth2SubKind, OAuth2TokenPayload,
 } from '@authelion/common';
 
 export type OAuth2AbstractBuilderContext = {
@@ -51,5 +51,5 @@ export type OAuth2AuthorizationCodeBuilderCreateContext = {
 export type OAuth2RefreshTokenBuilderContext = OAuth2AbstractBuilderContext;
 
 export type OAuth2RefreshTokenBuilderCreateContext = {
-    accessToken: OAuth2AccessToken
+    accessToken: Partial<OAuth2TokenPayload>
 };

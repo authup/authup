@@ -1,7 +1,7 @@
 import { Cache, useClient } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { CachePrefix } from '../../../constants';
-import { OAuth2AccessTokenEntity, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 import { useLogger } from '../../../logger';
 
 export async function runOAuth2CleanerByEvent() {
@@ -21,21 +21,6 @@ export async function runOAuth2CleanerByEvent() {
     });
 
     await authorizationCodeCache.startScheduler();
-
-    // -------------------------------------------------
-
-    const accessTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
-    accessTokenCache.on('expired', async (data) => {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(OAuth2AccessTokenEntity);
-        await repository.delete(data.id);
-
-        if (logger) {
-            logger.info(`Removing expired access-token: #${data.id}`);
-        }
-    });
-
-    await accessTokenCache.startScheduler();
 
     // -------------------------------------------------
 

@@ -10,7 +10,7 @@ import {
     PermissionID,
 } from '@authelion/common';
 import {
-    ForbiddenError, NotFoundError,
+    ForbiddenError,
 } from '@typescript-error/http';
 import {
     ValidationChain, body, oneOf, param, query, validationResult,
@@ -18,7 +18,7 @@ import {
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import {
     extractOAuth2TokenPayload, loadOAuth2SubEntity,
-    loadOAuth2SubPermissions, loadOAuth2TokenEntity, resolveOpenIdClaimsFromSubEntity,
+    loadOAuth2SubPermissions, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../../oauth2';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
 
@@ -60,19 +60,6 @@ export async function introspectTokenRouteHandler(
     }
 
     const payload = await extractOAuth2TokenPayload(validationData.token);
-
-    try {
-        await loadOAuth2TokenEntity(payload.kind, payload.jti);
-    } catch (e) {
-        if (e instanceof NotFoundError) {
-            return res.respond({
-                data: {
-                    active: false,
-                } as OAuth2TokenIntrospectionResponse,
-            });
-        }
-    }
-
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
     return res.respond({

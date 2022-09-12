@@ -9,8 +9,8 @@ import { SwaggerTags } from '@trapi/swagger';
 import {
     Controller, Delete, Get, Params, Post, Request, Response,
 } from '@decorators/express';
-import { OAuth2AccessToken, OAuth2RefreshToken, OAuth2TokenGrantResponse } from '@authelion/common';
-import { createTokenRouteHandler, deleteTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
+import { OAuth2RefreshToken, OAuth2TokenGrantResponse } from '@authelion/common';
+import { createTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
 
 @SwaggerTags('auth')
 @Controller('/token')
@@ -39,24 +39,5 @@ export class AuthTokenController {
             @Response() res: any,
     ): Promise<OAuth2TokenGrantResponse[]> {
         return createTokenRouteHandler(req, res);
-    }
-
-    // ----------------------------------------------------------
-
-    @Delete('/:id', [])
-    async deleteTokenById(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
-    ): Promise<OAuth2AccessToken | OAuth2RefreshToken> {
-        return deleteTokenRouteHandler(req, res);
-    }
-
-    @Delete('', [])
-    async deleteToken(
-        @Request() req: any,
-            @Response() res: any,
-    ): Promise<OAuth2AccessToken | OAuth2RefreshToken> {
-        return deleteTokenRouteHandler(req, res);
     }
 }

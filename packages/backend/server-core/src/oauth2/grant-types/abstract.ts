@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
-import { AccessTokenIssueContext } from './type';
-import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
+import { OAuth2TokenPayload } from '@authelion/common';
 import { Config } from '../../config';
-import { OAuth2AccessTokenCache, OAuth2RefreshTokenCache } from '../cache';
+import { OAuth2RefreshTokenEntity } from '../../domains';
+import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
+import { OAuth2RefreshTokenCache } from '../cache';
+import { AccessTokenIssueContext } from './type';
 
 export abstract class AbstractGrant {
     protected config : Config;
-
-    protected accessTokenCache : OAuth2AccessTokenCache;
 
     protected refreshTokenCache : OAuth2RefreshTokenCache;
 
@@ -23,19 +22,18 @@ export abstract class AbstractGrant {
     constructor(config: Config) {
         this.config = config;
 
-        this.accessTokenCache = new OAuth2AccessTokenCache();
         this.refreshTokenCache = new OAuth2RefreshTokenCache();
     }
 
     // -----------------------------------------------------
 
-    protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<OAuth2AccessTokenEntity> {
+    protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<Partial<OAuth2TokenPayload>> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
             selfUrl: this.config.selfUrl,
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
-        const token = await tokenBuilder.create({
+        return tokenBuilder.create({
             realmId: context.realmId,
             sub: context.sub,
             subKind: context.subKind,
@@ -43,13 +41,9 @@ export abstract class AbstractGrant {
             scope: context.scope,
             clientId: context.clientId,
         });
-
-        await this.accessTokenCache.set(token);
-
-        return token;
     }
 
-    protected async issueRefreshToken(accessToken: OAuth2AccessTokenEntity) : Promise<OAuth2RefreshTokenEntity> {
+    protected async issueRefreshToken(accessToken: Partial<OAuth2TokenPayload>) : Promise<OAuth2RefreshTokenEntity> {
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
             maxAge: this.config.tokenMaxAgeRefreshToken,
         });

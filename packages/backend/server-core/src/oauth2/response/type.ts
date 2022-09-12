@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AccessTokenEntity, OAuth2RefreshTokenEntity } from '../../domains';
+import { OAuth2TokenPayload } from '@authelion/common';
+import { OAuth2RefreshTokenEntity } from '../../domains';
 
 export type OAuth2BearerResponseContext = {
-    accessToken: OAuth2AccessTokenEntity,
+    accessToken: Partial<OAuth2TokenPayload>,
+    accessTokenMaxAge: number,
     refreshToken?: OAuth2RefreshTokenEntity,
     idToken?: string
 };

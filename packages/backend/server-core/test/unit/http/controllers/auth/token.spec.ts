@@ -53,18 +53,6 @@ describe('src/http/controllers/token', () => {
         expect(response.body.expires_in).toBeDefined();
         expect(response.body.refresh_token).toBeDefined();
 
-        // original access-token should not be there anymore!
-        response = await superTest
-            .get('/token/introspect')
-            .auth(tokenPayload.access_token, { type: 'bearer' })
-            .send({
-                token: tokenPayload.access_token,
-            });
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.active).toBeFalsy();
-
         response = await superTest
             .post('/token')
             .send({
@@ -158,36 +146,5 @@ describe('src/http/controllers/token', () => {
 
         expect(response.status).toEqual(400);
         expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
-    });
-
-    it('should revoke token', async () => {
-        let response = await superTest
-            .post('/token')
-            .send({
-                username: 'admin',
-                password: 'start123',
-            });
-
-        const tokenPayload : OAuth2TokenGrantResponse = response.body;
-
-        response = await superTest
-            .delete(`/token/${tokenPayload.refresh_token}`)
-            .auth(tokenPayload.access_token, { type: 'bearer' });
-
-        expect(response.status).toEqual(200);
-
-        response = await superTest
-            .delete('/token')
-            .auth(tokenPayload.access_token, { type: 'bearer' });
-
-        expect(response.status).toEqual(200);
-
-        response = await superTest
-            .get('/token/introspect')
-            .auth(tokenPayload.access_token, { type: 'bearer' });
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.active).toBeFalsy();
     });
 });

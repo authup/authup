@@ -9,8 +9,6 @@ import {
     OAuth2TokenGrantResponse,
     OAuth2TokenKind,
     OAuth2TokenPayload,
-    getOAuth2SubByEntity,
-    getOAuth2SubKindByEntity,
 } from '@authelion/common';
 import { OAuth2BearerResponseContext } from './type';
 import { signOAuth2TokenWithKey, useKey } from '../../domains';
@@ -27,9 +25,20 @@ export class OAuth2BearerTokenResponse {
     // ------------------------------------------------
 
     async build() : Promise<OAuth2TokenGrantResponse> {
+        const key = await useKey({ realm_id: this.context.accessToken.realm_id });
+
+        const content = await signOAuth2TokenWithKey(
+            this.context.accessToken,
+            key,
+            {
+                keyid: key.id,
+                expiresIn: this.context.accessTokenMaxAge,
+            },
+        );
+
         const response : OAuth2TokenGrantResponse = {
-            access_token: this.context.accessToken.content,
-            expires_in: Math.ceil((this.context.accessToken.expires.getTime() - Date.now()) / 1000),
+            access_token: content,
+            expires_in: this.context.accessTokenMaxAge,
             token_type: 'Bearer',
             ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
         };
@@ -42,15 +51,16 @@ export class OAuth2BearerTokenResponse {
             const refreshTokenPayload : Partial<OAuth2TokenPayload> = {
                 jti: this.context.refreshToken.id,
                 kind: OAuth2TokenKind.REFRESH,
-                realm_id: this.context.refreshToken.realm_id,
-                sub: getOAuth2SubByEntity(this.context.accessToken),
-                sub_kind: getOAuth2SubKindByEntity(this.context.accessToken),
+                realm_id: this.context.accessToken.realm_id,
+                sub: this.context.accessToken.sub,
+                sub_kind: this.context.accessToken.sub_kind,
                 scope: this.context.accessToken.scope,
                 ...(this.context.accessToken.client_id ? { client_id: this.context.accessToken.client_id } : {}),
                 ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
             };
 
-            const key = await useKey({ realm_id: this.context.refreshToken.realm_id });
+            const key = await useKey({ realm_id: this.context.accessToken.realm_id });
+
             response.refresh_token = await signOAuth2TokenWithKey(
                 refreshTokenPayload,
                 key,

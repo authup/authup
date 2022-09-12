@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenGrant, OAuth2TokenGrantType } from '@authelion/common';
+import { OAuth2TokenGrant } from '@authelion/common';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import { ExpressRequest } from '../../../http/type';
 
 export function guessOauth2GrantTypeByRequest(
     request: ExpressRequest,
-) : OAuth2TokenGrantType | undefined {
+) : `${OAuth2TokenGrant}` | undefined {
     const grantType = request.body.grant_type || request.query.grant_type;
 
     const validGrantTypes = Object.values(OAuth2TokenGrant);

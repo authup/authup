@@ -12,7 +12,6 @@ import {
     IdentityProviderEntity,
     IdentityProviderRoleEntity,
     KeyEntity,
-    OAuth2AccessTokenEntity,
     OAuth2AuthorizationCodeEntity,
     OAuth2ClientEntity,
     OAuth2RefreshTokenEntity,
@@ -33,7 +32,6 @@ export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(opt
             KeyEntity,
 
             OAuth2AuthorizationCodeEntity,
-            OAuth2AccessTokenEntity,
             OAuth2ClientEntity,
             OAuth2RefreshTokenEntity,
 
