@@ -60,7 +60,7 @@
         "redis-extension": "^1.0.2",
         "reflect-metadata": "^0.1.13",
         "swagger-ui-express": "^4.5.0",
-        "zod": "^3.19.0"
+        "zod": "^3.19.1"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
