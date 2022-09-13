@@ -70,7 +70,7 @@
     },
     "devDependencies": {
         "@authelion/common": "^0.3.0",
-        "@types/express": "^4.17.12",
+        "@types/express": "^4.17.14",
         "@types/express-validator": "^3.0.0",
         "@types/nodemailer": "^6.4.5",
         "@types/supertest": "^2.0.12",
