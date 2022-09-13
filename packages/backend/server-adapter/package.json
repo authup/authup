@@ -40,14 +40,15 @@
         "@hapic/oauth2": "^0.0.2",
         "@types/express": "^4.17.13",
         "@typescript-error/http": "^1.1.4",
-        "hapic": "^0.0.2",
-        "redis-extension": "^1.0.0"
+        "hapic": "^0.0.2"
     },
     "devDependencies": {
-        "@authelion/common": "^0.3.0-alpha.0"
+        "@authelion/common": "^0.3.0-alpha.0",
+        "redis-extension": "^1.0.3"
     },
     "peerDependencies": {
-        "@authelion/common": "^0.x"
+        "@authelion/common": "^0.x",
+        "redis-extension": "^1.x"
     },
     "publishConfig": {
         "access": "public"
