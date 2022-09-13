@@ -44,7 +44,7 @@
     },
     "devDependencies": {
         "@authelion/common": "^0.3.0-alpha.0",
-        "redis-extension": "^1.1.0"
+        "redis-extension": "^1.1.1"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
