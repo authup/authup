@@ -9,7 +9,7 @@ export async function runOAuth2CleanerByEvent() {
 
     const redis = useClient();
 
-    const authorizationCodeCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
+    const authorizationCodeCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_AUTHORIZATION_CODE });
     authorizationCodeCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);

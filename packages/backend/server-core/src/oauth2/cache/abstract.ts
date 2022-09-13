@@ -108,7 +108,7 @@ export abstract class OAuth2AbstractCache<
 
         this.driver = new Cache<T['id'], T>({
             redis: useClient(),
-        }, { prefix: CachePrefix.OAUTH2_ACCESS_TOKEN });
+        }, { prefix: this.prefix });
 
         return this.driver;
     }
