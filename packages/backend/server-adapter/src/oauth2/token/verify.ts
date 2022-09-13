@@ -69,7 +69,7 @@ export async function verifyOAuth2Token(token: string, context: TokenVerifyConte
             }
         }
 
-        let secondsDiff : number = payload.exp - Date.now();
+        let secondsDiff : number = payload.exp - payload.iat;
         secondsDiff = parseInt(secondsDiff.toString(), 10);
 
         if (secondsDiff <= 0) {
