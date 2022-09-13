@@ -8,14 +8,6 @@ runs:
             shell: bash
             run: echo ${{ github.ref }}
 
-        - uses: actions/cache@v3
-          id: build-cache
-          with:
-              path: '**/dist/**'
-              key: ${{ runner.os }}-build-${{ github.ref }}
-              restore-keys: |
-                  ${{ runner.os }}-build-
-
         - name: Build
           shell: bash
           run: |
