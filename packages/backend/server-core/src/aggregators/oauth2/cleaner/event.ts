@@ -20,7 +20,7 @@ export async function runOAuth2CleanerByEvent() {
         }
     });
 
-    await authorizationCodeCache.startScheduler();
+    await authorizationCodeCache.start();
 
     // -------------------------------------------------
 
@@ -35,5 +35,5 @@ export async function runOAuth2CleanerByEvent() {
         }
     });
 
-    await refreshTokenCache.startScheduler();
+    await refreshTokenCache.start();
 }
