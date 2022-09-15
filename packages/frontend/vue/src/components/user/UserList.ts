@@ -34,7 +34,7 @@ ComponentListProperties<BuildInput<User>>
     name: 'UserList',
     components: { Pagination },
     props: {
-        loadOnInit: {
+        loadOnSetup: {
             type: Boolean,
             default: true,
         },
@@ -87,7 +87,7 @@ ComponentListProperties<BuildInput<User>>
         },
     },
     created() {
-        if (this.loadOnInit) {
+        if (this.loadOnSetup) {
             Promise.resolve()
                 .then(this.load);
         }

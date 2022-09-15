@@ -31,7 +31,7 @@ ComponentListProperties<BuildInput<Role>>
     name: 'RoleList',
     components: { Pagination },
     props: {
-        loadOnInit: {
+        loadOnSetup: {
             type: Boolean,
             default: true,
         },
@@ -86,7 +86,7 @@ ComponentListProperties<BuildInput<Role>>
         },
     },
     created() {
-        if (this.loadOnInit) {
+        if (this.loadOnSetup) {
             Promise.resolve()
                 .then(this.load);
         }

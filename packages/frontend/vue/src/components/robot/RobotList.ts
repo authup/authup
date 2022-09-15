@@ -31,7 +31,7 @@ ComponentListProperties<BuildInput<Robot>>
     name: 'RobotList',
     components: { Pagination },
     props: {
-        loadOnInit: {
+        loadOnSetup: {
             type: Boolean,
             default: true,
         },
@@ -86,7 +86,7 @@ ComponentListProperties<BuildInput<Robot>>
         },
     },
     created() {
-        if (this.loadOnInit) {
+        if (this.loadOnSetup) {
             Promise.resolve()
                 .then(this.load);
         }
