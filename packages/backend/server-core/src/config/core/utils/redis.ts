@@ -6,7 +6,7 @@
  */
 
 import {
-    Client, ClientOptions, setClient, setConfig,
+    Client, ClientOptions, setClient, setConfig, useClient,
 } from 'redis-extension';
 import { hasOwnProperty } from '@authelion/common';
 
@@ -23,7 +23,7 @@ export function setupRedis(data: string | boolean | Client | ClientOptions): voi
         typeof data === 'undefined'
     ) {
         if (data) {
-            setConfig({});
+            useClient();
         }
 
         return;

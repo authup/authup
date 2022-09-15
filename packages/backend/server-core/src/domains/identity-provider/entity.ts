@@ -19,13 +19,13 @@ import {
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_identity_providers' })
-@Index(['sub', 'realm_id'], { unique: true })
+@Index(['slug', 'realm_id'], { unique: true })
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({ type: 'varchar', length: 36 })
-        sub: string;
+        slug: string;
 
     @Column({ type: 'varchar', length: 128 })
         name: string;

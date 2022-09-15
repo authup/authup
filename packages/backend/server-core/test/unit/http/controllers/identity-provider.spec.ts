@@ -29,7 +29,7 @@ describe('src/http/controllers/identity-provider', () => {
 
     const details : Partial<OAuth2IdentityProvider> = {
         name: 'keycloak',
-        sub: 'keycloak',
+        slug: 'keycloak',
         enabled: true,
         protocol: IdentityProviderProtocol.OAUTH2,
         client_id: 'client',

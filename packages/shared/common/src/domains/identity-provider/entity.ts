@@ -13,7 +13,7 @@ export interface IdentityProvider {
 
     name: string,
 
-    sub: string;
+    slug: string;
 
     protocol: `${IdentityProviderProtocol}`;
 
