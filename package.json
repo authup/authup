@@ -34,7 +34,7 @@
         "node": ">=14.0.0"
     },
     "devDependencies": {
-        "@tada5hi/eslint-config-vue-typescript": "^1.0.6",
+        "@tada5hi/eslint-config-vue-typescript": "^1.0.7",
         "@types/jest": "^27.5.0",
         "@types/node": "^18.7.18",
         "cross-env": "^7.0.3",
