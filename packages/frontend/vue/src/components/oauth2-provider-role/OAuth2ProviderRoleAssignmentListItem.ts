@@ -221,11 +221,7 @@ OAuth2ProviderRoleListItemProperties
                     },
                 }, [
                     h('i', {
-                        staticClass: 'fa',
-                        class: {
-                            'fa-plus': !vm.item,
-                            'fa-save': vm.item,
-                        },
+                        staticClass: 'fa fa-minus',
                     }),
                 ]);
             }
