@@ -27,8 +27,8 @@ export class RoleAttributeEntity implements RoleAttribute {
     @Column({ type: 'varchar', length: 255 })
         name: string;
 
-    @Column({ type: 'text' })
-        value: string;
+    @Column({ type: 'text', nullable: true })
+        value: string | null;
 
     // ------------------------------------------------------------------
 
