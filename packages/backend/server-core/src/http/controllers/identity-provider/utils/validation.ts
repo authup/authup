@@ -39,7 +39,7 @@ export async function runOauth2ProviderValidation(
 ) : Promise<ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}>> {
     const result : ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}> = initExpressValidationResult();
 
-    await check('sub')
+    await check('slug')
         .exists()
         .notEmpty()
         .isString()
