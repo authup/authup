@@ -11,12 +11,14 @@ import { BadRequestError } from '@typescript-error/http';
 
 const validationSchema = zod.object({
     token_url: zod.string().url(),
-    token_revoke_url: zod.string().url().optional(),
+    token_revoke_url: zod.string().url().optional().nullable(),
     authorize_url: zod.string().url(),
-    user_info_url: zod.string().url().optional(),
-    scope: zod.string().min(3).max(2000).optional(),
+    user_info_url: zod.string().url().optional().nullable(),
+    scope: zod.string().min(3).max(2000).optional()
+        .nullable(),
     client_id: zod.string().min(3).max(128),
-    client_secret: zod.string().min(3).max(128).optional(),
+    client_secret: zod.string().min(3).max(128).optional()
+        .nullable(),
 });
 
 export function validateOAuth2IdentityProviderProtocol<
@@ -24,7 +26,7 @@ export function validateOAuth2IdentityProviderProtocol<
 >(entity: T) : T {
     const result = validationSchema.safeParse(entity);
     if (result.success === false) {
-        throw new BadRequestError(result.error);
+        throw new BadRequestError(result.error.message);
     }
 
     return entity;
