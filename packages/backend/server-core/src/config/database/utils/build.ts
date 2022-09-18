@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import defu from 'defu';
+import { merge } from 'smob';
 import { DatabaseOptions, DatabaseOptionsInput } from '../type';
 import { extendDatabaseOptionsWithDefaults } from './defaults';
 import { extractDatabaseOptionsFromEnv } from './env';
@@ -13,7 +13,7 @@ import { validateDatabaseOptionsInput } from './validate';
 
 export function buildDatabaseOptions(options?: DatabaseOptionsInput) : DatabaseOptions {
     const input = validateDatabaseOptionsInput(
-        defu(
+        merge(
             extractDatabaseOptionsFromEnv(),
             options || {},
         ),

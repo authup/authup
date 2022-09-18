@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import defu from 'defu';
+import { merge } from 'smob';
 import { Config, ConfigInput } from './type';
 import {
     buildConfig,
@@ -58,14 +58,7 @@ export function useConfigSync(directoryPath?: string) : Config {
  */
 export function setConfig(value: ConfigInput) : Config {
     if (instance) {
-        // redis client instance can not be merged ;)
-        const { redis, ...rest } = value;
-
-        const merged = defu(rest, instance);
-
-        if (redis) {
-            merged.redis = redis;
-        }
+        const merged = merge({}, value, instance);
 
         instance = buildConfig(merged);
     } else {

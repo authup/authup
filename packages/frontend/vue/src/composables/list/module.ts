@@ -12,7 +12,7 @@ import {
 import {
     Ref, VNode, ref, watch,
 } from 'vue';
-import { mergeDeep } from '@authelion/common';
+import { merge } from 'smob';
 import { ListBuilderContext } from './type';
 import {
     buildListComponentOptions,
@@ -36,7 +36,7 @@ export function useListBuilder<T extends Record<string, any>>(
     async function load(targetMeta?: Partial<PaginationMeta>) {
         const queryMeta : Partial<PaginationMeta> = targetMeta || meta.value;
 
-        const response = await context.load(mergeDeep(
+        const response = await context.load(merge(
             context.props.query.value,
             {
                 page: {

@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.page-sidebar {
+    width:300px;
+    background-color: #34353a;
+    color: #fff;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+}
+
+.page-sidebar .sidebar-header {
+    padding: 20px;
+    -webkit-box-shadow: 0px -6px 0px rgba(0, 0, 0, 0.3) inset;
+    box-shadow: 0px -6px 0px rgba(0, 0, 0, 0.3) inset;
+}
+
+.page-sidebar .sidebar-header span {
+    color: #4ECDC4;
+}
+
+@media only screen and (max-width: 768px) {
+    .page-sidebar {
+        width: 56px;
+        overflow: hidden;
+    }
+
+    .page-sidebar .sidebar-header,
+    .page-sidebar .nav-separator,
+    .page-sidebar .nav-link-text {
+        display: none !important;
+    }
+
+    .page-sidebar .nav-item {
+        text-align: center !important;
+    }
+
+    .m-l-sidebar {
+        margin-left: 56px;
+    }
+}

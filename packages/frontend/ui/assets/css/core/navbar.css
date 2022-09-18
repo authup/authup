@@ -1,0 +1,151 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.page-navbar.navbar-fixed-top {
+    z-index: 9999999;
+}
+
+.page-navbar {
+    border-radius: 0px;
+    margin: 0px auto;
+    padding:0px;
+    border: none;
+    width:100%;
+    text-align: right;
+    display: flex;
+}
+
+.page-navbar:before,
+.page-navbar:after {
+    clear:both;
+}
+
+.page-navbar .navbar-toggler {
+    border-color: #333;
+    padding: 9px 10px;
+    margin: 8px 15px 8px 0px;
+}
+
+.page-navbar .navbar-toggler > .icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    margin-top:4px;
+    background:#fff;
+}
+
+.page-navbar > .navbar-content {
+    padding: 0 20px 0 20px;
+}
+
+
+.page-navbar .navbar-content li:not(:last-child) .nav-item {
+    padding-right: 0.25rem;
+}
+
+.page-navbar .navbar-content .nav-link {
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    border-radius: 4px;
+}
+
+.page-navbar .navbar-content .dropdown-menu > .dropdown-item:hover,
+.page-navbar .navbar-content .dropdown-menu > .dropdown-item:active,
+.page-navbar .navbar-content .dropdown-menu > .dropdown-item:focus,
+.page-navbar .navbar-content .dropdown-menu > .dropdown-item.active {
+    color: #FF5B5B;
+    background: #32333B;
+    text-decoration: none;
+}
+
+.page-navbar .navbar-content .navbar-gadgets {
+    margin-left: auto;
+}
+
+.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link {
+    text-transform: none;
+    position: relative;
+}
+
+.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link img {
+    border-radius: 50%;
+    height: 1.25rem;
+    width: 1.25rem;
+}
+
+.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link span {
+    padding-left:6px;
+}
+
+.page-navbar .navbar-content > .navbar-gadgets> li > a i {
+    font-size:16px;
+}
+
+.page-navbar .navbar-content .dropdown-menu {
+    background-color: #40434E;
+}
+
+.page-navbar .navbar-content .dropdown-menu > .dropdown-item {
+    padding: 10px 20px 10px 20px;
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #9d9d9d;
+}
+
+@media (max-width: 1024px) {
+    .page-navbar > .navbar-content {
+        padding: 0px 50px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-navbar > .navbar-content {
+        padding: 0px;
+    }
+
+    .page-navbar .navbar-content .navbar-gadgets {
+        flex-direction: row;
+    }
+
+    .page-header {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-navbar > .navbar-content {
+        padding: 0px;
+    }
+
+    .page-navbar .navbar-content > ul:not(:last-child) {
+        margin-bottom: 1rem;
+    }
+
+    .page-navbar .navbar-content .nav-item {
+        width: 100%;
+    }
+
+    .nav-items .nav-link,
+    .nav-items .nav-item .nav-sub-title {
+        text-align: center;
+    }
+
+    .page-navbar .navbar-content .nav-link {
+        padding: 1rem 0.75rem;
+    }
+
+    .page-navbar .navbar-content .navbar-gadgets {
+        flex-direction: row;
+    }
+
+    .page-header {
+        flex-wrap: wrap;
+    }
+}

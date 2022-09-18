@@ -6,13 +6,10 @@
  */
 
 import {
-    SlotName, hasNormalizedSlot, hasOwnProperty, normalizeSlot,
-} from '@vue-layout/utils';
-import {
-    PropType, VNode, defineComponent, h, toRefs,
+    PropType, defineComponent, toRefs,
 } from 'vue';
 import { BuildInput } from 'rapiq';
-import { IdentityProvider, User, mergeDeep } from '@authelion/common';
+import { User } from '@authelion/common';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

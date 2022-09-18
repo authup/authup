@@ -1,0 +1,73 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.list,
+.c-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-header,
+.list-search {
+    margin-bottom: 0.5rem;
+}
+
+.list .list-item,
+.c-list .c-list-item {
+    background-color: #ececec;
+    border: 1px solid #dedede;
+
+    box-shadow: 0 4px 25px 0 rgba(0,0,0,.1);
+    transition: all .3s ease-in-out;
+
+    border-radius: 4px;
+
+    padding: 0.25rem 0.25rem;
+    margin-bottom: 0.5rem;
+    vertical-align: middle;
+}
+
+.list .list-item.active {
+    background-color: #d7d3d3;
+}
+
+.list .list-icon,
+.c-list .c-list-icon {
+    font-size: 1rem;
+    padding-right: 0.5rem;
+}
+
+.list-no-more {
+    margin-top: 0.5rem;
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 0.4rem 0.7rem;
+    position: relative;
+    margin-bottom: 1rem;
+    border: 1px solid #ffeeba;
+    border-radius: 0.25rem;
+}
+
+
+.pagination > li > .page-link {
+    color: #333;
+    background-color: #eee;
+    border: 1px solid #eee;
+    cursor:pointer;
+    padding: 5px 8px;
+}
+
+.pagination > .active > .page-link,
+.pagination > .active > .page-link:focus,
+.pagination > .active > .page-link:hover,
+.pagination > li > .page-link:focus,
+.pagination > li > .page-link:hover,
+.pagination > li > .page-link.active {
+    background-color: #30373e;
+    color: #FFF;
+    border: 1px solid #30373e;
+}

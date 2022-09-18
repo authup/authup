@@ -1,0 +1,184 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/* @import url('https://fonts.googleapis.com/css?family=Asap'); */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    font-family: Nunito,sans-serif;
+    font-size: 13px;
+    color: #30373E;
+    font-weight: 300;
+    background: #D5D8DA none repeat scroll 0% 0%;
+}
+
+b, strong {
+    font-weight: 700;
+}
+
+/*
+Generics
+ */
+.m-b-0 {
+    margin-bottom: 0px;
+}
+
+.m-b-10 {
+    margin-bottom:10px;
+}
+
+.m-b-20 {
+    margin-bottom: 20px;
+}
+
+.m-t-5 {
+    margin-top:5px;
+}
+
+.m-t-10 {
+    margin-top:10px;
+}
+
+.m-t-20 {
+    margin-top:20px;
+}
+
+.m-l-10 {
+    margin-left: 10px;
+}
+
+.m-l-20 {
+    margin-left: 20px;
+}
+
+/*
+General
+ */
+.h1, .h2, .h3, .h4, .h5, .h6,
+h1, h2, h3, h4, h5, h6 {
+    font-family: Asap,sans-serif;
+    font-weight: 700;
+}
+
+h1.title,
+h2.title,
+h3.title,
+h4.title,
+h5.title {
+    /* font-weight: 700; */
+    color: rgba(0,0,0,0.7);
+}
+
+h1.title:before,
+h2.title:before,
+h3.title:before,
+h4.title:before,
+h5.title:before {
+    content: "";
+    width: 4px;
+    padding-right: 4px;
+    background: #baa875;
+    margin-right: 4px;
+}
+
+.title.no-border:before {
+    content: none;
+    width:0;
+    height: 0;
+    padding-right: 0;
+    margin-right: 0;
+}
+
+.title .sub-title {
+    font-size: .65em;
+    color: #cc8181;
+}
+
+.form-horizontal .form-group {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+/*
+header
+ */
+
+
+/*
+sidebar
+*/
+
+
+
+/*
+@media (max-width: 768px) {
+    .page-sidebar {
+        margin-left: -300px;
+    }
+    .page-sidebar.active {
+        margin-left: 0;
+    }
+}
+ */
+
+/*
+body
+ */
+.page-wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    padding-top: 56px;
+    height: -moz-calc(100% - (34px));
+    height: -webkit-calc(100% - (34px));
+    height: calc(100% - (34px));
+}
+
+.page-content {
+    padding: 15px 15px 40px;
+    position:relative;
+    overflow-x: hidden;
+    width: 100%;
+    background: #f7f5f2;
+}
+
+/*
+Login
+ */
+.login-container {
+    width: 100%;
+    min-height: 100%;
+}
+
+.login-container .login-box {
+    width: 400px;
+    margin: 0px auto;
+    padding-top: 100px;
+}
+
+.login-container .login-box .login-body {
+    width: 100%;
+    float: left;
+    background: #f5f5f5;
+    padding: 20px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.login-container .login-box .login-body .login-title {
+    font-size: 19px;
+    font-weight: 300;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #33414e;
+}

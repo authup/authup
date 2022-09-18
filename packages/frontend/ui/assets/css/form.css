@@ -1,0 +1,59 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.form-group-warning label,
+.form-group-warning .label {
+    color: #a68d2f;
+}
+
+.form-group-warning input.form-control,
+.form-group-warning textarea.form-control,
+.form-group-warning select.form-control {
+    box-shadow: 0 0 0 0.1rem #f3db82;
+    border-color: #f3db82;
+}
+
+.form-group-error label,
+.form-group-error .label {
+    color: #f04124;
+}
+
+.form-group-error input.form-control,
+.form-group-error textarea.form-control,
+.form-group-error select.form-control {
+    box-shadow: 0 0 0 0.1rem #f79483;
+    border-color: #f79483;
+}
+
+.form-group-hint {
+    font-size: 0.75rem;
+    line-height: 0.9rem;
+    display: none;
+    margin-left: 10px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.9375rem;
+}
+
+.form-group-hint.group-required,
+.form-group-error .form-group-hint {
+    display: block;
+}
+
+.form-group-hint.group-required {
+    color: rgba(0,123,255);
+}
+
+.form-group-error .form-group-hint {
+    color: #f57f6c;
+}
