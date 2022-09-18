@@ -49,7 +49,6 @@
         "@typescript-error/http": "^1.1.4",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
-        "defu": "^6.1.0",
         "express-validator": "^6.14.2",
         "hapic": "^0.0.2",
         "locter": "^0.2.2",
@@ -58,6 +57,7 @@
         "nodemailer": "^6.7.8",
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
+        "smob":  "^0.0.3",
         "swagger-ui-express": "^4.5.0",
         "zod": "^3.19.1"
     },

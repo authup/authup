@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import defu from 'defu';
+import { merge } from 'smob';
 import { CoreOptions, CoreOptionsInput } from '../type';
 import { extendCoreOptionsWithDefaults } from './defaults';
 import { extractCoreOptionsFromEnv } from './env';
@@ -14,7 +14,7 @@ import { validateCoreOptionsInput } from './validate';
 export function buildCoreOptions(config: CoreOptionsInput) : CoreOptions {
     return extendCoreOptionsWithDefaults(
         validateCoreOptionsInput(
-            defu(
+            merge(
                 extractCoreOptionsFromEnv(),
                 {
                     env: config.env,

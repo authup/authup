@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import defu from 'defu';
+import { merge } from 'smob';
 import {
     HTTPMiddlewareOptions, HTTPMiddlewareOptionsInput,
 } from '../type';
@@ -18,7 +18,7 @@ export function buildHTTPMiddlewareOptions(options?: HTTPMiddlewareOptionsInput)
 
     return extendHTTPMiddlewareOptionsWithDefaults(
         validateHTTPMiddlewareOptionsInput(
-            defu(
+            merge(
                 extractHTTPMiddlewareOptionsFromEnv(),
                 options,
             ),

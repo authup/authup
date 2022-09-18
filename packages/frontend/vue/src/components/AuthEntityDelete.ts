@@ -30,10 +30,6 @@ enum ElementType {
 export const AuthEntityDelete = defineComponent({
     name: 'AuthEntityDelete',
     props: {
-        class: {
-            type: String,
-            default: '',
-        },
         elementIcon: {
             type: String,
             default: 'fa-solid fa-trash',
@@ -72,7 +68,6 @@ export const AuthEntityDelete = defineComponent({
     emits: ['canceled', 'deleted', 'failed'],
     setup(props, ctx) {
         const busy = ref(false);
-        const modalRef = ref<null | DefineComponent>(null);
 
         const submit = async () => {
             if (busy.value) return;
@@ -93,56 +88,6 @@ export const AuthEntityDelete = defineComponent({
             }
 
             busy.value = false;
-        };
-
-        const show = async () => {
-            if (!modalRef.value) {
-                return;
-            }
-
-            modalRef.value.show();
-        };
-
-        const renderModal = () => {
-            const modalComponent = resolveComponent('b-modal');
-
-            let hint;
-            if (props.hint) {
-                hint = props.hint;
-            } else {
-                hint = useAuthIlingo()
-                    .getSync('app.delete.hint', props.locale);
-            }
-
-            const message = h(
-                'div',
-                {
-                    class: 'alert alert-sm alert-danger mb-0',
-                },
-                [hint],
-            );
-
-            return h(
-                modalComponent,
-                mergeProps({
-                    ref: modalRef,
-                    size: 'md',
-                    buttonSize: 'xs',
-                    okTitle: useAuthIlingo()
-                        .getSync('app.delete.okTitle', props.locale),
-                    cancelTitle: useAuthIlingo()
-                        .getSync('app.delete.cancelTitle', props.locale),
-                    onOk() {
-                        return submit();
-                    },
-                    onCancel() {
-                        ctx.emit('canceled');
-                    },
-                }, props.options),
-                {
-                    default: () => message,
-                } as any,
-            );
         };
 
         const render = () => {
@@ -177,25 +122,21 @@ export const AuthEntityDelete = defineComponent({
                 ];
             }
 
-            return [
-                h(
-                    tag,
-                    mergeProps({
-                        disabled: busy.value,
-                        class: props.class,
-                        onClick($event: any) {
-                            $event.preventDefault();
+            return h(
+                tag,
+                mergeProps({
+                    disabled: busy.value,
+                    onClick($event: any) {
+                        $event.preventDefault();
 
-                            return show.apply(null);
-                        },
-                    }, data),
-                    [
-                        icon,
-                        text,
-                    ],
-                ),
-                renderModal(),
-            ];
+                        return submit.apply(null);
+                    },
+                }, data),
+                [
+                    icon,
+                    text,
+                ],
+            );
         };
 
         return () => render();

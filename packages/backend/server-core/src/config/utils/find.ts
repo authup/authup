@@ -11,7 +11,7 @@ import {
     locateFiles,
     locateFilesSync,
 } from 'locter';
-import defu from 'defu';
+import { merge } from 'smob';
 import { ConfigInput } from '../type';
 
 export async function findConfig(directoryPath?: string) : Promise<ConfigInput> {
@@ -30,7 +30,7 @@ export async function findConfig(directoryPath?: string) : Promise<ConfigInput> 
         }
     }
 
-    return defu({}, ...items);
+    return merge({}, ...items);
 }
 
 export function findConfigSync(directoryPath?: string) {
@@ -49,5 +49,5 @@ export function findConfigSync(directoryPath?: string) {
         }
     }
 
-    return defu({}, ...items);
+    return merge({}, ...items);
 }
