@@ -5,26 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, sameAs,
-} from 'vuelidate/lib/validators';
-import Vue, {
-    CreateElement, VNode, VNodeData,
+} from '@vuelidate/validators';
+import {
+    defineComponent, h, reactive, ref, toRef,
 } from 'vue';
-import { User } from '@authelion/common';
-import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
+import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/utils';
 import { useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
-type Properties = {
-    [key: string]: any;
-
-    id: User['id'],
-    translatorLocale?: string
-};
-
-export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Properties>({
+export const UserPasswordForm = defineComponent({
     name: 'UserPasswordForm',
     props: {
         id: {
@@ -36,20 +29,18 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                password: '',
-                password_repeat: '',
-                passwordShow: false,
-            },
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const form = reactive({
+            password: '',
+            password_repeat: '',
+        });
 
-            message: null,
-            busy: false,
-        };
-    },
-    validations: {
-        form: {
+        const passwordShow = ref(false);
+        const passwordRef = toRef(form, 'password');
+
+        const $v = useVuelidate({
             password: {
                 required,
                 minLength: minLength(5),
@@ -58,100 +49,94 @@ export const UserPasswordForm = Vue.extend<ComponentFormData<User>, any, any, Pr
             password_repeat: {
                 minLength: minLength(5),
                 maxLength: maxLength(100),
-                sameAs: sameAs('password'),
+                sameAs: sameAs(passwordRef),
             },
-        },
-    },
-    computed: {
-        isEditing() {
-            return true;
-        },
-    },
-    methods: {
-        async submit() {
-            if (this.busy) return;
+        }, form);
 
-            this.busy = true;
+        const submit = async () => {
+            if (busy.value) return;
+
+            busy.value = true;
 
             try {
-                const user = await useHTTPClient().user.update(this.id, {
-                    password: this.form.password,
-                    password_repeat: this.form.password_repeat,
+                const user = await useHTTPClient().user.update(props.id, {
+                    password: form.password,
+                    password_repeat: form.password_repeat,
                 });
 
-                this.$emit('updated', user);
+                ctx.emit('updated', user);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
 
-            this.busy = false;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
+            busy.value = false;
+        };
 
-        const password = buildFormInput<User>(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Password',
-            propName: 'password',
-            attrs: {
-                type: vm.form.passwordShow ? 'text' : 'password',
-                autocomplete: 'new-password',
-            },
-        });
-
-        const passwordRepeat = buildFormInput(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Password repeat',
-            propName: 'password_repeat',
-            attrs: {
-                type: vm.form.passwordShow ? 'text' : 'password',
-                autocomplete: 'new-password',
-            },
-        });
-
-        const showPassword = h('div', {
-            staticClass: 'form-group mb-1',
-        }, [
-            h('b-form-checkbox', {
-                attrs: {
-                    switch: '',
+        const render = () => {
+            const password = buildFormInput({
+                validationResult: $v.value.password,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Password',
+                value: form.password,
+                change(input) {
+                    form.password = input;
                 },
-                model: {
-                    value: vm.form.passwordShow,
-                    callback(v: boolean) {
-                        vm.form.passwordShow = v;
-                    },
-                    expression: 'form.passwordShow',
+                props: {
+                    type: passwordShow.value ? 'text' : 'password',
+                    autocomplete: 'new-password',
                 },
-            } as VNodeData, [
-                'Password ',
-                (vm.form.passwordShow ? 'hide' : 'show'),
-            ]),
-        ]);
+            });
 
-        const submit = buildFormSubmit(vm, h, {
-            updateText: useAuthIlingo().getSync('form.update.button'),
-            createText: useAuthIlingo().getSync('form.create.button'),
-        });
+            const passwordRepeat = buildFormInput({
+                validationResult: $v.value.password_repeat,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Password repeat',
+                value: form.password_repeat,
+                change(input) {
+                    form.password_repeat = input;
+                },
+                props: {
+                    type: passwordShow.value ? 'text' : 'password',
+                    autocomplete: 'new-password',
+                },
+            });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+            const showPassword = buildFormInputCheckbox({
+                groupClass: 'mt-3',
+                labelContent: [
+                    'Password ',
+                    (passwordShow.value ? 'hide' : 'show'),
+                ],
+                value: passwordShow.value,
+                change(input) {
+                    passwordShow.value = input;
+                },
+            });
+
+            const submitButton = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button'),
+                createText: useAuthIlingo().getSync('form.create.button'),
+                submit,
+                isEditing: true,
+            });
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            password,
-            passwordRepeat,
-            showPassword,
-            submit,
-        ]);
+            }, [
+                password,
+                passwordRepeat,
+                showPassword,
+                submitButton,
+            ]);
+        };
+
+        return () => render();
     },
 });
 

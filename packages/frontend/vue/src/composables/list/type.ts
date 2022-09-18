@@ -13,7 +13,7 @@ import {
     ListSearchBuildOptionsInput,
 } from '@vue-layout/utils';
 import { BuildInput } from 'rapiq';
-import { Ref, ToRefs } from 'vue';
+import { Ref, Slots, ToRefs } from 'vue';
 
 export type ListBuilderComponentOptions<T extends Record<string, any>> = {
     header: ListHeaderBuildOptionsInput | boolean,
@@ -33,6 +33,7 @@ export type ListProps<T extends Record<string, any>> = {
 };
 
 export type ListBuilderContext<T extends Record<string, any>> = {
+    slots?: Slots,
     props: ToRefs<ListProps<T>>
     load: (input: BuildInput<T>) => Promise<CollectionResourceResponse<T>>,
     components: Partial<ListBuilderComponentOptions<T>>

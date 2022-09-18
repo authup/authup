@@ -5,23 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { maxLength, minLength, required } from 'vuelidate/lib/validators';
+import useVuelidate from '@vuelidate/core';
+import {
+    PropType, computed, defineComponent, h, reactive, ref, watch,
+} from 'vue';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Permission } from '@authelion/common';
-import { ComponentFormData, buildFormInput, buildFormSubmit } from '@vue-layout/utils';
-import { useHTTPClient } from '../../utils';
-import { initPropertiesFromSource } from '../../utils/proprety';
+import { buildFormInput, buildFormSubmit } from '@vue-layout/utils';
+import { initFormAttributesFromEntity } from '../../composables/form';
+import { createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
-type Properties = {
-    [key: string]: any;
-
-    entity?: Partial<Permission>,
-    translatorLocale?: string
-};
-
-export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any, Properties>({
+export const PermissionForm = defineComponent({
     name: 'PermissionForm',
     props: {
         entity: {
@@ -33,103 +29,69 @@ export const PermissionForm = Vue.extend<ComponentFormData<Permission>, any, any
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                id: '',
-            },
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
 
-            busy: false,
-        };
-    },
-    validations: {
-        form: {
+        const form = reactive({
+            id: '',
+        });
+
+        const $v = useVuelidate(form, {
             id: {
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(30),
             },
-        },
-    },
-    computed: {
-        isEditing() {
-            return this.entityProperty &&
-                Object.prototype.hasOwnProperty.call(this.entityProperty, 'id');
-        },
-        updatedAt() {
-            return this.entity ? this.entity.updated_at : undefined;
-        },
-    },
-    watch: {
-        updatedAt(val, oldVal) {
+        });
+
+        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+
+        watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                this.initFromProperties();
+                initFormAttributesFromEntity(form, props.entity);
             }
-        },
-    },
-    created() {
-        Promise.resolve()
-            .then(this.initFromProperties);
-    },
-    methods: {
-        initFromProperties() {
-            if (this.entity) {
-                initPropertiesFromSource<Permission>(this.entity, this.form);
-            }
-        },
-        async submit() {
-            if (this.busy || this.$v.$invalid) {
-                return;
-            }
-
-            this.message = null;
-            this.busy = true;
-
-            try {
-                let response;
-
-                if (this.isEditing) {
-                    response = await useHTTPClient().permission.update(this.entityProperty.id, this.form);
-                    this.$emit('updated', response);
-                } else {
-                    response = await useHTTPClient().permission.create(this.form);
-                    this.$emit('created', response);
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const id = buildFormInput(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'ID',
-            propName: 'id',
         });
 
-        const submit = buildFormSubmit(this, h, {
-            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
-            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
+        const submit = createSubmitHandler<Permission>({
+            props,
+            ctx,
+            busy,
+            form,
+            formIsValid: () => !$v.value.$invalid,
+            create: async (data) => useHTTPClient().permission.create({ id: data.id as string }),
+            update: async (id, data) => useHTTPClient().permission.update(id, { id: data.id as string }),
         });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+        const render = () => {
+            const id = buildFormInput({
+                validationResult: $v.value.id,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'ID',
+                value: form.id,
+                change(input) {
+                    form.id = input;
+                },
+            });
+
+            const submitButton = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
+                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                submit,
+            });
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            id,
-            submit,
-        ]);
+            }, [
+                id,
+                submitButton,
+            ]);
+        };
+
+        return () => render();
     },
 });

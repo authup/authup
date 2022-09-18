@@ -6,36 +6,29 @@
  */
 
 import {
+    MaybeRef,
+    SlotName,
+
+    buildFormInput,
+    buildFormInputCheckbox,
+    buildFormSubmit, buildItemActionToggle,
+} from '@vue-layout/utils';
+import useVuelidate from '@vuelidate/core';
+import {
     email, maxLength, minLength, required,
-} from 'vuelidate/lib/validators';
-import Vue, {
-    CreateElement, PropType, VNode, VNodeData,
+} from '@vuelidate/validators';
+import {
+    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, resolveComponent, watch,
 } from 'vue';
 
 import { Realm, User } from '@authelion/common';
-import {
-    ComponentFormData, ComponentFormMethods,
-    ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
-} from '@vue-layout/utils';
-import { useHTTPClient } from '../../utils';
-import { initPropertiesFromSource } from '../../utils/proprety';
+import { initFormAttributesFromEntity } from '../../composables/form';
+import { createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { RealmList } from '../realm';
 
-export type Properties = {
-    [key: string]: any;
-
-    entity?: Partial<User>,
-    realmId?: string,
-    translatorLocale?: string
-};
-
-type Data = {
-    displayNameChanged: boolean,
-} & ComponentFormData<User>;
-
-export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Properties>({
+export const UserForm = defineComponent({
     name: 'UserForm',
     props: {
         entity: {
@@ -55,23 +48,22 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                active: true,
-                name: '',
-                display_name: '',
-                email: '',
-                realm_id: '',
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const displayNameChanged = ref(false);
+        const form = reactive({
+            active: true,
+            name: '',
+            display_name: '',
+            email: '',
+            realm_id: '',
+        });
+
+        const $v = useVuelidate({
+            active: {
+
             },
-
-            busy: false,
-
-            displayNameChanged: false,
-        };
-    },
-    validations: {
-        form: {
             name: {
                 required,
                 minLength: minLength(3),
@@ -90,229 +82,168 @@ export const UserForm = Vue.extend<Data, ComponentFormMethods<User>, any, Proper
             realm_id: {
                 required,
             },
-        },
-    },
-    computed: {
-        isRealmLocked() {
-            return !!this.realmId;
-        },
-        isEditing() {
-            return typeof this.entity !== 'undefined' &&
-                Object.prototype.hasOwnProperty.call(this.entity, 'id');
-        },
-        isNameLocked() {
-            if (!this.entity) {
-                return false;
+        }, form);
+
+        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const isRealmLocked = computed(() => !!props.realmId);
+        const isNameLocked = computed(() => props.entity && props.entity.name_locked);
+
+        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+
+        function initForm() {
+            if (props.realmId) {
+                form.realm_id = props.realmId;
             }
 
-            return !!this.entity.name_locked;
-        },
-        updatedAt() {
-            return this.entity ? this.entity.updated_at : undefined;
-        },
-    },
-    watch: {
-        updatedAt(val, oldVal) {
-            if (val && val !== oldVal) {
-                this.initFromProperties();
-            }
-        },
-    },
-    created() {
-        this.initFromProperties();
-    },
-    methods: {
-        initFromProperties() {
-            if (this.realmId) {
-                this.form.realm_id = this.realmId;
-            }
-
-            if (this.entity) {
-                initPropertiesFromSource<User>(this.entity, this.form);
-            }
-        },
-        getModifiedFields() {
-            if (typeof this.entity === 'undefined') {
-                return Object.keys(this.form);
-            }
-
-            const fields : (keyof User)[] = [];
-
-            const keys : (keyof User)[] = Object.keys(this.form) as (keyof User)[];
-
-            for (let i = 0; i < keys.length; i++) {
-                if (
-                    Object.prototype.hasOwnProperty.call(this.form, keys[i]) &&
-                    this.entity[keys[i]] !== this.form[keys[i]]
-                ) {
-                    fields.push(keys[i]);
-                }
-            }
-
-            return fields;
-        },
-        async submit() {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-
-            try {
-                const fields = this.getModifiedFields();
-
-                if (fields.length > 0) {
-                    const properties : Record<string, any> = {};
-
-                    for (let i = 0; i < fields.length; i++) {
-                        properties[fields[i]] = this.form[fields[i]];
-                    }
-
-                    if (this.isEditing) {
-                        const user = await useHTTPClient().user.update(this.entity.id, { ...properties });
-
-                        this.$emit('updated', user);
-                    } else {
-                        const user = await useHTTPClient().user.create(properties);
-
-                        this.$emit('created', user);
-                    }
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
-        updateDisplayName(value: string) {
-            if (!this.displayNameChanged) {
-                this.form.display_name = value;
-            }
-        },
-        handleDisplayNameChanged(value: string) {
-            this.displayNameChanged = value.length !== 0;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const name = buildFormInput<User>(vm, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Name',
-            propName: 'name',
-            attrs: {
-                disabled: vm.isNameLocked,
-            },
-            domProps: {
-                disabled: vm.isNameLocked,
-            },
-            changeCallback(input) {
-                vm.updateDisplayName.call(null, input);
-            },
-        });
-
-        const displayName = buildFormInput<User>(vm, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Display Name',
-            propName: 'display_name',
-            changeCallback(input) {
-                vm.handleDisplayNameChanged.call(null, input);
-            },
-        });
-
-        const email = buildFormInput<User>(vm, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Email',
-            propName: 'email',
-            attrs: {
-                type: 'email',
-                placeholder: '...@...',
-            },
-        });
-
-        let activate = h();
-
-        if (vm.canManage) {
-            activate = h('div', {
-                staticClass: 'form-group mb-3',
-            }, [
-                h('b-form-checkbox', {
-                    attrs: {
-                        switch: '',
-                    },
-                    model: {
-                        value: vm.form.active,
-                        callback(v: boolean) {
-                            vm.form.active = v;
-                        },
-                        expression: 'form.active',
-                    },
-                } as VNodeData, [
-                    h('span', {
-                        class: {
-                            'text-warning': !vm.form.active,
-                            'text-success': vm.form.active,
-                        },
-                    }, [vm.form.active ? 'active' : 'inactive']),
-                ]),
-            ]);
+            initFormAttributesFromEntity(form, props.entity);
         }
 
-        const submit = buildFormSubmit(this, h, {
-            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
-            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
+        watch(updatedAt, (val, oldVal) => {
+            if (val && val !== oldVal) {
+                initForm();
+            }
         });
 
-        const leftColumn = h('div', { staticClass: 'col' }, [
-            name,
-            displayName,
-            email,
-            activate,
-            h('hr'),
-            submit,
-        ]);
+        initForm();
 
-        let rightColumn = h();
-        if (
-            !vm.isRealmLocked &&
-            vm.canManage
-        ) {
-            const realm = h(RealmList, {
-                scopedSlots: {
-                    [SlotName.ITEM_ACTIONS]: (
-                        props: ComponentListItemSlotProps<Realm>,
-                    ) => buildListItemToggleAction(vm.form, h, {
-                        propName: 'realm_id',
-                        item: props.item,
-                        busy: props.busy,
-                    }),
+        const submit = createSubmitHandler<User>({
+            props,
+            ctx,
+            busy,
+            form,
+            formIsValid: () => $v.value.$invalid,
+            create: async (data) => useHTTPClient().user.create(data),
+            update: async (id, data) => useHTTPClient().user.update(id, data),
+        });
+
+        const updateDisplayName = (value: string) => {
+            if (!displayNameChanged.value) {
+                form.display_name = value;
+            }
+        };
+
+        const handleDisplayNameChanged = (value: string) => {
+            displayNameChanged.value = value.length !== 0;
+        };
+        const render = () => {
+            const name = buildFormInput({
+                validationResult: $v.value.name,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Name',
+                value: form.name,
+                change(input) {
+                    form.name = input;
+                    updateDisplayName.call(null, input);
+                },
+                props: {
+                    disabled: isNameLocked.value,
                 },
             });
 
-            rightColumn = h('div', {
-                staticClass: 'col',
-            }, [
-                realm,
-            ]);
-        }
+            const displayName = buildFormInput({
+                validationResult: $v.value.display_name,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Display Name',
+                value: form.display_name,
+                change(input) {
+                    form.display_name = input;
+                    handleDisplayNameChanged.call(null, input);
+                },
+            });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+            const email = buildFormInput({
+                validationResult: $v.value.email,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Email',
+                value: form.email,
+                props: {
+                    type: 'email',
+                    placeholder: '...@...',
+                },
+                change(value) {
+                    form.email = value;
+                },
+            });
+
+            let activate : VNodeArrayChildren = [];
+
+            if (props.canManage) {
+                activate = [
+                    buildFormInputCheckbox({
+                        groupClass: 'form-switch mt-3',
+                        labelContent: h('span', {
+                            class: {
+                                'text-warning': !form.active,
+                                'text-success': form.active,
+                            },
+                        }, [form.active ? 'active' : 'inactive']),
+                        value: form.active,
+                        change(input) {
+                            form.active = input;
+                        },
+                    }),
+                ];
+            }
+
+            const submitForm = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
+                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                submit,
+                busy,
+                isEditing: isEditing.value,
+                validationRulesResult: $v.value,
+            });
+
+            const leftColumn = h('div', { class: 'col' }, [
+                name,
+                displayName,
+                email,
+                activate,
+                h('hr'),
+                submitForm,
+            ]);
+
+            let rightColumn : VNodeArrayChildren = [];
+            if (
+                !isRealmLocked.value &&
+                props.canManage
+            ) {
+                const realm = h(RealmList, {}, {
+                    [SlotName.ITEM_ACTIONS]: (props: { item: Realm, busy: MaybeRef<boolean>}) => buildItemActionToggle({
+                        value: props.item.id,
+                        currentValue: form.realm_id,
+                        busy: props.busy,
+                        change(value) {
+                            form.realm_id = value as string;
+                        },
+                    }),
+
+                });
+
+                rightColumn = [
+                    h('div', {
+                        class: 'col',
+                    }, [
+                        realm,
+                    ]),
+                ];
+            }
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            h('div', { staticClass: 'row' }, [
-                leftColumn,
-                rightColumn,
-            ]),
-        ]);
+            }, [
+                h('div', { class: 'row' }, [
+                    leftColumn,
+                    rightColumn,
+                ]),
+            ]);
+        };
+
+        return () => render();
     },
 });
 

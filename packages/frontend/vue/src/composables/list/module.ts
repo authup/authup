@@ -34,7 +34,7 @@ export function useListBuilder<T extends Record<string, any>>(
     });
 
     async function load(targetMeta?: Partial<PaginationMeta>) {
-        const queryMeta : Partial<PaginationMeta> = targetMeta || {};
+        const queryMeta : Partial<PaginationMeta> = targetMeta || meta.value;
 
         const response = await context.load(mergeDeep(
             context.props.query.value,
@@ -66,7 +66,7 @@ export function useListBuilder<T extends Record<string, any>>(
         await load({ offset: 0 });
     });
 
-    function build() : VNode {
+    function build() {
         return buildList({
             ...buildListComponentOptions(context.props, context.components),
             load,
@@ -76,6 +76,7 @@ export function useListBuilder<T extends Record<string, any>>(
             change(value) {
                 q.value = value;
             },
+            slotItems: context.slots || {},
         });
     }
 

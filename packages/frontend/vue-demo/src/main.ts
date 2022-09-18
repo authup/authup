@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { VNode } from 'vue';
-import { BootstrapVue } from 'bootstrap-vue';
-import Vuelidate from 'vuelidate';
+import { createApp } from 'vue';
+import Utils, { Config, Preset } from '@vue-layout/utils';
+import BootstrapVue3 from 'bootstrap-vue-3';
 import AuthVue, { setHTTPClient } from '@authelion/vue';
 import { Client } from '@hapic/oauth2';
 import { useAPI } from './api';
@@ -15,7 +15,7 @@ import { useAPI } from './api';
 // CSS
 import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 import '../assets/css/index.css';
 import '../assets/css/bootstrap-override.css';
 
@@ -41,19 +41,20 @@ import Dev from './components/index.vue';
 
     setHTTPClient(api);
 
-    Vue.use(BootstrapVue);
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    Vue.use(Vuelidate);
-
-    Vue.use(AuthVue, {
-        httpClient: api,
-    });
-
-    Vue.config.productionTip = false;
-
-    new Vue({
-        render: (h): VNode => h(Dev),
-    }).$mount('#app');
+    createApp(Dev)
+        .use(Utils, {
+            preset: {
+                [Preset.BOOTSTRAP_V5]: {
+                    enabled: true,
+                },
+                [Preset.FONT_AWESOME]: {
+                    enabled: true,
+                },
+            },
+        } as Partial<Config>)
+        .use(AuthVue, {
+            httpClient: api,
+        })
+        .use(BootstrapVue3)
+        .mount('#app');
 })();

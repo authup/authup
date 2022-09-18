@@ -7,5 +7,5 @@
 
 import { helpers } from '@vuelidate/validators';
 
-export const alphaNumHyphenUnderscore = helpers.regex('alphaNumHyphenUnderscore', /^[a-z0-9-_]*$/);
-export const alphaWithUpperNumHyphenUnderScore = helpers.regex('alphaWithUpperNumHyphenUnderscore', /^[a-zA-Z0-9-_]*$/);
+export const alphaNumHyphenUnderscore = helpers.regex(/^[a-z0-9-_]*$/);
+export const alphaWithUpperNumHyphenUnderScore = helpers.regex(/^[a-zA-Z0-9-_]*$/);

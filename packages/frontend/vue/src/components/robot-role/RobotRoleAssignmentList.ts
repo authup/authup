@@ -5,38 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, VNode } from 'vue';
+import { defineComponent, h } from 'vue';
 import { Role } from '@authelion/common';
 import { SlotName } from '@vue-layout/utils';
 import { RoleList } from '../role';
-import { RobotRoleAssignmentListItemActions, RobotRoleListItemActionsProperties } from './RobotRoleAssignmentListItemActions';
+import { RobotRoleAssignmentListItemActions } from './RobotRoleAssignmentListItemActions';
 
-export type Properties = {
-    [key: string]: any;
-
-    entityId: string
-};
-
-export const RobotRoleAssignmentList = Vue.extend<any, any, any, Properties>({
+export const RobotRoleAssignmentList = defineComponent({
     name: 'RobotRoleList',
     props: {
         entityId: String,
     },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const buildProps = (item: Role) : RobotRoleListItemActionsProperties => ({
-            robotId: vm.entityId,
-            roleId: item.id,
-        });
-
-        return h(RoleList, {
-            scopedSlots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps) => h(RobotRoleAssignmentListItemActions, {
-                    props: buildProps(slotProps.item),
-                }),
-            },
+    setup(props) {
+        return () => h(RoleList, {}, {
+            [SlotName.ITEM_ACTIONS]: (slotProps: { item: Role }) => h(
+                RobotRoleAssignmentListItemActions,
+                {
+                    robotId: props.entityId,
+                    roleId: slotProps.item.id,
+                },
+            ),
         });
     },
 });

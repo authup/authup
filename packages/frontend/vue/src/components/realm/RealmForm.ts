@@ -4,32 +4,25 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required,
-} from 'vuelidate/lib/validators';
-import Vue, { CreateElement, PropType, VNode } from 'vue';
+} from '@vuelidate/validators';
+import {
+    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
+} from 'vue';
 import { Realm, createNanoID } from '@authelion/common';
 import {
-    ComponentFormData,
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/utils';
-import { alphaNumHyphenUnderscore, initPropertiesFromSource, useHTTPClient } from '../../utils';
+import { initFormAttributesFromEntity } from '../../composables/form';
+import { alphaNumHyphenUnderscore, createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
-type Properties = {
-    entity?: Realm,
-    translatorLocale?: string
-};
-
-export const RealmForm = Vue.extend<
-ComponentFormData<Realm>,
-any,
-any,
-Properties
->({
+export const RealmForm = defineComponent({
     name: 'RealmForm',
     props: {
         entity: {
@@ -42,20 +35,16 @@ Properties
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                id: '',
-                name: '',
-                description: '',
-            },
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const form = reactive({
+            id: '',
+            name: '',
+            description: '',
+        });
 
-            busy: false,
-            message: null,
-        };
-    },
-    validations: {
-        form: {
+        const $v = useVuelidate({
             id: {
                 required,
                 alphaNumHyphenUnderscore,
@@ -71,151 +60,126 @@ Properties
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
-        },
-    },
-    computed: {
-        isEditing() {
-            return this.entity &&
-                Object.prototype.hasOwnProperty.call(this.entity, 'id');
-        },
-        isIDEmpty() {
-            return !this.form.id || this.form.id.length === 0;
-        },
-        updatedAt() {
-            return this.entity ? this.entity.updated_at : undefined;
-        },
-    },
-    watch: {
-        updatedAt(val, oldVal) {
-            if (val && val !== oldVal) {
-                this.initFromProperties();
+        }, form);
+
+        const isIDEmpty = computed(() => !form.id || form.id.length === 0);
+        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+
+        const generateID = () => {
+            form.id = createNanoID();
+        };
+
+        function initForm() {
+            initFormAttributesFromEntity(form, props.entity);
+
+            if (form.id.length === 0) {
+                generateID();
             }
-        },
-    },
-    created() {
-        this.initFromProperties();
-    },
-    methods: {
-        initFromProperties() {
-            if (this.entity) {
-                initPropertiesFromSource<Realm>(this.entity, this.form);
-            }
-
-            if (this.form.id.length === 0) {
-                this.generateID();
-            }
-        },
-        async submit() {
-            if (this.busy || this.$v.$invalid) {
-                return;
-            }
-
-            this.busy = true;
-
-            try {
-                let response;
-                if (this.isEditing) {
-                    response = await useHTTPClient().realm.update(this.entity.id, this.form);
-
-                    this.$emit('updated', response);
-                } else {
-                    response = await useHTTPClient().realm.create(this.form);
-
-                    this.$emit('created', response);
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
-
-        generateID() {
-            this.form.id = createNanoID();
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const id = buildFormInput<Realm>(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'ID',
-            propName: 'id',
-            domProps: {
-                disabled: vm.isEditing,
-            },
-            attrs: {
-                disabled: vm.isEditing,
-            },
-        });
-
-        let idHint = h();
-
-        if (!this.isEditing) {
-            idHint = h('div', {
-                staticClass: 'mb-3',
-            }, [
-                h('button', {
-                    staticClass: 'btn btn-xs',
-                    class: {
-                        'btn-dark': this.isIDEmpty,
-                        'btn-warning': !this.isIDEmpty,
-                    },
-                    on: {
-                        click($event: any) {
-                            $event.preventDefault();
-
-                            vm.generateID.call(null);
-                        },
-                    },
-                }, [
-                    h('i', { staticClass: 'fa fa-wrench' }),
-                    ' ',
-                    'Generate',
-                ]),
-            ]);
         }
 
-        const name = buildFormInput<Realm>(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Name',
-            propName: 'name',
+        watch(updatedAt, (val, oldVal) => {
+            if (val && val !== oldVal) {
+                initForm();
+            }
         });
 
-        const description = buildFormTextarea<Realm>(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Description',
-            propName: 'description',
-            attrs: {
-                rows: 4,
-            },
+        initForm();
+
+        const submit = createSubmitHandler<Realm>({
+            props,
+            ctx,
+            busy,
+            form,
+            formIsValid: () => !$v.value.$invalid,
+            create: async (data) => useHTTPClient().realm.create(data),
+            update: async (id, data) => useHTTPClient().realm.update(id, data),
         });
 
-        const submit = buildFormSubmit(this, h, {
-            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
-            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
-        });
+        const render = () => {
+            const id = buildFormInput({
+                validationResult: $v.value.id,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'ID',
+                value: form.id,
+                change(input) {
+                    form.id = input;
+                },
+                props: {
+                    disabled: props.entity && props.entity.id,
+                },
+            });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+            let idHint : VNodeArrayChildren = [];
+
+            if (!props.entity || !props.entity.id) {
+                idHint = [
+                    h('div', {
+                        class: 'mb-3',
+                    }, [
+                        h('button', {
+                            class: ['btn btn-xs', {
+                                'btn-dark': isIDEmpty.value,
+                                'btn-warning': !isIDEmpty.value,
+                            }],
+                            onClick($event: any) {
+                                $event.preventDefault();
+
+                                generateID.call(null);
+                            },
+                        }, [
+                            h('i', { class: 'fa fa-wrench' }),
+                            ' ',
+                            'Generate',
+                        ]),
+                    ]),
+                ];
+            }
+
+            const name = buildFormInput({
+                validationResult: $v.value.name,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Name',
+                value: form.name,
+                change(input) {
+                    form.name = input;
+                },
+            });
+
+            const description = buildFormTextarea({
+                validationResult: $v.value.description,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Description',
+                value: form.description,
+                change(input) {
+                    form.description = input;
+                },
+                props: {
+                    rows: 4,
+                },
+            });
+
+            const submitButton = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
+                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                submit,
+            });
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            id,
-            idHint,
-            h('hr'),
-            name,
-            h('hr'),
-            description,
-            h('hr'),
-            submit,
-        ]);
+            }, [
+                id,
+                idHint,
+                h('hr'),
+                name,
+                h('hr'),
+                description,
+                h('hr'),
+                submitButton,
+            ]);
+        };
     },
 });

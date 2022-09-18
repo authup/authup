@@ -13,6 +13,7 @@ import {
 import { IdentityProviderRole, Role } from '@authelion/common';
 import { buildFormInput } from '@vue-layout/utils';
 import { initFormAttributesFromEntity } from '../../composables/form';
+import { buildVuelidateTranslator } from '../../language/utils';
 import { useHTTPClient } from '../../utils';
 
 export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
@@ -25,6 +26,10 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
         entityId: {
             type: String,
             required: true,
+        },
+        translatorLocale: {
+            type: String,
+            default: undefined,
         },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
@@ -44,13 +49,13 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
             external_id: '',
         });
 
-        const $v = useVuelidate(form, {
+        const $v = useVuelidate({
             external_id: {
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
-        });
+        }, form);
 
         const isExternalIDDefined = computed(() => form.external_id && form.external_id.length > 0);
 
@@ -140,6 +145,7 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
                 busy.value = false;
                 loaded.value = true;
             });
+
         const render = () => {
             let displayButton : VNodeArrayChildren = [];
 
@@ -236,22 +242,24 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
             let renderForm : VNodeArrayChildren = [];
 
             if (display.value) {
-                renderForm = [h('div', {
-                    staticClass: 'mt-2',
-                }, [
-                    buildFormInput({
-                        labelContent: 'External ID',
-                        value: $v.value.external_id.$model,
-                        change(input) {
-                            $v.value.external_id.$model = input;
-                        },
-                        validationRulesResult: $v.value.external_id,
-                    }),
-                ]),
+                renderForm = [
+                    h('div', {
+                        class: 'mt-2',
+                    }, [
+                        buildFormInput({
+                            labelContent: 'External ID',
+                            value: form.external_id,
+                            change(input) {
+                                form.external_id = input;
+                            },
+                            validationResult: $v.value.external_id,
+                            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        }),
+                    ]),
                 ];
             }
 
-            return h('div', { staticClass: 'list-item flex-column' }, [
+            return h('div', { class: 'list-item flex-column' }, [
                 listBar,
                 renderForm,
             ]);

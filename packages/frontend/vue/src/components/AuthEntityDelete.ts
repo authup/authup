@@ -5,11 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, {
-    CreateElement, PropType, VNode, VNodeData,
+import { VNodeProperties } from '@vue-layout/utils';
+import {
+    DefineComponent,
+    PropType,
+    VNodeArrayChildren,
+    VNodeProps,
+    defineComponent,
+    h,
+    mergeProps,
+    ref,
+    resolveComponent,
 } from 'vue';
-import { BvMsgBoxData, BvMsgBoxOptions } from 'bootstrap-vue';
-import { mergeDeep, useHTTPClientAPI } from '@authelion/common';
+import { useHTTPClientAPI } from '@authelion/common';
 import { useHTTPClient } from '../utils';
 import { useAuthIlingo } from '../language/singleton';
 
@@ -19,26 +27,13 @@ enum ElementType {
     DROP_DOWN_ITEM = 'dropDownItem',
 }
 
-export type AuthEntityDeleteProperties = {
-    [key: string]: any,
-    elementIcon: string,
-    withText: boolean,
-    elementType: `${ElementType}`,
-    entityId: string,
-    entityType: string,
-    hint?: string,
-    locale?: string,
-    options?: BvMsgBoxOptions
-};
-
-export const AuthEntityDelete = Vue.extend<
-any,
-any,
-any,
-AuthEntityDeleteProperties
->({
+export const AuthEntityDelete = defineComponent({
     name: 'AuthEntityDelete',
     props: {
+        class: {
+            type: String,
+            default: '',
+        },
         elementIcon: {
             type: String,
             default: 'fa-solid fa-trash',
@@ -54,9 +49,11 @@ AuthEntityDeleteProperties
 
         entityId: {
             type: String,
+            required: true,
         },
         entityType: {
             type: String,
+            required: true,
         },
 
         hint: {
@@ -68,126 +65,140 @@ AuthEntityDeleteProperties
             default: undefined,
         },
         options: {
-            type: Object as PropType<BvMsgBoxOptions>,
-            default: undefined,
+            type: Object as PropType<VNodeProps>,
+            default: () => ({}),
         },
     },
-    data() {
-        return {
-            busy: false,
-        };
-    },
-    methods: {
-        async delete() {
-            if (this.busy) return;
+    emits: ['canceled', 'deleted', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const modalRef = ref<null | DefineComponent>(null);
 
-            const domainApi = useHTTPClientAPI(useHTTPClient(), this.entityType);
+        const submit = async () => {
+            if (busy.value) return;
+
+            const domainApi = useHTTPClientAPI(useHTTPClient(), props.entityType);
             if (!domainApi) {
                 return;
             }
 
-            this.busy = true;
+            busy.value = true;
 
-            const h = this.$createElement;
+            try {
+                const response = await domainApi.delete(props.entityId);
+                response.id = props.entityId;
+                ctx.emit('deleted', response);
+            } catch (e) {
+                ctx.emit('failed', e);
+            }
 
-            let { hint } = this;
-            if (!hint) {
+            busy.value = false;
+        };
+
+        const show = async () => {
+            if (!modalRef.value) {
+                return;
+            }
+
+            modalRef.value.show();
+        };
+
+        const renderModal = () => {
+            const modalComponent = resolveComponent('b-modal');
+
+            let hint;
+            if (props.hint) {
+                hint = props.hint;
+            } else {
                 hint = useAuthIlingo()
-                    .getSync('app.delete.hint', this.locale);
+                    .getSync('app.delete.hint', props.locale);
             }
 
             const message = h(
                 'div',
                 {
-                    staticClass: 'alert alert-sm alert-danger mb-0',
+                    class: 'alert alert-sm alert-danger mb-0',
                 },
                 [hint],
             );
 
-            const confirmModal : Promise<BvMsgBoxData> = this.$bvModal.msgBoxConfirm(message, mergeDeep(
-                {
+            return h(
+                modalComponent,
+                mergeProps({
+                    ref: modalRef,
                     size: 'md',
                     buttonSize: 'xs',
                     okTitle: useAuthIlingo()
-                        .getSync('app.delete.okTitle', this.locale),
+                        .getSync('app.delete.okTitle', props.locale),
                     cancelTitle: useAuthIlingo()
-                        .getSync('app.delete.cancelTitle', this.locale),
-                },
-                this.options || {},
-            ));
+                        .getSync('app.delete.cancelTitle', props.locale),
+                    onOk() {
+                        return submit();
+                    },
+                    onCancel() {
+                        ctx.emit('canceled');
+                    },
+                }, props.options),
+                {
+                    default: () => message,
+                } as any,
+            );
+        };
 
-            try {
-                const value = await confirmModal;
-                if (value) {
-                    const response = await domainApi.delete(this.entityId);
-                    response.id = this.entityId;
-                    this.$emit('deleted', response);
-                } else {
-                    this.$emit('canceled');
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
+        const render = () => {
+            let tag = 'button';
+            const data : VNodeProperties = {};
+
+            switch (props.elementType) {
+                case ElementType.LINK:
+                    tag = 'a';
+                    break;
+                case ElementType.DROP_DOWN_ITEM:
+                    tag = 'b-dropdown-item';
+                    break;
             }
 
-            this.busy = false;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
+            let icon : VNodeArrayChildren = [];
+            if (props.elementIcon) {
+                icon = [
+                    h('i', {
+                        class: [props.elementIcon, {
+                            'pr-1': props.withText,
+                        }],
+                    }),
+                ];
+            }
 
-        let tag = 'button';
-        const data : VNodeData = {};
+            let text : VNodeArrayChildren = [];
+            if (props.withText) {
+                text = [
+                    useAuthIlingo()
+                        .getSync('app.delete.button', props.locale),
+                ];
+            }
 
-        switch (vm.elementType) {
-            case ElementType.LINK:
-                tag = 'a';
-                break;
-            case ElementType.DROP_DOWN_ITEM:
-                tag = 'b-dropdown-item';
-                break;
-        }
+            return [
+                h(
+                    tag,
+                    mergeProps({
+                        disabled: busy.value,
+                        class: props.class,
+                        onClick($event: any) {
+                            $event.preventDefault();
 
-        let icon = h('');
-        if (vm.elementIcon) {
-            icon = h('i', {
-                staticClass: vm.elementIcon,
-                class: {
-                    'pr-1': vm.withText,
-                },
-            });
-        }
+                            return show.apply(null);
+                        },
+                    }, data),
+                    [
+                        icon,
+                        text,
+                    ],
+                ),
+                renderModal(),
+            ];
+        };
 
-        let text : string | VNode = h('');
-        if (vm.withText) {
-            text = useAuthIlingo()
-                .getSync('app.delete.button', this.locale);
-        }
-
-        return h(
-            tag,
-            mergeDeep({
-                domProps: {
-                    disabled: vm.busy,
-                },
-                props: {
-                    disabled: vm.busy,
-                },
-                on: {
-                    click($event: any) {
-                        $event.preventDefault();
-
-                        return vm.delete.apply(null);
-                    },
-                },
-            }, data),
-            [
-                icon,
-                text,
-            ],
-        );
+        return () => render();
     },
 });
 

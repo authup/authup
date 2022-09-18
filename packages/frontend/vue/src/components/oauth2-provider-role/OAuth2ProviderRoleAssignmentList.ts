@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { VNode, defineComponent, h } from 'vue';
+import { defineComponent, h } from 'vue';
 import { Role } from '@authelion/common';
 import { SlotName } from '@vue-layout/utils';
 import { OAuth2ProviderRoleAssignmentListItem } from './OAuth2ProviderRoleAssignmentListItem';
@@ -23,13 +23,14 @@ export const OAuth2ProviderRoleAssignmentList = defineComponent({
         return () => h(RoleList, {
             withHeader: false,
         }, {
-            [SlotName.ITEMS]: (slotProps: { items: Role[] }) => slotProps.items.map((item: Role) => h(OAuth2ProviderRoleAssignmentListItem, {
-                key: item.id,
-                props: (item: Role) => ({
+            [SlotName.ITEMS]: (slotProps: { items: Role[] }) => slotProps.items.map((item: Role) => h(
+                OAuth2ProviderRoleAssignmentListItem,
+                {
+                    key: item.id,
                     entityId: props.entityId,
                     role: item,
-                }),
-            })),
+                },
+            )),
         });
     },
 });

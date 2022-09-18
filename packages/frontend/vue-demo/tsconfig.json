@@ -2,11 +2,10 @@
     "extends": "../../../tsconfig.json",
     "compilerOptions": {
         "lib": [
-            "ES6",
-            "dom",
-            "dom.iterable",
-            "scripthost"
+            "ESNext",
+            "dom"
         ],
+        "module": "ESNext",
         "paths": {
             "@authelion/common": ["./packages/shared/common/src"],
             "@authelion/vue": ["./packages/frontend/vue"]

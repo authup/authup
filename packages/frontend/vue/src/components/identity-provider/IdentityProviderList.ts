@@ -62,7 +62,7 @@ export const IdentityProviderList = defineComponent({
                     },
                 },
                 noMore: {
-                    textContent: 'No more Identity-providers available...',
+                    textContent: 'No more identity-providers available...',
                 },
             },
         });

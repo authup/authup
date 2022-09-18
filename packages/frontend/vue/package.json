@@ -52,6 +52,7 @@
         "@rollup/plugin-commonjs": "^22.0.2",
         "@rollup/plugin-node-resolve": "^14.1.0",
         "@rollup/plugin-replace": "^4.0.0",
+        "@vue-layout/utils": "^2.0.0-alpha.10",
         "@vuelidate/core": "^2.0.0-alpha.44",
         "@vuelidate/validators": "^2.0.0-alpha.31",
         "cross-env": "^7.0.3",
@@ -66,12 +67,11 @@
         "vue": "^3.2.39"
     },
     "dependencies": {
-        "@vue-layout/utils": "^2.0.0-alpha.2",
-        "nanoid": "^3.3.4",
         "regenerator-runtime": "^0.13.9"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
+        "@vue-layout/utils": "^2.0.0-alpha.10",
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "ilingo": "^2.x",

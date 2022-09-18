@@ -43,7 +43,7 @@ export const PermissionList = defineComponent({
         },
     },
     setup(props) {
-        const { build, load } = useListBuilder<Permission>({
+        const { build } = useListBuilder<Permission>({
             props: toRefs(props),
             load: (buildInput) => useHTTPClient().permission.getMany(buildInput),
             components: {

@@ -6,7 +6,7 @@
  */
 
 import { PropType, defineComponent, toRefs } from 'vue';
-import { IdentityProvider } from '@authelion/common';
+import { Realm } from '@authelion/common';
 import { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
@@ -15,7 +15,7 @@ export const RealmList = defineComponent({
     name: 'RealmList',
     props: {
         query: {
-            type: Object as PropType<BuildInput<IdentityProvider>>,
+            type: Object as PropType<BuildInput<Realm>>,
             default() {
                 return {};
             },
@@ -41,10 +41,11 @@ export const RealmList = defineComponent({
             default: true,
         },
     },
-    setup(props) {
-        const { build } = useListBuilder<IdentityProvider>({
+    setup(props, { slots }) {
+        const { build } = useListBuilder<Realm>({
+            slots,
             props: toRefs(props),
-            load: (buildInput) => useHTTPClient().identityProvider.getMany(buildInput),
+            load: (buildInput) => useHTTPClient().realm.getMany(buildInput),
             components: {
                 header: {
                     title: {
