@@ -5,25 +5,28 @@ on:
         branches:
             - master
 
+env:
+    PRIMARY_NODE_VERSION: 18
+
 jobs:
-    deploy:
+    install:
+        name: Checkout and Install
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: 16
+            - name: Checkout
+              uses: actions/checkout@v3
 
             - name: Install
-              run: cd ./docs && npm ci
+              uses: ./.github/actions/install
+              with:
+                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
             - name: Build
-              run: cd ./docs && npm run build
+              run: npm run docs:build
 
             - name: CNAME
               run: |
-                    cd ./docs/src/.vitepress/dist/
+                    cd ./docs/.vitepress/dist/
                     touch CNAME
                     echo "authelion.net" > CNAME
 
@@ -31,4 +34,4 @@ jobs:
               uses: peaceiris/actions-gh-pages@v3
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_dir: ./docs/src/.vitepress/dist
+                  publish_dir: ./docs/.vitepress/dist

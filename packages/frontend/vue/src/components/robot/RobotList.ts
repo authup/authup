@@ -43,9 +43,10 @@ export const RobotList = defineComponent({
             default: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         const { build } = useListBuilder<Robot>({
             props: toRefs(props),
+            slots,
             load: (buildInput) => useHTTPClient().robot.getMany(buildInput),
             components: {
                 header: {

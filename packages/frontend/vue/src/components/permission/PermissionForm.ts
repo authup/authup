@@ -45,6 +45,7 @@ export const PermissionForm = defineComponent({
             },
         });
 
+        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         watch(updatedAt, (val, oldVal) => {
@@ -78,6 +79,8 @@ export const PermissionForm = defineComponent({
                 updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
                 createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
                 submit,
+                busy,
+                isEditing,
             });
 
             return h('form', {

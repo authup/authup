@@ -114,6 +114,7 @@ export const OAuth2ProviderForm = defineComponent({
             },
         }, form);
 
+        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
@@ -311,6 +312,8 @@ export const OAuth2ProviderForm = defineComponent({
                 updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
                 createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
                 submit,
+                busy,
+                isEditing,
             });
 
             return h('form', {

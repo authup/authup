@@ -33,6 +33,10 @@
     "engines": {
         "node": ">=14.0.0"
     },
+    "dependencies": {
+        "vitepress": "^1.0.0-alpha.15",
+        "vue": "^3.2.39"
+    },
     "devDependencies": {
         "@tada5hi/eslint-config-vue-typescript": "^1.0.7",
         "@types/jest": "^27.5.0",
@@ -52,6 +56,9 @@
         "test": "lerna run test",
         "pub": "npm run build && lerna publish",
         "lint": "eslint --ext .ts ./packages/",
-        "lint:fix": "npm run lint -- --fix"
+        "lint:fix": "npm run lint -- --fix",
+        "docs:dev": "vitepress dev docs --temp .temp",
+        "docs:build": "vitepress build docs --temp .temp",
+        "docs:help": "vitepress --help"
     }
 }

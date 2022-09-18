@@ -45,9 +45,10 @@ export const IdentityProviderList = defineComponent({
             default: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         const { build } = useListBuilder<IdentityProvider>({
             props: toRefs(props),
+            slots,
             load: (buildInput) => useHTTPClient().identityProvider.getMany(buildInput),
             components: {
                 header: {

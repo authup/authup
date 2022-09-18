@@ -43,9 +43,10 @@ export const RoleList = defineComponent({
             default: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         const { build } = useListBuilder<Role>({
             props: toRefs(props),
+            slots,
             load: (buildInput) => useHTTPClient().role.getMany(buildInput),
             components: {
                 header: {

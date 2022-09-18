@@ -80,6 +80,7 @@ export const RobotForm = defineComponent({
             },
         }, form);
 
+        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const isRealmLocked = computed(() => !!props.realmId);
         const isSecretHashed = computed(() => props.entity && props.entity.secret === form.secret && form.secret.startsWith('$'));
@@ -196,6 +197,7 @@ export const RobotForm = defineComponent({
                 createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
+                isEditing,
             });
 
             const leftColumn = h('div', { class: 'col' }, [
