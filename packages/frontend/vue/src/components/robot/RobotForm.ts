@@ -5,40 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, {
-    CreateElement, PropType, VNode,
+import useVuelidate from '@vuelidate/core';
+import {
+    PropType,
+    VNodeArrayChildren,
+    computed,
+    defineComponent,
+    h,
+    reactive,
+    ref,
+    toRef, watch,
 } from 'vue';
 import {
     maxLength, minLength, required,
-} from 'vuelidate/lib/validators';
+} from '@vuelidate/validators';
 import { Realm, Robot, createNanoID } from '@authelion/common';
 import {
-    ComponentFormData, ComponentListItemSlotProps, SlotName, buildFormInput, buildFormSubmit, buildListItemToggleAction,
+    MaybeRef,
+    SlotName,
+    buildFormInput,
+    buildFormSubmit, buildItemActionToggle,
 } from '@vue-layout/utils';
+import { initFormAttributesFromEntity } from '../../composables/form';
 import {
+    alphaWithUpperNumHyphenUnderScore,
+    createSubmitHandler,
     useHTTPClient,
 } from '../../utils';
-import { alphaWithUpperNumHyphenUnderScore } from '../../utils/vuelidate';
-import { initPropertiesFromSource } from '../../utils/proprety';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { RealmList } from '../realm';
 
-type Properties = {
-    [key: string]: any;
-
-    name?: string,
-    entity?: Robot,
-    translatorLocale?: string
-};
-
-// Data, Methods, Computed, Props
-export const RobotForm = Vue.extend<
-ComponentFormData<Robot>,
-any,
-any,
-Properties
->({
+export const RobotForm = defineComponent({
     name: 'RobotForm',
     props: {
         name: {
@@ -58,19 +56,16 @@ Properties
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                name: '',
-                realm_id: '',
-                secret: '',
-            },
-            busy: false,
-            loaded: false,
-        };
-    },
-    validations: {
-        form: {
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const form = reactive({
+            name: '',
+            realm_id: '',
+            secret: '',
+        });
+
+        const $v = useVuelidate({
             name: {
                 alphaWithUpperNumHyphenUnderScore,
                 minLength: minLength(3),
@@ -83,221 +78,177 @@ Properties
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
-        },
-    },
-    computed: {
-        isNameFixed() {
-            return !!this.name &&
-                this.name.length > 0;
-        },
-        isEditing() {
-            return this.entity &&
-                Object.prototype.hasOwnProperty.call(this.entity, 'id');
-        },
-        isRealmLocked() {
-            return !!this.realmId;
-        },
-        isSecretEmpty() {
-            return !this.form.secret || this.form.secret.length === 0;
-        },
-        isSecretHashed() {
-            return this.entity &&
-                this.entity.secret === this.form.secret &&
-                this.form.secret.startsWith('$');
-        },
-        updatedAt() {
-            return this.entity ? this.entity.updated_at : undefined;
-        },
-    },
-    watch: {
-        updatedAt(val, oldVal) {
-            if (val && val !== oldVal) {
-                this.initFromProperties();
-            }
-        },
-    },
-    created() {
-        Promise.resolve()
-            .then(this.initFromProperties);
-    },
-    methods: {
-        initFromProperties() {
-            if (this.name) {
-                this.form.name = this.name;
+        }, form);
+
+        const isNameFixed = computed(() => !!props.name && props.name.length > 0);
+        const isRealmLocked = computed(() => !!props.realmId);
+        const isSecretHashed = computed(() => props.entity && props.entity.secret === form.secret && form.secret.startsWith('$'));
+        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+
+        const generateSecret = () => {
+            form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
+        };
+
+        function initForm() {
+            if (props.name) {
+                form.name = props.name;
             }
 
-            if (this.realmId) {
-                this.form.realm_id = this.realmId;
+            if (props.realmId) {
+                form.realm_id = props.realmId;
             }
 
-            if (this.entity) {
-                initPropertiesFromSource<Robot>(this.entity, this.form);
+            initFormAttributesFromEntity(form, props.entity);
+
+            if (form.secret.length === 0) {
+                generateSecret();
             }
-
-            if (this.form.secret.length === 0) {
-                this.generateSecret();
-            }
-        },
-        generateSecret() {
-            this.form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
-        },
-
-        async submit() {
-            if (this.busy || this.$v.$invalid) return;
-
-            this.busy = true;
-
-            try {
-                let response;
-
-                if (this.isEditing) {
-                    const { secret, ...form } = this.form;
-
-                    response = await useHTTPClient().robot.update(this.entity.id, {
-                        ...form,
-                        ...(this.isSecretHashed ? { } : { secret }),
-                    });
-
-                    this.$emit('updated', response);
-                } else {
-                    response = await useHTTPClient().robot.create({
-                        ...this.form,
-                    });
-
-                    this.$emit('created', response);
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
-        handleSecretChanged() {
-            this.secretHashed = this.entity && this.form.secret === this.entity.secret;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const name = buildFormInput(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Name',
-            propName: 'name',
-            domProps: {
-                disabled: vm.isNameFixed,
-            },
-        });
-
-        let id = h();
-
-        if (vm.entity) {
-            id = h('div', {
-                staticClass: 'form-group',
-            }, [
-                h('label', ['ID']),
-                h('input', {
-                    attrs: {
-                        disabled: true,
-                        type: 'text',
-                        placeholder: '...',
-                    },
-                    domProps: {
-                        disabled: true,
-                        value: vm.entity.id,
-                    },
-                    staticClass: 'form-control',
-                }),
-            ]);
         }
 
-        const secret = buildFormInput(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: [
-                'Secret',
-                vm.isSecretHashed ? h('span', {
-                    staticClass: 'text-danger font-weight-bold pl-1',
-                }, [
-                    'Hashed',
-                    ' ',
-                    h('i', { staticClass: 'fa fa-exclamation-triangle pl-1' }),
-                ]) : '',
-            ],
-            propName: 'secret',
-            changeCallback: (input: string) => vm.handleSecretChanged.call(null, input),
+        watch(updatedAt, (val, oldVal) => {
+            if (val && val !== oldVal) {
+                initForm();
+            }
         });
 
-        const secretInfo = h('div', [
-            h('button', {
-                staticClass: 'btn btn-dark btn-xs',
-                on: {
-                    click($event: any) {
-                        $event.preventDefault();
+        initForm();
 
-                        vm.generateSecret.call(null);
-                    },
-                },
-            }, [
-                h('i', { staticClass: 'fa fa-wrench' }),
-                ' ',
-                useAuthIlingo().getSync('form.generate.button', vm.translatorLocale),
-            ]),
-        ]);
+        const render = () => {
+            const submit = createSubmitHandler<Robot>({
+                props,
+                ctx,
+                busy,
+                form,
+                formIsValid: () => !$v.value.$invalid,
+                create: (data) => useHTTPClient().robot.create(data),
+                update: (id, data) => {
+                    if (isSecretHashed.value) {
+                        delete data.secret;
+                    }
 
-        const submit = buildFormSubmit(this, h, {
-            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
-            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
-        });
-
-        const leftColumn = h('div', { staticClass: 'col' }, [
-            id,
-            name,
-            secret,
-            secretInfo,
-            h('hr'),
-            submit,
-        ]);
-
-        let rightColumn = h();
-
-        if (
-            !vm.isRealmLocked
-        ) {
-            const realm = h(RealmList, {
-                scopedSlots: {
-                    [SlotName.ITEM_ACTIONS]: (
-                        props: ComponentListItemSlotProps<Realm>,
-                    ) => buildListItemToggleAction(vm.form, h, {
-                        propName: 'realm_id',
-                        item: props.item,
-                        busy: props.busy,
-                    }),
+                    return useHTTPClient().robot.update(id, data);
                 },
             });
 
-            rightColumn = h('div', {
-                staticClass: 'col',
-            }, [
-                realm,
-            ]);
-        }
+            const name = buildFormInput({
+                validationResult: $v.value.name,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Name',
+                value: form.name,
+                change(input) {
+                    form.name = input;
+                },
+                props: {
+                    disabled: isNameFixed.value,
+                },
+            });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+            let id : VNodeArrayChildren = [];
+
+            if (props.entity) {
+                id = [
+                    buildFormInput({
+                        labelContent: 'ID',
+                        value: props.entity.id,
+                        props: {
+                            disabled: true,
+                        },
+                    }),
+                ];
+            }
+
+            const secret = buildFormInput({
+                validationResult: $v.value.secret,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: [
+                    'Secret',
+                    isSecretHashed.value ? h('span', {
+                        class: 'text-danger font-weight-bold pl-1',
+                    }, [
+                        'Hashed',
+                        ' ',
+                        h('i', { class: 'fa fa-exclamation-triangle pl-1' }),
+                    ]) : '',
+                ],
+                value: form.secret,
+                change(input) {
+                    form.secret = input;
+                },
+            });
+
+            const secretInfo = h('div', [
+                h('button', {
+                    class: 'btn btn-dark btn-xs',
+                    onClick($event: any) {
+                        $event.preventDefault();
+
+                        generateSecret.call(null);
+                    },
+                }, [
+                    h('i', { class: 'fa fa-wrench' }),
+                    ' ',
+                    useAuthIlingo().getSync('form.generate.button', props.translatorLocale),
+                ]),
+            ]);
+
+            const submitForm = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
+                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                busy,
+                submit,
+            });
+
+            const leftColumn = h('div', { class: 'col' }, [
+                id,
+                name,
+                secret,
+                secretInfo,
+                h('hr'),
+                submitForm,
+            ]);
+
+            let rightColumn : VNodeArrayChildren = [];
+
+            if (
+                !isRealmLocked.value
+            ) {
+                const realm = h(RealmList, {}, {
+                    [SlotName.ITEM_ACTIONS]: (
+                        props: { item: Realm, busy: MaybeRef<boolean> },
+                    ) => buildItemActionToggle({
+                        currentValue: form.realm_id,
+                        value: props.item.id,
+                        busy: props.busy,
+                        change(value) {
+                            form.realm_id = value as string;
+                        },
+                    }),
+                });
+
+                rightColumn = [
+                    h('div', {
+                        class: 'col',
+                    }, [
+                        realm,
+                    ]),
+                ];
+            }
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            h('div', { staticClass: 'row' }, [
-                leftColumn,
-                rightColumn,
-            ]),
-        ]);
+            }, [
+                h('div', { class: 'row' }, [
+                    leftColumn,
+                    rightColumn,
+                ]),
+            ]);
+        };
+
+        return () => render();
     },
 });
 

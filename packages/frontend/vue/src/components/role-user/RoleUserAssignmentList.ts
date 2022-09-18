@@ -5,37 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, VNode } from 'vue';
+import {
+    defineComponent, h,
+} from 'vue';
 import { User } from '@authelion/common';
 import { SlotName } from '@vue-layout/utils';
 import { UserRoleAssignmentListItemActions } from '../user-role';
 import { UserList } from '../user/UserList';
-import { UserRoleListItemActionsProperties } from '../user-role/UserRoleAssignmentListItemActions';
 
-type Properties = {
-    entityId: string
-};
-
-export const RoleUserAssignmentList = Vue.extend<any, any, any, Properties>({
+export const RoleUserAssignmentList = defineComponent({
     name: 'RoleUserAssignmentList',
     props: {
         entityId: String,
     },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const buildProps = (item: User) : UserRoleListItemActionsProperties => ({
-            roleId: vm.entityId,
-            userId: item.id,
-        });
-
-        return h(UserList, {
-            scopedSlots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps) => h(UserRoleAssignmentListItemActions, {
-                    props: buildProps(slotProps.item),
-                }),
-            },
+    setup(props) {
+        return () => h(UserList, {}, {
+            [SlotName.ITEM_ACTIONS]: (slotProps: { item: User }) => h(
+                UserRoleAssignmentListItemActions,
+                {
+                    roleId: props.entityId,
+                    userId: slotProps.item.id,
+                },
+            ),
         });
     },
 });

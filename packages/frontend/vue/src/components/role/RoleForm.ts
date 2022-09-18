@@ -5,28 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, PropType, VNode } from 'vue';
-import { maxLength, minLength, required } from 'vuelidate/lib/validators';
+import useVuelidate from '@vuelidate/core';
+import {
+    PropType, computed, defineComponent, h, reactive, ref, watch,
+} from 'vue';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Role } from '@authelion/common';
 import {
-    ComponentFormData, ComponentFormMethods, buildFormInput, buildFormSubmit, buildFormTextarea,
+    buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/utils';
-import { useHTTPClient } from '../../utils';
-import { initPropertiesFromSource } from '../../utils/proprety';
+import { initFormAttributesFromEntity } from '../../composables/form';
+import { createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
-type Properties = {
-    entity?: Partial<Role>,
-    translatorLocale?: string
-};
-
-export const RoleForm = Vue.extend<
-ComponentFormData<Role>,
-ComponentFormMethods<Role>,
-any,
-Properties
->({
+export const RoleForm = defineComponent({
     name: 'RoleForm',
     props: {
         entity: {
@@ -38,19 +31,15 @@ Properties
             default: undefined,
         },
     },
-    data() {
-        return {
-            form: {
-                name: '',
-                description: '',
-            },
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const form = reactive({
+            name: '',
+            description: '',
+        });
 
-            busy: false,
-            message: null,
-        };
-    },
-    validations: {
-        form: {
+        const $v = useVuelidate({
             name: {
                 required,
                 minLength: minLength(3),
@@ -60,100 +49,76 @@ Properties
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
-        },
-    },
-    computed: {
-        isEditing() {
-            return this.entity &&
-                Object.prototype.hasOwnProperty.call(this.entity, 'id');
-        },
-        updatedAt() {
-            return this.entity ? this.entity.updated_at : undefined;
-        },
-    },
-    watch: {
-        updatedAt(val, oldVal) {
+        }, form);
+
+        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+
+        function initForm() {
+            initFormAttributesFromEntity(form, props.entity);
+        }
+
+        watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                this.initFromProperties();
+                initForm();
             }
-        },
-    },
-    created() {
-        Promise.resolve()
-            .then(this.initFromProperties);
-    },
-    methods: {
-        initFromProperties() {
-            if (this.entity) {
-                initPropertiesFromSource<Role>(this.entity, this.form);
-            }
-        },
-        async submit() {
-            if (this.busy || this.$v.$invalid) {
-                return;
-            }
-
-            this.message = null;
-            this.busy = true;
-
-            try {
-                let response;
-
-                if (this.isEditing) {
-                    response = await useHTTPClient().role.update(this.entity.id, this.form);
-
-                    this.$emit('updated', response);
-                } else {
-                    response = await useHTTPClient().role.create(this.form);
-
-                    this.$emit('created', response);
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.$emit('failed', e);
-                }
-            }
-
-            this.busy = false;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const name = buildFormInput<Role>(this, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Name',
-            propName: 'name',
         });
 
-        const description = buildFormTextarea<Role>(vm, h, {
-            validationTranslator: buildVuelidateTranslator(vm.translatorLocale),
-            title: 'Description',
-            propName: 'description',
-            attrs: {
-                rows: 6,
-            },
+        initForm();
+
+        const submit = createSubmitHandler<Role>({
+            props,
+            ctx,
+            busy,
+            form,
+            formIsValid: () => $v.value.$invalid,
+            create: async (data) => useHTTPClient().role.create(data),
+            update: async (id, data) => useHTTPClient().role.update(id, data),
         });
 
-        const submit = buildFormSubmit(this, h, {
-            updateText: useAuthIlingo().getSync('form.update.button', vm.translatorLocale),
-            createText: useAuthIlingo().getSync('form.create.button', vm.translatorLocale),
-        });
+        const render = () => {
+            const name = buildFormInput({
+                validationResult: $v.value.name,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Name',
+                value: form.name,
+                change(input) {
+                    form.name = input;
+                },
+            });
 
-        return h('form', {
-            on: {
-                submit($event: any) {
+            const description = buildFormTextarea({
+                validationResult: $v.value.description,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Description',
+                value: form.description,
+                change(input) {
+                    form.description = input;
+                },
+                props: {
+                    rows: 6,
+                },
+            });
+
+            const submitForm = buildFormSubmit({
+                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
+                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                submit,
+            });
+
+            return h('form', {
+                onSubmit($event: any) {
                     $event.preventDefault();
 
-                    return vm.submit.apply(null);
+                    return submit.apply(null);
                 },
-            },
-        }, [
-            name,
-            description,
-            submit,
-        ]);
+            }, [
+                name,
+                description,
+                submitForm,
+            ]);
+        };
+
+        return () => render();
     },
 });
 

@@ -5,20 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, VNode } from 'vue';
+import { defineComponent, h } from 'vue';
 import { Robot } from '@authelion/common';
 import { SlotName } from '@vue-layout/utils';
 import {
     RobotPermissionAssignmentListItemActions,
-    RobotPermissionListItemActionsProperties,
 } from '../robot-permission/RobotPermissionAssignmentListItemActions';
 import { RobotList } from '../robot';
 
-export type Properties = {
-    entityId: string
-};
-
-export const PermissionRobotAssignmentList = Vue.extend<any, any, any, Properties>({
+export const PermissionRobotAssignmentList = defineComponent({
     name: 'PermissionRobotAssignmentList',
     props: {
         entityId: {
@@ -26,21 +21,15 @@ export const PermissionRobotAssignmentList = Vue.extend<any, any, any, Propertie
             required: true,
         },
     },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
-
-        const buildProps = (item: Robot) : RobotPermissionListItemActionsProperties => ({
-            permissionId: vm.entityId,
-            robotId: item.id,
-        });
-
-        return h(RobotList, {
-            scopedSlots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps) => h(RobotPermissionAssignmentListItemActions, {
-                    props: buildProps(slotProps.item),
-                }),
-            },
+    setup(props) {
+        return () => h(RobotList, {}, {
+            [SlotName.ITEM_ACTIONS]: (slotProps: { item: Robot }) => h(
+                RobotPermissionAssignmentListItemActions,
+                {
+                    permissionId: props.entityId,
+                    robotId: slotProps.item.id,
+                },
+            ),
         });
     },
 });

@@ -1,170 +1,132 @@
-// rollup.config.js
-import fs from 'fs';
+/*
+ * Copyright (c) 2022-2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
 
-import vue from 'rollup-plugin-vue2';
+import vue from 'rollup-plugin-vue';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
-import json from '@rollup/plugin-json';
-
-import typescriptTransformer from 'ttypescript';
-import typescript from 'rollup-plugin-typescript2';
-
-import includePaths from 'rollup-plugin-includepaths';
+import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
+import pkg from './package.json';
 
-const includePathOptions = {
-    include: {
-        vue: 'node_modules/vue/dist/vue.common.js',
-    },
-    external: [
-        '@authelion/common',
-        'ilingo',
-        'rapiq',
-        'vue',
-        'vuelidate',
-        'vuelidate/lib/validators',
-        'bootstrap-vue',
-    ],
-};
-
-// Get browserslist config and remove ie from es build targets
-const browserList = fs.readFileSync('./.browserslistrc')
-    .toString()
-    .split('\n')
-    .filter((entry) => entry && entry.substring(0, 2) !== 'ie');
-
-// Extract babel preset-env config, to combine with esbrowserslist
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const babelPresetEnvConfig = require('./babel.config')
-    .presets.filter((entry) => entry[0] === '@babel/preset-env')[0][1];
-
-const baseConfig = {
-    input: 'src/entry.ts',
-    plugins: {
-        replace: {
-            'process.env.NODE_ENV': 'production',
-            preventAssignment: true,
-        },
-        vue: {
-            css: true,
-            template: {
-                isProduction: true,
-            },
-        },
-        postVue: [
+function buildConfig(config) {
+    return {
+        input: 'src/entry.ts',
+        ...config,
+        plugins: [
+            replace({
+                'process.env.NODE_ENV': JSON.stringify('production'),
+                preventAssignment: true,
+            }),
+            postcss({
+                extract: true,
+            }),
+            vue(),
             resolve({
                 extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
-                preferBuiltins: true,
             }),
             commonjs(),
+            babel({
+                exclude: 'node_modules/**',
+                extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
+                babelHelpers: 'bundled',
+            }),
+            ...(config.plugins ? config.plugins : []),
         ],
-        babel: {
-            exclude: 'node_modules/**',
-            extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
-            babelHelpers: 'bundled',
-        },
-    },
-};
+
+    };
+}
 
 // ESM/UMD/IIFE shared settings: externals
 // Refer to https://rollupjs.org/guide/en/#warning-treating-module-as-external-dependency
 const external = [
-    // list external dependencies, exactly the way it is written in the import statement.
-    // eg. 'jquery'
     '@authelion/common',
     'ilingo',
     'rapiq',
     'vue',
-    'vuelidate',
-    'vuelidate/lib/validators',
-    'bootstrap-vue',
+    '@vuelidate/core',
+    '@vuelidate/validators',
+    '@vue-layout/utils',
 ];
 
 // UMD/IIFE shared settings: output.globals
 // Refer to https://rollupjs.org/guide/en#output-globals for details
 const globals = {
-    // Provide global variable names to replace your external imports
-    // eg. jquery: '$'
-    vue: 'vue',
+    vue: 'Vue',
 };
 
-// Customize configs for individual targets
-const buildFormats = [];
-const esConfig = {
-    ...baseConfig,
-    input: 'src/index.ts',
-    external,
-    output: {
-        file: 'dist/index.esm.js',
-        format: 'esm',
-        exports: 'named',
-        assetFileNames: '[name]-[hash][extname]',
-    },
-    plugins: [
-        json(),
-        replace(baseConfig.plugins.replace),
-        postcss({
-            extract: true,
-        }),
-        vue(baseConfig.plugins.vue),
-        ...baseConfig.plugins.postVue,
-        // Only use typescript for declarations - babel will
-        // do actual js transformations
-        typescript({
-            typescript: typescriptTransformer,
-            useTsconfigDeclarationDir: true,
-            emitDeclarationOnly: true,
-            tsconfig: 'tsconfig.build.json',
-        }),
-        babel({
-            ...baseConfig.plugins.babel,
-            presets: [
-                [
-                    '@babel/preset-env', {
-                        ...babelPresetEnvConfig,
-                        targets: browserList,
-                    },
-                ],
-            ],
-        }),
-    ],
-};
-buildFormats.push(esConfig);
+const name = 'Authelion';
 
-const umdConfig = {
-    ...baseConfig,
-    external,
-    output: {
-        compact: true,
-        file: 'dist/index.ssr.js',
-        format: 'cjs',
-        name: 'TypescriptAuth',
-        exports: 'auto',
-        assetFileNames: '[name]-[hash][extname]',
-        globals,
-    },
-    plugins: [
-        json(),
-        replace(baseConfig.plugins.replace),
-        postcss({
-            extract: true,
-        }),
-        vue({
-            ...baseConfig.plugins.vue,
-            template: {
-                ...baseConfig.plugins.vue.template,
-                optimizeSSR: true,
+export default [
+    buildConfig({
+        input: 'src/index.ts',
+        external,
+        output: [
+            {
+                file: pkg.module,
+                format: 'esm',
+                exports: 'named',
+                assetFileNames: '[name]-[hash][extname]',
             },
-        }),
-        includePaths(includePathOptions),
-        ...baseConfig.plugins.postVue,
-        babel(baseConfig.plugins.babel),
-    ],
-};
-
-buildFormats.push(umdConfig);
-
-// Export config
-export default buildFormats;
+        ],
+    }),
+    buildConfig({
+        external,
+        output: [
+            {
+                compact: true,
+                file: pkg.main,
+                format: 'cjs',
+                exports: 'auto',
+                assetFileNames: '[name]-[hash][extname]',
+                globals,
+            },
+        ],
+    }),
+    buildConfig({
+        input: 'src/index.ts',
+        external,
+        plugins: [
+            terser({
+                output: {
+                    ecma: 5,
+                },
+            }),
+        ],
+        output: [
+            {
+                name,
+                compact: true,
+                file: pkg.browser,
+                format: 'esm',
+                assetFileNames: '[name]-[hash][extname]',
+                globals,
+            },
+        ],
+    }),
+    buildConfig({
+        external,
+        plugins: [
+            terser({
+                output: {
+                    ecma: 5,
+                },
+            }),
+        ],
+        output: [
+            {
+                name,
+                compact: true,
+                file: pkg.unpkg,
+                format: 'iife',
+                assetFileNames: '[name]-[hash][extname]',
+                globals,
+            },
+        ],
+    }),
+];

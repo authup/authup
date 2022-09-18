@@ -4,16 +4,7 @@
     "compilerOptions": {
         "outDir": "./dist",
         "lib": [
-            "dom",
-            "ESNext",
-            "dom.iterable",
-            "scripthost"
-        ],
-        "plugins": [
-            {
-                "transform":"@zerollup/ts-transform-paths",
-                "exclude": ["*"]
-            }
+            "ESNext"
         ],
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
@@ -21,9 +12,11 @@
         "module": "ESNext",
         "jsx": "preserve",
 
-        "declaration": true,
-        "declarationDir": "dist/types",
-        "isolatedModules": true
+        "preserveValueImports": true,
+        "resolveJsonModule": true,
+        "useDefineForClassFields": true,
+        "isolatedModules": true,
+        "importsNotUsedAsValues": "error"
     },
     "exclude": [
         "node_modules",

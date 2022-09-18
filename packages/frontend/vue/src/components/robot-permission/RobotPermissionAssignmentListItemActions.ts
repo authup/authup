@@ -5,23 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Vue, { CreateElement, PropType, VNode } from 'vue';
+import {
+    PropType, defineComponent, h, ref,
+} from 'vue';
 import { RobotPermission } from '@authelion/common';
-import { ComponentListItemData } from '@vue-layout/utils';
+import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
 import { useHTTPClient } from '../../utils';
 
-export type RobotPermissionListItemActionsProperties = {
-    items?: RobotPermission[],
-    robotId: string,
-    permissionId: string
-};
-
-export const RobotPermissionAssignmentListItemActions = Vue.extend<
-ComponentListItemData<RobotPermission>,
-any,
-any,
-RobotPermissionListItemActionsProperties
->({
+export const RobotPermissionAssignmentListItemActions = defineComponent({
     name: 'RobotPermissionAssignmentListItemActions',
     props: {
         items: {
@@ -31,37 +22,28 @@ RobotPermissionListItemActionsProperties
         robotId: String,
         permissionId: String,
     },
-    data() {
-        return {
-            busy: false,
-            item: null,
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const loaded = ref(false);
+        const item = ref<RobotPermission | null>(null);
 
-            loaded: false,
-        };
-    },
-    created() {
-        Promise.resolve()
-            .then(() => this.initFromProperties())
-            .then(() => this.init())
-            .then(() => {
-                this.loaded = true;
-            });
-    },
-    methods: {
-        initFromProperties() {
-            if (!Array.isArray(this.items)) return;
+        const initForm = () => {
+            if (!Array.isArray(props.items)) return;
 
-            const index = this.items.findIndex((item: RobotPermission) => item.robot_id === this.robotId && item.permission_id === this.permissionId);
+            const index = props.items.findIndex((item: RobotPermission) => item.robot_id === props.robotId &&
+                item.permission_id === props.permissionId);
+
             if (index !== -1) {
-                this.item = this.items[index];
+                item.value = props.items[index];
             }
-        },
-        async init() {
+        };
+        const init = async () => {
             try {
                 const response = await useHTTPClient().robotPermission.getMany({
                     filters: {
-                        robot_id: this.robotId,
-                        permission_id: this.permissionId,
+                        robot_id: props.robotId,
+                        permission_id: props.permissionId,
                     },
                     page: {
                         limit: 1,
@@ -69,94 +51,73 @@ RobotPermissionListItemActionsProperties
                 });
 
                 if (response.meta.total === 1) {
-                    const { 0: item } = response.data;
+                    const { 0: data } = response.data;
 
-                    this.item = item;
+                    item.value = data;
                 }
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
-        },
-        async add() {
-            if (this.busy || this.item) return;
+        };
 
-            this.busy = true;
+        Promise.resolve()
+            .then(() => initForm())
+            .then(() => init())
+            .then(() => {
+                loaded.value = true;
+            });
+
+        const add = async () => {
+            if (busy.value || item.value) return;
+
+            busy.value = true;
 
             try {
-                const item = await useHTTPClient().robotPermission.create({
-                    robot_id: this.robotId,
-                    permission_id: this.permissionId,
+                const data = await useHTTPClient().robotPermission.create({
+                    robot_id: props.robotId,
+                    permission_id: props.permissionId,
                 });
 
-                this.item = item;
+                item.value = data;
 
-                this.$emit('created', item);
+                ctx.emit('created', data);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
 
-            this.busy = false;
-        },
-        async drop() {
-            if (this.busy || !this.item) return;
+            busy.value = false;
+        };
 
-            this.busy = true;
+        const drop = async () => {
+            if (busy.value || !item.value) return;
+
+            busy.value = true;
 
             try {
-                const item = await useHTTPClient().robotPermission.delete(this.item.id);
+                const data = await useHTTPClient().robotPermission.delete(item.value.id);
 
-                this.item = null;
+                item.value = null;
 
-                this.$emit('deleted', item);
+                ctx.emit('deleted', data);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
 
-            this.busy = false;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
+            busy.value = false;
+        };
 
-        let button = h();
-
-        if (vm.loaded) {
-            button = h('button', {
-                class: {
-                    'btn-success': !vm.item,
-                    'btn-danger': vm.item,
-                },
-                staticClass: 'btn btn-xs',
-                on: {
-                    click($event: any) {
-                        $event.preventDefault();
-
-                        if (vm.item) {
-                            return vm.drop.call(null);
-                        }
-
-                        return vm.add.call(null);
-                    },
-                },
-            }, [
-                h('i', {
-                    staticClass: 'fa',
-                    class: {
-                        'fa-plus': !vm.item,
-                        'fa-trash': vm.item,
-                    },
-                }),
-            ]);
-        }
-
-        return h('div', [button]);
+        return () => renderListItemAssignmentButton({
+            add,
+            drop,
+            item,
+            loaded,
+        });
     },
 });
 

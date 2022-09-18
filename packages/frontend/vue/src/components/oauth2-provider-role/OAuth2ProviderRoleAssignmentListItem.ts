@@ -5,25 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { maxLength, minLength, required } from 'vuelidate/lib/validators';
-import Vue, { CreateElement, PropType, VNode } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { maxLength, minLength, required } from '@vuelidate/validators';
+import {
+    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref,
+} from 'vue';
 import { IdentityProviderRole, Role } from '@authelion/common';
-import { ComponentFormData, buildFormInput } from '@vue-layout/utils';
+import { buildFormInput } from '@vue-layout/utils';
+import { initFormAttributesFromEntity } from '../../composables/form';
+import { buildVuelidateTranslator } from '../../language/utils';
 import { useHTTPClient } from '../../utils';
 
-export type OAuth2ProviderRoleListItemProperties = {
-    [key: string]: any;
-
-    role: Role,
-    entityId: string
-};
-
-export const OAuth2ProviderRoleAssignmentListItem = Vue.extend<
-ComponentFormData<IdentityProviderRole>,
-any,
-any,
-OAuth2ProviderRoleListItemProperties
->({
+export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',
     props: {
         role: {
@@ -34,269 +27,245 @@ OAuth2ProviderRoleListItemProperties
             type: String,
             required: true,
         },
+        translatorLocale: {
+            type: String,
+            default: undefined,
+        },
     },
-    data() {
-        return {
-            busy: false,
-            loaded: false,
+    emits: ['created', 'deleted', 'updated', 'failed'],
+    setup(props, ctx) {
+        const busy = ref(false);
+        const loaded = ref(false);
+        const display = ref(false);
+        const toggleDisplay = () => {
+            if (!loaded.value) return;
 
-            item: null,
-
-            form: {
-                external_id: '',
-            },
-
-            display: false,
+            display.value = !display.value;
         };
-    },
-    validations() {
-        return {
-            form: {
-                external_id: {
-                    required,
-                    minLength: minLength(3),
-                    maxLength: maxLength(128),
-                },
+
+        const item = ref<IdentityProviderRole | null>(null);
+
+        const form = reactive({
+            external_id: '',
+        });
+
+        const $v = useVuelidate({
+            external_id: {
+                required,
+                minLength: minLength(3),
+                maxLength: maxLength(128),
             },
-        };
-    },
-    computed: {
-        isExternalIDDefined() {
-            return this.form.external_id && this.form.external_id.length > 0;
-        },
-    },
-    created() {
-        Promise.resolve()
-            .then(this.resolve)
-            .then(this.initFromProperties)
-            .then(() => {
-                if (!this.isExternalIDDefined) {
-                    this.form.external_id = this.role.name;
-                }
-            });
-    },
-    methods: {
-        initFromProperties() {
-            if (!this.item) return;
+        }, form);
 
-            const keys = Object.keys(this.form);
-            for (let i = 0; i < keys.length; i++) {
-                if (Object.prototype.hasOwnProperty.call(this.item, keys[i])) {
-                    this.form[keys[i]] = this.item[keys[i]];
-                }
-            }
-        },
-        async resolve() {
-            if (this.busy && this.loaded) return;
+        const isExternalIDDefined = computed(() => form.external_id && form.external_id.length > 0);
 
-            this.loaded = false;
+        const submit = async () => {
+            if (busy.value || $v.value.$invalid) return;
 
-            try {
-                const { data } = await useHTTPClient().identityProviderRole.getMany({
-                    filter: {
-                        role_id: this.role.id,
-                        provider_id: this.entityId,
-                    },
-                });
-
-                if (data.length === 1) {
-                    // eslint-disable-next-line prefer-destructuring
-                    this.item = data[0];
-                } else {
-                    this.item = null;
-                }
-            } catch (e) {
-                // ...
-            }
-
-            this.busy = false;
-            this.loaded = true;
-        },
-        async submit() {
-            if (this.busy || this.$v.$invalid) return;
-
-            this.busy = true;
+            busy.value = true;
 
             try {
                 let response;
 
-                if (this.item) {
-                    response = await useHTTPClient().identityProviderRole.update(this.item.id, {
-                        ...this.form,
+                if (item.value) {
+                    response = await useHTTPClient().identityProviderRole.update(item.value.id, {
+                        ...form,
                     });
 
-                    this.$emit('updated', response);
+                    ctx.emit('updated', response);
                 } else {
                     response = await useHTTPClient().identityProviderRole.create({
-                        ...this.form,
-                        role_id: this.role.id,
-                        provider_id: this.entityId,
+                        ...form,
+                        role_id: props.role.id,
+                        provider_id: props.entityId,
                     });
 
-                    this.item = response;
+                    item.value = response;
 
-                    this.$emit('created', response);
+                    ctx.emit('created', response);
                 }
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
 
-            this.busy = false;
-        },
-        async drop() {
-            if (this.busy || !this.item) return;
+            busy.value = false;
+        };
 
-            this.busy = true;
+        const drop = async () => {
+            if (busy.value || !item.value) return;
+
+            busy.value = true;
 
             try {
-                const response = await useHTTPClient().identityProviderRole.delete(this.item.id);
+                const response = await useHTTPClient().identityProviderRole.delete(item.value.id);
 
-                this.item = null;
+                item.value = null;
 
-                this.$emit('deleted', response);
+                ctx.emit('deleted', response);
             } catch (e) {
                 if (e instanceof Error) {
-                    this.$emit('failed', e);
+                    ctx.emit('failed', e);
                 }
             }
 
-            this.busy = false;
-        },
+            busy.value = false;
+        };
 
-        toggleDisplay() {
-            if (!this.loaded) return;
+        Promise.resolve()
+            .then(async () => {
+                if (busy.value && loaded.value) return;
 
-            this.display = !this.display;
-        },
-    },
-    render(createElement: CreateElement): VNode {
-        const vm = this;
-        const h = createElement;
+                loaded.value = false;
 
-        let displayButton = h();
+                try {
+                    const { data } = await useHTTPClient().identityProviderRole.getMany({
+                        filter: {
+                            role_id: props.role.id,
+                            provider_id: props.entityId,
+                        },
+                    });
 
-        if (vm.loaded) {
-            displayButton = h('button', {
-                staticClass: 'btn btn-xs btn-dark',
-                on: {
-                    click($event: any) {
+                    if (data.length === 1) {
+                        // eslint-disable-next-line prefer-destructuring
+                        item.value = data[0];
+
+                        initFormAttributesFromEntity(form, data[0]);
+                        if (!isExternalIDDefined.value) {
+                            form.external_id = props.role.name;
+                        }
+                    } else {
+                        item.value = null;
+                    }
+                } catch (e) {
+                    // ...
+                }
+
+                busy.value = false;
+                loaded.value = true;
+            });
+
+        const render = () => {
+            let displayButton : VNodeArrayChildren = [];
+
+            if (loaded.value) {
+                displayButton = [h('button', {
+                    class: 'btn btn-xs btn-dark',
+                    onClick($event: any) {
                         $event.preventDefault();
 
-                        vm.toggleDisplay.call(null);
-                    },
-                },
-            }, [
-                h('i', {
-                    staticClass: 'fa',
-                    class: {
-                        'fa-chevron-down': !vm.display,
-                        'fa-chevron-up': vm.display,
-                    },
-                }),
-            ]);
-        }
-
-        let itemActions = h();
-
-        if (vm.loaded) {
-            let dropAction = h();
-
-            if (vm.item) {
-                dropAction = h('button', {
-                    staticClass: 'btn btn-xs btn-danger',
-                    attrs: {
-                        disabled: vm.$v.$invalid || vm.busy,
-                    },
-                    domProps: {
-                        disabled: vm.$v.$invalid || vm.busy,
-                    },
-                    on: {
-                        click($event: any) {
-                            $event.preventDefault();
-
-                            return vm.drop.call(null);
-                        },
+                        toggleDisplay.call(null);
                     },
                 }, [
                     h('i', {
-                        staticClass: 'fa fa-minus',
+                        class: ['fa', {
+                            'fa-chevron-down': !display.value,
+                            'fa-chevron-up': display.value,
+                        }],
                     }),
+                ])];
+            }
+
+            let itemActions;
+
+            if (loaded.value) {
+                let dropAction : VNodeArrayChildren = [];
+
+                if (item.value) {
+                    dropAction = [h('button', {
+                        class: 'btn btn-xs btn-danger',
+                        disabled: $v.value.$invalid || busy.value,
+                        onClick($event: any) {
+                            $event.preventDefault();
+
+                            return drop.call(null);
+                        },
+                    }, [
+                        h('i', {
+                            class: ['fa', {
+                                'fa-plus': !item.value,
+                                'fa-save': item.value,
+                            }],
+                        }),
+                    ])];
+                }
+
+                itemActions = h('div', {
+                    class: 'ml-auto',
+                }, [
+                    h('button', {
+                        class: ['btn btn-xs', {
+                            'btn-primary': !item.value,
+                            'btn-dark': !!item.value,
+                        }],
+                        onClick($event: any) {
+                            $event.preventDefault();
+
+                            return submit.call(null);
+                        },
+                    }, [
+                        h('i', {
+                            class: ['fa', {
+                                'fa-plus': !item.value,
+                                'fa-save': item.value,
+                            }],
+                        }),
+                    ]),
+                    dropAction,
                 ]);
             }
 
-            itemActions = h('div', {
-                staticClass: 'ml-auto',
+            const listBar = h('div', {
+                class: 'd-flex flex-row',
             }, [
-                h('button', {
-                    staticClass: 'btn btn-xs',
-                    class: {
-                        'btn-primary': !vm.item,
-                        'btn-dark': !!vm.item,
-                    },
-                    on: {
-                        click($event: any) {
-                            $event.preventDefault();
-
-                            return vm.submit.call(null);
-                        },
-                    },
+                h('div', {
+                    class: 'mr-2',
                 }, [
-                    h('i', {
-                        staticClass: 'fa',
-                        class: {
-                            'fa-plus': !vm.item,
-                            'fa-save': vm.item,
-                        },
-                    }),
+                    displayButton,
                 ]),
-                dropAction,
-            ]);
-        }
-
-        const listBar = h('div', {
-            staticClass: 'd-flex flex-row',
-        }, [
-            h('div', {
-                staticClass: 'mr-2',
-            }, [
-                displayButton,
-            ]),
-            h('div', [
-                h('h6', {
-                    staticClass: 'mb-0',
-                    on: {
-                        click($event: any) {
+                h('div', [
+                    h('h6', {
+                        class: 'mb-0',
+                        onClick($event: any) {
                             $event.preventDefault();
 
-                            if (vm.loaded) {
-                                vm.toggleDisplay.call(null);
+                            if (loaded.value) {
+                                toggleDisplay.call(null);
                             }
                         },
-                    },
-                }, [vm.role.name]),
-            ]),
-            itemActions,
-        ]);
-
-        let form = h();
-
-        if (vm.display) {
-            form = h('div', {
-                staticClass: 'mt-2',
-            }, [
-                buildFormInput(vm, h, {
-                    title: 'External ID',
-                    propName: 'external_id',
-                }),
+                    }, [props.role.name]),
+                ]),
+                itemActions,
             ]);
-        }
 
-        return h('div', { staticClass: 'list-item flex-column' }, [
-            listBar,
-            form,
-        ]);
+            let renderForm : VNodeArrayChildren = [];
+
+            if (display.value) {
+                renderForm = [
+                    h('div', {
+                        class: 'mt-2',
+                    }, [
+                        buildFormInput({
+                            labelContent: 'External ID',
+                            value: form.external_id,
+                            change(input) {
+                                form.external_id = input;
+                            },
+                            validationResult: $v.value.external_id,
+                            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        }),
+                    ]),
+                ];
+            }
+
+            return h('div', { class: 'list-item flex-column' }, [
+                listBar,
+                renderForm,
+            ]);
+        };
+
+        return () => render();
     },
 });
 

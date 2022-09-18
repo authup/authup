@@ -35,16 +35,30 @@ export default {
                     </template>
                 </user-list>
 
+                <hr>
+
                 <role-list />
             </div>
             <div class="col">
                 <user-form @created="handleCreated" />
 
+                <hr>
+
                 <robot-form />
 
-                <user-password-form id="bed1e14a-3110-480d-9ebb-ad74aae30f4c" />
+                <hr>
+
+                <user-password-form />
+
+                <hr>
+
+                <o-auth2-provider-form />
             </div>
         </div>
-        <o-auth2-provider-form />
     </div>
 </template>
+<style>
+.form-group {
+    margin-bottom: 0.5rem;
+}
+</style>
