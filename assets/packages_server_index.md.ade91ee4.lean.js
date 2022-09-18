@@ -1,0 +1,1 @@
+import{_ as e,o as a,c as t,f as r}from"./app.0c148756.js";const m=JSON.parse('{"title":"Server \u265F","description":"","frontmatter":{},"headers":[],"relativePath":"packages/server/index.md"}'),s={name:"packages/server/index.md"},o=r("",3),n=[o];function c(i,p,_,d,h,l){return a(),t("div",null,n)}const u=e(s,[["render",c]]);export{m as __pageData,u as default};
