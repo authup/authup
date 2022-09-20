@@ -46,7 +46,7 @@
         "@vuelidate/validators": "^2.0.0-alpha.31",
         "@vue-layout/utils": "^2.0.0-alpha.10",
         "bootstrap": "^5.2.1",
-        "bootstrap-vue-3": "^0.3.3",
+        "bootstrap-vue-3": "^0.3.4",
         "hapic": "^0.0.2",
         "ilingo": "^2.0.4",
         "vue": "^3.2.39"
