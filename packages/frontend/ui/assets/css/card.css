@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.panel-card {
+    /** background: rgba(59,59,59,0.1); **/
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 25px 0 rgba(0,0,0,.1);
+    transition: all .3s ease-in-out;
+}
+
+.panel-card > .panel-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-card > .panel-card-header h1,
+.panel-card > .panel-card-header h2,
+.panel-card > .panel-card-header h3,
+.panel-card > .panel-card-header h4,
+.panel-card > .panel-card-header h5,
+.panel-card > .panel-card-header h6 {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.panel-card > .panel-card-header .title:before {
+    width: 0;
+    padding: 0;
+}
+
+.panel-card > .panel-card-header,
+.panel-card > .panel-card-body {
+    padding: 0.45rem;
+}
+
+.panel-card > .panel-card-body.body-dark {
+    background: #efefef;
+    color: #7F828B;
+}
+
+.event-card {
+    background-color: #ececec;
+    border: 1px solid #dedede;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.event-card.active {
+    color: #dedede;
+    background-color: #434343;
+}
+
+.event-card-header,
+.event-card-header a {
+    text-decoration: none;
+}
+.event-card-header:hover,
+.event-card-header:active {
+    font-weight: 600;
+    color: inherit;
+}
+.event-card-body i {
+    font-size: 5rem;
+}
+.event-card .foot-print {
+    color: #cc8181;
+}

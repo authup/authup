@@ -13,6 +13,18 @@
     "rules": {
         "class-methods-use-this": "off",
         "dot-notation": "off",
+        "import/no-extraneous-dependencies": [
+            "error", {
+                "devDependencies": [
+                    "**/*.test.js",
+                    "**/*.test.ts",
+                    "**/*.spec.js",
+                    "**/*.spec.ts",
+                    "packages/frontend/ui/**",
+                    "**/rollup.config.js"
+                ]
+            }
+        ],
         "no-use-before-define": "off",
         "no-underscore-dangle": "off",
         "no-shadow": "off",

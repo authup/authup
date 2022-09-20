@@ -3,7 +3,13 @@
 
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom", "ES6"]
+        "lib": ["ESNext"],
+        "declarationDir": "dist/types",
+        "declaration": true,
+
+        "importHelpers": true,
+        "allowSyntheticDefaultImports": true,
+        "isolatedModules": true
     },
 
     "include": [

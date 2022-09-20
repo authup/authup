@@ -3,10 +3,7 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "lib": [
-            "ES6",
-            "dom",
-            "dom.iterable",
-            "scripthost"
+            "ESNext"
         ],
         "strict": true,
         "paths": {

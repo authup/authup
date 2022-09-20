@@ -1,7 +1,7 @@
 {
     "extends": "../../../tsconfig.json",
     "compilerOptions": {
-        "lib": ["dom", "ES6"],
+        "lib": ["ESNext"],
         "paths": {
 
         }

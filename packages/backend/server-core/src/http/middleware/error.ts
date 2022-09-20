@@ -13,7 +13,6 @@ import {
     ServerError,
     ServerErrorSettings,
 } from '@typescript-error/http';
-import * as console from 'console';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 
 export function errorMiddleware(

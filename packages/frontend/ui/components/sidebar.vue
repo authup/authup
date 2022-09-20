@@ -1,0 +1,80 @@
+<!--
+  - Copyright (c) 2021-2022.
+  - Author Peter Placzek (tada5hi)
+  - For the full copyright and license information,
+  - view the LICENSE file that was distributed with this source code.
+  -->
+<script lang="ts">
+
+import { defineNuxtComponent } from '#app';
+import { computed, useAPI } from '#imports';
+import { useAuthStore } from '../store/auth';
+import Countdown from './Countdown.vue';
+
+export default defineNuxtComponent({
+    components: { Countdown },
+    setup() {
+        const { loggedIn, accessTokenExpireDate: tokenExpireDate } = useAuthStore();
+
+        const tokenExpiresIn = computed(() => {
+            if (!tokenExpireDate) {
+                return 0;
+            }
+
+            return tokenExpireDate.getTime() - Date.now();
+        });
+
+        const docsUrl = computed(() => {
+            const api = useAPI();
+
+            return new URL('docs/', api.config.baseURL).href;
+        });
+
+        return {
+            loggedIn,
+            tokenExpiresIn,
+            docsUrl,
+        };
+    },
+});
+</script>
+<template>
+    <div class="page-sidebar">
+        <navigation-components
+            class="sidebar-menu navbar-nav"
+            :tier="1"
+        />
+
+        <div class="mt-auto">
+            <div
+                v-if="loggedIn"
+                class="font-weight-light d-flex flex-column ms-3 me-3 mb-1 mt-auto"
+            >
+                <small
+                    class="text-muted"
+                >
+                    <countdown
+                        :time="tokenExpiresIn"
+                    >
+                        <template #default="props">
+                            <i class="fa fa-clock pr-1" /> Die Sitzung endet in
+                            <span class="text-success">{{ props.minutes }} Minute(n), {{ props.seconds }} Sekunde(n)</span>.
+                        </template>
+                    </countdown>
+                </small>
+            </div>
+
+            <ul class="sidebar-menu nav-items navbar-nav">
+                <li class="nav-item">
+                    <a
+                        class="nav-link"
+                        :href="docsUrl"
+                        target="_blank"
+                    >
+                        <i class="fa fa-file" /> <span class="nav-link-text">API Docs</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</template>

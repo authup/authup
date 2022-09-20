@@ -5,15 +5,7 @@
         "outDir": "./dist",
         "lib": [
             "dom",
-            "ESNext",
-            "dom.iterable",
-            "scripthost"
-        ],
-        "plugins": [
-            {
-                "transform":"@zerollup/ts-transform-paths",
-                "exclude": ["*"]
-            }
+            "ESNext"
         ],
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,

@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.form-group {
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    font-size: inherit;
+}
+
+.alert-sm {
+    padding: .4rem .7rem;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    color: #fff;
+    background-color: rgba(29, 33, 36, 0.5);
+    border-color: #171a1d;
+}
+
+a {
+    color: #949da5;
+    transition: color .1s ease-in-out,background-color .1s ease-in-out,border-color .1s ease-in-out;
+}
+
+a:hover,
+a:active,
+a:focus{
+    color: #495057;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #286090;
+    border-color: #204d74;
+}
+
+.btn-group-sm>.btn, .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+
+.btn-group-xs>.btn,
+.btn-xs {
+    padding: .05rem .5rem;
+    font-size: .75rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+
+.btn-dark:hover,
+.btn-outline-dark:hover {
+    box-shadow: 0 8px 25px -8px #343a40;
+}
+
+.btn-primary:hover,
+.btn-outline-primary:hover {
+    box-shadow: 0 8px 25px -8px #286090;
+}
+
+.btn-info:hover,
+.btn-outline-info:hover {
+    box-shadow: 0 8px 25px -8px #138496;
+}
+
+.btn-success:hover {
+    box-shadow: 0 8px 25px -8px #218838;
+}
+
+.btn-warning:hover {
+    box-shadow: 0 8px 25px -8px #e0a800;
+}
+
+.btn-danger:hover,
+.btn-outline-danger:hover {
+    box-shadow: 0 8px 25px -8px #c82333;
+}
+
+.list-group-item-sm {
+    padding: .45rem .65rem;
+}
+
+.list-group > .list-group-item {
+    background: none;
+}
+
+.__vuescroll.hasVBar .__view > * {
+    padding-right: 6px;
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+    padding: .5rem;
+}
+

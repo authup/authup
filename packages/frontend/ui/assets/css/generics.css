@@ -1,0 +1,145 @@
+/*
+ * Copyright (c) 2021-2021.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.h-150 {
+    height: 150px !important;
+}
+
+.h-250 {
+    height: 250px !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.justify-space-between {
+    justify-content: space-between;
+}
+
+.f-rem-3 {
+    font-size: 0.75rem;
+}
+
+.f-rem-4 {
+    font-size: 1rem;
+}
+
+.f-rem-4-5 {
+    font-size: 1.15rem;
+}
+
+.f-rem-5 {
+    font-size: 1.25rem;
+}
+.f-rem-6 {
+    font-size: 1.5rem;
+}
+
+.m-r-5 {
+    margin-right: 5px;
+}
+/**
+Margin with pixels
+ */
+.m-b-0 {
+    margin-bottom: 0px !important;
+}
+
+.m-b-5 {
+    margin-bottom: 5px;
+}
+
+.m-b-10 {
+    margin-bottom:10px;
+}
+
+.m-b-20 {
+    margin-bottom: 20px;
+}
+
+.m-b-rem-4 {
+    margin-bottom: 1rem !important;
+}
+
+.m-t-5 {
+    margin-top:5px;
+}
+
+.m-t-10 {
+    margin-top:10px;
+}
+
+.m-t-20 {
+    margin-top:20px;
+}
+
+.m-l-10 {
+    margin-left: 10px;
+}
+
+.m-l-20 {
+    margin-left: 20px;
+}
+
+.p-r-0 {
+    padding-right: 0px;
+}
+
+.p-r-5 {
+    padding-right: 5px;
+}
+
+.p-l-0 {
+    padding-left: 0px;
+}
+
+.p-l-5 {
+    padding-left: 5px;
+}
+
+.p-t-0 {
+    padding-top:0px;
+}
+
+.p-t-rem-2 {
+    padding-top: 0.25rem;
+}
+.p-t-rem-3 {
+    padding-top:0.5rem;
+}
+
+.p-b-rem-4 {
+    padding-bottom: 1rem !important;
+}
+
+/**
+Padding with rem
+ */
+.p-rem-1 {
+    padding: 0.25rem !important;
+}
+
+.p-rem-2 {
+    padding: 0.5rem !important;
+}
+
+.p-rem-3 {
+    padding: 0.75rem !important;
+}
+
+.p-rem-3 {
+    padding: 1rem !important;
+}
+
+.p-rem-5 {
+    padding: 1.25rem;
+}
+
+.p-rem-6 {
+    padding: 1.5rem;
+}
