@@ -10,7 +10,7 @@ import { Application, json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
-import { mergeDeep } from '@authelion/common';
+import { merge } from 'smob';
 import {
     HTTPMiddlewareOptions,
     HTTPMiddlewareOptionsInput,
@@ -30,7 +30,7 @@ export function registerMiddlewares(
     const config = useConfigSync();
 
     if (input) {
-        options = mergeDeep(
+        options = merge(
             {},
             config.middleware,
             buildHTTPMiddlewareOptions(input),
