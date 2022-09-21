@@ -7,7 +7,6 @@
 
 import { createApp } from 'vue';
 import Utils, { Config, Preset } from '@vue-layout/utils';
-import BootstrapVue3 from 'bootstrap-vue-3';
 import AuthVue, { setHTTPClient } from '@authelion/vue';
 import { Client } from '@hapic/oauth2';
 import { useAPI } from './api';
@@ -15,7 +14,6 @@ import { useAPI } from './api';
 // CSS
 import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 import '../assets/css/index.css';
 import '../assets/css/bootstrap-override.css';
 
@@ -55,6 +53,5 @@ import Dev from './components/index.vue';
         .use(AuthVue, {
             httpClient: api,
         })
-        .use(BootstrapVue3)
         .mount('#app');
 })();
