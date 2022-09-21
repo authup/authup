@@ -42,7 +42,7 @@
     "dependencies": {
         "@authelion/server-utils": "^0.3.6",
         "@decorators/express": "^2.6.0",
-        "@ebec/http": "^0.0.2",
+        "@ebec/http": "^0.0.3",
         "@hapic/oauth2": "^0.0.2",
         "@trapi/swagger": "^0.3.0",
         "@types/morgan": "^1.9.3",

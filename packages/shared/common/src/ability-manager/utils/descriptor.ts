@@ -8,8 +8,13 @@
 import { AbilityDescriptor } from '../type';
 
 export function extendPermissionDescriptor(descriptor: AbilityDescriptor) {
-    descriptor.target ??= null;
-    descriptor.inverse ??= false;
+    if (typeof descriptor.target === 'undefined') {
+        descriptor.target = null;
+    }
+
+    if (typeof descriptor.inverse === 'undefined') {
+        descriptor.inverse = null;
+    }
 
     return descriptor;
 }
