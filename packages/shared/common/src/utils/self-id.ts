@@ -6,5 +6,6 @@
  */
 
 export function isSelfId(id: string) {
-    return id === '@me' || id === '@self';
+    return id === '@me' ||
+        id === '@self';
 }
