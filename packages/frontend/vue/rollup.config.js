@@ -42,25 +42,10 @@ function buildConfig(config) {
     };
 }
 
-// ESM/UMD/IIFE shared settings: externals
-// Refer to https://rollupjs.org/guide/en/#warning-treating-module-as-external-dependency
 const external = [
-    '@authelion/common',
-    'ilingo',
-    'rapiq',
-    'vue',
-    '@vuelidate/core',
-    '@vuelidate/validators',
-    '@vue-layout/utils',
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.peerDependencies || {}),
 ];
-
-// UMD/IIFE shared settings: output.globals
-// Refer to https://rollupjs.org/guide/en#output-globals for details
-const globals = {
-    vue: 'Vue',
-};
-
-const name = 'Authelion';
 
 export default [
     buildConfig({
@@ -84,48 +69,6 @@ export default [
                 format: 'cjs',
                 exports: 'auto',
                 assetFileNames: '[name]-[hash][extname]',
-                globals,
-            },
-        ],
-    }),
-    buildConfig({
-        input: 'src/index.ts',
-        external,
-        plugins: [
-            terser({
-                output: {
-                    ecma: 5,
-                },
-            }),
-        ],
-        output: [
-            {
-                name,
-                compact: true,
-                file: pkg.browser,
-                format: 'esm',
-                assetFileNames: '[name]-[hash][extname]',
-                globals,
-            },
-        ],
-    }),
-    buildConfig({
-        external,
-        plugins: [
-            terser({
-                output: {
-                    ecma: 5,
-                },
-            }),
-        ],
-        output: [
-            {
-                name,
-                compact: true,
-                file: pkg.unpkg,
-                format: 'iife',
-                assetFileNames: '[name]-[hash][extname]',
-                globals,
             },
         ],
     }),
