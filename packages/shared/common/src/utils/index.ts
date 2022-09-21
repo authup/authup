@@ -7,6 +7,7 @@
 
 export * from './duplicate-slashes';
 export * from './has-own-property';
+export * from './merge-deep';
 export * from './nanoid';
 export * from './object-properties';
 export * from './self-id';
