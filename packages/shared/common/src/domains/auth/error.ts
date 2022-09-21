@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ErrorOptions, mergeErrorOptions } from '@typescript-error/http';
+import { BadRequestError, Options, mergeOptions } from '@ebec/http';
 import { ErrorCode } from '../../error';
 import { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
-    constructor(options?: ErrorOptions) {
-        super(mergeErrorOptions({
+    constructor(options?: Options) {
+        super(mergeOptions({
             code: ErrorCode.TOKEN_INVALID,
             message: 'The Token is invalid.',
         }, (options || {})));

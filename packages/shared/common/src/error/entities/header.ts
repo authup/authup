@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError, Options, mergeOptions } from '@ebec/http';
 import { AuthorizationHeaderType } from 'hapic';
-import { ErrorOptions, mergeErrorOptions } from '@typescript-error/core';
 import { ErrorCode } from '../constants';
 
 export class HeaderError extends BadRequestError {
-    constructor(options?: ErrorOptions) {
-        super(mergeErrorOptions({
+    constructor(options?: Options) {
+        super(mergeOptions({
             code: ErrorCode.HEADER_INVALID,
         }, options));
     }

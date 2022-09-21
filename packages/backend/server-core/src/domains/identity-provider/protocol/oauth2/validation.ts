@@ -7,7 +7,7 @@
 
 import { OAuth2IdentityProviderBase } from '@authelion/common';
 import zod from 'zod';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 
 const validationSchema = zod.object({
     token_url: zod.string().url(),

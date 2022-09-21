@@ -8,7 +8,7 @@
 import { JsonWebKey, createPublicKey } from 'crypto';
 import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authelion/common';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { KeyEntity } from '../../../../../domains';

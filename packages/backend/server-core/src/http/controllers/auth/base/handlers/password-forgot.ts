@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NotFoundError, ServerError } from '@typescript-error/http';
+import { NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
 import { FindOptionsWhere } from 'typeorm';

@@ -48,8 +48,7 @@
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
         "@types/jsonwebtoken": "^8.5.9",
-        "@typescript-error/core": "^1.1.2",
-        "@typescript-error/http": "^1.1.4",
+        "@ebec/http": "^0.0.2",
         "@ucast/mongo2js": "^1.3.3",
         "change-case": "^4.1.2",
         "nanoid": "^3.3.4"

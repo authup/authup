@@ -8,7 +8,7 @@
 import {
     applyFilters, applyPagination, applySort, useDataSource,
 } from 'typeorm-extension';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';

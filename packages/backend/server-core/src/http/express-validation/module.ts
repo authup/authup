@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import { Result, ValidationError } from 'express-validator';
 import { buildExpressValidationErrorMessage } from './utils';
 

@@ -10,7 +10,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { Brackets } from 'typeorm';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';

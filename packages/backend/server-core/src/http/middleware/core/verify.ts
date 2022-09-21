@@ -19,7 +19,7 @@ import {
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from 'hapic';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest } from '../../type';
 import {

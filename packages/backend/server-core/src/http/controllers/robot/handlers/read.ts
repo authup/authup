@@ -10,7 +10,7 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@typescript-error/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     MASTER_REALM_ID,
     OAuth2SubKind, PermissionID, isSelfId,

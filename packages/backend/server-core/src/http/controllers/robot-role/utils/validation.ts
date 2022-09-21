@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { ExpressRequest } from '../../../type';
 import {

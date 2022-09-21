@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';

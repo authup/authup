@@ -12,7 +12,7 @@ import {
     isPermittedForResourceRealm,
     isValidIdentityProviderSub,
 } from '@authelion/common';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import { ExpressRequest } from '../../../type';
 import {
     ExpressValidationError,

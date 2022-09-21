@@ -6,7 +6,7 @@
  */
 
 import { Middleware } from '@decorators/express';
-import { UnauthorizedError } from '@typescript-error/http';
+import { UnauthorizedError } from '@ebec/http';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 
 export function forceUserLoggedIn(

@@ -9,7 +9,7 @@ import {
     PermissionID, isPermittedForResourceRealm, isValidRoleName,
 } from '@authelion/common';
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import {
     ExpressValidationError,
     ExpressValidationResult,

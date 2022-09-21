@@ -12,7 +12,7 @@ import {
     TokenError,
     isOAuth2ScopeAllowed,
 } from '@authelion/common';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import {
     ExpressValidationError,
     ExpressValidationResult,

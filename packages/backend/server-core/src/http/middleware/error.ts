@@ -7,12 +7,14 @@
 
 import { hasOwnProperty } from 'typeorm-extension';
 import {
-    ClientError, ConflictError,
+    ClientError,
+    ConflictError,
     InsufficientStorageError,
     InternalServerError,
+    InternalServerErrorOptions,
     ServerError,
-    ServerErrorSettings,
-} from '@typescript-error/http';
+    extendsBaseError,
+} from '@ebec/http';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 
 export function errorMiddleware(
@@ -38,11 +40,11 @@ export function errorMiddleware(
             break;
     }
 
-    const baseError : ServerError | ClientError = error instanceof ClientError || error instanceof ServerError ?
+    const baseError = extendsBaseError(error) ?
         error :
         new InternalServerError(error, { decorateMessage: true });
 
-    const statusCode : number = baseError.getOption('statusCode') ?? ServerErrorSettings.InternalServerError.statusCode;
+    const statusCode : number = baseError.getOption('statusCode') ?? InternalServerErrorOptions.statusCode;
 
     if (baseError.getOption('logMessage')) {
         const isInspected = error instanceof ClientError || error instanceof ServerError;
@@ -62,8 +64,8 @@ export function errorMiddleware(
     return response
         .status(statusCode)
         .json({
-            code: baseError.getOption('code') ?? ServerErrorSettings.InternalServerError.code,
-            message: baseError.message ?? ServerErrorSettings.InternalServerError.message,
+            code: baseError.getOption('code') ?? InternalServerErrorOptions.code,
+            message: baseError.message ?? InternalServerErrorOptions.message,
             statusCode,
             ...(extra ? { extra } : {}),
         })

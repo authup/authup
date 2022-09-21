@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@typescript-error/http';
+import { ForbiddenError } from '@ebec/http';
 import { check, matchedData, validationResult } from 'express-validator';
 import {
     Permission, PermissionID,

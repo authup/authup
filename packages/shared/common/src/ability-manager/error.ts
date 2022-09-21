@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BaseError, ErrorOptions, mergeErrorOptions } from '@typescript-error/core';
+import { BaseError, Options, mergeOptions } from '@ebec/http';
 import { ErrorCode } from '../error';
 
 export class AbilityError extends BaseError {
-    constructor(options?: ErrorOptions) {
-        super(mergeErrorOptions({
+    constructor(options?: Options) {
+        super(mergeOptions({
             code: ErrorCode.ABILITY_INVALID,
         }, (options || {})));
     }

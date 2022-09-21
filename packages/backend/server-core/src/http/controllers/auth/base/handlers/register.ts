@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
-import { BadRequestError, ServerError } from '@typescript-error/http';
+import { BadRequestError, ServerError } from '@ebec/http';
 import { randomBytes } from 'crypto';
 import { useDataSource } from 'typeorm-extension';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';

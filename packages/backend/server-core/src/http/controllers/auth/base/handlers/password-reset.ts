@@ -8,7 +8,7 @@
 import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
 import { FindOptionsWhere } from 'typeorm';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';

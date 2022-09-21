@@ -8,7 +8,7 @@
 import {
     applyFilters, applyPagination, applySort, useDataSource,
 } from 'typeorm-extension';
-import { BadRequestError, NotFoundError } from '@typescript-error/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
 

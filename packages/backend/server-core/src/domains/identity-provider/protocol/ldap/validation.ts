@@ -6,7 +6,7 @@
  */
 
 import { LdapIdentityProvider } from '@authelion/common';
-import { NotImplementedError } from '@typescript-error/http';
+import { NotImplementedError } from '@ebec/http';
 
 export function validateLdapIdentityProviderProtocol(
     entity: Partial<LdapIdentityProvider>,

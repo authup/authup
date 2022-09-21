@@ -10,7 +10,7 @@ import {
     applyFields, applyFilters, applyPagination, applyRelations, applySort,
     useDataSource,
 } from 'typeorm-extension';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';

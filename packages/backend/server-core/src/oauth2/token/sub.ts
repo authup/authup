@@ -9,7 +9,7 @@ import {
     OAuth2SubKind,
     TokenError,
 } from '@authelion/common';
-import { NotFoundError } from '@typescript-error/http';
+import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import {
     OAuth2ClientEntity,
