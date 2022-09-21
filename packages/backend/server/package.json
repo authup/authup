@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "description": "This is a simple standalone api application.",
     "main": "dist/index.js",
     "scripts": {
@@ -40,8 +40,8 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/common": "^0.3.2",
-        "@authelion/server-core": "^0.3.6",
+        "@authelion/common": "^0.3.3",
+        "@authelion/server-core": "^0.3.7",
         "better-sqlite3": "^7.6.2",
         "change-case": "^4.1.2",
         "dotenv": "^16.0.2",
