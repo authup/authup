@@ -1,6 +1,6 @@
 {
     "name": "@authelion/vue-demo",
-    "version": "2.0.0-alpha.1",
+    "version": "2.0.0-alpha.2",
     "private": true,
     "description": "This package contains a vue demo app.",
     "scripts": {
@@ -38,8 +38,8 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/common": "^0.3.6",
-        "@authelion/vue": "^2.0.1-alpha.1",
+        "@authelion/common": "^0.3.7",
+        "@authelion/vue": "^2.0.1-alpha.2",
         "@fortawesome/fontawesome-free": "^6.2.0",
         "@hapic/oauth2": "^0.0.2",
         "@vue-layout/utils": "^2.0.0-alpha.10",
