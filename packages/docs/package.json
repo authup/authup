@@ -1,0 +1,13 @@
+{
+    "name": "@authelion/docs",
+    "private": true,
+    "scripts": {
+        "dev": "vitepress dev src --temp .temp",
+        "build": "vitepress build src --temp .temp",
+        "help": "vitepress --help"
+    },
+    "dependencies": {
+        "vitepress": "^1.0.0-alpha.15",
+        "vue": "^3.2.39"
+    }
+}
