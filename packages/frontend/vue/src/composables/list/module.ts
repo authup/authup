@@ -10,7 +10,7 @@ import {
     buildList,
 } from '@vue-layout/utils';
 import {
-    Ref, VNode, ref, watch,
+    Ref, VNode, computed, ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
 import { ListBuilderContext } from './type';
@@ -33,20 +33,36 @@ export function useListBuilder<T extends Record<string, any>>(
         total: 0,
     });
 
+    const filterKey = computed(() => {
+        if (
+            context.components.items &&
+            typeof context.components.items !== 'boolean'
+        ) {
+            const item = unref(context.components.items.item);
+            if (item && item.textPropName) {
+                return unref(item.textPropName);
+            }
+        }
+
+        return 'name';
+    });
+
     async function load(targetMeta?: Partial<PaginationMeta>) {
-        const queryMeta : Partial<PaginationMeta> = targetMeta || meta.value;
+        if (typeof targetMeta === 'undefined') {
+            targetMeta = {};
+        }
 
         const response = await context.load(merge(
-            context.props.query.value,
             {
                 page: {
-                    limit: queryMeta.limit,
-                    offset: queryMeta.offset,
+                    limit: targetMeta.limit ?? meta.value.limit,
+                    offset: targetMeta.offset ?? meta.value.offset,
                 },
                 filter: {
-                    name: q.value.length > 0 ? `~${q.value}` : q.value,
+                    [filterKey.value]: q.value.length > 0 ? `~${q.value}` : q.value,
                 },
             },
+            context.props.query.value,
         ));
 
         data.value = response.data;

@@ -22,11 +22,11 @@ export const PermissionRoleAssignmentList = defineComponent({
     setup(props) {
         return () => h(RoleList, {
             scopedSlots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps: { item: Role }) => h(
+                [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                     RolePermissionAssignmentListItemActions,
                     {
                         permissionId: props.entityId,
-                        roleId: slotProps.item.id,
+                        roleId: slotProps.data.id,
                     },
                 ),
             },

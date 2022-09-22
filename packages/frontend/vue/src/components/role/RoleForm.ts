@@ -106,6 +106,7 @@ export const RoleForm = defineComponent({
                 submit,
                 busy,
                 isEditing,
+                validationResult: $v.value,
             });
 
             return h('form', {

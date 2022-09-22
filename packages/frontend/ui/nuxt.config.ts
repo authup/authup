@@ -6,8 +6,10 @@ import path from 'path';
 export default defineNuxtConfig({
     css: [
         '@fortawesome/fontawesome-free/css/all.css',
-        'bootstrap/dist/css/bootstrap.min.css',
+        'bootstrap/dist/css/bootstrap.css',
+        'vue-toastification/dist/index.css',
         '@/assets/css/vue-layout-navigation.css',
+        '@/assets/css/vue-toastification.css',
         '@/assets/css/root.css',
         '@/assets/css/core/header.css',
         '@/assets/css/core/navbar.css',

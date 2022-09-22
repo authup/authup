@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2022.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+.Vue-Toastification__toast--default {
+    background-color: hsla(0,0%,100%,.85);;
+    color: inherit;
+}
+
+.Vue-Toastification__toast--sucess {
+    background-color: rgba(230,245,233,.85);
+    border-color: rgba(195,230,203,.85);
+    color: #155724;
+}
+
+.Vue-Toastification__toast--info {
+    background-color: rgba(229,244,247,.85);
+    border-color: rgba(190,229,235,.85);
+    color: #0c5460;
+}
+
+.Vue-Toastification__toast--warning {
+    background-color: rgba(255,249,231,.85);
+    border-color: rgba(255,238,186,.85);
+    color: #856404;
+}
+
+.Vue-Toastification__toast--error {
+    background-color: rgba(252,237,238,.85);
+    border-color: rgba(245,198,203,.85);
+    color: #721c24;
+}

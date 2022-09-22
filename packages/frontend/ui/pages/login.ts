@@ -8,6 +8,7 @@
 import { buildFormInput, buildFormSubmit } from '@vue-layout/utils';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
+import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import { reactive, ref } from '#imports';
 import { translateValidationMessage } from '../composables/ilingo';
@@ -50,7 +51,8 @@ export default defineNuxtComponent({
                 const route = useRoute();
                 navigateTo({ path: (route.query.redirect || '/') as string });
             } catch (e) {
-                // todo: display error
+                const toast = useToast();
+                toast.warning(e.message);
             }
         };
 

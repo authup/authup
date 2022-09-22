@@ -59,6 +59,7 @@
     border: 1px solid #eee;
     cursor:pointer;
     padding: 5px 8px;
+    font-size: 0.75rem;
 }
 
 .pagination > .active > .page-link,

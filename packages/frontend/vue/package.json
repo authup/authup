@@ -53,7 +53,7 @@
         "@rollup/plugin-node-resolve": "^14.1.0",
         "@rollup/plugin-replace": "^4.0.0",
         "@types/node": "^18.7.18",
-        "@vue-layout/utils": "^2.0.0-alpha.10",
+        "@vue-layout/utils": "^2.0.0-alpha.11",
         "@vuelidate/core": "^2.0.0-alpha.44",
         "@vuelidate/validators": "^2.0.0-alpha.31",
         "cross-env": "^7.0.3",
@@ -70,7 +70,7 @@
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
-        "@vue-layout/utils": "^2.0.0-alpha.10",
+        "@vue-layout/utils": "^2.0.0-alpha.11",
         "@vuelidate/core": "^2.0.0-alpha.44",
         "@vuelidate/validators": "^2.0.0-alpha.31",
         "ilingo": "^2.x",

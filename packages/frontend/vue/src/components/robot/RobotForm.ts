@@ -198,6 +198,7 @@ export const RobotForm = defineComponent({
                 busy,
                 submit,
                 isEditing,
+                validationResult: $v.value,
             });
 
             const leftColumn = h('div', { class: 'col' }, [
@@ -216,10 +217,10 @@ export const RobotForm = defineComponent({
             ) {
                 const realm = h(RealmList, {}, {
                     [SlotName.ITEM_ACTIONS]: (
-                        props: { item: Realm, busy: MaybeRef<boolean> },
+                        props: { data: Realm, busy: MaybeRef<boolean> },
                     ) => buildItemActionToggle({
                         currentValue: form.realm_id,
-                        value: props.item.id,
+                        value: props.data.id,
                         busy: props.busy,
                         change(value) {
                             form.realm_id = value as string;

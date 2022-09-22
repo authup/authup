@@ -57,8 +57,8 @@ export default defineNuxtComponent({
                         :time="tokenExpiresIn"
                     >
                         <template #default="props">
-                            <i class="fa fa-clock pr-1" /> Die Sitzung endet in
-                            <span class="text-success">{{ props.minutes }} Minute(n), {{ props.seconds }} Sekunde(n)</span>.
+                            <i class="fa fa-clock pr-1" /> The session expires in
+                            <span class="text-success">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
                         </template>
                     </countdown>
                 </small>

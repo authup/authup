@@ -59,9 +59,9 @@ function checkAbilityOrPermission(route, has: (name: string) => boolean) {
     return true;
 }
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin(({ $pinia }) => {
     addRouteMiddleware(async (to, from) => {
-        const store = useAuthStore();
+        const store = useAuthStore($pinia);
         await store.resolve();
 
         let redirectPath = '/';

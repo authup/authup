@@ -17,9 +17,6 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
-        const app = useAPI();
-        const { data } = await app.realm.getMany();
-
-        return () => h(RealmList);
+        return () => h('div', []);
     },
 });

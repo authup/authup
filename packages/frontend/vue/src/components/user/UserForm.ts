@@ -191,7 +191,7 @@ export const UserForm = defineComponent({
                 submit,
                 busy,
                 isEditing: isEditing.value,
-                validationRulesResult: $v.value,
+                validationResult: $v.value,
             });
 
             const leftColumn = h('div', { class: 'col' }, [
@@ -209,8 +209,8 @@ export const UserForm = defineComponent({
                 props.canManage
             ) {
                 const realm = h(RealmList, {}, {
-                    [SlotName.ITEM_ACTIONS]: (props: { item: Realm, busy: MaybeRef<boolean>}) => buildItemActionToggle({
-                        value: props.item.id,
+                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: MaybeRef<boolean>}) => buildItemActionToggle({
+                        value: props.data.id,
                         currentValue: form.realm_id,
                         busy: props.busy,
                         change(value) {

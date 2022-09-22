@@ -20,11 +20,11 @@ export const UserRoleAssignmentList = defineComponent({
     },
     setup(props) {
         return () => h(RoleList, {}, {
-            [SlotName.ITEM_ACTIONS]: (slotProps: { item: Role }) => h(
+            [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 UserRoleAssignmentListItemActions,
                 {
                     userId: props.entityId,
-                    roleId: slotProps.item.id,
+                    roleId: slotProps.data.id,
                 },
             ),
         });

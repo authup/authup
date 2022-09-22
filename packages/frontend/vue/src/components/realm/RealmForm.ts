@@ -162,6 +162,8 @@ export const RealmForm = defineComponent({
                 updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
                 createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
                 submit,
+                busy,
+                validationResult: $v.value,
             });
 
             return h('form', {
@@ -181,5 +183,7 @@ export const RealmForm = defineComponent({
                 submitButton,
             ]);
         };
+
+        return () => render();
     },
 });

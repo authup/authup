@@ -23,11 +23,11 @@ export const RobotPermissionAssignmentList = defineComponent({
     },
     setup(props) {
         return () => h(PermissionList, {}, {
-            [SlotName.ITEM_ACTIONS]: (slotProps: { item: Permission }) => h(
+            [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
                 RobotPermissionAssignmentListItemActions,
                 {
                     robotId: props.entityId,
-                    permissionId: slotProps.item.id,
+                    permissionId: slotProps.data.id,
                 },
             ),
         });

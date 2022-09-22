@@ -78,91 +78,65 @@ export const LayoutSideDefaultNavigation : Component[] = [
 
 export const LayoutSideAdminNavigation : Component[] = [
     {
-        name: 'Auth',
-        icon: 'fas fa-lock',
+        name: 'Realms',
+        type: 'link',
+        url: '/admin/realms',
+        icon: 'fas fa-university',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionID.REALM_ADD,
             PermissionID.REALM_EDIT,
             PermissionID.REALM_DROP,
-
+        ],
+    },
+    {
+        name: 'Robots',
+        type: 'link',
+        url: '/admin/robots',
+        icon: 'fas fa-robot',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionID.ROBOT_ADD,
+            PermissionID.ROBOT_EDIT,
+            PermissionID.ROBOT_DROP,
+        ],
+    },
+    {
+        name: 'Users',
+        type: 'link',
+        url: '/admin/users',
+        icon: 'fas fa-user',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionID.USER_ADD,
             PermissionID.USER_EDIT,
             PermissionID.USER_DROP,
-
+        ],
+    },
+    {
+        name: 'Roles',
+        type: 'link',
+        url: '/admin/roles',
+        icon: 'fas fa-users',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionID.ROLE_ADD,
             PermissionID.ROLE_EDIT,
             PermissionID.ROLE_DROP,
             PermissionID.ROLE_PERMISSION_ADD,
             PermissionID.ROLE_PERMISSION_DROP,
-
+        ],
+    },
+    {
+        name: 'Permissions',
+        type: 'link',
+        url: '/admin/permissions',
+        icon: 'fas fa-key',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionID.PERMISSION_ADD,
             PermissionID.PERMISSION_EDIT,
             PermissionID.PERMISSION_DROP,
-        ],
-        components: [
-            {
-                name: 'Realms',
-                type: 'link',
-                url: '/admin/realms',
-                icon: 'fas fa-university',
-                [LayoutKey.REQUIRED_LOGGED_IN]: true,
-                [LayoutKey.REQUIRED_PERMISSIONS]: [
-                    PermissionID.REALM_ADD,
-                    PermissionID.REALM_EDIT,
-                    PermissionID.REALM_DROP,
-                ],
-            },
-            {
-                name: 'Robots',
-                type: 'link',
-                url: '/admin/robots',
-                icon: 'fas fa-robot',
-                [LayoutKey.REQUIRED_LOGGED_IN]: true,
-                [LayoutKey.REQUIRED_PERMISSIONS]: [
-                    PermissionID.ROBOT_ADD,
-                    PermissionID.ROBOT_EDIT,
-                    PermissionID.ROBOT_DROP,
-                ],
-            },
-            {
-                name: 'Users',
-                type: 'link',
-                url: '/admin/users',
-                icon: 'fas fa-user',
-                [LayoutKey.REQUIRED_LOGGED_IN]: true,
-                [LayoutKey.REQUIRED_PERMISSIONS]: [
-                    PermissionID.USER_ADD,
-                    PermissionID.USER_EDIT,
-                    PermissionID.USER_DROP,
-                ],
-            },
-            {
-                name: 'Roles',
-                type: 'link',
-                url: '/admin/roles',
-                icon: 'fas fa-users',
-                [LayoutKey.REQUIRED_LOGGED_IN]: true,
-                [LayoutKey.REQUIRED_PERMISSIONS]: [
-                    PermissionID.ROLE_ADD,
-                    PermissionID.ROLE_EDIT,
-                    PermissionID.ROLE_DROP,
-                    PermissionID.ROLE_PERMISSION_ADD,
-                    PermissionID.ROLE_PERMISSION_DROP,
-                ],
-            },
-            {
-                name: 'Permissions',
-                type: 'link',
-                url: '/admin/permissions',
-                icon: 'fas fa-key',
-                [LayoutKey.REQUIRED_LOGGED_IN]: true,
-                [LayoutKey.REQUIRED_PERMISSIONS]: [
-                    PermissionID.PERMISSION_ADD,
-                    PermissionID.PERMISSION_EDIT,
-                    PermissionID.PERMISSION_DROP,
-                ],
-            },
         ],
     },
 ];

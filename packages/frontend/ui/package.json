@@ -17,7 +17,7 @@
         "@nuxtjs/google-fonts": "^3.0.0-0",
         "@pinia/nuxt": "^0.4.2",
         "@vue-layout/navigation": "^2.0.0-alpha.12",
-        "@vue-layout/utils": "^2.0.0-alpha.10",
+        "@vue-layout/utils": "^2.0.0-alpha.11",
         "@vuelidate/core": "^2.0.0-alpha.44",
         "@vuelidate/validators": "^2.0.0-alpha.31",
         "bootstrap": "^5.2.1",
@@ -25,6 +25,7 @@
         "hapic": "^0.0.2",
         "ilingo": "^2.0.4",
         "nuxt": "3.0.0-rc.11",
-        "pinia": "^2.0.22"
+        "pinia": "^2.0.22",
+        "vue-toastification": "next"
     }
 }

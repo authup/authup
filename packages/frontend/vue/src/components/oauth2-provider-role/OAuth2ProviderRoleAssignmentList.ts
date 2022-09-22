@@ -23,7 +23,7 @@ export const OAuth2ProviderRoleAssignmentList = defineComponent({
         return () => h(RoleList, {
             withHeader: false,
         }, {
-            [SlotName.ITEMS]: (slotProps: { items: Role[] }) => slotProps.items.map((item: Role) => h(
+            [SlotName.ITEMS]: (slotProps: { data: Role[] }) => slotProps.data.map((item: Role) => h(
                 OAuth2ProviderRoleAssignmentListItem,
                 {
                     key: item.id,

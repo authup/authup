@@ -22,11 +22,11 @@ export const RoleRobotAssignmentList = defineComponent({
     },
     setup(props) {
         return () => h(RobotList, {}, {
-            [SlotName.ITEM_ACTIONS]: (slotProps: { item: Robot }) => h(
+            [SlotName.ITEM_ACTIONS]: (slotProps: { data: Robot }) => h(
                 RobotRoleAssignmentListItemActions,
                 {
                     roleId: props.entityId,
-                    robotId: slotProps.item.id,
+                    robotId: slotProps.data.id,
                 },
             ),
         });

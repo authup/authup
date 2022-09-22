@@ -17,7 +17,12 @@
     padding: .4rem .7rem;
 }
 
+.nav-pills .nav-link {
+    color: inherit;
+}
+
 .nav-pills .nav-link.active,
+.nav-pills .nav-link.router-link-exact-active,
 .nav-pills .show>.nav-link {
     color: #fff;
     background-color: rgba(29, 33, 36, 0.5);
