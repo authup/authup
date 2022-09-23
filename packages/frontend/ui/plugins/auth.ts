@@ -60,7 +60,7 @@ function checkAbilityOrPermission(route, has: (name: string) => boolean) {
 }
 
 export default defineNuxtPlugin(({ $pinia }) => {
-    addRouteMiddleware(async (to, from) => {
+    addRouteMiddleware('auth', async (to, from) => {
         const store = useAuthStore($pinia);
         await store.resolve();
 

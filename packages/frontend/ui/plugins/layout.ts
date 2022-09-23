@@ -7,7 +7,7 @@
 
 import Navigation, { Component, build } from '@vue-layout/navigation';
 import { addRouteMiddleware, defineNuxtPlugin, useState } from '#app';
-import { NavigationProvider } from '../config/layout/module';
+import { NavigationProvider } from '../config/layout';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtPlugin((ctx) => {

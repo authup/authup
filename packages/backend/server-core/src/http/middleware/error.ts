@@ -7,14 +7,13 @@
 
 import { hasOwnProperty } from 'typeorm-extension';
 import {
-    ClientError,
     ConflictError,
     InsufficientStorageError,
     InternalServerError,
     InternalServerErrorOptions,
-    ServerError,
     extendsBaseError,
 } from '@ebec/http';
+import { useLogger } from '../../logger';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 
 export function errorMiddleware(
@@ -46,13 +45,15 @@ export function errorMiddleware(
 
     const statusCode : number = baseError.getOption('statusCode') ?? InternalServerErrorOptions.statusCode;
 
-    if (baseError.getOption('logMessage')) {
-        const isInspected = error instanceof ClientError || error instanceof ServerError;
-        console.error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
-    }
-
-    if (process.env.NODE_ENV === 'test') {
-        console.error(error);
+    if (
+        baseError.getOption('logMessage') ||
+        process.env.NODE_ENV === 'test'
+    ) {
+        const isInspected = extendsBaseError(error);
+        const logger = useLogger();
+        if (logger) {
+            logger.error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
+        }
     }
 
     if (baseError.getOption('decorateMessage')) {

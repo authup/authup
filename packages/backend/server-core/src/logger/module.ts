@@ -7,9 +7,9 @@
 
 import { Logger } from './type';
 
-let instance: Logger;
+let instance: Logger | undefined;
 
-export function useLogger() {
+export function useLogger() : Logger | undefined {
     return instance;
 }
 
