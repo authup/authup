@@ -5,13 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Ref } from 'vue';
 import { RouterView } from 'vue-router';
 import { PermissionID, User } from '@authelion/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink } from '#components';
-import { defineNuxtComponent, navigateTo, useRoute } from '#app';
-import { definePageMeta, resolveComponent, useAPI } from '#imports';
-import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
+import { defineNuxtComponent, useRoute } from '#app';
+import {
+    definePageMeta, useAPI, useAsyncData,
+} from '#imports';
+import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 
 export default defineNuxtComponent({
     async setup() {
@@ -28,13 +31,8 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        let entity : User | undefined;
-
-        try {
-            entity = await useAPI().user.getOne(route.params.id as string, { fields: ['+email'] });
-        } catch (e) {
-            return navigateTo('/admin/users');
-        }
+        const response = await useAsyncData(() => useAPI().user.getOne(route.params.id as string, { fields: ['+email'] }));
+        const entity = response.data as Ref<User>;
 
         const items = [
             {
@@ -58,7 +56,7 @@ export default defineNuxtComponent({
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
                 h('i', { class: 'fa fa-user me-1' }),
-                entity.name,
+                entity.value.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),
@@ -72,7 +70,7 @@ export default defineNuxtComponent({
                             NuxtLink,
                             {
                                 class: 'nav-link',
-                                to: `/admin/users/${entity.id}/${item.urlSuffix}`,
+                                to: `/admin/users/${entity.value.id}/${item.urlSuffix}`,
                             },
                             {
                                 default: () => [
@@ -89,7 +87,7 @@ export default defineNuxtComponent({
                 h(RouterView, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
-                    entity,
+                    entity: entity.value,
                 }),
             ]),
 

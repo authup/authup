@@ -36,6 +36,6 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         await store.logout();
 
-        return navigateTo({ path: '/login', query });
+        await router.push({ path: '/login', query });
     },
 });

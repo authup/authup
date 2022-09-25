@@ -7,7 +7,7 @@
 
 import { buildNameFromAbilityID } from '@authelion/common';
 import {
-    addRouteMiddleware, defineNuxtPlugin, navigateTo,
+    navigateTo,
 } from '#app';
 import { LayoutKey } from '../config/layout';
 import { useAuthStore } from '../store/auth';
@@ -59,57 +59,55 @@ function checkAbilityOrPermission(route, has: (name: string) => boolean) {
     return true;
 }
 
-export default defineNuxtPlugin(({ $pinia }) => {
-    addRouteMiddleware('auth', async (to, from) => {
-        const store = useAuthStore($pinia);
-        await store.resolve();
+export default defineNuxtRouteMiddleware(async (to, from) => {
+    const store = useAuthStore();
+    await store.resolve();
 
-        let redirectPath = '/';
+    let redirectPath = '/';
 
-        if (typeof from !== 'undefined') {
-            redirectPath = from.fullPath;
-        }
+    if (typeof from !== 'undefined') {
+        redirectPath = from.fullPath;
+    }
 
-        if (
-            to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])
-        ) {
-            if (!store.loggedIn) {
-                const query : Record<string, any> = {};
-
-                if (!to.fullPath.startsWith('/logout')) {
-                    query.redirect = to.fullPath;
-                }
-
-                return navigateTo({
-                    path: '/login',
-                    query,
-                });
-            }
-
-            try {
-                checkAbilityOrPermission(to, (name) => store.has(name));
-            } catch (e) {
-                return navigateTo({
-                    path: redirectPath,
-                });
-            }
-        } else if (
-            !to.fullPath.startsWith('/logout') &&
-            to.matched.some((matched) => matched.meta[LayoutKey.REQUIRED_LOGGED_OUT])
-        ) {
+    if (
+        to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])
+    ) {
+        if (!store.loggedIn) {
             const query : Record<string, any> = {};
-            if (!redirectPath.includes('logout')) {
-                query.redirect = redirectPath;
+
+            if (!to.fullPath.startsWith('/logout')) {
+                query.redirect = to.fullPath;
             }
 
-            if (store.loggedIn) {
-                return navigateTo({
-                    path: '/logout',
-                    query,
-                });
-            }
+            return navigateTo({
+                path: '/login',
+                query,
+            });
         }
 
-        return undefined;
-    });
+        try {
+            checkAbilityOrPermission(to, (name) => store.has(name));
+        } catch (e) {
+            return navigateTo({
+                path: redirectPath,
+            });
+        }
+    } else if (
+        !to.fullPath.startsWith('/logout') &&
+        to.matched.some((matched) => matched.meta[LayoutKey.REQUIRED_LOGGED_OUT])
+    ) {
+        const query : Record<string, any> = {};
+        if (!redirectPath.includes('logout')) {
+            query.redirect = redirectPath;
+        }
+
+        if (store.loggedIn) {
+            return navigateTo({
+                path: '/logout',
+                query,
+            });
+        }
+    }
+
+    return undefined;
 });

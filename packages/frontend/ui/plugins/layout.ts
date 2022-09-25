@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Navigation, { Component, build } from '@vue-layout/navigation';
-import { addRouteMiddleware, defineNuxtPlugin, useState } from '#app';
+import Navigation, { Component } from '@vue-layout/navigation';
+import { defineNuxtPlugin, useState } from '#app';
 import { NavigationProvider } from '../config/layout';
 import { useAuthStore } from '../store/auth';
 
@@ -27,9 +27,5 @@ export default defineNuxtPlugin((ctx) => {
             isLoggedIn: () => store.loggedIn,
             hasPermission: (name) => store.has(name),
         }),
-    });
-
-    addRouteMiddleware(async (to, from) => {
-        await build({ url: to.fullPath });
     });
 });
