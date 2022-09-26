@@ -19,7 +19,7 @@
         "@vue-layout/navigation": "^2.0.0-alpha.16",
         "@vue-layout/utils": "^2.0.0-alpha.11",
         "@vuelidate/core": "^2.0.0-alpha.44",
-        "@vuelidate/validators": "^2.0.0-alpha.31",
+        "@vuelidate/validators": "^2.0.0",
         "bootstrap": "^5.2.1",
         "browser-storage-adapter": "^1.0.3",
         "hapic": "^0.0.2",
