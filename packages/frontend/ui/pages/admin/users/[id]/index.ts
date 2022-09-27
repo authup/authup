@@ -20,7 +20,12 @@ export default defineNuxtComponent({
         },
     },
     emits: ['updated', 'failed'],
-    setup(props, { emit }) {
+    async setup(props, { emit }) {
+        // todo: remove this when nuxt is fixed
+        if (!props.entity) {
+            return () => h('div', []);
+        }
+
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });
