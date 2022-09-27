@@ -12,6 +12,22 @@
             ]
         }
     },
+    "useNx": true,
     "useWorkspaces": true,
-    "version": "independent"
+    "conventionalCommits": true,
+    "version": "independent",
+    "changelog": {
+        "labels": {
+            "build": "Build",
+            "ci": "Continuous Integration",
+            "docs": "Documentation",
+            "feat": "New Feature",
+            "fix": "Bug Fix",
+            "perf": "Performance",
+            "refactor": "Refactor",
+            "revert": "Revert",
+            "style": "Style",
+            "test": "Test"
+        }
+    }
 }
