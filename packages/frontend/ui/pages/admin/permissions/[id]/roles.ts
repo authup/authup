@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '@authelion/common';
+import { Permission } from '@authelion/common';
 import { PropType } from 'vue';
 import { resolveComponent } from '#imports';
 
 export default defineNuxtComponent({
     props: {
         entity: {
-            type: Object as PropType<User>,
+            type: Object as PropType<Permission>,
             required: true,
         },
     },
@@ -22,7 +22,7 @@ export default defineNuxtComponent({
             return () => h('div', []);
         }
 
-        const list = resolveComponent('UserRoleAssignmentList');
+        const list = resolveComponent('PermissionRoleAssignmentList');
         return () => h(list, {
             entityId: props.entity.id,
         });

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '@authelion/common';
+import { Role } from '@authelion/common';
 import { PropType } from 'vue';
 import { definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '../../../../config/layout';
@@ -13,7 +13,7 @@ import { LayoutKey } from '../../../../config/layout';
 export default defineComponent({
     props: {
         entity: {
-            type: Object as PropType<User>,
+            type: Object as PropType<Role>,
             required: true,
         },
     },
@@ -36,27 +36,15 @@ export default defineComponent({
             emit('failed', e);
         };
 
-        const form = resolveComponent('UserForm');
-        const passwordForm = resolveComponent('UserPasswordForm');
+        const form = resolveComponent('RoleForm');
 
         return () => h('div', { class: 'row' }, [
-            h('div', { class: 'col-7' }, [
-                h('h6', { class: 'title' }, ['General']),
-                h(form, {
-                    entity: props.entity,
-                    realmId: props.entity.realm_id,
-                    onUpdated: handleUpdated,
-                    onFailed: handleFailed,
-                }),
-            ]),
-            h('div', { class: 'col-5' }, [
-                h('h6', { class: 'title' }, ['Password']),
-                h(passwordForm, {
-                    id: props.entity.id,
-                    onUpdated: handleUpdated,
-                    onFailed: handleFailed,
-                }),
-            ]),
+            h('h6', { class: 'title' }, ['General']),
+            h(form, {
+                entity: props.entity,
+                onUpdated: handleUpdated,
+                onFailed: handleFailed,
+            }),
 
         ]);
     },

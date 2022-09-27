@@ -37,22 +37,28 @@ export const PermissionForm = defineComponent({
             id: '',
         });
 
-        const $v = useVuelidate(form, {
+        const $v = useVuelidate({
             id: {
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(30),
             },
-        });
+        }, form);
 
         const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
+        function initForm() {
+            initFormAttributesFromEntity(form, props.entity);
+        }
+
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                initFormAttributesFromEntity(form, props.entity);
+                initForm();
             }
         });
+
+        initForm();
 
         const submit = createSubmitHandler<Permission>({
             props,
@@ -72,6 +78,9 @@ export const PermissionForm = defineComponent({
                 value: form.id,
                 change(input) {
                     form.id = input;
+                },
+                props: {
+                    disabled: isEditing.value,
                 },
             });
 

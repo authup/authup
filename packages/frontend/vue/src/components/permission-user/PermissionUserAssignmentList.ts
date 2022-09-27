@@ -6,13 +6,13 @@
  */
 
 import { defineComponent, h } from 'vue';
-import { Role } from '@authelion/common';
+import { User } from '@authelion/common';
 import { SlotName } from '@vue-layout/utils';
-import { RolePermissionAssignmentListItemActions } from '../role-permission';
-import { RoleList } from '../role';
+import { UserPermissionAssignmentListItemActions } from '../user-permission';
+import { UserList } from '../user';
 
-export const PermissionRoleAssignmentList = defineComponent({
-    name: 'PermissionRoleAssignmentList',
+export const PermissionUserAssignmentList = defineComponent({
+    name: 'PermissionUserAssignmentList',
     props: {
         entityId: {
             type: String,
@@ -20,16 +20,17 @@ export const PermissionRoleAssignmentList = defineComponent({
         },
     },
     setup(props) {
-        return () => h(RoleList, {}, {
-            [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
-                RolePermissionAssignmentListItemActions,
+        return () => h(UserList, {}, {
+            [SlotName.ITEM_ACTIONS]: (slotProps: { data: User }) => h(
+                UserPermissionAssignmentListItemActions,
                 {
                     permissionId: props.entityId,
-                    roleId: slotProps.data.id,
+                    userId: slotProps.data.id,
                 },
             ),
+
         });
     },
 });
 
-export default PermissionRoleAssignmentList;
+export default PermissionUserAssignmentList;

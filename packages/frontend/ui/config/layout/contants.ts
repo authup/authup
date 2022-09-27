@@ -117,7 +117,7 @@ export const LayoutSideAdminNavigation : Component[] = [
         name: 'Roles',
         type: 'link',
         url: '/admin/roles',
-        icon: 'fas fa-users',
+        icon: 'fa-solid fa-user-group',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionID.ROLE_ADD,

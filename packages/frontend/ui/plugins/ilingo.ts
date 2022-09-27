@@ -23,7 +23,7 @@ declare module '@vue/runtime-core' {
 export default defineNuxtPlugin((ctx) => {
     const ilingo = new Ilingo();
 
-    ilingo.setLocale('de');
+    ilingo.setLocale('en');
     ilingo.setCache({
         de: {
             app: {

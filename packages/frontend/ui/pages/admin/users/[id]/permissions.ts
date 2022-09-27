@@ -22,7 +22,7 @@ export default defineNuxtComponent({
             return () => h('div', []);
         }
 
-        const list = resolveComponent('UserRoleAssignmentList');
+        const list = resolveComponent('UserPermissionAssignmentList');
         return () => h(list, {
             entityId: props.entity.id,
         });

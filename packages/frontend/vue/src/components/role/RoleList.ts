@@ -51,7 +51,7 @@ export const RoleList = defineComponent({
             components: {
                 header: {
                     title: {
-                        iconClass: 'fa-solid fa-layer-group',
+                        iconClass: 'fa-solid fa-user-group',
                         textContent: 'Roles',
                     },
                 },

@@ -6,23 +6,13 @@
  */
 
 import {
-    AbilityDescriptor,
-    AbilityManager,
-    ErrorCode,
-    OAuth2TokenGrantResponse,
-    OAuth2TokenKind,
-    User,
-    hasOwnProperty,
+    AbilityDescriptor, AbilityManager, ErrorCode, OAuth2TokenGrantResponse, OAuth2TokenKind, User, hasOwnProperty,
 } from '@authelion/common';
 import { Client } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
 import { defineStore } from 'pinia';
+import { computed, ref, useRuntimeConfig } from '#imports';
 import { useRouter } from '#app';
-import {
-    computed,
-    ref,
-    useRuntimeConfig,
-} from '#imports';
 
 export const useAuthStore = defineStore('auth', () => {
     const config = useRuntimeConfig();
@@ -229,8 +219,32 @@ export const useAuthStore = defineStore('auth', () => {
     const resolve = async () => {
         if (!accessToken.value) return;
 
-        await resolveUser();
-        await resolvePermissions();
+        try {
+            await resolveUser();
+            await resolvePermissions();
+        } catch (e) {
+            console.log('abc');
+            if (isClientError(e)) {
+                if (
+                    e.response.data &&
+                    hasOwnProperty(e.response.data, 'code') &&
+                    typeof e.response.data.code === 'string'
+                ) {
+                    const tokenErrorCodes : string[] = [
+                        ErrorCode.TOKEN_EXPIRED,
+                        ErrorCode.TOKEN_INVALID,
+                        ErrorCode.TOKEN_INACTIVE,
+                    ];
+
+                    if (tokenErrorCodes.indexOf(e.response.data.code) !== -1) {
+                        await logout();
+                        return;
+                    }
+                }
+            }
+
+            throw e;
+        }
     };
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);

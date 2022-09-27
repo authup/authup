@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, User } from '@authelion/common';
+import { PermissionID, Role } from '@authelion/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPageWrapper } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -20,7 +20,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.USER_EDIT,
+                PermissionID.ROLE_EDIT,
                 PermissionID.USER_ROLE_ADD,
                 PermissionID.USER_ROLE_EDIT,
                 PermissionID.USER_ROLE_DROP,
@@ -29,14 +29,14 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        let entity: User;
+        let entity: Role;
 
         try {
             entity = await useAPI()
-                .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
+                .role
+                .getOne(route.params.id as string);
         } catch (e) {
-            return navigateTo({ path: '/admin/users' });
+            return navigateTo({ path: '/admin/roles' });
         }
 
         const items = [
@@ -47,13 +47,13 @@ export default defineNuxtComponent({
                 name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: 'roles',
+                name: 'Users', icon: 'fas fa-users', urlSuffix: 'users',
             },
         ];
 
         const handleUpdated = () => {
             const toast = useToast();
-            toast.success('The user was successfully updated.');
+            toast.success('The role was successfully updated.');
         };
 
         const handleFailed = (e) => {
@@ -63,7 +63,7 @@ export default defineNuxtComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-user me-1' }),
+                h('i', { class: 'fa-solid fa-user-group me-1' }),
                 entity.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
@@ -78,7 +78,7 @@ export default defineNuxtComponent({
                             NuxtLink,
                             {
                                 class: 'nav-link',
-                                to: `/admin/users/${entity.id}/${item.urlSuffix}`,
+                                to: `/admin/roles/${entity.id}/${item.urlSuffix}`,
                             },
                             {
                                 default: () => [

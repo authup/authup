@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, User } from '@authelion/common';
+import { PermissionID, Robot } from '@authelion/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPageWrapper } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -29,14 +29,14 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        let entity: User;
+        let entity: Robot;
 
         try {
             entity = await useAPI()
-                .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
+                .robot
+                .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch (e) {
-            return navigateTo({ path: '/admin/users' });
+            return navigateTo({ path: '/admin/robots' });
         }
 
         const items = [
@@ -53,7 +53,7 @@ export default defineNuxtComponent({
 
         const handleUpdated = () => {
             const toast = useToast();
-            toast.success('The user was successfully updated.');
+            toast.success('The robot was successfully updated.');
         };
 
         const handleFailed = (e) => {
@@ -63,7 +63,7 @@ export default defineNuxtComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-user me-1' }),
+                h('i', { class: 'fa fa-robot me-1' }),
                 entity.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
@@ -78,7 +78,7 @@ export default defineNuxtComponent({
                             NuxtLink,
                             {
                                 class: 'nav-link',
-                                to: `/admin/users/${entity.id}/${item.urlSuffix}`,
+                                to: `/admin/robots/${entity.id}/${item.urlSuffix}`,
                             },
                             {
                                 default: () => [

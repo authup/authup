@@ -55,12 +55,12 @@ export default defineNuxtComponent({
                         class="navbar-nav nav-items navbar-gadgets"
                     >
                         <li class="nav-item">
-                            <nuxt-link
-                                class="nav-link user-link"
-                                :to="'/users/'+user.id"
+                            <a
+                                href="javascript:void(0)"
+                                class="nav-link"
                             >
                                 <span>{{ user.displayName ? user.displayName : user.name }}</span>
-                            </nuxt-link>
+                            </a>
                         </li>
                         <li class="nav-item">
                             <nuxt-link

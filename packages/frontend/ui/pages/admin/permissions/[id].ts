@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, User } from '@authelion/common';
+import { Permission, PermissionID } from '@authelion/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPageWrapper } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -20,23 +20,20 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.USER_EDIT,
-                PermissionID.USER_ROLE_ADD,
-                PermissionID.USER_ROLE_EDIT,
-                PermissionID.USER_ROLE_DROP,
+                PermissionID.PERMISSION_EDIT,
             ],
         });
 
         const route = useRoute();
 
-        let entity: User;
+        let entity: Permission;
 
         try {
             entity = await useAPI()
-                .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
+                .permission
+                .getOne(route.params.id as string);
         } catch (e) {
-            return navigateTo({ path: '/admin/users' });
+            return navigateTo({ path: '/admin/robots' });
         }
 
         const items = [
@@ -44,16 +41,19 @@ export default defineNuxtComponent({
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
             {
-                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
+                name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: 'roles',
+                name: 'Robots', icon: 'fas fa-robot', urlSuffix: 'robots',
+            },
+            {
+                name: 'Roles', icon: 'fas fa-user-group', urlSuffix: 'roles',
             },
         ];
 
         const handleUpdated = () => {
             const toast = useToast();
-            toast.success('The user was successfully updated.');
+            toast.success('The permission was successfully updated.');
         };
 
         const handleFailed = (e) => {
@@ -63,8 +63,8 @@ export default defineNuxtComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-user me-1' }),
-                entity.name,
+                h('i', { class: 'fa fa-robot me-1' }),
+                entity.id,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),
@@ -78,7 +78,7 @@ export default defineNuxtComponent({
                             NuxtLink,
                             {
                                 class: 'nav-link',
-                                to: `/admin/users/${entity.id}/${item.urlSuffix}`,
+                                to: `/admin/permissions/${entity.id}/${item.urlSuffix}`,
                             },
                             {
                                 default: () => [

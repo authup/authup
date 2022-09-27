@@ -25,11 +25,17 @@ export default defineComponent({
                 'Overview',
             ]),
             [SlotName.ITEM_ACTIONS]: (props) => h('div', [
-                h(NuxtLink, { class: 'btn btn-xs btn-outline-primary me-1', to: `/admin/users/${props.data.id}` }, [
-                    h('i', { class: 'fa fa-bars' }),
-                ]),
+                h(NuxtLink, {
+                    class: 'btn btn-xs btn-outline-primary me-1', to: `/admin/users/${props.data.id}`,
+                }, {
+                    default: () => h('i', { class: 'fa fa-bars' }),
+                }),
                 h(AuthEntityDelete, {
-                    class: 'btn btn-xs btn-outline-danger', entityId: props.data.id, entityType: 'user', withText: false, onDeleted: handleDeleted,
+                    class: 'btn btn-xs btn-outline-danger',
+                    entityId: props.data.id,
+                    entityType: 'user',
+                    withText: false,
+                    onDeleted: handleDeleted,
                 }),
             ]),
         });

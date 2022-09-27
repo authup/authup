@@ -13,7 +13,7 @@ export function buildListComponentOptions<T extends Record<string, any>>(
     options: Partial<ListBuilderComponentOptions<T>>,
 ) : ListBuilderComponentOptions<T> {
     const output : Partial<ListBuilderComponentOptions<T>> = {
-        items: true,
+        items: options.items ?? true,
     };
 
     if (props.withHeader.value) {

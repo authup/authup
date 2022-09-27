@@ -44,7 +44,7 @@ export default defineComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-users me-1' }),
+                h('i', { class: 'fa-solid fa-user-group me-1' }),
                 'Role',
                 h('span', { class: 'sub-title ms-1' }, [
                     'Management',
