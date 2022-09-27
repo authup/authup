@@ -219,32 +219,8 @@ export const useAuthStore = defineStore('auth', () => {
     const resolve = async () => {
         if (!accessToken.value) return;
 
-        try {
-            await resolveUser();
-            await resolvePermissions();
-        } catch (e) {
-            console.log('abc');
-            if (isClientError(e)) {
-                if (
-                    e.response.data &&
-                    hasOwnProperty(e.response.data, 'code') &&
-                    typeof e.response.data.code === 'string'
-                ) {
-                    const tokenErrorCodes : string[] = [
-                        ErrorCode.TOKEN_EXPIRED,
-                        ErrorCode.TOKEN_INVALID,
-                        ErrorCode.TOKEN_INACTIVE,
-                    ];
-
-                    if (tokenErrorCodes.indexOf(e.response.data.code) !== -1) {
-                        await logout();
-                        return;
-                    }
-                }
-            }
-
-            throw e;
-        }
+        await resolveUser();
+        await resolvePermissions();
     };
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);

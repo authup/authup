@@ -7,10 +7,10 @@
 
 import { Permission, PermissionID } from '@authelion/common';
 import { PropType } from 'vue';
-import { definePageMeta, resolveComponent } from '#imports';
+import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
-export default defineComponent({
+export default defineNuxtComponent({
     props: {
         entity: {
             type: Object as PropType<Permission>,

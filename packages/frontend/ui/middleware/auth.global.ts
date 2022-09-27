@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildNameFromAbilityID } from '@authelion/common';
+import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authelion/common';
+import { isClientError } from 'hapic';
 import {
     navigateTo,
 } from '#app';
@@ -61,7 +62,34 @@ function checkAbilityOrPermission(route, has: (name: string) => boolean) {
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const store = useAuthStore();
-    await store.resolve();
+    try {
+        await store.resolve();
+    } catch (e) {
+        let processed : boolean | undefined;
+
+        if (isClientError(e)) {
+            if (
+                e.response.data &&
+                hasOwnProperty(e.response.data, 'code') &&
+                typeof e.response.data.code === 'string'
+            ) {
+                const tokenErrorCodes : string[] = [
+                    ErrorCode.TOKEN_EXPIRED,
+                    ErrorCode.TOKEN_INVALID,
+                    ErrorCode.TOKEN_INACTIVE,
+                ];
+
+                if (tokenErrorCodes.indexOf(e.response.data.code) !== -1) {
+                    await store.logout();
+                    processed = true;
+                }
+            }
+        }
+
+        if (!processed) {
+            throw e;
+        }
+    }
 
     let redirectPath = '/';
 

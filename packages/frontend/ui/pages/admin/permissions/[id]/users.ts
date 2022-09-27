@@ -7,7 +7,7 @@
 
 import { Permission } from '@authelion/common';
 import { PropType } from 'vue';
-import { resolveComponent } from '#imports';
+import { defineNuxtComponent, resolveComponent } from '#imports';
 
 export default defineNuxtComponent({
     props: {

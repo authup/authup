@@ -7,10 +7,10 @@
 
 import { PermissionID, User } from '@authelion/common';
 import { useToast } from 'vue-toastification';
-import { NuxtLink, NuxtPageWrapper } from '#components';
+import { NuxtLink } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, useAPI,
+    definePageMeta, resolveComponent, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 
@@ -27,18 +27,6 @@ export default defineNuxtComponent({
             ],
         });
 
-        const route = useRoute();
-
-        let entity: User;
-
-        try {
-            entity = await useAPI()
-                .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
-        } catch (e) {
-            return navigateTo({ path: '/admin/users' });
-        }
-
         const items = [
             {
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
@@ -51,15 +39,29 @@ export default defineNuxtComponent({
             },
         ];
 
+        const toast = useToast();
+
         const handleUpdated = () => {
-            const toast = useToast();
             toast.success('The user was successfully updated.');
         };
 
         const handleFailed = (e) => {
-            const toast = useToast();
             toast.warning(e.message);
         };
+
+        const nuxtPage = resolveComponent('NuxtPage');
+
+        const route = useRoute();
+
+        let entity : User;
+
+        try {
+            entity = await useAPI()
+                .user
+                .getOne(route.params.id as string, { fields: ['+email'] });
+        } catch (e) {
+            return navigateTo({ path: '/admin/roles' });
+        }
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
@@ -92,7 +94,7 @@ export default defineNuxtComponent({
             ]),
 
             h('div', [
-                h(NuxtPageWrapper, {
+                h(nuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
                     entity,

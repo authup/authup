@@ -7,10 +7,10 @@
 
 import { Permission, PermissionID } from '@authelion/common';
 import { useToast } from 'vue-toastification';
-import { NuxtLink, NuxtPageWrapper } from '#components';
+import { NuxtLink } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, useAPI,
+    definePageMeta, resolveComponent, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 
@@ -23,18 +23,6 @@ export default defineNuxtComponent({
                 PermissionID.PERMISSION_EDIT,
             ],
         });
-
-        const route = useRoute();
-
-        let entity: Permission;
-
-        try {
-            entity = await useAPI()
-                .permission
-                .getOne(route.params.id as string);
-        } catch (e) {
-            return navigateTo({ path: '/admin/robots' });
-        }
 
         const items = [
             {
@@ -51,15 +39,29 @@ export default defineNuxtComponent({
             },
         ];
 
+        const toast = useToast();
+
         const handleUpdated = () => {
-            const toast = useToast();
             toast.success('The permission was successfully updated.');
         };
 
         const handleFailed = (e) => {
-            const toast = useToast();
             toast.warning(e.message);
         };
+
+        const nuxtPage = resolveComponent('NuxtPage');
+
+        const route = useRoute();
+
+        let entity: Permission;
+
+        try {
+            entity = await useAPI()
+                .permission
+                .getOne(route.params.id as string);
+        } catch (e) {
+            return navigateTo({ path: '/admin/robots' });
+        }
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
@@ -92,7 +94,7 @@ export default defineNuxtComponent({
             ]),
 
             h('div', [
-                h(NuxtPageWrapper, {
+                h(nuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
                     entity,

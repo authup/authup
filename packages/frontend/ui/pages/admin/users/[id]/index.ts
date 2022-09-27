@@ -7,10 +7,12 @@
 
 import { User } from '@authelion/common';
 import { PropType } from 'vue';
-import { definePageMeta, resolveComponent } from '#imports';
-import { LayoutKey } from '../../../../config/layout';
+import {
+    defineNuxtComponent, definePageMeta, resolveComponent,
+} from '#imports';
+import { LayoutKey } from '~/config/layout';
 
-export default defineComponent({
+export default defineNuxtComponent({
     props: {
         entity: {
             type: Object as PropType<User>,
@@ -19,11 +21,6 @@ export default defineComponent({
     },
     emits: ['updated', 'failed'],
     setup(props, { emit }) {
-        // todo: remove this when nuxt is fixed
-        if (!props.entity) {
-            return () => h('div', []);
-        }
-
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });

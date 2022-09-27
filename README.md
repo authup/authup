@@ -6,6 +6,9 @@
 
 `Authelion` is a monorepo, containing a collection of packages for frontend and backend authentication & authorization.
 
+> **Note**
+> The ui package particularly is still in heavy development and is therefore not production ready.
+
 **Table of Contents**
 
 - [Features](#features)
