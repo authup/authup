@@ -53,7 +53,7 @@
         "locter": "^0.2.2",
         "morgan": "^1.10.0",
         "node-cron": "^3.0.2",
-        "nodemailer": "^6.7.8",
+        "nodemailer": "^6.8.0",
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.3",
