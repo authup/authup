@@ -10,9 +10,15 @@ This package contains an authentication & authorization server.
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
   
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/server](https://authelion.net/packages/server)
 
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).

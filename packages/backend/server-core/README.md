@@ -11,7 +11,14 @@ should therefore only be used on the server-side.
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/server-core](https://authelion.net/packages/server-core)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).

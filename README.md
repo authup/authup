@@ -14,6 +14,7 @@ which is split in different packages, most of which can be used independently.
 
 - [Features](#features)
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Features
 
@@ -29,3 +30,9 @@ which is split in different packages, most of which can be used independently.
 ## Documentation
 
 To read the docs, visit [https://authelion.net](https://authelion.net)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).

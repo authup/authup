@@ -12,7 +12,7 @@
             ]
         }
     },
-    "useNx": true,
+    "useNx": false,
     "useWorkspaces": true,
     "conventionalCommits": true,
     "version": "independent",

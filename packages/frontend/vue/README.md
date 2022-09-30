@@ -17,7 +17,14 @@ This package requires the following `dependencies` to be installed in addition:
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/vue](https://authelion.net/packages/vue)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).

@@ -32,12 +32,13 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "engines": {
-        "node": ">=14.0.0"
+        "node": ">=16.0.0"
     },
     "devDependencies": {
         "@commitlint/cli": "^17.1.2",
         "@commitlint/config-angular": "^17.1.0",
         "@commitlint/config-conventional": "^17.1.0",
+        "@commitlint/cz-commitlint": "^17.1.2",
         "@tada5hi/eslint-config-vue-typescript": "^1.0.7",
         "@types/jest": "^27.5.0",
         "@types/node": "^18.7.23",
@@ -53,6 +54,7 @@
     },
     "scripts": {
         "bootstrap": "lerna bootstrap",
+        "commit": "npx git-cz",
         "clean": "lerna run clean",
         "build": "lerna run build",
         "test": "lerna run test",
@@ -60,5 +62,10 @@
         "lint": "eslint --ext .ts ./packages/",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
+    },
+    "config": {
+        "commitizen": {
+            "path": "@commitlint/cz-commitlint"
+        }
     }
 }

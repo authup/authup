@@ -10,7 +10,14 @@ The main propose of this package, is to provide general classes, interfaces & ty
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/common](https://authelion.net/packages/common)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).

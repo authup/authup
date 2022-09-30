@@ -15,7 +15,14 @@ based services. These middlewares provide a way to validate and verify the reque
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/server-adapter](https://authelion.net/packages/server-adapter)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).
