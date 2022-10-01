@@ -10,7 +10,14 @@ The main propose of this package, is to provide general utilities for authorizat
 **Table of Contents**
 
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Documentation
 
 To read the docs, visit [https://authelion.net/packages/server-utils](https://authelion.net/packages/server-utils)
+
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).
