@@ -50,7 +50,7 @@
         "pg": "^8.8.0",
         "reflect-metadata": "^0.1.13",
         "typeorm": "^0.3.9",
-        "typeorm-extension": "^2.1.10",
+        "typeorm-extension": "^2.1.11",
         "winston": "^3.8.2",
         "yargs": "^17.5.1"
     },
