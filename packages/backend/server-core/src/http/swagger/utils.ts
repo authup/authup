@@ -7,6 +7,9 @@
 
 import path from 'path';
 
-export function getSwaggerEntrypointRootPath() {
-    return path.resolve(__dirname, '..', '..', '..', 'src', 'http', 'controllers');
+export function getSwaggerEntrypoint() : { pattern: string, cwd: string } {
+    return {
+        cwd: path.resolve(__dirname, '..', '..', '..', 'src', 'http', 'controllers'),
+        pattern: '**/*{.ts,.js,.d.ts}',
+    };
 }
