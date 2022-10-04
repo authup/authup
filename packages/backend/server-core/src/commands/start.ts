@@ -10,7 +10,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
 import { createExpressApp, createHttpServer, generateSwaggerDocumentation } from '../http';
 import { StartCommandContext } from './type';
-import { DatabaseSeeder, buildDataSourceOptions } from '../database';
+import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
 import { useConfig } from '../config';
 import { setLogger } from '../logger';
@@ -92,7 +92,11 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     const seeder = new DatabaseSeeder(config.database);
-    await seeder.run(dataSource);
+    const seederData = await seeder.run(dataSource);
+
+    if (seederData.robot) {
+        await saveSeedResult(config.writableDirectoryPath, seederData);
+    }
 
     if (context.logger) {
         context.logger.info('Starting aggregators.');
