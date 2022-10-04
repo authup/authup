@@ -40,8 +40,6 @@ export async function startCommand(context?: StartCommandContext) {
         context.logger.info('Initialise controllers & middlewares.');
     }
 
-    const expressApp = createExpressApp();
-
     if (context.logger) {
         context.logger.info('Initialised controllers & middlewares.');
     }
@@ -109,6 +107,7 @@ export async function startCommand(context?: StartCommandContext) {
         context.logger.info('Started aggregators.');
     }
 
+    const expressApp = createExpressApp();
     const httpServer = createHttpServer({ expressApp });
     httpServer.listen(config.port, '0.0.0.0', () => {
         if (context.logger) {

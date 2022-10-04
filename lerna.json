@@ -10,6 +10,9 @@
             "ignoreChanges": [
                 "*.md"
             ]
+        },
+        "version": {
+            "message": "build(release): publish %s"
         }
     },
     "useNx": false,

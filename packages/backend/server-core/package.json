@@ -44,7 +44,6 @@
         "@decorators/express": "^2.6.0",
         "@ebec/http": "^0.0.3",
         "@hapic/oauth2": "^0.0.2",
-        "@trapi/swagger": "^0.3.0",
         "@types/morgan": "^1.9.3",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
@@ -62,6 +61,7 @@
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
+        "@trapi/swagger": "^0.3.2",
         "express": "^4.x",
         "redis-extension": "^1.x",
         "typeorm": "^0.3.x",
@@ -69,6 +69,7 @@
     },
     "devDependencies": {
         "@authelion/common": "^0.3.8",
+        "@trapi/swagger": "^0.3.4",
         "@types/express": "^4.17.14",
         "@types/express-validator": "^3.0.0",
         "@types/nodemailer": "^6.4.6",

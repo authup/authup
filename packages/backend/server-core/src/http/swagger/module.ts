@@ -16,7 +16,7 @@ import path from 'path';
 import { URL } from 'url';
 import { loadJsonFile } from 'locter';
 import { SwaggerDocumentCreateContext } from './type';
-import { getSwaggerEntrypointFilePath } from './utils';
+import { getSwaggerEntrypointRootPath } from './utils';
 
 export async function generateSwaggerDocumentation(
     context: SwaggerDocumentCreateContext,
@@ -24,7 +24,8 @@ export async function generateSwaggerDocumentation(
     const packageJson : Record<string, any> = await loadJsonFile(path.join(context.rootPath, 'package.json'));
 
     const metadataConfig : MetadataConfig = {
-        entryFile: getSwaggerEntrypointFilePath(),
+        entryFile: '**/*{.ts,.js,.d.ts}',
+        rootPath: getSwaggerEntrypointRootPath(),
         ignore: [
             '**/node_modules/**',
         ],
@@ -73,5 +74,5 @@ export async function generateSwaggerDocumentation(
     return generateDocumentation({
         metadata: metadataConfig,
         swagger: swaggerConfig,
-    });
+    }, { });
 }
