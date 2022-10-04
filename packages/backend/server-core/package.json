@@ -61,7 +61,7 @@
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",
-        "@trapi/swagger": "^0.3.2",
+        "@trapi/swagger": "^0.3.4",
         "express": "^4.x",
         "redis-extension": "^1.x",
         "typeorm": "^0.3.x",
