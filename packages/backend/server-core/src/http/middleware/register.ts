@@ -17,6 +17,7 @@ import {
     buildHTTPMiddlewareOptions,
     useConfigSync,
 } from '../../config';
+import { useLogger } from '../../logger';
 import { createLoggerMiddleware } from './logger';
 import { responseMiddleware } from './response';
 import { createMiddleware } from './core';
@@ -32,8 +33,8 @@ export function registerMiddlewares(
     if (input) {
         options = merge(
             {},
-            config.middleware,
             buildHTTPMiddlewareOptions(input),
+            config.middleware,
         );
     } else {
         options = config.middleware;
@@ -81,6 +82,11 @@ export function registerMiddlewares(
                     },
                 }),
             );
+        } else {
+            const logger = useLogger();
+            if (logger) {
+                logger.warn(`Swagger file ( ${swaggerDocumentPath} ) does not exist.`);
+            }
         }
     }
 }
