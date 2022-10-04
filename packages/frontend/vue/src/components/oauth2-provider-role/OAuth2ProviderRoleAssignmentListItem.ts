@@ -11,7 +11,7 @@ import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref,
 } from 'vue';
 import { IdentityProviderRole, Role } from '@authelion/common';
-import { buildFormInput } from '@vue-layout/utils';
+import { buildFormInput } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { useHTTPClient } from '../../utils';
@@ -249,7 +249,7 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
                         buildFormInput({
                             labelContent: 'External ID',
                             value: form.external_id,
-                            change(input) {
+                            onChange(input) {
                                 form.external_id = input;
                             },
                             validationResult: $v.value.external_id,

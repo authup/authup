@@ -13,7 +13,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Role } from '@authelion/common';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import { createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
@@ -82,7 +82,7 @@ export const RoleForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
-                change(input) {
+                onChange(input) {
                     form.name = input;
                 },
             });
@@ -92,7 +92,7 @@ export const RoleForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
-                change(input) {
+                onChange(input) {
                     form.description = input;
                 },
                 props: {

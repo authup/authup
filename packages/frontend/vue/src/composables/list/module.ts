@@ -8,7 +8,7 @@
 import {
     PaginationMeta,
     buildList,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import {
     Ref, VNode, computed, ref, unref, watch,
 } from 'vue';

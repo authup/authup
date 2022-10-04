@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFormInput, buildFormSubmit } from '@vue-layout/utils';
+import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import { useToast } from 'vue-toastification';
@@ -62,7 +62,7 @@ export default defineNuxtComponent({
                 validationTranslator: translateValidationMessage,
                 labelContent: 'Name',
                 value: form.name,
-                change(value) {
+                onChange(value) {
                     form.name = value;
                 },
             });
@@ -72,7 +72,7 @@ export default defineNuxtComponent({
                 validationTranslator: translateValidationMessage,
                 labelContent: 'Password',
                 value: form.password,
-                change(value) {
+                onChange(value) {
                     form.password = value;
                 },
                 props: {
@@ -81,7 +81,7 @@ export default defineNuxtComponent({
             });
 
             const submitButton = buildFormSubmit({
-                validationRulesResult: vuelidate.value,
+                validationResult: vuelidate.value,
                 createText: 'Login',
                 createButtonClass: 'btn btn-sm btn-dark btn-block',
                 createIconClass: 'fa-solid fa-right-to-bracket',

@@ -6,7 +6,7 @@
  */
 
 import { Permission } from '@authelion/common';
-import { SlotName } from '@vue-layout/utils';
+import { SlotName } from '@vue-layout/hyperscript';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
 

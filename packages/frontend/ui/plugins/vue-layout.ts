@@ -5,18 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Utils, { Config, Preset } from '@vue-layout/utils';
+import { NavigationStore, createPlugin } from '@vue-layout/basic';
 import { defineNuxtPlugin } from '#app';
+import { buildNavigationProvider } from '../config/layout';
+import { useAuthStore } from '../store/auth';
 
 export default defineNuxtPlugin((ctx) => {
-    ctx.vueApp.use(Utils, {
-        preset: {
-            [Preset.BOOTSTRAP_V5]: {
-                enabled: true,
-            },
-            [Preset.FONT_AWESOME]: {
-                enabled: true,
-            },
-        },
-    } as Partial<Config>);
+    const navigationStore = useState<NavigationStore>(() => ({
+        items: [],
+        itemsActive: [],
+    }));
+
+    const store = useAuthStore(ctx.$pinia);
+
+    ctx.vueApp.use(createPlugin({
+        navigationStore,
+        navigationProvider: buildNavigationProvider({
+            isLoggedIn: () => store.loggedIn,
+            hasPermission: (name) => store.has(name),
+        }),
+        presets: [
+            'bootstrapV5',
+            'fontAwesome',
+        ],
+    }));
 });

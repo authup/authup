@@ -14,18 +14,17 @@ import {
     h,
     reactive,
     ref,
-    toRef, watch,
+    watch,
 } from 'vue';
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import { Realm, Robot, createNanoID } from '@authelion/common';
 import {
-    MaybeRef,
     SlotName,
     buildFormInput,
     buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import {
     alphaWithUpperNumHyphenUnderScore,
@@ -136,7 +135,7 @@ export const RobotForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
-                change(input) {
+                onChange(input) {
                     form.name = input;
                 },
                 props: {
@@ -172,7 +171,7 @@ export const RobotForm = defineComponent({
                     ]) : '',
                 ],
                 value: form.secret,
-                change(input) {
+                onChange(input) {
                     form.secret = input;
                 },
             });
@@ -217,12 +216,12 @@ export const RobotForm = defineComponent({
             ) {
                 const realm = h(RealmList, {}, {
                     [SlotName.ITEM_ACTIONS]: (
-                        props: { data: Realm, busy: MaybeRef<boolean> },
+                        props: { data: Realm, busy: boolean },
                     ) => buildItemActionToggle({
                         currentValue: form.realm_id,
                         value: props.data.id,
                         busy: props.busy,
-                        change(value) {
+                        onChange(value) {
                             form.realm_id = value as string;
                         },
                     }),

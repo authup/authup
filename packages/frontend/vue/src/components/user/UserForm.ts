@@ -6,19 +6,17 @@
  */
 
 import {
-    MaybeRef,
     SlotName,
-
     buildFormInput,
     buildFormInputCheckbox,
     buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
 } from '@vuelidate/validators';
 import {
-    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, resolveComponent, watch,
+    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 
 import { Realm, User } from '@authelion/common';
@@ -131,7 +129,7 @@ export const UserForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
-                change(input) {
+                onChange(input) {
                     form.name = input;
                     updateDisplayName.call(null, input);
                 },
@@ -145,7 +143,7 @@ export const UserForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Display Name',
                 value: form.display_name,
-                change(input) {
+                onChange(input) {
                     form.display_name = input;
                     handleDisplayNameChanged.call(null, input);
                 },
@@ -160,7 +158,7 @@ export const UserForm = defineComponent({
                     type: 'email',
                     placeholder: '...@...',
                 },
-                change(value) {
+                onChange(value) {
                     form.email = value;
                 },
             });
@@ -178,7 +176,7 @@ export const UserForm = defineComponent({
                             },
                         }, [form.active ? 'active' : 'inactive']),
                         value: form.active,
-                        change(input) {
+                        onChange(input) {
                             form.active = input;
                         },
                     }),
@@ -209,11 +207,11 @@ export const UserForm = defineComponent({
                 props.canManage
             ) {
                 const realm = h(RealmList, {}, {
-                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: MaybeRef<boolean>}) => buildItemActionToggle({
+                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: boolean}) => buildItemActionToggle({
                         value: props.data.id,
                         currentValue: form.realm_id,
                         busy: props.busy,
-                        change(value) {
+                        onChange(value) {
                             form.realm_id = value as string;
                         },
                     }),

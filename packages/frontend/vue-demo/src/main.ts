@@ -6,7 +6,7 @@
  */
 
 import { createApp } from 'vue';
-import Utils, { Config, Preset } from '@vue-layout/utils';
+import { getBuildInPresets, setPresets } from '@vue-layout/hyperscript';
 import AuthVue, { setHTTPClient } from '@authelion/vue';
 import { Client } from '@hapic/oauth2';
 import { useAPI } from './api';
@@ -39,17 +39,12 @@ import Dev from './components/index.vue';
 
     setHTTPClient(api);
 
+    setPresets(getBuildInPresets([
+        'bootstrapV5',
+        'fontAwesome',
+    ]));
+
     createApp(Dev)
-        .use(Utils, {
-            preset: {
-                [Preset.BOOTSTRAP_V5]: {
-                    enabled: true,
-                },
-                [Preset.FONT_AWESOME]: {
-                    enabled: true,
-                },
-            },
-        } as Partial<Config>)
         .use(AuthVue, {
             httpClient: api,
         })

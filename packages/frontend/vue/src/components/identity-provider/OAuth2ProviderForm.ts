@@ -14,7 +14,7 @@ import {
     h,
     reactive,
     ref,
-    resolveComponent, watch,
+    watch,
 } from 'vue';
 import {
     maxLength, minLength, required, url,
@@ -25,7 +25,7 @@ import {
 import {
     buildFormInput, buildFormInputCheckbox,
     buildFormSubmit,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import { alphaNumHyphenUnderscore, createSubmitHandler, useHTTPClient } from '../../utils';
 import { OAuth2ProviderRoleAssignmentList } from '../oauth2-provider-role';
@@ -160,7 +160,7 @@ export const OAuth2ProviderForm = defineComponent({
                 groupClass: 'form-switch mt-3',
                 labelContent: 'Enabled?',
                 value: form.enabled,
-                change(input) {
+                onChange(input) {
                     form.enabled = input;
                 },
             });
@@ -181,7 +181,7 @@ export const OAuth2ProviderForm = defineComponent({
                         validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                         labelContent: 'Slug',
                         value: form.slug,
-                        change(input) {
+                        onChange(input) {
                             form.slug = input;
                         },
                     }),
@@ -206,7 +206,7 @@ export const OAuth2ProviderForm = defineComponent({
                         validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                         labelContent: 'Name',
                         value: form.name,
-                        change(input) {
+                        onChange(input) {
                             form.name = input;
                         },
                     }),
@@ -225,7 +225,7 @@ export const OAuth2ProviderForm = defineComponent({
                         validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                         labelContent: 'Client ID',
                         value: form.client_id,
-                        change(input) {
+                        onChange(input) {
                             form.client_id = input;
                         },
                     }),
@@ -234,7 +234,7 @@ export const OAuth2ProviderForm = defineComponent({
                         validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                         labelContent: 'Client Secret',
                         value: form.client_secret,
-                        change(input) {
+                        onChange(input) {
                             form.client_secret = input;
                         },
                     }),
@@ -260,7 +260,7 @@ export const OAuth2ProviderForm = defineComponent({
                             validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.token_url,
-                            change(input) {
+                            onChange(input) {
                                 form.token_url = input;
                             },
                             props: {
@@ -281,7 +281,7 @@ export const OAuth2ProviderForm = defineComponent({
                             validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.authorize_url,
-                            change(input) {
+                            onChange(input) {
                                 form.authorize_url = input;
                             },
                             props: {

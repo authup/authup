@@ -12,7 +12,7 @@ import {
 import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
-import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/utils';
+import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/hyperscript';
 import { useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -80,7 +80,7 @@ export const UserPasswordForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Password',
                 value: form.password,
-                change(input) {
+                onChange(input) {
                     form.password = input;
                 },
                 props: {
@@ -94,7 +94,7 @@ export const UserPasswordForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'Password repeat',
                 value: form.password_repeat,
-                change(input) {
+                onChange(input) {
                     form.password_repeat = input;
                 },
                 props: {
@@ -110,7 +110,7 @@ export const UserPasswordForm = defineComponent({
                     (passwordShow.value ? 'hide' : 'show'),
                 ],
                 value: passwordShow.value,
-                change(input) {
+                onChange(input) {
                     passwordShow.value = input;
                 },
             });

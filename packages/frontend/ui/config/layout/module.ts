@@ -6,132 +6,98 @@
  */
 
 import {
-    Component,
-    ProviderInterface,
-    applyRestrictionForComponents,
-    findTierComponent,
-} from '@vue-layout/navigation';
+    NavigationElement,
+    NavigationProvider,
+    findNavigationElementForTier,
+    flattenNestedNavigationElements,
+    reduceNavigationElementsByRestriction,
+} from '@vue-layout/basic';
+
 import {
-    LayoutKey, LayoutSideAdminNavigation, LayoutSideDefaultNavigation, LayoutTopNavigation,
+    LayoutSideAdminNavigation,
+    LayoutSideDefaultNavigation,
+    LayoutTopNavigation,
 } from './contants';
 
-type Context = {
-    isLoggedIn: () => boolean,
-    hasPermission: (name: string) => boolean
+type NavigationProviderContext = {
+    hasPermission: (name: string) => boolean,
+    isLoggedIn: () => boolean
 };
 
-export class NavigationProvider implements ProviderInterface {
-    protected ctx: Context;
+export function buildNavigationProvider(context: NavigationProviderContext) : NavigationProvider {
+    return {
+        hasTier(tier: number): Promise<boolean> {
+            return Promise.resolve([0, 1].indexOf(tier) !== -1);
+        },
+        async getElements(tier: number, elements: NavigationElement[]): Promise<NavigationElement[]> {
+            if (!await this.hasTier(tier)) {
+                return [];
+            }
 
-    // -------------------------
+            let items : NavigationElement[] = [];
 
-    protected primaryItems : Component[] = LayoutTopNavigation;
+            switch (tier) {
+                case 0:
+                    items = LayoutTopNavigation;
+                    break;
+                case 1: {
+                    const component: NavigationElement = findNavigationElementForTier(elements, 0) || { id: 'default' };
 
-    protected secondaryDefaultItems : Component[] = LayoutSideDefaultNavigation;
+                    switch (component.id) {
+                        case 'default':
+                            items = LayoutSideDefaultNavigation;
+                            break;
+                        case 'admin':
+                            items = LayoutSideAdminNavigation;
+                            break;
+                    }
 
-    protected secondaryAdminItems : Component[] = LayoutSideAdminNavigation;
+                    break;
+                }
+            }
 
-    // -------------------------
+            return reduceNavigationElementsByRestriction(items, {
+                hasPermission: (name: string) => context.hasPermission(name),
+                isLoggedIn: () => context.isLoggedIn(),
+            });
+        },
+        async getElementsActive(url: string): Promise<NavigationElement[]> {
+            const sortFunc = (a: NavigationElement, b: NavigationElement) => (b.url?.length ?? 0) - (a.url?.length ?? 0);
+            const filterFunc = (item: NavigationElement) => {
+                if (!item.url) return false;
 
-    constructor(ctx: Context) {
-        this.ctx = ctx;
-    }
-
-    // ---------------------------
-
-    async getComponents(tier: number, components: Component[]): Promise<Component[]> {
-        if (!await this.hasTier(tier)) {
-            return [];
-        }
-
-        let items : Component[] = [];
-
-        switch (tier) {
-            case 0:
-                items = this.primaryItems;
-                break;
-            case 1: {
-                const component: Component = findTierComponent(components, 0) || { id: 'default' };
-
-                switch (component.id) {
-                    case 'default':
-                        items = this.secondaryDefaultItems;
-                        break;
-                    case 'admin':
-                        items = this.secondaryAdminItems;
-                        break;
+                if (item.rootLink) {
+                    return url === item.url;
                 }
 
-                break;
-            }
-        }
+                return url === item.url || url.startsWith(item.url);
+            };
 
-        return applyRestrictionForComponents(items, {
-            hasPermission: (name: string) => this.ctx.hasPermission(name),
-            isLoggedIn: () => this.ctx.isLoggedIn(),
-            layoutKey: {
-                requiredAbilities: LayoutKey.REQUIRED_ABILITIES,
-                requiredPermissions: LayoutKey.REQUIRED_PERMISSIONS,
-                requiredLoggedIn: LayoutKey.REQUIRED_LOGGED_IN,
-                requiredLoggedOut: LayoutKey.REQUIRED_LOGGED_OUT,
-            },
-        });
-    }
+            // ------------------------
 
-    async hasTier(tier: number): Promise<boolean> {
-        return [0, 1].indexOf(tier) !== -1;
-    }
+            let items = flattenNestedNavigationElements([...LayoutSideDefaultNavigation])
+                .sort(sortFunc)
+                .filter(filterFunc);
 
-    async getComponentsActive(url: string): Promise<Component[]> {
-        const sortFunc = (a: Component, b: Component) => (b.url?.length ?? 0) - (a.url?.length ?? 0);
-        const filterFunc = (item: Component) => {
-            if (!item.url) return false;
-
-            if (item.rootLink) {
-                return url === item.url;
+            if (items.length > 0) {
+                return [
+                    LayoutTopNavigation[0],
+                    items[0],
+                ];
             }
 
-            return url === item.url || url.startsWith(item.url);
-        };
+            items = flattenNestedNavigationElements([...LayoutSideAdminNavigation])
+                .sort(sortFunc)
+                .filter(filterFunc);
 
-        // ------------------------
-
-        const secondaryDefaultItems = this.flattenNestedComponents(this.secondaryDefaultItems)
-            .sort(sortFunc)
-            .filter(filterFunc);
-
-        if (secondaryDefaultItems.length > 0) {
-            return [
-                this.primaryItems[0],
-                secondaryDefaultItems[0],
-            ];
-        }
-
-        const secondaryAdminItems = this.flattenNestedComponents(this.secondaryAdminItems)
-            .sort(sortFunc)
-            .filter(filterFunc);
-
-        if (secondaryAdminItems.length > 0) {
-            return [
-                this.primaryItems[1],
-                secondaryAdminItems[0],
-            ];
-        }
-
-        return [];
-    }
-
-    // ----------------------------------------------------
-
-    private flattenNestedComponents(components: Component[]) : Component[] {
-        const output = [...components];
-
-        for (let i = 0; i < components.length; i++) {
-            if (components[i].components) {
-                output.push(...this.flattenNestedComponents(components[i].components));
+            if (items.length > 0) {
+                return [
+                    LayoutTopNavigation[1],
+                    items[0],
+                ];
             }
-        }
 
-        return output;
-    }
+            return [];
+        },
+    };
 }

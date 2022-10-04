@@ -5,11 +5,14 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { getComponents } from '@vue-layout/navigation';
+import { NavigationComponents } from '@vue-layout/basic';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
+    components: {
+        NavigationComponents,
+    },
     setup() {
         const { loggedIn, user } = useAuthStore();
 

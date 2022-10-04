@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { VNodeProperties } from '@vue-layout/utils';
 import {
-    DefineComponent,
     PropType,
     VNodeArrayChildren,
     VNodeProps,
@@ -15,7 +13,6 @@ import {
     h,
     mergeProps,
     ref,
-    resolveComponent,
 } from 'vue';
 import { useHTTPClientAPI } from '@authelion/common';
 import { useHTTPClient } from '../utils';
@@ -92,7 +89,7 @@ export const AuthEntityDelete = defineComponent({
 
         const render = () => {
             let tag = 'button';
-            const data : VNodeProperties = {};
+            const data : VNodeProps = {};
 
             switch (props.elementType) {
                 case ElementType.LINK:

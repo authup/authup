@@ -11,7 +11,7 @@ import {
     ListItemsBuildOptionsInput,
     ListNoMoreBuildOptionsInput, ListPaginationBuildOptionsInput,
     ListSearchBuildOptionsInput,
-} from '@vue-layout/utils';
+} from '@vue-layout/hyperscript';
 import { BuildInput } from 'rapiq';
 import { Ref, Slots, ToRefs } from 'vue';
 

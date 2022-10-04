@@ -9,7 +9,7 @@ import {
     defineComponent, h,
 } from 'vue';
 import { Role } from '@authelion/common';
-import { SlotName } from '@vue-layout/utils';
+import { SlotName } from '@vue-layout/hyperscript';
 import { RoleList } from '../role';
 import { UserRoleAssignmentListItemActions } from './UserRoleAssignmentListItemActions';
 

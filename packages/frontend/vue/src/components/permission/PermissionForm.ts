@@ -11,7 +11,7 @@ import {
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Permission } from '@authelion/common';
-import { buildFormInput, buildFormSubmit } from '@vue-layout/utils';
+import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import { createSubmitHandler, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
@@ -76,7 +76,7 @@ export const PermissionForm = defineComponent({
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
                 labelContent: 'ID',
                 value: form.id,
-                change(input) {
+                onChange(input) {
                     form.id = input;
                 },
                 props: {

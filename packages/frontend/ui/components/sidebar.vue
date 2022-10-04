@@ -6,13 +6,13 @@
   -->
 <script lang="ts">
 
+import { Countdown, NavigationComponents } from '@vue-layout/basic';
 import { defineNuxtComponent } from '#app';
 import { computed, useAPI } from '#imports';
 import { useAuthStore } from '../store/auth';
-import Countdown from './Countdown.vue';
 
 export default defineNuxtComponent({
-    components: { Countdown },
+    components: { Countdown, NavigationComponents },
     setup() {
         const { loggedIn, accessTokenExpireDate: tokenExpireDate } = useAuthStore();
 
