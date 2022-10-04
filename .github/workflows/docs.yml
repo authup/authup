@@ -22,13 +22,14 @@ jobs:
                   node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
             - name: Build
-              run: npm run docs:build
+              run: npm run build --workspace=packages/docs
 
             - name: CNAME
               run: |
                   cd ./packages/docs/src/.vitepress/dist/
                   touch CNAME
                   echo "authelion.net" > CNAME
+
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
               with:
