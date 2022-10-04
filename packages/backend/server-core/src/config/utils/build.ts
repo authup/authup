@@ -17,7 +17,7 @@ export function buildConfig(config?: ConfigInput) : Config {
     const database = buildDatabaseOptions(config.database);
 
     config.middleware = config.middleware || {};
-    config.middleware.swaggerDirectoryPath = config.middleware.swaggerDirectoryPath || config.writableDirectoryPath;
+    config.middleware.swaggerDirectoryPath = config.middleware.swaggerDirectoryPath || core.writableDirectoryPath;
     const middleware = buildHTTPMiddlewareOptions(config.middleware);
 
     if (core.redis) {
