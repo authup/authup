@@ -6,16 +6,6 @@
  */
 
 .page-footer {
-    /*
-    position: fixed;
-    width: 100%;
-    bottom: 0px;
-    left:0px;
-    display:flex;
-    align-items: center;
-    justify-content: center;
-     */
-
     box-shadow: 0px 6px 0px 0px rgba(0, 0, 0, 0.3) inset;
     background-color: #34353a;
     padding: 10px 0px 4px 0px;
