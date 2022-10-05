@@ -8,7 +8,7 @@
 import { Config, ConfigInput } from '../type';
 import { buildCoreOptions, setupRedis, setupSmtp } from '../core';
 import { buildDatabaseOptions } from '../database';
-import { buildHTTPMiddlewareOptions } from '../http/middleware';
+import { buildHTTPMiddlewareOptions } from '../http';
 
 export function buildConfig(config?: ConfigInput) : Config {
     config = config || {};
