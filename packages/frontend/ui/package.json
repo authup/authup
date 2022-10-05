@@ -1,6 +1,6 @@
 {
     "name": "@authelion/ui",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "private": true,
     "scripts": {
         "build": "nuxt build",
@@ -10,14 +10,14 @@
         "postinstall": "nuxt prepare"
     },
     "devDependencies": {
-        "@authelion/common": "^0.3.8",
-        "@authelion/vue": "^2.0.1-alpha.3",
+        "@authelion/common": "^0.3.9",
+        "@authelion/vue": "^2.0.1-alpha.4",
         "@fortawesome/fontawesome-free": "^6.2.0",
         "@hapic/oauth2": "^0.0.2",
         "@nuxtjs/google-fonts": "^3.0.0-0",
         "@pinia/nuxt": "^0.4.2",
         "@vue-layout/basic": "^0.1.0",
-        "@vue-layout/hyperscript":  "^0.0.1",
+        "@vue-layout/hyperscript": "^0.0.1",
         "@vuelidate/core": "^2.0.0",
         "@vuelidate/validators": "^2.0.0",
         "bootstrap": "^5.2.2",
