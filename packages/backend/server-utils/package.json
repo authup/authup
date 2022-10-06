@@ -38,7 +38,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "bcrypt": "^5.0.1",
+        "bcrypt": "^5.1.0",
         "jsonwebtoken": "^8.5.1",
         "mkdirp": "^1.0.4"
     },
