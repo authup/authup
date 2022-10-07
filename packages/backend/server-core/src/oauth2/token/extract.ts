@@ -14,9 +14,16 @@ import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../domains';
 
 export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
-    const { header } = decodeToken(token, { complete: true });
+    if (typeof token === 'undefined' || token === null) {
+        throw TokenError.requestInvalid('The token is not defined.');
+    }
 
-    if (header.kid) {
+    const payload = decodeToken(token, { complete: true });
+    if (!payload) {
+        throw TokenError.payloadInvalid('The token could not be decoded.');
+    }
+
+    if (payload.header.kid) {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(KeyEntity);
         const entity = await repository.findOne({
@@ -28,7 +35,7 @@ export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2T
                 decryption_key: true,
             },
             where: {
-                id: header.kid,
+                id: payload.header.kid,
             },
             cache: 60.000,
         });
