@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-utils",
-    "version": "0.3.9",
+    "version": "0.3.10",
     "description": "Authelion http & socket server utils.",
     "main": "dist/index.js",
     "files": [

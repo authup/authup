@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.14](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.13...@authelion/server-core@0.3.14) (2022-10-07)
+
+
+### Bug Fixes
+
+* run database-seed for integrity on upgrade ([80c6e48](https://github.com/Tada5hi/authelion/commit/80c6e483dbc0a436589b012633621fe73d9893ef))
+* **server-utils:** ensure token payload is decoded ([eecb656](https://github.com/Tada5hi/authelion/commit/eecb6566e922a2e0ba917e028531fdc72c89391c))
+
+
+
+
+
 ## [0.3.13](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.12...@authelion/server-core@0.3.13) (2022-10-05)
 
 

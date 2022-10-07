@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.8](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.0.7...@authelion/ui@0.0.8) (2022-10-07)
+
+**Note:** Version bump only for package @authelion/ui
+
+
+
+
+
 ## [0.0.7](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.0.6...@authelion/ui@0.0.7) (2022-10-05)
 
 

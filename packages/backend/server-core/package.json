@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-core",
-    "version": "0.3.13",
+    "version": "0.3.14",
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
@@ -40,7 +40,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/server-utils": "^0.3.9",
+        "@authelion/server-utils": "^0.3.10",
         "@decorators/express": "^2.6.0",
         "@ebec/http": "^0.0.3",
         "@hapic/oauth2": "^0.0.2",
