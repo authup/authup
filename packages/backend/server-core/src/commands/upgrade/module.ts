@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { setupDatabaseSchema } from 'typeorm-extension';
 import { UpgradeCommandContext } from '../type';
-import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../../database';
+import { DatabaseSeeder, buildDataSourceOptions } from '../../database';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     if (context.logger) {
@@ -24,13 +24,6 @@ export async function upgradeCommand(context: UpgradeCommandContext) {
         }
     } else {
         const options = context.dataSourceOptions || await buildDataSourceOptions();
-
-        Object.assign(options, {
-            subscribers: [],
-            synchronize: false,
-            migrationsRun: false,
-            dropSchema: false,
-        } as DataSourceOptions);
 
         dataSource = new DataSource(options);
         await dataSource.initialize();
