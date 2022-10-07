@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.15](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.14...@authelion/server-core@0.3.15) (2022-10-07)
+
+
+### Bug Fixes
+
+* **server-core:** keep subscribers during upgrade ([8239763](https://github.com/Tada5hi/authelion/commit/823976326e2629ab55e7b7f8ca5980dd58294943))
+
+
+
+
+
 ## [0.3.14](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.13...@authelion/server-core@0.3.14) (2022-10-07)
 
 

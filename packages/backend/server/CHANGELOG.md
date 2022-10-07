@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.15](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.14...@authelion/server@0.3.15) (2022-10-07)
+
+**Note:** Version bump only for package @authelion/server
+
+
+
+
+
 ## [0.3.14](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.13...@authelion/server@0.3.14) (2022-10-07)
 
 **Note:** Version bump only for package @authelion/server
