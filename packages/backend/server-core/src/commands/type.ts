@@ -25,8 +25,8 @@ export type SetupCommandContext = CommandContext & {
 };
 
 export type UpgradeCommandContext = CommandContext & {
-    migrationsGenerate?: boolean,
     dataSource?: DataSource,
+    databaseSeed?: boolean,
     dataSourceDestroyOnCompletion?: boolean
 };
 
