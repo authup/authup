@@ -43,10 +43,14 @@ export const UserList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: User) => true,
+        updated: (item: User) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<User>({
             props: toRefs(props),
-            slots,
+            setup: ctx,
             load: (buildInput) => useHTTPClient().user.getMany(buildInput),
             components: {
                 header: {

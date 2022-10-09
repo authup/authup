@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Robot } from '@authelion/common';
 import { AuthEntityDelete } from '@authelion/vue';
-import { SlotName } from '@vue-layout/hyperscript';
+import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
 
@@ -19,21 +20,23 @@ export default defineComponent({
             emit('deleted', e);
         };
 
-        return () => h(list as string, {}, {
+        return () => h(list as string, {
+            onDeleted: handleDeleted,
+        }, {
             [SlotName.HEADER]: () => h('h6', [
                 h('i', { class: 'fa-solid fa-list pe-1' }),
                 'Overview',
             ]),
-            [SlotName.ITEM_ACTIONS]: (props) => h('div', [
-                h(NuxtLink, { class: 'btn btn-xs btn-outline-primary me-1', to: `/admin/robots/${props.data.id}` }, [
-                    h('i', { class: 'fa fa-bars' }),
-                ]),
+            [SlotName.ITEM_ACTIONS]: (props: ListItemSlotProps<Robot>) => h('div', [
+                h(NuxtLink, { class: 'btn btn-xs btn-outline-primary me-1', to: `/admin/robots/${props.data.id}` }, {
+                    default: () => h('i', { class: 'fa fa-bars' }),
+                }),
                 h(AuthEntityDelete, {
                     class: 'btn btn-xs btn-outline-danger',
                     entityId: props.data.id,
                     entityType: 'robot',
                     withText: false,
-                    onDeleted: handleDeleted,
+                    onDeleted: props.deleted,
                 }),
             ]),
         });

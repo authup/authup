@@ -88,7 +88,6 @@ export const RealmForm = defineComponent({
         const submit = createSubmitHandler<Realm>({
             props,
             ctx,
-            busy,
             form,
             formIsValid: () => !$v.value.$invalid,
             create: async (data) => useHTTPClient().realm.create(data),

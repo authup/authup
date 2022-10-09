@@ -63,7 +63,6 @@ export const PermissionForm = defineComponent({
         const submit = createSubmitHandler<Permission>({
             props,
             ctx,
-            busy,
             form,
             formIsValid: () => !$v.value.$invalid,
             create: async (data) => useHTTPClient().permission.create({ id: data.id as string }),

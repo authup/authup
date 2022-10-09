@@ -69,9 +69,8 @@ export const RoleForm = defineComponent({
         const submit = createSubmitHandler<Role>({
             props,
             ctx,
-            busy,
             form,
-            formIsValid: () => $v.value.$invalid,
+            formIsValid: () => !$v.value.$invalid,
             create: async (data) => useHTTPClient().role.create(data),
             update: async (id, data) => useHTTPClient().role.update(id, data),
         });

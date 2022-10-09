@@ -117,7 +117,6 @@ export const RobotForm = defineComponent({
             const submit = createSubmitHandler<Robot>({
                 props,
                 ctx,
-                busy,
                 form,
                 formIsValid: () => !$v.value.$invalid,
                 create: (data) => useHTTPClient().robot.create(data),

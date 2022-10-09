@@ -6,7 +6,7 @@
  */
 
 import {
-    PropType, defineComponent, toRef, toRefs,
+    PropType, defineComponent, toRefs,
 } from 'vue';
 import { BuildInput } from 'rapiq';
 import { IdentityProvider } from '@authelion/common';
@@ -45,10 +45,14 @@ export const IdentityProviderList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: IdentityProvider) => true,
+        updated: (item: IdentityProvider) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<IdentityProvider>({
             props: toRefs(props),
-            slots,
+            setup: ctx,
             load: (buildInput) => useHTTPClient().identityProvider.getMany(buildInput),
             components: {
                 header: {

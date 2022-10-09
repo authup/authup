@@ -41,10 +41,14 @@ export const RealmList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: Realm) => true,
+        updated: (item: Realm) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<Realm>({
-            slots,
             props: toRefs(props),
+            setup: ctx,
             load: (buildInput) => useHTTPClient().realm.getMany(buildInput),
             components: {
                 header: {

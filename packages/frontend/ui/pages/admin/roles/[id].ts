@@ -6,6 +6,7 @@
  */
 
 import { PermissionID, Role } from '@authelion/common';
+import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtLink } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -13,6 +14,7 @@ import {
     definePageMeta, resolveComponent, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
+import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
 
 export default defineNuxtComponent({
     async setup() {
@@ -41,63 +43,50 @@ export default defineNuxtComponent({
 
         const toast = useToast();
 
-        const handleUpdated = () => {
-            toast.success('The role was successfully updated.');
-        };
-
-        const handleFailed = (e) => {
-            toast.warning(e.message);
-        };
-
         const nuxtPage = resolveComponent('NuxtPage');
 
         const route = useRoute();
 
-        let entity: Role;
+        const entity : Ref<Role> = ref(null);
 
         try {
-            entity = await useAPI()
+            entity.value = await useAPI()
                 .role
                 .getOne(route.params.id as string);
         } catch (e) {
             return navigateTo({ path: '/admin/roles' });
         }
 
+        const handleUpdated = (e: Role) => {
+            toast.success('The role was successfully updated.');
+
+            const keys = Object.keys(e);
+            for (let i = 0; i < keys.length; i++) {
+                entity.value[keys[i]] = e[keys[i]];
+            }
+        };
+
+        const handleFailed = (e) => {
+            toast.warning(e.message);
+        };
+
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
                 h('i', { class: 'fa-solid fa-user-group me-1' }),
-                entity.name,
+                entity.value.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),
             ]),
             h('div', { class: 'mb-2' }, [
-                h(
-                    'ul',
-                    { class: 'nav nav-pills' },
-                    items.map((item) => h('li', { class: 'nav-item' }, [
-                        h(
-                            NuxtLink,
-                            {
-                                class: 'nav-link',
-                                to: `/admin/roles/${entity.id}/${item.urlSuffix}`,
-                            },
-                            {
-                                default: () => [
-                                    h('i', { class: `${item.icon} pe-1` }),
-                                    item.name,
-                                ],
-                            },
-                        ),
-                    ])),
-                ),
+                buildDomainEntityNav(`/admin/roles/${entity.value.id}`, items),
             ]),
 
             h('div', [
                 h(nuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
-                    entity,
+                    entity: entity.value,
                 }),
             ]),
 

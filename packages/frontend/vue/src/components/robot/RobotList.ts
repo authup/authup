@@ -9,7 +9,7 @@ import {
     PropType, defineComponent, toRefs,
 } from 'vue';
 import { BuildInput } from 'rapiq';
-import { IdentityProvider, Robot } from '@authelion/common';
+import { Robot } from '@authelion/common';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 
@@ -43,10 +43,14 @@ export const RobotList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: Robot) => true,
+        updated: (item: Robot) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<Robot>({
             props: toRefs(props),
-            slots,
+            setup: ctx,
             load: (buildInput) => useHTTPClient().robot.getMany(buildInput),
             components: {
                 header: {

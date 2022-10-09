@@ -6,11 +6,12 @@
  */
 
 import {
-    PaginationMeta,
+    ListLoadMeta,
     buildList,
+    extractValueFromOptionValueInput,
 } from '@vue-layout/hyperscript';
 import {
-    Ref, VNode, computed, ref, unref, watch,
+    Ref, computed, ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
 import { ListBuilderContext } from './type';
@@ -27,7 +28,7 @@ export function useListBuilder<T extends Record<string, any>>(
     const q = ref('');
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
-    const meta : Ref<Partial<PaginationMeta>> = ref({
+    const meta : Ref<Partial<ListLoadMeta>> = ref({
         limit: 10,
         offset: 0,
         total: 0,
@@ -38,16 +39,17 @@ export function useListBuilder<T extends Record<string, any>>(
             context.components.items &&
             typeof context.components.items !== 'boolean'
         ) {
-            const item = unref(context.components.items.item);
+            const item = unref(extractValueFromOptionValueInput(context.components.items.item));
+
             if (item && item.textPropName) {
-                return unref(item.textPropName);
+                return unref(extractValueFromOptionValueInput(item.textPropName));
             }
         }
 
         return 'name';
     });
 
-    async function load(targetMeta?: Partial<PaginationMeta>) {
+    async function load(targetMeta?: Partial<ListLoadMeta>) {
         if (typeof targetMeta === 'undefined') {
             targetMeta = {};
         }
@@ -89,16 +91,28 @@ export function useListBuilder<T extends Record<string, any>>(
             busy,
             data,
             meta,
-            change(value) {
+            onChange(value) {
                 q.value = value;
             },
-            slotItems: context.slots || {},
+            onDeleted(value) {
+                if (context.setup.emit) {
+                    context.setup.emit('deleted', value);
+                }
+            },
+            onUpdated(value) {
+                if (context.setup.emit) {
+                    context.setup.emit('updated', value);
+                }
+            },
+            slotItems: context.setup.slots || {},
         });
     }
 
-    const handleCreated = buildListCreatedHandler(data);
-    const handleUpdated = buildListUpdatedHandler(data);
-    const handleDeleted = buildListDeletedHandler(data);
+    context.setup.expose({
+        handleCreated: buildListCreatedHandler(data),
+        handleDeleted: buildListDeletedHandler(data),
+        handleUpdated: buildListUpdatedHandler(data),
+    });
 
     if (context.props.loadOnSetup) {
         Promise.resolve()
@@ -113,8 +127,5 @@ export function useListBuilder<T extends Record<string, any>>(
 
         build,
         load,
-        handleCreated,
-        handleUpdated,
-        handleDeleted,
     };
 }

@@ -42,10 +42,14 @@ export const PermissionList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: Permission) => true,
+        updated: (item: Permission) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<Permission>({
             props: toRefs(props),
-            slots,
+            setup: ctx,
             load: (buildInput) => useHTTPClient().permission.getMany(buildInput),
             components: {
                 header: {

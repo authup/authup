@@ -43,10 +43,14 @@ export const RoleList = defineComponent({
             default: true,
         },
     },
-    setup(props, { slots }) {
+    emits: {
+        deleted: (item: Role) => true,
+        updated: (item: Role) => true,
+    },
+    setup(props, ctx) {
         const { build } = useListBuilder<Role>({
             props: toRefs(props),
-            slots,
+            setup: ctx,
             load: (buildInput) => useHTTPClient().role.getMany(buildInput),
             components: {
                 header: {

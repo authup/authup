@@ -148,7 +148,6 @@ export const OAuth2ProviderForm = defineComponent({
         const submit = createSubmitHandler<IdentityProvider>({
             props,
             ctx,
-            busy,
             form,
             formIsValid: () => !$v.value.$invalid,
             create: async (data) => useHTTPClient().identityProvider.create(data),

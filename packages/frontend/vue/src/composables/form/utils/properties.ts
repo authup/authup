@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function initFormAttributesFromEntity(form: Record<string, any>, entity?: Record<string, any>) {
+export function initFormAttributesFromEntity(
+    form: Record<string, any>,
+    entity?: Record<string, any>,
+) {
     if (!entity) {
         return entity;
     }
@@ -13,7 +16,7 @@ export function initFormAttributesFromEntity(form: Record<string, any>, entity?:
     const keys = Object.keys(form);
     for (let i = 0; i < keys.length; i++) {
         if (Object.prototype.hasOwnProperty.call(entity, keys[i])) {
-            form[keys[i]] = entity[keys[i]];
+            form[keys[i]] = entity[keys[i]] ?? '';
         }
     }
 

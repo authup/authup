@@ -107,9 +107,8 @@ export const UserForm = defineComponent({
         const submit = createSubmitHandler<User>({
             props,
             ctx,
-            busy,
             form,
-            formIsValid: () => $v.value.$invalid,
+            formIsValid: () => !$v.value.$invalid,
             create: async (data) => useHTTPClient().user.create(data),
             update: async (id, data) => useHTTPClient().user.update(id, data),
         });

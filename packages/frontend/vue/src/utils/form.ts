@@ -10,7 +10,6 @@ import { useHTTPClient } from './http-client';
 
 type Context<T extends Record<string, any>> = {
     ctx: SetupContext<('created' | 'deleted' | 'updated' | 'failed')[]>,
-    busy: Ref<boolean>,
     props: {
         entity: Partial<T> | undefined
     },
@@ -22,11 +21,9 @@ type Context<T extends Record<string, any>> = {
 
 export function createSubmitHandler<T extends Record<string, any>>(ctx: Context<T>) {
     return async () => {
-        if (ctx.busy.value || ctx.formIsValid()) {
+        if (!ctx.formIsValid()) {
             return;
         }
-
-        ctx.busy.value = true;
 
         try {
             let response;
@@ -39,7 +36,7 @@ export function createSubmitHandler<T extends Record<string, any>>(ctx: Context<
 
                 ctx.ctx.emit('updated', response);
             } else {
-                response = await useHTTPClient().identityProvider.create({ ...ctx.form });
+                response = await ctx.create({ ...ctx.form });
 
                 ctx.ctx.emit('created', response);
             }
@@ -48,7 +45,5 @@ export function createSubmitHandler<T extends Record<string, any>>(ctx: Context<
                 ctx.ctx.emit('failed', e);
             }
         }
-
-        ctx.busy.value = false;
     };
 }
