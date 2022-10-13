@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission, PermissionID, Role } from '@authelion/common';
+import { PermissionID, Realm } from '@authelion/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -21,22 +21,13 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.PERMISSION_EDIT,
+                PermissionID.REALM_EDIT,
             ],
         });
 
         const items = [
             {
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
-            },
-            {
-                name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
-            },
-            {
-                name: 'Robots', icon: 'fas fa-robot', urlSuffix: 'robots',
-            },
-            {
-                name: 'Roles', icon: 'fas fa-user-group', urlSuffix: 'roles',
             },
         ];
 
@@ -46,18 +37,18 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const entity: Ref<Permission> = ref(null);
+        const entity: Ref<Realm> = ref(null);
 
         try {
             entity.value = await useAPI()
-                .permission
+                .realm
                 .getOne(route.params.id as string);
         } catch (e) {
-            return navigateTo({ path: '/admin/permissions' });
+            return navigateTo({ path: '/admin/realms' });
         }
 
-        const handleUpdated = (e: Permission) => {
-            toast.success('The permission was successfully updated.');
+        const handleUpdated = (e: Realm) => {
+            toast.success('The realm was successfully updated.');
 
             const keys = Object.keys(e);
             for (let i = 0; i < keys.length; i++) {
@@ -78,7 +69,7 @@ export default defineNuxtComponent({
                 ]),
             ]),
             h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/permissions/${entity.value.id}`, items),
+                buildDomainEntityNav(`/admin/realms/${entity.value.id}`, items),
             ]),
 
             h('div', [
