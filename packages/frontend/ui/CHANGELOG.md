@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.0.8...@authelion/ui@0.1.0) (2022-10-14)
+
+
+### Features
+
+* **ui:** added domain list event management + minor fixes ([b5062db](https://github.com/tada5hi/authelion/commit/b5062dbe940c9cf7f29713864a7ddb5b08cfddf5))
+
+
+
+
+
 ## [0.0.8](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.0.7...@authelion/ui@0.0.8) (2022-10-07)
 
 **Note:** Version bump only for package @authelion/ui

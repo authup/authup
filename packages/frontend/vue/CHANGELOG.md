@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.0](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.0.1-alpha.5...@authelion/vue@2.1.0-alpha.0) (2022-10-14)
+
+
+### Bug Fixes
+
+* **deps:** bump regenerator-runtime from 0.13.9 to 0.13.10 ([a84c0db](https://github.com/Tada5hi/authelion/commit/a84c0db55f9033baa8bbb2d1cd1106b66bf80256))
+* **server-core:** added missing realm_id filter for roles endpoint ([6186aa1](https://github.com/Tada5hi/authelion/commit/6186aa1c827578e04780c6d9adad8a03594790a2))
+
+
+### Features
+
+* **ui:** added domain list event management + minor fixes ([b5062db](https://github.com/Tada5hi/authelion/commit/b5062dbe940c9cf7f29713864a7ddb5b08cfddf5))
+
+
+
+
+
 ## [2.0.1-alpha.5](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.0.1-alpha.4...@authelion/vue@2.0.1-alpha.5) (2022-10-07)
 
 **Note:** Version bump only for package @authelion/vue

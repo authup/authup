@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.16](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.15...@authelion/server-core@0.3.16) (2022-10-14)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 0.3.1 to 0.3.2 ([e636ef7](https://github.com/Tada5hi/authelion/commit/e636ef75df4eca677a39da94ec351eee9125070c))
+* **deps:** bump typeorm-extension from 2.1.12 to 2.1.14 ([4351470](https://github.com/Tada5hi/authelion/commit/4351470990f88b7f2c5c46236369a3d96360271d))
+* **deps:** bump typeorm-extension from 2.1.14 to 2.1.15 ([1edfaba](https://github.com/Tada5hi/authelion/commit/1edfabae3a95fec9073806494ae673574f682c04))
+* **server-core:** added missing realm_id filter for roles endpoint ([6186aa1](https://github.com/Tada5hi/authelion/commit/6186aa1c827578e04780c6d9adad8a03594790a2))
+
+
+
+
+
 ## [0.3.15](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.14...@authelion/server-core@0.3.15) (2022-10-07)
 
 
