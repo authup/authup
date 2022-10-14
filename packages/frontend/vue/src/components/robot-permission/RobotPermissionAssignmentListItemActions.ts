@@ -9,7 +9,7 @@ import {
     PropType, defineComponent, h, ref,
 } from 'vue';
 import { RobotPermission } from '@authelion/common';
-import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
+import { renderListItemAssignmentButton } from '../../composables';
 import { useHTTPClient } from '../../utils';
 
 export const RobotPermissionAssignmentListItemActions = defineComponent({

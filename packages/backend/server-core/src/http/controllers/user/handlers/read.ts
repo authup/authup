@@ -14,7 +14,7 @@ import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
-import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
 export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {

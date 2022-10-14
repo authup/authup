@@ -36,7 +36,7 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
     });
 
     applyFilters(query, filter, {
-        allowed: ['id', 'name', 'target'],
+        allowed: ['id', 'name', 'target', 'realm_id'],
         defaultAlias: 'role',
     });
 
