@@ -69,6 +69,6 @@
         }
     },
     "dependencies": {
-        "@vue-layout/core": "^0.1.0"
+        "@vue-layout/core": "^0.1.1"
     }
 }
