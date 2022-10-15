@@ -1,0 +1,1 @@
+import{_ as e,o as a,c as s,f as t}from"./app.d712f101.js";const u=JSON.parse('{"title":"Deploying","description":"","frontmatter":{},"headers":[],"relativePath":"packages/server/docker.md"}'),n={name:"packages/server/docker.md"},o=t("",4),r=[o];function c(l,d,i,p,_,h){return a(),s("div",null,r)}const v=e(n,[["render",c]]);export{u as __pageData,v as default};
