@@ -5,16 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { parseQueryRelations } from 'rapiq';
 import { Brackets } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    applyFields,
+    applyFilters,
+    applyPagination,
+    applyQueryRelationsParseOutput,
+    applySort,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
-import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
 export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
     const {
@@ -26,7 +31,7 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
 
     const query = repository.createQueryBuilder('client');
 
-    const relations = applyRelations(query, include, {
+    const relations = parseQueryRelations(include, {
         defaultAlias: 'client',
         allowed: ['realm'],
     });
@@ -64,6 +69,8 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
             ],
         },
     );
+
+    applyQueryRelationsParseOutput(query, relations);
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 
@@ -106,7 +113,7 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         }));
     }
 
-    applyRelations(query, include, {
+    const relations = parseQueryRelations(include, {
         defaultAlias: 'client',
         allowed: ['realm'],
     });
@@ -133,6 +140,8 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
             ],
         },
     );
+
+    applyQueryRelationsParseOutput(query, relations);
 
     const result = await query.getOne();
 

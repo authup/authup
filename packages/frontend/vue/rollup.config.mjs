@@ -10,7 +10,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
-import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 import pkg from './package.json' assert { type: 'json' };
 
@@ -37,11 +36,6 @@ function buildConfig(config) {
                 babelHelpers: 'bundled',
             }),
             ...(config.plugins ? config.plugins : []),
-            terser({
-                output: {
-                    comments: false,
-                },
-            }),
         ],
 
     };

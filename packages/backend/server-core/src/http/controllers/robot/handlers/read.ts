@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { parseQueryRelations } from 'rapiq';
 import { Brackets } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    applyFields, applyFilters, applyPagination, applyQueryRelationsParseOutput, applyRelations, applySort,
     useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
@@ -33,7 +34,7 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         defaultAlias: 'robot',
     });
 
-    applyRelations(query, include, {
+    const relations = parseQueryRelations(include, {
         allowed: ['realm', 'user'],
         defaultAlias: 'robot',
     });
@@ -76,6 +77,8 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
             'updated_at',
         ],
     });
+
+    applyQueryRelationsParseOutput(query, relations);
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 

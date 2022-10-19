@@ -54,6 +54,7 @@
         "node-cron": "^3.0.2",
         "nodemailer": "^6.8.0",
         "pascal-case": "^3.1.2",
+        "rapiq": "^0.0.6",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.3",
         "swagger-ui-express": "^4.5.0",

@@ -6,9 +6,10 @@
  */
 
 import {
-    applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    applyFields, applyFilters, applyPagination, applyQueryRelationsParseOutput, applyRelations, applySort,
     useDataSource,
 } from 'typeorm-extension';
+import { parseQueryRelations } from 'rapiq';
 import { NotFoundError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -24,7 +25,7 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
 
     const query = repository.createQueryBuilder('provider');
 
-    const relations = applyRelations(query, include, {
+    const relations = parseQueryRelations(include, {
         defaultAlias: 'provider',
         allowed: ['realm'],
     });
@@ -36,6 +37,7 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
     });
 
     applySort(query, sort, {
+        relations,
         allowed: ['id', 'created_at', 'updated_at'],
         defaultAlias: 'provider',
     });
@@ -56,8 +58,11 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
                 'created_at',
                 'updated_at',
             ],
+            relations,
         },
     );
+
+    applyQueryRelationsParseOutput(query, relations);
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 
