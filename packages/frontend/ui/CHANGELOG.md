@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.1.0...@authelion/ui@0.1.1) (2022-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump vue from 3.2.40 to 3.2.41 ([8009eb1](https://github.com/tada5hi/authelion/commit/8009eb103df2f96bbd222c1640ff113d78abb02e))
+
+
+
+
+
 # [0.1.0](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.0.8...@authelion/ui@0.1.0) (2022-10-14)
 
 

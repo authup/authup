@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.17](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.16...@authelion/server-core@0.3.17) (2022-10-19)
+
+
+### Bug Fixes
+
+* http endpoints with query relations ([47141a1](https://github.com/Tada5hi/authelion/commit/47141a1a5f41875b1469d537b2d2ccb1442931be))
+
+
+
+
+
 ## [0.3.16](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.15...@authelion/server-core@0.3.16) (2022-10-14)
 
 

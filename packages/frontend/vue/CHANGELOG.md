@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.1](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.0...@authelion/vue@2.1.0-alpha.1) (2022-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump vue from 3.2.40 to 3.2.41 ([8009eb1](https://github.com/Tada5hi/authelion/commit/8009eb103df2f96bbd222c1640ff113d78abb02e))
+* http endpoints with query relations ([47141a1](https://github.com/Tada5hi/authelion/commit/47141a1a5f41875b1469d537b2d2ccb1442931be))
+
+
+
+
+
 # [2.1.0-alpha.0](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.0.1-alpha.5...@authelion/vue@2.1.0-alpha.0) (2022-10-14)
 
 
