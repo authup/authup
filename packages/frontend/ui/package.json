@@ -22,7 +22,7 @@
         "@vuelidate/validators": "^2.0.0",
         "bootstrap": "^5.2.2",
         "browser-storage-adapter": "^1.0.3",
-        "hapic": "^0.0.2",
+        "hapic": "^0.1.0",
         "ilingo": "^2.0.4",
         "nuxt": "3.0.0-rc.11",
         "pinia": "^2.0.22",
