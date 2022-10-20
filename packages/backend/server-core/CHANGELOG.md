@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.19](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.18...@authelion/server-core@0.3.19) (2022-10-20)
+
+
+### Bug Fixes
+
+* bump typeorm-extension & rapiq version ([a980f80](https://github.com/Tada5hi/authelion/commit/a980f80c35cb6a581886d398e3e3317815507e3b))
+
+
+
+
+
 ## [0.3.18](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.17...@authelion/server-core@0.3.18) (2022-10-20)
 
 

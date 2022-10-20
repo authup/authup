@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.3](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.2...@authelion/vue@2.1.0-alpha.3) (2022-10-20)
+
+
+### Bug Fixes
+
+* bump typeorm-extension & rapiq version ([a980f80](https://github.com/Tada5hi/authelion/commit/a980f80c35cb6a581886d398e3e3317815507e3b))
+
+
+
+
+
 # [2.1.0-alpha.2](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.1...@authelion/vue@2.1.0-alpha.2) (2022-10-20)
 
 

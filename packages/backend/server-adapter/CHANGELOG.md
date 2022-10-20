@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.13](https://github.com/Tada5hi/authelion/compare/@authelion/server-adapter@0.3.12...@authelion/server-adapter@0.3.13) (2022-10-20)
+
+**Note:** Version bump only for package @authelion/server-adapter
+
+
+
+
+
 ## [0.3.12](https://github.com/Tada5hi/authelion/compare/@authelion/server-adapter@0.3.11...@authelion/server-adapter@0.3.12) (2022-10-20)
 
 
