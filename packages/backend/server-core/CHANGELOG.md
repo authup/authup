@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.18](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.17...@authelion/server-core@0.3.18) (2022-10-20)
+
+
+### Bug Fixes
+
+* updated typeorm-extension & smob dependency ([50ea810](https://github.com/Tada5hi/authelion/commit/50ea810b4ffae39291ec29317e6f7da371dc875d))
+
+
+
+
+
 ## [0.3.17](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.16...@authelion/server-core@0.3.17) (2022-10-19)
 
 

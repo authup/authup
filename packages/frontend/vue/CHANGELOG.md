@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.2](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.1...@authelion/vue@2.1.0-alpha.2) (2022-10-20)
+
+
+### Bug Fixes
+
+* updated typeorm-extension & smob dependency ([50ea810](https://github.com/Tada5hi/authelion/commit/50ea810b4ffae39291ec29317e6f7da371dc875d))
+
+
+
+
+
 # [2.1.0-alpha.1](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.0...@authelion/vue@2.1.0-alpha.1) (2022-10-19)
 
 

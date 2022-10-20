@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.1.1...@authelion/ui@0.1.2) (2022-10-20)
+
+
+### Bug Fixes
+
+* updated typeorm-extension & smob dependency ([50ea810](https://github.com/tada5hi/authelion/commit/50ea810b4ffae39291ec29317e6f7da371dc875d))
+
+
+
+
+
 ## [0.1.1](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.1.0...@authelion/ui@0.1.1) (2022-10-19)
 
 
