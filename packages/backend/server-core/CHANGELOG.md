@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.20](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.19...@authelion/server-core@0.3.20) (2022-10-20)
+
+
+### Bug Fixes
+
+* applying default web-url ([02435bb](https://github.com/Tada5hi/authelion/commit/02435bb9667d1450a0800ea883ed8e7297312458))
+
+
+
+
+
 ## [0.3.19](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.18...@authelion/server-core@0.3.19) (2022-10-20)
 
 
