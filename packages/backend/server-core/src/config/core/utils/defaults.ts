@@ -15,7 +15,7 @@ export function extendCoreOptionsWithDefaults(config: Partial<CoreOptions>) : Co
 
     config.selfUrl = config.selfUrl || `http://127.0.0.1:${config.port}/`;
 
-    config.webUrl = config.selfUrl || `http://127.0.0.1:${config.port}/`;
+    config.webUrl = config.webUrl || `http://127.0.0.1:${config.port}/`;
 
     config.rootPath = config.rootPath || process.cwd();
     if (!path.isAbsolute(config.rootPath)) {
