@@ -18,7 +18,7 @@ import {
 } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
-import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2/scope';
+import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const {
@@ -36,7 +36,6 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 
     const relations = parseQueryRelations(include, {
         allowed: ['realm', 'user'],
-        defaultAlias: 'robot',
     });
 
     applySort(query, sort, {
@@ -78,7 +77,7 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         ],
     });
 
-    applyQueryRelationsParseOutput(query, relations);
+    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'robot' });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 

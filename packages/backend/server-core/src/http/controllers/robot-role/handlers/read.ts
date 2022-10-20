@@ -18,7 +18,7 @@ export async function getManyRobotRoleRouteHandler(req: ExpressRequest, res: Exp
     const query = await repository.createQueryBuilder('robot_roles');
 
     applyFilters(query, filter, {
-        allowed: ['robot_roles.role_id', 'robot_roles.robot_id'],
+        allowed: ['role_id', 'robot_id'],
         defaultAlias: 'robot_roles',
     });
 

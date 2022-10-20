@@ -6,28 +6,18 @@
  */
 
 import {
-    applyFields, applyFilters, applyPagination, applyRelations, applySort,
+    FieldsApplyOptions, applyFields, applyFilters, applyPagination, applyRelations, applySort,
     useDataSource,
 } from 'typeorm-extension';
-import { Brackets } from 'typeorm';
+import { Brackets, SelectQueryBuilder } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
-import { UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
+import { UserEntity, UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
-export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const {
-        filter, page, include, fields, sort,
-    } = req.query;
-
-    const dataSource = await useDataSource();
-    const userRepository = new UserRepository(dataSource);
-    const query = userRepository.createQueryBuilder('user');
-
-    onlyRealmPermittedQueryResources(query, req.realmId);
-
-    applyFields(query, fields, {
+function applyUserFields(req: ExpressRequest, query: SelectQueryBuilder<UserEntity>, input: unknown) {
+    const options : FieldsApplyOptions<UserEntity> = {
         defaultAlias: 'user',
         default: [
             'id',
@@ -43,10 +33,27 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
             'updated_at',
             'realm_id',
         ],
-        allowed: [
-            ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
-        ],
-    });
+    };
+
+    if (req.ability.has(PermissionID.USER_EDIT)) {
+        options.allowed = ['email'];
+    }
+
+    applyFields(query, input, options);
+}
+
+export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+    const {
+        filter, page, include, fields, sort,
+    } = req.query;
+
+    const dataSource = await useDataSource();
+    const userRepository = new UserRepository(dataSource);
+    const query = userRepository.createQueryBuilder('user');
+
+    onlyRealmPermittedQueryResources(query, req.realmId);
+
+    applyUserFields(req, query, fields);
 
     applyFilters(query, filter, {
         defaultAlias: 'user',
@@ -110,30 +117,11 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     onlyRealmPermittedQueryResources(query, req.realmId);
 
-    applyFields(query, fields, {
-        defaultAlias: 'user',
-        default: [
-            'id',
-            'name',
-            'name_locked',
-            'first_name',
-            'last_name',
-            'display_name',
-            'avatar',
-            'cover',
-            'active',
-            'created_at',
-            'updated_at',
-            'realm_id',
-        ],
-        allowed: [
-            ...(req.ability.has(PermissionID.USER_EDIT) ? ['email'] : []),
-        ],
-    });
+    applyUserFields(req, query, fields);
 
     applyRelations(query, include, {
         defaultAlias: 'user',
-        allowed: ['realm', 'user_roles'],
+        allowed: ['realm'],
     });
 
     const entity = await query.getOne();

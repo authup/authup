@@ -10,7 +10,7 @@ import {
     CookieName, OAuth2SubKind,
     OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
-import { BadRequestError } from '@typescript-error/http';
+import { BadRequestError } from '@ebec/http';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 import { HTTPMiddlewareContext } from './type';

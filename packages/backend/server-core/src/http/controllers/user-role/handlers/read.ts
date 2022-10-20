@@ -18,7 +18,7 @@ export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: Expr
     const query = await repository.createQueryBuilder('user_roles');
 
     applyFilters(query, filter, {
-        allowed: ['user_roles.role_id', 'user_roles.user_id'],
+        allowed: ['role_id', 'user_id'],
         defaultAlias: 'user_roles',
     });
 

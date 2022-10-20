@@ -26,7 +26,6 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
     const query = repository.createQueryBuilder('provider');
 
     const relations = parseQueryRelations(include, {
-        defaultAlias: 'provider',
         allowed: ['realm'],
     });
 
@@ -62,7 +61,7 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
         },
     );
 
-    applyQueryRelationsParseOutput(query, relations);
+    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'provider' });
 
     const pagination = applyPagination(query, page, { maxLimit: 50 });
 

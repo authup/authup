@@ -60,12 +60,12 @@
         "@vuelidate/validators": "^2.0.0",
         "cross-env": "^7.0.3",
         "ilingo": "^2.0.4",
-        "rapiq": "^0.0.6",
+        "rapiq": "^0.2.4",
         "rollup": "^3.1.0",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-vue": "^6.0.0-beta.11",
         "vue": "^3.2.41",
-        "vue-tsc": "^1.0.7"
+        "vue-tsc": "^1.0.8"
     },
     "dependencies": {
         "regenerator-runtime": "^0.13.10"
@@ -77,7 +77,7 @@
         "@vuelidate/validators": "^2.x",
         "ilingo": "^2.x",
         "rapiq": "^0.x",
-        "smob": "^0.0.3",
+        "smob": "^0.x",
         "vue": "^3.x"
     },
     "publishConfig": {

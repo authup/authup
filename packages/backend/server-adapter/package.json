@@ -39,7 +39,7 @@
     "dependencies": {
         "@hapic/oauth2": "^0.0.2",
         "@types/express": "^4.17.14",
-        "@typescript-error/http": "^1.1.4",
+        "@ebec/http": "^0.0.3",
         "hapic": "^0.0.2"
     },
     "devDependencies": {
