@@ -31,4 +31,4 @@ runs:
         - name: Install
           shell: bash
           run: |
-              npm install
+              npm ci

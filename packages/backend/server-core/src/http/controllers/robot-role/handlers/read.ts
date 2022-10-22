@@ -5,24 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination, useDataSource } from 'typeorm-extension';
+import {
+    applyQuery, useDataSource,
+} from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
 
 export async function getManyRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
-    const query = await repository.createQueryBuilder('robot_roles');
+    const query = await repository.createQueryBuilder('robotRole');
 
-    applyFilters(query, filter, {
-        allowed: ['role_id', 'robot_id'],
-        defaultAlias: 'robot_roles',
+    const { pagination } = applyQuery(query, req.query, {
+        defaultAlias: 'robotRole',
+        filters: {
+            allowed: ['robot_id', 'role_id'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

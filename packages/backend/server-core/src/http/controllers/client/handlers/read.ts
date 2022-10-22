@@ -43,7 +43,7 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
         options.allowed = ['secret'];
     }
 
-    const context = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultPath: 'client',
         fields: options,
         filters: {
@@ -67,7 +67,7 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
             data: entities,
             meta: {
                 total,
-                pagination: context.pagination,
+                ...pagination,
             },
         },
     });

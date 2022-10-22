@@ -19,7 +19,7 @@ export async function getManyIdentityProviderRoleRouteHandler(req: ExpressReques
 
     const query = repository.createQueryBuilder('providerRole');
 
-    const context = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'providerRole',
         filters: {
             allowed: ['role_id', 'provider_id'],
@@ -39,7 +39,7 @@ export async function getManyIdentityProviderRoleRouteHandler(req: ExpressReques
             data: entities,
             meta: {
                 total,
-                pagination: context.pagination,
+                ...pagination,
             },
         },
     });

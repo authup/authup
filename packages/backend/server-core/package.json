@@ -65,7 +65,7 @@
         "express": "^4.x",
         "redis-extension": "^1.x",
         "typeorm": "^0.3.x",
-        "typeorm-extension": "^2.x"
+        "typeorm-extension": ">=2.2.8 <3.0.0"
     },
     "devDependencies": {
         "@authelion/common": "^0.3.13",

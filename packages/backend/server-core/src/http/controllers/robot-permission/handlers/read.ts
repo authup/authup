@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination, useDataSource } from 'typeorm-extension';
+import {
+    applyQuery, useDataSource,
+} from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotPermissionEntity } from '../../../../domains';
@@ -17,18 +19,19 @@ import { RobotPermissionEntity } from '../../../../domains';
  * @param res
  */
 export async function getManyRobotPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page } = req.query;
-
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
     const query = robotPermissionRepository.createQueryBuilder('robotPermission');
 
-    applyFilters(query, filter, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'robotPermission',
-        allowed: ['robot_id', 'permission_id'],
+        filters: {
+            allowed: ['robot_id', 'permission_id'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

@@ -7,7 +7,7 @@
 
 import { Brackets } from 'typeorm';
 import {
-    applyFilters, applyPagination, applySort, useDataSource,
+    applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
@@ -15,7 +15,6 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
 
 export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page, sort } = req.query;
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
@@ -27,17 +26,18 @@ export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res:
         qb.orWhere('userAttribute.user_id = :userId', { userId: req.userId });
     }));
 
-    applyFilters(query, filter, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'userAttribute',
-        allowed: ['id', 'name', 'user_id', 'realm_id'],
+        filters: {
+            allowed: ['id', 'name', 'user_id', 'realm_id'],
+        },
+        sort: {
+            allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    applySort(query, sort, {
-        defaultAlias: 'userAttribute',
-        allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'],
-    });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

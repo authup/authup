@@ -6,7 +6,7 @@
  */
 
 import {
-    applyFilters, applyPagination, applySort, useDataSource,
+    applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
@@ -23,17 +23,18 @@ export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res:
 
     onlyRealmPermittedQueryResources(query, req.realmId);
 
-    applyFilters(query, filter, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'roleAttribute',
-        allowed: ['id', 'name', 'role_id', 'realm_id'],
+        filters: {
+            allowed: ['id', 'name', 'role_id', 'realm_id'],
+        },
+        sort: {
+            allowed: ['id', 'name', 'role_id', 'realm_id', 'created_at', 'updated_at'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    applySort(query, sort, {
-        defaultAlias: 'roleAttribute',
-        allowed: ['id', 'key', 'role_id', 'realm_id', 'created_at', 'updated_at'],
-    });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 
