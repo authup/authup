@@ -74,6 +74,7 @@ jobs:
             matrix:
                 package: [
                     'backend/server-core',
+                    'backend/server-utils',
                     'shared/common'
                 ]
         steps:
