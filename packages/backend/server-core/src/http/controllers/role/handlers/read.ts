@@ -6,7 +6,8 @@
  */
 
 import {
-    applyFields, applyFilters, applyPagination, applySort,
+    applyFields,
+    applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
@@ -14,37 +15,33 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
 
 export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const {
-        filter, page, sort, fields,
-    } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
     const query = repository.createQueryBuilder('role');
 
-    applyFields(query, fields, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'role',
-        allowed: [
-            'id',
-            'name',
-            'target',
-            'description',
-            'realm_id',
-            'created_at',
-            'updated_at',
-        ],
+        fields: {
+            allowed: [
+                'id',
+                'name',
+                'target',
+                'description',
+                'realm_id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+        filters: {
+            allowed: ['id', 'name', 'target', 'realm_id'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
+        sort: {
+            allowed: ['id', 'name', 'updated_at', 'created_at'],
+        },
     });
-
-    applyFilters(query, filter, {
-        allowed: ['id', 'name', 'target', 'realm_id'],
-        defaultAlias: 'role',
-    });
-
-    applySort(query, sort, {
-        allowed: ['id', 'name', 'updated_at', 'created_at'],
-    });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

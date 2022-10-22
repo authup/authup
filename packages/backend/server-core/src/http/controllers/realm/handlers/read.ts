@@ -6,7 +6,7 @@
  */
 
 import {
-    applyFilters, applyPagination, applySort, useDataSource,
+    applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
@@ -16,24 +16,23 @@ export async function getManyRealmRouteHandler(
     req: ExpressRequest,
     res: ExpressResponse,
 ) : Promise<any> {
-    const { filter, page, sort } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
     const query = repository.createQueryBuilder('realm');
 
-    applyFilters(query, filter, {
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'realm',
-        allowed: ['id', 'name'],
+        filters: {
+            allowed: ['id', 'name'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
+        sort: {
+            allowed: ['id', 'name', 'created_at', 'updated_at'],
+        },
     });
-
-    applySort(query, sort, {
-        defaultAlias: 'realm',
-        allowed: ['id', 'name', 'created_at', 'updated_at'],
-    });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

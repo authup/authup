@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseQueryRelations } from 'rapiq';
 import { Brackets } from 'typeorm';
 import {
-    applyFields, applyFilters, applyPagination, applyQueryRelationsParseOutput, applyRelations, applySort,
+    applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
@@ -21,26 +20,39 @@ import { RobotEntity } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
 export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const {
-        filter, fields, page, include, sort,
-    } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
 
-    applyFilters(query, filter, {
-        allowed: ['id', 'name', 'realm_id', 'user_id'],
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'robot',
-    });
-
-    const relations = parseQueryRelations(include, {
-        allowed: ['realm', 'user'],
-    });
-
-    applySort(query, sort, {
-        allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'],
-        defaultAlias: 'robot',
+        fields: {
+            allowed: [
+                'secret',
+            ],
+            default: [
+                'id',
+                'name',
+                'description',
+                'active',
+                'user_id',
+                'realm_id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+        filters: {
+            allowed: ['id', 'name', 'realm_id', 'user_id'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
+        relations: {
+            allowed: ['realm', 'user'],
+        },
+        sort: {
+            allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'],
+        },
     });
 
     if (
@@ -60,27 +72,6 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         query.andWhere('robot.realm_id = :realmId', { realmId: req.realmId });
     }
 
-    applyFields(query, fields, {
-        defaultAlias: 'robot',
-        allowed: [
-            'secret',
-        ],
-        default: [
-            'id',
-            'name',
-            'description',
-            'active',
-            'user_id',
-            'realm_id',
-            'created_at',
-            'updated_at',
-        ],
-    });
-
-    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'robot' });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
-
     const [entities, total] = await query.getManyAndCount();
 
     return res.respond({
@@ -96,8 +87,6 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
 
 export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
     const { id } = req.params;
-
-    const { fields, include } = req.query;
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
@@ -120,26 +109,26 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
         }));
     }
 
-    applyFields(query, fields, {
+    applyQuery(query, req.query, {
         defaultAlias: 'robot',
-        allowed: [
-            'secret',
-        ],
-        default: [
-            'id',
-            'name',
-            'description',
-            'active',
-            'user_id',
-            'realm_id',
-            'created_at',
-            'updated_at',
-        ],
-    });
-
-    applyRelations(query, include, {
-        allowed: ['realm', 'user'],
-        defaultAlias: 'robot',
+        fields: {
+            allowed: [
+                'secret',
+            ],
+            default: [
+                'id',
+                'name',
+                'description',
+                'active',
+                'user_id',
+                'realm_id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+        relations: {
+            allowed: ['realm', 'user'],
+        },
     });
 
     const entity = await query.getOne();

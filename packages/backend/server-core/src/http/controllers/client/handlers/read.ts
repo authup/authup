@@ -5,14 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseQueryRelations } from 'rapiq';
 import { Brackets } from 'typeorm';
 import {
-    FieldsApplyOptions,
-    applyFields,
-    applyFilters,
-    applyPagination,
-    applyQueryRelationsParseOutput, applySort,
+    QueryFieldsApplyOptions,
+    applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
@@ -22,31 +18,12 @@ import { OAuth2ClientEntity } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
 
 export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const {
-        page, filter, fields, include, sort,
-    } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2ClientEntity);
 
     const query = repository.createQueryBuilder('client');
 
-    const relations = parseQueryRelations(include, {
-        allowed: ['realm'],
-    });
-
-    applyFilters(query, filter, {
-        relations,
-        defaultAlias: 'client',
-        allowed: ['realm_id', 'realm.name'],
-    });
-
-    applySort(query, sort, {
-        allowed: ['id', 'created_at', 'updated_at'],
-        defaultAlias: 'client',
-    });
-
-    const options : FieldsApplyOptions<OAuth2ClientEntity> = {
+    const options : QueryFieldsApplyOptions<OAuth2ClientEntity> = {
         defaultAlias: 'client',
         default: [
             'name',
@@ -66,15 +43,22 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
         options.allowed = ['secret'];
     }
 
-    applyFields(
-        query,
-        fields,
-        options,
-    );
-
-    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'client' });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
+    const context = applyQuery(query, req.query, {
+        defaultPath: 'client',
+        fields: options,
+        filters: {
+            allowed: ['realm_id', 'realm.name'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
+        relations: {
+            allowed: ['realm'],
+        },
+        sort: {
+            allowed: ['id', 'created_at', 'updated_at'],
+        },
+    });
 
     const [entities, total] = await query.getManyAndCount();
 
@@ -83,14 +67,13 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
             data: entities,
             meta: {
                 total,
-                ...pagination,
+                pagination: context.pagination,
             },
         },
     });
 }
 
 export async function getOneClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const { fields, include } = req.query;
     const { id } = req.params;
 
     const dataSource = await useDataSource();
@@ -115,11 +98,7 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         }));
     }
 
-    const relations = parseQueryRelations(include, {
-        allowed: ['realm'],
-    });
-
-    const options : FieldsApplyOptions<OAuth2ClientEntity> = {
+    const options : QueryFieldsApplyOptions<OAuth2ClientEntity> = {
         defaultAlias: 'client',
         default: [
             'name',
@@ -139,13 +118,13 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         options.allowed = ['secret'];
     }
 
-    applyFields(
-        query,
-        fields,
-        options,
-    );
-
-    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'client' });
+    applyQuery(query, req.query, {
+        defaultPath: 'client',
+        fields: options,
+        relations: {
+            allowed: ['realm'],
+        },
+    });
 
     const result = await query.getOne();
 

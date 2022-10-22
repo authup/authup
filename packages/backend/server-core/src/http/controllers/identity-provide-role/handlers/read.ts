@@ -6,7 +6,7 @@
  */
 
 import {
-    applyFilters, applyPagination, applySort,
+    applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
@@ -14,24 +14,23 @@ import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRoleEntity } from '../../../../domains';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { page, filter, sort } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderRoleEntity);
 
     const query = repository.createQueryBuilder('providerRole');
 
-    applyFilters(query, filter, {
+    const context = applyQuery(query, req.query, {
         defaultAlias: 'providerRole',
-        allowed: ['role_id', 'provider_id'],
+        filters: {
+            allowed: ['role_id', 'provider_id'],
+        },
+        sort: {
+            allowed: ['id', 'created_at', 'updated_at'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    applySort(query, sort, {
-        defaultAlias: 'providerRole',
-        allowed: ['id', 'created_at', 'updated_at'],
-    });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 
@@ -40,7 +39,7 @@ export async function getManyIdentityProviderRoleRouteHandler(req: ExpressReques
             data: entities,
             meta: {
                 total,
-                ...pagination,
+                pagination: context.pagination,
             },
         },
     });

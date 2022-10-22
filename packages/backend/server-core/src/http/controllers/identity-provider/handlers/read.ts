@@ -6,46 +6,26 @@
  */
 
 import {
-    applyFields, applyFilters, applyPagination, applyQueryRelationsParseOutput, applyRelations, applySort,
+    applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { parseQueryRelations } from 'rapiq';
 import { NotFoundError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 
 export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const {
-        page, filter, fields, include, sort,
-    } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderEntity);
 
     const query = repository.createQueryBuilder('provider');
 
-    const relations = parseQueryRelations(include, {
-        allowed: ['realm'],
-    });
-
-    applyFilters(query, filter, {
-        relations,
+    const { pagination } = applyQuery(query, req.query, {
         defaultAlias: 'provider',
-        allowed: ['realm_id', 'realm.name'],
-    });
-
-    applySort(query, sort, {
-        relations,
-        allowed: ['id', 'created_at', 'updated_at'],
-        defaultAlias: 'provider',
-    });
-
-    applyFields(
-        query,
-        fields,
-        {
-            defaultAlias: 'provider',
+        relations: {
+            allowed: ['realm'],
+        },
+        fields: {
             default: [
                 'id',
                 'slug',
@@ -57,13 +37,17 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
                 'created_at',
                 'updated_at',
             ],
-            relations,
         },
-    );
-
-    applyQueryRelationsParseOutput(query, relations, { defaultAlias: 'provider' });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
+        filters: {
+            allowed: ['realm_id', 'realm.name'],
+        },
+        sort: {
+            allowed: ['id', 'created_at', 'updated_at'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
+    });
 
     const [entities, total] = await query.getManyAndCount();
 
@@ -79,7 +63,6 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
 }
 
 export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const { fields, include } = req.query;
     const { id } = req.params;
 
     const dataSource = await useDataSource();
@@ -88,16 +71,9 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
     const query = repository.createQueryBuilder('provider')
         .where('provider.id = :id', { id });
 
-    applyRelations(query, include, {
+    applyQuery(query, req.query, {
         defaultAlias: 'provider',
-        allowed: ['realm'],
-    });
-
-    applyFields(
-        query,
-        fields,
-        {
-            defaultAlias: 'provider',
+        fields: {
             default: [
                 'id',
                 'slug',
@@ -110,7 +86,10 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
                 'updated_at',
             ],
         },
-    );
+        relations: {
+            allowed: ['realm'],
+        },
+    });
 
     const entity = await query.getOne();
 

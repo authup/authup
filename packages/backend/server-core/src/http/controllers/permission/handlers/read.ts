@@ -5,23 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyFilters, applyPagination, useDataSource } from 'typeorm-extension';
+import {
+    applyQuery, useDataSource,
+} from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ExpressRequest, ExpressResponse } from '../../../type';
 import { PermissionEntity } from '../../../../domains';
 
 export async function getManyPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const { filter, page } = req.query;
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
     const query = repository.createQueryBuilder('permission');
 
-    applyFilters(query, filter, {
-        allowed: ['id'],
+    const { pagination } = applyQuery(query, req.query, {
+        defaultAlias: 'permission',
+        filters: {
+            allowed: ['id'],
+        },
+        pagination: {
+            maxLimit: 50,
+        },
     });
-
-    const pagination = applyPagination(query, page, { maxLimit: 50 });
 
     const [entities, total] = await query.getManyAndCount();
 

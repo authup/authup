@@ -60,12 +60,12 @@
         "@rollup/plugin-commonjs": "^23.0.0",
         "@rollup/plugin-node-resolve": "^15.0.0",
         "hapic": "^0.0.2",
-        "rapiq": "^0.2.6",
+        "rapiq": "^0.3.0",
         "rollup": "^3.1.0"
     },
     "peerDependencies": {
         "hapic": "^0.x",
-        "rapiq": "^0.x"
+        "rapiq": ">=0.3.0 <1.0.0"
     },
     "publishConfig": {
         "access": "public"

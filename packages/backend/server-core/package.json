@@ -54,7 +54,6 @@
         "node-cron": "^3.0.2",
         "nodemailer": "^6.8.0",
         "pascal-case": "^3.1.2",
-        "rapiq": "^0.2.6",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.6",
         "swagger-ui-express": "^4.5.0",
@@ -85,7 +84,7 @@
         "supertest": "^6.3.0",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.10",
-        "typeorm-extension": "^2.2.6"
+        "typeorm-extension": "^2.2.8"
     },
     "publishConfig": {
         "access": "public"
