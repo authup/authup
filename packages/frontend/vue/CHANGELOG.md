@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.4](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.3...@authelion/vue@2.1.0-alpha.4) (2022-10-22)
+
+
+### Performance Improvements
+
+* optimized http endpoints + merged github workflows ([cba2de4](https://github.com/Tada5hi/authelion/commit/cba2de47c9ecce74c42be21ae951f90264b982df))
+
+
+
+
+
 # [2.1.0-alpha.3](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.2...@authelion/vue@2.1.0-alpha.3) (2022-10-20)
 
 

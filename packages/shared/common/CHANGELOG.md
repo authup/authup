@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.14](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.3.13...@authelion/common@0.3.14) (2022-10-22)
+
+
+### Performance Improvements
+
+* optimized http endpoints + merged github workflows ([cba2de4](https://github.com/Tada5hi/authelion/commit/cba2de47c9ecce74c42be21ae951f90264b982df))
+
+
+
+
+
 ## [0.3.13](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.3.12...@authelion/common@0.3.13) (2022-10-20)
 
 
