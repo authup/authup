@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission, PermissionID, Role } from '@authelion/common';
+import { Permission, PermissionID } from '@authelion/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
+import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
     definePageMeta, resolveComponent, useAPI,
@@ -41,8 +42,6 @@ export default defineNuxtComponent({
         ];
 
         const toast = useToast();
-
-        const nuxtPage = resolveComponent('NuxtPage');
 
         const route = useRoute();
 
@@ -78,11 +77,11 @@ export default defineNuxtComponent({
                 ]),
             ]),
             h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/permissions/${entity.value.id}`, items),
+                buildDomainEntityNav(`/admin/permissions/${entity.value.id}`, items, { prevLink: true }),
             ]),
 
             h('div', [
-                h(nuxtPage, {
+                h(NuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
                     entity: entity.value,

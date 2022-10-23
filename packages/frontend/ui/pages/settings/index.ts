@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NuxtLink } from '#components';
+import { NuxtLink, NuxtPage } from '#components';
 import { definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../config/layout';
 
@@ -24,8 +24,6 @@ export default defineComponent({
                 name: 'Security', icon: 'fa fa-lock', urlSuffix: '/security',
             },
         ];
-
-        const nuxtPage = resolveComponent('NuxtPage');
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
@@ -49,7 +47,7 @@ export default defineComponent({
                     ),
                 ]),
                 h('div', { class: 'content-container' }, [
-                    h(nuxtPage),
+                    h(NuxtPage),
                 ]),
             ]),
         ]);

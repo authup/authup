@@ -8,10 +8,10 @@
 import { PermissionID, Robot, Role } from '@authelion/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
-import { NuxtLink } from '#components';
+import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, resolveComponent, useAPI,
+    definePageMeta, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
@@ -22,10 +22,10 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.USER_EDIT,
-                PermissionID.USER_ROLE_ADD,
-                PermissionID.USER_ROLE_EDIT,
-                PermissionID.USER_ROLE_DROP,
+                PermissionID.ROBOT_EDIT,
+                PermissionID.ROBOT_ROLE_ADD,
+                PermissionID.ROBOT_ROLE_EDIT,
+                PermissionID.ROBOT_ROLE_DROP,
             ],
         });
 
@@ -42,8 +42,6 @@ export default defineNuxtComponent({
         ];
 
         const toast = useToast();
-
-        const nuxtPage = resolveComponent('NuxtPage');
 
         const route = useRoute();
 
@@ -79,11 +77,11 @@ export default defineNuxtComponent({
                 ]),
             ]),
             h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/robots/${entity.value.id}`, items),
+                buildDomainEntityNav(`/admin/robots/${entity.value.id}`, items, { prevLink: true }),
             ]),
 
             h('div', [
-                h(nuxtPage, {
+                h(NuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
                     entity: entity.value,

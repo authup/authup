@@ -62,6 +62,7 @@ export const RealmForm = defineComponent({
             },
         }, form);
 
+        const isEditing = computed(() => !!props.entity && !!props.entity.id);
         const isIDEmpty = computed(() => !form.id || form.id.length === 0);
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
@@ -162,6 +163,7 @@ export const RealmForm = defineComponent({
                 createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
+                isEditing,
                 validationResult: $v.value,
             });
 

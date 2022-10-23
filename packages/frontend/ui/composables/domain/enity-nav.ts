@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { VNodeChild } from 'vue';
 import { NuxtLink } from '#components';
 
 type EntityNavItem = {
@@ -13,37 +14,72 @@ type EntityNavItem = {
     urlSuffix: string
 };
 
+type EntityNavOptions = {
+    direction?: 'vertical' | 'horizontal',
+    prevLink?: boolean
+};
+
 export function buildDomainEntityNav(
     path: string,
     items: EntityNavItem[],
+    options?: EntityNavOptions,
 ) {
     const lastIndex = path.lastIndexOf('/');
     const basePath = path.substring(0, lastIndex);
 
+    options = options || {};
+
+    const clazz : string[] = [
+        'nav nav-pills',
+    ];
+
+    switch (options.direction) {
+        case 'vertical':
+            clazz.push('flex-column');
+            break;
+    }
+
+    let prevLink : VNodeChild = [];
+    if (options.prevLink) {
+        prevLink = h('li', { class: 'nav-item' }, [
+            h(
+                NuxtLink,
+                {
+                    class: 'nav-link',
+                    to: basePath,
+                },
+                {
+                    default: () => [
+                        h('i', { class: 'fa fa-arrow-left' }),
+                    ],
+                },
+            ),
+        ]);
+    }
+
+    const buildLink = (link: string) => {
+        if (link.length === 0) {
+            return path;
+        }
+
+        if (link.substring(0, 1) === '/') {
+            return `${path}${link}`;
+        }
+
+        return `${path}/${link}`;
+    };
+
     return h(
         'ul',
-        { class: 'nav nav-pills' },
+        { class: clazz },
         [
-            h('li', { class: 'nav-item' }, [
-                h(
-                    NuxtLink,
-                    {
-                        class: 'nav-link',
-                        to: basePath,
-                    },
-                    {
-                        default: () => [
-                            h('i', { class: 'fa fa-arrow-left' }),
-                        ],
-                    },
-                ),
-            ]),
+            prevLink,
             ...items.map((item) => h('li', { class: 'nav-item' }, [
                 h(
                     NuxtLink,
                     {
                         class: 'nav-link',
-                        to: `${path}/${item.urlSuffix}`,
+                        to: buildLink(item.urlSuffix),
                     },
                     {
                         default: () => [

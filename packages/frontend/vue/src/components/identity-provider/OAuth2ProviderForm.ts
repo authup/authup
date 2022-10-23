@@ -28,7 +28,7 @@ import {
 } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity } from '../../composables/form';
 import { alphaNumHyphenUnderscore, createSubmitHandler, useHTTPClient } from '../../utils';
-import { OAuth2ProviderRoleAssignmentList } from '../oauth2-provider-role';
+import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -300,7 +300,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ' ',
                         'Roles',
                     ]),
-                    h(OAuth2ProviderRoleAssignmentList, {
+                    h(IdentityProviderRoleAssignmentList, {
                         entityId: props.entity.id,
                     }),
                     h('hr'),

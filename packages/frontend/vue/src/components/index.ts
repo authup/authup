@@ -7,7 +7,7 @@
 
 export * from './AuthEntityDelete';
 export * from './identity-provider';
-export * from './oauth2-provider-role';
+export * from './identity-provider-role';
 export * from './permission';
 export * from './permission-robot';
 export * from './permission-role';

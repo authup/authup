@@ -7,8 +7,8 @@
 
 import { PermissionID } from '@authelion/common';
 import { useToast } from 'vue-toastification';
-import { NuxtLink, NuxtPage } from '#components';
-import { definePageMeta, resolveComponent } from '#imports';
+import { NuxtPage } from '#components';
+import { definePageMeta } from '#imports';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
@@ -18,9 +18,9 @@ export default defineComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.ROBOT_EDIT,
-                PermissionID.ROBOT_DROP,
-                PermissionID.ROBOT_ADD,
+                PermissionID.PROVIDER_EDIT,
+                PermissionID.PROVIDER_DROP,
+                PermissionID.PROVIDER_ADD,
             ],
         });
 
@@ -32,14 +32,14 @@ export default defineComponent({
             },
             {
                 name: 'add',
-                urlSuffix: '/add',
+                urlSuffix: 'add',
                 icon: 'fa fa-plus',
             },
         ];
 
         const handleDeleted = (e) => {
             const toast = useToast();
-            toast.success(`The robot ${e.name} was successfully deleted.`);
+            toast.success(`The identity-provider ${e.name} was successfully deleted.`);
         };
 
         const handleFailed = (e) => {
@@ -49,15 +49,15 @@ export default defineComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-robot me-1' }),
-                'Robot',
+                h('i', { class: 'fas fa-atom me-1' }),
+                'Identity-Provider',
                 h('span', { class: 'sub-title ms-1' }, [
                     'Management',
                 ]),
             ]),
             h('div', { class: 'content-wrapper' }, [
                 h('div', { class: 'content-sidebar flex-column' }, [
-                    buildDomainEntityNav('/admin/robots', items, { direction: 'vertical' }),
+                    buildDomainEntityNav('/admin/identity-providers', items, { direction: 'vertical' }),
                 ]),
                 h('div', { class: 'content-container' }, [
                     h(NuxtPage, {

@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PermissionID } from '@authelion/common';
 import { useToast } from 'vue-toastification';
-import { NuxtLink } from '#components';
+import { NuxtLink, NuxtPage } from '#components';
 import { definePageMeta, resolveComponent } from '#imports';
+import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
 export default defineComponent({
@@ -15,6 +17,11 @@ export default defineComponent({
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionID.ROLE_EDIT,
+                PermissionID.ROLE_DROP,
+                PermissionID.ROLE_ADD,
+            ],
         });
 
         const items = [
@@ -40,8 +47,6 @@ export default defineComponent({
             toast.warning(e.message);
         };
 
-        const nuxtPage = resolveComponent('NuxtPage');
-
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
                 h('i', { class: 'fa-solid fa-user-group me-1' }),
@@ -52,28 +57,10 @@ export default defineComponent({
             ]),
             h('div', { class: 'content-wrapper' }, [
                 h('div', { class: 'content-sidebar flex-column' }, [
-                    h(
-                        'ul',
-                        { class: 'nav nav-pills flex-column' },
-                        items.map((item) => h('li', { class: 'nav-item' }, [
-                            h(
-                                NuxtLink,
-                                {
-                                    class: 'nav-link',
-                                    to: `/admin/roles${item.urlSuffix}`,
-                                },
-                                {
-                                    default: () => [
-                                        h('i', { class: `${item.icon} pe-1` }),
-                                        item.name,
-                                    ],
-                                },
-                            ),
-                        ])),
-                    ),
+                    buildDomainEntityNav('/admin/roles', items, { direction: 'vertical' }),
                 ]),
                 h('div', { class: 'content-container' }, [
-                    h(nuxtPage, {
+                    h(NuxtPage, {
                         onDeleted: handleDeleted,
                         onFailed: handleFailed,
                     }),

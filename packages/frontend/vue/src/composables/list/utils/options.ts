@@ -18,18 +18,26 @@ export function buildListComponentOptions<T extends Record<string, any>>(
 
     if (props.withHeader.value) {
         output.header = options.header ?? true;
+    } else {
+        output.header = false;
     }
 
     if (props.withNoMore.value) {
         output.noMore = options.noMore ?? true;
+    } else {
+        output.noMore = false;
     }
 
     if (props.withSearch.value) {
         output.search = options.search ?? true;
+    } else {
+        output.search = false;
     }
 
     if (props.withPagination.value) {
         output.pagination = options.pagination ?? true;
+    } else {
+        output.pagination = false;
     }
 
     return output as ListBuilderComponentOptions<T>;

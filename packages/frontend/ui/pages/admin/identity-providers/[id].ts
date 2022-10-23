@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, Role } from '@authelion/common';
+import { IdentityProvider, PermissionID, Realm } from '@authelion/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
-import { NuxtLink, NuxtPage } from '#components';
+import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
     definePageMeta, resolveComponent, useAPI,
@@ -22,10 +22,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.ROLE_EDIT,
-                PermissionID.USER_ROLE_ADD,
-                PermissionID.USER_ROLE_EDIT,
-                PermissionID.USER_ROLE_DROP,
+                PermissionID.REALM_EDIT,
             ],
         });
 
@@ -33,30 +30,24 @@ export default defineNuxtComponent({
             {
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
-            {
-                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
-            },
-            {
-                name: 'Users', icon: 'fas fa-users', urlSuffix: 'users',
-            },
         ];
 
         const toast = useToast();
 
         const route = useRoute();
 
-        const entity : Ref<Role> = ref(null);
+        const entity: Ref<IdentityProvider> = ref(null);
 
         try {
             entity.value = await useAPI()
-                .role
+                .identityProvider
                 .getOne(route.params.id as string);
         } catch (e) {
-            return navigateTo({ path: '/admin/roles' });
+            return navigateTo({ path: '/admin/identity-providers' });
         }
 
-        const handleUpdated = (e: Role) => {
-            toast.success('The role was successfully updated.');
+        const handleUpdated = (e: Realm) => {
+            toast.success('The identity-provider was successfully updated.');
 
             const keys = Object.keys(e);
             for (let i = 0; i < keys.length; i++) {
@@ -70,14 +61,20 @@ export default defineNuxtComponent({
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa-solid fa-user-group me-1' }),
+                h('i', { class: 'fa fa-atom me-1' }),
                 entity.value.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),
             ]),
-            h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/roles/${entity.value.id}`, items, { prevLink: true }),
+            h('div', { class: 'mb-3' }, [
+                buildDomainEntityNav(
+                    `/admin/identity-providers/${entity.value.id}`,
+                    items,
+                    {
+                        prevLink: true,
+                    },
+                ),
             ]),
 
             h('div', [

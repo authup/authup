@@ -16,7 +16,7 @@ import { initFormAttributesFromEntity } from '../../composables/form';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { useHTTPClient } from '../../utils';
 
-export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
+export const IdentityProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',
     props: {
         role: {
@@ -173,26 +173,25 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
                 let dropAction : VNodeArrayChildren = [];
 
                 if (item.value) {
-                    dropAction = [h('button', {
-                        class: 'btn btn-xs btn-danger',
-                        disabled: $v.value.$invalid || busy.value,
-                        onClick($event: any) {
-                            $event.preventDefault();
+                    dropAction = [
+                        h('button', {
+                            class: 'btn btn-xs btn-danger ms-1',
+                            disabled: $v.value.$invalid || busy.value,
+                            onClick($event: any) {
+                                $event.preventDefault();
 
-                            return drop.call(null);
-                        },
-                    }, [
-                        h('i', {
-                            class: ['fa', {
-                                'fa-plus': !item.value,
-                                'fa-save': item.value,
-                            }],
-                        }),
-                    ])];
+                                return drop.call(null);
+                            },
+                        }, [
+                            h('i', {
+                                class: ['fa fa-trash'],
+                            }),
+                        ]),
+                    ];
                 }
 
                 itemActions = h('div', {
-                    class: 'ml-auto',
+                    class: 'ms-auto',
                 }, [
                     h('button', {
                         class: ['btn btn-xs', {
@@ -220,7 +219,7 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
                 class: 'd-flex flex-row',
             }, [
                 h('div', {
-                    class: 'mr-2',
+                    class: 'me-2',
                 }, [
                     displayButton,
                 ]),
@@ -269,4 +268,4 @@ export const OAuth2ProviderRoleAssignmentListItem = defineComponent({
     },
 });
 
-export default OAuth2ProviderRoleAssignmentListItem;
+export default IdentityProviderRoleAssignmentListItem;

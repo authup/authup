@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Component } from '@vue-layout/navigation';
+import { NavigationElement } from '@vue-layout/basic';
 import { PermissionID } from '@authelion/common';
 
 export enum LayoutKey {
@@ -22,7 +22,7 @@ export enum LayoutNavigationID {
     DEFAULT = 'default',
 }
 
-export const LayoutTopNavigation : Component[] = [
+export const LayoutTopNavigation : NavigationElement[] = [
     {
         id: LayoutNavigationID.DEFAULT,
         name: 'General',
@@ -37,7 +37,7 @@ export const LayoutTopNavigation : Component[] = [
     },
 ];
 
-export const LayoutSideDefaultNavigation : Component[] = [
+export const LayoutSideDefaultNavigation : NavigationElement[] = [
     {
         name: 'General',
         type: 'separator',
@@ -76,7 +76,7 @@ export const LayoutSideDefaultNavigation : Component[] = [
     },
 ];
 
-export const LayoutSideAdminNavigation : Component[] = [
+export const LayoutSideAdminNavigation : NavigationElement[] = [
     {
         name: 'Realms',
         type: 'link',
@@ -87,6 +87,18 @@ export const LayoutSideAdminNavigation : Component[] = [
             PermissionID.REALM_ADD,
             PermissionID.REALM_EDIT,
             PermissionID.REALM_DROP,
+        ],
+    },
+    {
+        name: 'Identity Providers',
+        type: 'link',
+        url: '/admin/identity-providers',
+        icon: 'fa-solid fa-atom',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionID.PROVIDER_ADD,
+            PermissionID.PROVIDER_EDIT,
+            PermissionID.PROVIDER_DROP,
         ],
     },
     {

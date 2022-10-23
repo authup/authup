@@ -8,9 +8,10 @@
 import { PermissionID, Realm } from '@authelion/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
+import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, resolveComponent, useAPI,
+    definePageMeta, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
@@ -32,8 +33,6 @@ export default defineNuxtComponent({
         ];
 
         const toast = useToast();
-
-        const nuxtPage = resolveComponent('NuxtPage');
 
         const route = useRoute();
 
@@ -69,11 +68,11 @@ export default defineNuxtComponent({
                 ]),
             ]),
             h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/realms/${entity.value.id}`, items),
+                buildDomainEntityNav(`/admin/realms/${entity.value.id}`, items, { prevLink: true }),
             ]),
 
             h('div', [
-                h(nuxtPage, {
+                h(NuxtPage, {
                     onUpdated: handleUpdated,
                     onFailed: handleFailed,
                     entity: entity.value,

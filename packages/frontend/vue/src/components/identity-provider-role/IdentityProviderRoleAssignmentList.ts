@@ -8,10 +8,10 @@
 import { defineComponent, h } from 'vue';
 import { Role } from '@authelion/common';
 import { SlotName } from '@vue-layout/hyperscript';
-import { OAuth2ProviderRoleAssignmentListItem } from './OAuth2ProviderRoleAssignmentListItem';
+import { IdentityProviderRoleAssignmentListItem } from './IdentityProviderRoleAssignmentListItem';
 import { RoleList } from '../role';
 
-export const OAuth2ProviderRoleAssignmentList = defineComponent({
+export const IdentityProviderRoleAssignmentList = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentList',
     props: {
         entityId: {
@@ -24,7 +24,7 @@ export const OAuth2ProviderRoleAssignmentList = defineComponent({
             withHeader: false,
         }, {
             [SlotName.ITEMS]: (slotProps: { data: Role[] }) => slotProps.data.map((item: Role) => h(
-                OAuth2ProviderRoleAssignmentListItem,
+                IdentityProviderRoleAssignmentListItem,
                 {
                     key: item.id,
                     entityId: props.entityId,
@@ -35,4 +35,4 @@ export const OAuth2ProviderRoleAssignmentList = defineComponent({
     },
 });
 
-export default OAuth2ProviderRoleAssignmentList;
+export default IdentityProviderRoleAssignmentList;
