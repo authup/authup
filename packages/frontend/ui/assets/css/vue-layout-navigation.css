@@ -52,8 +52,8 @@
 .nav-items .nav-link.router-link-exact-active:not(.root-link),
 .nav-items .nav-link.nuxt-link-exact-active:not(.root-link) {
     cursor: pointer;
-    background-color: #baa875;
     color: #fff;
+    background: #6d7fcc;
 }
 
 .nav-items .nav-separator {

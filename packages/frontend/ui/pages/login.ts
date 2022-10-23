@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
+import { PresetsBuildIn, buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import { reactive, ref } from '#imports';
+import Login from '../components/svg/LoginSVG';
 import { translateValidationMessage } from '../composables/ilingo';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { useAuthStore } from '../store/auth';
@@ -83,14 +84,29 @@ export default defineNuxtComponent({
             const submitButton = buildFormSubmit({
                 validationResult: vuelidate.value,
                 createText: 'Login',
-                createButtonClass: 'btn btn-sm btn-dark btn-block',
+                createButtonClass: {
+                    value: 'btn btn-sm btn-dark btn-block',
+                    presets: {
+                        [PresetsBuildIn.BOOTSTRAP_V5]: false,
+                    },
+                },
                 createIconClass: 'fa-solid fa-right-to-bracket',
                 submit,
                 busy,
             });
 
-            return h('div', { staticClass: 'container' }, [
-                h('h4', 'Login'),
+            return h('div', { class: 'container' }, [
+                h('h4', [
+                    h('i', { class: 'fa-solid fa-arrow-right-to-bracket pe-2' }),
+                    'Login',
+                ]),
+                h('div', {
+                    class: 'text-center',
+                }, [
+                    h(Login, {
+                        height: 320,
+                    }),
+                ]),
                 h('form', {
                     onSubmit($event) {
                         $event.preventDefault();

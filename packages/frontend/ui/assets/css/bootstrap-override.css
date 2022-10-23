@@ -40,6 +40,11 @@ a:focus{
     color: #495057;
 }
 
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #337ab7;

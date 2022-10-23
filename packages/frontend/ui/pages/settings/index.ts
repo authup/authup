@@ -7,6 +7,8 @@
 
 import { NuxtLink, NuxtPage } from '#components';
 import { definePageMeta, resolveComponent } from '#imports';
+import AccountSVG from '../../components/svg/AccountSVG';
+import { buildDomainEntityNav } from '../../composables/domain/enity-nav';
 import { LayoutKey, LayoutNavigationID } from '../../config/layout';
 
 export default defineComponent({
@@ -26,6 +28,11 @@ export default defineComponent({
         ];
 
         return () => h('div', [
+            h('div', {
+                class: 'text-center',
+            }, [
+                h(AccountSVG),
+            ]),
             h('h1', { class: 'title no-border mb-3' }, [
                 h('i', { class: 'fa fa-cog' }),
                 'Settings',
@@ -35,16 +42,7 @@ export default defineComponent({
             ]),
             h('div', { class: 'content-wrapper' }, [
                 h('div', { class: 'content-sidebar flex-column' }, [
-                    h(
-                        'ul',
-                        { class: 'nav nav-pills flex-column' },
-                        items.map((item) => h('li', { class: 'nav-item' }, [
-                            h(NuxtLink, { class: 'nav-link', to: `/settings${item.urlSuffix}` }, [
-                                h('i', { class: `${item.icon} pe-1` }),
-                                item.name,
-                            ]),
-                        ])),
-                    ),
+                    buildDomainEntityNav('/settings', items, { direction: 'vertical' }),
                 ]),
                 h('div', { class: 'content-container' }, [
                     h(NuxtPage),

@@ -67,8 +67,5 @@
         "commitizen": {
             "path": "@commitlint/cz-commitlint"
         }
-    },
-    "dependencies": {
-        "@vue-layout/core": "^0.1.1"
     }
 }
