@@ -7,5 +7,4 @@
 
 export * from './form';
 export * from './http-client';
-export * from './proprety';
 export * from './vuelidate';

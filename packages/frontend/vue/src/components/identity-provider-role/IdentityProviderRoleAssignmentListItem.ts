@@ -12,9 +12,8 @@ import {
 } from 'vue';
 import { IdentityProviderRole, Role } from '@authelion/common';
 import { buildFormInput } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity } from '../../composables/form';
+import { initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';
-import { useHTTPClient } from '../../utils';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',

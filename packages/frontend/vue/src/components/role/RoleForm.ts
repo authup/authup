@@ -14,8 +14,7 @@ import { Role } from '@authelion/common';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity } from '../../composables/form';
-import { createSubmitHandler, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 

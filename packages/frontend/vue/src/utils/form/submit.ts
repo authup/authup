@@ -6,7 +6,6 @@
  */
 
 import { Ref, SetupContext } from 'vue';
-import { useHTTPClient } from './http-client';
 
 type Context<T extends Record<string, any>> = {
     ctx: SetupContext<('created' | 'deleted' | 'updated' | 'failed')[]>,

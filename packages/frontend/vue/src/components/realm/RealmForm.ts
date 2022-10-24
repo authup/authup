@@ -17,8 +17,9 @@ import {
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity } from '../../composables/form';
-import { alphaNumHyphenUnderscore, createSubmitHandler, useHTTPClient } from '../../utils';
+import {
+    alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useHTTPClient,
+} from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 

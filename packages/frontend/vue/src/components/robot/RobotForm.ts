@@ -25,10 +25,10 @@ import {
     buildFormInput,
     buildFormSubmit, buildItemActionToggle,
 } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity } from '../../composables/form';
 import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
+    initFormAttributesFromEntity,
     useHTTPClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';

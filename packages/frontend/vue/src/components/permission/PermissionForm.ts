@@ -12,8 +12,7 @@ import {
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Permission } from '@authelion/common';
 import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity } from '../../composables/form';
-import { createSubmitHandler, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 

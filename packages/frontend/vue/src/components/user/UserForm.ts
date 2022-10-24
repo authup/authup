@@ -20,8 +20,7 @@ import {
 } from 'vue';
 
 import { Realm, User } from '@authelion/common';
-import { initFormAttributesFromEntity } from '../../composables/form';
-import { createSubmitHandler, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { RealmList } from '../realm';

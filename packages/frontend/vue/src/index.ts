@@ -31,3 +31,4 @@ export default install;
 // each can be registered via Vue.component()
 export * from './components';
 export * from './composables';
+export * from './utils';
