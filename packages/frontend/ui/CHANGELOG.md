@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.1.4...@authelion/ui@0.2.0) (2022-10-24)
+
+
+### Features
+
+* **ui:** add identity-provider management + explicit import NuxtPage ([2cca37b](https://github.com/tada5hi/authelion/commit/2cca37b666cbece3c2b212a9787d5f3f49866144))
+
+
+
+
+
 ## [0.1.4](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.1.3...@authelion/ui@0.1.4) (2022-10-22)
 
 **Note:** Version bump only for package @authelion/ui

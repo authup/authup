@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.5](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.4...@authelion/vue@2.1.0-alpha.5) (2022-10-24)
+
+
+### Features
+
+* **ui:** add identity-provider management + explicit import NuxtPage ([2cca37b](https://github.com/Tada5hi/authelion/commit/2cca37b666cbece3c2b212a9787d5f3f49866144))
+
+
+
+
+
 # [2.1.0-alpha.4](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.3...@authelion/vue@2.1.0-alpha.4) (2022-10-22)
 
 
