@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.6](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.5...@authelion/vue@2.1.0-alpha.6) (2022-10-24)
+
+
+### Bug Fixes
+
+* **vue:** exports + restructrure file structure ([2bfc512](https://github.com/Tada5hi/authelion/commit/2bfc512989b46a57877957f10991e351fa544d60))
+
+
+
+
+
 # [2.1.0-alpha.5](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.4...@authelion/vue@2.1.0-alpha.5) (2022-10-24)
 
 
