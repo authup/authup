@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.7](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.6...@authelion/vue@2.1.0-alpha.7) (2022-10-25)
+
+
+### Bug Fixes
+
+* **vue:** extendend submit handler create context ([af26051](https://github.com/Tada5hi/authelion/commit/af260513f7ced8373eac9355e7a5b778feb72535))
+
+
+
+
+
 # [2.1.0-alpha.6](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.5...@authelion/vue@2.1.0-alpha.6) (2022-10-24)
 
 

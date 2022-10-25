@@ -1,6 +1,6 @@
 {
     "name": "@authelion/vue",
-    "version": "2.1.0-alpha.6",
+    "version": "2.1.0-alpha.7",
     "description": "This package contains auth related vue components.",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",

@@ -1,6 +1,6 @@
 {
     "name": "@authelion/ui",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "private": true,
     "scripts": {
         "build": "nuxt build",
@@ -11,7 +11,7 @@
     },
     "devDependencies": {
         "@authelion/common": "^0.3.14",
-        "@authelion/vue": "^2.1.0-alpha.6",
+        "@authelion/vue": "^2.1.0-alpha.7",
         "@fortawesome/fontawesome-free": "^6.2.0",
         "@hapic/oauth2": "^0.0.2",
         "@nuxtjs/google-fonts": "^3.0.0-0",
