@@ -60,13 +60,15 @@ export default [
         ],
     }),
     buildConfig({
+        input: 'src/index.ts',
         external,
         output: [
             {
                 compact: true,
                 file: pkg.main,
                 format: 'cjs',
-                exports: 'auto',
+                exports: 'named',
+                footer: 'module.exports = Object.assign(exports.default, exports);',
                 assetFileNames: '[name]-[hash][extname]',
             },
         ],

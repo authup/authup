@@ -4,12 +4,6 @@
     "description": "This package contains auth related vue components.",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
-    "exports": {
-        ".": {
-            "import": "./dist/index.ems.js",
-            "require": "./dist/index.cjs.js"
-        }
-    },
     "types": "dist/types/index.d.ts",
     "files": [
         "dist/"

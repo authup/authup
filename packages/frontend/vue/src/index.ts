@@ -7,8 +7,6 @@ import * as components from './components';
 import { InstallOptions } from './type';
 import { setHTTPClient } from './utils';
 
-export { setHTTPClient, useHTTPClient } from './utils';
-
 // install function executed by Vue.use()
 const install: Plugin = function install(instance, options?: InstallOptions) {
     options = options || {};
