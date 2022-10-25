@@ -15,7 +15,11 @@ type Context<T extends Record<string, any>> = {
     form: Partial<T>,
     formIsValid: () => boolean,
     update: (id: string, data: Partial<T>) => Promise<T>,
-    create: (data: Partial<T>) => Promise<T>
+    create: (data: Partial<T>) => Promise<T>,
+
+    onCreate?: (entity: T) => void,
+    onUpdate?: (entity: T) => void,
+    onFail?: (error: Error) => void
 };
 
 export function createSubmitHandler<T extends Record<string, any>>(ctx: Context<T>) {
@@ -33,14 +37,26 @@ export function createSubmitHandler<T extends Record<string, any>>(ctx: Context<
             ) {
                 response = await ctx.update(ctx.props.entity.id, { ...ctx.form });
 
+                if (ctx.onUpdate) {
+                    ctx.onUpdate(response);
+                }
+
                 ctx.ctx.emit('updated', response);
             } else {
                 response = await ctx.create({ ...ctx.form });
+
+                if (ctx.onCreate) {
+                    ctx.onCreate(response);
+                }
 
                 ctx.ctx.emit('created', response);
             }
         } catch (e) {
             if (e instanceof Error) {
+                if (ctx.onFail) {
+                    ctx.onFail(e);
+                }
+
                 ctx.ctx.emit('failed', e);
             }
         }
