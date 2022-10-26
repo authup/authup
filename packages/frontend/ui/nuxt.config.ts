@@ -4,6 +4,11 @@ import { defineNuxtConfig } from 'nuxt/config';
 import path from 'path';
 
 export default defineNuxtConfig({
+    build: {
+        transpile: [
+            'vue-toastification',
+        ],
+    },
     css: [
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',

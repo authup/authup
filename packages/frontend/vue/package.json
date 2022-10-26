@@ -58,7 +58,7 @@
         "@vuelidate/validators": "^2.0.0",
         "cross-env": "^7.0.3",
         "ilingo": "^2.0.4",
-        "rapiq": "^0.3.0",
+        "rapiq": "^0.3.1",
         "rollup": "^3.1.0",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-vue": "^6.0.0-beta.11",
