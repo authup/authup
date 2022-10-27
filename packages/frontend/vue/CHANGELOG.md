@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0-alpha.9](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.8...@authelion/vue@2.1.0-alpha.9) (2022-10-27)
+
+**Note:** Version bump only for package @authelion/vue
+
+
+
+
+
 # [2.1.0-alpha.8](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.7...@authelion/vue@2.1.0-alpha.8) (2022-10-25)
 
 **Note:** Version bump only for package @authelion/vue

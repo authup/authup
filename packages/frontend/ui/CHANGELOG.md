@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.4](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.2.3...@authelion/ui@0.2.4) (2022-10-27)
+
+
+### Bug Fixes
+
+* nginx reverse proxy + add query sort for permissions ([b939cfa](https://github.com/tada5hi/authelion/commit/b939cfa1f94fb38450c0fa388688c71bf4a4d795))
+
+
+
+
+
 ## [0.2.3](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.2.2...@authelion/ui@0.2.3) (2022-10-25)
 
 **Note:** Version bump only for package @authelion/ui

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.22](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.21...@authelion/server-core@0.3.22) (2022-10-27)
+
+
+### Bug Fixes
+
+* **deps:** bump typeorm-extension from 2.2.8 to 2.2.9 ([9d2a7a2](https://github.com/Tada5hi/authelion/commit/9d2a7a24500b055a44c0894edb08666994127109))
+* **deps:** bump typeorm-extension from 2.2.9 to 2.2.10 ([fde1bcd](https://github.com/Tada5hi/authelion/commit/fde1bcd60ec597fd7f842d8465478000591225eb))
+* nginx reverse proxy + add query sort for permissions ([b939cfa](https://github.com/Tada5hi/authelion/commit/b939cfa1f94fb38450c0fa388688c71bf4a4d795))
+
+
+
+
+
 ## [0.3.21](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.20...@authelion/server-core@0.3.21) (2022-10-22)
 
 
