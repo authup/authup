@@ -86,7 +86,7 @@
         "supertest": "^6.3.0",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.10",
-        "typeorm-extension": "^2.2.8"
+        "typeorm-extension": "^2.2.9"
     },
     "publishConfig": {
         "access": "public"
