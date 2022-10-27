@@ -9,6 +9,9 @@ export default defineNuxtConfig({
             'vue-toastification',
         ],
     },
+    experimental: {
+        writeEarlyHints: false,
+    },
     css: [
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',

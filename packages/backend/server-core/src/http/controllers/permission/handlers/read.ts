@@ -25,6 +25,9 @@ export async function getManyPermissionRouteHandler(req: ExpressRequest, res: Ex
         pagination: {
             maxLimit: 50,
         },
+        sort: {
+            allowed: ['id', 'created_at', 'updated_at'],
+        },
     });
 
     const [entities, total] = await query.getManyAndCount();
