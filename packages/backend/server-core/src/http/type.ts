@@ -6,17 +6,10 @@
  */
 
 import {
-    Express, NextFunction, Request, Response,
-} from 'express';
-import {
     AbilityManager, Client, Realm, Robot, User,
 } from '@authelion/common';
 
-export interface ExpressAppInterface extends Express {
-
-}
-
-export interface ExpressRequest extends Request {
+export type RequestEnv = {
     user?: User,
     userId?: User['id'],
 
@@ -32,7 +25,7 @@ export interface ExpressRequest extends Request {
     scopes?: string[],
 
     ability: AbilityManager
-}
+};
 
 export type ExpressResponseMessage = {
     statusMessage?: string,
