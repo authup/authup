@@ -27,7 +27,7 @@
         "ilingo": "^2.0.4",
         "nuxt": "3.0.0-rc.13",
         "pinia": "^2.0.22",
-        "vue": "^3.2.41",
+        "vue": "^3.2.43",
         "vue-router": "^4.1.5",
         "vue-toastification": "next"
     }
