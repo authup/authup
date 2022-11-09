@@ -11,25 +11,31 @@ import {
     OAuth2TokenIntrospectionResponse,
 } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
+import { useRequestCookies } from '@routup/cookie';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
+import {
+    Handler, Next, Request, Response, setRequestEnv,
+} from 'routup';
+import { RequestEnv } from '../type';
 import { HTTPMiddlewareContext } from './type';
 import { verifyOAuth2Token } from '../../oauth2';
 
-export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
-    return async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
+    return async (req: Request, res: Response, next: Next) => {
         let { authorization: headerValue } = req.headers;
 
         if (!headerValue) {
+            const cookies = useRequestCookies(req);
+
             try {
                 let value;
                 if (context.cookieHandler) {
-                    value = context.cookieHandler(req.cookies);
+                    value = context.cookieHandler(cookies);
                 } else if (
-                    req.cookies?.[CookieName.ACCESS_TOKEN] &&
-                        typeof req.cookies[CookieName.ACCESS_TOKEN] === 'string'
+                    cookies[CookieName.ACCESS_TOKEN] &&
+                        typeof cookies[CookieName.ACCESS_TOKEN] === 'string'
                 ) {
-                    value = req.cookies[CookieName.ACCESS_TOKEN];
+                    value = cookies[CookieName.ACCESS_TOKEN];
                 }
 
                 if (value) {
@@ -61,22 +67,29 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) {
             return;
         }
 
+        const env : Partial<RequestEnv> = {};
+
         switch (data.sub_kind) {
             case OAuth2SubKind.CLIENT:
-                req.clientId = data.sub;
+                env.clientId = data.sub;
                 break;
             case OAuth2SubKind.ROBOT:
-                req.robotId = data.sub;
+                env.robotId = data.sub;
                 break;
             case OAuth2SubKind.USER:
-                req.userId = data.sub;
+                env.userId = data.sub;
                 break;
         }
 
-        req.realmId = data.realm_id;
-        req.token = header.token;
-        req.permissions = data.permissions;
-        req.ability = new AbilityManager(data.permissions);
+        env.realmId = data.realm_id;
+        env.token = header.token;
+        env.permissions = data.permissions;
+        env.ability = new AbilityManager(data.permissions);
+
+        const keys = Object.keys(env);
+        for (let i = 0; i < keys.length; i++) {
+            setRequestEnv(req, keys[i], env[keys[i]]);
+        }
 
         next();
     };

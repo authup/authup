@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenVerifyContext } from '../../oauth2/token';
+import { TokenVerifyContext } from '../../oauth2';
 
 export type HTTPMiddlewareContext = TokenVerifyContext & {
     cookieHandler?: (cookies: any) => string | undefined

@@ -6,7 +6,6 @@
  */
 
 import { IncomingHttpHeaders } from 'http';
-import { ParsedUrlQuery } from 'querystring';
 
 export type SocketNextFunction = (err?: Error) => void;
 export type Socket = {
@@ -49,7 +48,7 @@ export interface Handshake {
     /**
      * The query object
      */
-    query: ParsedUrlQuery;
+    query: Record<string, any>;
     /**
      * The auth object
      */

@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NextFunction, Request } from 'express';
 import {
     AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
 } from '@authelion/common';
 
-export interface ExpressRequest extends Request {
+export type RequestEnv = {
     userId?: User['id'],
     robotId?: Robot['id'],
     clientId?: Client['id']
@@ -21,12 +20,4 @@ export interface ExpressRequest extends Request {
 
     ability: AbilityManager,
     permissions: AbilityDescriptor[],
-}
-
-export interface ExpressResponse extends Response {
-
-}
-
-export interface ExpressNextFunction extends NextFunction {
-
-}
+};
