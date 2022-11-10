@@ -19,9 +19,9 @@ import {
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from 'hapic';
+import { Request } from 'routup';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest } from '../../type';
 import {
     extractOAuth2TokenPayload,
     loadOAuth2SubEntity,
@@ -37,9 +37,10 @@ import {
 import {
     useConfig,
 } from '../../../config';
+import { setRequestEnv } from '../../utils';
 
 async function verifyBearerAuthorizationHeader(
-    request: ExpressRequest,
+    request: Request,
     header: BearerAuthorizationHeader,
 ) {
     const payload = await extractOAuth2TokenPayload(header.token);
@@ -47,37 +48,36 @@ async function verifyBearerAuthorizationHeader(
         throw TokenError.accessTokenRequired();
     }
 
-    request.token = header.token;
-    request.scopes = transformOAuth2ScopeToArray(payload.scope);
-
-    request.realmId = payload.realm_id;
+    setRequestEnv(request, 'token', header.token);
+    setRequestEnv(request, 'scopes', transformOAuth2ScopeToArray(payload.scope));
+    setRequestEnv(request, 'realmId', payload.realm_id);
 
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    request.ability = new AbilityManager(permissions);
+    setRequestEnv(request, 'ability', new AbilityManager(permissions));
 
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
-            request.client = sub as OAuth2ClientEntity;
-            request.clientId = payload.sub;
+            setRequestEnv(request, 'client', sub as OAuth2ClientEntity);
+            setRequestEnv(request, 'clientId', payload.sub);
             break;
         }
         case OAuth2SubKind.USER: {
-            request.user = sub as UserEntity;
-            request.userId = payload.sub;
+            setRequestEnv(request, 'user', sub as UserEntity);
+            setRequestEnv(request, 'userId', payload.sub);
             break;
         }
         case OAuth2SubKind.ROBOT: {
-            request.robot = sub as RobotEntity;
-            request.robotId = payload.sub;
+            setRequestEnv(request, 'robot', sub as RobotEntity);
+            setRequestEnv(request, 'robotId', payload.sub);
             break;
         }
     }
 }
 
 async function verifyBasicAuthorizationHeader(
-    request: ExpressRequest,
+    request: Request,
     header: BasicAuthorizationHeader,
 ) {
     let permissions : AbilityDescriptor[] = [];
@@ -103,12 +103,12 @@ async function verifyBasicAuthorizationHeader(
 
         permissions = await userRepository.getOwnedPermissions(entity.id);
 
-        request.ability = new AbilityManager(permissions);
-        request.scopes = [OAuth2Scope.GLOBAL];
+        setRequestEnv(request, 'ability', new AbilityManager(permissions));
+        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
 
-        request.user = entity;
-        request.userId = entity.id;
-        request.realmId = entity.realm_id;
+        setRequestEnv(request, 'user', entity);
+        setRequestEnv(request, 'userId', entity.id);
+        setRequestEnv(request, 'realmId', entity.realm_id);
 
         return;
     }
@@ -117,29 +117,29 @@ async function verifyBasicAuthorizationHeader(
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!
-        request.ability = new AbilityManager();
-        request.scopes = [OAuth2Scope.GLOBAL];
+        setRequestEnv(request, 'ability', new AbilityManager());
+        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
 
-        request.realmId = robot.realm_id;
-        request.robot = robot;
-        request.robotId = robot.id;
+        setRequestEnv(request, 'robot', robot);
+        setRequestEnv(request, 'robotId', robot.id);
+        setRequestEnv(request, 'realmId', robot.realm_id);
     }
 
     const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
     const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
     if (oauth2Client) {
         // allow authentication but not authorization with basic auth for robots!
-        request.ability = new AbilityManager();
-        request.scopes = [OAuth2Scope.GLOBAL];
+        setRequestEnv(request, 'ability', new AbilityManager());
+        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
 
-        request.realmId = oauth2Client.realm_id;
-        request.clientId = oauth2Client.id;
-        request.client = oauth2Client;
+        setRequestEnv(request, 'client', oauth2Client);
+        setRequestEnv(request, 'clientId', oauth2Client.id);
+        setRequestEnv(request, 'realmId', oauth2Client.realm_id);
     }
 }
 
 export async function verifyAuthorizationHeader(
-    request: ExpressRequest,
+    request: Request,
     header: AuthorizationHeader,
 ) : Promise<void> {
     switch (header.type) {

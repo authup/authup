@@ -5,17 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Request, Response, Next } from 'routup';
 import { Middleware } from '@decorators/express';
 import { UnauthorizedError } from '@ebec/http';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
+import { useRequestEnv } from '../../utils';
 
 export function forceUserLoggedIn(
-    req: ExpressRequest,
-    res: ExpressResponse,
-    next: ExpressNextFunction,
+    req: Request,
+    res: Response,
+    next: Next,
 ) {
+    const userId = useRequestEnv(req, 'userId');
+
     if (
-        typeof req.userId === 'undefined'
+        typeof userId === 'undefined'
     ) {
         throw new UnauthorizedError();
     }
@@ -25,7 +28,7 @@ export function forceUserLoggedIn(
 
 export class ForceUserLoggedInMiddleware implements Middleware {
     // eslint-disable-next-line class-methods-use-this
-    public use(request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) {
+    public use(request: Request, response: Response, next: Next) {
         return forceUserLoggedIn(request, response, next);
     }
 }

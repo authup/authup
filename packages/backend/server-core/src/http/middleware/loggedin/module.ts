@@ -7,17 +7,18 @@
 
 import { Middleware } from '@decorators/express';
 import { UnauthorizedError } from '@ebec/http';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
+import { Request, Response, Next } from 'routup';
+import { useRequestEnv } from '../../utils';
 
 export function forceLoggedIn(
-    req: ExpressRequest,
-    res: ExpressResponse,
-    next: ExpressNextFunction,
+    req: Request,
+    res: Response,
+    next: Next,
 ) {
     if (
-        typeof req.userId === 'undefined' &&
-        typeof req.robotId === 'undefined' &&
-        typeof req.clientId === 'undefined'
+        typeof useRequestEnv(req, 'userId') === 'undefined' &&
+        typeof useRequestEnv(req, 'robotId') === 'undefined' &&
+        typeof useRequestEnv(req, 'clientId') === 'undefined'
     ) {
         throw new UnauthorizedError();
     }
@@ -27,7 +28,7 @@ export function forceLoggedIn(
 
 export class ForceLoggedInMiddleware implements Middleware {
     // eslint-disable-next-line class-methods-use-this
-    public use(request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) {
+    public use(request: Request, response: Response, next: Next) {
         return forceLoggedIn(request, response, next);
     }
 }

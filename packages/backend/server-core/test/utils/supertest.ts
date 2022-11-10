@@ -7,10 +7,10 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import supertest, { SuperTest, Test } from 'supertest';
-import { createExpressApp } from '../../src';
+import { createRouter } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const expressApp = createExpressApp();
+    const expressApp = createRouter();
 
     return supertest(expressApp);
 }

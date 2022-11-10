@@ -6,7 +6,8 @@
  */
 
 import swaggerUi from 'swagger-ui-express';
-import { Application, json, urlencoded } from 'express';
+import { Router } from 'routup';
+import { createRequestJsonHandler, createRequestUrlEncodedHandler } from '@routup/body';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { existsSync } from 'fs';
@@ -19,11 +20,10 @@ import {
 } from '../../config';
 import { useLogger } from '../../logger';
 import { createLoggerMiddleware } from './logger';
-import { responseMiddleware } from './response';
 import { createMiddleware } from './core';
 
 export function registerMiddlewares(
-    router: Application,
+    router: Router,
     input?: HTTPMiddlewareOptionsInput,
 ) {
     let options : HTTPMiddlewareOptions;
@@ -43,15 +43,11 @@ export function registerMiddlewares(
     router.use(createLoggerMiddleware());
 
     if (options.bodyParser) {
-        router.use(urlencoded({ extended: false }));
-        router.use(json());
+        router.use(createRequestJsonHandler());
+        router.use(createRequestUrlEncodedHandler({ extended: false }));
     }
 
     router.use(cookieParser());
-
-    if (options.response) {
-        router.use(responseMiddleware);
-    }
 
     //--------------------------------------------------------------------
 
@@ -68,9 +64,11 @@ export function registerMiddlewares(
             // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
             const swaggerDocument = require(swaggerDocumentPath);
 
-            router.use(
-                '/docs',
-                swaggerUi.serve,
+            for(let i=0; i<swaggerUi.serve.length; i++) {
+                router.use('/docs', swaggerUi.serve[i]);
+            }
+
+            router.use('/docs',
                 swaggerUi.setup(swaggerDocument, {
                     swaggerOptions: {
                         withCredentials: true,

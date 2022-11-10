@@ -26,23 +26,3 @@ export type RequestEnv = {
 
     ability: AbilityManager
 };
-
-export type ExpressResponseMessage = {
-    statusMessage?: string,
-    statusCode?: number,
-    data?: any
-};
-
-export interface ExpressResponse extends Response {
-    respond(message?: ExpressResponseMessage): void,
-
-    respondDeleted(message?: ExpressResponseMessage): void,
-
-    respondCreated(message?: ExpressResponseMessage): void,
-
-    respondAccepted(message?: ExpressResponseMessage): void
-}
-
-export interface ExpressNextFunction extends NextFunction {
-
-}

@@ -8,6 +8,6 @@
 import http from 'http';
 import { HttpServerContext, HttpServerInterface } from './type';
 
-export function createHttpServer({ expressApp } : HttpServerContext) : HttpServerInterface {
-    return new http.Server(expressApp);
+export function createHttpServer({ router } : HttpServerContext) : HttpServerInterface {
+    return new http.Server(router.createListener());
 }

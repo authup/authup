@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Application } from 'express';
+import { Router } from 'routup';
 import { attachControllers } from '@decorators/express';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
@@ -25,7 +25,7 @@ import { UserAttributeController } from './user-attribute';
 import { ClientController } from './client';
 
 export function registerControllers(
-    router: Application,
+    router: Router,
 ) {
     attachControllers(router, [
         AuthController,

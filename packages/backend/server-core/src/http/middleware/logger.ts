@@ -6,31 +6,36 @@
  */
 
 import morgan from 'morgan';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
+import { Request, Response, Next } from 'routup';
 import { useLogger } from '../../logger';
+import { useRequestEnv } from '../utils';
 
 export function createLoggerMiddleware() {
     const logger = useLogger();
 
     return (
-        request: ExpressRequest,
-        response: ExpressResponse,
-        next: ExpressNextFunction,
+        request: Request,
+        response: Response,
+        next: Next,
     ) => {
         if (logger) {
             morgan(
-                (tokens, req: ExpressRequest, res: ExpressResponse) => {
+                (tokens, req: Request, res: Response) => {
                     const parts = [
                         tokens['remote-addr'](req, res),
                     ];
 
-                    if (req.userId || req.robotId || req.clientId) {
-                        if (req.userId) {
-                            parts.push(`user#${req.userId}`);
-                        } else if (req.robotId) {
-                            parts.push(`robot#${req.robotId}`);
+                    const userId = useRequestEnv(req,'userId');
+                    const robotId = useRequestEnv(req,'robotId');
+                    const clientId = useRequestEnv(req,'clientId');
+
+                    if (userId || robotId || clientId) {
+                        if (userId) {
+                            parts.push(`user#${userId}`);
+                        } else if (robotId) {
+                            parts.push(`robot#${robotId}`);
                         } else {
-                            parts.push(`client#${req.client.id}`);
+                            parts.push(`client#${clientId}`);
                         }
                     }
 

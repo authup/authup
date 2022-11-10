@@ -5,29 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import express, { Express } from 'express';
+import { Router } from 'routup';
 import cors from 'cors';
 
 import { errorMiddleware, registerMiddlewares } from '../middleware';
 import { registerControllers } from '../controllers';
 
-export function createExpressApp() : Express {
-    const expressApp : Express = express();
+export function createRouter() : Router {
+    const router = new Router();
 
-    expressApp.set('trust proxy', 1);
-
-    expressApp.use(cors({
+    router.use(cors({
         origin(origin, callback) {
             callback(null, true);
         },
         credentials: true,
     }));
 
-    registerMiddlewares(expressApp);
-    registerControllers(expressApp);
+    registerMiddlewares(router);
+    registerControllers(router);
 
     // needs to be last :/
-    expressApp.use(errorMiddleware);
+    router.use(errorMiddleware);
 
-    return expressApp;
+    return router;
 }

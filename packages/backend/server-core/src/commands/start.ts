@@ -8,7 +8,7 @@
 import { URL } from 'url';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
-import { createExpressApp, createHttpServer, generateSwaggerDocumentation } from '../http';
+import { createRouter, createHttpServer, generateSwaggerDocumentation } from '../http';
 import { StartCommandContext } from './type';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';
@@ -107,8 +107,8 @@ export async function startCommand(context?: StartCommandContext) {
         context.logger.info('Started aggregators.');
     }
 
-    const expressApp = createExpressApp();
-    const httpServer = createHttpServer({ expressApp });
+    const router = createRouter();
+    const httpServer = createHttpServer({ router });
     httpServer.listen(config.port, '0.0.0.0', () => {
         if (context.logger) {
             context.logger.info('Startup completed.');

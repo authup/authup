@@ -6,19 +6,20 @@
  */
 
 import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authelion/common';
+import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http/type';
+import { Request, Response, useRequestBody } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const authorizationCode = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if set
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
             realmId: authorizationCode.realm_id,
@@ -38,7 +39,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<OAuth2AuthorizationCodeEntity> {
+    async validate(request: Request) : Promise<OAuth2AuthorizationCodeEntity> {
         const code = this.getAuthorizationCode(request);
 
         const dataSource = await useDataSource();
@@ -70,11 +71,12 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         return entity;
     }
 
-    protected getAuthorizationCode(request: ExpressRequest) : string {
-        let { code } = request.body;
+    protected getAuthorizationCode(request: Request) : string {
+        let { code } = useRequestBody(request) as Record<string, any>;
 
         if (!code) {
-            code = request.query.code;
+            const query = useRequestQuery(request);
+            code = query.code;
         }
 
         if (!code || typeof code !== 'string') {
@@ -84,7 +86,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         return code;
     }
 
-    protected getRedirectURI(request: ExpressRequest) : string {
+    protected getRedirectURI(request: Request) : string {
         let { redirect_uri: redirectUri } = request.body;
 
         if (!redirectUri) {

@@ -6,10 +6,10 @@
  */
 
 import { Server } from 'http';
-import { Express } from 'express';
+import { Router } from 'routup';
 
 export interface HttpServerContext {
-    expressApp: Express
+    router: Router
 }
 
 export interface HttpServerInterface extends Server {

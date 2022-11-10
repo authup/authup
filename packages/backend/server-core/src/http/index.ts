@@ -7,9 +7,10 @@
 
 export * from './constants';
 export * from './controllers';
-export * from './express';
+export * from './router';
 export * from './express-validation';
 export * from './middleware';
 export * from './server';
 export * from './swagger';
 export * from './type';
+export * from './utils';

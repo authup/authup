@@ -6,27 +6,27 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
+import { Request, Response, Next } from 'routup';
+import { useRequestCookie, unsetResponseCookie } from '@routup/cookie';
 import { AbilityManager, CookieName } from '@authelion/common';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
+import { setRequestEnv } from '../../utils';
 import { verifyAuthorizationHeader } from './verify';
 
-function parseRequestAccessTokenCookie(request: ExpressRequest): string | undefined {
-    return typeof request.cookies?.[CookieName.ACCESS_TOKEN] === 'string' ?
-        request.cookies?.[CookieName.ACCESS_TOKEN] :
-        undefined;
+function parseRequestAccessTokenCookie(request: Request): string | undefined {
+    return useRequestCookie(request, CookieName.ACCESS_TOKEN);
 }
 
-function unsetCookies(res: ExpressResponse) {
-    res.cookie(CookieName.ACCESS_TOKEN, null, { maxAge: 0 });
-    res.cookie(CookieName.REFRESH_TOKEN, null, { maxAge: 0 });
-    res.cookie(CookieName.ACCESS_TOKEN_EXPIRE_DATE, null, { maxAge: 0 });
+function unsetCookies(res: Response) {
+    unsetResponseCookie(res, CookieName.ACCESS_TOKEN);
+    unsetResponseCookie(res, CookieName.REFRESH_TOKEN);
+    unsetResponseCookie(res, CookieName.ACCESS_TOKEN_EXPIRE_DATE);
 }
 
 export function createMiddleware() {
-    return async (request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction) => {
+    return async (request: Request, response: Response, next: Next) => {
         let { authorization: headerValue } = request.headers;
 
-        request.ability = new AbilityManager();
+        setRequestEnv(request, 'ability', new AbilityManager());
 
         try {
             const cookie = parseRequestAccessTokenCookie(request);
