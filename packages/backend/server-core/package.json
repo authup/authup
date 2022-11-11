@@ -54,7 +54,7 @@
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.6",
-        "swagger-ui-express": "^4.5.0",
+        "swagger-ui-express": "^4.6.0",
         "zod": "^3.19.1"
     },
     "peerDependencies": {
