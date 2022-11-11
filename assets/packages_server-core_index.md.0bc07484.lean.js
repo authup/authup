@@ -1,0 +1,1 @@
+import{_ as e,o as a,c as t,f as r}from"./app.ea8b556e.js";const f=JSON.parse('{"title":"Server-Core \u{1F340}","description":"","frontmatter":{},"headers":[],"relativePath":"packages/server-core/index.md"}'),s={name:"packages/server-core/index.md"},o=r("",5),i=[o];function c(n,p,l,d,_,m){return a(),t("div",null,i)}const u=e(s,[["render",c]]);export{f as __pageData,u as default};
