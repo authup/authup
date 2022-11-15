@@ -6,11 +6,12 @@
  */
 
 import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authelion/common';
+import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
+import { Request } from 'routup';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { Request, Response, useRequestBody } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 
@@ -72,11 +73,10 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     }
 
     protected getAuthorizationCode(request: Request) : string {
-        let { code } = useRequestBody(request) as Record<string, any>;
+        let code = useRequestBody(request, 'code');
 
         if (!code) {
-            const query = useRequestQuery(request);
-            code = query.code;
+            code = useRequestQuery(request, 'code');
         }
 
         if (!code || typeof code !== 'string') {
@@ -87,10 +87,10 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     }
 
     protected getRedirectURI(request: Request) : string {
-        let { redirect_uri: redirectUri } = request.body;
+        let redirectUri = useRequestBody(request, 'redirect_uri');
 
         if (!redirectUri) {
-            redirectUri = request.query.redirect_uri;
+            redirectUri = useRequestQuery(request, 'redirect_uri');
         }
 
         if (!redirectUri || typeof redirectUri !== 'string') {

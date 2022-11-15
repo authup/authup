@@ -7,20 +7,24 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
 /**
- * Drop an permission by id of a specific user.
+ * Drop a permission by id of a specific user.
  *
  * @param req
  * @param res
  */
-export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.USER_PERMISSION_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.USER_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -35,14 +39,14 @@ export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res:
     // ----------------------------------------------
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.user_realm_id)
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.user_realm_id)
     ) {
         throw new ForbiddenError();
     }
 
     // ----------------------------------------------
 
-    if (!req.ability.matchTarget(PermissionID.USER_PERMISSION_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionID.USER_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role-permission target.');
     }
 
@@ -56,7 +60,5 @@ export async function deleteUserPermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

@@ -12,21 +12,25 @@ import {
     OAuth2TokenGrantResponse,
     buildIdentityProviderAuthorizeCallbackPath,
 } from '@authelion/common';
+import { SerializeOptions, setResponseCookie } from '@routup/cookie';
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, sendRedirect, useRequestParam,
+} from 'routup';
 import { URL } from 'url';
-import { CookieOptions } from 'express';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../../utils';
 import { InternalGrantType } from '../../../../oauth2';
 import { useConfig } from '../../../../config';
+import { setRequestEnv } from '../../../utils';
 
 export async function authorizeURLIdentityProviderRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
@@ -59,16 +63,16 @@ export async function authorizeURLIdentityProviderRouteHandler(
         },
     });
 
-    return res.redirect(oauth2Client.authorize.buildURL({}));
+    return sendRedirect(res, oauth2Client.authorize.buildURL({}));
 }
 
 /* istanbul ignore next */
 export async function authorizeCallbackIdentityProviderRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
-    const { code, state } = req.query;
+    const id = useRequestParam(req, 'id');
+    const { code, state } = useRequestQuery(req);
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
@@ -114,26 +118,26 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
     const grant = new InternalGrantType(config);
 
-    req.userId = account.user_id;
-    req.realmId = entity.realm_id;
+    setRequestEnv(req, 'userId', account.user_id);
+    setRequestEnv(req, 'realmId', entity.realm_id);
 
     const token = await grant.run(req);
 
-    const cookieOptions : CookieOptions = {
+    const cookieOptions : SerializeOptions = {
         ...(process.env.NODE_ENV === 'production' ? {
             domain: new URL(config.webUrl).hostname,
         } : {}),
     };
 
-    res.cookie(CookieName.ACCESS_TOKEN, token.access_token, {
+    setResponseCookie(res, CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
         maxAge: config.tokenMaxAgeAccessToken * 1000,
     });
 
-    res.cookie(CookieName.REFRESH_TOKEN, token.refresh_token, {
+    setResponseCookie(res, CookieName.REFRESH_TOKEN, token.refresh_token, {
         ...cookieOptions,
         maxAge: config.tokenMaxAgeRefreshToken * 1000,
     });
 
-    return res.redirect(config.webUrl);
+    return sendRedirect(res, config.webUrl);
 }

@@ -8,18 +8,18 @@
 import { NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
+import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { useDataSource } from 'typeorm-extension';
 import {
     useConfig,
 } from '../../../../../config';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
-import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
+import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
 import { useSMTPClient } from '../../../../../smtp';
 
-export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createAuthPasswordForgotRouteHandler(req: Request, res: Response) : Promise<any> {
     const config = await useConfig();
 
     if (!config.registration) {
@@ -48,7 +48,7 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     const data : Partial<User> = matchedValidationData(req, { includeOptionals: true });
@@ -63,6 +63,7 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
     const query = repository.createQueryBuilder('user');
     const entity = await query
         .addSelect('user.email')
+        .where(where)
         .getOne();
 
     if (!entity) {
@@ -83,5 +84,5 @@ export async function createAuthPasswordForgotRouteHandler(req: ExpressRequest, 
             `,
     });
 
-    return res.respondAccepted();
+    return sendAccepted(res);
 }

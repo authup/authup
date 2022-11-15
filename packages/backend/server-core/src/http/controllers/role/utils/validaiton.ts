@@ -10,20 +10,21 @@ import {
 } from '@authelion/common';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
-import { ExpressRequest } from '../../../type';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { RealmEntity, RoleEntity } from '../../../../domains';
 
 export async function runRoleValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RoleEntity>> {
     const result : ExpressValidationResult<RoleEntity> = initExpressValidationResult();
@@ -71,7 +72,7 @@ export async function runRoleValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -85,19 +86,21 @@ export async function runRoleValidation(
 
     if (result.relation.realm) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.relation.realm.id)
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }
 
+    const ability = useRequestEnv(req, 'ability');
+
     if (operation === CRUDOperation.CREATE) {
-        const permissionTarget = req.ability.getTarget(PermissionID.ROLE_ADD);
+        const permissionTarget = ability.getTarget(PermissionID.ROLE_ADD);
         if (permissionTarget) {
             result.data.target = permissionTarget;
         }
     } else {
-        const permissionTarget = req.ability.getTarget(PermissionID.ROLE_EDIT);
+        const permissionTarget = ability.getTarget(PermissionID.ROLE_EDIT);
         if (permissionTarget) {
             result.data.target = permissionTarget;
         }

@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { UserRole } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -19,39 +20,39 @@ import {
 } from './handlers';
 
 @SwaggerTags('user')
-@Controller('/user-roles')
+@DController('/user-roles')
 export class UserRoleController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserRole[]> {
         return getManyUserRoleRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Pick<UserRole, 'role_id' | 'user_id'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() data: Pick<UserRole, 'role_id' | 'user_id'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserRole> {
         return await createUserRoleRouteHandler(req, res) as UserRole;
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserRole> {
         return await getOneUserRoleRouteHandler(req, res) as UserRole;
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserRole> {
         return await deleteUserRoleRouteHandler(req, res) as UserRole;
     }

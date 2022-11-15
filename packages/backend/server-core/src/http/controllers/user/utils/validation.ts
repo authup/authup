@@ -10,22 +10,24 @@ import {
     PermissionID, isPermittedForResourceRealm, isValidUserName,
 } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
-import { ExpressRequest } from '../../../type';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { RealmEntity, UserEntity } from '../../../../domains';
 
 export async function runUserValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserEntity>> {
+    const ability = useRequestEnv(req, 'ability');
     const result : ExpressValidationResult<UserEntity> = initExpressValidationResult();
 
     const nameChain = check('name')
@@ -45,8 +47,8 @@ export async function runUserValidation(
     await nameChain.run(req);
 
     if (
-        req.ability.has(PermissionID.USER_ADD) ||
-        req.ability.has(PermissionID.USER_EDIT)
+        ability.has(PermissionID.USER_ADD) ||
+        ability.has(PermissionID.USER_EDIT)
     ) {
         await check('name_locked')
             .isBoolean()
@@ -97,8 +99,8 @@ export async function runUserValidation(
     // ----------------------------------------------
 
     if (
-        req.ability.has(PermissionID.USER_ADD) ||
-        req.ability.has(PermissionID.USER_EDIT)
+        ability.has(PermissionID.USER_ADD) ||
+        ability.has(PermissionID.USER_EDIT)
     ) {
         await check('active')
             .isBoolean()
@@ -131,7 +133,7 @@ export async function runUserValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -144,7 +146,7 @@ export async function runUserValidation(
     });
 
     if (result.relation.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
+        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }
@@ -153,7 +155,7 @@ export async function runUserValidation(
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        result.data.realm_id = req.realmId;
+        result.data.realm_id = useRequestEnv(req, 'realmId');
     }
 
     return result;

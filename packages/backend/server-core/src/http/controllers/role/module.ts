@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { Role } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -19,49 +20,49 @@ import {
 } from './handlers';
 
 @SwaggerTags('role')
-@Controller('/roles')
+@DController('/roles')
 export class RoleController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Role[]> {
         return getManyRoleRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Pick<Role, 'name'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() data: Pick<Role, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Role> {
         return createRoleRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Role> {
         return getOneRoleRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @Params('id') id: string,
-            @Body() data: Pick<Role, 'name'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() data: Pick<Role, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Role> {
         return updateRoleRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Role> {
         return deleteRoleRouteHandler(req, res);
     }

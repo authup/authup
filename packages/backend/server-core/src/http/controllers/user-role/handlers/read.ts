@@ -5,19 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRoleEntity } from '../../../../domains';
 
-export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
     const query = await repository.createQueryBuilder('userRole');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userRole',
         filters: {
             allowed: ['role_id', 'user_id'],
@@ -29,27 +32,25 @@ export async function getManyUserRoleRouteHandler(req: ExpressRequest, res: Expr
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneUserRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function getOneUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
-    const entities = await repository.findOneBy({ id });
+    const entity = await repository.findOneBy({ id });
 
-    if (!entities) {
+    if (!entity) {
         throw new NotFoundError();
     }
 
-    return res.respond({ data: entities });
+    return send(res, entity);
 }

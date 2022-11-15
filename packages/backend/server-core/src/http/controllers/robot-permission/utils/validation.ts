@@ -8,20 +8,21 @@
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '../../../../domains';
 
 export async function runRobotPermissionValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RobotPermissionEntity>> {
     const result : ExpressValidationResult<RobotPermissionEntity> = initExpressValidationResult();
@@ -49,7 +50,7 @@ export async function runRobotPermissionValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -65,7 +66,9 @@ export async function runRobotPermissionValidation(
         result.data.target = result.relation.permission.target;
     }
 
-    const permissionTarget = req.ability.getTarget(PermissionID.ROBOT_PERMISSION_ADD);
+    const permissionTarget = useRequestEnv(req, 'ability')
+        .getTarget(PermissionID.ROBOT_PERMISSION_ADD);
+
     if (permissionTarget) {
         result.data.target = permissionTarget;
     }
@@ -79,7 +82,7 @@ export async function runRobotPermissionValidation(
 
     if (result.relation.robot) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.relation.robot.realm_id)
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }

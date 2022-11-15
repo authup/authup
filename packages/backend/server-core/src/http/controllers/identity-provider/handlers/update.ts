@@ -7,22 +7,26 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runOauth2ProviderValidation } from '../utils';
 import { IdentityProviderRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 
     const result = await runOauth2ProviderValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -33,7 +37,7 @@ export async function updateIdentityProviderRouteHandler(req: ExpressRequest, re
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 
@@ -44,7 +48,5 @@ export async function updateIdentityProviderRouteHandler(req: ExpressRequest, re
     await repository.saveAttributes(entity.id, result.meta.attributes);
     await repository.extendEntity(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

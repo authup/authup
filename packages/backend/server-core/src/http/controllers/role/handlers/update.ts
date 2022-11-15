@@ -7,22 +7,26 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
 import { RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.ROLE_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROLE_EDIT)) {
         throw new NotFoundError();
     }
 
     const result = await runRoleValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     // ----------------------------------------------
@@ -37,13 +41,13 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 
     // ----------------------------------------------
 
-    if (!req.ability.matchTarget(PermissionID.ROLE_EDIT, entity.target)) {
+    if (!ability.matchTarget(PermissionID.ROLE_EDIT, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role target.');
     }
 
@@ -53,7 +57,5 @@ export async function updateRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     await repository.save(entity);
 
-    return res.respondAccepted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

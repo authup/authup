@@ -6,8 +6,11 @@
  */
 
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
+import {
+    DBody,
+} from '@routup/body';
 import { SwaggerTags } from '@trapi/swagger';
 import {
     Client,
@@ -22,49 +25,49 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('oauth2')
-@Controller('/client')
+@DController('/client')
 export class ClientController {
-    @Get('', [])
+    @DGet('', [])
     async getClients(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Client[]> {
         return getManyClientRouteHandler(req, res);
     }
 
-    @Get('/:id', [])
+    @DGet('/:id', [])
     async getClient(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Client> {
         return getOneClientRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async editClient(
-        @Params('id') id: string,
-            @Body() user: NonNullable<Client>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<Client>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Client> {
         return updateClientRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropClient(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Client> {
         return deleteClientRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async addClient(
-        @Body() user: NonNullable<Client>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<Client>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Client> {
         return createClientRouteHandler(req, res);
     }

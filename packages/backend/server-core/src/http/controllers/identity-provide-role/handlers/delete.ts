@@ -7,17 +7,21 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderRoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 
@@ -29,8 +33,8 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.provider_realm_id) ||
-        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }
@@ -41,5 +45,5 @@ export async function deleteOauth2ProvideRoleRouteHandler(
 
     entity.id = entityId;
 
-    return res.respondDeleted();
+    return sendAccepted(res);
 }

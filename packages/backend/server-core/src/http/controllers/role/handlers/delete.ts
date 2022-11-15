@@ -7,14 +7,18 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.ROLE_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROLE_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -28,13 +32,13 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 
     // ----------------------------------------------
 
-    if (!req.ability.matchTarget(PermissionID.ROLE_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionID.ROLE_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role target.');
     }
 
@@ -48,7 +52,5 @@ export async function deleteRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     // ----------------------------------------------
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

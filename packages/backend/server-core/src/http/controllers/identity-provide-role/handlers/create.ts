@@ -9,20 +9,24 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
 } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { IdentityProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
+export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 
     const result = await runIdentityProviderRoleValidation(req, CRUDOperation.CREATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -32,7 +36,5 @@ export async function createOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
 
     await repository.save(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

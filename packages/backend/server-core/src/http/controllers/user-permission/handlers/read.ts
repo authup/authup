@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
 
 /**
@@ -18,12 +21,12 @@ import { UserPermissionEntity } from '../../../../domains';
  * @param req
  * @param res
  */
-export async function getManyUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
     const query = robotPermissionRepository.createQueryBuilder('userPermission');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userPermission',
         filters: {
             allowed: ['user_id', 'permission_id'],
@@ -35,13 +38,11 @@ export async function getManyUserPermissionRouteHandler(req: ExpressRequest, res
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
@@ -54,8 +55,8 @@ export async function getManyUserPermissionRouteHandler(req: ExpressRequest, res
  * @param req
  * @param res
  */
-export async function getOneUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function getOneUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
@@ -65,5 +66,5 @@ export async function getOneUserPermissionRouteHandler(req: ExpressRequest, res:
         throw new NotFoundError();
     }
 
-    return res.respond({ data: entity });
+    return send(res, entity);
 }

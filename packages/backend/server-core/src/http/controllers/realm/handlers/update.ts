@@ -8,22 +8,26 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionID } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.REALM_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.REALM_EDIT)) {
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
     const result = await runRealmValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -38,7 +42,5 @@ export async function updateRealmRouteHandler(req: ExpressRequest, res: ExpressR
 
     await repository.save(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

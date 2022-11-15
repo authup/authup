@@ -6,22 +6,22 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse,
+    OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, Realm, User,
 } from '@authelion/common';
+import { Request, useRequestEnv } from 'routup';
 import { AbstractGrant } from './abstract';
 import {
     Grant,
 } from './type';
 import { OAuth2BearerTokenResponse } from '../response';
-import { ExpressRequest } from '../../http/type';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest): Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request): Promise<OAuth2TokenGrantResponse> {
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if present
             scope: OAuth2Scope.GLOBAL,
-            realmId: request.realmId,
-            sub: request.userId,
+            realmId: useRequestEnv(request, 'realmId') as Realm['id'],
+            sub: useRequestEnv(request, 'userId') as User['id'],
             subKind: OAuth2SubKind.USER,
         });
 

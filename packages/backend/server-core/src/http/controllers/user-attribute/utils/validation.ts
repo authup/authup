@@ -6,18 +6,19 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
-    ExpressValidationResult, extendExpressValidationResultWithRelation,
+    ExpressValidationResult,
+    RequestValidationError, extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { UserAttributeEntity, UserEntity } from '../../../../domains';
 
 export async function runUserAttributeValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserAttributeEntity>> {
     const result : ExpressValidationResult<UserAttributeEntity> = initExpressValidationResult();
@@ -48,7 +49,7 @@ export async function runUserAttributeValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -63,8 +64,8 @@ export async function runUserAttributeValidation(
             result.data.realm_id = result.relation.user.realm_id;
             result.data.user_id = result.relation.user.id;
         } else {
-            result.data.realm_id = req.realmId;
-            result.data.user_id = req.userId;
+            result.data.realm_id = useRequestEnv(req, 'realmId');
+            result.data.user_id = useRequestEnv(req, 'userId');
         }
     }
 

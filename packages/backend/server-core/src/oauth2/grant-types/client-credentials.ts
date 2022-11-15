@@ -8,20 +8,22 @@
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
 } from '@authelion/common';
+import { useRequestBody } from '@routup/body';
+import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
+import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http/type';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2ClientEntity } from '../../domains';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if present
             scope: OAuth2Scope.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
@@ -40,7 +42,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<OAuth2ClientEntity> {
+    async validate(request: Request) : Promise<OAuth2ClientEntity> {
         const [id, secret] = this.getClientCredentials(request);
 
         const dataSource = await useDataSource();
@@ -58,9 +60,9 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         return entity;
     }
 
-    protected getClientCredentials(request: ExpressRequest) : [string, string] {
-        let clientId = request.body.client_id || request.query.client_id;
-        let clientSecret = request.body.client_secret || request.query.client_secret;
+    protected getClientCredentials(request: Request) : [string, string] {
+        let clientId = useRequestBody(request, 'client_id') || useRequestQuery(request, 'client_id');
+        let clientSecret = useRequestBody(request, 'client_secret') || useRequestQuery(request, 'client_secret');
 
         if (!clientId && !clientSecret) {
             const { authorization: headerValue } = request.headers;

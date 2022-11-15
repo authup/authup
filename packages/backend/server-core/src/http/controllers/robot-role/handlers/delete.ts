@@ -7,14 +7,18 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.ROBOT_ROLE_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROBOT_ROLE_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -28,8 +32,8 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.robot_realm_id) ||
-        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.robot_realm_id) ||
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }
@@ -40,5 +44,5 @@ export async function deleteRobotRoleRouteHandler(req: ExpressRequest, res: Expr
 
     entity.id = entityId;
 
-    return res.respondDeleted({ data: entity });
+    return sendAccepted(res, entity);
 }

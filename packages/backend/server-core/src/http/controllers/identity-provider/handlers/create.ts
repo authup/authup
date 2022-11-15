@@ -9,14 +9,16 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
 } from '@authelion/common';
+import { Request, Response, send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runOauth2ProviderValidation } from '../utils';
 import { IdentityProviderRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.PROVIDER_ADD)) {
+export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.PROVIDER_ADD)) {
         throw new ForbiddenError();
     }
 
@@ -32,7 +34,5 @@ export async function createIdentityProviderRouteHandler(req: ExpressRequest, re
     await repository.saveAttributes(entity.id, result.meta.attributes);
     repository.appendAttributes(entity, result.meta.attributes);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

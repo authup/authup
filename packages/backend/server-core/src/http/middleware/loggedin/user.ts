@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request, Response, Next } from 'routup';
-import { Middleware } from '@decorators/express';
+import {
+    HandlerInterface, Next, Request, Response,
+} from 'routup';
 import { UnauthorizedError } from '@ebec/http';
 import { useRequestEnv } from '../../utils';
 
@@ -26,9 +27,9 @@ export function forceUserLoggedIn(
     next();
 }
 
-export class ForceUserLoggedInMiddleware implements Middleware {
+export class ForceUserLoggedInMiddleware implements HandlerInterface {
     // eslint-disable-next-line class-methods-use-this
-    public use(request: Request, response: Response, next: Next) {
+    public run(request: Request, response: Response, next: Next) {
         return forceUserLoggedIn(request, response, next);
     }
 }

@@ -5,21 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyFields,
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleEntity } from '../../../../domains';
 
-export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
     const query = repository.createQueryBuilder('role');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'role',
         fields: {
             allowed: [
@@ -45,20 +48,18 @@ export async function getManyRoleRouteHandler(req: ExpressRequest, res: ExpressR
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
-    const { fields } = req.query;
+export async function getOneRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
+    const { fields } = useRequestQuery(req, 'fields');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
@@ -84,5 +85,5 @@ export async function getOneRoleRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
-    return res.respond({ data: entity });
+    return send(res, entity);
 }

@@ -7,12 +7,12 @@
 
 import { check, validationResult } from 'express-validator';
 import { NotFoundError } from '@ebec/http';
+import { Request, Response, send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
-import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
+import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
 
-export async function createAuthActivateRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createAuthActivateRouteHandler(req: Request, res: Response) : Promise<any> {
     await check('token')
         .exists()
         .notEmpty()
@@ -21,7 +21,7 @@ export async function createAuthActivateRouteHandler(req: ExpressRequest, res: E
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     const data = matchedValidationData(req, { includeOptionals: true });
@@ -46,7 +46,5 @@ export async function createAuthActivateRouteHandler(req: ExpressRequest, res: E
 
     // todo: maybe redirect to appUrl
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

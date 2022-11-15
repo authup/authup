@@ -10,19 +10,20 @@ import {
     OAuth2TokenGrantResponse,
     UserError,
 } from '@authelion/common';
+import { useRequestBody } from '@routup/body';
+import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { UserEntity, UserRepository } from '../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http/type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const user = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if present
             scope: OAuth2Scope.GLOBAL,
             sub: user.id,
             subKind: OAuth2SubKind.USER,
@@ -40,8 +41,8 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<UserEntity> {
-        const { username, password } = request.body;
+    async validate(request: Request) : Promise<UserEntity> {
+        const { username, password } = useRequestBody(request);
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);

@@ -5,39 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { Permission } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { createOnePermissionRouteHandler, getManyPermissionRouteHandler, getOnePermissionRouteHandler } from './handlers';
 
 @SwaggerTags('permission')
-@Controller('/permissions')
+@DController('/permissions')
 export class PermissionController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getPermissions(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Permission[]> {
         return getManyPermissionRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getPermission(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Permission> {
         return getOnePermissionRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() user: NonNullable<Permission>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<Permission>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Permission[]> {
         return createOnePermissionRouteHandler(req, res);
     }

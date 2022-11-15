@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { RobotRole } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -19,39 +20,39 @@ import {
 } from './handlers';
 
 @SwaggerTags('robot')
-@Controller('/robot-roles')
+@DController('/robot-roles')
 export class RobotRoleController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<RobotRole[]> {
         return getManyRobotRoleRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Pick<RobotRole, 'role_id' | 'robot_id'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() data: Pick<RobotRole, 'role_id' | 'robot_id'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<RobotRole> {
         return await createRobotRoleRouteHandler(req, res) as RobotRole;
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<RobotRole> {
         return await getOneRobotRoleRouteHandler(req, res) as RobotRole;
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<RobotRole> {
         return await deleteRobotRoleRouteHandler(req, res) as RobotRole;
     }

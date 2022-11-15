@@ -7,8 +7,8 @@
 
 import { SwaggerTags } from '@trapi/swagger';
 import {
-    Controller, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import {
     OAuth2JsonWebKey,
     OAuth2OpenIDProviderMetadata,
@@ -25,75 +25,75 @@ import {
 } from './base';
 
 @SwaggerTags('auth')
-@Controller('')
+@DController('')
 export class AuthController {
-    @Post('/authorize', [ForceUserLoggedInMiddleware])
+    @DPost('/authorize', [ForceUserLoggedInMiddleware])
     async confirmAuthorization(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<void> {
         return runAuthorizationRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------
 
-    @Get('/.well-known/openid-configuration', [])
+    @DGet('/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2OpenIDProviderMetadata[]> {
         return getOpenIdConfigurationRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------
 
-    @Get('/jwks', [])
+    @DGet('/jwks', [])
     async getManyJwks(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
         return getJwksRouteHandler(req, res);
     }
 
-    @Get('/jwks/:id', [])
+    @DGet('/jwks/:id', [])
     async getOneJwks(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
         return getJwkRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------
 
-    @Post('/activate', [])
+    @DPost('/activate', [])
     async activate(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<void> {
         return createAuthActivateRouteHandler(req, res);
     }
 
-    @Post('/register', [])
+    @DPost('/register', [])
     async register(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<void> {
         return createAuthRegisterRouteHandler(req, res);
     }
 
-    @Post('/password-forgot', [])
+    @DPost('/password-forgot', [])
     async forgotPassword(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<void> {
         return createAuthPasswordForgotRouteHandler(req, res);
     }
 
-    @Post('/password-reset', [])
+    @DPost('/password-reset', [])
     async resetPassword(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<void> {
         return createAuthPasswordResetRouteHandler(req, res);
     }

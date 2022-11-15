@@ -8,7 +8,7 @@
 import {
     OAuth2SubKind, OAuth2TokenGrantResponse,
 } from '@authelion/common';
-import { ExpressRequest } from '../../http/type';
+import { Request } from 'routup';
 
 export type AccessTokenIssueContext = {
     remoteAddress: string,
@@ -25,5 +25,5 @@ export type AccessTokenIssueContext = {
 // -----------------------------------------------------
 
 export interface Grant {
-    run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse>;
+    run(request: Request) : Promise<OAuth2TokenGrantResponse>;
 }

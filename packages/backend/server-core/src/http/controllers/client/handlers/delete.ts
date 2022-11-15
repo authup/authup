@@ -7,17 +7,21 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteClientRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.CLIENT_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.CLIENT_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -29,7 +33,7 @@ export async function deleteClientRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 
@@ -39,7 +43,5 @@ export async function deleteClientRouteHandler(
 
     entity.id = entityId;
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

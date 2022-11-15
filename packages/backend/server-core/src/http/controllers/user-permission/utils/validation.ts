@@ -8,20 +8,21 @@
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { PermissionEntity, UserEntity, UserPermissionEntity } from '../../../../domains';
 
 export async function runUserPermissionValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserPermissionEntity>> {
     const result : ExpressValidationResult<UserPermissionEntity> = initExpressValidationResult();
@@ -49,7 +50,7 @@ export async function runUserPermissionValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -65,7 +66,8 @@ export async function runUserPermissionValidation(
         result.data.target = result.relation.permission.target;
     }
 
-    const permissionTarget = req.ability.getTarget(PermissionID.USER_PERMISSION_ADD);
+    const ability = useRequestEnv(req, 'ability');
+    const permissionTarget = ability.getTarget(PermissionID.USER_PERMISSION_ADD);
     if (permissionTarget) {
         result.data.target = permissionTarget;
     }
@@ -79,7 +81,7 @@ export async function runUserPermissionValidation(
 
     if (result.relation.user) {
         if (
-            !isPermittedForResourceRealm(req.realmId, result.relation.user.realm_id)
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.user.realm_id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('user_id'));
         }

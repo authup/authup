@@ -9,7 +9,7 @@ import { BadRequestError } from '@ebec/http';
 import { Result, ValidationError } from 'express-validator';
 import { buildExpressValidationErrorMessage } from './utils';
 
-export class ExpressValidationError extends BadRequestError {
+export class RequestValidationError extends BadRequestError {
     constructor(validation: Result<ValidationError>) {
         let errors : ValidationError[] = validation.array();
         errors = [...new Map(errors.map((item) => [item.param, item])).values()]

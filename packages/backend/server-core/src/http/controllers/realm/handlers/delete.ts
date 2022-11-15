@@ -8,14 +8,18 @@
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionID } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteRealmRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.REALM_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.REALM_DROP)) {
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }
 
@@ -38,7 +42,5 @@ export async function deleteRealmRouteHandler(req: ExpressRequest, res: ExpressR
 
     entity.id = entityId;
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

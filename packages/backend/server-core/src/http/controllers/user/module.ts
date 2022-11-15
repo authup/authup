@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { User } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -20,49 +21,49 @@ import {
 } from './handlers';
 
 @SwaggerTags('user')
-@Controller('/users')
+@DController('/users')
 export class UserController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<User[]> {
         return getManyUserRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() user: NonNullable<User>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<User>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<User | undefined> {
         return createUserRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<User | undefined> {
         return getOneUserRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @Params('id') id: string,
-            @Body() user: User,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: User,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<User | undefined> {
         return updateUserRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<User | undefined> {
         return deleteUserRouteHandler(req, res);
     }

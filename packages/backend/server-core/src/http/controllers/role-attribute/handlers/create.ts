@@ -10,21 +10,25 @@ import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRoleAttributeValidation } from '../utils';
 import { RoleAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runRoleAttributeValidation(req, CRUDOperation.CREATE);
     if (!result) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
+    const ability = useRequestEnv(req, 'ability');
     if (
-        !req.ability.has(PermissionID.ROLE_EDIT) ||
-        !isPermittedForResourceRealm(req.realmId, result.data.realm_id)
+        !ability.has(PermissionID.ROLE_EDIT) ||
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.data.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to set an attribute for this role...');
     }
@@ -36,7 +40,5 @@ export async function createRoleAttributeRouteHandler(req: ExpressRequest, res: 
 
     await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

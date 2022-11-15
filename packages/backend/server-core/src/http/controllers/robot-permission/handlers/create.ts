@@ -7,11 +7,12 @@
 
 import { ForbiddenError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
+import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 import { runRobotPermissionValidation } from '../utils';
 
 /**
@@ -20,8 +21,9 @@ import { runRobotPermissionValidation } from '../utils';
  * @param req
  * @param res
  */
-export async function createRobotPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.ROBOT_PERMISSION_ADD)) {
+export async function createRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROBOT_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 
@@ -37,7 +39,5 @@ export async function createRobotPermissionRouteHandler(req: ExpressRequest, res
 
     entity = await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

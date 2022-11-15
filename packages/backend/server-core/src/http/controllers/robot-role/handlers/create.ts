@@ -7,14 +7,16 @@
 
 import { NotFoundError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
+import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotRoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 import { runRobotRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
-export async function createRobotRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.ROBOT_ROLE_ADD)) {
+export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROBOT_ROLE_ADD)) {
         throw new NotFoundError();
     }
 
@@ -26,7 +28,5 @@ export async function createRobotRoleRouteHandler(req: ExpressRequest, res: Expr
 
     entity = await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

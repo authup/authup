@@ -8,17 +8,17 @@
 import { check, validationResult } from 'express-validator';
 import { isValidRealmName } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
 import { CRUDOperation } from '../../../constants';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     initExpressValidationResult, matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { RealmEntity } from '../../../../domains';
 
 export async function runRealmValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RealmEntity>> {
     const result : ExpressValidationResult<RealmEntity> = initExpressValidationResult();
@@ -62,7 +62,7 @@ export async function runRealmValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });

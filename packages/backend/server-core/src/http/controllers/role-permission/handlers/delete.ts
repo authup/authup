@@ -7,9 +7,12 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RolePermissionEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
 /**
  * Drop a permission by id of a specific user.
@@ -17,10 +20,11 @@ import { RolePermissionEntity } from '../../../../domains';
  * @param req
  * @param res
  */
-export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.ROLE_PERMISSION_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROLE_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -34,13 +38,13 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.role_realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.role_realm_id)) {
         throw new ForbiddenError();
     }
 
     // ----------------------------------------------
 
-    if (!req.ability.matchTarget(PermissionID.ROLE_PERMISSION_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionID.ROLE_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role-permission target.');
     }
 
@@ -54,7 +58,5 @@ export async function deleteRolePermissionRouteHandler(req: ExpressRequest, res:
 
     // ----------------------------------------------
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

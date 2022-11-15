@@ -9,14 +9,16 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
 } from '@authelion/common';
+import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
 import { RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.ROLE_ADD)) {
+export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROLE_ADD)) {
         throw new ForbiddenError();
     }
 
@@ -30,7 +32,5 @@ export async function createRoleRouteHandler(req: ExpressRequest, res: ExpressRe
 
     await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

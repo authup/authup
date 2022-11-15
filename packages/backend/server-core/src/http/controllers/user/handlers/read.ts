@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     QueryFieldsApplyOptions,
     applyQuery,
@@ -13,11 +17,11 @@ import {
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserEntity, UserRepository, onlyRealmPermittedQueryResources } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { useRequestEnv } from '../../../utils';
 
-function buildFieldsOption(req: ExpressRequest) : QueryFieldsApplyOptions<UserEntity> {
+function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
     const options : QueryFieldsApplyOptions<UserEntity> = {
         defaultAlias: 'user',
         default: [
@@ -36,21 +40,21 @@ function buildFieldsOption(req: ExpressRequest) : QueryFieldsApplyOptions<UserEn
         ],
     };
 
-    if (req.ability.has(PermissionID.USER_EDIT)) {
+    if (useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT)) {
         options.allowed = ['email'];
     }
 
     return options;
 }
 
-export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
-    onlyRealmPermittedQueryResources(query, req.realmId);
+    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
         fields: buildFieldsOption(req),
         filters: {
@@ -69,19 +73,17 @@ export async function getManyUserRouteHandler(req: ExpressRequest, res: ExpressR
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const userRepository = new UserRepository(dataSource);
@@ -92,16 +94,16 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     if (
         isSelfId(id) &&
-        req.userId
+        useRequestEnv(req, 'userId')
     ) {
-        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, req.scopes);
+        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, useRequestEnv(req, 'scopes'));
 
         for (let i = 0; i < attributes.length; i++) {
             // todo: only select valid entity attributes :)
             query.addSelect(`user.${attributes[i]}`);
         }
 
-        query.where('user.id = :id', { id: req.userId });
+        query.where('user.id = :id', { id: useRequestEnv(req, 'userId') });
     } else {
         query.where(new Brackets((q2) => {
             q2.where('user.id = :id', { id });
@@ -109,9 +111,9 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
         }));
     }
 
-    onlyRealmPermittedQueryResources(query, req.realmId);
+    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
 
-    applyQuery(query, req.query, {
+    applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
         fields: buildFieldsOption(req),
         relations: {
@@ -125,9 +127,9 @@ export async function getOneUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
-    if (isSelfId(id) && req.userId) {
+    if (isSelfId(id) && useRequestEnv(req, 'userId')) {
         await userRepository.appendAttributes(entity, attributes);
     }
 
-    return res.respond({ data: entity });
+    return send(res, entity);
 }

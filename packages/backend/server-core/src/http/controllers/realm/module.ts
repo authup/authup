@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata, Realm } from '@authelion/common';
 import {
@@ -22,67 +23,67 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('realm')
-@Controller('/realms')
+@DController('/realms')
 export class RealmController {
-    @Get('', [])
+    @DGet('', [])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Realm[]> {
         return getManyRealmRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() user: NonNullable<Realm>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<Realm>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Realm> {
         return createRealmRouteHandler(req, res);
     }
 
-    @Get('/:id', [])
+    @DGet('/:id', [])
     async get(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Realm> {
         return getOneRealmRouteHandler(req, res);
     }
 
-    @Get('/:id/.well-known/openid-configuration', [])
+    @DGet('/:id/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2OpenIDProviderMetadata> {
         return getRealmOpenIdConfigurationRouteHandler(req, res);
     }
 
-    @Get('/:id/jwks', [])
+    @DGet('/:id/jwks', [])
     async getCerts(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
         return getRealmJwksRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @Params('id') id: string,
-            @Body() user: NonNullable<Realm>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<Realm>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Realm> {
         return updateRealmRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<Realm> {
         return deleteRealmRouteHandler(req, res);
     }

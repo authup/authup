@@ -7,18 +7,21 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
 import { RobotRepository, useRobotEventEmitter } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const result = await runRobotValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -29,14 +32,15 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
         throw new NotFoundError();
     }
 
-    if (!req.ability.has(PermissionID.ROBOT_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.ROBOT_EDIT)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }
 
         if (
             entity.user_id &&
-            entity.user_id !== req.userId
+            entity.user_id !== useRequestEnv(req, 'userId')
         ) {
             throw new ForbiddenError();
         }
@@ -69,7 +73,5 @@ export async function updateRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     // ----------------------------------------------
 
-    return res.respondAccepted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

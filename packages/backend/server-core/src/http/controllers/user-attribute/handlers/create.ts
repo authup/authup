@@ -10,24 +10,27 @@ import {
     PermissionID,
     isPermittedForResourceRealm,
 } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runUserAttributeValidation } from '../utils';
 import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runUserAttributeValidation(req, CRUDOperation.CREATE);
     if (!result) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     if (
-        result.data.user_id !== req.userId
+        result.data.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !req.ability.has(PermissionID.USER_EDIT) ||
-            !isPermittedForResourceRealm(req.realmId, result.data.realm_id)
+            !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');
         }
@@ -40,7 +43,5 @@ export async function createUserAttributeRouteHandler(req: ExpressRequest, res: 
 
     await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

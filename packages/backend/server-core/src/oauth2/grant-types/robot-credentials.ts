@@ -10,19 +10,20 @@ import {
     OAuth2TokenGrantResponse,
     RobotError,
 } from '@authelion/common';
+import { useRequestBody } from '@routup/body';
+import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { RobotEntity, RobotRepository } from '../../domains';
 import { Grant } from './type';
-import { ExpressRequest } from '../../http/type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const entity = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if present
             scope: OAuth2Scope.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
             sub: entity.id,
@@ -37,8 +38,8 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<RobotEntity> {
-        const { id, secret } = request.body;
+    async validate(request: Request) : Promise<RobotEntity> {
+        const { id, secret } = useRequestBody(request);
 
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);

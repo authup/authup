@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { UserAttribute } from '@authelion/common';
 import {
@@ -19,49 +20,49 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('user')
-@Controller('/user-attributes')
+@DController('/user-attributes')
 export class UserAttributeController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserAttribute[]> {
         return getManyUserAttributeRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() user: NonNullable<UserAttribute>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<UserAttribute>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<UserAttribute> {
         return createUserAttributeRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserAttribute> {
         return getOneUserAttributeRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @Params('id') id: string,
-            @Body() user: NonNullable<UserAttribute>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<UserAttribute>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<UserAttribute> {
         return updateUserAttributeRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<UserAttribute> {
         return deleteUserAttributeRouteHandler(req, res);
     }

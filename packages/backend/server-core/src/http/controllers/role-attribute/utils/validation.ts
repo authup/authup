@@ -6,18 +6,18 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
 import {
-    ExpressValidationError,
-    ExpressValidationResult, extendExpressValidationResultWithRelation,
+    ExpressValidationResult,
+    RequestValidationError, extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { RoleAttributeEntity, RoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
 export async function runRoleAttributeValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RoleAttributeEntity>> {
     const result : ExpressValidationResult<RoleAttributeEntity> = initExpressValidationResult();
@@ -32,8 +32,7 @@ export async function runRoleAttributeValidation(
 
         await check('role_id')
             .exists()
-            .isUUID()
-            .optional();
+            .isUUID();
     }
 
     await check('value')
@@ -48,7 +47,7 @@ export async function runRoleAttributeValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -61,13 +60,8 @@ export async function runRoleAttributeValidation(
     });
 
     if (operation === CRUDOperation.CREATE) {
-        if (result.relation.role) {
-            result.data.realm_id = result.relation.role.realm_id;
-            result.data.role_id = result.relation.role.id;
-        } else {
-            result.data.realm_id = req.realmId;
-            result.data.role_id = req.userId;
-        }
+        result.data.realm_id = result.relation.role.realm_id;
+        result.data.role_id = result.relation.role.id;
     }
 
     return result;

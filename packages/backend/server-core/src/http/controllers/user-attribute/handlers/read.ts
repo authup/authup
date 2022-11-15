@@ -5,28 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import { Brackets } from 'typeorm';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const query = repository.createQueryBuilder('userAttribute');
 
     query.where(new Brackets((qb) => {
-        onlyRealmPermittedQueryResources(query, req.realmId);
+        onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
 
-        qb.orWhere('userAttribute.user_id = :userId', { userId: req.userId });
+        qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
     }));
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userAttribute',
         filters: {
             allowed: ['id', 'name', 'user_id', 'realm_id'],
@@ -41,22 +45,21 @@ export async function getManyUserAttributeRouteHandler(req: ExpressRequest, res:
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
+
     });
 }
 
 export async function getOneUserAttributeRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
     if (typeof id !== 'string') {
         throw new BadRequestError();
@@ -72,13 +75,11 @@ export async function getOneUserAttributeRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, result.realm_id) &&
-        req.userId !== result.user_id
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.realm_id) &&
+        useRequestEnv(req, 'userId') !== result.user_id
     ) {
         throw new ForbiddenError('You are not authorized to read this user attribute...');
     }
 
-    return res.respond({
-        data: result,
-    });
+    return send(res, result);
 }

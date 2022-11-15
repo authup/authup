@@ -13,19 +13,19 @@ import {
     isOAuth2ScopeAllowed,
 } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
+import { Request } from 'routup';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../../express-validation';
-import { ExpressRequest } from '../../../../type';
+} from '../../../../validation';
 import { OAuth2ClientEntity } from '../../../../../domains';
 
 export async function runAuthorizeValidation(
-    req: ExpressRequest,
+    req: Request,
 ) : Promise<ExpressValidationResult<OAuth2AuthorizationCodeRequest & { client: OAuth2ClientEntity, client_id: string }>> {
     const result : ExpressValidationResult<OAuth2AuthorizationCodeRequest & {
         client: OAuth2ClientEntity, client_id: string
@@ -85,7 +85,7 @@ export async function runAuthorizeValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });

@@ -5,38 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { OAuth2TokenGrantResponse } from '@authelion/common';
 import { SwaggerTags } from '@trapi/swagger';
 import {
-    Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
-import { OAuth2RefreshToken, OAuth2TokenGrantResponse } from '@authelion/common';
+    DController, DGet, DPost, DRequest, DResponse,
+} from 'routup';
 import { createTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
 
 @SwaggerTags('auth')
-@Controller('/token')
+@DController('/token')
 export class AuthTokenController {
-    @Get('/introspect', [])
+    @DGet('/introspect', [])
     async getIntrospectToken(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Record<string, any>> {
         return introspectTokenRouteHandler(req, res);
     }
 
-    @Post('/introspect', [])
+    @DPost('/introspect', [])
     async postIntrospectToken(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Record<string, any>> {
         return introspectTokenRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------
 
-    @Post('', [])
+    @DPost('', [])
     async createToken(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<OAuth2TokenGrantResponse[]> {
         return createTokenRouteHandler(req, res);
     }

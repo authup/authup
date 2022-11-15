@@ -6,7 +6,6 @@
  */
 
 import { Router } from 'routup';
-import { attachControllers } from '@decorators/express';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
 import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
@@ -27,7 +26,7 @@ import { ClientController } from './client';
 export function registerControllers(
     router: Router,
 ) {
-    attachControllers(router, [
+    router.useControllers([
         AuthController,
         AuthTokenController,
         ClientController,

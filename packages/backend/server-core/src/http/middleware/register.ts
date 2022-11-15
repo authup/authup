@@ -64,11 +64,12 @@ export function registerMiddlewares(
             // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
             const swaggerDocument = require(swaggerDocumentPath);
 
-            for(let i=0; i<swaggerUi.serve.length; i++) {
+            for (let i = 0; i < swaggerUi.serve.length; i++) {
                 router.use('/docs', swaggerUi.serve[i]);
             }
 
-            router.use('/docs',
+            router.use(
+                '/docs',
                 swaggerUi.setup(swaggerDocument, {
                     swaggerOptions: {
                         withCredentials: true,

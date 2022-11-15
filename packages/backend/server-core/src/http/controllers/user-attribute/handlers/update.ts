@@ -7,18 +7,21 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runUserAttributeValidation } from '../utils';
 import { UserAttributeEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const result = await runUserAttributeValidation(req, CRUDOperation.UPDATE);
     if (!result) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -32,11 +35,11 @@ export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: 
     entity = repository.merge(entity, result.data);
 
     if (
-        entity.user_id !== req.userId
+        entity.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !req.ability.has(PermissionID.USER_EDIT) ||
-            !isPermittedForResourceRealm(req.realmId, entity.realm_id)
+            !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to update an attribute for the given user...');
         }
@@ -44,7 +47,5 @@ export async function updateUserAttributeRouteHandler(req: ExpressRequest, res: 
 
     await repository.save(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

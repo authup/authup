@@ -6,16 +6,16 @@
  */
 
 import { JsonWebKey, createPublicKey } from 'crypto';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authelion/common';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
 import { KeyEntity } from '../../../../../domains';
 
-export async function getJwksRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
-
+export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
 
@@ -42,15 +42,13 @@ export async function getJwksRouteHandler(req: ExpressRequest, res: ExpressRespo
         return { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
     });
 
-    return res.respond({
-        data: {
-            keys,
-        },
+    return send(res, {
+        keys,
     });
 }
 
-export async function getJwkRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function getJwkRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
@@ -78,7 +76,5 @@ export async function getJwkRouteHandler(req: ExpressRequest, res: ExpressRespon
 
     jwk = { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
 
-    return res.respond({
-        data: jwk,
-    });
+    return send(res, jwk);
 }

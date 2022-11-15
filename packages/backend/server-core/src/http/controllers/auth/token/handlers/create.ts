@@ -9,7 +9,7 @@
 import {
     OAuth2TokenGrant, OAuth2TokenGrantResponse, TokenError,
 } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
+import { Request, Response, send } from 'routup';
 import {
     AuthorizeGrantType,
     ClientCredentialsGrant,
@@ -29,8 +29,8 @@ import { useConfig } from '../../../../../config';
  * @throws TokenError
  */
 export async function createTokenRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
     const grantType = guessOauth2GrantTypeByRequest(req);
     if (!grantType) {
@@ -66,7 +66,5 @@ export async function createTokenRouteHandler(
 
     const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
 
-    return res.respond({
-        data: tokenResponse,
-    });
+    return send(res, tokenResponse);
 }

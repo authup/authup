@@ -7,14 +7,16 @@
 
 import { ForbiddenError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
+import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.USER_ADD)) {
+export async function createUserRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.USER_ADD)) {
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
@@ -28,5 +30,5 @@ export async function createUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     delete entity.password;
 
-    return res.respondCreated({ data: entity });
+    return sendCreated(res, entity);
 }

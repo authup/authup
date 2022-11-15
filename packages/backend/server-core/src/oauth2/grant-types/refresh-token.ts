@@ -9,23 +9,24 @@ import {
     OAuth2TokenGrantResponse,
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authelion/common';
+import { useRequestBody } from '@routup/body';
+import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { OAuth2RefreshTokenEntity } from '../../domains';
 import { Grant } from './type';
 import { extractOAuth2TokenPayload } from '../token';
-import { ExpressRequest } from '../../http/type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
-    async run(request: ExpressRequest) : Promise<OAuth2TokenGrantResponse> {
+    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const token = await this.validate(request);
 
         const subKind = getOAuth2SubKindByEntity(token);
         const sub = getOAuth2SubByEntity(token);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.ip,
+            remoteAddress: request.socket.remoteAddress, // todo: check if present
             scope: token.scope,
             sub,
             subKind,
@@ -43,8 +44,8 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: ExpressRequest) : Promise<OAuth2RefreshTokenEntity> {
-        const { refresh_token: refreshToken } = request.body;
+    async validate(request: Request) : Promise<OAuth2RefreshTokenEntity> {
+        const refreshToken = useRequestBody(request, 'refresh_token');
 
         const payload = await extractOAuth2TokenPayload(refreshToken);
 

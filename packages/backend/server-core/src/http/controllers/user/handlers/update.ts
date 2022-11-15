@@ -7,25 +7,30 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
 import { UserRepository } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
+
+    const env = useRequestEnv(req);
 
     if (
-        !req.ability.has(PermissionID.USER_EDIT) &&
-        req.userId !== id
+        !env.ability.has(PermissionID.USER_EDIT) &&
+        env.userId !== id
     ) {
         throw new ForbiddenError('You are not authorized to modify a user.');
     }
 
     const result = await runUserValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -44,7 +49,7 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(env.realmId, entity.realm_id)) {
         throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
     }
 
@@ -65,7 +70,5 @@ export async function updateUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     await repository.save(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

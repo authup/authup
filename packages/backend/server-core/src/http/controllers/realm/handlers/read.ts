@@ -5,23 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RealmEntity } from '../../../../domains';
 
 export async function getManyRealmRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
     const query = repository.createQueryBuilder('realm');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'realm',
         filters: {
             allowed: ['id', 'name'],
@@ -36,7 +39,7 @@ export async function getManyRealmRouteHandler(
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
+    return send(res, {
         data: {
             data: entities,
             meta: {
@@ -48,10 +51,10 @@ export async function getManyRealmRouteHandler(
 }
 
 export async function getOneRealmRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
     if (typeof id !== 'string') {
         throw new BadRequestError();
@@ -66,7 +69,5 @@ export async function getOneRealmRouteHandler(
         throw new NotFoundError();
     }
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

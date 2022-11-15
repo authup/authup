@@ -8,19 +8,20 @@
 import { check, validationResult } from 'express-validator';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import { OAuth2ClientEntity, RealmEntity } from '../../../../domains';
 
 export async function runOauth2ClientValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<OAuth2ClientEntity>> {
     const result : ExpressValidationResult<OAuth2ClientEntity> = initExpressValidationResult();
@@ -82,7 +83,7 @@ export async function runOauth2ClientValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -97,7 +98,7 @@ export async function runOauth2ClientValidation(
     // ----------------------------------------------
 
     if (result.relation.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
+        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }
@@ -106,7 +107,7 @@ export async function runOauth2ClientValidation(
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        result.data.realm_id = req.realmId;
+        result.data.realm_id = useRequestEnv(req, 'realmId');
     }
 
     return result;

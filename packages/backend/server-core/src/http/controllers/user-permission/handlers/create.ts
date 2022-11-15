@@ -7,20 +7,22 @@
 
 import { ForbiddenError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
+import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserPermissionEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 import { runUserPermissionValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
 /**
- * Add an permission by id to a specific user.
+ * Add a permission by id to a specific user.
  *
  * @param req
  * @param res
  */
-export async function createUserPermissionRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.USER_PERMISSION_ADD)) {
+export async function createUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.USER_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 
@@ -36,7 +38,5 @@ export async function createUserPermissionRouteHandler(req: ExpressRequest, res:
 
     entity = await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

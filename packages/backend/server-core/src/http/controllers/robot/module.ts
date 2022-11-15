@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { Robot } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -20,49 +21,49 @@ import {
 } from './handlers';
 
 @SwaggerTags('robot')
-@Controller('/robots')
+@DController('/robots')
 export class RobotController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Robot[]> {
         return getManyRobotRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Robot,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() data: Robot,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Robot> {
         return createRobotRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Robot> {
         return getOneRobotRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @Params('id') id: string,
-            @Body() data: Pick<Robot, 'name'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() data: Pick<Robot, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Robot> {
         return updateRobotRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<Robot> {
         return deleteRobotRouteHandler(req, res);
     }

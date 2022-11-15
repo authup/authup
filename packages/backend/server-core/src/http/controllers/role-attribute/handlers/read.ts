@@ -5,25 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPermittedForResourceRealm } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RoleAttributeEntity, onlyRealmPermittedQueryResources } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { filter, page, sort } = req.query;
-
+export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
     const query = repository.createQueryBuilder('roleAttribute');
 
-    onlyRealmPermittedQueryResources(query, req.realmId);
+    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',
         filters: {
             allowed: ['id', 'name', 'role_id', 'realm_id'],
@@ -38,22 +40,20 @@ export async function getManyRoleAttributeRouteHandler(req: ExpressRequest, res:
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
 export async function getOneRoleAttributeRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
-    const { id } = req.params;
+    const id = useRequestParam(req, 'id');
 
     if (typeof id !== 'string') {
         throw new BadRequestError();
@@ -69,12 +69,10 @@ export async function getOneRoleAttributeRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, result.realm_id)
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.realm_id)
     ) {
         throw new ForbiddenError('You are not authorized to read this role attribute...');
     }
 
-    return res.respond({
-        data: result,
-    });
+    return send(res, result);
 }

@@ -7,18 +7,22 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserRepository } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.USER_DROP)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.USER_DROP)) {
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 
-    if (req.userId === id) {
+    if (useRequestEnv(req, 'userId') === id) {
         throw new BadRequestError('The own user can not be deleted.');
     }
 
@@ -30,7 +34,7 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(req.realmId, entity.realm_id)) {
+    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError(`You are not authorized to drop a user fo the realm ${entity.realm_id}`);
     }
 
@@ -40,7 +44,5 @@ export async function deleteUserRouteHandler(req: ExpressRequest, res: ExpressRe
 
     entity.id = entityId;
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

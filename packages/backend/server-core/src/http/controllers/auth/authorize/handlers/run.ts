@@ -9,7 +9,8 @@ import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind, buildHTTPQuery,
 } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
+import { Request, Response, sendRedirect } from 'routup';
+import { useRequestEnv } from '../../../../utils';
 import { runAuthorizeValidation } from '../utils';
 import { useConfig } from '../../../../../config';
 import {
@@ -19,8 +20,8 @@ import {
 } from '../../../../../oauth2';
 
 export async function runAuthorizationRouteHandler(
-    req: ExpressRequest,
-    res: ExpressResponse,
+    req: Request,
+    res: Response,
 ) : Promise<any> {
     const result = await runAuthorizeValidation(req);
 
@@ -42,10 +43,10 @@ export async function runAuthorizationRouteHandler(
         });
 
         const token = await tokenBuilder.create({
-            remoteAddress: req.ip,
-            sub: req.userId,
+            remoteAddress: req.socket.remoteAddress,
+            sub: useRequestEnv(req, 'userId'),
             subKind: OAuth2SubKind.USER,
-            realmId: req.realmId,
+            realmId: useRequestEnv(req, 'realmId'),
             clientId: result.data.client_id,
             scope: result.data.scope,
         });
@@ -54,10 +55,10 @@ export async function runAuthorizationRouteHandler(
     }
 
     const code = await codeBuilder.create({
-        sub: req.userId,
+        sub: useRequestEnv(req, 'userId'),
         subKind: OAuth2SubKind.USER,
-        remoteAddress: req.ip,
-        realmId: req.realmId,
+        remoteAddress: req.socket.remoteAddress,
+        realmId: useRequestEnv(req, 'userId'),
         clientId: result.data.client_id,
         scope: result.data.scope,
         redirectUri: result.data.redirect_uri,
@@ -65,7 +66,7 @@ export async function runAuthorizationRouteHandler(
 
     // ---------------------------------------------------------
 
-    return res.redirect(code.redirect_uri + buildHTTPQuery({
+    return sendRedirect(res, code.redirect_uri + buildHTTPQuery({
         ...(result.data.state ? { state: result.data.state } : {}),
         ...(responseTypes[OAuth2AuthorizationResponseType.CODE] ? { code: code.content } : {}),
         ...(responseTypes[OAuth2AuthorizationResponseType.TOKEN] && accessToken ? { access_token: accessToken } : {}),

@@ -9,22 +9,26 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionID, isPermittedForResourceRealm,
 } from '@authelion/common';
+import {
+    Request, Response, send, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { IdentityProviderRoleEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
-    if (!req.ability.has(PermissionID.PROVIDER_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 
     const result = await runIdentityProviderRoleValidation(req, CRUDOperation.UPDATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -36,8 +40,8 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
     }
 
     if (
-        !isPermittedForResourceRealm(req.realmId, entity.provider_realm_id) ||
-        !isPermittedForResourceRealm(req.realmId, entity.role_realm_id)
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
+        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }
@@ -46,7 +50,5 @@ export async function updateOauth2ProviderRoleRouteHandler(req: ExpressRequest, 
 
     await repository.save(entity);
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

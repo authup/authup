@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import { Brackets } from 'typeorm';
 import {
     applyQuery,
@@ -15,16 +19,16 @@ import {
     MASTER_REALM_ID,
     OAuth2SubKind, PermissionID, isSelfId,
 } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { RobotEntity } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { useRequestEnv } from '../../../utils';
 
-export async function getManyRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robot',
         fields: {
             allowed: [
@@ -55,38 +59,38 @@ export async function getManyRobotRouteHandler(req: ExpressRequest, res: Express
         },
     });
 
+    const env = useRequestEnv(req);
+
     if (
-        !req.ability.has(PermissionID.ROBOT_EDIT) &&
-        !req.ability.has(PermissionID.ROBOT_DROP)
+        !env.ability.has(PermissionID.ROBOT_EDIT) &&
+        !env.ability.has(PermissionID.ROBOT_DROP)
     ) {
-        if (req.userId) {
-            query.andWhere('robot.user_id = :userId', { userId: req.userId });
+        if (env.userId) {
+            query.andWhere('robot.user_id = :userId', { userId: env.userId });
         }
 
-        if (req.robotId) {
-            query.andWhere('robot.id = :id', { id: req.robotId });
+        if (env.robotId) {
+            query.andWhere('robot.id = :id', { id: env.robotId });
         }
     }
 
-    if (req.realmId !== MASTER_REALM_ID) {
-        query.andWhere('robot.realm_id = :realmId', { realmId: req.realmId });
+    if (env.realmId !== MASTER_REALM_ID) {
+        query.andWhere('robot.realm_id = :realmId', { realmId: env.realmId });
     }
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
@@ -94,9 +98,9 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
     if (
         isSelfId(id) &&
-        req.robotId
+        useRequestEnv(req, 'robotId')
     ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, req.scopes);
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, useRequestEnv(req, 'scopes'));
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`robot.${attributes[i]}`);
         }
@@ -109,7 +113,7 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
         }));
     }
 
-    applyQuery(query, req.query, {
+    applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robot',
         fields: {
             allowed: [
@@ -137,10 +141,12 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
         throw new NotFoundError();
     }
 
+    const env = useRequestEnv(req);
+
     if (
-        req.robotId !== entity.id &&
-        !req.ability.has(PermissionID.ROBOT_DROP) &&
-        !req.ability.has(PermissionID.ROBOT_EDIT)
+        env.robotId !== entity.id &&
+        !env.ability.has(PermissionID.ROBOT_DROP) &&
+        !env.ability.has(PermissionID.ROBOT_EDIT)
     ) {
         if (
             !entity.user_id
@@ -150,11 +156,11 @@ export async function getOneRobotRouteHandler(req: ExpressRequest, res: ExpressR
 
         if (
             entity.user_id &&
-            entity.user_id !== req.userId
+            entity.user_id !== env.userId
         ) {
             throw new ForbiddenError();
         }
     }
 
-    return res.respond({ data: entity });
+    return send(res, entity);
 }

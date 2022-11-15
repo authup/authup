@@ -7,14 +7,14 @@
 
 import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authelion/common';
+import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
-import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
+import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
 
-export async function createAuthPasswordResetRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {
     await oneOf([
         check('email')
             .exists()
@@ -41,7 +41,7 @@ export async function createAuthPasswordResetRouteHandler(req: ExpressRequest, r
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     const data = matchedValidationData(req, { includeOptionals: true }) as Partial<User> & { token: string };
@@ -68,5 +68,5 @@ export async function createAuthPasswordResetRouteHandler(req: ExpressRequest, r
 
     await repository.save(entity);
 
-    return res.respondAccepted();
+    return sendAccepted(res);
 }

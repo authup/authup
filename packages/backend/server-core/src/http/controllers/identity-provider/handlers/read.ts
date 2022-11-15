@@ -5,22 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { PermissionID } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
+export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderEntity);
 
     const query = repository.createQueryBuilder('provider');
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',
         relations: {
             allowed: ['realm'],
@@ -51,19 +55,17 @@ export async function getManyIdentityProviderRouteHandler(req: ExpressRequest, r
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const { id } = req.params;
+export async function getOneIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
@@ -71,7 +73,7 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
     const query = repository.createQueryBuilder('provider')
         .where('provider.id = :id', { id });
 
-    applyQuery(query, req.query, {
+    applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',
         fields: {
             default: [
@@ -97,14 +99,12 @@ export async function getOneIdentityProviderRouteHandler(req: ExpressRequest, re
         throw new NotFoundError();
     }
 
+    const ability = useRequestEnv(req, 'ability');
     if (
-        req.ability &&
-        req.ability.has(PermissionID.PROVIDER_EDIT)
+        ability.has(PermissionID.PROVIDER_EDIT)
     ) {
         await repository.extendEntity(entity);
     }
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

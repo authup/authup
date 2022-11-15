@@ -9,9 +9,9 @@ import { check, validationResult } from 'express-validator';
 import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
 import { BadRequestError, ServerError } from '@ebec/http';
 import { randomBytes } from 'crypto';
+import { Request, Response, send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressValidationError, matchedValidationData } from '../../../../express-validation';
-import { ExpressRequest, ExpressResponse } from '../../../../type';
+import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
 import {
     useConfig,
@@ -19,7 +19,7 @@ import {
 import { useSMTPClient } from '../../../../../smtp';
 import { useLogger } from '../../../../../logger';
 
-export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createAuthRegisterRouteHandler(req: Request, res: Response) : Promise<any> {
     const config = await useConfig();
 
     if (!config.registration) {
@@ -66,7 +66,7 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     const data : Partial<User> = matchedValidationData(req, { includeOptionals: true });
@@ -104,7 +104,5 @@ export async function createAuthRegisterRouteHandler(req: ExpressRequest, res: E
         }
     }
 
-    return res.respond({
-        data: entity,
-    });
+    return send(res, entity);
 }

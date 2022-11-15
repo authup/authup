@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestQuery } from '@routup/query';
+import {
+    Request, Response, send, useRequestParam,
+} from 'routup';
 import { Brackets } from 'typeorm';
 import {
     QueryFieldsApplyOptions,
@@ -13,11 +17,11 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { OAuth2ClientEntity } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { useRequestEnv } from '../../../utils';
 
-export async function getManyClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
+export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2ClientEntity);
 
@@ -39,11 +43,12 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
         ],
     };
 
-    if (req.ability.has(PermissionID.CLIENT_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (ability.has(PermissionID.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }
 
-    const { pagination } = applyQuery(query, req.query, {
+    const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
         fields: options,
         filters: {
@@ -62,19 +67,17 @@ export async function getManyClientRouteHandler(req: ExpressRequest, res: Expres
 
     const [entities, total] = await query.getManyAndCount();
 
-    return res.respond({
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+    return send(res, {
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }
 
-export async function getOneClientRouteHandler(req: ExpressRequest, res: ExpressResponse): Promise<any> {
-    const { id } = req.params;
+export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2ClientEntity);
@@ -83,9 +86,9 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
 
     if (
         isSelfId(id) &&
-        req.clientId
+        useRequestEnv(req, 'clientId')
     ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, req.scopes);
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, useRequestEnv(req, 'scopes'));
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`client.${attributes[i]}`);
         }
@@ -114,11 +117,12 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         ],
     };
 
-    if (req.ability.has(PermissionID.CLIENT_EDIT)) {
+    const ability = useRequestEnv(req, 'ability');
+    if (ability.has(PermissionID.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }
 
-    applyQuery(query, req.query, {
+    applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
         fields: options,
         relations: {
@@ -132,7 +136,5 @@ export async function getOneClientRouteHandler(req: ExpressRequest, res: Express
         throw new NotFoundError();
     }
 
-    return res.respond({
-        data: result,
-    });
+    return send(res, result);
 }

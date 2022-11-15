@@ -9,20 +9,24 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID, Realm,
 } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRealmValidation } from '../utils';
 import { RealmEntity } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    if (!req.ability.has(PermissionID.REALM_ADD)) {
+export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(PermissionID.REALM_ADD)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
     const result = await runRealmValidation(req, CRUDOperation.CREATE);
     if (!result.data) {
-        return res.respondAccepted();
+        return sendAccepted(res);
     }
 
     const dataSource = await useDataSource();
@@ -32,7 +36,5 @@ export async function createRealmRouteHandler(req: ExpressRequest, res: ExpressR
 
     await repository.save(entity);
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return sendCreated(res, entity);
 }

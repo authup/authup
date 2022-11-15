@@ -8,20 +8,21 @@
 import { check, validationResult } from 'express-validator';
 import { isPermittedForResourceRealm } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
 import { CRUDOperation } from '../../../constants';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { IdentityProviderEntity, IdentityProviderRoleEntity, RoleEntity } from '../../../../domains';
 
 export async function runIdentityProviderRoleValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<IdentityProviderRoleEntity>> {
     const result : ExpressValidationResult<IdentityProviderRoleEntity> = initExpressValidationResult();
@@ -50,7 +51,7 @@ export async function runIdentityProviderRoleValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -66,7 +67,7 @@ export async function runIdentityProviderRoleValidation(
         result.relation.role &&
         result.relation.role.realm_id
     ) {
-        if (!isPermittedForResourceRealm(req.realmId, result.relation.role.realm_id)) {
+        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
@@ -79,7 +80,7 @@ export async function runIdentityProviderRoleValidation(
     });
 
     if (result.relation.provider) {
-        if (!isPermittedForResourceRealm(req.realmId, result.relation.provider.realm_id)) {
+        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.provider.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('provider_id'));
         }
 

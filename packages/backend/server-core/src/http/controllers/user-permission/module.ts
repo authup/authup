@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { UserPermission } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
@@ -19,39 +20,39 @@ import {
 } from './handlers';
 
 @SwaggerTags('user')
-@Controller('/user-permissions')
+@DController('/user-permissions')
 export class UserPermissionController {
-    @Get('', [ForceLoggedInMiddleware])
+    @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserPermission[]> {
         return getManyUserPermissionRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @Body() data: Pick<UserPermission, 'user_id' | 'permission_id'>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() data: Pick<UserPermission, 'user_id' | 'permission_id'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserPermission> {
         return createUserPermissionRouteHandler(req, res);
     }
 
-    @Get('/:id', [ForceLoggedInMiddleware])
+    @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserPermission> {
         return getOneUserPermissionRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<UserPermission> {
         return deleteUserPermissionRouteHandler(req, res);
     }

@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse, Request, Response,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { IdentityProviderRole } from '@authelion/common';
 import {
@@ -20,49 +21,49 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('identity-provider')
-@Controller('/identity-provider-roles')
+@DController('/identity-provider-roles')
 export class OAuth2ProviderRoleController {
-    @Get('', [])
+    @DGet('', [])
     async getProviders(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<IdentityProviderRole[]> {
         return getManyIdentityProviderRoleRouteHandler(req, res);
     }
 
-    @Get('/:id', [])
+    @DGet('/:id', [])
     async getProvider(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
         return getOneIdentityProviderRoleRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
-        @Params('id') id: string,
-            @Body() user: NonNullable<IdentityProviderRole>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<IdentityProviderRole>,
+            @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
         return updateOauth2ProviderRoleRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
         return deleteOauth2ProvideRoleRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
-        @Body() user: NonNullable<IdentityProviderRole>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<IdentityProviderRole>,
+            @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
         return createOauth2ProviderRoleRouteHandler(req, res);
     }

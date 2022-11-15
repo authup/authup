@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DBody } from '@routup/body';
 import {
-    Body, Controller, Delete, Get, Params, Post, Request, Response,
-} from '@decorators/express';
+    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse, Next, Request, Response, Router,
+} from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import {
     IdentityProvider,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authelion/common';
-import { Application } from 'express';
 import {
     authorizeCallbackIdentityProviderRouteHandler,
     authorizeURLIdentityProviderRouteHandler,
@@ -25,59 +25,58 @@ import {
     updateIdentityProviderRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../../type';
 
 @SwaggerTags('identity')
-@Controller('/identity-providers')
+@DController('/identity-providers')
 export class IdentityProviderController {
-    @Get('', [])
+    @DGet('', [])
     async getProviders(
-        @Request() req: any,
-            @Response() res: any,
+        @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<IdentityProvider[]> {
         return getManyIdentityProviderRouteHandler(req, res);
     }
 
-    @Get('/:id', [])
+    @DGet('/:id', [])
     async getProvider(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ): Promise<IdentityProvider> {
         return getOneIdentityProviderRouteHandler(req, res);
     }
 
-    @Post('/:id', [ForceLoggedInMiddleware])
+    @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
-        @Params('id') id: string,
-            @Body() user: NonNullable<IdentityProvider>,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<IdentityProvider>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<IdentityProvider> {
         return updateIdentityProviderRouteHandler(req, res);
     }
 
-    @Delete('/:id', [ForceLoggedInMiddleware])
+    @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
-        @Params('id') id: string,
-            @Request() req: any,
-            @Response() res: any,
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<IdentityProvider> {
         return deleteIdentityProviderRouteHandler(req, res);
     }
 
-    @Post('', [ForceLoggedInMiddleware])
+    @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
-        @Body() user: NonNullable<IdentityProvider>,
-            @Request() req: any,
-            @Response() res: any,
+        @DBody() user: NonNullable<IdentityProvider>,
+            @DRequest() req: any,
+            @DResponse() res: any,
     ) : Promise<IdentityProvider> {
         return createIdentityProviderRouteHandler(req, res);
     }
 }
 
-export function registerIdentityProviderController(router: Application) {
-    router.get(buildIdentityProviderAuthorizePath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+export function registerIdentityProviderController(router: Router) {
+    router.get(buildIdentityProviderAuthorizePath(':id'), async (req: Request, res: Response, next: Next) => {
         try {
             await authorizeURLIdentityProviderRouteHandler(req, res);
         } catch (e) {
@@ -85,7 +84,7 @@ export function registerIdentityProviderController(router: Application) {
         }
     });
 
-    router.get(buildIdentityProviderAuthorizeCallbackPath(':id'), async (req: ExpressRequest, res: ExpressResponse, next: ExpressNextFunction) => {
+    router.get(buildIdentityProviderAuthorizeCallbackPath(':id'), async (req: Request, res: Response, next: Next) => {
         try {
             await authorizeCallbackIdentityProviderRouteHandler(req, res);
         } catch (e) {

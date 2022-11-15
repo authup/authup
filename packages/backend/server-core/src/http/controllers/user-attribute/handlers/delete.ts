@@ -8,12 +8,15 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import {
+    Request, Response, sendAccepted, useRequestParam,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
 import { UserAttributeEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
-export async function deleteUserAttributeRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
-    const { id } = req.params;
+export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
@@ -25,11 +28,11 @@ export async function deleteUserAttributeRouteHandler(req: ExpressRequest, res: 
     }
 
     if (
-        entity.user_id !== req.userId
+        entity.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !req.ability.has(PermissionID.USER_EDIT) ||
-            !isPermittedForResourceRealm(req.realmId, entity.realm_id)
+            !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
+            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to drop an attribute for the given user...');
         }
@@ -41,7 +44,5 @@ export async function deleteUserAttributeRouteHandler(req: ExpressRequest, res: 
 
     entity.id = entityId;
 
-    return res.respondDeleted({
-        data: entity,
-    });
+    return sendAccepted(res, entity);
 }

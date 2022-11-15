@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useRequestBody } from '@routup/body';
 import { check, validationResult } from 'express-validator';
 import {
     IdentityProviderProtocol,
@@ -13,15 +14,16 @@ import {
     isValidIdentityProviderSub,
 } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
-import { ExpressRequest } from '../../../type';
+import { Request } from 'routup';
+import { useRequestEnv } from '../../../utils';
 import {
-    ExpressValidationError,
     ExpressValidationResult,
+    RequestValidationError,
     buildExpressValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
-} from '../../../express-validation';
+} from '../../../validation';
 import { CRUDOperation } from '../../../constants';
 import {
     extractLdapIdentityProviderProtocolAttributes,
@@ -34,7 +36,7 @@ import {
 import { IdentityProviderEntity, RealmEntity } from '../../../../domains';
 
 export async function runOauth2ProviderValidation(
-    req: ExpressRequest,
+    req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}>> {
     const result : ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}> = initExpressValidationResult();
@@ -92,7 +94,7 @@ export async function runOauth2ProviderValidation(
 
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
-        throw new ExpressValidationError(validation);
+        throw new RequestValidationError(validation);
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
@@ -102,19 +104,19 @@ export async function runOauth2ProviderValidation(
     switch (result.data.protocol) {
         case IdentityProviderProtocol.OAUTH2: {
             result.meta.attributes = validateOAuth2IdentityProviderProtocol(
-                extractOAuth2IdentityProviderProtocolAttributes(req.body),
+                extractOAuth2IdentityProviderProtocolAttributes(useRequestBody(req)),
             );
             break;
         }
         case IdentityProviderProtocol.OIDC: {
             result.meta.attributes = validateOidcIdentityProviderProtocol(
-                extractOidcConnectIdentityProviderProtocolAttributes(req.body),
+                extractOidcConnectIdentityProviderProtocolAttributes(useRequestBody(req)),
             );
             break;
         }
         case IdentityProviderProtocol.LDAP: {
             result.meta.attributes = validateLdapIdentityProviderProtocol(
-                extractLdapIdentityProviderProtocolAttributes(req.body),
+                extractLdapIdentityProviderProtocolAttributes(useRequestBody(req)),
             );
             break;
         }
@@ -128,7 +130,7 @@ export async function runOauth2ProviderValidation(
     });
 
     if (result.relation.realm) {
-        if (!isPermittedForResourceRealm(req.realmId, result.relation.realm.id)) {
+        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }
@@ -137,7 +139,7 @@ export async function runOauth2ProviderValidation(
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        result.data.realm_id = req.realmId;
+        result.data.realm_id = useRequestEnv(req, 'realmId');
     }
 
     return result;

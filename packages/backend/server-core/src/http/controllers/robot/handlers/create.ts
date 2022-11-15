@@ -8,24 +8,28 @@
 import {
     PermissionID,
 } from '@authelion/common';
+import { Request, Response, send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressRequest, ExpressResponse } from '../../../type';
+import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
 import {
     RobotRepository, useRobotEventEmitter,
 } from '../../../../domains';
 import { CRUDOperation } from '../../../constants';
 
-export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressResponse) : Promise<any> {
+export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runRobotValidation(req, CRUDOperation.CREATE);
 
-    if (!req.ability.has(PermissionID.ROBOT_ADD)) {
-        result.data.user_id = req.userId;
+    const ability = useRequestEnv(req, 'ability');
+    const userId = useRequestEnv(req, 'userId');
+
+    if (!ability.has(PermissionID.ROBOT_ADD)) {
+        result.data.user_id = userId;
     } else if (
         result.data.user_id &&
-        result.data.user_id !== req.userId
+        result.data.user_id !== userId
     ) {
-        result.data.user_id = req.userId;
+        result.data.user_id = userId;
     }
 
     const dataSource = await useDataSource();
@@ -47,7 +51,5 @@ export async function createRobotRouteHandler(req: ExpressRequest, res: ExpressR
             ...entity,
         });
 
-    return res.respondCreated({
-        data: entity,
-    });
+    return send(res, entity);
 }
