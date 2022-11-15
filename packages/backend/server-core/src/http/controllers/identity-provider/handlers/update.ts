@@ -48,5 +48,5 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
     await repository.saveAttributes(entity.id, result.meta.attributes);
     await repository.extendEntity(entity);
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

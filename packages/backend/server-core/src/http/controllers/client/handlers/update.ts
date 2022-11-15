@@ -8,7 +8,7 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
 import {
-    Request, Response, send, sendAccepted, useRequestParam,
+    Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils';
@@ -45,5 +45,5 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
 
     await repository.save(entity);
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

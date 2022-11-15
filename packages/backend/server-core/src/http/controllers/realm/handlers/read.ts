@@ -40,12 +40,10 @@ export async function getManyRealmRouteHandler(
     const [entities, total] = await query.getManyAndCount();
 
     return send(res, {
-        data: {
-            data: entities,
-            meta: {
-                total,
-                ...pagination,
-            },
+        data: entities,
+        meta: {
+            total,
+            ...pagination,
         },
     });
 }

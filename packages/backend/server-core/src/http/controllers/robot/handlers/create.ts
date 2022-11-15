@@ -8,7 +8,9 @@
 import {
     PermissionID,
 } from '@authelion/common';
-import { Request, Response, send } from 'routup';
+import {
+    Request, Response, send, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
@@ -51,5 +53,5 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
             ...entity,
         });
 
-    return send(res, entity);
+    return sendCreated(res, entity);
 }

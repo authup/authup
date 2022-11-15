@@ -43,7 +43,7 @@ describe('src/http/controllers/robot', () => {
             .send(details)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         expectPropertiesEqualToSrc(details, response.body);
@@ -67,7 +67,7 @@ describe('src/http/controllers/robot', () => {
             .send(details)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
 
         expectPropertiesEqualToSrc(details, response.body);
@@ -78,6 +78,6 @@ describe('src/http/controllers/robot', () => {
             .delete(`/robots/${response.body.id}`)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
     });
 });

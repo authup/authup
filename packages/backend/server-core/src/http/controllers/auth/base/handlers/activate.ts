@@ -7,7 +7,9 @@
 
 import { check, validationResult } from 'express-validator';
 import { NotFoundError } from '@ebec/http';
-import { Request, Response, send } from 'routup';
+import {
+    Request, Response, sendAccepted,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
@@ -46,5 +48,5 @@ export async function createAuthActivateRouteHandler(req: Request, res: Response
 
     // todo: maybe redirect to appUrl
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

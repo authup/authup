@@ -10,7 +10,7 @@ import supertest, { SuperTest, Test } from 'supertest';
 import { createRouter } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const expressApp = createRouter();
+    const router = createRouter();
 
-    return supertest(expressApp);
+    return supertest(router.createListener());
 }

@@ -56,7 +56,7 @@ describe('src/http/controllers/identity-provider', () => {
             .send(details)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         let keys : string[] = Object.keys(details);
@@ -83,7 +83,7 @@ describe('src/http/controllers/identity-provider', () => {
             .send(details)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
 
         keys = Object.keys(details);
@@ -97,7 +97,7 @@ describe('src/http/controllers/identity-provider', () => {
             .delete(`/identity-providers/${response.body.id}`)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
     });
 
     it('should build authorize url', async () => {

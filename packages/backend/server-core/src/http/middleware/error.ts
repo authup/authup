@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    Next, Request, Response, send,
+} from 'routup';
 import { hasOwnProperty } from 'typeorm-extension';
 import {
     ConflictError,
@@ -14,14 +17,13 @@ import {
     extendsBaseError,
 } from '@ebec/http';
 import { useLogger } from '../../logger';
-import { ExpressNextFunction, ExpressRequest, ExpressResponse } from '../type';
 
 export function errorMiddleware(
     error: Error,
-    request: ExpressRequest,
-    response: ExpressResponse,
+    request: Request,
+    response: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    next: ExpressNextFunction,
+    next: Next,
 ) {
     const code : string | undefined = hasOwnProperty(error, 'code') && typeof error.code === 'string' ?
         error.code :
@@ -62,13 +64,12 @@ export function errorMiddleware(
 
     const extra = baseError.getOption('extra');
 
-    return response
-        .status(statusCode)
-        .json({
-            code: baseError.getOption('code') ?? InternalServerErrorOptions.code,
-            message: baseError.message ?? InternalServerErrorOptions.message,
-            statusCode,
-            ...(extra ? { extra } : {}),
-        })
-        .end();
+    response.statusCode = statusCode;
+
+    send(response, {
+        code: baseError.getOption('code') ?? InternalServerErrorOptions.code,
+        message: baseError.message ?? InternalServerErrorOptions.message,
+        statusCode,
+        ...(extra ? { extra } : {}),
+    });
 }

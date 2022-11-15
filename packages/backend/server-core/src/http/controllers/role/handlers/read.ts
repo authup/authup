@@ -59,7 +59,7 @@ export async function getManyRoleRouteHandler(req: Request, res: Response) : Pro
 
 export async function getOneRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
-    const { fields } = useRequestQuery(req, 'fields');
+    const fields = useRequestQuery(req, 'fields');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);

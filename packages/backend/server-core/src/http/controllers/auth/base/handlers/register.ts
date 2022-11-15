@@ -9,7 +9,9 @@ import { check, validationResult } from 'express-validator';
 import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
 import { BadRequestError, ServerError } from '@ebec/http';
 import { randomBytes } from 'crypto';
-import { Request, Response, send } from 'routup';
+import {
+    Request, Response, sendAccepted,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import { UserRepository } from '../../../../../domains';
@@ -104,5 +106,5 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
         }
     }
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

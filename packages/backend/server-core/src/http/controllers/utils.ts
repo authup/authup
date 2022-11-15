@@ -26,6 +26,8 @@ import { ClientController } from './client';
 export function registerControllers(
     router: Router,
 ) {
+    registerIdentityProviderController(router);
+
     router.useControllers([
         AuthController,
         AuthTokenController,
@@ -45,6 +47,4 @@ export function registerControllers(
         UserPermissionController,
         UserRoleController,
     ]);
-
-    registerIdentityProviderController(router);
 }

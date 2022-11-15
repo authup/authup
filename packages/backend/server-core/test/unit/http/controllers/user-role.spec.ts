@@ -48,7 +48,7 @@ describe('src/http/controllers/user-role', () => {
             .send(user)
             .auth('admin', 'start123');
 
-        expect(userResponse.status).toEqual(200);
+        expect(userResponse.status).toEqual(201);
         expect(userResponse.body).toBeDefined();
 
         const roleResponse = await superTest
@@ -56,7 +56,7 @@ describe('src/http/controllers/user-role', () => {
             .send(role)
             .auth('admin', 'start123');
 
-        expect(roleResponse.status).toEqual(200);
+        expect(roleResponse.status).toEqual(201);
         expect(roleResponse.body).toBeDefined();
 
         // ---------------------------------------------------------
@@ -71,7 +71,7 @@ describe('src/http/controllers/user-role', () => {
             .send(userRole)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         const keys = ['user_id', 'role_id'];
@@ -92,6 +92,6 @@ describe('src/http/controllers/user-role', () => {
             .delete(`/user-roles/${response.body.id}`)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
     });
 });

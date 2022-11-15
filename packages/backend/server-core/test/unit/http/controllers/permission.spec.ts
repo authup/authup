@@ -41,7 +41,7 @@ describe('src/http/controllers/permission', () => {
             .send(details)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         const keys : string[] = Object.keys(details);

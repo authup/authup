@@ -70,5 +70,5 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
 
     await repository.save(entity);
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

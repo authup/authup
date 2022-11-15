@@ -42,5 +42,5 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
 
     await repository.save(entity);
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

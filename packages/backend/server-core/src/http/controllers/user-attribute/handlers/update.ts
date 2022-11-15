@@ -47,5 +47,5 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
 
     await repository.save(entity);
 
-    return send(res, entity);
+    return sendAccepted(res, entity);
 }

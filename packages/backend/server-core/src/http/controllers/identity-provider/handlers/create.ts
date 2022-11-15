@@ -9,7 +9,9 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
 } from '@authelion/common';
-import { Request, Response, send } from 'routup';
+import {
+    Request, Response, send, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils';
 import { runOauth2ProviderValidation } from '../utils';
@@ -34,5 +36,5 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
     await repository.saveAttributes(entity.id, result.meta.attributes);
     repository.appendAttributes(entity, result.meta.attributes);
 
-    return send(res, entity);
+    return sendCreated(res, entity);
 }

@@ -10,7 +10,7 @@ import {
     PermissionID,
 } from '@authelion/common';
 import {
-    Request, Response, send, sendAccepted,
+    Request, Response, send, sendAccepted, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils';
@@ -36,5 +36,5 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     await repository.save(entity);
 
-    return send(res, entity);
+    return sendCreated(res, entity);
 }

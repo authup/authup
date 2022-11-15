@@ -32,7 +32,7 @@ describe('src/http/controllers/user-attribute', () => {
             } as UserAttribute)
             .auth('admin', 'start123');
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(201);
 
         const body = response.body as UserAttribute;
         expect(body).toBeDefined();

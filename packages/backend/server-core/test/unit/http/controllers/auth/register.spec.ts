@@ -54,7 +54,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
                 password: 'my-password',
             });
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
 
         const data = response.body as User;

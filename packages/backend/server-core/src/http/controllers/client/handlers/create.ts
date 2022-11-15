@@ -9,7 +9,9 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
 } from '@authelion/common';
-import { Request, Response, send } from 'routup';
+import {
+    Request, Response, sendCreated,
+} from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils';
 import { runOauth2ClientValidation } from '../utils';
@@ -31,5 +33,5 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
 
     await repository.save(provider);
 
-    return send(res, provider);
+    return sendCreated(res, provider);
 }

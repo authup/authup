@@ -6,10 +6,12 @@
  */
 
 import { OAuth2AuthorizationResponseType, TokenError } from '@authelion/common';
-import { ExpressRequest } from '../../../http/type';
+import { useRequestBody } from '@routup/body';
+import { useRequestQuery } from '@routup/query';
+import { Request } from 'routup';
 
 export function getOauth2AuthorizeResponseTypesByRequest(
-    request: ExpressRequest,
+    request: Request,
 ) : Record<`${OAuth2AuthorizationResponseType}`, boolean> {
     const data : Record<`${OAuth2AuthorizationResponseType}`, boolean> = {
         [OAuth2AuthorizationResponseType.CODE]: false,
@@ -20,7 +22,9 @@ export function getOauth2AuthorizeResponseTypesByRequest(
 
     const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
 
-    const responseType = request.body.response_type || request.query.response_type;
+    const responseType = useRequestBody(request, 'response_type') ||
+        useRequestQuery(request, 'response_type');
+
     if (typeof responseType !== 'string') {
         throw TokenError.responseTypeUnsupported();
     }
