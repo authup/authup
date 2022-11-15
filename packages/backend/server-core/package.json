@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-core",
-    "version": "0.3.22",
+    "version": "0.3.23",
     "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
     "main": "dist/index.js",
     "scripts": {
@@ -40,7 +40,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/server-utils": "^0.3.16",
+        "@authelion/server-utils": "^0.3.17",
         "@ebec/http": "^0.0.4",
         "@types/morgan": "^1.9.3",
         "cookie-parser": "^1.4.6",
@@ -53,7 +53,7 @@
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.6",
-        "swagger-ui-express": "^4.5.0",
+        "swagger-ui-express": "^4.6.0",
         "zod": "^3.19.1"
     },
     "peerDependencies": {
@@ -70,7 +70,7 @@
         "typeorm-extension": ">=2.2.8 <3.0.0"
     },
     "devDependencies": {
-        "@authelion/common": "^0.3.15",
+        "@authelion/common": "^0.3.16",
         "@hapic/oauth2": "^0.1.2",
         "@routup/body": "^0.2.2",
         "@routup/cookie": "^0.1.3",
@@ -90,7 +90,7 @@
         "supertest": "^6.3.0",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.10",
-        "typeorm-extension": "^2.2.11"
+        "typeorm-extension": "^2.2.12"
     },
     "publishConfig": {
         "access": "public"

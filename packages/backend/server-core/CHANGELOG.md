@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.23](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.22...@authelion/server-core@0.3.23) (2022-11-11)
+
+
+### Bug Fixes
+
+* **deps:** bump swagger-ui-express from 4.5.0 to 4.6.0 ([1c1e416](https://github.com/Tada5hi/authelion/commit/1c1e4161cf6523ad416c7981f36bb12bd56207a9))
+* **deps:** bump typeorm-extension from 2.2.10 to 2.2.11 ([2659666](https://github.com/Tada5hi/authelion/commit/26596666b0eb690494bc5299b3e437da7f14ea95))
+* **deps:** bump typeorm-extension from 2.2.11 to 2.2.12 ([9b9d5b5](https://github.com/Tada5hi/authelion/commit/9b9d5b5692527aa4ed4fe357c5d6e0c5be513a5e))
+
+
+
+
+
 ## [0.3.22](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.21...@authelion/server-core@0.3.22) (2022-10-27)
 
 

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.23](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.22...@authelion/server@0.3.23) (2022-11-11)
+
+
+### Bug Fixes
+
+* **deps:** bump typeorm-extension from 2.2.10 to 2.2.11 ([2659666](https://github.com/Tada5hi/authelion/commit/26596666b0eb690494bc5299b3e437da7f14ea95))
+* **deps:** bump typeorm-extension from 2.2.11 to 2.2.12 ([9b9d5b5](https://github.com/Tada5hi/authelion/commit/9b9d5b5692527aa4ed4fe357c5d6e0c5be513a5e))
+* **deps:** bump yargs from 17.6.0 to 17.6.2 ([621c7bc](https://github.com/Tada5hi/authelion/commit/621c7bcb14e478dc98a780a45bab92f4077a1d14))
+
+
+
+
+
 ## [0.3.22](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.21...@authelion/server@0.3.22) (2022-10-27)
 
 
