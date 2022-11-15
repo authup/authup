@@ -61,7 +61,7 @@
         "@rollup/plugin-node-resolve": "^15.0.0",
         "hapic": "^0.1.2",
         "rapiq": "^0.4.1",
-        "rollup": "^3.2.5"
+        "rollup": "^3.3.0"
     },
     "peerDependencies": {
         "hapic": ">=0.1.2 <1.0.0",
