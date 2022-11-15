@@ -8,7 +8,7 @@
 import { URL } from 'url';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
-import { createRouter, createHttpServer, generateSwaggerDocumentation } from '../http';
+import { createHttpServer, createRouter, generateSwaggerDocumentation } from '../http';
 import { StartCommandContext } from './type';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { buildOAuth2Aggregator } from '../aggregators';

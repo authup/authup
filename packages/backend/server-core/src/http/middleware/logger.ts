@@ -6,7 +6,7 @@
  */
 
 import morgan from 'morgan';
-import { Request, Response, Next } from 'routup';
+import { Next, Request, Response } from 'routup';
 import { useLogger } from '../../logger';
 import { useRequestEnv } from '../utils';
 
@@ -25,9 +25,9 @@ export function createLoggerMiddleware() {
                         tokens['remote-addr'](req, res),
                     ];
 
-                    const userId = useRequestEnv(req,'userId');
-                    const robotId = useRequestEnv(req,'robotId');
-                    const clientId = useRequestEnv(req,'clientId');
+                    const userId = useRequestEnv(req, 'userId');
+                    const robotId = useRequestEnv(req, 'robotId');
+                    const clientId = useRequestEnv(req, 'clientId');
 
                     if (userId || robotId || clientId) {
                         if (userId) {
