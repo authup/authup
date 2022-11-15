@@ -85,7 +85,7 @@
         "coveralls": "^3.1.0",
         "hapic": "^0.1.2",
         "jest-serial-runner": "^1.2.0",
-        "redis-extension": "^1.1.1",
+        "redis-extension": "^1.2.0",
         "routup": "^0.3.2",
         "supertest": "^6.3.0",
         "ts-node": "^10.8.2",
