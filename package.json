@@ -39,7 +39,7 @@
         "@commitlint/config-angular": "^17.2.0",
         "@commitlint/config-conventional": "^17.2.0",
         "@commitlint/cz-commitlint": "^17.2.0",
-        "@tada5hi/eslint-config-vue-typescript": "^1.0.8",
+        "@tada5hi/eslint-config-vue-typescript": "^1.0.10",
         "@types/jest": "^29.2.2",
         "@types/node": "^18.11.9",
         "cross-env": "^7.0.3",
