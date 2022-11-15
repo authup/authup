@@ -7,8 +7,8 @@ a complete standalone solution.
 
 This package should be integrated in an existing backend application.
 The packages provide: 
-- routes & controllers for [express]()
-- models, seeds & many more for [typeorm]()
+- routes & controllers for [routup](https://www.npmjs.com/package/routup)
+- models, seeds & many more for [typeorm](https://www.npmjs.com/package/typeorm)
 
 ::: info
 It is recommended to create Database migrations after a new version of the package is released.

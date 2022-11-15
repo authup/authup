@@ -1,6 +1,6 @@
 # HTTP
 
-The http sub-modul which depends on the [express]() library, 
+The http sub-modul which depends on the [routup](https://www.npmjs.com/package/routup) library, 
 contains:
 - controllers &
 - middlewares
@@ -15,10 +15,10 @@ import {
     registerControllers
 } from "@authelion/server-core";
 
-import express from "express";
+import { Router } from "routup";
 import path from "path";
 
-const app = express();
+const router = new Router();
 
 // Register middlewares
 /* ... */
@@ -27,13 +27,13 @@ const app = express();
 /* ... */
 
 // Register controllers
-registerControllers(app);
+registerControllers(router);
 
 // Register error middleware
 /* ... */
 
 
-app.listen(3010);
+router.listen(3010);
 ```
 
 ## Middlewares
@@ -43,13 +43,13 @@ import {
     registerMiddlewares
 } from "@authelion/server-core";
 
-import express from "express";
+import { Router } from "routup";
 import path from "path";
 
-const app = express();
+const app = new Router();
 
 // Register middlewares
-registerMiddlewares(app);
+registerMiddlewares(router);
 
 // Register controllers
 /* ... */
@@ -57,7 +57,7 @@ registerMiddlewares(app);
 // Register error middleware
 /* ... */
 
-app.listen(3010);
+router.listen(3010);
 ```
 
 ---
@@ -71,9 +71,9 @@ The error middleware can be registered like shown in the following code snippet.
 
 ```typescript
 import { errorMiddleware } from '@authelion/server-core';
-import { express } from 'express';
+import { Router } from 'routup';
 
-const app = express();
+const router = new Router();
 
 // Register middlewares
 /* ... */
@@ -82,7 +82,7 @@ const app = express();
 /* ... */
 
 // Register error middleware
-app.use(errorMiddleware);
+router.use(errorMiddleware);
 
-app.listen(3010);
+router.listen(3010);
 ```
