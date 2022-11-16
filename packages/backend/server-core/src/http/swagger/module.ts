@@ -33,8 +33,8 @@ export async function generateSwaggerDocumentation(
         ],
         decorator: {
             internal: true,
-            library: [
-                'decorators-express',
+            preset: [
+                'routup',
             ],
         },
     };
