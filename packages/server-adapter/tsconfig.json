@@ -1,0 +1,9 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "lib": ["dom", "ES6"],
+        "paths": {
+            "@authelion/common": ["./packages/common/src"]
+        }
+    }
+}

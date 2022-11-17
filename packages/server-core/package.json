@@ -37,7 +37,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tada5hi/authelion.git",
-        "directory": "packages/backend/server-core"
+        "directory": "packages/server-core"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/authelion/issues"

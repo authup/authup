@@ -10,7 +10,7 @@ RUN rm -rf ./node-modules && \
     npm ci && \
     npm run bootstrap && \
     npm run build && \
-    touch packages/backend/server/.env
+    touch packages/server/.env
 
 
 COPY ./entrypoint.sh ./entrypoint.sh

@@ -9,10 +9,7 @@
     "license": "MIT",
     "version": "1.0.0",
     "workspaces": [
-        "./packages/docs",
-        "./packages/backend/*",
-        "./packages/shared/*",
-        "./packages/frontend/*"
+        "./packages/*"
     ],
     "keywords": [
         "auth",

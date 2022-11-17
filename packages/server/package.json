@@ -1,7 +1,7 @@
 {
     "name": "@authelion/server",
     "version": "0.3.23",
-    "description": "This is a simple standalone api application.",
+    "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
         "cli": "ts-node src/index.ts",
@@ -33,7 +33,8 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git"
+        "url": "git+https://github.com/Tada5hi/authelion.git",
+        "directory": "packages/server"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/authelion/issues"

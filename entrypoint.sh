@@ -11,4 +11,4 @@ set -e
 
 cd /usr/src/app
 
-exec npm run cli --workspace=packages/backend/server -- "$@"
+exec npm run cli --workspace=packages/server -- "$@"

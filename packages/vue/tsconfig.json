@@ -1,5 +1,5 @@
 {
-    "extends": "../../../tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "esModuleInterop": true,
         "lib": [
@@ -7,7 +7,7 @@
         ],
         "strict": true,
         "paths": {
-            "@authelion/common": ["./packages/shared/common/src"]
+            "@authelion/common": ["./packages/common/src"]
         }
     },
     "include": [

@@ -32,7 +32,7 @@ export default defineNuxtConfig({
         '@/assets/css/bootstrap-override.css',
     ],
     alias: {
-        '@authelion/common': path.join(__dirname, '..', '..', 'shared', 'common', 'src'),
+        '@authelion/common': path.join(__dirname, '..', 'common', 'src'),
         '@authelion/vue': path.join(__dirname, '..', 'vue', 'src'),
     },
     vite: {

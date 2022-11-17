@@ -38,7 +38,8 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git"
+        "url": "git+https://github.com/Tada5hi/authelion.git",
+        "directory": "packages/common"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/authelion/issues"
@@ -65,7 +66,7 @@
     },
     "peerDependencies": {
         "hapic": ">=0.1.2 <1.0.0",
-        "rapiq": ">=0.3.0 <1.0.0"
+        "rapiq": ">=0.4.1 <1.0.0"
     },
     "publishConfig": {
         "access": "public"
