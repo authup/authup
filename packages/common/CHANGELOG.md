@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.3.16...@authelion/common@0.4.0) (2022-11-17)
+
+
+### Features
+
+* **server-core:** replaced http framework ([6273ae6](https://github.com/Tada5hi/authelion/commit/6273ae680f82a4e27ba527b9eb260bb81ee75d20))
+
+
+
+
+
 ## [0.3.16](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.3.15...@authelion/common@0.3.16) (2022-11-11)
 
 **Note:** Version bump only for package @authelion/common

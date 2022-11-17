@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.10...@authelion/vue@1.1.0) (2022-11-17)
+
+
+### Features
+
+* **server-core:** replaced http framework ([6273ae6](https://github.com/Tada5hi/authelion/commit/6273ae680f82a4e27ba527b9eb260bb81ee75d20))
+
+
+
+
+
 # [2.1.0-alpha.10](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.9...@authelion/vue@2.1.0-alpha.10) (2022-11-11)
 
 

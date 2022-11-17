@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-adapter",
-    "version": "0.3.16",
+    "version": "0.3.17",
     "description": "Authelion http & socket server adapter package for api module.",
     "main": "dist/index.js",
     "files": [
@@ -41,7 +41,7 @@
         "@ebec/http": "^0.0.4"
     },
     "devDependencies": {
-        "@authelion/common": "^0.3.16",
+        "@authelion/common": "^0.4.0",
         "@hapic/oauth2": "^0.1.3",
         "@routup/cookie": "^0.1.6",
         "hapic": "^0.1.3",
