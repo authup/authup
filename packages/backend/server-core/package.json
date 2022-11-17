@@ -1,7 +1,7 @@
 {
     "name": "@authelion/server-core",
     "version": "0.3.23",
-    "description": "This is the core package of the auth-server and can be used as extension to an existing codebase",
+    "description": "This package contains the core of backend server.",
     "main": "dist/index.js",
     "scripts": {
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
@@ -19,11 +19,14 @@
         "server",
         "typescript",
         "oauth2",
-        "oauth2-client",
+        "oauth2-server",
+        "http",
         "middleware",
+        "routes",
         "key-pair",
         "password",
-        "token"
+        "token",
+        "authorization"
     ],
     "author": {
         "name": "Peter Placzek",
@@ -33,7 +36,8 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git"
+        "url": "git+https://github.com/Tada5hi/authelion.git",
+        "directory": "packages/backend/server-core"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/authelion/issues"
@@ -43,6 +47,7 @@
         "@authelion/server-utils": "^0.3.17",
         "@ebec/http": "^0.0.4",
         "@types/morgan": "^1.9.3",
+        "@types/nodemailer": "^6.4.6",
         "cors": "^2.8.5",
         "express-validator": "^6.14.2",
         "locter": "^0.3.2",
@@ -66,7 +71,7 @@
         "redis-extension": "^1.x",
         "routup": ">=0.4.1 <1.0.0",
         "typeorm": "^0.3.x",
-        "typeorm-extension": ">=2.2.8 <3.0.0"
+        "typeorm-extension": ">=2.2.13 <3.0.0"
     },
     "devDependencies": {
         "@authelion/common": "^0.3.16",
@@ -77,7 +82,6 @@
         "@routup/swagger": "^0.1.1",
         "@trapi/swagger": "^0.3.8",
         "@types/express-validator": "^3.0.0",
-        "@types/nodemailer": "^6.4.6",
         "@types/supertest": "^2.0.12",
         "@types/validator": "^13.7.10",
         "better-sqlite3": "^7.6.2",
