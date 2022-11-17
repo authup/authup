@@ -73,9 +73,9 @@ jobs:
         strategy:
             matrix:
                 package: [
-                    'backend/server-core',
-                    'backend/server-utils',
-                    'shared/common'
+                    'server-core',
+                    'server-utils',
+                    'common'
                 ]
         steps:
             -   name: Checkout
