@@ -20,7 +20,7 @@
                     "**/*.test.ts",
                     "**/*.spec.js",
                     "**/*.spec.ts",
-                    "packages/frontend/ui/**",
+                    "packages/ui/**",
                     "**/rollup.config.js"
                 ]
             }
