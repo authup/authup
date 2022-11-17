@@ -42,10 +42,10 @@
     "devDependencies": {
         "@authelion/common": "^0.3.16",
         "@hapic/oauth2": "^0.1.3",
-        "@routup/cookie": "^0.1.3",
+        "@routup/cookie": "^0.1.5",
         "hapic": "^0.1.3",
         "redis-extension": "^1.2.0",
-        "routup": "^0.3.2"
+        "routup": "^0.4.0"
     },
     "peerDependencies": {
         "@authelion/common": "^0.x",

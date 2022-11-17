@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import swaggerUi from 'swagger-ui-express';
 import { Router } from 'routup';
 import { createRequestJsonHandler, createRequestUrlEncodedHandler } from '@routup/body';
-import cookieParser from 'cookie-parser';
+import { createUIHandler } from '@routup/swagger';
 import path from 'path';
-import { existsSync } from 'fs';
+import fs from 'fs';
 import { merge } from 'smob';
 import {
     HTTPMiddlewareOptions,
@@ -47,8 +46,6 @@ export function registerMiddlewares(
         router.use(createRequestUrlEncodedHandler({ extended: false }));
     }
 
-    router.use(cookieParser());
-
     //--------------------------------------------------------------------
 
     router.use(createMiddleware());
@@ -60,27 +57,10 @@ export function registerMiddlewares(
 
         const swaggerDocumentPath: string = path.join(basePath, 'swagger.json');
 
-        if (existsSync(swaggerDocumentPath)) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
-            const swaggerDocument = require(swaggerDocumentPath);
+        if (fs.existsSync(swaggerDocumentPath)) {
+            const swaggerDocument = fs.readFileSync(swaggerDocumentPath, { encoding: 'utf-8' });
 
-            for (let i = 0; i < swaggerUi.serve.length; i++) {
-                router.use('/docs', swaggerUi.serve[i]);
-            }
-
-            router.use(
-                '/docs',
-                swaggerUi.setup(swaggerDocument, {
-                    swaggerOptions: {
-                        withCredentials: true,
-                        plugins: [
-                            () => ({
-                                components: { Topbar: (): any => null },
-                            }),
-                        ],
-                    },
-                }),
-            );
+            router.use('/docs', createUIHandler(JSON.parse(swaggerDocument)));
         } else {
             const logger = useLogger();
             if (logger) {
