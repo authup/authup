@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DBody } from '@routup/body';
 import {
-    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
-} from 'routup';
+    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
 import { RolePermission } from '@authelion/common';
 import { ForceLoggedInMiddleware } from '../../middleware';

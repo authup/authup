@@ -6,8 +6,9 @@
  */
 
 import { UnauthorizedError } from '@ebec/http';
+import { HandlerInterface } from '@routup/decorators';
 import {
-    HandlerInterface, Next, Request, Response,
+    Next, Request, Response,
 } from 'routup';
 import { useRequestEnv } from '../../utils';
 

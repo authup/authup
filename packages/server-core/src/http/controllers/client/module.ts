@@ -6,11 +6,8 @@
  */
 
 import {
-    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
-} from 'routup';
-import {
-    DBody,
-} from '@routup/body';
+    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
 import {
     Client,

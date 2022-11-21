@@ -9,7 +9,7 @@ import { OAuth2TokenGrantResponse } from '@authelion/common';
 import { SwaggerTags } from '@trapi/swagger';
 import {
     DController, DGet, DPost, DRequest, DResponse,
-} from 'routup';
+} from '@routup/decorators';
 import { createTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
 
 @SwaggerTags('auth')

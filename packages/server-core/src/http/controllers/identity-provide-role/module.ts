@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DBody } from '@routup/body';
 import {
-    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse, Request, Response,
-} from 'routup';
+    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from '@routup/decorators';
+import { Request, Response } from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import { IdentityProviderRole } from '@authelion/common';
 import {

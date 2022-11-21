@@ -8,7 +8,7 @@
 import { SwaggerTags } from '@trapi/swagger';
 import {
     DController, DGet, DParam, DPost, DRequest, DResponse,
-} from 'routup';
+} from '@routup/decorators';
 import {
     OAuth2JsonWebKey,
     OAuth2OpenIDProviderMetadata,

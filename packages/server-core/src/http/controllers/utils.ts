@@ -6,6 +6,7 @@
  */
 
 import { Router } from 'routup';
+import { mountControllers } from '@routup/decorators';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
 import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
@@ -28,7 +29,7 @@ export function registerControllers(
 ) {
     registerIdentityProviderController(router);
 
-    router.useControllers([
+    mountControllers(router, [
         AuthController,
         AuthTokenController,
         ClientController,

@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DBody } from '@routup/body';
 import {
-    DController, DDelete, DGet, DParam, DPost, DRequest, DResponse, Next, Request, Response, Router,
+    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+} from '@routup/decorators';
+import {
+    Next, Request, Response, Router,
 } from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
 import {
