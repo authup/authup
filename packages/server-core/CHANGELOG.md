@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.25](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.24...@authelion/server-core@0.3.25) (2022-11-21)
+
+
+### Bug Fixes
+
+* **deps:** updated routup ( & decorators) ([c3c0aba](https://github.com/Tada5hi/authelion/commit/c3c0aba7d11e9075821f536e16fe2167dc8a5e7d))
+
+
+
+
+
 ## [0.3.24](https://github.com/Tada5hi/authelion/compare/@authelion/server-core@0.3.23...@authelion/server-core@0.3.24) (2022-11-17)
 
 **Note:** Version bump only for package @authelion/server-core

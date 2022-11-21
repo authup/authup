@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-adapter",
-    "version": "0.3.17",
+    "version": "0.3.18",
     "description": "Authelion http & socket server adapter package for api module.",
     "main": "dist/index.js",
     "files": [

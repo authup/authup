@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-core",
-    "version": "0.3.24",
+    "version": "0.3.25",
     "description": "This package contains the core of backend server.",
     "main": "dist/index.js",
     "scripts": {
