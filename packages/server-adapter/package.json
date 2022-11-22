@@ -51,6 +51,7 @@
     "peerDependencies": {
         "@authelion/common": "^0.x",
         "@hapic/oauth2": ">=0.1.2 <1.0.0",
+        "@routup/cookie": ">=0.2.0 <1.0.0",
         "hapic": ">=0.1.2 <1.0.0",
         "redis-extension": "^1.x",
         "routup": ">=0.6.0 <1.0.0"
