@@ -34,7 +34,7 @@
     "devDependencies": {
         "@commitlint/cli": "^17.2.0",
         "@commitlint/config-angular": "^17.2.0",
-        "@commitlint/config-conventional": "^17.2.0",
+        "@commitlint/config-conventional": "^17.3.0",
         "@commitlint/cz-commitlint": "^17.2.0",
         "@tada5hi/eslint-config-vue-typescript": "^1.0.10",
         "@types/jest": "^29.2.2",
