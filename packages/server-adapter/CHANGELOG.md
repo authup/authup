@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.19](https://github.com/Tada5hi/authelion/compare/@authelion/server-adapter@0.3.18...@authelion/server-adapter@0.3.19) (2022-11-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @ebec/http from 0.0.4 to 0.1.0 ([016baa2](https://github.com/Tada5hi/authelion/commit/016baa22fd25390b0320e90d77a0fb870716c294))
+* **deps:** updated hapic-* ([e6bc7b9](https://github.com/Tada5hi/authelion/commit/e6bc7b9d388a4dda2d9f194a23b8ab37cf05e2b6))
+
+
+
+
+
 ## [0.3.18](https://github.com/Tada5hi/authelion/compare/@authelion/server-adapter@0.3.17...@authelion/server-adapter@0.3.18) (2022-11-21)
 
 

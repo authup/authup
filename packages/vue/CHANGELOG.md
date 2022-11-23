@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](https://github.com/Tada5hi/authelion/compare/@authelion/vue@1.1.0...@authelion/vue@1.1.1) (2022-11-23)
+
+**Note:** Version bump only for package @authelion/vue
+
+
+
+
+
 # [1.1.0](https://github.com/Tada5hi/authelion/compare/@authelion/vue@2.1.0-alpha.10...@authelion/vue@1.1.0) (2022-11-17)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.3.0...@authelion/ui@0.3.1) (2022-11-23)
+
+
+### Bug Fixes
+
+* **deps:** updated hapic-* ([e6bc7b9](https://github.com/tada5hi/authelion/commit/e6bc7b9d388a4dda2d9f194a23b8ab37cf05e2b6))
+
+
+
+
+
 # [0.3.0](https://github.com/tada5hi/authelion/compare/@authelion/ui@0.2.5...@authelion/ui@0.3.0) (2022-11-17)
 
 

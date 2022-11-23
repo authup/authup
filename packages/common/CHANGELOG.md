@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.4.0...@authelion/common@0.4.1) (2022-11-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @ebec/http from 0.0.4 to 0.1.0 ([016baa2](https://github.com/Tada5hi/authelion/commit/016baa22fd25390b0320e90d77a0fb870716c294))
+
+
+
+
+
 # [0.4.0](https://github.com/Tada5hi/authelion/compare/@authelion/common@0.3.16...@authelion/common@0.4.0) (2022-11-17)
 
 
