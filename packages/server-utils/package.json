@@ -48,7 +48,7 @@
         "@types/mkdirp": "^1.0.2"
     },
     "peerDependencies": {
-        "@authelion/common": "^0.x"
+        "@authelion/common": ">=0.4.2 <1.0.0"
     },
     "publishConfig": {
         "access": "public"
