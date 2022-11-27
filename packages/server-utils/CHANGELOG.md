@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.20](https://github.com/Tada5hi/authelion/compare/@authelion/server-utils@0.3.19...@authelion/server-utils@0.3.20) (2022-11-27)
+
+
+### Bug Fixes
+
+* bump typeorm-extension, rapiq & routup version ([e37b993](https://github.com/Tada5hi/authelion/commit/e37b993bfbf3d11b24c696d59f1382cc4379a72c))
+
+
+
+
+
 ## [0.3.19](https://github.com/Tada5hi/authelion/compare/@authelion/server-utils@0.3.18...@authelion/server-utils@0.3.19) (2022-11-23)
 
 **Note:** Version bump only for package @authelion/server-utils

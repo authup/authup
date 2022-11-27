@@ -1,6 +1,6 @@
 {
     "name": "@authelion/server-core",
-    "version": "0.3.26",
+    "version": "0.3.27",
     "description": "This package contains the core of backend server.",
     "main": "dist/index.js",
     "scripts": {
@@ -44,7 +44,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
-        "@authelion/server-utils": "^0.3.19",
+        "@authelion/server-utils": "^0.3.20",
         "@ebec/http": "^0.1.0",
         "@types/morgan": "^1.9.3",
         "@types/nodemailer": "^6.4.6",
@@ -75,7 +75,7 @@
         "typeorm-extension": ">=2.3.0 <3.0.0"
     },
     "devDependencies": {
-        "@authelion/common": "^0.4.1",
+        "@authelion/common": "^0.4.2",
         "@hapic/oauth2": "^0.2.0",
         "@routup/body": "^0.3.2",
         "@routup/cookie": "^0.2.2",

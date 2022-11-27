@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.27](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.26...@authelion/server@0.3.27) (2022-11-27)
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 7.6.2 to 8.0.0 ([0a0a3b4](https://github.com/Tada5hi/authelion/commit/0a0a3b4075c60864d55ac3e7f163b0c18c092e5a))
+
+
+
+
+
 ## [0.3.26](https://github.com/Tada5hi/authelion/compare/@authelion/server@0.3.25...@authelion/server@0.3.26) (2022-11-23)
 
 **Note:** Version bump only for package @authelion/server
