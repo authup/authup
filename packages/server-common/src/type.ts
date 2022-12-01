@@ -5,6 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './json-web-token';
-export * from './hash';
-export * from './key-pair';
+export type ObjectLiteral = Record<string, any>;
