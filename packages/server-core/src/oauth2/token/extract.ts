@@ -9,9 +9,9 @@ import {
     OAuth2TokenPayload,
     TokenError,
 } from '@authelion/common';
-import { decodeToken } from '@authelion/server-utils';
+import { decodeToken } from '@authelion/server-common';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity, verifyOAuth2TokenWithKey } from '../../domains';
+import { KeyEntity, verifyOAuth2TokenWithKey } from '@authelion/server-database';
 
 export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
     if (typeof token === 'undefined' || token === null) {

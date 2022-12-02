@@ -1,44 +1,25 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Arguments, Argv, CommandModule } from 'yargs';
-import {
-    resetCommand, useConfig,
-} from '@authelion/server-core';
+import { dropDatabase } from 'typeorm-extension';
+import { buildDataSourceOptions } from '../database';
+import { ResetCommandContext } from './type';
 
-import { buildDataSourceOptions } from '../database/utils';
+export async function resetCommand(context?: ResetCommandContext) {
+    context = context || {};
 
-interface ResetArguments extends Arguments {
-    root: string;
-}
-
-export class ResetCommand implements CommandModule {
-    command = 'reset';
-
-    describe = 'Reset the server.';
-
-    builder(args: Argv) {
-        return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
-            });
+    if (context.logger) {
+        context.logger.info('Executing database reset.');
     }
 
-    async handler(args: ResetArguments) {
-        await useConfig(args.root);
+    const options = context.dataSourceOptions || await buildDataSourceOptions();
+    await dropDatabase({ options });
 
-        const dataSourceOptions = await buildDataSourceOptions();
-
-        await resetCommand({
-            dataSourceOptions,
-        });
-
-        process.exit(0);
+    if (context.logger) {
+        context.logger.info('Executed database reset.');
     }
 }

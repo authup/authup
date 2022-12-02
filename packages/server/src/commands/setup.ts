@@ -1,89 +1,121 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Arguments, Argv, CommandModule } from 'yargs';
+import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
+import { DataSource } from 'typeorm';
+import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authelion/server-core';
 import {
-    setupCommand, useConfig,
-} from '@authelion/server-core';
+    DatabaseSeeder,
+    buildDataSourceOptions,
+    saveSeedResult,
+} from '@authelion/server-database';
+import { SetupCommandContext } from './type';
 
-import { DataSourceOptions } from 'typeorm';
-import { buildDataSourceOptions } from '../database/utils';
+export async function setupCommand(context?: SetupCommandContext) {
+    context = context || {};
 
-interface SetupArguments extends Arguments {
-    root: string;
-    database: boolean;
-    databaseSchema: boolean;
-    databaseSeed: boolean;
-    documentation: boolean;
-}
-
-export class SetupCommand implements CommandModule {
-    command = 'setup';
-
-    describe = 'Setup the server.';
-
-    // eslint-disable-next-line class-methods-use-this
-    builder(args: Argv) {
-        return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
-            })
-
-            .option('database', {
-                alias: 'db',
-                describe: 'Create database.',
-                type: 'boolean',
-            })
-
-            .option('databaseSchema', {
-                alias: 'db:schema',
-                describe: 'Setup the schema of database.',
-                type: 'boolean',
-            })
-
-            .option('databaseSeed', {
-                alias: 'db:seed',
-                describe: 'Seed database.',
-                type: 'boolean',
-            })
-
-            .option('documentation', {
-                alias: 'docs',
-                describe: 'Create swagger documentation.',
-                type: 'boolean',
-            });
+    if (
+        typeof context.database === 'undefined' &&
+        typeof context.databaseSeed === 'undefined' &&
+        typeof context.databaseSchema === 'undefined' &&
+        typeof context.documentation === 'undefined'
+    ) {
+        // eslint-disable-next-line no-multi-assign
+        context.database = context.databaseSeed = context.databaseSchema = context.documentation = true;
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async handler(args: SetupArguments) {
-        await useConfig(args.root);
+    const config = await useHTTPConfig();
 
-        const dataSourceOptions = await buildDataSourceOptions();
+    if (context.documentation) {
+        if (context.logger) {
+            context.logger.info('Generating documentation.');
+        }
 
-        if (process.env.NODE_ENV === 'test') {
-            Object.assign(dataSourceOptions, {
-                migrations: [],
-            } as DataSourceOptions);
+        await generateSwaggerDocumentation({
+            rootPath: config.get('rootPath'),
+            writableDirectoryPath: config.get('writableDirectoryPath'),
+            baseUrl: config.get('selfUrl'),
+        });
+
+        if (context.logger) {
+            context.logger.info('Generated documentation.');
+        }
+    }
+
+    if (context.database || context.databaseSchema || context.databaseSeed) {
+        /**
+         * Setup database with schema & seeder
+         */
+        const options = context.dataSourceOptions || await buildDataSourceOptions();
+
+        if (context.database) {
+            if (context.logger) {
+                context.logger.info('Creating database.');
+            }
+
+            await createDatabase({ options, synchronize: false });
+
+            if (context.logger) {
+                context.logger.info('Created database.');
+            }
+        }
+
+        const dataSource = new DataSource(options);
+        await dataSource.initialize();
+
+        try {
+            if (context.databaseSchema) {
+                if (context.logger) {
+                    context.logger.info('Execute schema setup.');
+                }
+
+                await setupDatabaseSchema(dataSource);
+
+                if (context.logger) {
+                    context.logger.info('Executed schema setup.');
+                }
+            }
+        } catch (e) {
+            if (context.logger) {
+                context.logger.fail('Setup of the database schema failed.');
+            }
+
+            throw e;
         }
 
         try {
-            await setupCommand({
-                dataSourceOptions,
-                ...args,
-            });
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            console.log(e);
+            if (context.databaseSeed) {
+                if (context.logger) {
+                    context.logger.info('Seeding database.');
+                }
 
-            process.exit(1);
+                const seeder = new DatabaseSeeder({
+                    adminPasswordReset: true,
+                    robotSecretReset: true,
+                });
+
+                const seederData = await seeder.run(dataSource);
+
+                if (context.logger) {
+                    context.logger.info('Seeded database.');
+
+                    if (seederData.robot) {
+                        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+                    }
+                }
+            }
+        } catch (e) {
+            if (context.logger) {
+                context.logger.fail('Seeding the database failed.');
+            }
+
+            throw e;
         }
 
-        process.exit(0);
+        await dataSource.destroy();
     }
 }

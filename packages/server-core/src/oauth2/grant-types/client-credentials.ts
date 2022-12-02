@@ -11,19 +11,19 @@ import {
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import { Request } from 'routup';
+import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { OAuth2ClientEntity } from '@authelion/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { OAuth2BearerTokenResponse } from '../response';
-import { OAuth2ClientEntity } from '../../domains';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }), // todo: check if present
             scope: OAuth2Scope.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
@@ -35,7 +35,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
+            accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
 

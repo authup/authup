@@ -6,6 +6,7 @@
  */
 
 export * from './builder';
+export * from './cleaner';
 export * from './token';
 export * from './grant-types';
 export * from './openid';

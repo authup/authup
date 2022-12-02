@@ -6,21 +6,22 @@
  */
 
 import { OAuth2TokenPayload } from '@authelion/common';
-import { Config } from '../../config';
-import { OAuth2RefreshTokenEntity } from '../../domains';
+import { Config } from '@authelion/server-common';
+import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
+import { Options, OptionsInput, useConfig } from '../../config';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
 import { OAuth2RefreshTokenCache } from '../cache';
 import { AccessTokenIssueContext } from './type';
 
 export abstract class AbstractGrant {
-    protected config : Config;
+    protected config : Config<Options, OptionsInput>;
 
     protected refreshTokenCache : OAuth2RefreshTokenCache;
 
     // -----------------------------------------------------
 
-    constructor(config: Config) {
-        this.config = config;
+    constructor() {
+        this.config = useConfig();
 
         this.refreshTokenCache = new OAuth2RefreshTokenCache();
     }
@@ -29,8 +30,8 @@ export abstract class AbstractGrant {
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<Partial<OAuth2TokenPayload>> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            selfUrl: this.config.selfUrl,
-            maxAge: this.config.tokenMaxAgeAccessToken,
+            selfUrl: this.config.get('selfUrl'),
+            maxAge: this.config.get('tokenMaxAgeAccessToken'),
         });
 
         return tokenBuilder.create({
@@ -45,7 +46,7 @@ export abstract class AbstractGrant {
 
     protected async issueRefreshToken(accessToken: Partial<OAuth2TokenPayload>) : Promise<OAuth2RefreshTokenEntity> {
         const tokenBuilder = new Oauth2RefreshTokenBuilder({
-            maxAge: this.config.tokenMaxAgeRefreshToken,
+            maxAge: this.config.get('tokenMaxAgeRefreshToken'),
         });
 
         const token = await tokenBuilder.create({ accessToken });

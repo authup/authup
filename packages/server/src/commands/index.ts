@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './migration-generate';
-export * from './migration-revert';
-export * from './migration-status';
+export * from './migration';
 export * from './reset';
 export * from './setup';
 export * from './start';
+export * from './type';
 export * from './upgrade';

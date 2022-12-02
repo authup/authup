@@ -7,7 +7,7 @@
 
 import path from 'path';
 import { DataSourceOptions } from 'typeorm';
-import { buildDataSourceOptions as _buildDataSourceOptions } from '@authelion/server-core';
+import { buildDataSourceOptions as _buildDataSourceOptions } from '@authelion/server-database';
 
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const dataSourceOptions = await _buildDataSourceOptions();

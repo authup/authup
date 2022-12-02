@@ -6,7 +6,7 @@
  */
 
 import { OAuth2TokenPayload } from '@authelion/common';
-import { OAuth2RefreshTokenEntity } from '../../domains';
+import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
 
 export type OAuth2BearerResponseContext = {
     accessToken: Partial<OAuth2TokenPayload>,

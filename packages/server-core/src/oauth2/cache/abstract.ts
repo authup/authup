@@ -9,7 +9,6 @@ import {
     Cache, KeyPathID, hasClient, hasConfig, useClient,
 } from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authelion/common';
-import { CachePrefix } from '../../constants';
 
 export abstract class OAuth2AbstractCache<
     T extends Record<string, any> & { id: string, expires?: Date | string | number },

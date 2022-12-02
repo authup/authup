@@ -5,16 +5,75 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DatabaseOptions, DatabaseOptionsInput } from './database';
-import { HTTPMiddlewareOptions, HTTPMiddlewareOptionsInput } from './http/middleware';
-import { CoreOptions, CoreOptionsInput } from './core';
+export type Options = {
+    env: string,
+    rootPath: string,
 
-export type Config = CoreOptions & {
-    database: DatabaseOptions,
-    middleware: HTTPMiddlewareOptions
+    writableDirectoryPath: string,
+
+    /**
+     * default: 3010
+     */
+    port: number,
+
+    /**
+     * default: http://127.0.0.1:3010
+     */
+    selfUrl: string,
+    /**
+     * default: http://127.0.0.1:3010
+     */
+    webUrl: string,
+
+    /**
+     * use body middleware
+     *
+     * default: true
+     */
+    middlewareBody: boolean,
+    /**
+     * use cookie middleware
+     *
+     * default: true
+     */
+    middlewareCookie: boolean,
+    /**
+     * use swagger middleware
+     *
+     * default: true
+     */
+    middlewareSwagger: boolean,
+
+    /**
+     * default: 3600
+     */
+    tokenMaxAgeAccessToken: number,
+
+    /**
+     * default: 3600
+     */
+    tokenMaxAgeRefreshToken: number,
+
+    /**
+     * Enable registration.
+     *
+     * default: false
+     */
+    registration: boolean,
+
+    /**
+     * Email verification required for registration or login with identity provider.
+     *
+     * default: false
+     */
+    emailVerification: boolean,
+
+    /**
+     * Allow password reset?
+     *
+     * default: false
+     */
+    forgotPassword: boolean
 };
 
-export type ConfigInput = CoreOptionsInput & {
-    database?: DatabaseOptionsInput,
-    middleware?: HTTPMiddlewareOptionsInput
-};
+export type OptionsInput = Partial<Options>;

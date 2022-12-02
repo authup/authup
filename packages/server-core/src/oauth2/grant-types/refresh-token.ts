@@ -12,9 +12,9 @@ import {
 import { useRequestBody } from '@routup/body';
 import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
-import { OAuth2RefreshTokenEntity } from '../../domains';
 import { Grant } from './type';
 import { extractOAuth2TokenPayload } from '../token';
 
@@ -37,7 +37,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
+            accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
 

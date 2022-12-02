@@ -5,14 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './aggregators';
-export * from './commands';
 export * from './config';
-export * from './database';
-export * from './domains';
-export * from './http';
-export * from './logger';
+export * from './controllers';
+export * from './middleware';
+export * from './router';
+export * from './server';
+export * from './swagger';
 export * from './oauth2';
-export * from './smtp';
-export * from './types';
 export * from './utils';

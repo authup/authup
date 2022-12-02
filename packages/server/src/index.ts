@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
  * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
@@ -7,34 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import 'reflect-metadata';
-import yargs from 'yargs';
-import dotenv from 'dotenv';
-import {
-    MigrationGenerateCommand,
-    MigrationRevertCommand,
-    MigrationStatusCommand,
-    ResetCommand,
-    SetupCommand,
-    StartCommand,
-    UpgradeCommand,
-} from './commands';
-
-dotenv.config();
-
-// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
-yargs
-    .usage('Usage: $0 <command> [options]')
-    .demandCommand(1)
-    .command(new MigrationGenerateCommand())
-    .command(new MigrationRevertCommand())
-    .command(new MigrationStatusCommand())
-    .command(new ResetCommand())
-    .command(new SetupCommand())
-    .command(new StartCommand())
-    .command(new UpgradeCommand())
-    .strict()
-    .alias('v', 'version')
-    .help('h')
-    .alias('h', 'help')
-    .argv;
+export * from './cli/commands';
+export * from './commands';
+export * from './config';
+export * from './database';

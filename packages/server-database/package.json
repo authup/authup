@@ -1,0 +1,61 @@
+{
+    "name": "@authelion/server-database",
+    "version": "0.0.0",
+    "description": "Database related modules and classes.",
+    "main": "dist/index.js",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "npm run test -- --coverage"
+    },
+    "keywords": [
+        "auth",
+        "express",
+        "utils",
+        "jwt",
+        "token",
+        "sign",
+        "verify",
+        "password",
+        "hash",
+        "crypto"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/authelion.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/authelion/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/authelion#readme",
+    "dependencies": {
+        "smob": "^0.0.6",
+        "zod": "^3.19.1"
+    },
+    "devDependencies": {
+        "@authelion/common": "^0.4.2",
+        "@authelion/server-common": "^0.0.0",
+        "redis-extension": "^1.2.0",
+        "typeorm": "^0.3.10",
+        "typeorm-extension": "^2.3.0"
+    },
+    "peerDependencies": {
+        "@authelion/common": ">=0.4.2 <1.0.0",
+        "@authelion/server-common": "^0.x",
+        "redis-extension": ">=1.2.0 <2.0.0",
+        "typeorm": "~0.3.10",
+        "typeorm-extension": "^2.3.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

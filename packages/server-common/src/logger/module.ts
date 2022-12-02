@@ -9,8 +9,9 @@ import { Logger } from './type';
 
 let instance: Logger | undefined;
 
-export function useLogger() : Logger | undefined {
-    return instance;
+export function useLogger() : Logger {
+    // todo: create fake logger :)
+    return instance as Logger;
 }
 
 export function setLogger(logger: Logger) {

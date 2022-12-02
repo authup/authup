@@ -10,9 +10,9 @@ import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
 import { Request } from 'routup';
+import { OAuth2AuthorizationCodeEntity } from '@authelion/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { OAuth2AuthorizationCodeEntity } from '../../domains';
 import { OAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {
@@ -32,7 +32,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
+            accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
             idToken: authorizationCode.id_token,
         });

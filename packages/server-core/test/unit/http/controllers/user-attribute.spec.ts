@@ -6,8 +6,8 @@
  */
 
 import { UserAttribute } from '@authelion/common';
+import { DatabaseRootSeederResult } from '@authelion/server-database';
 import { useSuperTest } from '../../../utils/supertest';
-import { DatabaseRootSeederResult } from '../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
 describe('src/http/controllers/user-attribute', () => {

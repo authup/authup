@@ -6,12 +6,13 @@
  */
 
 import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authelion/common';
+import { DatabaseRootSeederResult } from '@authelion/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
-import { DatabaseRootSeederResult, useConfigSync } from '../../../../../src';
+import { useConfig } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
-    const config = useConfigSync();
+    const config = useConfig();
     const superTest = useSuperTest();
 
     let seederResponse : DatabaseRootSeederResult | undefined;
@@ -33,16 +34,16 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
 
         const data = response.body as OAuth2OpenIDProviderMetadata;
 
-        expect(data.issuer).toEqual(config.selfUrl);
-        expect(data.authorization_endpoint).toEqual(new URL('authorize', config.selfUrl).href);
-        expect(data.jwks_uri).toEqual(new URL('jwks', config.selfUrl).href);
+        expect(data.issuer).toEqual(config.get('selfUrl'));
+        expect(data.authorization_endpoint).toEqual(new URL('authorize', config.get('selfUrl')).href);
+        expect(data.jwks_uri).toEqual(new URL('jwks', config.get('selfUrl')).href);
         expect(data.response_type_supported).toEqual([
             OAuth2AuthorizationResponseType.CODE,
             OAuth2AuthorizationResponseType.TOKEN,
             OAuth2AuthorizationResponseType.NONE,
         ]);
-        expect(data.token_endpoint).toEqual(new URL('token', config.selfUrl).href);
-        expect(data.introspection_endpoint).toEqual(new URL('token/introspect', config.selfUrl).href);
-        expect(data.userinfo_endpoint).toEqual(new URL('users/@me', config.selfUrl).href);
+        expect(data.token_endpoint).toEqual(new URL('token', config.get('selfUrl')).href);
+        expect(data.introspection_endpoint).toEqual(new URL('token/introspect', config.get('selfUrl')).href);
+        expect(data.userinfo_endpoint).toEqual(new URL('users/@me', config.get('selfUrl')).href);
     });
 });

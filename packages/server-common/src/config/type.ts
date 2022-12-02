@@ -9,10 +9,24 @@ import { ObjectLiteral } from '../type';
 
 export type ConfigOptionTransformer<V> = (value: unknown) => V;
 
+export type ConfigOptionsTransformer<T extends ObjectLiteral> = {
+    [K in keyof T]?: ConfigOptionTransformer<T[K]>
+};
+
+export type ConfigOptionValidatorResult<V> = {
+    success: boolean,
+    data: V
+};
+
+export type ConfigOptionValidator<V> = (value: unknown) => unknown;
+
+export type ConfigOptionsValidators<T extends ObjectLiteral> = {
+    [K in keyof T]?: ConfigOptionValidator<T[K]>
+};
+
 export type ConfigContext<T extends ObjectLiteral> = {
     defaults: T,
     options?: Partial<T>,
-    transform: {
-        [K in keyof T]: ConfigOptionTransformer<T[K]>
-    }
+    transformers?: ConfigOptionsTransformer<T>,
+    validators?: ConfigOptionsValidators<T>
 };

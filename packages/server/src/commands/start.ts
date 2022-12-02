@@ -1,75 +1,117 @@
 /*
- * Copyright (c) 2021-2022.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Arguments, Argv, CommandModule } from 'yargs';
+import { URL } from 'url';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
 import {
-    startCommand, useConfig,
+    createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner, useConfig as useHTTPConfig,
 } from '@authelion/server-core';
-import { DataSourceOptions } from 'typeorm';
+import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '@authelion/server-database';
+import { setLogger } from '@authelion/server-common';
+import { StartCommandContext } from './type';
 
-import { createLogger, format, transports } from 'winston';
-import path from 'path';
-import { buildDataSourceOptions } from '../database/utils';
+export async function startCommand(context?: StartCommandContext) {
+    context = context || {};
 
-interface StartArguments extends Arguments {
-    root: string;
-}
+    const config = await useHTTPConfig();
 
-export class StartCommand implements CommandModule {
-    command = 'start';
-
-    describe = 'Start the server.';
-
-    builder(args: Argv) {
-        return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
-            });
+    if (context.logger) {
+        setLogger(context.logger);
     }
 
-    async handler(args: StartArguments) {
-        const config = await useConfig(args.root);
-
-        const dataSourceOptions = await buildDataSourceOptions();
-
-        if (process.env.NODE_ENV === 'test') {
-            Object.assign(dataSourceOptions, {
-                migrations: [],
-            } as DataSourceOptions);
-        }
-
-        const logger = createLogger({
-            format: format.combine(
-                format.timestamp(),
-                format.json(),
-            ),
-            transports: [
-                new transports.Console({
-                    level: 'debug',
-                }),
-                new transports.File({
-                    filename: path.join(config.writableDirectoryPath, 'error.log'),
-                    level: 'warn',
-                }),
-            ],
-        });
-
-        try {
-            await startCommand({
-                logger,
-                dataSourceOptions,
-            });
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            console.log(e);
-
-            process.exit(1);
-        }
+    if (context.logger) {
+        context.logger.info(`Environment: ${config.get('env')}`);
+        context.logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
+        context.logger.info(`URL: ${config.get('selfUrl')}`);
+        context.logger.info(`Docs-URL: ${new URL('docs', config.get('selfUrl')).href}`);
+        context.logger.info(`Web-URL: ${config.get('webUrl')}`);
     }
+
+    /*
+    HTTP Server & Express App
+    */
+
+    if (context.logger) {
+        context.logger.info('Initialise controllers & middlewares.');
+    }
+
+    if (context.logger) {
+        context.logger.info('Initialised controllers & middlewares.');
+    }
+
+    if (context.logger) {
+        context.logger.info('Generating documentation.');
+    }
+
+    await generateSwaggerDocumentation({
+        rootPath: config.get('rootPath'),
+        writableDirectoryPath: config.get('writableDirectoryPath'),
+        baseUrl: config.get('selfUrl'),
+    });
+
+    if (context.logger) {
+        context.logger.info('Generated documentation.');
+    }
+
+    const options = context.dataSourceOptions || await buildDataSourceOptions();
+
+    await createDatabase({ options, synchronize: false, ifNotExist: true });
+
+    Object.assign(options, {
+        logging: ['error'],
+    } as DataSourceOptions);
+
+    if (context.logger) {
+        context.logger.info('Establish database connection.');
+    }
+
+    const dataSource = new DataSource(options);
+    await dataSource.initialize();
+
+    setDataSource(dataSource);
+
+    if (context.logger) {
+        context.logger.info('Established database connection.');
+    }
+
+    if (context.logger) {
+        context.logger.info('Initialise database schema.');
+    }
+
+    await setupDatabaseSchema(dataSource);
+
+    if (context.logger) {
+        context.logger.info('Initialised database schema.');
+    }
+
+    const seeder = new DatabaseSeeder();
+    const seederData = await seeder.run(dataSource);
+
+    if (seederData.robot) {
+        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+    }
+
+    if (context.logger) {
+        context.logger.info('Starting oauth2 cleaner.');
+    }
+
+    Promise.resolve()
+        .then(runOAuth2Cleaner);
+
+    if (context.logger) {
+        context.logger.info('Started oauth2 cleaner.');
+    }
+
+    const router = createRouter();
+    const httpServer = createHttpServer({ router });
+    httpServer.listen(config.get('port'), '0.0.0.0', () => {
+        if (context.logger) {
+            context.logger.info('Startup completed.');
+        }
+    });
 }

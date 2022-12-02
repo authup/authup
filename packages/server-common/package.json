@@ -38,7 +38,9 @@
     },
     "homepage": "https://github.com/Tada5hi/authelion#readme",
     "dependencies": {
+        "@types/nodemailer": "^6.4.6",
         "bcrypt": "^5.1.0",
+        "nodemailer": "^6.8.0",
         "jsonwebtoken": "^8.5.1"
     },
     "devDependencies": {

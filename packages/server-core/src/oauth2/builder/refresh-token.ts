@@ -7,7 +7,7 @@
 
 import { OAuth2SubKind } from '@authelion/common';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../domains';
+import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
 import { OAuth2RefreshTokenBuilderContext, OAuth2RefreshTokenBuilderCreateContext } from './type';
 import { OAuth2RefreshTokenCache } from '../cache';
 

@@ -6,8 +6,9 @@
  */
 
 import { MASTER_REALM_ID, User } from '@authelion/common';
+import { DatabaseRootSeederResult } from '@authelion/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
-import { DatabaseRootSeederResult, setConfig } from '../../../../../src';
+import { setConfig } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
@@ -43,7 +44,6 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
         setConfig({
             registration: true,
             emailVerification: true,
-            smtp: true,
         });
 
         response = await superTest

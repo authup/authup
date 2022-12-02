@@ -8,7 +8,7 @@
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, Realm, User,
 } from '@authelion/common';
-import { Request, useRequestEnv } from 'routup';
+import { Request, getRequestIp, useRequestEnv } from 'routup';
 import { AbstractGrant } from './abstract';
 import {
     Grant,
@@ -18,7 +18,7 @@ import { OAuth2BearerTokenResponse } from '../response';
 export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }), // todo: check if present
             scope: OAuth2Scope.GLOBAL,
             realmId: useRequestEnv(request, 'realmId') as Realm['id'],
             sub: useRequestEnv(request, 'userId') as User['id'],
@@ -29,7 +29,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
 
         const response = new OAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
+            accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
 

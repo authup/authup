@@ -12,8 +12,8 @@ import {
 } from '@authelion/common';
 import { randomBytes } from 'crypto';
 import { useDataSource } from 'typeorm-extension';
+import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '@authelion/server-database';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../domains';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { resolveOpenIdClaimsFromSubEntity } from '../openid';
 import { loadOAuth2SubEntity } from '../token';

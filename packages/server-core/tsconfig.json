@@ -3,7 +3,8 @@
     "compilerOptions": {
         "paths": {
             "@authelion/common": ["./packages/common/src"],
-            "@authelion/server-utils": ["./packages/server-utils/src"]
+            "@authelion/server-common": ["./packages/server-common/src"],
+            "@authelion/server-database": ["./packages/server-database/src"],
         }
     }
 }
