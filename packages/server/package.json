@@ -43,8 +43,8 @@
     "dependencies": {
         "@authelion/common": "^0.4.2",
         "@authelion/server-common": "^0.0.0",
-        "@authelion/server-core": "^0.3.27",
         "@authelion/server-database": "^0.0.0",
+        "@authelion/server-http": "^0.0.0",
         "@trapi/swagger": "^0.3.6",
         "better-sqlite3": "^8.0.0",
         "change-case": "^4.1.2",
@@ -56,8 +56,8 @@
         "reflect-metadata": "^0.1.13",
         "pascal-case": "^3.1.2",
         "smob": "^0.0.6",
-        "typeorm": "^0.3.9",
-        "typeorm-extension": "^2.2.13",
+        "typeorm": "^0.3.10",
+        "typeorm-extension": "^2.3.0",
         "winston": "^3.8.2",
         "yargs": "^17.6.2"
     },

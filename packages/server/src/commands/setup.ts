@@ -7,7 +7,7 @@
 
 import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
-import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authelion/server-core';
+import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authelion/server-http';
 import {
     DatabaseSeeder,
     buildDataSourceOptions,

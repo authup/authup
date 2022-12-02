@@ -2,8 +2,9 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authelion/server-core": ["./packages/server-core/src"],
-            "@authelion/server-utils": ["./packages/server-utils/src"],
+            "@authelion/server-common": ["./packages/server-common/src"],
+            "@authelion/server-database": ["./packages/server-database/src"],
+            "@authelion/server-http": ["./packages/server-http/src"],
             "@authelion/common": ["./packages/common/src"]
         }
     }

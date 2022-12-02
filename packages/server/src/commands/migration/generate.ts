@@ -9,7 +9,7 @@ import { pascalCase } from 'pascal-case';
 import path from 'path';
 import fs from 'fs';
 import { MigrationGenerateCommand } from 'typeorm/commands/MigrationGenerateCommand';
-import { useConfig as useHTTPConfig } from '@authelion/server-core';
+import { useConfig as useHTTPConfig } from '@authelion/server-http';
 import { MigrationGenerateCommandContext } from '../type';
 
 class GenerateCommand extends MigrationGenerateCommand {
