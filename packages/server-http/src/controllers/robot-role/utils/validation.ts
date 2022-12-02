@@ -7,8 +7,9 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { isPermittedForResourceRealm } from '@authelion/common';
+import { isRealmResourceWritable } from '@authelion/common';
 import { Request } from 'routup';
+import { RobotEntity, RobotRoleEntity, RoleEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -18,7 +19,6 @@ import {
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { RobotEntity, RobotRoleEntity, RoleEntity } from '@authelion/server-database';
 
 export async function runRobotRoleValidation(
     req: Request,
@@ -58,7 +58,7 @@ export async function runRobotRoleValidation(
         result.relation.role &&
         result.relation.role.realm_id
     ) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
@@ -71,7 +71,7 @@ export async function runRobotRoleValidation(
     });
 
     if (result.relation.robot) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }
 

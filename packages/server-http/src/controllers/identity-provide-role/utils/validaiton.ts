@@ -6,9 +6,10 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isPermittedForResourceRealm } from '@authelion/common';
+import { isRealmResourceWritable } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
+import { IdentityProviderEntity, IdentityProviderRoleEntity, RoleEntity } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 import { useRequestEnv } from '../../../utils/env';
 import {
@@ -19,7 +20,6 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { IdentityProviderEntity, IdentityProviderRoleEntity, RoleEntity } from '@authelion/server-database';
 
 export async function runIdentityProviderRoleValidation(
     req: Request,
@@ -67,7 +67,7 @@ export async function runIdentityProviderRoleValidation(
         result.relation.role &&
         result.relation.role.realm_id
     ) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 
@@ -80,7 +80,7 @@ export async function runIdentityProviderRoleValidation(
     });
 
     if (result.relation.provider) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.provider.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.provider.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('provider_id'));
         }
 

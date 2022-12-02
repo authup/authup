@@ -7,15 +7,15 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionID, isPermittedForResourceRealm,
+    PermissionID, isRealmResourceWritable,
 } from '@authelion/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { IdentityProviderRoleEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runIdentityProviderRoleValidation } from '../utils';
-import { IdentityProviderRoleEntity } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -40,8 +40,8 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     if (
-        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
-        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.role_realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
+        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }

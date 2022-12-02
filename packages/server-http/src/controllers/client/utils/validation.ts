@@ -6,9 +6,10 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isPermittedForResourceRealm } from '@authelion/common';
+import { isRealmResourceWritable } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
+import { OAuth2ClientEntity, RealmEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -18,7 +19,6 @@ import {
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { OAuth2ClientEntity, RealmEntity } from '@authelion/server-database';
 
 export async function runOauth2ClientValidation(
     req: Request,
@@ -98,7 +98,7 @@ export async function runOauth2ClientValidation(
     // ----------------------------------------------
 
     if (result.relation.realm) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }

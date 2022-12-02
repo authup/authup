@@ -9,6 +9,7 @@ import { Config } from '@authelion/server-common';
 import path from 'path';
 import * as process from 'process';
 import { merge } from 'smob';
+import zod from 'zod';
 import { Options, OptionsInput } from './type';
 import { extractOptionsFromEnv } from './utils';
 
@@ -28,6 +29,17 @@ export function useConfig() : Config<Options, OptionsInput> {
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
             env: process.env.NODE_ENV || 'development',
+        },
+        validators: {
+            env: (value) => zod.string().safeParse(value),
+            rootPath: (value) => zod.string().safeParse(value),
+            writableDirectoryPath: (value) => zod.string().safeParse(value),
+            adminUsername: (value) => zod.string().min(3).max(128).safeParse(value),
+            adminPassword: (value) => zod.string().min(3).max(256).safeParse(value),
+            adminPasswordReset: (value) => zod.boolean().safeParse(value),
+            robotEnabled: (value) => zod.boolean().safeParse(value),
+            robotSecret: (value) => zod.string().min(3).max(256).safeParse(value),
+            robotSecretReset: (value) => zod.boolean().safeParse(value),
         },
         transformers: {
             permissions: (value) => {

@@ -6,24 +6,61 @@
  */
 
 import { MASTER_REALM_ID } from './constants';
+
 /**
- * Check if owner realm is permitted for resource realm.
+ * Check if a realm resource is writable.
  *
  * @param realmId
  * @param resourceRealmId
  */
-export function isPermittedForResourceRealm(
+export function isRealmResourceWritable(
     realmId?: string,
     resourceRealmId?: string | string[],
 ) : boolean {
+    if (Array.isArray(resourceRealmId)) {
+        for (let i = 0; i < resourceRealmId.length; i++) {
+            if (isRealmResourceWritable(realmId, resourceRealmId[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     if (!realmId) return false;
 
-    if (!resourceRealmId) return true;
+    return realmId === MASTER_REALM_ID ||
+        realmId === resourceRealmId;
+}
 
-    if (realmId === MASTER_REALM_ID) return true;
+/**
+ * Check if realm resource is readable.
+ *
+ * @param realmId
+ * @param resourceRealmId
+ */
+export function isRealmResourceReadable(
+    realmId?: string,
+    resourceRealmId?: string | string[],
+) : boolean {
+    if (Array.isArray(resourceRealmId)) {
+        if (resourceRealmId.length === 0) {
+            return true;
+        }
 
-    return Array.isArray(resourceRealmId) ?
-        resourceRealmId.some((id) => id === realmId) :
+        for (let i = 0; i < resourceRealmId.length; i++) {
+            if (isRealmResourceReadable(realmId, resourceRealmId[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    if (!realmId) return false;
+
+    return !resourceRealmId ||
+        realmId === MASTER_REALM_ID ||
         realmId === resourceRealmId;
 }
 

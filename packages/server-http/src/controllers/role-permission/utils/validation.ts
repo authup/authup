@@ -7,8 +7,9 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import { Request } from 'routup';
+import { PermissionEntity, RoleEntity, RolePermissionEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -19,7 +20,6 @@ import {
     matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { PermissionEntity, RoleEntity, RolePermissionEntity } from '@authelion/server-database';
 
 export async function runRolePermissionValidation(
     req: Request,
@@ -78,7 +78,7 @@ export async function runRolePermissionValidation(
     });
 
     if (result.relation.role) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
         }
 

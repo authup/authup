@@ -7,8 +7,9 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import { Request } from 'routup';
+import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -19,7 +20,6 @@ import {
     matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authelion/server-database';
 
 export async function runRobotPermissionValidation(
     req: Request,
@@ -82,7 +82,7 @@ export async function runRobotPermissionValidation(
 
     if (result.relation.robot) {
         if (
-            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)
         ) {
             throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
         }

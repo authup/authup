@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -32,7 +32,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 

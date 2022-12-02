@@ -38,9 +38,12 @@ export function useConfig() : Config<Options, OptionsInput> {
             forgotPassword: false,
         },
         validators: {
-            port: (value) => zod.number().safeParse(value),
+            port: (value) => zod.number().nonnegative().safeParse(value),
             selfUrl: (value) => zod.string().url().safeParse(value),
             webUrl: (value) => zod.string().url().safeParse(value),
+            env: (value) => zod.string().safeParse(value),
+            rootPath: (value) => zod.string().safeParse(value),
+            writableDirectoryPath: (value) => zod.string().safeParse(value),
             middlewareBody: (value) => zod.boolean().safeParse(value),
             middlewareCookie: (value) => zod.boolean().safeParse(value),
             middlewareSwagger: (value) => zod.boolean().safeParse(value),
@@ -56,7 +59,6 @@ export function useConfig() : Config<Options, OptionsInput> {
 }
 
 export function setConfig(options: OptionsInput) {
-    // get env values :)
     options = merge({}, extractOptionsFromEnv(), options);
 
     const config = useConfig();

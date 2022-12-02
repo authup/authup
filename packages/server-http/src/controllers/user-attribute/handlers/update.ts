@@ -6,14 +6,14 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import {
     Request, Response, send, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { UserAttributeEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserAttributeValidation } from '../utils';
-import { UserAttributeEntity } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -39,7 +39,7 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
     ) {
         if (
             !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
-            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to update an attribute for the given user...');
         }

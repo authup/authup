@@ -6,14 +6,14 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import {
     Request, Response, send, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { UserRepository } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserValidation } from '../utils';
-import { UserRepository } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -49,7 +49,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(env.realmId, entity.realm_id)) {
+    if (!isRealmResourceWritable(env.realmId, entity.realm_id)) {
         throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
     }
 

@@ -14,8 +14,11 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isPermittedForResourceRealm } from '@authelion/common';
-import { UserAttributeEntity, onlyRealmPermittedQueryResources } from '@authelion/server-database';
+import { isRealmResourceReadable } from '@authelion/common';
+import {
+    UserAttributeEntity,
+    onlyRealmReadableQueryResources,
+} from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -25,7 +28,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     const query = repository.createQueryBuilder('userAttribute');
 
     query.where(new Brackets((qb) => {
-        onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
+        onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
 
         qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
     }));
@@ -75,7 +78,7 @@ export async function getOneUserAttributeRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.realm_id) &&
+        !isRealmResourceReadable(useRequestEnv(req, 'realmId'), result.realm_id) &&
         useRequestEnv(req, 'userId') !== result.user_id
     ) {
         throw new ForbiddenError('You are not authorized to read this user attribute...');

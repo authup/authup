@@ -6,14 +6,14 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isPermittedForResourceRealm } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authelion/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { OAuth2ClientEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ClientValidation } from '../utils';
-import { OAuth2ClientEntity } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateClientRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -37,7 +37,7 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
         throw new NotFoundError();
     }
 
-    if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), entity.realm_id)) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.realm_id)) {
         throw new ForbiddenError();
     }
 

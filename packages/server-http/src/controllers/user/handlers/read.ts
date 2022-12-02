@@ -17,7 +17,7 @@ import {
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
-import { UserEntity, UserRepository, onlyRealmPermittedQueryResources } from '@authelion/server-database';
+import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authelion/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils/env';
 
@@ -52,7 +52,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
-    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
@@ -111,7 +111,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         }));
     }
 
-    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
 
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',

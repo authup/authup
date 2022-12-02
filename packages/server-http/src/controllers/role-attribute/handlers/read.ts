@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isPermittedForResourceRealm } from '@authelion/common';
-import { RoleAttributeEntity, onlyRealmPermittedQueryResources } from '@authelion/server-database';
+import { isRealmResourceReadable } from '@authelion/common';
+import { RoleAttributeEntity, onlyRealmReadableQueryResources } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,7 +23,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('roleAttribute');
 
-    onlyRealmPermittedQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',
@@ -69,7 +69,7 @@ export async function getOneRoleAttributeRouteHandler(
     }
 
     if (
-        !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.realm_id)
+        !isRealmResourceReadable(useRequestEnv(req, 'realmId'), result.realm_id)
     ) {
         throw new ForbiddenError('You are not authorized to read this role attribute...');
     }

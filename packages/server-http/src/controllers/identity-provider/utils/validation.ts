@@ -10,7 +10,7 @@ import { check, validationResult } from 'express-validator';
 import {
     IdentityProviderProtocol,
     IdentityProviderProtocolConfig,
-    isPermittedForResourceRealm,
+    isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authelion/common';
 import { BadRequestError } from '@ebec/http';
@@ -130,7 +130,7 @@ export async function runOauth2ProviderValidation(
     });
 
     if (result.relation.realm) {
-        if (!isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
             throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
         }
     }

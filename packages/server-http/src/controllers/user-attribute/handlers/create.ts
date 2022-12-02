@@ -8,15 +8,15 @@
 import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
-    isPermittedForResourceRealm,
+    isRealmResourceWritable,
 } from '@authelion/common';
 import {
     Request, Response, sendAccepted, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { UserAttributeEntity } from '@authelion/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserAttributeValidation } from '../utils';
-import { UserAttributeEntity } from '@authelion/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -30,7 +30,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
     ) {
         if (
             !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
-            !isPermittedForResourceRealm(useRequestEnv(req, 'realmId'), result.data.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');
         }
