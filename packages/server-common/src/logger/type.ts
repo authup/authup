@@ -6,9 +6,8 @@
  */
 
 export type LeveledLogMethod = {
-    (message: string, ...meta: any[]): Logger;
-    (message: any): Logger;
-    [key: string]: any
+    (message: string, ...meta: any[]) : any;
+    (message: any) : any;
 };
 
 export type Logger = {

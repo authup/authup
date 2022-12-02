@@ -52,10 +52,8 @@ export function errorMiddleware(
         process.env.NODE_ENV === 'test'
     ) {
         const isInspected = extendsBaseError(error);
-        const logger = useLogger();
-        if (logger) {
-            logger.error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
-        }
+
+        useLogger().error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
     }
 
     if (baseError.getOption('decorateMessage')) {

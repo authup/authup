@@ -43,10 +43,7 @@ export function registerMiddlewares(
 
             router.use('/docs', createUIHandler(JSON.parse(swaggerDocument)));
         } else {
-            const logger = useLogger();
-            if (logger) {
-                logger.warn(`Swagger file ( ${swaggerDocumentPath} ) does not exist.`);
-            }
+            useLogger().warn(`Swagger file ( ${swaggerDocumentPath} ) does not exist.`);
         }
     }
 }

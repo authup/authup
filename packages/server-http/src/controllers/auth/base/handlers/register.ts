@@ -100,10 +100,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
                 `,
         });
 
-        const logger = useLogger();
-        if (logger) {
-            useLogger().debug(`Message #${info.messageId} has been sent!`);
-        }
+        useLogger().debug(`Message #${info.messageId} has been sent!`);
     }
 
     return sendAccepted(res, entity);

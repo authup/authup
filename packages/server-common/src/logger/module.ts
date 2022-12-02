@@ -5,13 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { VoidLogger } from './presets';
 import { Logger } from './type';
 
 let instance: Logger | undefined;
 
 export function useLogger() : Logger {
-    // todo: create fake logger :)
-    return instance as Logger;
+    if (typeof instance !== 'undefined') {
+        return instance;
+    }
+
+    instance = new VoidLogger();
+
+    return instance;
 }
 
 export function setLogger(logger: Logger) {

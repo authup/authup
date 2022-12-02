@@ -10,10 +10,8 @@ import { useLogger } from '@authelion/server-common';
 import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '@authelion/server-database';
 
 export async function cleanUp(log?: boolean) {
-    const logger = useLogger();
-
-    if (logger && log) {
-        logger.debug('Checking for expired access-tokens, refresh-tokens & authorization-codes...');
+    if (log) {
+        useLogger().debug('Checking for expired access-tokens, refresh-tokens & authorization-codes...');
     }
 
     // ------------------------------------------------------------------------------
