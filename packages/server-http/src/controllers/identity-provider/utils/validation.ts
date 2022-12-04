@@ -101,25 +101,35 @@ export async function runOauth2ProviderValidation(
 
     // ----------------------------------------------
 
-    switch (result.data.protocol) {
-        case IdentityProviderProtocol.OAUTH2: {
-            result.meta.attributes = validateOAuth2IdentityProviderProtocol(
-                extractOAuth2IdentityProviderProtocolAttributes(useRequestBody(req)),
-            );
-            break;
+    try {
+        switch (result.data.protocol) {
+            case IdentityProviderProtocol.OAUTH2: {
+                result.meta.attributes = validateOAuth2IdentityProviderProtocol(
+                    extractOAuth2IdentityProviderProtocolAttributes(useRequestBody(req)),
+                );
+                break;
+            }
+            case IdentityProviderProtocol.OIDC: {
+                result.meta.attributes = validateOidcIdentityProviderProtocol(
+                    extractOidcConnectIdentityProviderProtocolAttributes(useRequestBody(req)),
+                );
+                break;
+            }
+            case IdentityProviderProtocol.LDAP: {
+                result.meta.attributes = validateLdapIdentityProviderProtocol(
+                    extractLdapIdentityProviderProtocolAttributes(useRequestBody(req)),
+                );
+                break;
+            }
         }
-        case IdentityProviderProtocol.OIDC: {
-            result.meta.attributes = validateOidcIdentityProviderProtocol(
-                extractOidcConnectIdentityProviderProtocolAttributes(useRequestBody(req)),
-            );
-            break;
+    } catch (e) {
+        if (e instanceof Error) {
+            throw new BadRequestError(e.message, {
+                previous: e,
+            });
         }
-        case IdentityProviderProtocol.LDAP: {
-            result.meta.attributes = validateLdapIdentityProviderProtocol(
-                extractLdapIdentityProviderProtocolAttributes(useRequestBody(req)),
-            );
-            break;
-        }
+
+        throw e;
     }
 
     // ----------------------------------------------

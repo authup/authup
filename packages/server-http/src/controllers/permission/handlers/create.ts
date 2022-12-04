@@ -12,9 +12,9 @@ import {
 } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { PermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { RequestValidationError } from '../../../validation';
-import { PermissionEntity } from '@authup/server-database';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'ability');

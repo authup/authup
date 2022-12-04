@@ -59,7 +59,8 @@
         "typeorm": "^0.3.10",
         "typeorm-extension": "^2.3.0",
         "winston": "^3.8.2",
-        "yargs": "^17.6.2"
+        "yargs": "^17.6.2",
+        "zod": "^3.19.1"
     },
     "devDependencies": {
         "@types/change-case": "^2.3.1",

@@ -9,13 +9,13 @@ import { check, validationResult } from 'express-validator';
 import { isValidRealmName } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
+import { RealmEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 import {
     ExpressValidationResult,
     RequestValidationError,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
-import { RealmEntity } from '@authup/server-database';
 
 export async function runRealmValidation(
     req: Request,

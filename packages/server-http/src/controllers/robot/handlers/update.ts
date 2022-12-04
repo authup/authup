@@ -11,9 +11,9 @@ import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { RobotRepository, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotValidation } from '../utils';
-import { RobotRepository, useRobotEventEmitter } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {

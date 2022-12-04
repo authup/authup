@@ -7,6 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { Request } from 'routup';
+import { UserAttributeEntity, UserEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -15,7 +16,6 @@ import {
     matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { UserAttributeEntity, UserEntity } from '@authup/server-database';
 
 export async function runUserAttributeValidation(
     req: Request,

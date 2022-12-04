@@ -8,8 +8,7 @@ on:
         branches:
             - '**'
     pull_request:
-        branches:
-            - '**'
+        types: [ opened, synchronize ]
 
 env:
     PRIMARY_NODE_VERSION: 18

@@ -13,9 +13,9 @@ import {
     Request, Response, sendAccepted, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRealmValidation } from '../utils';
-import { RealmEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {

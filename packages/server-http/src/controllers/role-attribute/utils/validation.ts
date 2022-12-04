@@ -7,13 +7,13 @@
 
 import { check, validationResult } from 'express-validator';
 import { Request } from 'routup';
+import { RoleAttributeEntity, RoleEntity } from '@authup/server-database';
 import {
     ExpressValidationResult,
     RequestValidationError, extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RoleAttributeEntity, RoleEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function runRoleAttributeValidation(

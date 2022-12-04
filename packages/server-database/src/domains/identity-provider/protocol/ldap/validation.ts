@@ -6,10 +6,9 @@
  */
 
 import { LdapIdentityProvider } from '@authup/common';
-import { NotImplementedError } from '@ebec/http';
 
 export function validateLdapIdentityProviderProtocol(
     entity: Partial<LdapIdentityProvider>,
 ) : LdapIdentityProvider {
-    throw new NotImplementedError();
+    throw new Error('Not implemented');
 }

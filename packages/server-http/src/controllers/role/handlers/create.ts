@@ -11,9 +11,9 @@ import {
 } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { RoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRoleValidation } from '../utils';
-import { RoleEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {

@@ -13,9 +13,9 @@ import {
     Request, Response, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { OAuth2ClientEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ClientValidation } from '../utils';
-import { OAuth2ClientEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createClientRouteHandler(req: Request, res: Response) : Promise<any> {

@@ -7,7 +7,6 @@
 
 import { OAuth2IdentityProviderBase } from '@authup/common';
 import zod from 'zod';
-import { BadRequestError } from '@ebec/http';
 
 const validationSchema = zod.object({
     token_url: zod.string().url(),
@@ -26,7 +25,7 @@ export function validateOAuth2IdentityProviderProtocol<
 >(entity: T) : T {
     const result = validationSchema.safeParse(entity);
     if (result.success === false) {
-        throw new BadRequestError(result.error.message);
+        throw result.error;
     }
 
     return entity;

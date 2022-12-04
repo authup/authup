@@ -12,11 +12,11 @@ import {
     Request, Response, send, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { useRequestEnv } from '../../../utils/env';
-import { runRobotValidation } from '../utils';
 import {
     RobotRepository, useRobotEventEmitter,
 } from '@authup/server-database';
+import { useRequestEnv } from '../../../utils/env';
+import { runRobotValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
