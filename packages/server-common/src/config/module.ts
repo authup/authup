@@ -57,11 +57,10 @@ export class Config<
             try {
                 const output = validator(value);
 
-                if (
-                    isConfigOptionValidatorResult<O[K]>(output) &&
-                    output.success
-                ) {
-                    this.options[key] = output.data;
+                if (isConfigOptionValidatorResult<O[K]>(output)) {
+                    if (output.success) {
+                        this.options[key] = output.data;
+                    }
                 } else {
                     this.options[key] = value;
                 }

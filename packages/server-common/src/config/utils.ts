@@ -12,5 +12,8 @@ export function isConfigOptionValidatorResult<V>(value: unknown) : value is Conf
     return isObject(value) &&
         hasOwnProperty(value, 'success') &&
         typeof value.success === 'boolean' &&
-        hasOwnProperty(value, 'data');
+        (
+            hasOwnProperty(value, 'data') ||
+            hasOwnProperty(value, 'error')
+        );
 }
