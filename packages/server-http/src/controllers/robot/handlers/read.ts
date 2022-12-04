@@ -18,8 +18,8 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     MASTER_REALM_ID,
     OAuth2SubKind, PermissionID, isSelfId,
-} from '@authelion/common';
-import { RobotEntity } from '@authelion/server-database';
+} from '@authup/common';
+import { RobotEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils/env';
 

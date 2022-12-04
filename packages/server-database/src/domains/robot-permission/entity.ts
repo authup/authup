@@ -16,7 +16,7 @@ import {
 } from 'typeorm';
 import {
     Permission, Realm, Robot, RobotPermission,
-} from '@authelion/common';
+} from '@authup/common';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';

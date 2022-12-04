@@ -7,9 +7,9 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authelion/common';
+import { isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
-import { RobotEntity, RobotRoleEntity, RoleEntity } from '@authelion/server-database';
+import { RobotEntity, RobotRoleEntity, RoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,

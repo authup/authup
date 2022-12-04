@@ -8,14 +8,14 @@
 import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, send, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ProviderValidation } from '../utils';
-import { IdentityProviderRepository } from '@authelion/server-database';
+import { IdentityProviderRepository } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {

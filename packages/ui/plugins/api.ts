@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, HTTPClient, hasOwnProperty } from '@authelion/common';
-import install from '@authelion/vue';
+import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/common';
+import install from '@authup/vue';
 import {
     Config, isClientError,
 } from 'hapic';

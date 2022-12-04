@@ -16,7 +16,7 @@ import {
 } from 'typeorm';
 import {
     Permission, Realm, User, UserPermission,
-} from '@authelion/common';
+} from '@authup/common';
 import { UserEntity } from '../user/entity';
 import { PermissionEntity } from '../permission';
 import { RealmEntity } from '../realm';

@@ -14,7 +14,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { IdentityProviderRoleEntity } from '@authelion/server-database';
+import { IdentityProviderRoleEntity } from '@authup/server-database';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

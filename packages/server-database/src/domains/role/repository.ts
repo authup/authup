@@ -13,7 +13,7 @@ import {
     Role,
     buildPermissionDescriptorFromRelation,
 
-} from '@authelion/common';
+} from '@authup/common';
 import { buildKeyPath } from 'redis-extension';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';

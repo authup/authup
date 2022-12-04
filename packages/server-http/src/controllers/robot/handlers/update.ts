@@ -6,14 +6,14 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotValidation } from '../utils';
-import { RobotRepository, useRobotEventEmitter } from '@authelion/server-database';
+import { RobotRepository, useRobotEventEmitter } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {

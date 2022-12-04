@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Robot } from '@authelion/common';
+import { Robot } from '@authup/common';
 import { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';

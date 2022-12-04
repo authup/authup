@@ -12,7 +12,7 @@ import {
     PrimaryColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Realm } from '@authelion/common';
+import { Realm } from '@authup/common';
 
 @Entity({ name: 'auth_realms' })
 export class RealmEntity implements Realm {

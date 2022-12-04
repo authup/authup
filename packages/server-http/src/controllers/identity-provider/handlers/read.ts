@@ -14,8 +14,8 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authelion/common';
-import { IdentityProviderEntity, IdentityProviderRepository } from '@authelion/server-database';
+import { PermissionID } from '@authup/common';
+import { IdentityProviderEntity, IdentityProviderRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {

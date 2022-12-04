@@ -9,7 +9,7 @@ import {
     AbilityManager,
     CookieName, OAuth2SubKind,
     OAuth2TokenIntrospectionResponse,
-} from '@authelion/common';
+} from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { useRequestCookies } from '@routup/cookie';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';

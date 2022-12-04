@@ -14,7 +14,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Realm, User } from '@authelion/common';
+import { Realm, User } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_users' })

@@ -13,7 +13,7 @@ The controllers must be registered in the gap of the common- & error-[middleware
 ```typescript
 import {
     registerControllers
-} from "@authelion/server-core";
+} from "@authup/server-core";
 
 import { Router } from "routup";
 import path from "path";
@@ -41,7 +41,7 @@ router.listen(3010);
 ```typescript
 import {
     registerMiddlewares
-} from "@authelion/server-core";
+} from "@authup/server-core";
 
 import { Router } from "routup";
 import path from "path";
@@ -70,7 +70,7 @@ is required to define one, to handle errors thrown handlers (controllers & middl
 The error middleware can be registered like shown in the following code snippet.
 
 ```typescript
-import { errorMiddleware } from '@authelion/server-core';
+import { errorMiddleware } from '@authup/server-core';
 import { Router } from 'routup';
 
 const router = new Router();

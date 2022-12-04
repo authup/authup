@@ -12,7 +12,7 @@ import {
     IdentityProviderProtocolConfig,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
-} from '@authelion/common';
+} from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import {
@@ -23,7 +23,7 @@ import {
     extractOidcConnectIdentityProviderProtocolAttributes,
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol, validateOidcIdentityProviderProtocol,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,

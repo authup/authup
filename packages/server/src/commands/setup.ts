@@ -7,12 +7,12 @@
 
 import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
-import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authelion/server-http';
+import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authup/server-http';
 import {
     DatabaseSeeder,
     buildDataSourceOptions,
     saveSeedResult,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { SetupCommandContext } from './type';
 
 export async function setupCommand(context?: SetupCommandContext) {

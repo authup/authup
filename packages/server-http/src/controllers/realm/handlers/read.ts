@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { RealmEntity } from '@authelion/server-database';
+import { RealmEntity } from '@authup/server-database';
 
 export async function getManyRealmRouteHandler(
     req: Request,

@@ -40,7 +40,7 @@ An ability descriptor describes the permission owned and requires at least the `
 - **Fields**: A string array can be provided to limit the permission on specific fields of the subject.
 
 ```typescript
-import { AbilityDescriptor, AbilityManager } from '@authelion/common';
+import { AbilityDescriptor, AbilityManager } from '@authup/common';
 
 const items : AbilityDescriptor[] = [
     { id: 'data_add', condition: { size: { $lte: 5 } } },
@@ -91,7 +91,7 @@ The list of supported operators:
 To check if a permission is owned in general without any restrictions (conditions or fields), use the `has()` method of the class instance.
 
 ```typescript
-import { AbilityDescriptor, AbilityManager } from '@authelion/common';
+import { AbilityDescriptor, AbilityManager } from '@authup/common';
 
 const items : AbilityDescriptor[] = [
     { id: 'data_add', condition: { size: { $lte: 5 } } },
@@ -116,7 +116,7 @@ To verify a permission **with** condition and field restriction, use the `verify
 Conditions will be evaluated, if an object (subject) is provided as **second** argument to the `verify()` method.
 
 ```typescript
-import { AbilityDescriptor, AbilityManager } from '@authelion/common';
+import { AbilityDescriptor, AbilityManager } from '@authup/common';
 
 type Data = {
     value: string,
@@ -151,7 +151,7 @@ console.log(abilityManager.verify('data_add', exampleData));
 To verify if the permission applies on a specific field of an object (subject), provide the field name as **third** argument to the `verify()` method.
 
 ```typescript
-import { AbilityDescriptor, AbilityManager } from '@authelion/common';
+import { AbilityDescriptor, AbilityManager } from '@authup/common';
 
 type Data = {
     value: string,

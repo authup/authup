@@ -13,7 +13,7 @@ The method `compare()` compares a raw value with a hashed value.
     import {
         compare,
         hash
-    } from "@authelion/server-utils";
+    } from "@authup/server-utils";
 
     (async () => {
         const hashed = await hash('start123', 10); // 10 rounds
@@ -36,7 +36,7 @@ The method `hash()` returns the hashed value of an input string.
     ```typescript
     import {
         hash
-    } from "@authelion/server-utils";
+    } from "@authup/server-utils";
 
     (async () => {
         const hashed = await hash('start123', 10); // 10 rounds

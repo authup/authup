@@ -19,7 +19,7 @@ import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 
-import { Realm, User } from '@authelion/common';
+import { Realm, User } from '@authup/common';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';

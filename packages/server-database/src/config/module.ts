@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config } from '@authelion/server-common';
+import { Config } from '@authup/server-common';
 import path from 'path';
 import * as process from 'process';
 import { merge } from 'smob';

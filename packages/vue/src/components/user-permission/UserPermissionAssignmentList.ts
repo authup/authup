@@ -8,7 +8,7 @@
 import {
     defineComponent, h,
 } from 'vue';
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import {
     UserPermissionAssignmentListItemActions,

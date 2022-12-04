@@ -8,10 +8,10 @@
 import { check, validationResult } from 'express-validator';
 import {
     PermissionID, isRealmResourceWritable, isValidUserName,
-} from '@authelion/common';
+} from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { RealmEntity, UserEntity } from '@authelion/server-database';
+import { RealmEntity, UserEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,

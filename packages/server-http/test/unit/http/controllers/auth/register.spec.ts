@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, User } from '@authelion/common';
-import { DatabaseRootSeederResult } from '@authelion/server-database';
+import { MASTER_REALM_ID, User } from '@authup/common';
+import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { setConfig } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';

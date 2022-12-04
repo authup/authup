@@ -6,12 +6,12 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserValidation } from '../utils';
-import { UserRepository } from '@authelion/server-database';
+import { UserRepository } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createUserRouteHandler(req: Request, res: Response) : Promise<any> {

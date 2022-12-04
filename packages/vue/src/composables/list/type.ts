@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CollectionResourceResponse } from '@authelion/common';
+import { CollectionResourceResponse } from '@authup/common';
 import {
     ListHeaderBuildOptionsInput,
     ListItemsBuildOptionsInput,

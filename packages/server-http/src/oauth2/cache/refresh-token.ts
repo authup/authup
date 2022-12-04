@@ -7,7 +7,7 @@
 
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { CachePrefix, OAuth2RefreshTokenEntity } from '@authelion/server-database';
+import { CachePrefix, OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { OAuth2AbstractCache } from './abstract';
 
 export class OAuth2RefreshTokenCache extends OAuth2AbstractCache<OAuth2RefreshTokenEntity> {

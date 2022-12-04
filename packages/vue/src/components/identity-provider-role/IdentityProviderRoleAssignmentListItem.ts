@@ -10,7 +10,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref,
 } from 'vue';
-import { IdentityProviderRole, Role } from '@authelion/common';
+import { IdentityProviderRole, Role } from '@authup/common';
 import { buildFormInput } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';

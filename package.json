@@ -1,5 +1,5 @@
 {
-    "name": "authelion",
+    "name": "@authup/root",
     "private": true,
     "author": {
         "name": "Peter Placzek",
@@ -22,12 +22,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git"
+        "url": "git+https://github.com/Tada5hi/authup.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authelion/issues"
+        "url": "https://github.com/Tada5hi/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authelion#readme",
+    "homepage": "https://github.com/Tada5hi/authup#readme",
     "engines": {
         "node": ">=16.0.0"
     },

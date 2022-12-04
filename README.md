@@ -1,11 +1,11 @@
-# @authelion ⛩	
+# @authup ⛩	
 
-[![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
+[![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/Tada5hi/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authup)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-`Authelion` is an authentication & authorization application, 
+`Authup` is an authentication & authorization framework,
 which is split in different packages, most of which can be used independently.
 
 > **Note**
@@ -30,7 +30,7 @@ which is split in different packages, most of which can be used independently.
 
 ## Documentation
 
-To read the docs, visit [https://authelion.net](https://authelion.net)
+To read the docs, visit [https://authup.net](https://authup.net)
 
 ## License
 

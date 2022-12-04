@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authelion/common';
+import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
 import { Request } from 'routup';
-import { OAuth2AuthorizationCodeEntity } from '@authelion/server-database';
+import { OAuth2AuthorizationCodeEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { OAuth2BearerTokenResponse } from '../response';

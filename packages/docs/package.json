@@ -1,5 +1,5 @@
 {
-    "name": "@authelion/docs",
+    "name": "@authup/docs",
     "private": true,
     "scripts": {
         "dev": "vitepress dev src --temp .temp",

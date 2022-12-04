@@ -21,7 +21,7 @@ import {
 } from '@vuelidate/validators';
 import {
     IdentityProvider, IdentityProviderProtocol, OAuth2IdentityProvider, createNanoID,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     buildFormInput, buildFormInputCheckbox,
     buildFormSubmit,

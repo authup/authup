@@ -8,7 +8,7 @@
 import {
     PropType, defineComponent, ref,
 } from 'vue';
-import { RolePermission } from '@authelion/common';
+import { RolePermission } from '@authup/common';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
 import { useHTTPClient } from '../../utils';
 

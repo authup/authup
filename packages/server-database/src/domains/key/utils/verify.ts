@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenVerifyOptions, verifyToken } from '@authelion/server-common';
+import { TokenVerifyOptions, verifyToken } from '@authup/server-common';
 import {
     KeyType, OAuth2TokenPayload, wrapPrivateKeyPem, wrapPublicKeyPem,
-} from '@authelion/common';
+} from '@authup/common';
 import { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(

@@ -9,10 +9,10 @@ import {
     KeyType, Realm,
     unwrapPrivateKeyPem,
     unwrapPublicKeyPem,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     createKeyPair,
-} from '@authelion/server-common';
+} from '@authup/server-common';
 import { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';

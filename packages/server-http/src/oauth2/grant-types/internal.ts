@@ -7,7 +7,7 @@
 
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, Realm, User,
-} from '@authelion/common';
+} from '@authup/common';
 import { Request, getRequestIp, useRequestEnv } from 'routup';
 import { AbstractGrant } from './abstract';
 import {

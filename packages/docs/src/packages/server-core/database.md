@@ -25,7 +25,7 @@ Therefore, use the utility function `setEntitiesForDataSourceOptions` to extend 
 ```typescript
 import {
     setEntitiesForDataSourceOptions
-} from '@authelion/server-core';
+} from '@authup/server-core';
 
 import { 
     DataSource,
@@ -66,7 +66,7 @@ It also creates all possible relations between the following entities:
 import {
     DatabaseSeeder,
     extendDataSourceOptions
-} from '@authelion/server-core';
+} from '@authup/server-core';
 
 import {
     DataSource,
@@ -102,7 +102,7 @@ To set the provided providers for the typeorm DataSourceOptions, use the method
 ```typescript
 import {
     setSubscribersForDataSourceOptions
-} from '@authelion/server-core';
+} from '@authup/server-core';
 
 import { 
     DataSource,

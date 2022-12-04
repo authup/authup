@@ -7,7 +7,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { SuperTest, Test } from 'supertest';
-import { MASTER_REALM_ID, Robot } from '@authelion/common';
+import { MASTER_REALM_ID, Robot } from '@authup/common';
 
 export const TEST_DEFAULT_ROBOT : Partial<Robot> = {
     name: 'test',

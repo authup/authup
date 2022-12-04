@@ -7,7 +7,7 @@
 
 import {
     AbilityDescriptor, AbilityManager, ErrorCode, OAuth2TokenGrantResponse, OAuth2TokenKind, User, hasOwnProperty,
-} from '@authelion/common';
+} from '@authup/common';
 import { Client } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
 import { defineStore } from 'pinia';

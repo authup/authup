@@ -6,7 +6,7 @@
  */
 
 import { MatchedDataOptions, matchedData } from 'express-validator';
-import { deleteUndefinedObjectProperties } from '@authelion/common';
+import { deleteUndefinedObjectProperties } from '@authup/common';
 import { Request } from 'routup';
 import { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@ebec/http';

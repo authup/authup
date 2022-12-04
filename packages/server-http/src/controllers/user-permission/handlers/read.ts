@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { UserPermissionEntity } from '@authelion/server-database';
+import { UserPermissionEntity } from '@authup/server-database';
 
 /**
  * Receive user permissions of a specific user.

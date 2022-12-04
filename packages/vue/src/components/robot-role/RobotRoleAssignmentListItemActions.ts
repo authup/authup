@@ -8,7 +8,7 @@
 import {
     PropType, VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
-import { RobotRole } from '@authelion/common';
+import { RobotRole } from '@authup/common';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
 import { useHTTPClient } from '../../utils';
 

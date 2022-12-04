@@ -17,7 +17,7 @@ export function findConfig(directoryPath?: string) {
 
     const items : OptionsInput[] = [];
 
-    const fileInfos = locateFilesSync('authelion.{ts,js,json}', {
+    const fileInfos = locateFilesSync('authup.{ts,js,json}', {
         path: directoryPath,
     });
 

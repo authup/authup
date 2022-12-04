@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import { Robot } from '@authelion/common';
+import { Robot } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import {
     RobotPermissionAssignmentListItemActions,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2IdentityProviderBase } from '@authelion/common';
+import { OAuth2IdentityProviderBase } from '@authup/common';
 import zod from 'zod';
 import { BadRequestError } from '@ebec/http';
 

@@ -7,7 +7,7 @@
 
 import {
     OAuth2SubKind, OAuth2TokenPayload,
-} from '@authelion/common';
+} from '@authup/common';
 
 export type OAuth2AbstractBuilderContext = {
     maxAge?: number,

@@ -18,9 +18,9 @@ import {
     UserRole,
     buildPermissionDescriptorFromRelation,
     createNanoID,
-} from '@authelion/common';
+} from '@authup/common';
 
-import { compare, hash } from '@authelion/server-common';
+import { compare, hash } from '@authup/server-common';
 import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';

@@ -14,7 +14,7 @@ use an internal runtime cache, if the key was once loaded before.
     import {
           useKeyPair,
           KeyPairOptions 
-      } from '@authelion/server-utils';
+      } from '@authup/server-utils';
     
     const options: Partial<KeyPairOptions> = {
         /* ... */
@@ -44,7 +44,7 @@ The method `createKeyPair()` can be used to create a key-pair.
     import {
         createKeyPair,
         KeyPairOptions 
-    } from '@authelion/server-utils';
+    } from '@authup/server-utils';
     
     const options: Partial<KeyPairOptions> = {
         /* ... */
@@ -74,7 +74,7 @@ The method `deleteKeyPair()` will attempt to delete the specified key-pair on di
     import {
         deleteKeyPair,
         KeyPairOptions 
-    } from '@authelion/server-utils';
+    } from '@authup/server-utils';
       
     const options: Partial<KeyPairOptions> = {
         /* ... */

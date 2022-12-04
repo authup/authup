@@ -19,7 +19,7 @@ import {
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
-import { Realm, Robot, createNanoID } from '@authelion/common';
+import { Realm, Robot, createNanoID } from '@authup/common';
 import {
     SlotName,
     buildFormInput,

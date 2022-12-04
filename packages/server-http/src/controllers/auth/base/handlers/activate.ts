@@ -11,7 +11,7 @@ import {
     Request, Response, sendAccepted,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authelion/server-database';
+import { UserRepository } from '@authup/server-database';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthActivateRouteHandler(req: Request, res: Response) : Promise<any> {

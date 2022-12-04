@@ -12,7 +12,7 @@ import {
     PrimaryColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity implements Permission {

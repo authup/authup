@@ -16,8 +16,8 @@ import {
 } from 'typeorm-extension';
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
-import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authelion/server-database';
+import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
+import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils/env';
 

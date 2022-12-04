@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, Role } from '@authelion/common';
+import { PermissionID, Role } from '@authup/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPage } from '#components';

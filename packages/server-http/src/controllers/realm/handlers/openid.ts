@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authelion/common';
+import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authup/common';
 import { NotFoundError } from '@ebec/http';
 import {
     Request, Response, send, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '@authelion/server-database';
+import { RealmEntity } from '@authup/server-database';
 import { useConfig } from '../../../config';
 
 export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -57,7 +57,7 @@ export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res:
 
         // -----------------------------------------------------------
 
-        service_documentation: 'https://authelion.net/',
+        service_documentation: 'https://authup.net/',
 
         userinfo_endpoint: new URL('users/@me', config.get('selfUrl')).href,
     };

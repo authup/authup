@@ -1,7 +1,7 @@
 {
-    "name": "@authelion/server-common",
+    "name": "@authup/server-common",
     "version": "0.0.0",
-    "description": "Authelion http & socket server common utilities.",
+    "description": "Common server services and utilities.",
     "main": "dist/index.js",
     "files": [
         "dist/"
@@ -13,7 +13,6 @@
     },
     "keywords": [
         "auth",
-        "express",
         "utils",
         "jwt",
         "token",
@@ -31,12 +30,13 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git"
+        "url": "git+https://github.com/Tada5hi/authup.git",
+        "directory": "server/common"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authelion/issues"
+        "url": "https://github.com/Tada5hi/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authelion#readme",
+    "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
         "@types/nodemailer": "^6.4.6",
         "bcrypt": "^5.1.0",
@@ -44,11 +44,11 @@
         "jsonwebtoken": "^8.5.1"
     },
     "devDependencies": {
-        "@authelion/common": "^0.4.2",
+        "@authup/common": "^0.0.0",
         "@types/bcrypt": "^5.0.0"
     },
     "peerDependencies": {
-        "@authelion/common": ">=0.4.2 <1.0.0"
+        "@authup/common": "^0.x"
     },
     "publishConfig": {
         "access": "public"

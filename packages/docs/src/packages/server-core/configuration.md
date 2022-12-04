@@ -12,7 +12,7 @@ All options inherit **default** values, so it is not mandatory to pass any optio
 To get an insight of a full list of options, which can be passed to the method, check out the [API Reference](api-reference-config.md#config).
 
 ```typescript
-import { setConfig } from '@authelion/server-core';
+import { setConfig } from '@authup/server-core';
 
 setConfig({
     env: 'development',
@@ -26,7 +26,7 @@ setConfig({
 It is also possible to extend the configuration found on the file system and from the environment variables.
 
 ```typescript
-import { loadConfig, setConfig } from '@authelion/server-core';
+import { loadConfig, setConfig } from '@authup/server-core';
 
 (async () => {
     const config = await loadConfig();

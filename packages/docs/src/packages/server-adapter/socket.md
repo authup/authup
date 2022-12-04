@@ -16,7 +16,7 @@ The redis client, if enabled, is used to cache verification responses from the b
 
 ```typescript
 import { Server } from 'socket.io';
-import { setupSocketMiddleware } from '@authelion/server-adapter';
+import { setupSocketMiddleware } from '@authup/server-adapter';
 import { createClient } from 'redis-extension';
 import axios from 'axios';
 

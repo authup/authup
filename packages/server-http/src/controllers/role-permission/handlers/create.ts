@@ -6,12 +6,12 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     RolePermissionEntity,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRolePermissionValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

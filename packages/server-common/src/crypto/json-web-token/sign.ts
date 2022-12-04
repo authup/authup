@@ -6,7 +6,7 @@
  */
 
 import { sign } from 'jsonwebtoken';
-import { KeyType, TokenError } from '@authelion/common';
+import { KeyType, TokenError } from '@authup/common';
 import { isKeyPair, useKeyPair } from '../key-pair';
 import { TokenSignOptions } from './type';
 

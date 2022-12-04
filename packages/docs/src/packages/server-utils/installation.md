@@ -3,5 +3,5 @@
 Add the package as dependency to the project.
 
 ```sh
-npm install @authelion/server-utils --save
+npm install @authup/server-utils --save
 ```

@@ -7,7 +7,7 @@
 
 import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import * as Buffer from 'buffer';
-import { KeyType } from '@authelion/common';
+import { KeyType } from '@authup/common';
 import { KeyPair, KeyPairOptions } from '../key-pair';
 
 export type TokenSignOptions = ({

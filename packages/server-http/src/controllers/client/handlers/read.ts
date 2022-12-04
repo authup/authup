@@ -16,8 +16,8 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionID, isSelfId } from '@authelion/common';
-import { OAuth2ClientEntity } from '@authelion/server-database';
+import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
+import { OAuth2ClientEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils/env';
 

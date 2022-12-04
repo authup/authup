@@ -17,7 +17,7 @@ import {
 } from 'typeorm';
 import {
     IdentityProvider, IdentityProviderAccount, OAuth2IdentityProvider, User,
-} from '@authelion/common';
+} from '@authup/common';
 import { UserEntity } from '../user';
 import { IdentityProviderEntity } from '../identity-provider';
 

@@ -7,7 +7,7 @@
 import {
     PropType, defineComponent, toRefs,
 } from 'vue';
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 import { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';

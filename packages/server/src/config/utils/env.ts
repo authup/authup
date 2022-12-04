@@ -9,7 +9,7 @@ import {
     hasEnv,
     requireBoolOrStringFromEnv,
     requireFromEnv,
-} from '@authelion/server-common';
+} from '@authup/server-common';
 import { BaseOptions } from '../type';
 
 export function extractBaseOptionsFromEnv() : Partial<BaseOptions> {

@@ -16,7 +16,7 @@ import {
     InternalServerErrorOptions,
     extendsBaseError,
 } from '@ebec/http';
-import { useLogger } from '@authelion/server-common';
+import { useLogger } from '@authup/server-common';
 
 export function errorMiddleware(
     error: Error,

@@ -17,7 +17,7 @@ import {
 } from 'typeorm';
 import {
     IdentityProviderRole, Realm, Role,
-} from '@authelion/common';
+} from '@authup/common';
 import { IdentityProviderEntity } from '../identity-provider';
 import { RoleEntity } from '../role';
 import { RealmEntity } from '../realm';

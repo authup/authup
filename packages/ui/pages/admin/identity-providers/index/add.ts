@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol, PermissionID } from '@authelion/common';
+import { IdentityProviderProtocol, PermissionID } from '@authup/common';
 import { buildFormSelect } from '@vue-layout/hyperscript';
 import { ref } from 'vue';
 import { navigateTo } from '#app';

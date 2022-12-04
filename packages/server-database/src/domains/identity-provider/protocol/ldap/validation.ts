@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LdapIdentityProvider } from '@authelion/common';
+import { LdapIdentityProvider } from '@authup/common';
 import { NotImplementedError } from '@ebec/http';
 
 export function validateLdapIdentityProviderProtocol(

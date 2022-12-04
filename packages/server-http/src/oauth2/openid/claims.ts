@@ -7,7 +7,7 @@
 
 import {
     Client, OAuth2OpenIdTokenPayload, OAuth2SubKind, Robot, User, hasOwnProperty,
-} from '@authelion/common';
+} from '@authup/common';
 
 type AttributeMap<T extends Record<string, any>> = Record<
 keyof OAuth2OpenIdTokenPayload,

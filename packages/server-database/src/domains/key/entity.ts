@@ -12,7 +12,7 @@ import {
     Key,
     KeyType,
     Realm,
-} from '@authelion/common';
+} from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Index([

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Realm } from '@authelion/common';
-import { AuthEntityDelete } from '@authelion/vue';
+import { Realm } from '@authup/common';
+import { AuthEntityDelete } from '@authup/vue';
 import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';

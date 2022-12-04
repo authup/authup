@@ -9,7 +9,7 @@ import {
     DBody, DController, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import { createOnePermissionRouteHandler, getManyPermissionRouteHandler, getOnePermissionRouteHandler } from './handlers';
 

@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-    title: 'Authelion',
+    title: 'Authup',
     base: '/',
     themeConfig: {
         socialLinks: [
-            { icon: 'github', link: 'https://github.com/tada5hi/authelion' },
+            { icon: 'github', link: 'https://github.com/tada5hi/authup' },
         ],
         editLink: {
-            pattern: 'https://github.com/tada5hi/authelion/edit/master/docs/:path',
+            pattern: 'https://github.com/tada5hi/authup/edit/master/docs/:path',
             text: 'Edit this page on GitHub'
         },
         nav: [
@@ -48,7 +48,7 @@ export default defineConfig({
                     text: 'Introduction',
                     collapsible: false,
                     items: [
-                        {text: 'What is Authelion?', link: '/guide/'},
+                        {text: 'What is Authup?', link: '/guide/'},
                     ]
                 },
                 {

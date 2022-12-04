@@ -14,8 +14,8 @@ import {
     TokenError,
     User,
     createNanoID, hasOwnProperty, isValidUserName,
-} from '@authelion/common';
-import { decodeToken } from '@authelion/server-common';
+} from '@authup/common';
+import { decodeToken } from '@authup/server-common';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
 import { UserEntity, UserRepository } from '../user';

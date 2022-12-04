@@ -14,11 +14,11 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isRealmResourceReadable } from '@authelion/common';
+import { isRealmResourceReadable } from '@authup/common';
 import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

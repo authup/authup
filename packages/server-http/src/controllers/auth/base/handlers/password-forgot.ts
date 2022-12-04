@@ -7,13 +7,13 @@
 
 import { NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
-import { User } from '@authelion/common';
+import { User } from '@authup/common';
 import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig, useSMTPClient } from '@authelion/server-common';
-import { UserRepository } from '@authelion/server-database';
+import { hasSmtpConfig, useSMTPClient } from '@authup/server-common';
+import { UserRepository } from '@authup/server-database';
 import {
     useConfig,
 } from '../../../../config';

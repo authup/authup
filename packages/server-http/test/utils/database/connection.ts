@@ -15,7 +15,7 @@ import {
     DatabaseRootSeederResult,
     DatabaseSeeder,
     buildDataSourceOptions,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 
 async function buildOptions() {
     const options = await buildDataSourceOptions();

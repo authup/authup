@@ -8,7 +8,7 @@
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind, buildHTTPQuery,
-} from '@authelion/common';
+} from '@authup/common';
 import { Request, Response, sendRedirect } from 'routup';
 import { useRequestEnv } from '../../../../utils/env';
 import { runAuthorizeValidation } from '../utils';

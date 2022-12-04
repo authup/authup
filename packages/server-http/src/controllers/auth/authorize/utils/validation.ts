@@ -11,10 +11,10 @@ import {
     OAuth2AuthorizationResponseType,
     TokenError,
     isOAuth2ScopeAllowed,
-} from '@authelion/common';
+} from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { OAuth2ClientEntity } from '@authelion/server-database';
+import { OAuth2ClientEntity } from '@authup/server-database';
 import {
     ExpressValidationResult,
     RequestValidationError,

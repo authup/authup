@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, OAuth2TokenGrantResponse } from '@authelion/common';
-import { DatabaseRootSeederResult } from '@authelion/server-database';
+import { ErrorCode, OAuth2TokenGrantResponse } from '@authup/common';
+import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestUser, updateSuperTestUser } from '../../../../utils/domains/user';

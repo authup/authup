@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';

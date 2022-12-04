@@ -10,7 +10,7 @@ import {
     PropType, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import { Role } from '@authelion/common';
+import { Role } from '@authup/common';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/hyperscript';

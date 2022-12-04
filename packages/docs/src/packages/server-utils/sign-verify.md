@@ -8,7 +8,7 @@ The method `signToken()` can be used to sign a payload.
 ```ts
 import {
     TokenSignOptions
-} from '@authelion/server-utils';
+} from '@authup/server-utils';
 
 async function signToken(
     payload: string | object | Buffer | Record<string, any>,
@@ -20,7 +20,7 @@ async function signToken(
 ```typescript
 import {
     signToken
-} from '@authelion/server-utils';
+} from '@authup/server-utils';
 
 (async () => {
     const token : Record<string, any> = {foo: 'bar'};
@@ -44,7 +44,7 @@ The method `decodeToken()` can be used to decode the payload of a JWT token with
 ```typescript
 import {
     TokenDecodeOptions
-} from '@authelion/server-utils';
+} from '@authup/server-utils';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 
 export function decodeToken(
@@ -67,7 +67,7 @@ function decodeToken(
 ```typescript
 import {
     decodeToken
-} from "@authelion/server-utils";
+} from "@authup/server-utils";
 
 (async () => {
     const tokenSigned = '...';
@@ -88,7 +88,7 @@ The method `decodeToken()` can be used to decode and verify a JWT token.
 ```ts
 import {
     TokenVerifyOptions
-} from '@authelion/server-utils';
+} from '@authup/server-utils';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 
 export async function verifyToken(
@@ -110,7 +110,7 @@ async function verifyToken(
 ```typescript
 import {
     signToken
-} from "@authelion/server-utils";
+} from "@authup/server-utils";
 
 (async () => {
     const tokenSigned = '...';
@@ -130,7 +130,7 @@ The type is simplified for better readability.
 :::
 
 ```typescript
-import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
+import { KeyPair, KeyPairOptions } from '@authup/server-utils';
 import { SignOptions } from 'jsonwebtoken';
 
 export type TokenSignOptions = ({
@@ -160,8 +160,8 @@ The type is simplified for better readability.
 :::
 
 ```typescript
-import { KeyType } from '@authelion/common';
-import { KeyPair, KeyPairOptions } from '@authelion/server-utils';
+import { KeyType } from '@authup/common';
+import { KeyPair, KeyPairOptions } from '@authup/server-utils';
 import { VerifyOptions } from 'jsonwebtoken';
 
 export type TokenVerifyOptions = ({

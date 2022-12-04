@@ -29,7 +29,7 @@ export async function generateSwaggerDocumentation(
             '**/node_modules/**',
         ],
         allow: [
-            '**/@authelion/**',
+            '**/@authup/**',
         ],
         decorator: {
             internal: true,

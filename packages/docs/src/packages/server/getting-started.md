@@ -23,7 +23,7 @@ $ npm init
 Add this package as dependency to the project.
 
 ```sh
-$ npm install @authelion/server --save
+$ npm install @authup/server --save
 ```
 
 ## Step. 3: Configuration
@@ -34,7 +34,7 @@ All options have either default values or are generated automatically 🔥.
 :::
 
 To overwrite the default (generated) config property values,
-create a `authelion.{js,json,ts}` file in the root directory with the following content:
+create a `authup.{js,json,ts}` file in the root directory with the following content:
 
 ```typescript
 module.exports = {
@@ -70,9 +70,9 @@ Add some scripts to `package.json`.
 {
   ...
   "scripts": {
-      "setup": "authelion setup",
-      "start": "authelion start",
-      "upgrade": "authelion upgrade"
+      "setup": "authup-server setup",
+      "start": "authup-server start",
+      "upgrade": "authup-server upgrade"
   },
   ...
 }

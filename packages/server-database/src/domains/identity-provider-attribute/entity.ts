@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 import {
     IdentityProvider, IdentityProviderAttribute,
-} from '@authelion/common';
+} from '@authup/common';
 import { IdentityProviderEntity } from '../identity-provider/entity';
 
 @Unique(['name', 'provider_id'])

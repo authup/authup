@@ -11,7 +11,7 @@ import {
 import {
     Client, OAuth2AuthorizationCode, Realm, Robot,
     User,
-} from '@authelion/common';
+} from '@authup/common';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
 import { OAuth2ClientEntity } from '../client';

@@ -16,8 +16,8 @@ import {
     RolePermission,
     UserRole,
     createNanoID,
-} from '@authelion/common';
-import { Config, hasOwnProperty, hash } from '@authelion/server-common';
+} from '@authup/common';
+import { Config, hasOwnProperty, hash } from '@authup/server-common';
 import {
     PermissionEntity,
     RealmEntity,

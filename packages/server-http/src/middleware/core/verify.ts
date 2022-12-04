@@ -12,7 +12,7 @@ import {
     OAuth2SubKind,
     OAuth2TokenKind,
     TokenError, transformOAuth2ScopeToArray,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     AuthorizationHeader,
     AuthorizationHeaderType,
@@ -30,7 +30,7 @@ import {
     UserEntity, UserRepository,
 
     useConfig,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import {
     extractOAuth2TokenPayload,
     loadOAuth2SubEntity,

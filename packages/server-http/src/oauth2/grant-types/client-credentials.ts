@@ -7,13 +7,13 @@
 
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
-} from '@authelion/common';
+} from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2ClientEntity } from '@authelion/server-database';
+import { OAuth2ClientEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { OAuth2BearerTokenResponse } from '../response';

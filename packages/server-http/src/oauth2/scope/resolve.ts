@@ -7,7 +7,7 @@
 
 import {
     Client, OAuth2Scope, OAuth2SubKind, Robot, User, hasOwnProperty, transformOAuth2ScopeToArray,
-} from '@authelion/common';
+} from '@authup/common';
 
 type ScopeSubFields<
     I extends Record<string, Record<string, any>>,

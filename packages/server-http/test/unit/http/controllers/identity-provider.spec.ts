@@ -10,7 +10,7 @@ import {
     MASTER_REALM_ID,
     OAuth2IdentityProvider,
     buildIdentityProviderAuthorizePath,
-} from '@authelion/common';
+} from '@authup/common';
 import { Client } from '@hapic/oauth2';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';

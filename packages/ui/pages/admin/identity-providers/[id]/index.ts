@@ -7,7 +7,7 @@
 
 import {
     IdentityProvider, IdentityProviderProtocol, PermissionID, Realm,
-} from '@authelion/common';
+} from '@authup/common';
 import { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';

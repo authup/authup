@@ -6,12 +6,12 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRoleEntity } from '@authelion/server-database';
+import { UserRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {

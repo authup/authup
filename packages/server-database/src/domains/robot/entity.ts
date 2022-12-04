@@ -18,7 +18,7 @@ import {
 } from 'typeorm';
 import {
     MASTER_REALM_ID, Realm, Robot, User, createNanoID,
-} from '@authelion/common';
+} from '@authup/common';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 

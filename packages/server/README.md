@@ -1,9 +1,9 @@
-# @authelion/server ♟
+# @authup/server ♟
 
-[![npm version](https://badge.fury.io/js/@authelion%2Fserver.svg)](https://badge.fury.io/js/@authelion%2Fserver)
-[![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver.svg)](https://badge.fury.io/js/@authup%2Fserver)
+[![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/Tada5hi/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authup)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
 
 This package contains an authentication & authorization server.
 
@@ -15,7 +15,7 @@ This package contains an authentication & authorization server.
   
 ## Documentation
 
-To read the docs, visit [https://authelion.net/packages/server](https://authelion.net/packages/server)
+To read the docs, visit [https://authup.net/packages/server](https://authup.net/packages/server)
 
 ## License
 

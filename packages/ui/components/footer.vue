@@ -17,7 +17,7 @@ export default {
 <template>
     <div class="page-footer">
         <div class="copyright">
-            &copy; Authelion {{ year }}
+            &copy; Authup {{ year }}
         </div>
     </div>
 </template>

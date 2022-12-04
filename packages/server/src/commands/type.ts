@@ -6,7 +6,7 @@
  */
 
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { Logger } from '@authelion/server-common';
+import { Logger } from '@authup/server-common';
 
 export type CommandContext = {
     logger?: Logger,

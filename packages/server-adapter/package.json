@@ -1,7 +1,7 @@
 {
-    "name": "@authelion/server-adapter",
+    "name": "@authup/server-adapter",
     "version": "0.3.20",
-    "description": "Authelion http & socket server adapter package for api module.",
+    "description": "An adapter package to integrate into other services.",
     "main": "dist/index.js",
     "files": [
         "dist/"
@@ -30,18 +30,18 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git",
+        "url": "git+https://github.com/Tada5hi/authup.git",
         "directory": "packages/server-adapter"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authelion/issues"
+        "url": "https://github.com/Tada5hi/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authelion#readme",
+    "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
         "@ebec/http": "^0.1.0"
     },
     "devDependencies": {
-        "@authelion/common": "^0.4.2",
+        "@authup/common": "^0.0.0",
         "@hapic/oauth2": "^0.2.0",
         "@routup/cookie": "^0.2.2",
         "hapic": "^0.2.0",
@@ -49,7 +49,7 @@
         "routup": "^0.7.0"
     },
     "peerDependencies": {
-        "@authelion/common": ">=0.4.2 <1.0.0",
+        "@authup/common": "^0.x",
         "@hapic/oauth2": ">=0.2.0 <1.0.0",
         "@routup/cookie": ">=0.2.2 <1.0.0",
         "hapic": ">=0.2.0 <1.0.0",

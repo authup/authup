@@ -6,12 +6,12 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, send, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository } from '@authelion/server-database';
+import { IdentityProviderRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ProviderValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

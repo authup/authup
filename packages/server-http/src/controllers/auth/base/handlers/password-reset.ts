@@ -6,12 +6,12 @@
  */
 
 import { check, oneOf, validationResult } from 'express-validator';
-import { User } from '@authelion/common';
+import { User } from '@authup/common';
 import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authelion/server-database';
+import { UserRepository } from '@authup/server-database';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {

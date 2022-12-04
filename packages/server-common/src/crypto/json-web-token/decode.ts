@@ -10,7 +10,7 @@ import {
     JwtPayload,
     decode,
 } from 'jsonwebtoken';
-import { TokenError } from '@authelion/common';
+import { TokenError } from '@authup/common';
 import { TokenDecodeOptions } from './type';
 import { handleJWTError } from './utils';
 

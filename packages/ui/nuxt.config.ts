@@ -32,13 +32,13 @@ export default defineNuxtConfig({
         '@/assets/css/bootstrap-override.css',
     ],
     alias: {
-        '@authelion/common': path.join(__dirname, '..', 'common', 'src'),
-        '@authelion/vue': path.join(__dirname, '..', 'vue', 'src'),
+        '@authup/common': path.join(__dirname, '..', 'common', 'src'),
+        '@authup/vue': path.join(__dirname, '..', 'vue', 'src'),
     },
     vite: {
         resolve: {
             alias: {
-                // '@authelion/common': '@authelion/common/dist/index.esm.js',
+                // '@authup/common': '@authup/common/dist/index.esm.js',
             },
         },
     },

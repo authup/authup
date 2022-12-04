@@ -9,7 +9,7 @@ import {
     OAuth2TokenIntrospectionResponse,
     TokenError,
     hasOwnProperty,
-} from '@authelion/common';
+} from '@authup/common';
 import { isClientError } from 'hapic';
 import { useOAuth2Client } from '../client';
 import { TokenVerifyContext } from './type';

@@ -8,7 +8,7 @@
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { Next, Request, Response } from 'routup';
 import { unsetResponseCookie, useRequestCookie } from '@routup/cookie';
-import { AbilityManager, CookieName } from '@authelion/common';
+import { AbilityManager, CookieName } from '@authup/common';
 import { setRequestEnv } from '../../utils/env';
 import { verifyAuthorizationHeader } from './verify';
 

@@ -9,7 +9,7 @@ import {
     AbilityManager,
     OAuth2SubKind,
     OAuth2TokenIntrospectionResponse,
-} from '@authelion/common';
+} from '@authup/common';
 import { Socket, SocketNextFunction } from '../type';
 import { SocketMiddlewareContext } from './type';
 import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';

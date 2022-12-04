@@ -8,11 +8,11 @@
 import {
     OAuth2TokenGrantResponse,
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
-} from '@authelion/common';
+} from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
+import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';

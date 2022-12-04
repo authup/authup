@@ -1,5 +1,5 @@
 {
-    "name": "@authelion/server",
+    "name": "@authup/server",
     "version": "0.3.27",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
@@ -11,7 +11,7 @@
         "dist/"
     ],
     "bin": {
-        "authelion": "dist/index.js"
+        "authup": "dist/index.js"
     },
     "keywords": [
         "auth",
@@ -33,19 +33,19 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authelion.git",
+        "url": "git+https://github.com/Tada5hi/authup.git",
         "directory": "packages/server"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authelion/issues"
+        "url": "https://github.com/Tada5hi/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authelion#readme",
+    "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
-        "@authelion/common": "^0.4.2",
-        "@authelion/server-common": "^0.0.0",
-        "@authelion/server-database": "^0.0.0",
-        "@authelion/server-http": "^0.0.0",
-        "@trapi/swagger": "^0.3.6",
+        "@authup/common": "^0.0.0",
+        "@authup/server-common": "^0.0.0",
+        "@authup/server-database": "^0.0.0",
+        "@authup/server-http": "^0.0.0",
+        "@trapi/swagger": "^0.3.8",
         "better-sqlite3": "^8.0.0",
         "change-case": "^4.1.2",
         "dotenv": "^16.0.3",

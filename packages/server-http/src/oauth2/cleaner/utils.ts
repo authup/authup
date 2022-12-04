@@ -6,8 +6,8 @@
  */
 import { LessThan } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { useLogger } from '@authelion/server-common';
-import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '@authelion/server-database';
+import { useLogger } from '@authup/server-common';
+import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '@authup/server-database';
 
 export async function cleanUp(log?: boolean) {
     if (log) {

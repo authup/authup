@@ -10,7 +10,7 @@ import {
     PropType, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';

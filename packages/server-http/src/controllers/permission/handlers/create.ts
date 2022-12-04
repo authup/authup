@@ -9,12 +9,12 @@ import { ForbiddenError } from '@ebec/http';
 import { check, matchedData, validationResult } from 'express-validator';
 import {
     PermissionID,
-} from '@authelion/common';
+} from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils/env';
 import { RequestValidationError } from '../../../validation';
-import { PermissionEntity } from '@authelion/server-database';
+import { PermissionEntity } from '@authup/server-database';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'ability');

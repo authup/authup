@@ -7,7 +7,7 @@
 
 import {
     hasEnv, requireBooleanFromEnv, requireFromEnv,
-} from '@authelion/server-common';
+} from '@authup/server-common';
 import { OptionsInput } from '../type';
 
 export function extractOptionsFromEnv() : OptionsInput {

@@ -7,12 +7,12 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '@authelion/server-database';
+import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteRealmRouteHandler(req: Request, res: Response) : Promise<any> {

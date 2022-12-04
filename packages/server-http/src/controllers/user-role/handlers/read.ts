@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { UserRoleEntity } from '@authelion/server-database';
+import { UserRoleEntity } from '@authup/server-database';
 
 export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

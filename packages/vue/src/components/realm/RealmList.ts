@@ -6,7 +6,7 @@
  */
 
 import { PropType, defineComponent, toRefs } from 'vue';
-import { Realm } from '@authelion/common';
+import { Realm } from '@authup/common';
 import { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';

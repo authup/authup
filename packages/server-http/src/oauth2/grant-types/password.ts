@@ -9,11 +9,11 @@ import {
     OAuth2Scope, OAuth2SubKind,
     OAuth2TokenGrantResponse,
     UserError,
-} from '@authelion/common';
+} from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserEntity, UserRepository } from '@authelion/server-database';
+import { UserEntity, UserRepository } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';

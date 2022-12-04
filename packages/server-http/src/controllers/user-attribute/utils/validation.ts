@@ -15,7 +15,7 @@ import {
     matchedValidationData,
 } from '../../../validation';
 import { CRUDOperation } from '../../../constants';
-import { UserAttributeEntity, UserEntity } from '@authelion/server-database';
+import { UserAttributeEntity, UserEntity } from '@authup/server-database';
 
 export async function runUserAttributeValidation(
     req: Request,

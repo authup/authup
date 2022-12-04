@@ -7,7 +7,7 @@
 
 import { DataSource } from 'typeorm';
 import { setupDatabaseSchema } from 'typeorm-extension';
-import { DatabaseSeeder, buildDataSourceOptions } from '@authelion/server-database';
+import { DatabaseSeeder, buildDataSourceOptions } from '@authup/server-database';
 import { UpgradeCommandContext } from '../type';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {

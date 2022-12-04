@@ -7,7 +7,7 @@
 
 import {
     AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
-} from '@authelion/common';
+} from '@authup/common';
 
 export type RequestEnv = {
     userId?: User['id'],

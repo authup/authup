@@ -7,7 +7,7 @@
 
 import {
     OAuth2TokenIntrospectionResponse,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     ValidationChain, body, oneOf, param, query, validationResult,
 } from 'express-validator';

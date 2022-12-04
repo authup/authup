@@ -6,10 +6,10 @@
  */
 
 import { NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRoleEntity } from '@authelion/server-database';
+import { RobotRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

@@ -11,7 +11,7 @@ import {
 import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import { Realm, createNanoID } from '@authelion/common';
+import { Realm, createNanoID } from '@authup/common';
 import {
     buildFormInput,
     buildFormSubmit,

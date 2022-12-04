@@ -10,7 +10,7 @@ import {
 } from '@routup/decorators';
 import { Request, Response } from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
-import { IdentityProviderRole } from '@authelion/common';
+import { IdentityProviderRole } from '@authup/common';
 import {
     createOauth2ProviderRoleRouteHandler,
     deleteOauth2ProvideRoleRouteHandler,

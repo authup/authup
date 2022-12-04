@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '@authelion/common';
+import { User } from '@authup/common';
 import { PropType } from 'vue';
 import { resolveComponent } from '#imports';
 

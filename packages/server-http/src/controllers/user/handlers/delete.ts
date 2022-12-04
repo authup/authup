@@ -6,12 +6,12 @@
  */
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authelion/common';
+import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authelion/server-database';
+import { UserRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {

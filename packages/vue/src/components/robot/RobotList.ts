@@ -9,7 +9,7 @@ import {
     PropType, defineComponent, toRefs,
 } from 'vue';
 import { BuildInput } from 'rapiq';
-import { Robot } from '@authelion/common';
+import { Robot } from '@authup/common';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

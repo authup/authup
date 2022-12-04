@@ -8,7 +8,7 @@
 import {
     OAuth2SubKind,
     TokenError,
-} from '@authelion/common';
+} from '@authup/common';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import {
@@ -17,7 +17,7 @@ import {
     RobotRepository,
     UserEntity,
     UserRepository,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =

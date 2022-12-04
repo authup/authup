@@ -8,12 +8,12 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionID, isRealmResourceWritable,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleEntity } from '@authelion/server-database';
+import { IdentityProviderRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

@@ -18,7 +18,7 @@ import {
     buildOAuth2Aggregator,
     setEntitiesForDataSourceOptions,
     setSubscribersForDataSourceOptions
-} from '@authelion/server-core';
+} from '@authup/server-core';
 
 import {
     DataSource,

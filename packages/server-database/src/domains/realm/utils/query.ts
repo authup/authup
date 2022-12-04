@@ -6,7 +6,7 @@
  */
 
 import { Brackets, SelectQueryBuilder } from 'typeorm';
-import { MASTER_REALM_ID } from '@authelion/common';
+import { MASTER_REALM_ID } from '@authup/common';
 
 export function onlyRealmReadableQueryResources<T>(
     query: SelectQueryBuilder<T>,

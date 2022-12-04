@@ -8,12 +8,12 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionID,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, useRobotEventEmitter } from '@authelion/server-database';
+import { RobotEntity, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {

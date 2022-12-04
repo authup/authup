@@ -14,7 +14,7 @@ import {
     mergeProps,
     ref,
 } from 'vue';
-import { useHTTPClientAPI } from '@authelion/common';
+import { useHTTPClientAPI } from '@authup/common';
 import { useHTTPClient } from '../utils';
 import { useAuthIlingo } from '../language/singleton';
 

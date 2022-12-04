@@ -16,7 +16,7 @@ import {
     IdentityProvider,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     authorizeCallbackIdentityProviderRouteHandler,
     authorizeURLIdentityProviderRouteHandler,

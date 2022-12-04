@@ -9,7 +9,7 @@ import {
     IdentityProvider,
     IdentityProviderProtocolType,
     hasOwnProperty,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     DataSource, EntityManager, In, InstanceChecker, Repository,
 } from 'typeorm';

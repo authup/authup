@@ -15,7 +15,7 @@ import {
 } from 'typeorm';
 import {
     IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig, Realm,
-} from '@authelion/common';
+} from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_identity_providers' })

@@ -12,7 +12,7 @@ import {
 import {
     OAuth2JsonWebKey,
     OAuth2OpenIDProviderMetadata,
-} from '@authelion/common';
+} from '@authup/common';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
 import { getJwkRouteHandler, getJwksRouteHandler } from './jwks';

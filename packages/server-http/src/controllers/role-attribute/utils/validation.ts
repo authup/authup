@@ -13,7 +13,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RoleAttributeEntity, RoleEntity } from '@authelion/server-database';
+import { RoleAttributeEntity, RoleEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function runRoleAttributeValidation(

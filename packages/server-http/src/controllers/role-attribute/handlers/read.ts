@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isRealmResourceReadable } from '@authelion/common';
-import { RoleAttributeEntity, onlyRealmReadableQueryResources } from '@authelion/server-database';
+import { isRealmResourceReadable } from '@authup/common';
+import { RoleAttributeEntity, onlyRealmReadableQueryResources } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

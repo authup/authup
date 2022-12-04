@@ -9,10 +9,10 @@ import {
     OAuth2OpenIdTokenPayload,
     OAuth2TokenKind,
     OAuth2TokenPayload, hasOAuth2OpenIDScope,
-} from '@authelion/common';
+} from '@authup/common';
 import { randomBytes } from 'crypto';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '@authelion/server-database';
+import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '@authup/server-database';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { resolveOpenIdClaimsFromSubEntity } from '../openid';

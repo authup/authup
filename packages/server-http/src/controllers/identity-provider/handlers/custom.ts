@@ -11,7 +11,7 @@ import {
     IdentityProviderProtocol,
     OAuth2TokenGrantResponse,
     buildIdentityProviderAuthorizeCallbackPath,
-} from '@authelion/common';
+} from '@authup/common';
 import { SerializeOptions, setResponseCookie } from '@routup/cookie';
 import { useRequestQuery } from '@routup/query';
 import {
@@ -20,7 +20,7 @@ import {
 import { URL } from 'url';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository, createOauth2ProviderAccount } from '@authelion/server-database';
+import { IdentityProviderRepository, createOauth2ProviderAccount } from '@authup/server-database';
 import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../config';

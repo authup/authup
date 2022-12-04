@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenPayload } from '@authelion/common';
-import { Config } from '@authelion/server-common';
-import { OAuth2RefreshTokenEntity } from '@authelion/server-database';
+import { OAuth2TokenPayload } from '@authup/common';
+import { Config } from '@authup/server-common';
+import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { Options, OptionsInput, useConfig } from '../../config';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
 import { OAuth2RefreshTokenCache } from '../cache';

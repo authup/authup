@@ -1,6 +1,6 @@
-# What is Authelion?
+# What is Authup?
 
-Authelion a collection of packages for authentication & authorization.
+Authup is an authentication & authorization framework.
 These packages are grouped into the following categories: 
 
 - [Backend](backend.md)

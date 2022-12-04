@@ -1,7 +1,7 @@
 import { Cache, useClient } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
-import { CachePrefix, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '@authelion/server-database';
-import { useLogger } from '@authelion/server-common';
+import { CachePrefix, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '@authup/server-database';
+import { useLogger } from '@authup/server-common';
 
 export async function runOAuth2CleanerByEvent() {
     const redis = useClient();

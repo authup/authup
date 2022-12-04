@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionEntity } from '@authelion/server-database';
+import { PermissionEntity } from '@authup/server-database';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();

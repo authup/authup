@@ -7,7 +7,7 @@
 
 import {
     MASTER_REALM_ID, Role, User, UserRole,
-} from '@authelion/common';
+} from '@authup/common';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 

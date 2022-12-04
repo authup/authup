@@ -8,9 +8,9 @@
 import {
     AbilityDescriptor, Robot,
     Role, buildPermissionDescriptorFromRelation, createNanoID,
-} from '@authelion/common';
+} from '@authup/common';
 
-import { compare, hash } from '@authelion/server-common';
+import { compare, hash } from '@authup/server-common';
 import {
     DataSource, EntityManager, InstanceChecker, Repository,
 } from 'typeorm';

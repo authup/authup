@@ -1,11 +1,11 @@
-# @authelion/vue 🏝
+# @authup/vue 🏝
 
-[![npm version](https://badge.fury.io/js/@authelion%2Fvue.svg)](https://badge.fury.io/js/@authelion%2Fvue)
-[![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
+[![npm version](https://badge.fury.io/js/@authup%2Fvue.svg)](https://badge.fury.io/js/@authup%2Fvue)
+[![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/Tada5hi/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authup)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
 
-This repository contains different vue components for the authelion domain entities.
+This package contains different vue components for the authup domain entities.
 The README.md is still under construction 🚧, so please stay patient till it is fully available.
 
 This package requires the following `dependencies` to be installed in addition:
@@ -21,7 +21,7 @@ This package requires the following `dependencies` to be installed in addition:
 
 ## Documentation
 
-To read the docs, visit [https://authelion.net/packages/vue](https://authelion.net/packages/vue)
+To read the docs, visit [https://authup.net/packages/vue](https://authup.net/packages/vue)
 
 ## License
 

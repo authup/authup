@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, Realm } from '@authelion/common';
+import { PermissionID, Realm } from '@authup/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';

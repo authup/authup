@@ -1,16 +1,16 @@
 ---
 layout: home
 hero:
-    name: Authelion
+    name: Authup
     text: Authentication- & Authorization
-    tagline: Authelion a collection of packages for frontend and backend authentication & authorization.
+    tagline: Authup is an authentication & authorization framework.
     actions:
        - theme: brand
          text: Get Started
          link: /guide/
        - theme: alt
          text: View on GitHub
-         link: https://github.com/tada5hi/authelion
+         link: https://github.com/tada5hi/authup
 
 features:
     - icon: 🔋

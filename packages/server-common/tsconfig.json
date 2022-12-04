@@ -4,7 +4,7 @@
         "strict": true,
         "lib": ["ES6"],
         "paths": {
-            "@authelion/common": ["./packages/common/src"]
+            "@authup/common": ["./packages/common/src"]
         }
     }
 }

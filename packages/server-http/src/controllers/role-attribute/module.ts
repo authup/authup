@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
-import { RoleAttribute } from '@authelion/common';
+import { RoleAttribute } from '@authup/common';
 import {
     createRoleAttributeRouteHandler,
     deleteRoleAttributeRouteHandler,

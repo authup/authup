@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, TokenError } from '@authelion/common';
+import { OAuth2AuthorizationResponseType, TokenError } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { Request } from 'routup';

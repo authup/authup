@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OpenIDConnectIdentityProvider } from '@authelion/common';
+import { OpenIDConnectIdentityProvider } from '@authup/common';
 import { extractOAuth2IdentityProviderProtocolAttributes } from '../oauth2';
 
 export function extractOidcConnectIdentityProviderProtocolAttributes(

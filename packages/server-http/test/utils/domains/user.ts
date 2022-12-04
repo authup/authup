@@ -7,7 +7,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { SuperTest, Test } from 'supertest';
-import { MASTER_REALM_ID, User } from '@authelion/common';
+import { MASTER_REALM_ID, User } from '@authup/common';
 
 export const TEST_DEFAULT_USER : Partial<User> = {
     name: 'test',

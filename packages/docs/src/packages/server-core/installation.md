@@ -3,5 +3,5 @@
 Add the package as dependency to the project.
 
 ```sh
-npm install @authelion/server-core --save
+npm install @authup/server-core --save
 ```

@@ -7,7 +7,7 @@
 
 import {
     PermissionID,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, send, sendCreated,
 } from 'routup';
@@ -16,7 +16,7 @@ import { useRequestEnv } from '../../../utils/env';
 import { runRobotValidation } from '../utils';
 import {
     RobotRepository, useRobotEventEmitter,
-} from '@authelion/server-database';
+} from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {

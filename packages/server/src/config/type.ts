@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Options as HTTPOptions, OptionsInput as HTTPOptionsInput } from '@authelion/server-http';
-import { Options as DatabaseOptions, OptionsInput as DatabaseOptionsInput } from '@authelion/server-database';
+import { Options as HTTPOptions, OptionsInput as HTTPOptionsInput } from '@authup/server-http';
+import { Options as DatabaseOptions, OptionsInput as DatabaseOptionsInput } from '@authup/server-database';
 import { Client, ClientOptions } from 'redis-extension';
-import { SmtpConfig } from '@authelion/server-common';
+import { SmtpConfig } from '@authup/server-common';
 
 export type BaseOptions = {
     /**

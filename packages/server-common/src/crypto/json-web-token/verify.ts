@@ -6,7 +6,7 @@
  */
 
 import { Jwt, JwtPayload, verify } from 'jsonwebtoken';
-import { KeyType, TokenError } from '@authelion/common';
+import { KeyType, TokenError } from '@authup/common';
 import { isKeyPair, useKeyPair } from '../key-pair';
 import { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';

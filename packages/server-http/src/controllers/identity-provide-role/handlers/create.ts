@@ -8,12 +8,12 @@
 import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, send, sendAccepted, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleEntity } from '@authelion/server-database';
+import { IdentityProviderRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

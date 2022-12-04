@@ -12,7 +12,7 @@ The redis client, if enabled, is used to cache verification responses from the b
 
 ```typescript
 import { Router } from 'routup';
-import { setupHTTPMiddleware } from '@authelion/server-adapter';
+import { setupHTTPMiddleware } from '@authup/server-adapter';
 import { createClient } from 'redis-extension';
 import axios from 'axios';
 

@@ -8,7 +8,7 @@
 import {
     Client, ClientOptions, setClient, setConfig, useClient,
 } from 'redis-extension';
-import { hasOwnProperty } from '@authelion/common';
+import { hasOwnProperty } from '@authup/common';
 
 export function isRedisClient(data: unknown) : data is Client {
     return typeof data === 'object' &&

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authelion/common';
-import { DatabaseRootSeederResult } from '@authelion/server-database';
+import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authup/common';
+import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { useConfig } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';

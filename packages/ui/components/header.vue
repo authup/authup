@@ -39,7 +39,7 @@ export default defineNuxtComponent({
                     </button>
                 </div>
                 <div class="logo">
-                    Authelion
+                    Authup
                 </div>
             </div>
 

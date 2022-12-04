@@ -7,14 +7,14 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID } from '@authelion/common';
+import { PermissionID } from '@authup/common';
 import {
     Request, Response, send, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../../utils/env';
 import { runRealmValidation } from '../utils';
-import { RealmEntity } from '@authelion/server-database';
+import { RealmEntity } from '@authup/server-database';
 import { CRUDOperation } from '../../../constants';
 
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {

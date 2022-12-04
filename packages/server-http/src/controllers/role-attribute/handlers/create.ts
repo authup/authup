@@ -9,12 +9,12 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionID,
     isRealmResourceWritable,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     Request, Response, sendAccepted, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RoleAttributeEntity } from '@authelion/server-database';
+import { RoleAttributeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRoleAttributeValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';

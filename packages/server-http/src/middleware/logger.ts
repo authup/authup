@@ -9,7 +9,7 @@ import morgan from 'morgan';
 import {
     Next, Request, Response, getRequestIp,
 } from 'routup';
-import { useLogger } from '@authelion/server-common';
+import { useLogger } from '@authup/server-common';
 import { useRequestEnv } from '../utils/env';
 
 export function createLoggerMiddleware() {

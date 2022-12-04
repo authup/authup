@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authelion/common';
+import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authup/common';
 import { Request, Response, send } from 'routup';
 import { useConfig } from '../../../../config';
 
@@ -43,7 +43,7 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
 
         // -----------------------------------------------------------
 
-        service_documentation: 'https://authelion.net/',
+        service_documentation: 'https://authup.net/',
 
         userinfo_endpoint: new URL('users/@me', config.get('selfUrl')).href,
     };

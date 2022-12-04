@@ -8,7 +8,7 @@
 /* istanbul ignore next */
 import {
     OAuth2TokenGrant, OAuth2TokenGrantResponse, TokenError,
-} from '@authelion/common';
+} from '@authup/common';
 import { Request, Response, send } from 'routup';
 import {
     AuthorizeGrantType,

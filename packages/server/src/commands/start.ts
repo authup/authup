@@ -10,9 +10,9 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
 import {
     createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner, useConfig as useHTTPConfig,
-} from '@authelion/server-http';
-import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '@authelion/server-database';
-import { setLogger } from '@authelion/server-common';
+} from '@authup/server-http';
+import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '@authup/server-database';
+import { setLogger } from '@authup/server-common';
 import { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {

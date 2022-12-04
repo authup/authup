@@ -10,7 +10,7 @@ import { createRequestJsonHandler, createRequestUrlEncodedHandler } from '@routu
 import { createUIHandler } from '@routup/swagger';
 import path from 'path';
 import fs from 'fs';
-import { useLogger } from '@authelion/server-common';
+import { useLogger } from '@authup/server-common';
 import {
     useConfig,
 } from '../config';

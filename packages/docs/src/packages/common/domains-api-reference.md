@@ -4,7 +4,7 @@
 
 **Type**
 ```typescript
-import { OAuth2Client, Realm, Robot, User } from '@authelion/common';
+import { OAuth2Client, Realm, Robot, User } from '@authup/common';
 
 interface OAuth2AccessToken {
     id: string,
@@ -43,7 +43,7 @@ interface OAuth2AccessToken {
 
 **Type**
 ```typescript
-import { User } from '@authelion/common';
+import { User } from '@authup/common';
 
 interface OAuth2Client {
     id: string,
@@ -73,7 +73,7 @@ interface OAuth2Client {
 
 **Type**
 ```typescript
-import { Realm } from '@authelion/common';
+import { Realm } from '@authup/common';
 
 interface OAuth2Provider {
     id: string;
@@ -119,7 +119,7 @@ interface OAuth2Provider {
 
 **Type**
 ```typescript
-import { OAuth2Provider, Realm , User } from '@authelion/common';
+import { OAuth2Provider, Realm , User } from '@authup/common';
 
 interface OAuth2ProviderAccount {
     id: string;
@@ -162,7 +162,7 @@ interface OAuth2ProviderAccount {
 
 **Type**
 ```typescript
-import { OAuth2Provider, Realm, Role } from '@authelion/common';
+import { OAuth2Provider, Realm, Role } from '@authup/common';
 
 interface OAuth2ProviderRole {
     id: string;
@@ -202,7 +202,7 @@ interface OAuth2ProviderRole {
 
 **Type**
 ```typescript
-import { OAuth2AccessToken, OAuth2Client, Realm } from '@authelion/common';
+import { OAuth2AccessToken, OAuth2Client, Realm } from '@authup/common';
 
 interface OAuth2RefreshToken {
     id: string;
@@ -251,7 +251,7 @@ interface Permission {
 
 **Type**
 ```typescript
-import { Permission } from '@authelion/common';
+import { Permission } from '@authup/common';
 
 interface PermissionRelation {
     power: number;
@@ -295,7 +295,7 @@ interface Realm {
 
 **Type**
 ```typescript
-import { Realm, User } from '@authelion/common';
+import { Realm, User } from '@authup/common';
 
 interface Robot {
     id: string;
@@ -334,7 +334,7 @@ interface Robot {
 
 **Type**
 ```typescript
-import { PermissionRelation, Realm, Robot } from '@authelion/common';
+import { PermissionRelation, Realm, Robot } from '@authup/common';
 
 interface RobotPermission extends PermissionRelation {
     id: string;
@@ -366,7 +366,7 @@ interface RobotPermission extends PermissionRelation {
 
 **Type**
 ```typescript
-import { Realm, Role } from '@authelion/common';
+import { Realm, Role } from '@authup/common';
 
 interface RobotRole {
     id: string;
@@ -405,7 +405,7 @@ interface RobotRole {
 
 **Type**
 ```typescript
-import { Realm } from '@authelion/common';
+import { Realm } from '@authup/common';
 
 interface Role {
     id: string;
@@ -435,7 +435,7 @@ interface Role {
 
 **Type**
 ```typescript
-import { Realm, Role } from '@authelion/common';
+import { Realm, Role } from '@authup/common';
 
 interface RoleAttribute {
     id: string;
@@ -470,7 +470,7 @@ interface RoleAttribute {
 
 **Type**
 ```typescript
-import { PermissionRelation, Realm, Role } from '@authelion/common';
+import { PermissionRelation, Realm, Role } from '@authup/common';
 
 interface RolePermission extends PermissionRelation {
     id: string;
@@ -502,7 +502,7 @@ interface RolePermission extends PermissionRelation {
 
 **Type**
 ```typescript
-import { Realm } from '@authelion/common';
+import { Realm } from '@authup/common';
 
 interface User {
     id: string;
@@ -571,7 +571,7 @@ interface User {
 
 **Type**
 ```typescript
-import { Realm, User } from '@authelion/common';
+import { Realm, User } from '@authup/common';
 
 interface UserAttribute {
     id: string;
@@ -606,7 +606,7 @@ interface UserAttribute {
 
 **Type**
 ```typescript
-import { PermissionRelation, Realm, User } from '@authelion/common';
+import { PermissionRelation, Realm, User } from '@authup/common';
 
 interface UserPermission extends PermissionRelation {
     id: string;
@@ -638,7 +638,7 @@ interface UserPermission extends PermissionRelation {
 
 **Type**
 ```typescript
-import { Realm, Role, User } from '@authelion/common';
+import { Realm, Role, User } from '@authup/common';
 
 interface UserRole {
     id: string;

@@ -6,10 +6,10 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isRealmResourceWritable } from '@authelion/common';
+import { isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { RealmEntity, RobotEntity } from '@authelion/server-database';
+import { RealmEntity, RobotEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,

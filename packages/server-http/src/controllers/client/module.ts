@@ -11,7 +11,7 @@ import {
 import { SwaggerTags } from '@trapi/swagger';
 import {
     Client,
-} from '@authelion/common';
+} from '@authup/common';
 import {
     createClientRouteHandler,
     deleteClientRouteHandler,

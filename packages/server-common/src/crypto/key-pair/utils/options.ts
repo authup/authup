@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { hasOwnProperty } from '@authelion/common';
+import { hasOwnProperty } from '@authup/common';
 import { KeyPairOptions } from '../type';
 
 export function extendKeyPairOptions(

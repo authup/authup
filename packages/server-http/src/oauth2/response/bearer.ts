@@ -9,8 +9,8 @@ import {
     OAuth2TokenGrantResponse,
     OAuth2TokenKind,
     OAuth2TokenPayload,
-} from '@authelion/common';
-import { signOAuth2TokenWithKey, useKey } from '@authelion/server-database';
+} from '@authup/common';
+import { signOAuth2TokenWithKey, useKey } from '@authup/server-database';
 import { OAuth2BearerResponseContext } from './type';
 
 export class OAuth2BearerTokenResponse {

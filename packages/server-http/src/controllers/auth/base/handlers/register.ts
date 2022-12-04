@@ -6,15 +6,15 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { MASTER_REALM_ID, User, isValidUserName } from '@authelion/common';
+import { MASTER_REALM_ID, User, isValidUserName } from '@authup/common';
 import { BadRequestError, ServerError } from '@ebec/http';
 import { randomBytes } from 'crypto';
 import {
     Request, Response, sendAccepted,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authelion/server-database';
-import { hasSmtpConfig, useLogger, useSMTPClient } from '@authelion/server-common';
+import { UserRepository } from '@authup/server-database';
+import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-common';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
     useConfig,

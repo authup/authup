@@ -1,9 +1,9 @@
-# @authelion/server-adapter 🌉
+# @authup/server-adapter 🌉
 
-[![npm version](https://badge.fury.io/js/@authelion%2Fserver-adapter.svg)](https://badge.fury.io/js/@authelion%2Fserver-adapter)
-[![main](https://github.com/Tada5hi/authelion/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authelion/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/authelion/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authelion)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authelion/badge.svg)](https://snyk.io/test/github/Tada5hi/authelion)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver-adapter.svg)](https://badge.fury.io/js/@authup%2Fserver-adapter)
+[![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/Tada5hi/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/Tada5hi/authup)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
 
 The main propose of this package, is to provide middlewares for:
 
@@ -19,7 +19,7 @@ based services. These middlewares provide a way to validate and verify the reque
 
 ## Documentation
 
-To read the docs, visit [https://authelion.net/packages/server-adapter](https://authelion.net/packages/server-adapter)
+To read the docs, visit [https://authup.net/packages/server-adapter](https://authup.net/packages/server-adapter)
 
 ## License
 

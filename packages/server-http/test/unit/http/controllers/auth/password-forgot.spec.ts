@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DatabaseRootSeederResult } from '@authelion/server-database';
+import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { setConfig } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';

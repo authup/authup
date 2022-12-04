@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenSignOptions, signToken } from '@authelion/server-common';
-import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authelion/common';
+import { TokenSignOptions, signToken } from '@authup/server-common';
+import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/common';
 import { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(

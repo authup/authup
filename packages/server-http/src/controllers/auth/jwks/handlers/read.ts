@@ -10,10 +10,10 @@ import {
     Request, Response, send, useRequestParam,
 } from 'routup';
 import { In } from 'typeorm';
-import { KeyType, wrapPublicKeyPem } from '@authelion/common';
+import { KeyType, wrapPublicKeyPem } from '@authup/common';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '@authelion/server-database';
+import { KeyEntity } from '@authup/server-database';
 
 export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

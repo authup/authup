@@ -11,8 +11,8 @@ Follow the [Database](database.md) step of the `Getting Started` guide first, to
 :::
 
 ```typescript
-import { User } from '@authelion/common';
-import { UserEntity } from '@authelion/server-core';
+import { User } from '@authup/common';
+import { UserEntity } from '@authup/server-core';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()

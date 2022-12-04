@@ -8,7 +8,7 @@
 import {
     Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import { Client, Realm, User } from '@authelion/common';
+import { Client, Realm, User } from '@authup/common';
 import { UserEntity } from '../user';
 import { RealmEntity } from '../realm';
 

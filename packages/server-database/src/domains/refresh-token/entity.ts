@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import {
     Client, OAuth2RefreshToken, Realm, Robot, User,
-} from '@authelion/common';
+} from '@authup/common';
 import { OAuth2ClientEntity } from '../client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';
