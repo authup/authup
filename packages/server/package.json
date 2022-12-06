@@ -1,6 +1,6 @@
 {
     "name": "@authup/server",
-    "version": "0.3.27",
+    "version": "0.0.0",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -11,7 +11,7 @@
         "dist/"
     ],
     "bin": {
-        "authup": "dist/index.js"
+        "authup-server": "dist/cli/index.js"
     },
     "keywords": [
         "auth",

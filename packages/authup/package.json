@@ -1,0 +1,40 @@
+{
+    "name": "authup",
+    "version": "0.0.0",
+    "description": "This is the CLI for the authup framework.",
+    "main": "dist/index.js",
+    "scripts": {
+        "cli": "ts-node src/index.ts",
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
+    },
+    "files": [
+        "dist/"
+    ],
+    "bin": {
+        "authup": "dist/index.js"
+    },
+    "keywords": [],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/authup.git",
+        "directory": "packages/authup"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/authup/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/authup#readme",
+    "dependencies": {
+        "cac": "^6.7.14",
+        "@authup/ui": "^0.0.0",
+        "@authup/server": "^0.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
