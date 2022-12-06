@@ -15,7 +15,7 @@ should therefore only be used on the server-side.
 
 ## Documentation
 
-To read the docs, visit [https://authup.net/packages/server-core](https://authup.net/packages/server-core)
+To read the docs, visit [https://authup.org/packages/server-core](https://authup.org/packages/server-core)
 
 ## License
 

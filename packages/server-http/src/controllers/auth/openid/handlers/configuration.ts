@@ -43,7 +43,7 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
 
         // -----------------------------------------------------------
 
-        service_documentation: 'https://authup.net/',
+        service_documentation: 'https://authup.org/',
 
         userinfo_endpoint: new URL('users/@me', config.get('selfUrl')).href,
     };

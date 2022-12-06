@@ -19,7 +19,7 @@ based services. These middlewares provide a way to validate and verify the reque
 
 ## Documentation
 
-To read the docs, visit [https://authup.net/packages/server-adapter](https://authup.net/packages/server-adapter)
+To read the docs, visit [https://authup.org/packages/server-adapter](https://authup.org/packages/server-adapter)
 
 ## License
 

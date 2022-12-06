@@ -21,7 +21,7 @@ This package requires the following `dependencies` to be installed in addition:
 
 ## Documentation
 
-To read the docs, visit [https://authup.net/packages/vue](https://authup.net/packages/vue)
+To read the docs, visit [https://authup.org/packages/vue](https://authup.org/packages/vue)
 
 ## License
 

@@ -15,7 +15,7 @@ This package contains an authentication & authorization server.
   
 ## Documentation
 
-To read the docs, visit [https://authup.net/packages/server](https://authup.net/packages/server)
+To read the docs, visit [https://authup.org/packages/server](https://authup.org/packages/server)
 
 ## License
 

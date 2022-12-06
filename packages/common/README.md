@@ -14,7 +14,7 @@ The main propose of this package, is to provide general classes, interfaces & ty
 
 ## Documentation
 
-To read the docs, visit [https://authup.net/packages/common](https://authup.net/packages/common)
+To read the docs, visit [https://authup.org/packages/common](https://authup.org/packages/common)
 
 ## License
 

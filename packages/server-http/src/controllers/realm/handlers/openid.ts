@@ -57,7 +57,7 @@ export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res:
 
         // -----------------------------------------------------------
 
-        service_documentation: 'https://authup.net/',
+        service_documentation: 'https://authup.org/',
 
         userinfo_endpoint: new URL('users/@me', config.get('selfUrl')).href,
     };
