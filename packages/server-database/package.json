@@ -46,7 +46,7 @@
         "@authup/common": "^0.0.0",
         "@authup/server-common": "^0.0.0",
         "redis-extension": "^1.2.0",
-        "typeorm": "^0.3.10",
+        "typeorm": "^0.3.11",
         "typeorm-extension": "^2.3.0"
     },
     "peerDependencies": {
