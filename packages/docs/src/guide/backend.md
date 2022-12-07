@@ -16,7 +16,7 @@ There is also a docker image available for instant usage.
 ### Extension
 
 To use authup as extension to an existent [routup](https://www.npmjs.com/package/routup)- & [typeorm](https://www.npmjs.com/package/typeorm)-application,
-read the [server-core](../packages/server-core/index.md) package documentation.
+read the [server-core](../packages/server-http/index.md) package documentation.
 
 ## Supporting Microservices
 

@@ -5,26 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setConfig as setHTTPConfig } from '@authup/server-http';
-import { setConfig as setDatabaseConfig } from '@authup/server-database';
+import { setOptions as setHTTPOptions } from '@authup/server-http';
+import { setOptions as setDatabaseOptions } from '@authup/server-database';
 import { Options, OptionsInput } from '../type';
 import { buildBaseOptions } from './build';
 import { setupRedis } from './redis';
 import { setupSmtp } from './smtp';
 
-export function setConfigOptions(config?: OptionsInput) : Options {
+export function setOptions(config?: OptionsInput) : Options {
     config = config || {};
 
     const base = buildBaseOptions(config.base || {});
 
-    const database = setDatabaseConfig({
+    const database = setDatabaseOptions({
         env: base.env,
         rootPath: base.rootPath,
         writableDirectoryPath: base.writableDirectoryPath,
         ...(config.database || {}),
     });
 
-    const http = setHTTPConfig({
+    const http = setHTTPOptions({
         env: base.env,
         rootPath: base.rootPath,
         writableDirectoryPath: base.writableDirectoryPath,

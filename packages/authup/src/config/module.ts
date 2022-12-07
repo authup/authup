@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readConfig as readServerConfig, setConfigOptions } from '@authup/server';
+import { readConfig as readServerConfig, setOptions } from '@authup/server';
 import { merge } from 'smob';
 import { extendUiConfig, readUIConfig, validateUiConfig } from '../packages';
 import { readConfig } from './read';
@@ -30,7 +30,7 @@ export function createConfig() : Options {
     global.server = merge({}, readServerConfig(), global.server);
 
     const ui = validateUiConfig(global.ui);
-    const server = setConfigOptions(global.server);
+    const server = setOptions(global.server);
 
     const url = new URL(server.http.uiUrl);
     if (typeof ui.port === 'undefined') {

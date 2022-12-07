@@ -28,7 +28,8 @@ export default defineConfig({
                 items: [
                     { text: 'Server', link: '/packages/server/' },
                     { text: 'Server-Adapter', link: '/packages/server-adapter/' },
-                    { text: 'Server-Core', link: '/packages/server-core/' },
+                    { text: 'Server-Database', link: '/packages/server-database/' },
+                    { text: 'Server-HTTP', link: '/packages/server-http/' },
                     { text: 'Server-Utils', link: '/packages/server-utils/' },
                     { text: 'Common', link: '/packages/common/' },
                     { text: 'Vue', link: '/packages/vue/' },
@@ -89,37 +90,57 @@ export default defineConfig({
                     ]
                 },
             ],
-            '/packages/server-core/': [
+            '/packages/server-database/': [
                 {
-                    text: 'Server Core',
+                    text: 'Server Database',
                     collapsible: false,
                     items: [
-                        {text: 'Introduction', link: '/packages/server-core/'},
+                        {text: 'Introduction', link: '/packages/server-database/'},
+                        {text: 'Installation', link: '/packages/server-database/installation'},
+                        {text: 'Configuration', link: '/packages/server-database/configuration'},
                     ]
                 },
                 {
-                    text: 'Getting Started',
+                    text: 'Components',
                     collapsible: false,
                     items: [
-                        {text: 'Installation', link: '/packages/server-core/installation'},
-                        {text: 'Configuration', link: '/packages/server-core/configuration'},
-                        {text: 'Database', link: '/packages/server-core/database'},
-                        {text: 'HTTP', link: '/packages/server-core/http'},
-                        {text: 'Aggregators', link: '/packages/server-core/aggregators'},
-                    ]
-                },
-                {
-                    text: 'Database',
-                    items: [
-                        {text: 'Entities', link: '/packages/server-core/entities'}
+                        {text: 'Entities', link: '/packages/server-database/entities'},
+                        {text: 'Seeds', link: '/packages/server-database/seeds'},
+                        {text: 'Subscribers', link: '/packages/server-database/subscribers'},
+                        {text: 'Aggregators', link: '/packages/server-database/aggregators'},
                     ]
                 },
                 {
                     text: 'API Reference',
                     items: [
-                        {text: 'Config', link: '/packages/server-core/api-reference-config'},
-                        {text: 'Database', link: '/packages/server-core/api-reference-database'},
-                        {text: 'HTTP', link: '/packages/server-core/api-reference-http'},
+                        {text: 'Config', link: '/packages/server-database/api-reference-config'},
+                        {text: 'Database', link: '/packages/server-database/api-reference-database'}
+                    ]
+                },
+            ],
+            '/packages/server-http/': [
+                {
+                    text: 'Server HTTP',
+                    collapsible: false,
+                    items: [
+                        {text: 'Introduction', link: '/packages/server-http/'},
+                        {text: 'Installation', link: '/packages/server-http/installation'},
+                        {text: 'Configuration', link: '/packages/server-http/configuration'},
+                    ]
+                },
+                {
+                    text: 'Components',
+                    collapsible: false,
+                    items: [
+                        {text: 'Controllers', link: '/packages/server-http/controllers'},
+                        {text: 'Middlewares', link: '/packages/server-http/middlewares'},
+                    ]
+                },
+                {
+                    text: 'API Reference',
+                    items: [
+                        {text: 'Config', link: '/packages/server-http/api-reference-config'},
+                        {text: 'Middleware', link: '/packages/server-http/api-reference-middleware'},
                     ]
                 },
             ],

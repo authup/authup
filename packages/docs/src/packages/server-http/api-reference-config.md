@@ -20,7 +20,7 @@ setConfig({
 })
 ```
 **Type References**
-- [Config](api-reference-http#config)
+- [Config](api-reference-middleware#config)
 
 ## `useConfig`
 
@@ -32,7 +32,7 @@ the method attempts to load the configuration file or initialize the configurati
 async function useConfig(value: Subset<Config>) : Promise<Config>;
 ```
 **Type References**
-- [Config](api-reference-http#config)
+- [Config](api-reference-middleware#config)
 
 ## `useConfigSync`
 
@@ -44,7 +44,7 @@ the method attempts to load the configuration file or initialize the configurati
 function useConfigSync(value: Subset<Config>) : Config;
 ```
 **Type References**
-- [Config](api-reference-http#config)
+- [Config](api-reference-middleware#config)
 
 ## `Config`
 

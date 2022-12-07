@@ -8,7 +8,7 @@ These packages are grouped into the following categories:
 - [Shared](shared.md)
 
 For the minimal usage it is **only** necessary to use the standalone [server](../packages/server/index.md) package or
-the [server-core](../packages/server-core/index) extension package for an existent application.
+the [server-core](../packages/server-http/index) extension package for an existent application.
 
 ::: warning **Important NOTE**
 

@@ -8,7 +8,7 @@
 import { MASTER_REALM_ID, User } from '@authup/common';
 import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
-import { setConfig } from '../../../../../src';
+import { setOptions } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
@@ -27,7 +27,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
     it('should register a new user', async () => {
         let response;
 
-        setConfig({
+        setOptions({
             registration: false,
         });
 
@@ -41,7 +41,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
 
         expect(response.status).toEqual(500);
 
-        setConfig({
+        setOptions({
             registration: true,
             emailVerification: true,
         });

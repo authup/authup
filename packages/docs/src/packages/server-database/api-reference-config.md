@@ -1,11 +1,40 @@
-/*
- * Copyright (c) 2022-2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
+# Config
 
-export type Options = {
+## `setOptions`
+
+The `setOptions()` method can be used to set config options:
+
+**Type**
+```ts
+declare function setOptions(value: OptionsInput);
+```
+
+**Example**
+```ts
+setOptions({
+    port: 3010,
+    adminUsername: 'admin',
+    adminPassword: 'start123',
+    robotEnabled: true,
+    permissions: ['data_add', 'data_edit']
+})
+```
+
+## `useConfig`
+
+The `useConfig()` method returns the configuration object. If no configuration is set,
+the method will use default options
+
+**Type**
+```ts
+declare function useConfig() : Config;
+```
+
+## `Options`
+
+**Type**
+```typescript
+declare type Options = {
     /**
      * default: process.cwd()
      */
@@ -48,10 +77,4 @@ export type Options = {
      */
     permissions: string[],
 };
-
-export type OptionsInput = Partial<Omit<Options, 'permissions'>> & {
-    /**
-     * default: []
-     */
-    permissions?: string[] | string
-};
+```

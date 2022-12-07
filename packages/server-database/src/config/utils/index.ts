@@ -6,4 +6,4 @@
  */
 
 export * from './env';
-export * from './validate';
+export * from './set';

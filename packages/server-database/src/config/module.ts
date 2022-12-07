@@ -62,16 +62,7 @@ export function createConfig() {
 }
 
 export function setConfig(
-    input: OptionsInput | Config<Options, OptionsInput>,
-) : Options {
-    if (input instanceof Config) {
-        // todo: maybe merge with existing options
-        instance = input;
-        return instance.getAll();
-    }
-
-    const config = useConfig();
-    config.setRaw(input);
-
-    return config.getAll();
+    input: Config<Options, OptionsInput>,
+) {
+    instance = input;
 }

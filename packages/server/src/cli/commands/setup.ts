@@ -11,7 +11,7 @@ import { DataSourceOptions } from 'typeorm';
 import {
     setupCommand,
 } from '../../commands';
-import { readConfig, readConfigFromEnv, setConfigOptions } from '../../config';
+import { readConfig, readConfigFromEnv, setOptions } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
@@ -66,7 +66,7 @@ export class SetupCommand implements CommandModule {
         const fileConfig = readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
-        setConfigOptions(merge(
+        setOptions(merge(
             envConfig,
             fileConfig,
         ));

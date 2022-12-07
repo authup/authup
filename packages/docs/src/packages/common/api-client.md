@@ -1,7 +1,7 @@
 # API Client
 
 The APIClient Class provides an easy way to interact with the REST-API to manage domain resources, 
-which are available by using the [server](../server/index.md) or [server-core](../server-core/index.md) package.
+which are available by using the [server](../server/index.md) or [server-core](../server-http/index.md) package.
 
 ## Configuration
 
@@ -109,7 +109,7 @@ the api responds with an error payload, which looks like this:
 
 ::: warning Important
 
-The response maybe differs if the [server-core](../server-core/index.md) package is **not** used with the provided error middleware.
+The response maybe differs if the [server-core](../server-http/index.md) package is **not** used with the provided error middleware.
 
 :::
 

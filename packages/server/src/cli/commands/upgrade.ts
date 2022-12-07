@@ -10,7 +10,7 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import {
     upgradeCommand,
 } from '../../commands';
-import { readConfigFromEnv, setConfigOptions } from '../../config';
+import { readConfigFromEnv, setOptions } from '../../config';
 import { readConfig } from '../../config/utils/read';
 
 import { buildDataSourceOptions } from '../../database/utils';
@@ -38,7 +38,7 @@ export class UpgradeCommand implements CommandModule {
         const fileConfig = readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
-        setConfigOptions(merge(
+        setOptions(merge(
             envConfig,
             fileConfig,
         ));

@@ -14,7 +14,7 @@ import path from 'path';
 import {
     startCommand,
 } from '../../commands';
-import { readConfigFromEnv, setConfigOptions } from '../../config';
+import { readConfigFromEnv, setOptions } from '../../config';
 import { readConfig } from '../../config/utils/read';
 import { buildDataSourceOptions } from '../../database';
 
@@ -40,7 +40,7 @@ export class StartCommand implements CommandModule {
         const fileConfig = readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
-        const config = setConfigOptions(merge(
+        const config = setOptions(merge(
             envConfig,
             fileConfig,
         ));
