@@ -6,7 +6,7 @@
  */
 
 import {
-    setOptions,
+    setConfigOptions,
     useConfig,
 } from '../../../src';
 
@@ -17,7 +17,7 @@ describe('src/config/*.ts', () => {
         expect(config).toBeDefined();
         expect(config.get('middlewareBody')).toBeTruthy();
 
-        setOptions({
+        setConfigOptions({
             middlewareBody: false,
         });
 

@@ -7,12 +7,17 @@
 
 import { URL } from 'url';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { createDatabase, setDataSource, setupDatabaseSchema } from 'typeorm-extension';
+import {
+    checkDatabase,
+    createDatabase,
+    setDataSource,
+    setupDatabaseSchema,
+} from 'typeorm-extension';
 import {
     createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner, useConfig as useHTTPConfig,
 } from '@authup/server-http';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '@authup/server-database';
-import { setLogger } from '@authup/server-common';
+import { setLogger, useLogger } from '@authup/server-common';
 import { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
@@ -24,29 +29,19 @@ export async function startCommand(context?: StartCommandContext) {
         setLogger(context.logger);
     }
 
-    if (context.logger) {
-        context.logger.info(`Environment: ${config.get('env')}`);
-        context.logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
-        context.logger.info(`URL: ${config.get('selfUrl')}`);
-        context.logger.info(`Docs-URL: ${new URL('docs/', config.get('selfUrl')).href}`);
-        context.logger.info(`UI-URL: ${config.get('uiUrl')}`);
-    }
+    const logger = useLogger();
+
+    logger.info(`Environment: ${config.get('env')}`);
+    logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
+    logger.info(`URL: ${config.get('selfUrl')}`);
+    logger.info(`Docs-URL: ${new URL('docs/', config.get('selfUrl')).href}`);
+    logger.info(`UI-URL: ${config.get('uiUrl')}`);
 
     /*
     HTTP Server & Express App
     */
 
-    if (context.logger) {
-        context.logger.info('Initialise controllers & middlewares.');
-    }
-
-    if (context.logger) {
-        context.logger.info('Initialised controllers & middlewares.');
-    }
-
-    if (context.logger) {
-        context.logger.info('Generating documentation.');
-    }
+    logger.info('Generating documentation...');
 
     await generateSwaggerDocumentation({
         rootPath: config.get('rootPath'),
@@ -54,64 +49,75 @@ export async function startCommand(context?: StartCommandContext) {
         baseUrl: config.get('selfUrl'),
     });
 
-    if (context.logger) {
-        context.logger.info('Generated documentation.');
-    }
+    logger.info('Generated documentation.');
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
-
-    await createDatabase({ options, synchronize: false, ifNotExist: true });
-
     Object.assign(options, {
         logging: ['error'],
     } as DataSourceOptions);
 
-    if (context.logger) {
-        context.logger.info('Establish database connection.');
+    const check = await checkDatabase({
+        options,
+    });
+
+    if (!check.exists) {
+        await createDatabase({ options, synchronize: false, ifNotExist: true });
     }
+
+    logger.info('Establishing database connection...');
 
     const dataSource = new DataSource(options);
     await dataSource.initialize();
 
     setDataSource(dataSource);
 
-    if (context.logger) {
-        context.logger.info('Established database connection.');
+    logger.info('Established database connection.');
+
+    if (!check.schema) {
+        logger.info('Applying database schema...');
+
+        await setupDatabaseSchema(dataSource);
+
+        logger.info('Applied database schema.');
     }
 
-    if (context.logger) {
-        context.logger.info('Initialise database schema.');
+    if (
+        !check.schema ||
+        context.databaseAdminPasswordReset ||
+        context.databaseRobotSecretReset
+    ) {
+        const seeder = new DatabaseSeeder({
+            adminPasswordReset: context.databaseAdminPasswordReset ?? false,
+            robotSecretReset: context.databaseRobotSecretReset ?? true,
+        });
+
+        if (!check.schema) {
+            logger.info('Seeding database...');
+        }
+
+        const seederData = await seeder.run(dataSource);
+
+        if (!check.schema) {
+            logger.info('Seeded database');
+        }
+
+        if (seederData.robot) {
+            await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+        }
     }
 
-    await setupDatabaseSchema(dataSource);
-
-    if (context.logger) {
-        context.logger.info('Initialised database schema.');
-    }
-
-    const seeder = new DatabaseSeeder();
-    const seederData = await seeder.run(dataSource);
-
-    if (seederData.robot) {
-        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
-    }
-
-    if (context.logger) {
-        context.logger.info('Starting oauth2 cleaner.');
-    }
+    logger.info('Starting oauth2 cleaner...');
 
     Promise.resolve()
         .then(runOAuth2Cleaner);
 
-    if (context.logger) {
-        context.logger.info('Started oauth2 cleaner.');
-    }
+    logger.info('Started oauth2 cleaner.');
+
+    logger.info('Starting http server...');
 
     const router = createRouter();
     const httpServer = createHttpServer({ router });
     httpServer.listen(config.get('port'), '0.0.0.0', () => {
-        if (context.logger) {
-            context.logger.info('Startup completed.');
-        }
+        logger.info('Started http server.');
     });
 }

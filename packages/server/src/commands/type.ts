@@ -14,7 +14,10 @@ export type CommandContext = {
     dataSourceOptions?: DataSourceOptions
 };
 
-export type StartCommandContext = CommandContext;
+export type StartCommandContext = CommandContext & {
+    databaseAdminPasswordReset?: boolean,
+    databaseRobotSecretReset?: boolean,
+};
 
 export type SetupCommandContext = CommandContext & {
     database?: boolean,

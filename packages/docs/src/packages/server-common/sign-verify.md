@@ -10,7 +10,7 @@ import {
     TokenSignOptions
 } from '@authup/server-utils';
 
-async function signToken(
+declare async function signToken(
     payload: string | object | Buffer | Record<string, any>,
     options?: TokenSignOptions
 ): Promise<string>;
@@ -47,20 +47,15 @@ import {
 } from '@authup/server-utils';
 import { Jwt, JwtPayload } from 'jsonwebtoken';
 
-export function decodeToken(
+declare function decodeToken(
     token: string, 
     options: TokenDecodeOptions & { complete: true }
 ): null | Jwt;
 
-export function decodeToken(
+declare function decodeToken(
     token: string, 
     options?: TokenDecodeOptions
 ): JwtPayload | string | null;
-
-function decodeToken(
-    token: string,
-    options?: TokenDecodeOptions,
-): string | JwtPayload | null;
 ```
 
 **Example**
@@ -96,12 +91,12 @@ export async function verifyToken(
     context: TokenVerifyOptions & { complete: true }
 ): Promise<string | Jwt>;
 
-export async function verifyToken(
+declare async function verifyToken(
     token: string,
     context: TokenVerifyOptions
 ): Promise<JwtPayload | string>;
 
-async function verifyToken(
+declare async function verifyToken(
     token: string,
     options?: TokenVerifyOptions
 ): Promise<JwtPayload | Jwt | string>;

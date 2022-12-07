@@ -14,7 +14,7 @@ Therefore, use the utility function `setEntitiesForDataSourceOptions` to extend 
 ```typescript
 import {
     setEntitiesForDataSourceOptions
-} from '@authup/server-core';
+} from '@authup/server-database';
 
 import { 
     DataSource,
@@ -69,7 +69,7 @@ Database entities are always suffixed with the `Entity` keyword.
 
 ```typescript
 import { User } from '@authup/common';
-import { UserEntity } from '@authup/server-core';
+import { UserEntity } from '@authup/server-database';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()

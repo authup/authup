@@ -6,7 +6,7 @@ To set the provided providers for the typeorm DataSourceOptions, use the method
 ```typescript
 import {
     setSubscribersForDataSourceOptions
-} from '@authup/server-core';
+} from '@authup/server-database';
 
 import { 
     DataSource,

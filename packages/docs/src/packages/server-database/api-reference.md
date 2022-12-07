@@ -1,4 +1,4 @@
-# Database
+# General
 
 ## `setEntitiesForDataSourceOptions`
 
@@ -6,7 +6,9 @@ The `setEntitiesForDataSourceOptions()` method, extends the entities property of
 
 **Type**
 ```ts
- function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(options: T) : T;
+declare function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(
+    options: T
+) : T;
 ```
 **Example**
 ```ts
@@ -26,7 +28,9 @@ The `setSubscribersForDataSourceOptions()` method, extends the subscribers prope
 
 **Type**
 ```ts
- function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T;
+declare function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
+    options: T
+): T;
 ```
 
 **Example**
@@ -39,33 +43,4 @@ const options : DataSourceOptions = {
 
 // set entities
 setSubscribersForDataSourceOptions(options);
-```
-
-## `DatabaseOptions`
-
-```typescript
-export type DatabaseOptions = {
-    seed: DatabaseSeedOptions,
-    alias?: string
-};
-```
-
-## `DatabaseSeedOptions`
-
-```typescript
-type DatabaseSeedOptions = {
-    admin: {
-        username: string,
-        password: string
-        passwordReset?: boolean
-    },
-
-    robot: {
-        enabled: boolean,
-        secret?: string,
-        secretReset?: boolean
-    },
-
-    permissions?: string[],
-};
 ```

@@ -7,7 +7,7 @@
 
 import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
-import { setOptions } from '../../../../../src';
+import { setConfigOptions } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
@@ -26,7 +26,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
     it('should attempt password reset for user', async () => {
         let response;
 
-        setOptions({
+        setConfigOptions({
             registration: false,
         });
 
@@ -38,7 +38,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
 
         expect(response.status).toEqual(500);
 
-        setOptions({
+        setConfigOptions({
             registration: true,
             emailVerification: true,
         });

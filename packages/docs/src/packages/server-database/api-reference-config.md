@@ -1,33 +1,33 @@
 # Config
 
-## `setOptions`
 
-The `setOptions()` method can be used to set config options:
+## `useConfig`
+
+The `useConfig()` method returns the configuration class. 
+If no configuration is set, the method will use default options.
 
 **Type**
 ```ts
-declare function setOptions(value: OptionsInput);
+declare function useConfig() : Config;
+```
+
+## `setConfigOptions`
+
+The `setConfigOptions()` method can be used to set/append config options:
+
+**Type**
+```ts
+declare function setConfigOptions(value: OptionsInput);
 ```
 
 **Example**
 ```ts
-setOptions({
-    port: 3010,
+setConfigOptions({
     adminUsername: 'admin',
     adminPassword: 'start123',
     robotEnabled: true,
     permissions: ['data_add', 'data_edit']
 })
-```
-
-## `useConfig`
-
-The `useConfig()` method returns the configuration object. If no configuration is set,
-the method will use default options
-
-**Type**
-```ts
-declare function useConfig() : Config;
 ```
 
 ## `Options`
@@ -76,5 +76,16 @@ declare type Options = {
      * default: []
      */
     permissions: string[],
+};
+```
+
+## `OptionsInput`
+
+```typescript
+export type OptionsInput = Partial<Omit<Options, 'permissions'>> & {
+    /**
+     * default: []
+     */
+    permissions?: string[] | string
 };
 ```

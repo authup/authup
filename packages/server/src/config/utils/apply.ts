@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setOptions as setHTTPOptions } from '@authup/server-http';
-import { setOptions as setDatabaseOptions } from '@authup/server-database';
+import { setConfigOptions as setHTTPOptions } from '@authup/server-http';
+import { setConfigOptions as setDatabaseOptions } from '@authup/server-database';
 import { Options, OptionsInput } from '../type';
 import { buildBaseOptions } from './build';
 import { setupRedis } from './redis';

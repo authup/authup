@@ -8,7 +8,7 @@
 import { useConfig } from '../module';
 import { OptionsInput } from '../type';
 
-export function setOptions(options: OptionsInput) {
+export function setConfigOptions(options: OptionsInput) {
     const config = useConfig();
     config.setRaw(options);
 

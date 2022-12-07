@@ -7,7 +7,7 @@
 import { useConfig } from '../module';
 import { Options, OptionsInput } from '../type';
 
-export function setOptions(
+export function setConfigOptions(
     input: OptionsInput,
 ) : Options {
     const config = useConfig();

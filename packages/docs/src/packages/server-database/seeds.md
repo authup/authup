@@ -13,7 +13,7 @@ It also creates all possible relations between the following entities:
 import {
     DatabaseSeeder,
     extendDataSourceOptions
-} from '@authup/server-core';
+} from '@authup/server-database';
 
 import {
     DataSource,

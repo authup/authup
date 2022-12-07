@@ -1,60 +1,52 @@
 # Config
 
-## `setConfig`
+## `useConfig`
 
-The `setConfig()` method, specify options for all submodules:
+The `useConfig()` method returns the configuration class.
+If no configuration is set, the method will use default options.
 
 **Type**
 ```ts
-function setConfig(value: Subset<Config>) : Config;
+declare function useConfig() : Config;
+```
+
+## `setConfigOptions`
+
+The `setConfigOptions()` method can be used to set/append config options:
+
+**Type**
+```ts
+declare function setConfigOptions(value: OptionsInput);
 ```
 
 **Example**
 ```ts
-setConfig({
+setConfigOptions({
     port: 3010,
-    adminUsername: 'admin',
-    adminPassword: 'start123',
-    robotEnabled: true,
-    permissions: ['data_add', 'data_edit']
+    tokenMaxAgeAccessToken: 7200, // 3 hours
+    registration: true
 })
 ```
-**Type References**
-- [Config](api-reference-middleware#config)
 
-## `useConfig`
-
-The asynchronous `useConfig()` method returns the configuration obect. If no configuration is set,
-the method attempts to load the configuration file or initialize the configuration by environment variables.
-
-**Type**
-```ts
-async function useConfig(value: Subset<Config>) : Promise<Config>;
-```
-**Type References**
-- [Config](api-reference-middleware#config)
-
-## `useConfigSync`
-
-The synchronous `useConfigSync()` method returns the configuration obect. If no configuration is set,
-the method attempts to load the configuration file or initialize the configuration by environment variables.
-
-**Type**
-```ts
-function useConfigSync(value: Subset<Config>) : Config;
-```
-**Type References**
-- [Config](api-reference-middleware#config)
-
-## `Config`
+## `Options`
 
 **Type**
 ```typescript
-type Config = {
+declare type Options = {
+    /**
+     * default: process.cwd()
+     */
+    rootPath: string,
+    /**
+     * Relative/absolute path to the writable directory.
+     * default: path.join(process.cwd(), 'writable')
+     */
+    writableDirectoryPath: string,
     /**
      * default: 'development'
      */
     env: string,
+
     /**
      * default: 3010
      */
@@ -67,19 +59,26 @@ type Config = {
     /**
      * default: http://127.0.0.1:3010
      */
-    webUrl: string,
+    uiUrl: string,
 
     /**
-     * default: process.cwd()
-     */
-    rootPath: string,
-    /**
-     * Relative or absolute path.
-     * If the path is relative, the rootPath will be appended.
+     * use body middleware
      *
-     * default: writable
+     * default: true
      */
-    writableDirectoryPath: string
+    middlewareBody: boolean,
+    /**
+     * use cookie middleware
+     *
+     * default: true
+     */
+    middlewareCookie: boolean,
+    /**
+     * use swagger middleware
+     *
+     * default: true
+     */
+    middlewareSwagger: boolean,
 
     /**
      * default: 3600
@@ -92,79 +91,30 @@ type Config = {
     tokenMaxAgeRefreshToken: number,
 
     /**
-     * default: true
-     */
-    redis: string | boolean | Client,
-
-    // -------------------------------------------------
-
-    /**
-     * default: 'admin'
-     */
-    adminUsername: string,
-
-    /**
-     * default: 'start123'
-     */
-    adminPassword: string,
-
-    /**
+     * Enable registration.
+     *
      * default: false
      */
-    robotEnabled: boolean,
+    registration: boolean,
 
     /**
-     * default: undefined
+     * Email verification required for registration or login with identity provider.
+     *
+     * default: false
      */
-    robotSecret?: string,
+    emailVerification: boolean,
 
     /**
-     * default: []
+     * Allow password reset?
+     *
+     * default: false
      */
-    permissions?: string[] | string,
-
-    // -------------------------------------------------
-
-    /**
-     * default: undefined
-     */
-    keyPairPassphrase?: string,
-
-    /**
-     * default: 'private'
-     */
-    keyPairPrivateName?: string,
-
-    /**
-     * default: '.pem'
-     */
-    keyPairPrivateExtension?: string,
-
-    // -------------------------------------------------
-
-    /**
-     * default: true
-     */
-    middlewareBodyParser: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareCookieParser: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareResponse: boolean;
-
-    /**
-     * default: true
-     */
-    middlewareSwaggerEnabled: boolean;
-
-    /**
-     * default: config.writableDirectoryPath
-     */
-    middlewareSwaggerDirectoryPath: string;
+    forgotPassword: boolean
 };
+```
+
+## `OptionsInput`
+**Type**
+```typescript
+export type OptionsInput = Partial<Options>;
 ```

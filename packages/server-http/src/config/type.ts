@@ -6,10 +6,19 @@
  */
 
 export type Options = {
-    env: string,
+    /**
+     * default: process.cwd()
+     */
     rootPath: string,
-
+    /**
+     * Relative/absolute path to the writable directory.
+     * default: path.join(process.cwd(), 'writable')
+     */
     writableDirectoryPath: string,
+    /**
+     * default: 'development'
+     */
+    env: string,
 
     /**
      * default: 3010

@@ -28,9 +28,9 @@ export default defineConfig({
                 items: [
                     { text: 'Server', link: '/packages/server/' },
                     { text: 'Server-Adapter', link: '/packages/server-adapter/' },
+                    { text: 'Server-Common', link: '/packages/server-common/' },
                     { text: 'Server-Database', link: '/packages/server-database/' },
                     { text: 'Server-HTTP', link: '/packages/server-http/' },
-                    { text: 'Server-Utils', link: '/packages/server-utils/' },
                     { text: 'Common', link: '/packages/common/' },
                     { text: 'Vue', link: '/packages/vue/' },
                 ]
@@ -50,12 +50,14 @@ export default defineConfig({
                     collapsible: false,
                     items: [
                         {text: 'What is Authup?', link: '/guide/'},
+                        {text: 'Getting Started', link: '/guide/getting-started'}
                     ]
                 },
                 {
                     text: 'Packages',
                     collapsible: false,
                     items: [
+                        {text: 'Overview', link: '/guide/overview'},
                         {text: 'Backend', link: '/guide/backend'},
                         {text: 'Frontend', link: '/guide/frontend'},
                         {text: 'Shared', link: '/guide/shared'},
@@ -114,7 +116,7 @@ export default defineConfig({
                     text: 'API Reference',
                     items: [
                         {text: 'Config', link: '/packages/server-database/api-reference-config'},
-                        {text: 'Database', link: '/packages/server-database/api-reference-database'}
+                        {text: 'General', link: '/packages/server-database/api-reference'}
                     ]
                 },
             ],
@@ -149,9 +151,7 @@ export default defineConfig({
                     text: 'Server',
                     collapsible: false,
                     items: [
-                        {text: 'Introduction', link: '/packages/server/'},
-                        {text: 'Getting Started', link: '/packages/server/getting-started'},
-                        {text: 'Docker', link: '/packages/server/docker'},
+                        {text: 'Introduction', link: '/packages/server/'}
                     ]
                 },
             ],
@@ -173,22 +173,22 @@ export default defineConfig({
                     ]
                 },
             ],
-            '/packages/server-utils/': [
+            '/packages/server-common/': [
                 {
-                    text: 'Server Utils',
+                    text: 'Server Common',
                     collapsible: false,
                     items: [
-                        {text: 'Introduction', link: '/packages/server-utils/'},
-                        {text: 'Installation', link: '/packages/server-utils/installation'},
+                        {text: 'Introduction', link: '/packages/server-common/'},
+                        {text: 'Installation', link: '/packages/server-common/installation'},
                     ]
                 },
                 {
                     text: 'API-Reference',
                     collapsible: false,
                     items: [
-                        {text: 'KeyPair', link: '/packages/server-utils/key-pair'},
-                        {text: 'Sign & Verify', link: '/packages/server-utils/sign-verify'},
-                        {text: 'Hash', link: '/packages/server-utils/hash'},
+                        {text: 'KeyPair', link: '/packages/server-common/key-pair'},
+                        {text: 'Sign & Verify', link: '/packages/server-common/sign-verify'},
+                        {text: 'Hash', link: '/packages/server-common/hash'},
                     ]
                 },
             ],

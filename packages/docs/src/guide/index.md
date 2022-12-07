@@ -1,20 +1,10 @@
 # What is Authup?
 
 Authup is an authentication & authorization framework.
-These packages are grouped into the following categories: 
-
-- [Backend](backend.md)
-- [Frontend](frontend.md)
-- [Shared](shared.md)
-
-For the minimal usage it is **only** necessary to use the standalone [server](../packages/server/index.md) package or
-the [server-core](../packages/server-http/index) extension package for an existent application.
 
 ::: warning **Important NOTE**
-
 The guide is under construction ☂ at the moment. So please stay patient or contribute to it, till it covers all parts ⭐.
 :::
-
 
 ## Features
 

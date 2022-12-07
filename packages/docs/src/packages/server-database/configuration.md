@@ -8,13 +8,13 @@ To get an insight of a full list of options, which can be passed to the method,
 check out the [API Reference](api-reference-config.md#config).
 
 
-The `setOptions` method, can be used to provide an initial set of options.
-All options inherit **default** values, so it is not mandatory to pass any option at all.
+The `setConfigOptions` method, can be used to set a collection of options to the (existing) config instance.
+All other options inherit **default** values.
 
 ```typescript
-import { setOptions } from '@authup/server-database';
+import { setConfigOptions } from '@authup/server-database';
 
-setOptions({
+setConfigOptions({
     permissions: [
         'resource_add',
         'resource_drop',
@@ -26,11 +26,11 @@ setOptions({
 The `readOptionsFromEnv` method, can be used to load option values from the environment.
 
 ```typescript
-import { setOptions, readOptionsFromEnv } from '@authup/server-database';
+import { setConfigOptions, readOptionsFromEnv } from '@authup/server-database';
 
 const env = readOptionsFromEnv();
 
-setOptions({
+setConfigOptions({
     ...env,
     /* ... */
 })

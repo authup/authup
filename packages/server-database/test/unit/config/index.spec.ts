@@ -6,7 +6,7 @@
  */
 
 import {
-    setOptions, useConfig,
+    setConfigOptions, useConfig,
 } from '../../../src';
 
 describe('src/config/*.ts', () => {
@@ -16,7 +16,7 @@ describe('src/config/*.ts', () => {
         expect(config).toBeDefined();
         expect(config.get('adminUsername')).toEqual('admin');
 
-        setOptions({
+        setConfigOptions({
             adminUsername: 'tada5hi',
         });
 
