@@ -7,11 +7,9 @@
 
 import { Config } from '@authup/server-common';
 import path from 'path';
-import * as process from 'process';
-import { merge } from 'smob';
+import process from 'process';
 import zod from 'zod';
 import { Options, OptionsInput } from './type';
-import { extractOptionsFromEnv } from './utils';
 
 let instance : Config<Options, OptionsInput> | undefined;
 
@@ -20,7 +18,13 @@ export function useConfig() : Config<Options, OptionsInput> {
         return instance;
     }
 
-    instance = new Config<Options, OptionsInput>({
+    instance = createConfig();
+
+    return instance;
+}
+
+export function createConfig() {
+    return new Config<Options, OptionsInput>({
         defaults: {
             adminUsername: 'admin',
             adminPassword: 'start123',
@@ -55,12 +59,19 @@ export function useConfig() : Config<Options, OptionsInput> {
             },
         },
     });
-
-    return instance;
 }
-export function setConfig(options: OptionsInput) {
-    options = merge({}, extractOptionsFromEnv(), options);
+
+export function setConfig(
+    input: OptionsInput | Config<Options, OptionsInput>,
+) : Options {
+    if (input instanceof Config) {
+        // todo: maybe merge with existing options
+        instance = input;
+        return instance.getAll();
+    }
 
     const config = useConfig();
-    config.setRaw(options);
+    config.setRaw(input);
+
+    return config.getAll();
 }

@@ -23,8 +23,9 @@ export async function generateSwaggerDocumentation(
 ) : Promise<Record<SwaggerDocFormatType, SwaggerDocFormatData>> {
     const packageJson : Record<string, any> = await loadJsonFile(path.join(context.rootPath, 'package.json'));
 
+    const entryPoint = getSwaggerEntrypoint();
     const metadataConfig : MetadataConfig = {
-        entryPoint: getSwaggerEntrypoint(),
+        entryPoint,
         ignore: [
             '**/node_modules/**',
         ],

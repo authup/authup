@@ -25,6 +25,6 @@ const configValidation = zod.object({
     ])),
 });
 
-export function validateCoreOptionsInput(input: unknown) : BaseOptionsInput {
+export function validateBaseOptionsInput(input: unknown) : BaseOptionsInput {
     return configValidation.partial().parse(input);
 }

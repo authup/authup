@@ -35,26 +35,21 @@ export default defineNuxtConfig({
         '@authup/common': path.join(__dirname, '..', 'common', 'src'),
         '@authup/vue': path.join(__dirname, '..', 'vue', 'src'),
     },
-    vite: {
-        resolve: {
-            alias: {
-                // '@authup/common': '@authup/common/dist/index.esm.js',
-            },
-        },
-    },
     runtimeConfig: {
         public: {
             apiUrl: 'http://localhost:3010',
         },
     },
     modules: [
-        ['@nuxtjs/google-fonts', {
-            families: {
-                Asap: true,
-                Nunito: true,
+        [
+            '@nuxtjs/google-fonts', {
+                families: {
+                    Asap: true,
+                    Nunito: true,
+                },
+                download: true,
             },
-            download: true,
-        }],
+        ],
         '@pinia/nuxt',
     ],
 });

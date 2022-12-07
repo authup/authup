@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSourceOptions } from 'typeorm';
 
@@ -13,9 +14,9 @@ import path from 'path';
 import {
     startCommand,
 } from '../../commands';
-import { applyConfig } from '../../config';
-import { findConfig } from '../../config/utils/find';
-import { buildDataSourceOptions } from '../../database/utils';
+import { readConfigFromEnv, setConfigOptions } from '../../config';
+import { readConfig } from '../../config/utils/read';
+import { buildDataSourceOptions } from '../../database';
 
 interface StartArguments extends Arguments {
     root: string;
@@ -36,8 +37,13 @@ export class StartCommand implements CommandModule {
     }
 
     async handler(args: StartArguments) {
-        const config = findConfig(args.root);
-        applyConfig(config);
+        const fileConfig = readConfig(args.root);
+        const envConfig = readConfigFromEnv();
+
+        const config = setConfigOptions(merge(
+            envConfig,
+            fileConfig,
+        ));
 
         const dataSourceOptions = await buildDataSourceOptions();
 
@@ -57,7 +63,7 @@ export class StartCommand implements CommandModule {
                     level: 'debug',
                 }),
                 new transports.File({
-                    filename: path.join(config.core.writableDirectoryPath, 'error.log'),
+                    filename: path.join(config.base.writableDirectoryPath, 'error.log'),
                     level: 'warn',
                 }),
             ],

@@ -7,17 +7,18 @@
 
 import cac from 'cac';
 
+import {
+    buildInfoCommand,
+    buildServerCommand,
+    buildStartCommand, buildUiCommand,
+} from './commands';
+
 const cli = cac();
 
-cli.command('server <command>', 'Run a backend command')
-    .action(async (command: string) => {
-
-    });
-
-cli.command('ui <command>', 'Run a frontend command')
-    .action(async (command) => {
-
-    });
+buildInfoCommand(cli);
+buildStartCommand(cli);
+buildServerCommand(cli);
+buildUiCommand(cli);
 
 cli.help();
 

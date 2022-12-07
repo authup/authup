@@ -1,23 +1,18 @@
 /*
- * Copyright (c) 2022-2022.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    loadScriptFileExportSync,
-    locateFilesSync,
-} from 'locter';
+import { loadScriptFileExportSync, locateFilesSync } from 'locter';
 import { merge } from 'smob';
-import { OptionsInput } from '../type';
+import { OptionsInput } from './type';
 
-export function findConfig(directoryPath?: string) {
-    directoryPath ??= process.cwd();
-
+export function readConfig(directoryPath?: string) {
     const items : OptionsInput[] = [];
 
-    const fileInfos = locateFilesSync('authup.server.{ts,js,json}', {
+    const fileInfos = locateFilesSync('authup.{ts,js,json}', {
         path: directoryPath,
     });
 

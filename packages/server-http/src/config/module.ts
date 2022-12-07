@@ -8,10 +8,8 @@
 import { Config } from '@authup/server-common';
 import path from 'path';
 import process from 'process';
-import { merge } from 'smob';
 import zod from 'zod';
 import { Options, OptionsInput } from './type';
-import { extractOptionsFromEnv } from './utils';
 
 let instance : Config<Options, OptionsInput> | undefined;
 
@@ -20,11 +18,17 @@ export function useConfig() : Config<Options, OptionsInput> {
         return instance;
     }
 
-    instance = new Config<Options, OptionsInput>({
+    instance = createConfig();
+
+    return instance;
+}
+
+export function createConfig() {
+    return new Config<Options, OptionsInput>({
         defaults: {
             port: 3010,
             selfUrl: 'http://127.0.0.1:3010',
-            webUrl: 'http://127.0.0.1:3010',
+            uiUrl: 'http://127.0.0.1:3000',
             env: process.env.NODE_ENV || 'development',
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
@@ -40,7 +44,7 @@ export function useConfig() : Config<Options, OptionsInput> {
         validators: {
             port: (value) => zod.number().nonnegative().safeParse(value),
             selfUrl: (value) => zod.string().url().safeParse(value),
-            webUrl: (value) => zod.string().url().safeParse(value),
+            uiUrl: (value) => zod.string().url().safeParse(value),
             env: (value) => zod.string().safeParse(value),
             rootPath: (value) => zod.string().safeParse(value),
             writableDirectoryPath: (value) => zod.string().safeParse(value),
@@ -54,13 +58,19 @@ export function useConfig() : Config<Options, OptionsInput> {
             forgotPassword: (value) => zod.boolean().safeParse(value),
         },
     });
-
-    return instance;
 }
 
-export function setConfig(options: OptionsInput) {
-    options = merge({}, extractOptionsFromEnv(), options);
+export function setConfig(
+    input: OptionsInput | Config<Options, OptionsInput>,
+) : Options {
+    if (input instanceof Config) {
+        // todo: maybe merge with existing options
+        instance = input;
+        return instance.getAll();
+    }
 
     const config = useConfig();
-    config.setRaw(options);
+    config.setRaw(input);
+
+    return config.getAll();
 }

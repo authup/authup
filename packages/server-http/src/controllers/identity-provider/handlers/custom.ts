@@ -125,7 +125,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const cookieOptions : SerializeOptions = {
         ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(config.get('webUrl')).hostname,
+            domain: new URL(config.get('uiUrl')).hostname,
         } : {}),
     };
 
@@ -139,5 +139,5 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         maxAge: config.get('tokenMaxAgeRefreshToken') * 1000,
     });
 
-    return sendRedirect(res, config.get('webUrl'));
+    return sendRedirect(res, config.get('uiUrl'));
 }

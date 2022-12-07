@@ -5,28 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import {
     BaseOptions, BaseOptionsInput,
 } from '../type';
 import { extendCoreOptionsWithDefaults } from './defaults';
-import { extractBaseOptionsFromEnv } from './env';
-import { validateCoreOptionsInput } from './validate';
+import { validateBaseOptionsInput } from './validate';
 
 export function buildBaseOptions(config: BaseOptionsInput) : BaseOptions {
     return extendCoreOptionsWithDefaults(
-        validateCoreOptionsInput(
-            merge(
-                extractBaseOptionsFromEnv(),
-                {
-                    env: config.env,
-                    rootPath: config.rootPath,
-                    writableDirectoryPath: config.writableDirectoryPath,
+        validateBaseOptionsInput(
+            {
+                env: config.env,
+                rootPath: config.rootPath,
+                writableDirectoryPath: config.writableDirectoryPath,
 
-                    redis: config.redis,
-                    smtp: config.smtp,
-                },
-            ),
+                redis: config.redis,
+                smtp: config.smtp,
+            },
         ),
     );
 }

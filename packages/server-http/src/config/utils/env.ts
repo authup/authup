@@ -10,7 +10,7 @@ import {
 } from '@authup/server-common';
 import { OptionsInput } from '../type';
 
-export function extractOptionsFromEnv() : OptionsInput {
+export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = { };
 
     if (hasEnv('PORT')) {
@@ -21,8 +21,8 @@ export function extractOptionsFromEnv() : OptionsInput {
         options.selfUrl = requireFromEnv('SELF_URL');
     }
 
-    if (hasEnv('WEB_URL')) {
-        options.webUrl = requireFromEnv('WEB_URL');
+    if (hasEnv('UI_URL')) {
+        options.uiUrl = requireFromEnv('UI_URL');
     }
 
     if (hasEnv('ACCESS_TOKEN_MAX_AGE')) {

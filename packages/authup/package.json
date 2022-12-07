@@ -30,9 +30,17 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
-        "cac": "^6.7.14",
         "@authup/ui": "^0.0.0",
-        "@authup/server": "^0.0.0"
+        "@authup/server": "^0.0.0",
+        "@authup/server-database": "^0.0.0",
+        "@authup/server-http": "^0.0.0",
+        "cac": "^6.7.14",
+        "consola": "^2.15.3",
+        "chalk": "^4.1.2",
+        "locter": "^0.6.0",
+        "resolve-package-path": "^4.0.3",
+        "smob": "^0.0.6",
+        "zod": "^3.19.1"
     },
     "publishConfig": {
         "access": "public"

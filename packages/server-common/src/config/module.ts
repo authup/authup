@@ -141,4 +141,21 @@ export class Config<
 
         return this.defaults[key];
     }
+
+    getAll() : O {
+        const keys = [
+            ...new Set([
+                ...Object.keys(this.options),
+                ...Object.keys(this.defaults),
+            ]),
+        ];
+
+        const options : Record<string, any> = {};
+
+        for (let i = 0; i < keys.length; i++) {
+            options[keys[i]] = this.get(keys[i]);
+        }
+
+        return options as O;
+    }
 }

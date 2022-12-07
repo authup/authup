@@ -9,7 +9,7 @@ import path from 'path';
 
 export function getSwaggerEntrypoint() : { pattern: string, cwd: string } {
     return {
-        cwd: path.resolve(__dirname, '..', '..', '..', 'src', 'http', 'controllers'),
+        cwd: path.resolve(__dirname, '..', '..', 'src', 'controllers'),
         pattern: '**/*{.ts,.js,.d.ts}',
     };
 }

@@ -28,8 +28,8 @@ export async function startCommand(context?: StartCommandContext) {
         context.logger.info(`Environment: ${config.get('env')}`);
         context.logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
         context.logger.info(`URL: ${config.get('selfUrl')}`);
-        context.logger.info(`Docs-URL: ${new URL('docs', config.get('selfUrl')).href}`);
-        context.logger.info(`Web-URL: ${config.get('webUrl')}`);
+        context.logger.info(`Docs-URL: ${new URL('docs/', config.get('selfUrl')).href}`);
+        context.logger.info(`UI-URL: ${config.get('uiUrl')}`);
     }
 
     /*

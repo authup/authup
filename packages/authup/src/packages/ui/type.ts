@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-module.exports = {
-    // Production mode is required, so no database schema synchronization happens on the fly.
-    env: 'production',
-    port: 3010,
+export type UIOptions = {
+    port: number,
+
+    host: string
 };
+export type UIOptionsInput = Partial<UIOptions>;

@@ -6,6 +6,7 @@
  */
 
 export * from './cli/commands';
+export * from './config';
 export * from './commands';
 export * from './config';
 export * from './database';

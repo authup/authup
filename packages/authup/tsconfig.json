@@ -2,7 +2,10 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authup/common": ["./packages/common/src"]
+            "@authup/common": ["./packages/common/src"],
+            "@authup/server": ["./packages/server/src"],
+            "@authup/server-database": ["./packages/server-database/src"],
+            "@authup/server-http": ["./packages/server-http/src"],
         }
     }
 }

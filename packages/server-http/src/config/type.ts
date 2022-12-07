@@ -23,7 +23,7 @@ export type Options = {
     /**
      * default: http://127.0.0.1:3010
      */
-    webUrl: string,
+    uiUrl: string,
 
     /**
      * use body middleware

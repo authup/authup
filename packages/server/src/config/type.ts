@@ -42,13 +42,13 @@ export type BaseOptions = {
 export type BaseOptionsInput = Partial<BaseOptions>;
 
 export type Options = {
-    core: BaseOptions,
+    base: BaseOptions,
     database: Omit<DatabaseOptions, 'env' | 'rootPath' | 'writableDirectoryPath'>,
     http: Omit<HTTPOptions, 'env' | 'rootPath' | 'writableDirectoryPath'>
 };
 
 export type OptionsInput = {
-    core?: BaseOptionsInput,
+    base?: BaseOptionsInput,
     database?: Omit<DatabaseOptionsInput, 'env' | 'rootPath' | 'writableDirectoryPath'>,
     http?: Omit<HTTPOptionsInput, 'env' | 'rootPath' | 'writableDirectoryPath'>
 };

@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSourceOptions } from 'typeorm';
 import {
     setupCommand,
 } from '../../commands';
-import { applyConfig } from '../../config';
-import { findConfig } from '../../config/utils/find';
-import { buildDataSourceOptions } from '../../database/utils';
+import { readConfig, readConfigFromEnv, setConfigOptions } from '../../config';
+import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
     root: string;
@@ -63,8 +63,13 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = findConfig(args.root);
-        applyConfig(config);
+        const fileConfig = readConfig(args.root);
+        const envConfig = readConfigFromEnv();
+
+        setConfigOptions(merge(
+            envConfig,
+            fileConfig,
+        ));
 
         const dataSourceOptions = await buildDataSourceOptions();
 

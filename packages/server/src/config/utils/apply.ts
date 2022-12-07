@@ -7,28 +7,28 @@
 
 import { setConfig as setHTTPConfig } from '@authup/server-http';
 import { setConfig as setDatabaseConfig } from '@authup/server-database';
-import { OptionsInput } from '../type';
+import { Options, OptionsInput } from '../type';
 import { buildBaseOptions } from './build';
 import { setupRedis } from './redis';
 import { setupSmtp } from './smtp';
 
-export function applyConfig(config?: OptionsInput) : void {
+export function setConfigOptions(config?: OptionsInput) : Options {
     config = config || {};
 
-    const base = buildBaseOptions(config.core);
+    const base = buildBaseOptions(config.base || {});
 
-    setDatabaseConfig({
+    const database = setDatabaseConfig({
         env: base.env,
         rootPath: base.rootPath,
         writableDirectoryPath: base.writableDirectoryPath,
-        ...config.database,
+        ...(config.database || {}),
     });
 
-    setHTTPConfig({
+    const http = setHTTPConfig({
         env: base.env,
         rootPath: base.rootPath,
         writableDirectoryPath: base.writableDirectoryPath,
-        ...config.http,
+        ...(config.http || {}),
     });
 
     if (base.redis) {
@@ -38,4 +38,10 @@ export function applyConfig(config?: OptionsInput) : void {
     if (base.smtp) {
         setupSmtp(base.smtp);
     }
+
+    return {
+        base,
+        database,
+        http,
+    };
 }

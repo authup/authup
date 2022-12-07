@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import {
     resetCommand,
 } from '../../commands';
-import { applyConfig } from '../../config';
-import { findConfig } from '../../config/utils/find';
+import { readConfigFromEnv, setConfigOptions } from '../../config';
+import { readConfig } from '../../config/utils/read';
 
 import { buildDataSourceOptions } from '../../database/utils';
 
@@ -33,8 +34,13 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        const config = findConfig(args.root);
-        applyConfig(config);
+        const fileConfig = readConfig(args.root);
+        const envConfig = readConfigFromEnv();
+
+        setConfigOptions(merge(
+            envConfig,
+            fileConfig,
+        ));
 
         const dataSourceOptions = await buildDataSourceOptions();
 

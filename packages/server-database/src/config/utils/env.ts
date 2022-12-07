@@ -10,7 +10,7 @@ import {
 } from '@authup/server-common';
 import { OptionsInput } from '../type';
 
-export function extractOptionsFromEnv() : OptionsInput {
+export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = { };
 
     if (hasEnv('ADMIN_USERNAME')) {

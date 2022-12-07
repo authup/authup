@@ -10,9 +10,11 @@ import {
     requireBoolOrStringFromEnv,
     requireFromEnv,
 } from '@authup/server-common';
-import { BaseOptions } from '../type';
+import { readOptionsFromEnv as readHttpOptionsFromEnv } from '@authup/server-http';
+import { readOptionsFromEnv as readDBOptionsFromEnv } from '@authup/server-database';
+import { BaseOptions, OptionsInput } from '../type';
 
-export function extractBaseOptionsFromEnv() : Partial<BaseOptions> {
+export function readBaseOptionsFromEnv() : Partial<BaseOptions> {
     const options : Partial<BaseOptions> = {};
 
     if (hasEnv('NODE_ENV')) {
@@ -32,4 +34,12 @@ export function extractBaseOptionsFromEnv() : Partial<BaseOptions> {
     }
 
     return options;
+}
+
+export function readConfigFromEnv() : OptionsInput {
+    return {
+        base: readBaseOptionsFromEnv(),
+        http: readHttpOptionsFromEnv(),
+        database: readDBOptionsFromEnv(),
+    };
 }
