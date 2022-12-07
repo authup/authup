@@ -1,4 +1,4 @@
-# authup 👻
+# authup 💎
 
 [![npm version](https://badge.fury.io/js/authup.svg)](https://badge.fury.io/js/authup)
 [![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
@@ -19,11 +19,18 @@ To read the docs, visit [https://authup.org](https://authup.org)
 
 ## Usage
 
-### CLI
+The easiest way to get the framework up and running, is by using the global CLI.
+Therefore, execute the following shell command.
 
-The following commands are available in the terminal:
-- `authup server start` to start the backend application
-- `authup ui start` to start the frontend application
+```shell
+$ npx authup start
+```
+
+This will lunch the following application with default settings:
+- Frontend Application: `http://localhost:3000/`
+- Backend Application: `http://localhost:3010/`
+
+To customize the settings follow the [documentation](#documentation).
 
 ## License
 
