@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/Tada5hi/authup/compare/v0.1.1...v0.1.2) (2022-12-08)
+
+
+### Bug Fixes
+
+* **server:** add shebang to cli entrypoint ([f77eb85](https://github.com/Tada5hi/authup/commit/f77eb85a55d4becdcd996a634a4fbcc463b2cba4))
+
+
+
+
+
 ## [0.1.1](https://github.com/Tada5hi/authup/compare/v0.1.0...v0.1.1) (2022-12-08)
 
 
