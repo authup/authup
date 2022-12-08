@@ -9,7 +9,7 @@ import { ChildProcess, exec } from 'child_process';
 import consola from 'consola';
 import path from 'path';
 import process from 'process';
-import resolvePackagePath from 'resolve-package-path';
+import findUpPackagePath from 'resolve-package-path';
 import { stringifyObjectArgs } from '../../../utils';
 import { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
@@ -23,11 +23,15 @@ export async function executeServerCommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        const modulePath = resolvePackagePath('@authup/server', process.cwd());
-        const directory = path.dirname(modulePath);
+        let base = 'npx authup-server';
+        const modulePath = findUpPackagePath('@authup/server', process.cwd());
+        if (typeof modulePath === 'string') {
+            const directory = path.dirname(modulePath);
+            const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
+            base = `node ${outputPath}`;
+        }
 
-        const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
-        const childProcess = exec(`node ${outputPath} ${command} ${stringifyObjectArgs(ctx.args)}`, {
+        const childProcess = exec(`${base} ${command} ${stringifyObjectArgs(ctx.args)}`, {
             env: ctx.env,
         });
         childProcess.on('spawn', () => {
