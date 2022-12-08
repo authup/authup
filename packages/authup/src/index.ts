@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
  * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
