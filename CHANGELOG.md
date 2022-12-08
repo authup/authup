@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/Tada5hi/authup/compare/v0.1.2...v0.1.3) (2022-12-08)
+
+
+### Bug Fixes
+
+* **authup:** reading config for ui & server ([605d8ee](https://github.com/Tada5hi/authup/commit/605d8eecc70a63ff2ad0a5267aaef56525c98759))
+
+
+
+
+
 ## [0.1.2](https://github.com/Tada5hi/authup/compare/v0.1.1...v0.1.2) (2022-12-08)
 
 
