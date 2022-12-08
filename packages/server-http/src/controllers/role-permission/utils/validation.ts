@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, RoleEntity, RolePermissionEntity } from '@authup/server-database';
@@ -67,6 +67,10 @@ export async function runRolePermissionValidation(
     }
 
     const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(result.data.permission_id)) {
+        throw new ForbiddenError('It is only allowed to assign permissions, which are also owned.');
+    }
+
     const permissionTarget = ability.getTarget(PermissionID.ROLE_PERMISSION_ADD);
     if (permissionTarget) {
         result.data.target = permissionTarget;

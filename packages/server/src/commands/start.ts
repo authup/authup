@@ -81,29 +81,23 @@ export async function startCommand(context?: StartCommandContext) {
         logger.info('Applied database schema.');
     }
 
-    if (
-        !check.schema ||
-        context.databaseAdminPasswordReset ||
-        context.databaseRobotSecretReset
-    ) {
-        const seeder = new DatabaseSeeder({
-            adminPasswordReset: context.databaseAdminPasswordReset ?? false,
-            robotSecretReset: context.databaseRobotSecretReset ?? true,
-        });
+    const seeder = new DatabaseSeeder({
+        adminPasswordReset: context.databaseAdminPasswordReset ?? false,
+        robotSecretReset: context.databaseRobotSecretReset ?? false,
+    });
 
-        if (!check.schema) {
-            logger.info('Seeding database...');
-        }
+    if (!check.schema) {
+        logger.info('Seeding database...');
+    }
 
-        const seederData = await seeder.run(dataSource);
+    const seederData = await seeder.run(dataSource);
 
-        if (!check.schema) {
-            logger.info('Seeded database');
-        }
+    if (!check.schema) {
+        logger.info('Seeded database');
+    }
 
-        if (seederData.robot) {
-            await saveSeedResult(config.get('writableDirectoryPath'), seederData);
-        }
+    if (seederData.robot) {
+        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
     }
 
     logger.info('Starting oauth2 cleaner...');

@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authup/server-database';
@@ -66,7 +66,12 @@ export async function runRobotPermissionValidation(
         result.data.target = result.relation.permission.target;
     }
 
-    const permissionTarget = useRequestEnv(req, 'ability')
+    const ability = useRequestEnv(req, 'ability');
+    if (!ability.has(result.data.permission_id)) {
+        throw new ForbiddenError('It is only allowed to assign permissions, which are also owned.');
+    }
+
+    const permissionTarget = ability
         .getTarget(PermissionID.ROBOT_PERMISSION_ADD);
 
     if (permissionTarget) {
