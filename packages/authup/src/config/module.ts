@@ -7,6 +7,7 @@
 
 import { makeURLPublicAccessible } from '@authup/common';
 import { setOptions } from '@authup/server';
+import consola from 'consola';
 import { extendUiConfig, validateUiConfig } from '../packages';
 import { readConfig } from './read';
 import { Options } from './type';
@@ -14,8 +15,8 @@ import { Options } from './type';
 export async function createConfig() : Promise<Options> {
     const global = await readConfig();
 
-    const server = setOptions(global.server);
-    const ui = validateUiConfig(global.ui);
+    const server = setOptions(global.server || {});
+    const ui = validateUiConfig(global.ui || {});
 
     if (
         typeof ui.apiUrl === 'undefined' &&
@@ -25,7 +26,7 @@ export async function createConfig() : Promise<Options> {
     }
 
     return {
-        server: setOptions(global.server),
+        server,
         ui: extendUiConfig(ui),
     };
 }
