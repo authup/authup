@@ -23,7 +23,7 @@ export async function executeServerCommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx authup-server';
+        let base = 'npx @authup/server';
         const modulePath = findUpPackagePath('@authup/server', process.cwd());
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);

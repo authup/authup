@@ -11,7 +11,7 @@
         "preview": "nuxt preview"
     },
     "bin": {
-        "authup-ui": ".output/server/index.mjs"
+        "authup-ui": "node .output/server/index.mjs"
     },
     "devDependencies": {
         "@authup/common": "^0.1.0",

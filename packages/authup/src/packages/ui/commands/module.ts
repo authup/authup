@@ -23,7 +23,7 @@ export function executeUICommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx authup-ui';
+        let base = 'npx @authup/ui';
         const modulePath = findUpPackagePath('@authup/ui', process.cwd());
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);
