@@ -12,6 +12,7 @@ import {
     SwaggerDocFormatType,
     generateDocumentation,
 } from '@trapi/swagger';
+import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
 import { loadJsonFile } from 'locter';
@@ -21,8 +22,6 @@ import { getSwaggerEntrypoint } from './utils';
 export async function generateSwaggerDocumentation(
     context: SwaggerDocumentCreateContext,
 ) : Promise<Record<SwaggerDocFormatType, SwaggerDocFormatData>> {
-    const packageJson : Record<string, any> = await loadJsonFile(path.join(context.rootPath, 'package.json'));
-
     const entryPoint = getSwaggerEntrypoint();
     const metadataConfig : MetadataConfig = {
         entryPoint,
@@ -43,10 +42,8 @@ export async function generateSwaggerDocumentation(
     const swaggerConfig : Specification.Config = {
         yaml: true,
         host: context.baseUrl,
-        name: `${packageJson.name} - API Documentation`,
-        description: packageJson.description,
+        name: 'API Documentation',
         basePath: '/',
-        version: packageJson.version,
         outputDirectory: context.writableDirectoryPath,
         securityDefinitions: {
             bearer: {
@@ -70,6 +67,24 @@ export async function generateSwaggerDocumentation(
         consumes: ['application/json'],
         produces: ['application/json'],
     };
+
+    try {
+        const filePath = path.join(context.rootPath, 'package.json');
+
+        await fs.promises.access(filePath);
+        const packageJson : Record<string, any> = await loadJsonFile(filePath);
+        if (packageJson.name) {
+            swaggerConfig.name = `${packageJson.name} - API Documentation`;
+        }
+        if (packageJson.description) {
+            swaggerConfig.description = packageJson.description;
+        }
+        if (packageJson.version) {
+            swaggerConfig.version = packageJson.version;
+        }
+    } catch (e) {
+        // do nothing
+    }
 
     return generateDocumentation({
         metadata: metadataConfig,

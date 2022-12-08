@@ -5,11 +5,10 @@
         ".output/"
     ],
     "scripts": {
-        "build": "nuxt build",
+        "build": "nuxt prepare && nuxt build",
         "dev": "nuxt dev",
         "generate": "nuxt generate",
-        "preview": "nuxt preview",
-        "postinstall": "nuxt prepare"
+        "preview": "nuxt preview"
     },
     "bin": {
         "authup-ui": ".output/server/index.mjs"
