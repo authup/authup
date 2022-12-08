@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/tada5hi/authup/compare/v0.1.4...v0.1.5) (2022-12-08)
+
+
+### Bug Fixes
+
+* **ui:** make output file executable ([ba21fad](https://github.com/tada5hi/authup/commit/ba21fadd4ff062091283ca5ff632bb5279f1655b))
+
+
+
+
+
 ## [0.1.4](https://github.com/tada5hi/authup/compare/v0.1.3...v0.1.4) (2022-12-08)
 
 
