@@ -35,7 +35,7 @@ export class UpgradeCommand implements CommandModule {
     }
 
     async handler(args: UpgradeArguments) {
-        const fileConfig = readConfig(args.root);
+        const fileConfig = await readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
         setOptions(merge(

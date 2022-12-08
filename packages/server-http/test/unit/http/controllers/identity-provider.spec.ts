@@ -121,7 +121,7 @@ describe('src/http/controllers/identity-provider', () => {
             options: {
                 client_id: provider.client_id,
                 authorization_endpoint: provider.authorize_url,
-                redirect_uri: `${config.get('selfUrl')}/identity-providers/${provider.id}/authorize-callback`,
+                redirect_uri: `${config.get('publicUrl')}/identity-providers/${provider.id}/authorize-callback`,
             },
         });
 

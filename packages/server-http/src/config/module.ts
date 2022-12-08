@@ -27,8 +27,9 @@ export function createConfig() {
     return new Config<Options, OptionsInput>({
         defaults: {
             port: 3010,
-            selfUrl: 'http://127.0.0.1:3010',
-            uiUrl: 'http://127.0.0.1:3000',
+            host: '0.0.0.0',
+            publicUrl: 'http://127.0.0.1:3010',
+            authorizeRedirectUrl: 'http://127.0.0.1:3000',
             env: process.env.NODE_ENV || 'development',
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
@@ -43,8 +44,9 @@ export function createConfig() {
         },
         validators: {
             port: (value) => zod.number().nonnegative().safeParse(value),
-            selfUrl: (value) => zod.string().url().safeParse(value),
-            uiUrl: (value) => zod.string().url().safeParse(value),
+            host: (value) => zod.string().safeParse(value),
+            publicUrl: (value) => zod.string().url().safeParse(value),
+            authorizeRedirectUrl: (value) => zod.string().url().safeParse(value),
             env: (value) => zod.string().safeParse(value),
             rootPath: (value) => zod.string().safeParse(value),
             writableDirectoryPath: (value) => zod.string().safeParse(value),

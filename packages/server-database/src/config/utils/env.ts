@@ -13,6 +13,14 @@ import { OptionsInput } from '../type';
 export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = { };
 
+    if (hasEnv('NODE_ENV')) {
+        options.env = requireFromEnv('NODE_ENV');
+    }
+
+    if (hasEnv('WRITABLE_DIRECTORY_PATH')) {
+        options.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH');
+    }
+
     if (hasEnv('ADMIN_USERNAME')) {
         options.adminUsername = requireFromEnv('ADMIN_USERNAME');
     }

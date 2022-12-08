@@ -7,13 +7,14 @@
 
 import consola from 'consola';
 import { ChildProcess } from 'child_process';
+import { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
 import { handleServerCommandOutput } from './utils';
 
-export async function resetServer() : Promise<ChildProcess> {
+export async function resetServer(ctx?: CommandExecutionContext) : Promise<ChildProcess> {
     consola.info('Server: Cleanup configuration, database, ...');
-    const childProcess = await executeServerCommand(ServerCommand.RESET);
+    const childProcess = await executeServerCommand(ServerCommand.RESET, ctx);
     consola.success('Server: Cleaned up');
 
     handleServerCommandOutput(childProcess);

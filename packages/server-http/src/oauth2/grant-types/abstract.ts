@@ -30,7 +30,7 @@ export abstract class AbstractGrant {
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<Partial<OAuth2TokenPayload>> {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            selfUrl: this.config.get('selfUrl'),
+            selfUrl: this.config.get('publicUrl'),
             maxAge: this.config.get('tokenMaxAgeAccessToken'),
         });
 

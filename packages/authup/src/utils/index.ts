@@ -7,3 +7,4 @@
 
 export * from './line-breaks';
 export * from './process-output';
+export * from './stringify-object-args';

@@ -7,29 +7,31 @@
 
 import consola from 'consola';
 import { ChildProcess } from 'child_process';
-import { parseProcessOutputData } from '../../../utils/process-output';
+import { parseProcessOutputData } from '../../../utils';
+import { CommandExecutionContext } from '../../type';
 import { UICommand } from '../constants';
 import { executeUICommand } from './module';
 
-type Context = {
+type Env = {
     port?: number,
 
     host?: string,
 
     apiUrl?: string
 };
-export async function startUI(ctx?: Context) : Promise<ChildProcess> {
+export async function startUI(ctx?: CommandExecutionContext<Env>) : Promise<ChildProcess> {
     ctx = ctx || {};
+    ctx.env = ctx.env || {};
 
     const env : Record<string, any> = {};
-    if (ctx.port) {
-        env.PORT = ctx.port;
+    if (ctx.env.port) {
+        env.PORT = ctx.env.port;
     }
-    if (ctx.host) {
-        env.HOST = ctx.host;
+    if (ctx.env.host) {
+        env.HOST = ctx.env.host;
     }
-    if (ctx.apiUrl) {
-        env.NUXT_PUBLIC_API_URL = ctx.apiUrl;
+    if (ctx.env.apiUrl) {
+        env.NUXT_PUBLIC_API_URL = ctx.env.apiUrl;
     }
 
     consola.info('UI: Starting...');

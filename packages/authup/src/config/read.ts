@@ -5,23 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { loadScriptFileExportSync, locateFilesSync } from 'locter';
-import { merge } from 'smob';
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'rc9';
 import { OptionsInput } from './type';
 
-export function readConfig(directoryPath?: string) {
-    const items : OptionsInput[] = [];
+export async function readConfig(
+    directoryPath?: string,
+) : Promise<OptionsInput> {
+    directoryPath ??= process.cwd();
 
-    const fileInfos = locateFilesSync('authup.{ts,js,json}', {
-        path: directoryPath,
-    });
+    const filePath = path.resolve(directoryPath, 'authup.conf');
 
-    for (let i = 0; i < fileInfos.length; i++) {
-        const fileExport = loadScriptFileExportSync(fileInfos[i]);
-        if (fileExport.key === 'default') {
-            items.push(fileExport.value);
-        }
+    try {
+        await fs.promises.access(filePath);
+    } catch (e) {
+        return {};
     }
 
-    return merge({}, ...items);
+    const file = await fs.promises.readFile(
+        filePath,
+        { encoding: 'utf-8' },
+    );
+
+    return parse(file);
 }

@@ -59,7 +59,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
         options: {
             client_id: provider.client_id,
             authorization_endpoint: provider.authorize_url,
-            redirect_uri: `${config.get('selfUrl')}${buildIdentityProviderAuthorizeCallbackPath(entity.id)}`,
+            redirect_uri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(entity.id)}`,
         },
     });
 
@@ -106,7 +106,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
             token_endpoint: provider.token_url,
 
-            redirect_uri: `${config.get('selfUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
+            redirect_uri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
         },
     });
 
@@ -125,7 +125,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const cookieOptions : SerializeOptions = {
         ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(config.get('uiUrl')).hostname,
+            domain: new URL(config.get('publicUrl')).hostname,
         } : {}),
     };
 
@@ -139,5 +139,5 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         maxAge: config.get('tokenMaxAgeRefreshToken') * 1000,
     });
 
-    return sendRedirect(res, config.get('uiUrl'));
+    return sendRedirect(res, config.get('authorizeRedirectUrl'));
 }

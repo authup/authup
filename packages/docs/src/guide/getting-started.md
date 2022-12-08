@@ -32,29 +32,16 @@ All options have either default values or are generated automatically 🔥.
 :::
 
 To overwrite the default (generated) config option values,
-create a `authup.{js,json,ts}` file in the root directory with the following content:
+create a `authup.conf` file in the root directory with the following content:
 
-```typescript
-module.exports = {
-    ui: {
-        port: 3000,
-        host: '127.0.0.1',
-        apiUrl: 'http://127.0.0.1:3010/'
-    },
-    server: {
-        database: {
-            adminUsername: 'admin',
-            adminPassword: 'start123',
-        },
-        http: {
-            port: 3010,
-            selfUrl: 'http://127.0.0.1:3010/',
-            webUrl: 'http://127.0.0.1:3000/',
-        }
-        /* ... */
-    },
-    
-}
+```text
+ui.port=3000
+ui.host=127.0.0.1
+server.database.adminUsername=admin
+server.database.adminPassword=start123
+server.http.port=3010
+server.http.publicUrl=http://127.0.0.1:3010/
+server.http.authorizeRedirectUrl=http://127.0.0.1:3000/
 ```
 
 This will set custom options for the frontend- & backend-application.
@@ -69,7 +56,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=start123
 
 SELF_URL=http://127.0.0.1:3010/
-WEB_URL=http://127.0.0.1:3000/
+UI_URL=http://127.0.0.1:3000/
 ```
 
 ## Step. 4: Boot up

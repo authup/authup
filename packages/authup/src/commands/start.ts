@@ -6,10 +6,10 @@
  */
 
 import { CAC } from 'cac';
-import { useConfig } from '../config';
+import process from 'process';
+import { createConfig } from '../config';
 import {
-    startServer,
-    startUI,
+    startServer, startUI,
 } from '../packages';
 
 export function buildStartCommand(cac: CAC) {
@@ -20,17 +20,24 @@ export function buildStartCommand(cac: CAC) {
                 services = ['server', 'ui'];
             }
 
-            const config = useConfig();
+            const config = await createConfig();
+            const root = process.cwd();
 
             if (services.indexOf('server') !== -1) {
-                // todo: allow passing port and host
-                await startServer();
+                await startServer({
+                    env: {
+                        root,
+                    },
+                });
             }
 
             if (services.indexOf('ui') !== -1) {
                 await startUI({
-                    port: config.ui.port,
-                    host: config.ui.host,
+                    env: {
+                        port: config.ui.port,
+                        host: config.ui.host,
+                        apiUrl: config.server.http.publicUrl,
+                    },
                 });
             }
         });

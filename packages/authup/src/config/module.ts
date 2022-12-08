@@ -5,45 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readConfig as readServerConfig, setOptions } from '@authup/server';
-import { merge } from 'smob';
-import { extendUiConfig, readUIConfig, validateUiConfig } from '../packages';
+import { makeURLPublicAccessible } from '@authup/common';
+import { setOptions } from '@authup/server';
+import { extendUiConfig, validateUiConfig } from '../packages';
 import { readConfig } from './read';
 import { Options } from './type';
 
-let instance : Options | undefined;
+export async function createConfig() : Promise<Options> {
+    const global = await readConfig();
 
-export function useConfig() : Options {
-    if (typeof instance !== 'undefined') {
-        return instance;
-    }
-
-    instance = createConfig();
-
-    return instance;
-}
-
-export function createConfig() : Options {
-    const global = readConfig();
-
-    global.ui = merge({}, readUIConfig(), global.ui);
-    global.server = merge({}, readServerConfig(), global.server);
-
-    const ui = validateUiConfig(global.ui);
     const server = setOptions(global.server);
+    const ui = validateUiConfig(global.ui);
 
-    const url = new URL(server.http.uiUrl);
-    if (typeof ui.port === 'undefined') {
-        if (url.port.length > 0) {
-            ui.port = parseInt(url.port, 10);
-        }
-    }
-    if (typeof ui.host === 'undefined') {
-        ui.host = url.hostname;
+    if (
+        typeof ui.apiUrl === 'undefined' &&
+        server.http.publicUrl
+    ) {
+        ui.apiUrl = makeURLPublicAccessible(server.http.publicUrl);
     }
 
     return {
-        server,
+        server: setOptions(global.server),
         ui: extendUiConfig(ui),
     };
 }

@@ -8,7 +8,7 @@
 import { CAC } from 'cac';
 import chalk from 'chalk';
 import consola from 'consola';
-import { useConfig } from '../config';
+import { createConfig } from '../config';
 import { UICommand, startUI } from '../packages';
 
 export function buildUiCommand(cac: CAC) {
@@ -17,13 +17,15 @@ export function buildUiCommand(cac: CAC) {
         .option('-p, --port [port]', 'Specify the port for starting the application')
         .option('-h, --host [host]', 'Specify the host for starting a specific application')
         .action(async (command: string, ctx: Record<string, any>) => {
-            const config = useConfig();
+            const config = await createConfig();
 
             switch (command) {
                 case UICommand.START: {
                     await startUI({
-                        port: ctx.port || config.ui.port,
-                        host: ctx.host || config.ui.host,
+                        env: {
+                            port: ctx.port || config.ui.port,
+                            host: ctx.host || config.ui.host,
+                        },
                     });
                     break;
                 }

@@ -10,3 +10,4 @@ export * from './has-own-property';
 export * from './nanoid';
 export * from './object-properties';
 export * from './self-id';
+export * from './url';

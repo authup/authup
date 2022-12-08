@@ -33,9 +33,10 @@ export async function startCommand(context?: StartCommandContext) {
 
     logger.info(`Environment: ${config.get('env')}`);
     logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
-    logger.info(`URL: ${config.get('selfUrl')}`);
-    logger.info(`Docs-URL: ${new URL('docs/', config.get('selfUrl')).href}`);
-    logger.info(`UI-URL: ${config.get('uiUrl')}`);
+    logger.info(`Port: ${config.get('port')}`);
+    logger.info(`Host: ${config.get('host')}`);
+    logger.info(`Public-URL: ${config.get('publicUrl')}`);
+    logger.info(`Docs-URL: ${new URL('docs/', config.get('publicUrl')).href}`);
 
     /*
     HTTP Server & Express App
@@ -46,7 +47,7 @@ export async function startCommand(context?: StartCommandContext) {
     await generateSwaggerDocumentation({
         rootPath: config.get('rootPath'),
         writableDirectoryPath: config.get('writableDirectoryPath'),
-        baseUrl: config.get('selfUrl'),
+        baseUrl: config.get('publicUrl'),
     });
 
     logger.info('Generated documentation.');
@@ -111,7 +112,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const router = createRouter();
     const httpServer = createHttpServer({ router });
-    httpServer.listen(config.get('port'), '0.0.0.0', () => {
+    httpServer.listen(config.get('port'), config.get('host'), () => {
         logger.info('Started http server.');
     });
 }

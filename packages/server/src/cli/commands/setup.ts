@@ -63,7 +63,7 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const fileConfig = readConfig(args.root);
+        const fileConfig = await readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
         setOptions(merge(

@@ -7,3 +7,4 @@
 
 export * from './ui';
 export * from './server';
+export * from './type';

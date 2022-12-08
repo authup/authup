@@ -7,20 +7,19 @@
 
 import { CAC } from 'cac';
 import consola from 'consola';
-import { useConfig } from '../config';
+import { createConfig } from '../config';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
         .action(async () => {
-            const config = useConfig();
-            const serverHostName = new URL(config.server.http.selfUrl).hostname;
+            const config = await createConfig();
 
             consola.info(`Environment: ${config.server.base.env}`);
             consola.info(`RootPath: ${config.server.base.rootPath}`);
             consola.info(`WritableDirectoryPath: ${config.server.base.writableDirectoryPath}`);
             consola.info(`UI Host: ${config.ui.host}`);
             consola.info(`UI Port: ${config.ui.port}`);
-            consola.info(`Server Host: ${serverHostName}`);
+            consola.info(`Server Host: ${config.server.http.host}`);
             consola.info(`Server Port: ${config.server.http.port}`);
             consola.info('Report an issue: https://github.com/tada5hi/authup/issues/new');
             consola.info('Suggest an improvement: https://github.com/tada5hi/authup/discussions/new');

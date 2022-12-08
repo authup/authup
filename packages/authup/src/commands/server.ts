@@ -8,19 +8,31 @@
 import { CAC } from 'cac';
 import consola from 'consola';
 import chalk from 'chalk';
-import { ServerCommand, executeServerCommand, startServer } from '../packages';
-import { resetServer } from '../packages/server/commands/reset';
+import process from 'process';
+import {
+    ServerCommand, executeServerCommand, handleServerCommandOutput, resetServer, startServer,
+} from '../packages';
 
 export function buildServerCommand(cac: CAC) {
     cac.command('server <cmd>', 'Run a specific command.')
         .action(async (command :string) => {
+            const root = process.cwd();
+
             switch (command) {
                 case ServerCommand.START: {
-                    await startServer();
+                    await startServer({
+                        args: {
+                            root,
+                        },
+                    });
                     break;
                 }
                 case ServerCommand.RESET: {
-                    await resetServer();
+                    await resetServer({
+                        args: {
+                            root,
+                        },
+                    });
                     break;
                 }
                 default: {

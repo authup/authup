@@ -10,10 +10,8 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import {
     resetCommand,
 } from '../../commands';
-import { readConfigFromEnv, setOptions } from '../../config';
-import { readConfig } from '../../config/utils/read';
-
-import { buildDataSourceOptions } from '../../database/utils';
+import { readConfig, readConfigFromEnv, setOptions } from '../../config';
+import { buildDataSourceOptions } from '../../database';
 
 interface ResetArguments extends Arguments {
     root: string;
@@ -34,7 +32,7 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        const fileConfig = readConfig(args.root);
+        const fileConfig = await readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
         setOptions(merge(

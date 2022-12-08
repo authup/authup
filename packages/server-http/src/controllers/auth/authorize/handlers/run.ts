@@ -31,7 +31,7 @@ export async function runAuthorizationRouteHandler(
 
     const config = useConfig();
     const codeBuilder = new OAuth2AuthorizationCodeBuilder({
-        selfUrl: config.get('selfUrl'),
+        selfUrl: config.get('publicUrl'),
         maxAge: config.get('tokenMaxAgeAccessToken'),
     });
 

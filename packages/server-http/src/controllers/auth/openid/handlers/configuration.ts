@@ -15,11 +15,11 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
     // todo: this can be cached :)
 
     const configuration : OAuth2OpenIDProviderMetadata = {
-        issuer: config.get('selfUrl'),
+        issuer: config.get('publicUrl'),
 
-        authorization_endpoint: new URL('authorize', config.get('selfUrl')).href,
+        authorization_endpoint: new URL('authorize', config.get('publicUrl')).href,
 
-        jwks_uri: new URL('jwks', config.get('selfUrl')).href,
+        jwks_uri: new URL('jwks', config.get('publicUrl')).href,
 
         response_type_supported: [
             OAuth2AuthorizationResponseType.CODE,
@@ -35,17 +35,17 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
             'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'none',
         ],
 
-        token_endpoint: new URL('token', config.get('selfUrl')).href,
+        token_endpoint: new URL('token', config.get('publicUrl')).href,
 
-        introspection_endpoint: new URL('token/introspect', config.get('selfUrl')).href,
+        introspection_endpoint: new URL('token/introspect', config.get('publicUrl')).href,
 
-        revocation_endpoint: new URL('token', config.get('selfUrl')).href,
+        revocation_endpoint: new URL('token', config.get('publicUrl')).href,
 
         // -----------------------------------------------------------
 
         service_documentation: 'https://authup.org/',
 
-        userinfo_endpoint: new URL('users/@me', config.get('selfUrl')).href,
+        userinfo_endpoint: new URL('users/@me', config.get('publicUrl')).href,
     };
 
     return send(res, configuration);

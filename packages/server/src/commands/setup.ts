@@ -38,7 +38,7 @@ export async function setupCommand(context?: SetupCommandContext) {
         await generateSwaggerDocumentation({
             rootPath: config.get('rootPath'),
             writableDirectoryPath: config.get('writableDirectoryPath'),
-            baseUrl: config.get('selfUrl'),
+            baseUrl: config.get('publicUrl'),
         });
 
         if (context.logger) {

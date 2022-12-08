@@ -6,23 +6,38 @@
  */
 
 import {
-    hasEnv, requireBooleanFromEnv, requireFromEnv, requireIntegerFromEnv,
+    hasEnv,
+    requireBooleanFromEnv,
+    requireFromEnv,
+    requireIntegerFromEnv,
 } from '@authup/server-common';
 import { OptionsInput } from '../type';
 
 export function readOptionsFromEnv() : OptionsInput {
-    const options : OptionsInput = { };
+    const options : OptionsInput = {};
+
+    if (hasEnv('NODE_ENV')) {
+        options.env = requireFromEnv('NODE_ENV');
+    }
+
+    if (hasEnv('WRITABLE_DIRECTORY_PATH')) {
+        options.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH');
+    }
+
+    if (hasEnv('HOST')) {
+        options.host = requireFromEnv('HOST');
+    }
 
     if (hasEnv('PORT')) {
         options.port = requireIntegerFromEnv('PORT');
     }
 
-    if (hasEnv('SELF_URL')) {
-        options.selfUrl = requireFromEnv('SELF_URL');
+    if (hasEnv('PUBLIC_URL')) {
+        options.publicUrl = requireFromEnv('PUBLIC_URL');
     }
 
-    if (hasEnv('UI_URL')) {
-        options.uiUrl = requireFromEnv('UI_URL');
+    if (hasEnv('AUTHORIZE_REDIRECT_URL')) {
+        options.authorizeRedirectUrl = requireFromEnv('AUTHORIZE_REDIRECT_URL');
     }
 
     if (hasEnv('ACCESS_TOKEN_MAX_AGE')) {

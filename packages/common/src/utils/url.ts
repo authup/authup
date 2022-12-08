@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './reset';
-export * from './start';
-export * from './utils';
+export function makeURLPublicAccessible(url: string) {
+    return url.replace('0.0.0.0', '127.0.0.1');
+}

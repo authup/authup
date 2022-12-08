@@ -8,6 +8,8 @@
 export type UIOptions = {
     port: number,
 
-    host: string
+    host: string,
+
+    apiUrl?: string
 };
 export type UIOptionsInput = Partial<UIOptions>;

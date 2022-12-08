@@ -26,13 +26,18 @@ export type Options = {
     port: number,
 
     /**
-     * default: http://127.0.0.1:3010
+     * default: 0.0.0.0
      */
-    selfUrl: string,
+    host: string,
+
     /**
      * default: http://127.0.0.1:3010
      */
-    uiUrl: string,
+    publicUrl: string,
+    /**
+     * default: http://127.0.0.1:3000
+     */
+    authorizeRedirectUrl: string,
 
     /**
      * use body middleware

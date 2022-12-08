@@ -55,6 +55,7 @@
         "redis-extension": "^1.2.0",
         "reflect-metadata": "^0.1.13",
         "pascal-case": "^3.1.2",
+        "rc9": "^2.0.0",
         "smob": "^0.0.6",
         "typeorm": "^0.3.10",
         "typeorm-extension": "^2.3.0",

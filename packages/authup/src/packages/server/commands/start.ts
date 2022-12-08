@@ -6,17 +6,15 @@
  */
 
 import consola from 'consola';
-import { ChildProcess } from 'child_process';
+import { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
 import { handleServerCommandOutput } from './utils';
 
-export async function startServer() : Promise<ChildProcess> {
+export async function startServer(ctx?: CommandExecutionContext) {
     consola.info('Server: Starting...');
-    const childProcess = await executeServerCommand(ServerCommand.START);
+    const childProcess = await executeServerCommand(ServerCommand.START, ctx);
     consola.success('Server: Started');
 
     handleServerCommandOutput(childProcess);
-
-    return childProcess;
 }
