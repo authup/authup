@@ -13,30 +13,30 @@ import{_ as s,o as a,c as n,f as e}from"./app.5b1101e4.js";const u=JSON.parse('{
 <span class="line"><span style="color:#A6ACCD;">ADMIN_USERNAME=admin</span></span>
 <span class="line"><span style="color:#A6ACCD;">ADMIN_PASSWORD=start123</span></span>
 <span class="line"><span style="color:#A6ACCD;"></span></span>
-<span class="line"><span style="color:#A6ACCD;">SELF_URL=http://127.0.0.1:3010/</span></span>
-<span class="line"><span style="color:#A6ACCD;">UI_URL=http://127.0.0.1:3000/</span></span>
+<span class="line"><span style="color:#A6ACCD;">PUBLIC_URL=http://127.0.0.1:3010/</span></span>
+<span class="line"><span style="color:#A6ACCD;">AUTHORIZE_REDIRECT_URL=http://127.0.0.1:3000/</span></span>
 <span class="line"><span style="color:#A6ACCD;"></span></span></code></pre></div><h2 id="step-4-boot-up" tabindex="-1">Step. 4: Boot up <a class="header-anchor" href="#step-4-boot-up" aria-hidden="true">#</a></h2><p>Add some scripts to <code>package.json</code>.</p><div class="language-json"><button title="Copy Code" class="copy"></button><span class="lang">json</span><pre class="shiki"><code><span class="line"><span style="color:#89DDFF;">{</span></span>
 <span class="line"><span style="color:#A6ACCD;">  </span><span style="color:#89DDFF;">&quot;</span><span style="color:#C792EA;">scripts</span><span style="color:#89DDFF;">&quot;</span><span style="color:#89DDFF;">:</span><span style="color:#A6ACCD;"> </span><span style="color:#89DDFF;">{</span></span>
 <span class="line"><span style="color:#A6ACCD;">      </span><span style="color:#89DDFF;">&quot;</span><span style="color:#FFCB6B;">start</span><span style="color:#89DDFF;">&quot;</span><span style="color:#89DDFF;">:</span><span style="color:#A6ACCD;"> </span><span style="color:#89DDFF;">&quot;</span><span style="color:#C3E88D;">authup start</span><span style="color:#89DDFF;">&quot;</span></span>
 <span class="line"><span style="color:#A6ACCD;">  </span><span style="color:#89DDFF;">}</span></span>
 <span class="line"><span style="color:#89DDFF;">}</span></span>
 <span class="line"></span></code></pre></div><p>The application setup will be processed on startup, if it has not already happened in a previous execution.</p><div class="language-shell"><button title="Copy Code" class="copy"></button><span class="lang">shell</span><pre class="shiki"><code><span class="line"><span style="color:#A6ACCD;">$ npm run start</span></span>
-<span class="line"></span></code></pre></div><p>The output should be similar to the following:</p><div class="language-shell"><button title="Copy Code" class="copy"></button><span class="lang">shell</span><pre class="shiki"><code><span class="line"><span style="color:#A6ACCD;">i Server: Starting...                                                                                                                                                                                                         17:25:57  </span></span>
-<span class="line"><span style="color:#A6ACCD;">\u221A Server: Started                                                                                                                                                                                                             17:25:57  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i UI: Starting...                                                                                                                                                                                                             17:25:57  </span></span>
-<span class="line"><span style="color:#A6ACCD;">\u221A UI: Started                                                                                                                                                                                                                 17:25:57  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i UI: Listening http://127.0.0.1:3000                                                                                                                                                                                         17:25:57  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Environment: production                                                                                                                                                                                             17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: WritableDirectoryPath: xxx                                                                                                                                  17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: URL: http://127.0.0.1:3010                                                                                                                                                                                          17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Docs-URL: http://127.0.0.1:3010/docs/                                                                                                                                                                               17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: UI-URL: http://127.0.0.1:3000                                                                                                                                                                                       17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Generating documentation...                                                                                                                                                                                         17:26:00  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Generated documentation.                                                                                                                                                                                            17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Establishing database connection...                                                                                                                                                                                 17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Established database connection.                                                                                                                                                                                    17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Starting oauth2 cleaner...                                                                                                                                                                                          17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Started oauth2 cleaner.                                                                                                                                                                                             17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Starting http server...                                                                                                                                                                                             17:26:03  </span></span>
-<span class="line"><span style="color:#A6ACCD;">i Server: Started http server.  </span></span>
+<span class="line"></span></code></pre></div><p>The output should be similar to the following:</p><div class="language-shell"><button title="Copy Code" class="copy"></button><span class="lang">shell</span><pre class="shiki"><code><span class="line"><span style="color:#A6ACCD;">i Server: Starting... </span></span>
+<span class="line"><span style="color:#A6ACCD;">\u221A Server: Started</span></span>
+<span class="line"><span style="color:#A6ACCD;">i UI: Starting...</span></span>
+<span class="line"><span style="color:#A6ACCD;">\u221A UI: Started</span></span>
+<span class="line"><span style="color:#A6ACCD;">i UI: Listening http://127.0.0.1:3000</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Environment: production</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: WritableDirectoryPath: xxx</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: URL: http://127.0.0.1:3010</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Docs-URL: http://127.0.0.1:3010/docs/</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: UI-URL: http://127.0.0.1:3000</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Generating documentation...</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Generated documentation.</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Establishing database connection...</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Established database connection.</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Starting oauth2 cleaner...</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Started oauth2 cleaner.</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Starting http server...</span></span>
+<span class="line"><span style="color:#A6ACCD;">i Server: Started http server.</span></span>
 <span class="line"></span></code></pre></div><p>This will lunch the following application with default settings:</p><ul><li>Frontend Application: <code>http://127.0.0.1:3000/</code></li><li>Backend Application: <code>http://127.0.0.1:3010/</code></li><li>Docs: <code>http://127.0.0.1:3010/docs</code></li></ul>`,26),l=[p];function o(i,c,r,d,C,h){return a(),n("div",null,l)}const y=s(t,[["render",o]]);export{u as __pageData,y as default};
