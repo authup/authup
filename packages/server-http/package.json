@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-http",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "This package contains the http module.",
     "main": "dist/index.js",
     "scripts": {

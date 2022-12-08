@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/Tada5hi/authup/compare/v0.1.0...v0.1.1) (2022-12-08)
+
+
+### Bug Fixes
+
+* **server-http:** make local package.json existence optional ([d6105fa](https://github.com/Tada5hi/authup/commit/d6105fa9213cde311bf6238b35b381cc5832320b))
+
+
+
+
+
 # 0.1.0 (2022-12-08)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/Tada5hi/authup/compare/v0.1.0...v0.1.1) (2022-12-08)
+
+
+### Bug Fixes
+
+* **authup:** use module path only as fallback for execution ([e0ddcb0](https://github.com/Tada5hi/authup/commit/e0ddcb09c04a9b5c6a4e12c95a618d527fbc4a30))
+
+
+
+
+
 # 0.1.0 (2022-12-08)
 
 

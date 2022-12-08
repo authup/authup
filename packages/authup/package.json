@@ -1,6 +1,6 @@
 {
     "name": "authup",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "This is the CLI for the authup framework.",
     "main": "dist/index.js",
     "scripts": {
@@ -31,8 +31,8 @@
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
         "@authup/common": "^0.1.0",
-        "@authup/server": "^0.1.0",
-        "@authup/ui": "^0.1.0",
+        "@authup/server": "^0.1.1",
+        "@authup/ui": "^0.1.1",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^2.15.3",
