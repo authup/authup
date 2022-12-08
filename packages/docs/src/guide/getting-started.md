@@ -55,8 +55,8 @@ PORT=3010
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=start123
 
-SELF_URL=http://127.0.0.1:3010/
-UI_URL=http://127.0.0.1:3000/
+PUBLIC_URL=http://127.0.0.1:3010/
+AUTHORIZE_REDIRECT_URL=http://127.0.0.1:3000/
 ```
 
 ## Step. 4: Boot up
@@ -80,24 +80,24 @@ $ npm run start
 
 The output should be similar to the following:
 ```shell
-i Server: Starting...                                                                                                                                                                                                         17:25:57  
-√ Server: Started                                                                                                                                                                                                             17:25:57  
-i UI: Starting...                                                                                                                                                                                                             17:25:57  
-√ UI: Started                                                                                                                                                                                                                 17:25:57  
-i UI: Listening http://127.0.0.1:3000                                                                                                                                                                                         17:25:57  
-i Server: Environment: production                                                                                                                                                                                             17:26:00  
-i Server: WritableDirectoryPath: xxx                                                                                                                                  17:26:00  
-i Server: URL: http://127.0.0.1:3010                                                                                                                                                                                          17:26:00  
-i Server: Docs-URL: http://127.0.0.1:3010/docs/                                                                                                                                                                               17:26:00  
-i Server: UI-URL: http://127.0.0.1:3000                                                                                                                                                                                       17:26:00  
-i Server: Generating documentation...                                                                                                                                                                                         17:26:00  
-i Server: Generated documentation.                                                                                                                                                                                            17:26:03  
-i Server: Establishing database connection...                                                                                                                                                                                 17:26:03  
-i Server: Established database connection.                                                                                                                                                                                    17:26:03  
-i Server: Starting oauth2 cleaner...                                                                                                                                                                                          17:26:03  
-i Server: Started oauth2 cleaner.                                                                                                                                                                                             17:26:03  
-i Server: Starting http server...                                                                                                                                                                                             17:26:03  
-i Server: Started http server.  
+i Server: Starting... 
+√ Server: Started
+i UI: Starting...
+√ UI: Started
+i UI: Listening http://127.0.0.1:3000
+i Server: Environment: production
+i Server: WritableDirectoryPath: xxx
+i Server: URL: http://127.0.0.1:3010
+i Server: Docs-URL: http://127.0.0.1:3010/docs/
+i Server: UI-URL: http://127.0.0.1:3000
+i Server: Generating documentation...
+i Server: Generated documentation.
+i Server: Establishing database connection...
+i Server: Established database connection.
+i Server: Starting oauth2 cleaner...
+i Server: Started oauth2 cleaner.
+i Server: Starting http server...
+i Server: Started http server.
 ```
 
 This will lunch the following application with default settings:
