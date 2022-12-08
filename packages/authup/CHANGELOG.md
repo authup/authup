@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/Tada5hi/authup/compare/v0.1.5...v0.1.6) (2022-12-08)
+
+
+### Bug Fixes
+
+* **authup:** better process output parsing ([edc3ca4](https://github.com/Tada5hi/authup/commit/edc3ca471821d2ef7f122e8cdc86452364d56a69))
+
+
+
+
+
 ## [0.1.5](https://github.com/Tada5hi/authup/compare/v0.1.4...v0.1.5) (2022-12-08)
 
 
