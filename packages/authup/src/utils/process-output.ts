@@ -6,6 +6,7 @@
  */
 
 import { hasOwnProperty, isObject } from 'smob';
+import { removeLineBreaks } from './line-breaks';
 
 export function parseProcessOutputData(input: unknown) : string[] {
     if (typeof input !== 'string') {
@@ -19,8 +20,13 @@ export function parseProcessOutputData(input: unknown) : string[] {
     const items : string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
+        const line = removeLineBreaks(lines[i]).trim();
+        if (line.length === 0) {
+            continue;
+        }
+
         try {
-            const parsed = JSON.parse(lines[i]);
+            const parsed = JSON.parse(line);
 
             if (
                 isObject(parsed) &&
@@ -34,7 +40,7 @@ export function parseProcessOutputData(input: unknown) : string[] {
             // no json :/
         }
 
-        items.push(lines[i]);
+        items.push(line);
     }
 
     return items;

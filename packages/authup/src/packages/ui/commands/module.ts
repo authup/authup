@@ -10,7 +10,7 @@ import consola from 'consola';
 import path from 'path';
 import process from 'process';
 import findUpPackagePath from 'resolve-package-path';
-import { stringifyObjectArgs } from '../../../utils';
+import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import { CommandExecutionContext } from '../../type';
 import { UICommand } from '../constants';
 
@@ -24,7 +24,9 @@ export function executeUICommand(
 
     return new Promise<ChildProcess>((resolve, reject) => {
         let base = 'npx @authup/ui';
-        const modulePath = findUpPackagePath('@authup/ui', process.cwd());
+        const modulePath = findUpPackagePath('@authup/ui', process.cwd()) ||
+            findUpPackagePath('@authup/ui', getClosestNodeModulesPath());
+
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);
             const outputPath = path.join(directory, '.output', 'server', 'index.mjs');

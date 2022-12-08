@@ -10,7 +10,7 @@ import consola from 'consola';
 import path from 'path';
 import process from 'process';
 import findUpPackagePath from 'resolve-package-path';
-import { stringifyObjectArgs } from '../../../utils';
+import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 
@@ -24,7 +24,9 @@ export async function executeServerCommand(
 
     return new Promise<ChildProcess>((resolve, reject) => {
         let base = 'npx @authup/server';
-        const modulePath = findUpPackagePath('@authup/server', process.cwd());
+        const modulePath = findUpPackagePath('@authup/server', process.cwd()) ||
+            findUpPackagePath('@authup/server', getClosestNodeModulesPath());
+
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);
             const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
