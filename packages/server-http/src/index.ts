@@ -11,5 +11,6 @@ export * from './middleware';
 export * from './router';
 export * from './server';
 export * from './swagger';
+export * from './type';
 export * from './oauth2';
 export * from './utils';
