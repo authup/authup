@@ -39,6 +39,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
+        "pascal-case": "^3.1.2",
         "smob": "^0.0.6",
         "zod": "^3.19.1"
     },

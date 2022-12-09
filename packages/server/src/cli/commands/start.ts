@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import * as console from 'console';
 import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSourceOptions } from 'typeorm';

@@ -8,9 +8,9 @@
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 import fs from 'fs';
+import process from 'process';
 import { MigrationGenerateCommand } from 'typeorm/commands/MigrationGenerateCommand';
-import { useConfig as useHTTPConfig } from '@authup/server-http';
-import { MigrationGenerateCommandContext } from '../type';
+import { MigrationGenerateCommandContext } from './type';
 
 class GenerateCommand extends MigrationGenerateCommand {
     static prettify(query: string) {
@@ -18,26 +18,17 @@ class GenerateCommand extends MigrationGenerateCommand {
     }
 }
 
-export async function migrationGenerateCommand(context: MigrationGenerateCommandContext) {
-    const config = await useHTTPConfig();
-
-    if (!context.directory) {
-        context.directory = path.join(config.get('writableDirectoryPath'), 'migrations');
+export async function generateMigration(context: MigrationGenerateCommandContext) {
+    if (!path.isAbsolute(context.directoryPath)) {
+        context.directoryPath = path.join(process.cwd(), context.directoryPath);
     }
 
-    context.directory = path.isAbsolute(context.directory) ?
-        context.directory :
-        path.join(config.get('rootPath'), context.directory);
     context.name = context.name || 'Auth';
 
     const timestamp = new Date().getTime();
     const fileName = `${timestamp}-${context.name}.ts`;
 
     const { dataSource } = context;
-
-    if (context.logger) {
-        context.logger.info('Generate migrations.');
-    }
 
     const upStatements: string[] = []; const
         downStatements: string[] = [];
@@ -68,34 +59,17 @@ export async function migrationGenerateCommand(context: MigrationGenerateCommand
         }
     }
 
-    if (
-        upStatements.length === 0 &&
-        downStatements.length === 0
-    ) {
-        if (context.logger) {
-            context.logger.info('Generated no migrations.');
-        }
-    }
-
     const fileContent = getTemplate(context.name, timestamp, upStatements, downStatements.reverse());
 
-    const directoryPath = path.isAbsolute(context.directory) ?
-        context.directory :
-        path.join(config.get('rootPath'), context.directory);
-
     try {
-        await fs.promises.access(directoryPath, fs.constants.R_OK | fs.constants.W_OK);
+        await fs.promises.access(context.directoryPath, fs.constants.R_OK | fs.constants.W_OK);
     } catch (e) {
-        await fs.promises.mkdir(directoryPath, { recursive: true });
+        await fs.promises.mkdir(context.directoryPath, { recursive: true });
     }
 
-    const filePath = path.join(directoryPath, fileName);
+    const filePath = path.join(context.directoryPath, fileName);
 
     await fs.promises.writeFile(filePath, fileContent, { encoding: 'utf-8' });
-
-    if (context.logger) {
-        context.logger.info('Generated migrations.');
-    }
 }
 
 function queryParams(parameters: any[] | undefined): string {

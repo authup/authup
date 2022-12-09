@@ -8,7 +8,7 @@
 import { CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
 
-import { buildDataSourceOptions } from '../../database/utils';
+import { buildDataSourceOptions } from '../../database';
 
 export class MigrationStatusCommand implements CommandModule {
     command = 'migration:status';

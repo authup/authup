@@ -8,7 +8,7 @@
 import { CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
 import path from 'path';
-import { migrationGenerateCommand } from '../../commands';
+import { generateMigration } from '@authup/server-database';
 import { buildDataSourceOptions } from '../../database';
 
 export class MigrationGenerateCommand implements CommandModule {
@@ -22,10 +22,10 @@ export class MigrationGenerateCommand implements CommandModule {
         const dataSource = new DataSource(options);
         await dataSource.initialize();
 
-        await migrationGenerateCommand({
+        await generateMigration({
             dataSource,
             name: 'Default',
-            directory: path.join(__dirname, '..', 'database', 'migrations'),
+            directoryPath: path.join(__dirname, '..', 'database', 'migrations'),
         });
 
         process.exit(0);

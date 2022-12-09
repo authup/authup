@@ -46,13 +46,11 @@
     "dependencies": {
         "@ebec/http": "^0.1.0",
         "@types/morgan": "^1.9.3",
-        "@types/nodemailer": "^6.4.6",
         "cors": "^2.8.5",
         "express-validator": "^6.14.2",
         "locter": "^0.6.0",
         "morgan": "^1.10.0",
         "node-cron": "^3.0.2",
-        "nodemailer": "^6.8.0",
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.6",
