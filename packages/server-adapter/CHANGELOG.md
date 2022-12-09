@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/Tada5hi/authup/compare/v0.2.1...v0.2.2) (2022-12-09)
+
+
+### Bug Fixes
+
+* **routup-http:** updated rotuup dependencies ([da6a6a7](https://github.com/Tada5hi/authup/commit/da6a6a7ebd75fc20f05db9b7540070e6fea2d187))
+
+
+
+
+
 # [0.2.0](https://github.com/Tada5hi/authup/compare/v0.1.6...v0.2.0) (2022-12-09)
 
 **Note:** Version bump only for package @authup/server-adapter

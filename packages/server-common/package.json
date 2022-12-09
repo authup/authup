@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-common",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "description": "Common server services and utilities.",
     "main": "dist/index.js",
     "files": [
@@ -44,7 +44,7 @@
         "nodemailer": "^6.8.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.2.0",
+        "@authup/common": "^0.2.2",
         "@types/bcrypt": "^5.0.0"
     },
     "peerDependencies": {

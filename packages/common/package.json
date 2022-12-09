@@ -1,6 +1,6 @@
 {
     "name": "@authup/common",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "description": "Package containing global constants, types & interfaces.",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
