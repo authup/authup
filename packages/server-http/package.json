@@ -81,7 +81,7 @@
         "@routup/body": "^0.3.3",
         "@routup/cookie": "^0.2.3",
         "@routup/decorators": "^0.1.4",
-        "@routup/query": "^0.2.3",
+        "@routup/query": "^0.2.4",
         "@routup/swagger": "^0.2.3",
         "@trapi/swagger": "^0.3.8",
         "@types/express-validator": "^3.0.0",
