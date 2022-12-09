@@ -82,7 +82,7 @@
         "@routup/cookie": "^0.2.3",
         "@routup/decorators": "^0.1.4",
         "@routup/query": "^0.2.3",
-        "@routup/swagger": "^0.2.3",
+        "@routup/swagger": "^0.2.4",
         "@trapi/swagger": "^0.3.8",
         "@types/express-validator": "^3.0.0",
         "@types/supertest": "^2.0.12",
