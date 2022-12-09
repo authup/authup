@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/Tada5hi/authup/compare/v0.2.0...v0.2.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **server-http:** add missing type export ([5c0a994](https://github.com/Tada5hi/authup/commit/5c0a994116655e091d847d99d291b817b6ff02db))
+
+
+
+
+
 # [0.2.0](https://github.com/Tada5hi/authup/compare/v0.1.6...v0.2.0) (2022-12-09)
 
 
