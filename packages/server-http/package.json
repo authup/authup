@@ -93,7 +93,7 @@
         "jest-serial-runner": "^1.2.1",
         "redis-extension": "^1.2.0",
         "routup": "^0.8.0",
-        "supertest": "^6.3.2",
+        "supertest": "^6.3.3",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.10",
         "typeorm-extension": "^2.3.0"
