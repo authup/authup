@@ -1,19 +1,16 @@
-# Aggregators 
+# OAuth2
 
-Aggregators are meant to trigger different updates for the presentation layer.
-
-## OAuth2
-
+## Cleaner
 OAuth2 tokens which are used to handle authentication & authorization
 are stored in the database and cached in redis.
 But it is necessary to remove the corresponding database entries in time.
 
-Therefore, register the OAuth2 Token Aggregator, to remove 
+Therefore, register the OAuth2 Token Cleaner, to remove 
 expired access- & refresh-tokens, when necessary.
 
 ```typescript
 import {
-    buildOAuth2Aggregator,
+    runOAuth2Cleaner,
     setEntitiesForDataSourceOptions,
     setSubscribersForDataSourceOptions
 } from '@authup/server-database';
@@ -39,8 +36,6 @@ import {
 
     // ------------------------------------
     
-    const { start } = buildOAuth2Aggregator();
-
-    await start();
+    await runOAuth2Cleaner();
 })();
 ```

@@ -109,7 +109,7 @@ export default defineConfig({
                         {text: 'Entities', link: '/packages/server-database/entities'},
                         {text: 'Seeds', link: '/packages/server-database/seeds'},
                         {text: 'Subscribers', link: '/packages/server-database/subscribers'},
-                        {text: 'Aggregators', link: '/packages/server-database/aggregators'},
+                        {text: 'OAuth2', link: '/packages/server-database/oauth2'},
                     ]
                 },
                 {
