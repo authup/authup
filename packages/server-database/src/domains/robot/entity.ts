@@ -14,6 +14,7 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import {
@@ -23,6 +24,7 @@ import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 
 @Entity({ name: 'auth_robots' })
+@Unique(['name', 'realm_id'])
 export class RobotEntity implements Robot {
     @PrimaryGeneratedColumn('uuid')
         id: string;
@@ -30,7 +32,6 @@ export class RobotEntity implements Robot {
     @Column({ type: 'varchar', length: 256, select: false })
         secret: string;
 
-    @Index({ unique: true })
     @Column({ type: 'varchar', length: 128 })
         name: string;
 

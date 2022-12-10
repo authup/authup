@@ -8,19 +8,24 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index, JoinColumn, ManyToOne, OneToMany,
+    Entity,
+    Index,
+    JoinColumn,
+    ManyToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import { Realm, Role } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_roles' })
+@Unique(['name', 'realm_id'])
 export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 64, unique: true })
+    @Column({ type: 'varchar', length: 64 })
         name: string;
 
     @Column({ type: 'varchar', length: 16, nullable: true })

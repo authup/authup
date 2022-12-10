@@ -6,13 +6,21 @@
  */
 
 import {
-    Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    Unique,
+    UpdateDateColumn,
 } from 'typeorm';
 import { Client, Realm, User } from '@authup/common';
 import { UserEntity } from '../user';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_clients' })
+@Unique(['name', 'realm_id'])
 export class OAuth2ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;

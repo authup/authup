@@ -11,15 +11,16 @@ import {
     Entity, Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, UpdateDateColumn,
+    PrimaryGeneratedColumn, Unique,
+    UpdateDateColumn,
 } from 'typeorm';
 import {
     IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig, Realm,
 } from '@authup/common';
 import { RealmEntity } from '../realm';
 
+@Unique(['slug', 'realm_id'])
 @Entity({ name: 'auth_identity_providers' })
-@Index(['slug', 'realm_id'], { unique: true })
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
         id: string;
