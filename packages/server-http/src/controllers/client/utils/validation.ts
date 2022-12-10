@@ -6,7 +6,10 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isRealmResourceWritable } from '@authup/common';
+import {
+    isPropertySet,
+    isRealmResourceWritable,
+} from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { ClientEntity, RealmEntity } from '@authup/server-database';
@@ -14,7 +17,7 @@ import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildExpressValidationErrorMessage,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
@@ -87,13 +90,12 @@ export async function runOauth2ClientValidation(
         .optional()
         .run(req);
 
-    if (operation === CRUDOperation.CREATE) {
-        await check('realm_id')
-            .exists()
-            .notEmpty()
-            .isString()
-            .run(req);
-    }
+    await check('realm_id')
+        .exists()
+        .notEmpty()
+        .isString()
+        .optional({ nullable: true })
+        .run(req);
 
     // ----------------------------------------------
 
@@ -113,16 +115,9 @@ export async function runOauth2ClientValidation(
 
     // ----------------------------------------------
 
-    if (
-        operation === CRUDOperation.CREATE &&
-        !result.data.realm_id
-    ) {
-        result.data.realm_id = useRequestEnv(req, 'realmId');
-    }
-
-    if (result.data.realm_id) {
+    if (isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.data.realm_id)) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }
 

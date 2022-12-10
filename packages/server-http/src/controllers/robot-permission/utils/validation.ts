@@ -14,7 +14,7 @@ import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildExpressValidationErrorMessage,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -89,7 +89,7 @@ export async function runRobotPermissionValidation(
         if (
             !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)
         ) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('robot_id'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('robot_id'));
         }
 
         result.data.robot_realm_id = result.relation.robot.realm_id;

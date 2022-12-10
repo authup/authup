@@ -9,3 +9,10 @@
 export function hasOwnProperty<X extends {}, Y extends PropertyKey>(obj: X, prop: Y): obj is X & Record<Y, unknown> {
     return Object.prototype.hasOwnProperty.call(obj, prop);
 }
+
+export function isPropertySet<X extends Record<string, any>, K extends keyof X>(
+    obj: X,
+    prop: K,
+) : boolean {
+    return hasOwnProperty(obj, prop);
+}

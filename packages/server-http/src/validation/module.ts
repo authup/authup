@@ -7,7 +7,7 @@
 
 import { BadRequestError } from '@ebec/http';
 import { Result, ValidationError } from 'express-validator';
-import { buildExpressValidationErrorMessage } from './utils';
+import { buildHTTPValidationErrorMessage } from './utils';
 
 export class RequestValidationError extends BadRequestError {
     constructor(validation: Result<ValidationError>) {
@@ -20,7 +20,7 @@ export class RequestValidationError extends BadRequestError {
         if (errors) {
             const parameterNames = errors.map((error) => error.param);
 
-            message = buildExpressValidationErrorMessage(parameterNames);
+            message = buildHTTPValidationErrorMessage(parameterNames);
         } else {
             message = 'An unexpected validation error occurred.';
         }

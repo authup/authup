@@ -5,16 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    PermissionID,
+    MASTER_REALM_ID,
+    PermissionID, isPropertySet,
+    isRealmResourceWritable,
 } from '@authup/common';
 import {
     Request, Response, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
+import { buildHTTPValidationErrorMessage } from '../../../validation';
 import { runOauth2ClientValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
@@ -25,6 +28,12 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
     }
 
     const result = await runOauth2ClientValidation(req, CRUDOperation.CREATE);
+
+    if (!isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), MASTER_REALM_ID)) {
+            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+        }
+    }
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);

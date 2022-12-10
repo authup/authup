@@ -15,7 +15,7 @@ import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildExpressValidationErrorMessage,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -68,7 +68,7 @@ export async function runIdentityProviderRoleValidation(
         result.relation.role.realm_id
     ) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
         }
 
         result.data.role_realm_id = result.relation.role.realm_id;
@@ -81,7 +81,7 @@ export async function runIdentityProviderRoleValidation(
 
     if (result.relation.provider) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.provider.realm_id)) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('provider_id'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('provider_id'));
         }
 
         result.data.provider_realm_id = result.relation.provider.realm_id;

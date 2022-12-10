@@ -16,7 +16,7 @@ import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildExpressValidationErrorMessage,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -88,7 +88,7 @@ export async function runRoleValidation(
         if (
             !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)
         ) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }
 
