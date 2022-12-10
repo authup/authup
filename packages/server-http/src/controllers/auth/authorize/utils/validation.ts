@@ -18,7 +18,7 @@ import { ClientEntity } from '@authup/server-database';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildExpressValidationErrorMessage,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -102,7 +102,7 @@ export async function runAuthorizeValidation(
         result.data.scope
     ) {
         if (!isOAuth2ScopeAllowed(result.relation.client.scope, result.data.scope)) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('scope'));
+            throw new BadRequestError(buildHTTPValidationErrorMessage('scope'));
         }
     }
 
