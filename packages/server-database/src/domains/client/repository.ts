@@ -8,11 +8,11 @@
 import {
     DataSource, EntityManager, InstanceChecker, Repository,
 } from 'typeorm';
-import { OAuth2ClientEntity } from './entity';
+import { ClientEntity } from './entity';
 
-export class OAuth2ClientRepository extends Repository<OAuth2ClientEntity> {
+export class OAuth2ClientRepository extends Repository<ClientEntity> {
     constructor(instance: DataSource | EntityManager) {
-        super(OAuth2ClientEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+        super(ClientEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
 
     /**
@@ -21,7 +21,7 @@ export class OAuth2ClientRepository extends Repository<OAuth2ClientEntity> {
      * @param id
      * @param secret
      */
-    async verifyCredentials(id: string, secret: string) : Promise<OAuth2ClientEntity | undefined> {
+    async verifyCredentials(id: string, secret: string) : Promise<ClientEntity | undefined> {
         const entity = await this.createQueryBuilder('client')
             .addSelect('client.secret')
             .where('client.id = :id', { id })

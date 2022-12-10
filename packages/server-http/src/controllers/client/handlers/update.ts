@@ -11,8 +11,8 @@ import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2ClientEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { ClientEntity } from '@authup/server-database';
+import { useRequestEnv } from '../../../utils';
 import { runOauth2ClientValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
@@ -30,7 +30,7 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2ClientEntity);
+    const repository = dataSource.getRepository(ClientEntity);
 
     let entity = await repository.findOneBy({ id });
     if (!entity) {

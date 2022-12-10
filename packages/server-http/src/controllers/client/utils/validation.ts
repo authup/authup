@@ -9,8 +9,8 @@ import { check, validationResult } from 'express-validator';
 import { isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { OAuth2ClientEntity, RealmEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { ClientEntity, RealmEntity } from '@authup/server-database';
+import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -23,8 +23,8 @@ import { CRUDOperation } from '../../../constants';
 export async function runOauth2ClientValidation(
     req: Request,
     operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<OAuth2ClientEntity>> {
-    const result : ExpressValidationResult<OAuth2ClientEntity> = initExpressValidationResult();
+) : Promise<ExpressValidationResult<ClientEntity>> {
+    const result : ExpressValidationResult<ClientEntity> = initExpressValidationResult();
 
     await check('name')
         .exists()
@@ -42,6 +42,22 @@ export async function runOauth2ClientValidation(
         .run(req);
 
     await check('redirect_uri')
+        .exists()
+        .notEmpty()
+        .isURL()
+        .isLength({ min: 3, max: 2000 })
+        .optional({ nullable: true })
+        .run(req);
+
+    await check('base_url')
+        .exists()
+        .notEmpty()
+        .isURL()
+        .isLength({ min: 3, max: 2000 })
+        .optional({ nullable: true })
+        .run(req);
+
+    await check('root_url')
         .exists()
         .notEmpty()
         .isURL()
@@ -97,17 +113,17 @@ export async function runOauth2ClientValidation(
 
     // ----------------------------------------------
 
-    if (result.relation.realm) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
-            throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
-        }
-    }
-
     if (
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
         result.data.realm_id = useRequestEnv(req, 'realmId');
+    }
+
+    if (result.data.realm_id) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.data.realm_id)) {
+            throw new BadRequestError(buildExpressValidationErrorMessage('realm_id'));
+        }
     }
 
     return result;

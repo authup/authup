@@ -8,6 +8,7 @@
 import { Client as BaseClient, Config } from 'hapic';
 
 import {
+    ClientAPI,
     IdentityProviderAPI,
     IdentityProviderRoleAPI,
     PermissionAPI,
@@ -24,6 +25,8 @@ import {
 } from '../../domains';
 
 export class HTTPClient extends BaseClient {
+    public readonly client : ClientAPI;
+
     public readonly identityProvider : IdentityProviderAPI;
 
     public readonly identityProviderRole : IdentityProviderRoleAPI;
@@ -54,6 +57,8 @@ export class HTTPClient extends BaseClient {
 
     constructor(config: Config) {
         super(config);
+
+        this.client = new ClientAPI(this.driver);
 
         this.identityProvider = new IdentityProviderAPI(this.driver);
         this.identityProviderRole = new IdentityProviderRoleAPI(this.driver);

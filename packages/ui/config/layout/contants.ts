@@ -90,6 +90,18 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         ],
     },
     {
+        name: 'Clients',
+        type: 'link',
+        url: '/admin/clients',
+        icon: 'fa-solid fa-ghost',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionID.CLIENT_ADD,
+            PermissionID.CLIENT_EDIT,
+            PermissionID.CLIENT_DROP,
+        ],
+    },
+    {
         name: 'Identity Providers',
         type: 'link',
         url: '/admin/identity-providers',

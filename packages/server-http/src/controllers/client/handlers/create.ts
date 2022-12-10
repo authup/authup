@@ -13,7 +13,7 @@ import {
     Request, Response, sendCreated,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2ClientEntity } from '@authup/server-database';
+import { ClientEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ClientValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
@@ -27,7 +27,7 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
     const result = await runOauth2ClientValidation(req, CRUDOperation.CREATE);
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2ClientEntity);
+    const repository = dataSource.getRepository(ClientEntity);
 
     const provider = repository.create(result.data);
 

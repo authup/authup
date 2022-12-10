@@ -11,7 +11,7 @@ import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2ClientEntity } from '@authup/server-database';
+import { ClientEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteClientRouteHandler(
@@ -26,7 +26,7 @@ export async function deleteClientRouteHandler(
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2ClientEntity);
+    const repository = dataSource.getRepository(ClientEntity);
     const entity = await repository.findOneBy({ id });
 
     if (!entity) {

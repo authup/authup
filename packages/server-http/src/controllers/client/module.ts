@@ -22,7 +22,7 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @SwaggerTags('oauth2')
-@DController('/client')
+@DController('/clients')
 export class ClientController {
     @DGet('', [])
     async getClients(

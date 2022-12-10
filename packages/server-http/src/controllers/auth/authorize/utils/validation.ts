@@ -14,7 +14,7 @@ import {
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { OAuth2ClientEntity } from '@authup/server-database';
+import { ClientEntity } from '@authup/server-database';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -26,9 +26,9 @@ import {
 
 export async function runAuthorizeValidation(
     req: Request,
-) : Promise<ExpressValidationResult<OAuth2AuthorizationCodeRequest & { client: OAuth2ClientEntity, client_id: string }>> {
+) : Promise<ExpressValidationResult<OAuth2AuthorizationCodeRequest & { client: ClientEntity, client_id: string }>> {
     const result : ExpressValidationResult<OAuth2AuthorizationCodeRequest & {
-        client: OAuth2ClientEntity, client_id: string
+        client: ClientEntity, client_id: string
     }> = initExpressValidationResult();
 
     await check('response_type')
@@ -92,7 +92,7 @@ export async function runAuthorizeValidation(
 
     // ----------------------------------------------
 
-    await extendExpressValidationResultWithRelation(result, OAuth2ClientEntity, {
+    await extendExpressValidationResultWithRelation(result, ClientEntity, {
         id: 'client_id',
         entity: 'client',
     });

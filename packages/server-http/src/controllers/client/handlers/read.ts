@@ -17,21 +17,23 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
-import { OAuth2ClientEntity } from '@authup/server-database';
+import { ClientEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2ClientEntity);
+    const repository = dataSource.getRepository(ClientEntity);
 
     const query = repository.createQueryBuilder('client');
 
-    const options : QueryFieldsApplyOptions<OAuth2ClientEntity> = {
+    const options : QueryFieldsApplyOptions<ClientEntity> = {
         defaultAlias: 'client',
         default: [
             'name',
             'description',
+            'base_url',
+            'root_url',
             'redirect_uri',
             'grant_types',
             'scope',
@@ -80,7 +82,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2ClientEntity);
+    const repository = dataSource.getRepository(ClientEntity);
 
     const query = repository.createQueryBuilder('client');
 
@@ -101,11 +103,13 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         }));
     }
 
-    const options : QueryFieldsApplyOptions<OAuth2ClientEntity> = {
+    const options : QueryFieldsApplyOptions<ClientEntity> = {
         defaultAlias: 'client',
         default: [
             'name',
             'description',
+            'base_url',
+            'root_url',
             'redirect_uri',
             'grant_types',
             'scope',

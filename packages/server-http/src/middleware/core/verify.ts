@@ -23,7 +23,7 @@ import { Request } from 'routup';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import {
-    OAuth2ClientEntity,
+    ClientEntity,
     OAuth2ClientRepository,
     RobotEntity,
     RobotRepository,
@@ -58,7 +58,7 @@ async function verifyBearerAuthorizationHeader(
 
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
-            setRequestEnv(request, 'client', sub as OAuth2ClientEntity);
+            setRequestEnv(request, 'client', sub as ClientEntity);
             setRequestEnv(request, 'clientId', payload.sub);
             break;
         }

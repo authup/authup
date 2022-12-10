@@ -21,7 +21,7 @@ import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_clients' })
 @Unique(['name', 'realm_id'])
-export class OAuth2ClientEntity implements Client {
+export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
@@ -66,6 +66,20 @@ export class OAuth2ClientEntity implements Client {
         default: null,
     })
         scope: string | null;
+
+    @Column({
+        type: 'varchar',
+        length: 2000,
+        nullable: true,
+    })
+        base_url: string | null;
+
+    @Column({
+        type: 'varchar',
+        length: 2000,
+        nullable: true,
+    })
+        root_url: string | null;
 
     @Column({
         type: 'boolean',

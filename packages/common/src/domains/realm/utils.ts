@@ -15,7 +15,7 @@ import { MASTER_REALM_ID } from './constants';
  */
 export function isRealmResourceWritable(
     realmId?: string,
-    resourceRealmId?: string | string[],
+    resourceRealmId?: null | string | string[],
 ) : boolean {
     if (Array.isArray(resourceRealmId)) {
         for (let i = 0; i < resourceRealmId.length; i++) {

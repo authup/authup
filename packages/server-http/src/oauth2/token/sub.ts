@@ -12,7 +12,7 @@ import {
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import {
-    OAuth2ClientEntity,
+    ClientEntity,
     RobotEntity,
     RobotRepository,
     UserEntity,
@@ -26,7 +26,7 @@ export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
         T extends `${OAuth2SubKind.ROBOT}` | OAuth2SubKind.ROBOT ?
             RobotEntity :
             T extends `${OAuth2SubKind.CLIENT}` | OAuth2SubKind.CLIENT ?
-                OAuth2ClientEntity :
+                ClientEntity :
                 never;
 
 /**
@@ -43,7 +43,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
     id: string,
     scope?: string,
 ) : Promise<OAuth2SubEntity<T>> {
-    let payload : UserEntity | RobotEntity | OAuth2ClientEntity;
+    let payload : UserEntity | RobotEntity | ClientEntity;
 
     const dataSource = await useDataSource();
 
@@ -51,7 +51,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
 
     switch (kind) {
         case OAuth2SubKind.CLIENT: {
-            const repository = dataSource.getRepository(OAuth2ClientEntity);
+            const repository = dataSource.getRepository(ClientEntity);
 
             const query = repository.createQueryBuilder('client')
                 .where('client.id = :id', { id })

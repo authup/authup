@@ -6,6 +6,7 @@
  */
 
 export * from './AuthEntityDelete';
+export * from './client';
 export * from './identity-provider';
 export * from './identity-provider-role';
 export * from './permission';

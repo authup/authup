@@ -25,6 +25,15 @@ export interface Client {
 
     scope: string | null,
 
+    /**
+     * Default redirect URL.
+     */
+    base_url: string | null,
+    /**
+     * URL prepended to relative URLs.
+     */
+    root_url: string | null,
+
     is_confidential: boolean,
 
     // ------------------------------------------------------------------

@@ -13,7 +13,7 @@ import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2ClientEntity } from '@authup/server-database';
+import { ClientEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
 import { OAuth2BearerTokenResponse } from '../response';
@@ -42,11 +42,11 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         return response.build();
     }
 
-    async validate(request: Request) : Promise<OAuth2ClientEntity> {
+    async validate(request: Request) : Promise<ClientEntity> {
         const [id, secret] = this.getClientCredentials(request);
 
         const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(OAuth2ClientEntity);
+        const repository = dataSource.getRepository(ClientEntity);
 
         const entity = await repository.findOneBy({
             id,

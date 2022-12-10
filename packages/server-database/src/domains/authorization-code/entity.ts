@@ -14,7 +14,7 @@ import {
 } from '@authup/common';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
-import { OAuth2ClientEntity } from '../client';
+import { ClientEntity } from '../client';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_authorization_codes' })
@@ -56,7 +56,7 @@ export class OAuth2AuthorizationCodeEntity implements OAuth2AuthorizationCode {
     @Column({ nullable: true, default: null })
         client_id: Client['id'] | null;
 
-    @ManyToOne(() => OAuth2ClientEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
         client: Client | null;
 

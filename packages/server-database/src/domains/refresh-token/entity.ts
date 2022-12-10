@@ -11,7 +11,7 @@ import {
 import {
     Client, OAuth2RefreshToken, Realm, Robot, User,
 } from '@authup/common';
-import { OAuth2ClientEntity } from '../client';
+import { ClientEntity } from '../client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
@@ -41,9 +41,9 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
     @Column({ nullable: true, default: null })
         client_id: Client['id'] | null;
 
-    @ManyToOne(() => OAuth2ClientEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
-        client: OAuth2ClientEntity | null;
+        client: ClientEntity | null;
 
     @Column({ nullable: true, default: null })
         user_id: User['id'] | null;

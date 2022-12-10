@@ -9,6 +9,8 @@ import { HTTPClient } from './module';
 
 export function useHTTPClientAPI(client: HTTPClient, name: string) {
     switch (name) {
+        case 'client':
+            return client.client;
         case 'oauth2Provider':
             return client.identityProvider;
         case 'oauth2ProviderRole':
