@@ -36,6 +36,7 @@ export abstract class AbstractGrant {
 
         return tokenBuilder.create({
             realmId: context.realmId,
+            realmName: context.realmName,
             sub: context.sub,
             subKind: context.subKind,
             remoteAddress: context.remoteAddress,

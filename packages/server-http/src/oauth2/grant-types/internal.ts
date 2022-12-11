@@ -8,7 +8,8 @@
 import {
     OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, Realm, User,
 } from '@authup/common';
-import { Request, getRequestIp, useRequestEnv } from 'routup';
+import { Request, getRequestIp } from 'routup';
+import { useRequestEnv } from '../../utils';
 import { AbstractGrant } from './abstract';
 import {
     Grant,
@@ -17,10 +18,12 @@ import { OAuth2BearerTokenResponse } from '../response';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
+        const realm = useRequestEnv(request, 'realm');
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }), // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             scope: OAuth2Scope.GLOBAL,
-            realmId: useRequestEnv(request, 'realmId') as Realm['id'],
+            realmId: realm.id,
+            realmName: realm.name,
             sub: useRequestEnv(request, 'userId') as User['id'],
             subKind: OAuth2SubKind.USER,
         });

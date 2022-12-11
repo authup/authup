@@ -42,13 +42,14 @@ export async function runAuthorizationRouteHandler(
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
-        const { id: realmId } = useRequestEnv(req, 'realm');
+        const { id: realmId, name: realmName } = useRequestEnv(req, 'realm');
 
         const token = await tokenBuilder.create({
             remoteAddress: req.socket.remoteAddress,
             sub: useRequestEnv(req, 'userId'),
             subKind: OAuth2SubKind.USER,
             realmId,
+            realmName,
             clientId: result.data.client_id,
             scope: result.data.scope,
         });

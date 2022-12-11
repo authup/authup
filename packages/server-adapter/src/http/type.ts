@@ -15,6 +15,7 @@ export type RequestEnv = {
     clientId?: Client['id']
 
     realmId?: Realm['id'],
+    realmName?: Realm['name'],
 
     token?: string,
 

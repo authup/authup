@@ -23,6 +23,8 @@ export type OAuth2AccessTokenBuilderCreateContext = {
 
     realmId: string,
 
+    realmName: string,
+
     scope?: string,
     clientId?: string,
 

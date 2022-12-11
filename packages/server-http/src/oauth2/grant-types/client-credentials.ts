@@ -23,11 +23,12 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }), // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             scope: OAuth2Scope.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
-            realmId: client.realm_id,
+            realmId: client.realm.id,
+            realmName: client.realm.name,
             clientId: client.id,
         });
 
@@ -48,9 +49,12 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(ClientEntity);
 
-        const entity = await repository.findOneBy({
-            id,
-            secret,
+        const entity = await repository.findOne({
+            where: {
+                id,
+                secret,
+            },
+            relations: ['realm'],
         });
 
         if (!entity) {

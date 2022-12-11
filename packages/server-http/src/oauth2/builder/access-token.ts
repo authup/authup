@@ -35,6 +35,7 @@ export class Oauth2AccessTokenBuilder {
             aud: context.clientId,
             client_id: context.clientId,
             realm_id: context.realmId,
+            realm_name: context.realmName,
             scope: context.scope,
         };
     }

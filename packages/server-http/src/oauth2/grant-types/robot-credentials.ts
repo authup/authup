@@ -11,7 +11,7 @@ import {
     RobotError,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request } from 'routup';
+import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotEntity, RobotRepository } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
@@ -23,11 +23,12 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         const entity = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             scope: OAuth2Scope.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
             sub: entity.id,
-            realmId: entity.realm_id,
+            realmId: entity.realm.id,
+            realmName: entity.realm.name,
         });
 
         const response = new OAuth2BearerTokenResponse({

@@ -9,7 +9,7 @@ import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authup/com
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
-import { Request } from 'routup';
+import { Request, getRequestIp } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
@@ -20,10 +20,11 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         const authorizationCode = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if set
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
-            realmId: authorizationCode.realm_id,
+            realmId: authorizationCode.realm.id,
+            realmName: authorizationCode.realm.name,
             scope: authorizationCode.scope,
             clientId: authorizationCode.client_id,
         });
@@ -50,7 +51,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             where: {
                 content: code,
             },
-            relations: ['user'],
+            relations: ['user', 'realm'],
         });
 
         if (!entity) {

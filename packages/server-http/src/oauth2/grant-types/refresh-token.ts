@@ -10,7 +10,7 @@ import {
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request } from 'routup';
+import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
@@ -26,11 +26,12 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const sub = getOAuth2SubByEntity(token);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             scope: token.scope,
             sub,
             subKind,
-            realmId: token.realm_id,
+            realmId: token.realm.id,
+            realmName: token.realm.name,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);
@@ -51,7 +52,12 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
-        const entity = await repository.findOneBy({ id: payload.jti });
+        const entity = await repository.findOne({
+            where: {
+                id: payload.jti,
+            },
+            relations: ['realm'],
+        });
 
         if (!entity) {
             throw TokenError.refreshTokenInvalid();

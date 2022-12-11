@@ -11,7 +11,7 @@ import {
     UserError,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request } from 'routup';
+import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserEntity, UserRepository } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
@@ -23,11 +23,12 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const user = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: request.socket.remoteAddress, // todo: check if present
+            remoteAddress: getRequestIp(request, { trustProxy: true }),
             scope: OAuth2Scope.GLOBAL,
             sub: user.id,
             subKind: OAuth2SubKind.USER,
-            realmId: user.realm_id,
+            realmId: user.realm.id,
+            realmName: user.realm.name,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

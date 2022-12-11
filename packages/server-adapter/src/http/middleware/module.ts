@@ -82,6 +82,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
         }
 
         env.realmId = data.realm_id;
+        env.realmName = data.realm_name;
         env.token = header.token;
         env.permissions = data.permissions;
         env.ability = new AbilityManager(data.permissions);

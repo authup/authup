@@ -17,6 +17,7 @@ export type AccessTokenIssueContext = {
     subKind: `${OAuth2SubKind}`,
 
     realmId: string,
+    realmName: string,
 
     scope?: string,
     clientId?: string,
