@@ -6,27 +6,43 @@
  */
 
 import { Brackets, SelectQueryBuilder } from 'typeorm';
-import { MASTER_REALM_ID } from '@authup/common';
+import { MASTER_REALM_NAME, Realm, isPropertySet } from '@authup/common';
 
 export function onlyRealmReadableQueryResources<T>(
     query: SelectQueryBuilder<T>,
-    realmId: string,
-    queryField: string | string[] = 'realm_id',
+    input: { id: string, name?: string } | string,
+    resourceField: string | string[] = 'realm_id',
 ) : void {
-    if (realmId === MASTER_REALM_ID) return;
+    let realm : Partial<Realm>;
+    if (typeof input === 'string') {
+        realm.id = input;
+    } else {
+        realm = input;
+    }
+
+    if (
+        isPropertySet(realm, 'name') &&
+        realm.name === MASTER_REALM_NAME
+    ) {
+        return;
+    }
+
+    if (typeof realm.id === 'undefined') {
+        return;
+    }
 
     query.andWhere(new Brackets((qb) => {
-        if (Array.isArray(queryField)) {
-            for (let i = 0; i < queryField.length; i++) {
+        if (Array.isArray(resourceField)) {
+            for (let i = 0; i < resourceField.length; i++) {
                 qb.orWhere(
-                    `(${queryField[i]} = :realm${i} OR ${queryField} IS NULL)`,
-                    { [`realm${i}`]: realmId },
+                    `(${resourceField[i]} = :realm${i} OR ${resourceField} IS NULL)`,
+                    { [`realm${i}`]: realm.id },
                 );
             }
         } else {
             qb.where(
-                `(${queryField} = :realm OR ${queryField} IS NULL)`,
-                { realm: realmId },
+                `(${resourceField} = :realm OR ${resourceField} IS NULL)`,
+                { realm: realm.id },
             );
         }
     }));

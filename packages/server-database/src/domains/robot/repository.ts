@@ -65,6 +65,9 @@ export class RobotRepository extends Repository<RobotEntity> {
             where: {
                 robot_id: id,
             },
+            relations: {
+                permission: true,
+            },
             cache: {
                 id: buildKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
@@ -92,6 +95,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         const entity = await this.createQueryBuilder('robot')
             .addSelect('robot.secret')
             .where('robot.id = :id', { id })
+            .leftJoinAndSelect('robot.realm', 'realm')
             .getOne();
 
         if (

@@ -19,7 +19,7 @@ import { NotFoundError } from '@ebec/http';
 import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
 import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
     const options : QueryFieldsApplyOptions<UserEntity> = {
@@ -52,7 +52,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
@@ -111,7 +111,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         }));
     }
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',

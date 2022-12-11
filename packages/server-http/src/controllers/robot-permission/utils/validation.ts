@@ -35,7 +35,7 @@ export async function runRobotPermissionValidation(
 
         await check('permission_id')
             .exists()
-            .isString()
+            .isUUID()
             .run(req);
 
         await check('target')
@@ -57,18 +57,21 @@ export async function runRobotPermissionValidation(
 
     // ----------------------------------------------
 
+    const ability = useRequestEnv(req, 'ability');
+
     await extendExpressValidationResultWithRelation(result, PermissionEntity, {
         id: 'permission_id',
         entity: 'permission',
     });
 
-    if (result.relation.permission.target) {
-        result.data.target = result.relation.permission.target;
-    }
+    if (result.relation.permission) {
+        if (result.relation.permission.target) {
+            result.data.target = result.relation.permission.target;
+        }
 
-    const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(result.data.permission_id)) {
-        throw new ForbiddenError('It is only allowed to assign permissions, which are also owned.');
+        if (!ability.has(result.relation.permission.name)) {
+            throw new ForbiddenError('It is only allowed to assign robot permissions, which are also owned.');
+        }
     }
 
     const permissionTarget = ability
@@ -87,7 +90,7 @@ export async function runRobotPermissionValidation(
 
     if (result.relation.robot) {
         if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)
         ) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('robot_id'));
         }

@@ -16,12 +16,12 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    MASTER_REALM_ID,
+    MASTER_REALM_NAME,
     OAuth2SubKind, PermissionID, isSelfId,
 } from '@authup/common';
 import { RobotEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -74,8 +74,8 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
         }
     }
 
-    if (env.realmId !== MASTER_REALM_ID) {
-        query.andWhere('robot.realm_id = :realmId', { realmId: env.realmId });
+    if (env.realm.name !== MASTER_REALM_NAME) {
+        query.andWhere('robot.realm_id = :realmId', { realmId: env.realm.id });
     }
 
     const [entities, total] = await query.getManyAndCount();

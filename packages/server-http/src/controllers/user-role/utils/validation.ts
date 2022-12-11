@@ -60,7 +60,7 @@ export async function runUserRoleValidation(
         result.relation.role.realm_id
     ) {
         if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)
         ) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
         }
@@ -75,7 +75,7 @@ export async function runUserRoleValidation(
 
     if (result.relation.user) {
         if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.user.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.user.realm_id)
         ) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('user_id'));
         }

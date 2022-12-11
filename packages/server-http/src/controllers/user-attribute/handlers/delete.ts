@@ -32,7 +32,7 @@ export async function deleteUserAttributeRouteHandler(req: Request, res: Respons
     ) {
         if (
             !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to drop an attribute for the given user...');
         }

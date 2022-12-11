@@ -12,7 +12,7 @@ import {
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRoleEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
     req: Request,
@@ -33,8 +33,8 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     }
 
     if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id) ||
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }

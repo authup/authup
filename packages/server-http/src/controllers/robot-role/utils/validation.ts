@@ -58,7 +58,7 @@ export async function runRobotRoleValidation(
         result.relation.role &&
         result.relation.role.realm_id
     ) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
         }
 
@@ -71,7 +71,7 @@ export async function runRobotRoleValidation(
     });
 
     if (result.relation.robot) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.robot.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('robot_id'));
         }
 

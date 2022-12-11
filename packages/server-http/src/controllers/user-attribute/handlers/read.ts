@@ -28,7 +28,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     const query = repository.createQueryBuilder('userAttribute');
 
     query.where(new Brackets((qb) => {
-        onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
+        onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
         qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
     }));
@@ -78,7 +78,7 @@ export async function getOneUserAttributeRouteHandler(
     }
 
     if (
-        !isRealmResourceReadable(useRequestEnv(req, 'realmId'), result.realm_id) &&
+        !isRealmResourceReadable(useRequestEnv(req, 'realm'), result.realm_id) &&
         useRequestEnv(req, 'userId') !== result.user_id
     ) {
         throw new ForbiddenError('You are not authorized to read this user attribute...');

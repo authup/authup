@@ -23,13 +23,13 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'permission',
         filters: {
-            allowed: ['id'],
+            allowed: ['id', 'name'],
         },
         pagination: {
             maxLimit: 50,
         },
         sort: {
-            allowed: ['id', 'created_at', 'updated_at'],
+            allowed: ['id', 'name', 'created_at', 'updated_at'],
         },
     });
 

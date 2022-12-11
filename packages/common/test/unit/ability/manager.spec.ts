@@ -9,13 +9,13 @@ import { AbilityDescriptor, AbilityManager } from '../../../src';
 
 const testPermissions : AbilityDescriptor[] = [
     {
-        id: 'user_add', inverse: false, power: 777, target: 'test',
+        name: 'user_add', inverse: false, power: 777, target: 'test',
     },
     {
-        id: 'user_add', inverse: false, power: 999,
+        name: 'user_add', inverse: false, power: 999,
     },
     {
-        id: 'user_drop', inverse: false, power: 777, target: 'test',
+        name: 'user_drop', inverse: false, power: 777, target: 'test',
     },
 ];
 
@@ -33,7 +33,7 @@ describe('src/ability/manager.ts', () => {
         manager.set(testPermissions);
 
         let condition = manager.satisfy({
-            id: 'user_add',
+            name: 'user_add',
             power: {
                 $lt: 777,
             },
@@ -42,7 +42,7 @@ describe('src/ability/manager.ts', () => {
         expect(condition).toBeFalsy();
 
         condition = manager.satisfy({
-            id: 'user_add',
+            name: 'user_add',
             power: {
                 $eq: 999,
             },
@@ -83,7 +83,7 @@ describe('src/ability/manager.ts', () => {
         manager.set(testPermissions);
 
         expect(manager.getPower('user_add')).toBe(999);
-        expect(manager.getPower({ id: 'user_add', target: 'test' })).toEqual(777);
+        expect(manager.getPower({ name: 'user_add', target: 'test' })).toEqual(777);
         expect(manager.getPower('user_drop')).toBe(777);
         expect(manager.getPower('do')).toBeUndefined();
     });

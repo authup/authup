@@ -235,7 +235,9 @@ export const useAuthStore = defineStore('auth', () => {
             setTokenExpireDate(expireDate);
 
             setToken(OAuth2TokenKind.ACCESS, data.access_token);
-            setToken(OAuth2TokenKind.REFRESH, data.refresh_token);
+            if (data.refresh_token) {
+                setToken(OAuth2TokenKind.REFRESH, data.refresh_token);
+            }
 
             await resolve();
         } catch (e) {

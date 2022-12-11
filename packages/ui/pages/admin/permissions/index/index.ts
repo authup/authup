@@ -23,7 +23,7 @@ export default defineComponent({
             [SlotName.ITEM_ACTIONS]: (props: { data: Permission }) => h('div', [
                 h(NuxtLink, {
                     class: 'btn btn-xs btn-outline-primary me-1',
-                    to: `/admin/permissions/${props.data.id}`,
+                    to: `/admin/permissions/${props.data.name}`,
                 }, {
                     default: () => h('i', { class: 'fa fa-bars' }),
                 }),

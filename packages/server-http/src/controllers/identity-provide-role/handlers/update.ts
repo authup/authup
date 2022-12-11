@@ -40,8 +40,8 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.provider_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id) ||
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }

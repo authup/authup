@@ -25,6 +25,7 @@ export class OAuth2ClientRepository extends Repository<ClientEntity> {
         const entity = await this.createQueryBuilder('client')
             .addSelect('client.secret')
             .where('client.id = :id', { id })
+            .leftJoinAndSelect('client.realm', 'realm')
             .getOne();
 
         if (

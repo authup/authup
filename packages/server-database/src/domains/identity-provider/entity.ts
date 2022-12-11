@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index,
+    Entity,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn, Unique,

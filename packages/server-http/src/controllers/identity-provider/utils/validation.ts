@@ -9,7 +9,7 @@ import { useRequestBody } from '@routup/body';
 import { check, validationResult } from 'express-validator';
 import {
     IdentityProviderProtocol,
-    IdentityProviderProtocolConfig,
+    IdentityProviderProtocolConfig, isPropertySet,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authup/common';
@@ -24,7 +24,7 @@ import {
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol, validateOidcIdentityProviderProtocol,
 } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -82,13 +82,11 @@ export async function runOauth2ProviderValidation(
         .isBoolean()
         .run(req);
 
-    if (operation === CRUDOperation.CREATE) {
-        await check('realm_id')
-            .exists()
-            .notEmpty()
-            .isString()
-            .run(req);
-    }
+    await check('realm_id')
+        .exists()
+        .isUUID()
+        .optional({ nullable: true })
+        .run(req);
 
     // ----------------------------------------------
 
@@ -139,8 +137,8 @@ export async function runOauth2ProviderValidation(
         entity: 'realm',
     });
 
-    if (result.relation.realm) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }
@@ -149,7 +147,8 @@ export async function runOauth2ProviderValidation(
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        result.data.realm_id = useRequestEnv(req, 'realmId');
+        const { id } = useRequestEnv(req, 'realm');
+        result.data.realm_id = id;
     }
 
     return result;

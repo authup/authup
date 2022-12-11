@@ -9,15 +9,18 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    PrimaryColumn,
+    PrimaryColumn, PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Permission } from '@authup/common';
 
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity implements Permission {
-    @PrimaryColumn({ type: 'varchar', length: 128, generated: false })
+    @PrimaryGeneratedColumn('uuid')
         id: string;
+
+    @Column({ type: 'varchar', length: 128, unique: true })
+        name: string;
 
     @Column({ type: 'varchar', length: 16, nullable: true })
         target: string | null;

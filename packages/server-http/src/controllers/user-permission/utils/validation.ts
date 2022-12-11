@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, UserEntity, UserPermissionEntity } from '@authup/server-database';
@@ -57,16 +57,23 @@ export async function runUserPermissionValidation(
 
     // ----------------------------------------------
 
+    const ability = useRequestEnv(req, 'ability');
+
     await extendExpressValidationResultWithRelation(result, PermissionEntity, {
         id: 'permission_id',
         entity: 'permission',
     });
 
-    if (result.relation.permission.target) {
-        result.data.target = result.relation.permission.target;
+    if (result.relation.permission) {
+        if (result.relation.permission.target) {
+            result.data.target = result.relation.permission.target;
+        }
+
+        if (!ability.has(result.relation.permission.name)) {
+            throw new ForbiddenError('It is only allowed to assign user permissions, which are also owned.');
+        }
     }
 
-    const ability = useRequestEnv(req, 'ability');
     const permissionTarget = ability.getTarget(PermissionID.USER_PERMISSION_ADD);
     if (permissionTarget) {
         result.data.target = permissionTarget;
@@ -81,7 +88,7 @@ export async function runUserPermissionValidation(
 
     if (result.relation.user) {
         if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.user.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.user.realm_id)
         ) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('user_id'));
         }

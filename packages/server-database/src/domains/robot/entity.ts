@@ -18,7 +18,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
-    MASTER_REALM_ID, Realm, Robot, User, createNanoID,
+    Realm, Robot, User, createNanoID,
 } from '@authup/common';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
@@ -59,12 +59,12 @@ export class RobotEntity implements Robot {
         user: User | null;
 
     @Index()
-    @Column({ default: MASTER_REALM_ID })
-        realm_id: Realm['id'];
+    @Column({ nullable: true })
+        realm_id: Realm['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm;
+        realm: Realm | null;
 
     // ------------------------------------------------------------------
 

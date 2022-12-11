@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID, User } from '@authup/common';
+import { User } from '@authup/common';
 import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { setConfigOptions } from '../../../../../src';
@@ -61,7 +61,6 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
 
         expect(data.name).toEqual('test');
         expect(data.email).toEqual('test@example.com');
-        expect(data.realm_id).toEqual(MASTER_REALM_ID);
         expect(data.id).toBeDefined();
         expect(data.created_at).toBeDefined();
         expect(data.updated_at).toBeDefined();

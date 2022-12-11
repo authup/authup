@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isRealmResourceWritable } from '@authup/common';
+import { isPropertySet, isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { RealmEntity, RobotEntity } from '@authup/server-database';
@@ -57,14 +57,11 @@ export async function runRobotValidation(
         .optional({ nullable: true })
         .run(req);
 
-    if (operation === CRUDOperation.CREATE) {
-        await check('realm_id')
-            .exists()
-            .notEmpty()
-            .isString()
-            .optional()
-            .run(req);
-    }
+    await check('realm_id')
+        .exists()
+        .isUUID()
+        .optional()
+        .run(req);
 
     // ----------------------------------------------
 
@@ -82,20 +79,18 @@ export async function runRobotValidation(
         entity: 'realm',
     });
 
-    if (result.relation.realm) {
-        if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)
-        ) {
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
+    } else if (
+        operation === CRUDOperation.CREATE &&
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
+    ) {
+        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
     }
 
-    if (
-        operation === CRUDOperation.CREATE &&
-        !result.data.realm_id
-    ) {
-        result.data.realm_id = useRequestEnv(req, 'realmId');
-    }
+    // ----------------------------------------------
 
     return result;
 }

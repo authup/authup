@@ -12,10 +12,10 @@ import {
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotPermissionEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 /**
- * Drop an permission by id of a specific user.
+ * Drop a permission by id of a specific user.
  *
  * @param req
  * @param res
@@ -38,13 +38,13 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.robot_realm_id)) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.robot_realm_id)) {
         throw new ForbiddenError();
     }
 
     // ----------------------------------------------
 
-    if (ability.matchTarget(PermissionID.ROBOT_PERMISSION_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionID.ROBOT_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the robot-permission target.');
     }
 

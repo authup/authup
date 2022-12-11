@@ -15,7 +15,7 @@ import {
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isRealmResourceReadable } from '@authup/common';
 import { RoleAttributeEntity, onlyRealmReadableQueryResources } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -23,7 +23,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('roleAttribute');
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realmId'));
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',
@@ -69,7 +69,7 @@ export async function getOneRoleAttributeRouteHandler(
     }
 
     if (
-        !isRealmResourceReadable(useRequestEnv(req, 'realmId'), result.realm_id)
+        !isRealmResourceReadable(useRequestEnv(req, 'realm'), result.realm_id)
     ) {
         throw new ForbiddenError('You are not authorized to read this role attribute...');
     }

@@ -97,11 +97,15 @@ export function useListBuilder<T extends Record<string, any>>(
             onDeleted(value) {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
+
+                    // todo: delete data.value ref
                 }
             },
             onUpdated(value) {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
+
+                    // todo: update data.value ref
                 }
             },
             slotItems: context.setup.slots || {},

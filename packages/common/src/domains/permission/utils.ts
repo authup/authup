@@ -45,8 +45,12 @@ function isFieldsArray(input: unknown): input is string[] {
 // todo: replace CURRENT_DATE with evaluation of Date.now()
 
 export function buildPermissionDescriptorFromRelation(entity: PermissionRelation): AbilityDescriptor {
+    if (typeof entity.permission === 'undefined') {
+        throw new Error('The permission relation is mandatory.');
+    }
+
     return {
-        id: entity.permission_id,
+        name: entity.permission.name,
         condition: buildPermissionMetaCondition(entity.condition),
         power: entity.power,
         fields: buildPermissionMetaFields(entity.fields),

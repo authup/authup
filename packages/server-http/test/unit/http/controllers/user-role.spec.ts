@@ -6,7 +6,7 @@
  */
 
 import {
-    MASTER_REALM_ID, Role, User, UserRole,
+    Role, User, UserRole,
 } from '@authup/common';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -24,7 +24,6 @@ describe('src/http/controllers/user-role', () => {
 
     const user : Partial<User> = {
         name: 'Test',
-        realm_id: MASTER_REALM_ID,
     };
 
     const role : Partial<Role> = {

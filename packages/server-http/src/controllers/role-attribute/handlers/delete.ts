@@ -30,7 +30,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
     const ability = useRequestEnv(req, 'ability');
     if (
         !ability.has(PermissionID.ROLE_EDIT) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to drop an attribute of this role...');
     }

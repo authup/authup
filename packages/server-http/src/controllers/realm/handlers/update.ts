@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID } from '@authup/common';
+import { MASTER_REALM_NAME, PermissionID, isPropertySet } from '@authup/common';
 import {
-    Request, Response, send, sendAccepted, useRequestParam,
+    Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runRealmValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
@@ -36,6 +36,14 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     let entity = await repository.findOneBy({ id });
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (
+        entity.name === MASTER_REALM_NAME &&
+        isPropertySet(result.data, 'name') &&
+        entity.name !== result.data.name
+    ) {
+        throw new BadRequestError(`The name of the ${MASTER_REALM_NAME} can not be changed.`);
     }
 
     entity = repository.merge(entity, result.data);

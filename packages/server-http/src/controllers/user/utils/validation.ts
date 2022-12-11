@@ -7,12 +7,12 @@
 
 import { check, validationResult } from 'express-validator';
 import {
-    PermissionID, isRealmResourceWritable, isValidUserName,
+    PermissionID, isPropertySet, isRealmResourceWritable, isValidUserName,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { RealmEntity, UserEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -110,8 +110,7 @@ export async function runUserValidation(
         if (operation === CRUDOperation.CREATE) {
             await check('realm_id')
                 .exists()
-                .notEmpty()
-                .isString()
+                .isUUID()
                 .optional()
                 .run(req);
         }
@@ -145,8 +144,8 @@ export async function runUserValidation(
         entity: 'realm',
     });
 
-    if (result.relation.realm) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)) {
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.realm.id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }
@@ -155,7 +154,8 @@ export async function runUserValidation(
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        result.data.realm_id = useRequestEnv(req, 'realmId');
+        const { id } = useRequestEnv(req, 'realm');
+        result.data.realm_id = id;
     }
 
     return result;

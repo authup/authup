@@ -32,8 +32,8 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
     }
 
     if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.robot_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.robot_realm_id) ||
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }

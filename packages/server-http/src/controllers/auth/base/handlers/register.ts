@@ -6,14 +6,14 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { MASTER_REALM_ID, User, isValidUserName } from '@authup/common';
+import { User, isValidUserName } from '@authup/common';
 import { BadRequestError, ServerError } from '@ebec/http';
 import { randomBytes } from 'crypto';
 import {
     Request, Response, sendAccepted,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authup/server-database';
+import { RealmRepository, UserRepository } from '@authup/server-database';
 import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-common';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
@@ -73,7 +73,6 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     const data : Partial<User> = matchedValidationData(req, { includeOptionals: true });
 
-    data.realm_id ??= MASTER_REALM_ID;
     data.name ??= data.email;
 
     if (config.get('emailVerification')) {
@@ -85,6 +84,13 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     const repository = new UserRepository(dataSource);
 
     const entity = repository.create(data);
+
+    if (!entity.realm_id) {
+        const realmRepository = new RealmRepository(dataSource);
+        const realm = await realmRepository.getMaster();
+
+        entity.realm_id = realm.id;
+    }
 
     await repository.save(entity);
 

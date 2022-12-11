@@ -99,7 +99,7 @@ export class AbilityManager {
         let predicate : MongoQuery<Ability>;
 
         if (typeof value === 'string') {
-            predicate = { id: { $eq: value } };
+            predicate = { name: { $eq: value } };
         } else {
             predicate = value;
         }
@@ -119,7 +119,7 @@ export class AbilityManager {
         let basePredicate : MongoQuery<Ability>;
         if (typeof id === 'string') {
             basePredicate = {
-                id: {
+                name: {
                     $eq: id,
                 },
             };
@@ -174,7 +174,7 @@ export class AbilityManager {
     ) : Ability | undefined {
         if (typeof predicate === 'string') {
             predicate = {
-                id: {
+                name: {
                     $eq: predicate,
                 },
             };
@@ -247,7 +247,7 @@ export class AbilityManager {
 
             items[i] = {
                 ...configurations[i],
-                ...buildAbilityMetaFromName(configurations[i].id),
+                ...buildAbilityMetaFromName(configurations[i].name),
             };
         }
 

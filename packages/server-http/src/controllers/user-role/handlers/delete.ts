@@ -12,7 +12,7 @@ import {
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRoleEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -32,8 +32,8 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
     }
 
     if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.user_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.user_realm_id) ||
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
     ) {
         throw new ForbiddenError();
     }

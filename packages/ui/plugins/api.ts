@@ -37,6 +37,21 @@ export default defineNuxtPlugin((ctx) => {
     };
 
     const client = new HTTPClient(config);
+    client.mountResponseInterceptor(
+        (data) => data,
+        (error) => {
+            if (
+                isClientError(error) &&
+                error.response &&
+                error.response.data &&
+                hasOwnProperty(error.response.data, 'message')
+            ) {
+                error.message = error.response.data.message as string;
+            }
+
+            return Promise.reject(error);
+        },
+    );
 
     let interceptorId : undefined | number;
 
@@ -55,6 +70,7 @@ export default defineNuxtPlugin((ctx) => {
                 (error) => {
                     if (
                         isClientError(error) &&
+                        error.response &&
                         error.response.data &&
                         hasOwnProperty(error.response.data, 'code') &&
                         error.response.data.code === ErrorCode.TOKEN_EXPIRED
@@ -65,11 +81,7 @@ export default defineNuxtPlugin((ctx) => {
                                 type: 'Bearer',
                                 token: store.accessToken,
                             }))
-                            .then(() => client.request({
-                                method: error.config.method,
-                                url: error.config.url,
-                                data: error.config.data,
-                            }));
+                            .then(() => client.request(error.config));
                     }
 
                     return Promise.reject(error);

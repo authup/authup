@@ -8,11 +8,11 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionID, isRealmResourceWritable } from '@authup/common';
 import {
-    Request, Response, send, sendAccepted, useRequestParam,
+    Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
@@ -49,7 +49,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (!isRealmResourceWritable(env.realmId, entity.realm_id)) {
+    if (!isRealmResourceWritable(env.realm, entity.realm_id)) {
         throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
     }
 

@@ -67,7 +67,7 @@ export async function runIdentityProviderRoleValidation(
         result.relation.role &&
         result.relation.role.realm_id
     ) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.role.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
         }
 
@@ -80,7 +80,7 @@ export async function runIdentityProviderRoleValidation(
     });
 
     if (result.relation.provider) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.provider.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.provider.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('provider_id'));
         }
 

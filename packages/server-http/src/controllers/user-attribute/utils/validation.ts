@@ -64,7 +64,8 @@ export async function runUserAttributeValidation(
             result.data.realm_id = result.relation.user.realm_id;
             result.data.user_id = result.relation.user.id;
         } else {
-            result.data.realm_id = useRequestEnv(req, 'realmId');
+            const { id } = useRequestEnv(req, 'realm');
+            result.data.realm_id = id;
             result.data.user_id = useRequestEnv(req, 'userId');
         }
     }

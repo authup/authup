@@ -8,6 +8,8 @@
 export interface Permission {
     id: string;
 
+    name: string;
+
     target: string | null;
 
     created_at: Date;

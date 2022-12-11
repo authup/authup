@@ -8,7 +8,7 @@
 import { DataSource, FindOptionsWhere, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
-    MASTER_REALM_ID,
+    MASTER_REALM_NAME,
     Permission,
     PermissionID,
     Robot,
@@ -68,13 +68,12 @@ export class DatabaseSeeder implements Seeder {
          */
         const realmRepository = dataSource.getRepository(RealmEntity);
         let realm = await realmRepository.findOneBy({
-            name: MASTER_REALM_ID,
+            name: MASTER_REALM_NAME,
         });
 
         if (!realm) {
             realm = realmRepository.create({
-                id: MASTER_REALM_ID,
-                name: 'Master',
+                name: MASTER_REALM_NAME,
                 drop_able: false,
             });
         }
@@ -113,7 +112,7 @@ export class DatabaseSeeder implements Seeder {
                 name: this.getOption('adminUsername'),
                 password: await hash(this.getOption('adminPassword')),
                 email: 'peter.placzek1996@gmail.com',
-                realm_id: MASTER_REALM_ID,
+                realm_id: realm.id,
                 active: true,
             });
 
@@ -148,24 +147,28 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Create all permissions
          */
-        let permissionIds : string[] = getPermissions(this.getOption('permissions'));
+        const permissionNames : string[] = getPermissions(this.getOption('permissions'));
+        const permissionIds : string[] = [];
 
         const permissionRepository = dataSource.getRepository(PermissionEntity);
 
         const existingPermissions = await permissionRepository.findBy({
-            id: In(permissionIds),
+            name: In(permissionNames),
         });
 
         for (let i = 0; i < existingPermissions.length; i++) {
-            const index = permissionIds.indexOf(existingPermissions[i].id);
+            const index = permissionNames.indexOf(existingPermissions[i].name);
             if (index !== -1) {
-                permissionIds.splice(index, 1);
+                permissionIds.push(existingPermissions[i].id);
+                permissionNames.splice(index, 1);
             }
         }
 
-        const permissions : Permission[] = permissionIds.map((id: string) => permissionRepository.create({ id }));
+        const permissions : Permission[] = permissionNames.map((name: string) => permissionRepository.create({ name }));
         if (permissions.length > 0) {
             await permissionRepository.save(permissions);
+
+            permissionIds.push(...permissions.map((permission) => permission.id));
         }
 
         // -------------------------------------------------
@@ -173,26 +176,26 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Assign all permissions to default role.
          */
-        permissionIds = getPermissions(this.getOption('permissions'));
+        const rolePermissionIds = [...permissionIds];
         const rolePermissionRepository = dataSource.getRepository(RolePermissionEntity);
 
         const existingRolePermissions = await rolePermissionRepository.findBy({
-            permission_id: In(permissionIds),
+            permission_id: In(rolePermissionIds),
             role_id: role.id,
         });
 
         for (let i = 0; i < existingRolePermissions.length; i++) {
-            const index = permissionIds.indexOf(existingRolePermissions[i].permission_id);
+            const index = rolePermissionIds.indexOf(existingRolePermissions[i].permission_id);
             if (index !== -1) {
-                permissionIds.splice(index, 1);
+                rolePermissionIds.splice(index, 1);
             }
         }
 
         const rolePermissions : RolePermission[] = [];
-        for (let j = 0; j < permissionIds.length; j++) {
+        for (let j = 0; j < rolePermissionIds.length; j++) {
             rolePermissions.push(rolePermissionRepository.create({
                 role_id: role.id,
-                permission_id: permissionIds[j],
+                permission_id: rolePermissionIds[j],
             }));
         }
 
@@ -214,7 +217,7 @@ export class DatabaseSeeder implements Seeder {
         if (!robot) {
             robot = robotRepository.create({
                 name: 'SYSTEM',
-                realm_id: MASTER_REALM_ID,
+                realm_id: realm.id,
                 secret: await hash(secret),
             });
 
@@ -242,26 +245,26 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Assign all permissions to default robot.
          */
-        permissionIds = getPermissions(this.getOption('permissions'));
+        const robotPermissionIds = [...permissionIds];
         const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
 
         const existingRobotPermissions = await robotPermissionRepository.findBy({
-            permission_id: In(permissionIds),
+            permission_id: In(robotPermissionIds),
             robot_id: robot.id,
         });
 
         for (let i = 0; i < existingRobotPermissions.length; i++) {
-            const index = permissionIds.indexOf(existingRobotPermissions[i].permission_id);
+            const index = robotPermissionIds.indexOf(existingRobotPermissions[i].permission_id);
             if (index !== -1) {
-                permissionIds.splice(index, 1);
+                robotPermissionIds.splice(index, 1);
             }
         }
 
         const robotPermissions : RobotPermission[] = [];
-        for (let j = 0; j < permissionIds.length; j++) {
+        for (let j = 0; j < robotPermissionIds.length; j++) {
             robotPermissions.push(robotPermissionRepository.create({
                 robot_id: robot.id,
-                permission_id: permissionIds[j],
+                permission_id: robotPermissionIds[j],
             }));
         }
 

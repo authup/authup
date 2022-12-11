@@ -25,18 +25,18 @@ import { useDataSource } from 'typeorm-extension';
 import {
     ClientEntity,
     OAuth2ClientRepository,
+    RealmEntity,
     RobotEntity,
-    RobotRepository,
-    UserEntity, UserRepository,
+    RobotRepository, UserEntity,
 
-    useConfig,
+    UserRepository, useConfig,
 } from '@authup/server-database';
 import {
     extractOAuth2TokenPayload,
     loadOAuth2SubEntity,
     loadOAuth2SubPermissions,
 } from '../../oauth2';
-import { setRequestEnv } from '../../utils/env';
+import { setRequestEnv } from '../../utils';
 
 async function verifyBearerAuthorizationHeader(
     request: Request,
@@ -49,7 +49,16 @@ async function verifyBearerAuthorizationHeader(
 
     setRequestEnv(request, 'token', header.token);
     setRequestEnv(request, 'scopes', transformOAuth2ScopeToArray(payload.scope));
-    setRequestEnv(request, 'realmId', payload.realm_id);
+
+    const dataSource = await useDataSource();
+    const realmRepository = dataSource.getRepository(RealmEntity);
+    const realm = await realmRepository.findOne({
+        where: {
+            id: payload.realm_id,
+        },
+        cache: true,
+    });
+    setRequestEnv(request, 'realm', realm);
 
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
@@ -90,8 +99,14 @@ async function verifyBasicAuthorizationHeader(
         header.password === config.get('adminPassword')
     ) {
         const userRepository = new UserRepository(dataSource);
-        const entity = await userRepository.findOneBy({
-            name: 'admin',
+        const entity = await userRepository.findOne({
+            where: {
+                name: 'admin',
+            },
+            relations: {
+                realm: true,
+            },
+            cache: true,
         });
 
         if (!entity) {
@@ -107,7 +122,7 @@ async function verifyBasicAuthorizationHeader(
 
         setRequestEnv(request, 'user', entity);
         setRequestEnv(request, 'userId', entity.id);
-        setRequestEnv(request, 'realmId', entity.realm_id);
+        setRequestEnv(request, 'realm', entity.realm);
 
         return;
     }
@@ -121,7 +136,7 @@ async function verifyBasicAuthorizationHeader(
 
         setRequestEnv(request, 'robot', robot);
         setRequestEnv(request, 'robotId', robot.id);
-        setRequestEnv(request, 'realmId', robot.realm_id);
+        setRequestEnv(request, 'realm', robot.realm);
     }
 
     const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
@@ -133,7 +148,7 @@ async function verifyBasicAuthorizationHeader(
 
         setRequestEnv(request, 'client', oauth2Client);
         setRequestEnv(request, 'clientId', oauth2Client.id);
-        setRequestEnv(request, 'realmId', oauth2Client.realm_id);
+        setRequestEnv(request, 'realm', oauth2Client.realm);
     }
 }
 

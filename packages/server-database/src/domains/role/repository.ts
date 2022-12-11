@@ -45,6 +45,9 @@ export class RoleRepository extends Repository<RoleEntity> {
             where: {
                 role_id: id,
             },
+            relations: {
+                permission: true,
+            },
             cache: {
                 id: buildKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,

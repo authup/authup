@@ -6,13 +6,13 @@
  */
 
 import {
-    PermissionID, isRealmResourceWritable, isValidRoleName,
+    PermissionID, isPropertySet, isRealmResourceWritable, isValidRoleName,
 } from '@authup/common';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { RealmEntity, RoleEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -60,13 +60,11 @@ export async function runRoleValidation(
         .optional({ nullable: true })
         .run(req);
 
-    if (operation === CRUDOperation.CREATE) {
-        await check('realm_id')
-            .exists()
-            .isString()
-            .optional({ nullable: true })
-            .run(req);
-    }
+    await check('realm_id')
+        .exists()
+        .isUUID()
+        .optional({ nullable: true })
+        .run(req);
 
     // ----------------------------------------------
 
@@ -84,13 +82,18 @@ export async function runRoleValidation(
         entity: 'realm',
     });
 
-    if (result.relation.realm) {
-        if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.relation.realm.id)
-        ) {
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
+    } else if (
+        operation === CRUDOperation.CREATE &&
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
+    ) {
+        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
     }
+
+    // ----------------------------------------------
 
     const ability = useRequestEnv(req, 'ability');
 
@@ -105,6 +108,8 @@ export async function runRoleValidation(
             result.data.target = permissionTarget;
         }
     }
+
+    // ----------------------------------------------
 
     return result;
 }

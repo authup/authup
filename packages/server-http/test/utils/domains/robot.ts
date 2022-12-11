@@ -7,12 +7,11 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { SuperTest, Test } from 'supertest';
-import { MASTER_REALM_ID, Robot } from '@authup/common';
+import { Robot } from '@authup/common';
 
 export const TEST_DEFAULT_ROBOT : Partial<Robot> = {
     name: 'test',
     active: true,
-    realm_id: MASTER_REALM_ID,
 };
 
 export async function createSuperTestRobot(superTest: SuperTest<Test>, entity?: Partial<Robot>) {

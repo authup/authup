@@ -21,10 +21,9 @@ import { URL } from 'url';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '@authup/server-database';
-import { ProxyConnectionConfig, detectProxyConnectionConfig } from '../../../utils';
+import { ProxyConnectionConfig, detectProxyConnectionConfig, setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../config';
-import { setRequestEnv } from '../../../utils/env';
 
 export async function authorizeURLIdentityProviderRouteHandler(
     req: Request,
@@ -119,7 +118,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const grant = new InternalGrantType();
 
     setRequestEnv(req, 'userId', account.user_id);
-    setRequestEnv(req, 'realmId', entity.realm_id);
+    setRequestEnv(req, 'realm', entity.realm);
 
     const token = await grant.run(req);
 

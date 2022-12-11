@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Default1659513439259 implements MigrationInterface {
-    name = 'Default1659513439259';
+export class Default1670775868165 implements MigrationInterface {
+    name = 'Default1670775868165';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE "auth_realms" (
-                "id" varchar(36) PRIMARY KEY NOT NULL,
+                "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(128) NOT NULL,
                 "description" text,
                 "drop_able" boolean NOT NULL DEFAULT (1),
@@ -38,18 +38,6 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE INDEX "IDX_e38d9d6e8be3d1d6e684b60342" ON "auth_keys" ("priority", "realm_id", "type")
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_user_attributes" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
-                "realm_id" varchar NOT NULL,
-                "user_id" varchar NOT NULL,
-                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id")
-            )
-        `);
-        await queryRunner.query(`
             CREATE TABLE "auth_users" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(128) NOT NULL,
@@ -75,9 +63,6 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            CREATE INDEX "IDX_2d54113aa2edfc3955abcf524a" ON "auth_users" ("name")
-        `);
-        await queryRunner.query(`
             CREATE INDEX "IDX_13d8b49e55a8b06bee6bbc828f" ON "auth_users" ("email")
         `);
         await queryRunner.query(`
@@ -92,21 +77,20 @@ export class Default1659513439259 implements MigrationInterface {
                 "realm_id" varchar,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_6e74f330e34555ae90068b03928" UNIQUE ("name")
+                CONSTRAINT "UQ_dce62a3739791bb4fb2fb5c137b" UNIQUE ("name", "realm_id")
             )
-        `);
-        await queryRunner.query(`
-            CREATE INDEX "IDX_6e74f330e34555ae90068b0392" ON "auth_roles" ("name")
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_063e4bd5b708c304b51b7ee774" ON "auth_roles" ("realm_id")
         `);
         await queryRunner.query(`
             CREATE TABLE "auth_permissions" (
-                "id" varchar(128) PRIMARY KEY NOT NULL,
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(128) NOT NULL,
                 "target" varchar(16),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "updated_at" datetime NOT NULL DEFAULT (datetime('now'))
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_40a392cb2ddf6b12f841d06a82e" UNIQUE ("name")
             )
         `);
         await queryRunner.query(`
@@ -160,6 +144,18 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE UNIQUE INDEX "IDX_e1a21fc2e6ac12fa29b02c4382" ON "auth_user_permissions" ("permission_id", "user_id")
         `);
         await queryRunner.query(`
+            CREATE TABLE "auth_user_attributes" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "realm_id" varchar NOT NULL,
+                "user_id" varchar NOT NULL,
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id")
+            )
+        `);
+        await queryRunner.query(`
             CREATE TABLE "auth_robots" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "secret" varchar(256) NOT NULL,
@@ -169,11 +165,9 @@ export class Default1659513439259 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar NOT NULL DEFAULT ('master')
+                "realm_id" varchar,
+                CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id")
             )
-        `);
-        await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_f32b0b8138a40ced608c7cfc3e" ON "auth_robots" ("name")
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_9c99802f3f360718344180c3f6" ON "auth_robots" ("realm_id")
@@ -220,23 +214,14 @@ export class Default1659513439259 implements MigrationInterface {
                 "redirect_uri" varchar(2000),
                 "grant_types" varchar(512),
                 "scope" varchar(512),
+                "base_url" varchar(2000),
+                "root_url" varchar(2000),
                 "is_confidential" boolean NOT NULL DEFAULT (0),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "realm_id" varchar,
-                "user_id" varchar
-            )
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "auth_access_tokens" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
-                "scope" varchar(512),
-                "client_id" varchar,
                 "user_id" varchar,
-                "robot_id" varchar,
-                "realm_id" varchar NOT NULL
+                CONSTRAINT "UQ_6018b722f28f1cc6fdac450e611" UNIQUE ("name", "realm_id")
             )
         `);
         await queryRunner.query(`
@@ -254,30 +239,32 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_providers" (
+            CREATE TABLE "auth_identity_providers" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(36) NOT NULL,
-                "open_id" boolean NOT NULL DEFAULT (0),
-                "client_id" varchar(256) NOT NULL,
-                "client_secret" varchar(256),
-                "token_host" varchar(256),
-                "token_path" varchar(128),
-                "token_revoke_path" varchar(128),
-                "authorize_host" varchar(256),
-                "authorize_path" varchar(128),
-                "user_info_host" varchar(256),
-                "user_info_path" varchar(128),
-                "scope" varchar,
+                "slug" varchar(36) NOT NULL,
+                "name" varchar(128) NOT NULL,
+                "protocol" varchar(64) NOT NULL,
+                "protocol_config" varchar(64),
+                "enabled" boolean NOT NULL DEFAULT (1),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "realm_id" varchar NOT NULL
+                "realm_id" varchar NOT NULL,
+                CONSTRAINT "UQ_3752f24587d0405c13f5a790da7" UNIQUE ("slug", "realm_id")
             )
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_4dbdee0f1355d411972939967d" ON "auth_oauth2_providers" ("name", "realm_id")
+            CREATE TABLE "auth_identity_provider_attributes" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "provider_id" varchar NOT NULL,
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_994a26636cc20da801d5ef4ee40" UNIQUE ("name", "provider_id")
+            )
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_provider_accounts" (
+            CREATE TABLE "auth_identity_provider_accounts" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "access_token" text,
                 "refresh_token" text,
@@ -293,10 +280,10 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_54525c92a39b98d1b0b03ad708" ON "auth_oauth2_provider_accounts" ("provider_id", "user_id")
+            CREATE UNIQUE INDEX "IDX_96a230c697b83505e073713507" ON "auth_identity_provider_accounts" ("provider_id", "user_id")
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_provider_roles" (
+            CREATE TABLE "auth_identity_provider_roles" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "external_id" varchar(36) NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -308,20 +295,20 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_17c48da30a878499a38ac7e47c" ON "auth_oauth2_provider_roles" ("provider_id", "external_id")
+            CREATE UNIQUE INDEX "IDX_42df2e30eee05e54c74bced78b" ON "auth_identity_provider_roles" ("provider_id", "external_id")
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_039f19cbf8eadd18be864fe0c6" ON "auth_oauth2_provider_roles" ("provider_id", "role_id")
+            CREATE UNIQUE INDEX "IDX_fadb9ce4df580cc42e78b74b2f" ON "auth_identity_provider_roles" ("provider_id", "role_id")
         `);
         await queryRunner.query(`
             CREATE TABLE "auth_refresh_tokens" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "expires" datetime NOT NULL,
                 "scope" varchar(512),
+                "access_token" varchar,
                 "client_id" varchar,
                 "user_id" varchar,
                 "robot_id" varchar,
-                "access_token_id" varchar,
                 "realm_id" varchar NOT NULL
             )
         `);
@@ -329,7 +316,7 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE TABLE "auth_role_attributes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
+                "value" text,
                 "realm_id" varchar,
                 "role_id" varchar NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -398,49 +385,6 @@ export class Default1659513439259 implements MigrationInterface {
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_e38d9d6e8be3d1d6e684b60342" ON "auth_keys" ("priority", "realm_id", "type")
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "temporary_auth_user_attributes" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
-                "realm_id" varchar NOT NULL,
-                "user_id" varchar NOT NULL,
-                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id"),
-                CONSTRAINT "FK_9a84db5a27d34b31644b54d9106" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_f50fe4004312e972a547c0e945e" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
-            )
-        `);
-        await queryRunner.query(`
-            INSERT INTO "temporary_auth_user_attributes"(
-                    "id",
-                    "name",
-                    "value",
-                    "realm_id",
-                    "user_id",
-                    "created_at",
-                    "updated_at"
-                )
-            SELECT "id",
-                "name",
-                "value",
-                "realm_id",
-                "user_id",
-                "created_at",
-                "updated_at"
-            FROM "auth_user_attributes"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "auth_user_attributes"
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "temporary_auth_user_attributes"
-                RENAME TO "auth_user_attributes"
-        `);
-        await queryRunner.query(`
-            DROP INDEX "IDX_2d54113aa2edfc3955abcf524a"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_13d8b49e55a8b06bee6bbc828f"
@@ -527,16 +471,10 @@ export class Default1659513439259 implements MigrationInterface {
                 RENAME TO "auth_users"
         `);
         await queryRunner.query(`
-            CREATE INDEX "IDX_2d54113aa2edfc3955abcf524a" ON "auth_users" ("name")
-        `);
-        await queryRunner.query(`
             CREATE INDEX "IDX_13d8b49e55a8b06bee6bbc828f" ON "auth_users" ("email")
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_1d5fcbfcbba74381ca8a58a3f1" ON "auth_users" ("realm_id")
-        `);
-        await queryRunner.query(`
-            DROP INDEX "IDX_6e74f330e34555ae90068b0392"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_063e4bd5b708c304b51b7ee774"
@@ -550,7 +488,7 @@ export class Default1659513439259 implements MigrationInterface {
                 "realm_id" varchar,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_6e74f330e34555ae90068b03928" UNIQUE ("name"),
+                CONSTRAINT "UQ_dce62a3739791bb4fb2fb5c137b" UNIQUE ("name", "realm_id"),
                 CONSTRAINT "FK_063e4bd5b708c304b51b7ee7743" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
         `);
@@ -579,9 +517,6 @@ export class Default1659513439259 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "temporary_auth_roles"
                 RENAME TO "auth_roles"
-        `);
-        await queryRunner.query(`
-            CREATE INDEX "IDX_6e74f330e34555ae90068b0392" ON "auth_roles" ("name")
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_063e4bd5b708c304b51b7ee774" ON "auth_roles" ("realm_id")
@@ -750,7 +685,44 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE UNIQUE INDEX "IDX_e1a21fc2e6ac12fa29b02c4382" ON "auth_user_permissions" ("permission_id", "user_id")
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_f32b0b8138a40ced608c7cfc3e"
+            CREATE TABLE "temporary_auth_user_attributes" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "realm_id" varchar NOT NULL,
+                "user_id" varchar NOT NULL,
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id"),
+                CONSTRAINT "FK_9a84db5a27d34b31644b54d9106" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+                CONSTRAINT "FK_f50fe4004312e972a547c0e945e" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+            )
+        `);
+        await queryRunner.query(`
+            INSERT INTO "temporary_auth_user_attributes"(
+                    "id",
+                    "name",
+                    "value",
+                    "realm_id",
+                    "user_id",
+                    "created_at",
+                    "updated_at"
+                )
+            SELECT "id",
+                "name",
+                "value",
+                "realm_id",
+                "user_id",
+                "created_at",
+                "updated_at"
+            FROM "auth_user_attributes"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "auth_user_attributes"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "temporary_auth_user_attributes"
+                RENAME TO "auth_user_attributes"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_9c99802f3f360718344180c3f6"
@@ -765,7 +737,8 @@ export class Default1659513439259 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar NOT NULL DEFAULT ('master'),
+                "realm_id" varchar,
+                CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id"),
                 CONSTRAINT "FK_b6d73e3026e15c0af6c41ef8139" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
                 CONSTRAINT "FK_9c99802f3f360718344180c3f68" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
@@ -799,9 +772,6 @@ export class Default1659513439259 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "temporary_auth_robots"
                 RENAME TO "auth_robots"
-        `);
-        await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_f32b0b8138a40ced608c7cfc3e" ON "auth_robots" ("name")
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_9c99802f3f360718344180c3f6" ON "auth_robots" ("realm_id")
@@ -923,11 +893,14 @@ export class Default1659513439259 implements MigrationInterface {
                 "redirect_uri" varchar(2000),
                 "grant_types" varchar(512),
                 "scope" varchar(512),
+                "base_url" varchar(2000),
+                "root_url" varchar(2000),
                 "is_confidential" boolean NOT NULL DEFAULT (0),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "realm_id" varchar,
                 "user_id" varchar,
+                CONSTRAINT "UQ_6018b722f28f1cc6fdac450e611" UNIQUE ("name", "realm_id"),
                 CONSTRAINT "FK_b628ffa1b2f5415598cfb1a72af" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
                 CONSTRAINT "FK_9c9f985a5cfc1ff52a04c05e5d5" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
@@ -941,6 +914,8 @@ export class Default1659513439259 implements MigrationInterface {
                     "redirect_uri",
                     "grant_types",
                     "scope",
+                    "base_url",
+                    "root_url",
                     "is_confidential",
                     "created_at",
                     "updated_at",
@@ -954,6 +929,8 @@ export class Default1659513439259 implements MigrationInterface {
                 "redirect_uri",
                 "grant_types",
                 "scope",
+                "base_url",
+                "root_url",
                 "is_confidential",
                 "created_at",
                 "updated_at",
@@ -967,50 +944,6 @@ export class Default1659513439259 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "temporary_auth_clients"
                 RENAME TO "auth_clients"
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "temporary_auth_access_tokens" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
-                "scope" varchar(512),
-                "client_id" varchar,
-                "user_id" varchar,
-                "robot_id" varchar,
-                "realm_id" varchar NOT NULL,
-                CONSTRAINT "FK_0f843d99462f485cf847db9b8cf" FOREIGN KEY ("client_id") REFERENCES "auth_clients" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_83d6c9916b02fe7315afb1bcf66" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_c40e2f3450b458e935784904fc6" FOREIGN KEY ("robot_id") REFERENCES "auth_robots" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_44a975dcfe57d213c19245e77be" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
-            )
-        `);
-        await queryRunner.query(`
-            INSERT INTO "temporary_auth_access_tokens"(
-                    "id",
-                    "content",
-                    "expires",
-                    "scope",
-                    "client_id",
-                    "user_id",
-                    "robot_id",
-                    "realm_id"
-                )
-            SELECT "id",
-                "content",
-                "expires",
-                "scope",
-                "client_id",
-                "user_id",
-                "robot_id",
-                "realm_id"
-            FROM "auth_access_tokens"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "auth_access_tokens"
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "temporary_auth_access_tokens"
-                RENAME TO "auth_access_tokens"
         `);
         await queryRunner.query(`
             CREATE TABLE "temporary_auth_authorization_codes" (
@@ -1063,81 +996,91 @@ export class Default1659513439259 implements MigrationInterface {
                 RENAME TO "auth_authorization_codes"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_4dbdee0f1355d411972939967d"
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "temporary_auth_oauth2_providers" (
+            CREATE TABLE "temporary_auth_identity_providers" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(36) NOT NULL,
-                "open_id" boolean NOT NULL DEFAULT (0),
-                "client_id" varchar(256) NOT NULL,
-                "client_secret" varchar(256),
-                "token_host" varchar(256),
-                "token_path" varchar(128),
-                "token_revoke_path" varchar(128),
-                "authorize_host" varchar(256),
-                "authorize_path" varchar(128),
-                "user_info_host" varchar(256),
-                "user_info_path" varchar(128),
-                "scope" varchar,
+                "slug" varchar(36) NOT NULL,
+                "name" varchar(128) NOT NULL,
+                "protocol" varchar(64) NOT NULL,
+                "protocol_config" varchar(64),
+                "enabled" boolean NOT NULL DEFAULT (1),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "realm_id" varchar NOT NULL,
-                CONSTRAINT "FK_07596e87b9baa3122942fc2e0e9" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+                CONSTRAINT "UQ_3752f24587d0405c13f5a790da7" UNIQUE ("slug", "realm_id"),
+                CONSTRAINT "FK_00fd737c365d688f9edd0c73eca" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "temporary_auth_oauth2_providers"(
+            INSERT INTO "temporary_auth_identity_providers"(
                     "id",
+                    "slug",
                     "name",
-                    "open_id",
-                    "client_id",
-                    "client_secret",
-                    "token_host",
-                    "token_path",
-                    "token_revoke_path",
-                    "authorize_host",
-                    "authorize_path",
-                    "user_info_host",
-                    "user_info_path",
-                    "scope",
+                    "protocol",
+                    "protocol_config",
+                    "enabled",
                     "created_at",
                     "updated_at",
                     "realm_id"
                 )
             SELECT "id",
+                "slug",
                 "name",
-                "open_id",
-                "client_id",
-                "client_secret",
-                "token_host",
-                "token_path",
-                "token_revoke_path",
-                "authorize_host",
-                "authorize_path",
-                "user_info_host",
-                "user_info_path",
-                "scope",
+                "protocol",
+                "protocol_config",
+                "enabled",
                 "created_at",
                 "updated_at",
                 "realm_id"
-            FROM "auth_oauth2_providers"
+            FROM "auth_identity_providers"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_providers"
+            DROP TABLE "auth_identity_providers"
         `);
         await queryRunner.query(`
-            ALTER TABLE "temporary_auth_oauth2_providers"
-                RENAME TO "auth_oauth2_providers"
+            ALTER TABLE "temporary_auth_identity_providers"
+                RENAME TO "auth_identity_providers"
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_4dbdee0f1355d411972939967d" ON "auth_oauth2_providers" ("name", "realm_id")
+            CREATE TABLE "temporary_auth_identity_provider_attributes" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "provider_id" varchar NOT NULL,
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_994a26636cc20da801d5ef4ee40" UNIQUE ("name", "provider_id"),
+                CONSTRAINT "FK_5ac40c5ce92142639df65a33e53" FOREIGN KEY ("provider_id") REFERENCES "auth_identity_providers" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+            )
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_54525c92a39b98d1b0b03ad708"
+            INSERT INTO "temporary_auth_identity_provider_attributes"(
+                    "id",
+                    "name",
+                    "value",
+                    "provider_id",
+                    "created_at",
+                    "updated_at"
+                )
+            SELECT "id",
+                "name",
+                "value",
+                "provider_id",
+                "created_at",
+                "updated_at"
+            FROM "auth_identity_provider_attributes"
         `);
         await queryRunner.query(`
-            CREATE TABLE "temporary_auth_oauth2_provider_accounts" (
+            DROP TABLE "auth_identity_provider_attributes"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "temporary_auth_identity_provider_attributes"
+                RENAME TO "auth_identity_provider_attributes"
+        `);
+        await queryRunner.query(`
+            DROP INDEX "IDX_96a230c697b83505e073713507"
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "temporary_auth_identity_provider_accounts" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "access_token" text,
                 "refresh_token" text,
@@ -1150,12 +1093,12 @@ export class Default1659513439259 implements MigrationInterface {
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar NOT NULL,
                 "provider_id" varchar NOT NULL,
-                CONSTRAINT "FK_e18e50974a61970a519ea6a171f" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_e284bd0fbef34997a9f035dd741" FOREIGN KEY ("provider_id") REFERENCES "auth_oauth2_providers" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+                CONSTRAINT "FK_b07582d2705a04c2e868e6c3742" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+                CONSTRAINT "FK_a82bbdf79b8accbfe71326dce00" FOREIGN KEY ("provider_id") REFERENCES "auth_identity_providers" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "temporary_auth_oauth2_provider_accounts"(
+            INSERT INTO "temporary_auth_identity_provider_accounts"(
                     "id",
                     "access_token",
                     "refresh_token",
@@ -1181,26 +1124,26 @@ export class Default1659513439259 implements MigrationInterface {
                 "updated_at",
                 "user_id",
                 "provider_id"
-            FROM "auth_oauth2_provider_accounts"
+            FROM "auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_provider_accounts"
+            DROP TABLE "auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            ALTER TABLE "temporary_auth_oauth2_provider_accounts"
-                RENAME TO "auth_oauth2_provider_accounts"
+            ALTER TABLE "temporary_auth_identity_provider_accounts"
+                RENAME TO "auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_54525c92a39b98d1b0b03ad708" ON "auth_oauth2_provider_accounts" ("provider_id", "user_id")
+            CREATE UNIQUE INDEX "IDX_96a230c697b83505e073713507" ON "auth_identity_provider_accounts" ("provider_id", "user_id")
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_17c48da30a878499a38ac7e47c"
+            DROP INDEX "IDX_42df2e30eee05e54c74bced78b"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_039f19cbf8eadd18be864fe0c6"
+            DROP INDEX "IDX_fadb9ce4df580cc42e78b74b2f"
         `);
         await queryRunner.query(`
-            CREATE TABLE "temporary_auth_oauth2_provider_roles" (
+            CREATE TABLE "temporary_auth_identity_provider_roles" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "external_id" varchar(36) NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -1209,14 +1152,14 @@ export class Default1659513439259 implements MigrationInterface {
                 "role_realm_id" varchar,
                 "provider_id" varchar NOT NULL,
                 "provider_realm_id" varchar,
-                CONSTRAINT "FK_31ba55948469a1d19cd584a03b7" FOREIGN KEY ("role_id") REFERENCES "auth_roles" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_c89543ffc106639245a4a2b99c8" FOREIGN KEY ("role_realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_9c47ab7df9dc7300b6bca9220d0" FOREIGN KEY ("provider_id") REFERENCES "auth_oauth2_providers" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_bbfdff6678f0b3507fef481bc26" FOREIGN KEY ("provider_realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+                CONSTRAINT "FK_f32f792ca1aeacea0507ef80a11" FOREIGN KEY ("role_id") REFERENCES "auth_roles" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+                CONSTRAINT "FK_2c3139bd232ffde35b71d43018e" FOREIGN KEY ("role_realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+                CONSTRAINT "FK_52a568200844cde16722b9bb95e" FOREIGN KEY ("provider_id") REFERENCES "auth_identity_providers" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+                CONSTRAINT "FK_d49fb54b140869696a5a14285c7" FOREIGN KEY ("provider_realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "temporary_auth_oauth2_provider_roles"(
+            INSERT INTO "temporary_auth_identity_provider_roles"(
                     "id",
                     "external_id",
                     "created_at",
@@ -1234,37 +1177,35 @@ export class Default1659513439259 implements MigrationInterface {
                 "role_realm_id",
                 "provider_id",
                 "provider_realm_id"
-            FROM "auth_oauth2_provider_roles"
+            FROM "auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_provider_roles"
+            DROP TABLE "auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            ALTER TABLE "temporary_auth_oauth2_provider_roles"
-                RENAME TO "auth_oauth2_provider_roles"
+            ALTER TABLE "temporary_auth_identity_provider_roles"
+                RENAME TO "auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_17c48da30a878499a38ac7e47c" ON "auth_oauth2_provider_roles" ("provider_id", "external_id")
+            CREATE UNIQUE INDEX "IDX_42df2e30eee05e54c74bced78b" ON "auth_identity_provider_roles" ("provider_id", "external_id")
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_039f19cbf8eadd18be864fe0c6" ON "auth_oauth2_provider_roles" ("provider_id", "role_id")
+            CREATE UNIQUE INDEX "IDX_fadb9ce4df580cc42e78b74b2f" ON "auth_identity_provider_roles" ("provider_id", "role_id")
         `);
         await queryRunner.query(`
             CREATE TABLE "temporary_auth_refresh_tokens" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "expires" datetime NOT NULL,
                 "scope" varchar(512),
+                "access_token" varchar,
                 "client_id" varchar,
                 "user_id" varchar,
                 "robot_id" varchar,
-                "access_token_id" varchar,
                 "realm_id" varchar NOT NULL,
                 CONSTRAINT "FK_8f611e7ff67a2b013c909f60d52" FOREIGN KEY ("client_id") REFERENCES "auth_clients" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
                 CONSTRAINT "FK_f795ad14f31838e3ddc663ee150" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
                 CONSTRAINT "FK_6be38b6dbd4ce86ca3d17494ca9" FOREIGN KEY ("robot_id") REFERENCES "auth_robots" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
-                CONSTRAINT "FK_3c95cc8e54e69c3acc2b87bc420" FOREIGN KEY ("access_token_id") REFERENCES "auth_access_tokens" ("id") ON DELETE
-                SET NULL ON UPDATE NO ACTION,
-                    CONSTRAINT "FK_c1f59fdabbcf5dfd74d6af7f400" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+                CONSTRAINT "FK_c1f59fdabbcf5dfd74d6af7f400" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
             )
         `);
         await queryRunner.query(`
@@ -1272,19 +1213,19 @@ export class Default1659513439259 implements MigrationInterface {
                     "id",
                     "expires",
                     "scope",
+                    "access_token",
                     "client_id",
                     "user_id",
                     "robot_id",
-                    "access_token_id",
                     "realm_id"
                 )
             SELECT "id",
                 "expires",
                 "scope",
+                "access_token",
                 "client_id",
                 "user_id",
                 "robot_id",
-                "access_token_id",
                 "realm_id"
             FROM "auth_refresh_tokens"
         `);
@@ -1299,7 +1240,7 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE TABLE "temporary_auth_role_attributes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
+                "value" text,
                 "realm_id" varchar,
                 "role_id" varchar NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -1346,7 +1287,7 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE TABLE "auth_role_attributes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
+                "value" text,
                 "realm_id" varchar,
                 "role_id" varchar NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -1385,10 +1326,10 @@ export class Default1659513439259 implements MigrationInterface {
                 "id" varchar PRIMARY KEY NOT NULL,
                 "expires" datetime NOT NULL,
                 "scope" varchar(512),
+                "access_token" varchar,
                 "client_id" varchar,
                 "user_id" varchar,
                 "robot_id" varchar,
-                "access_token_id" varchar,
                 "realm_id" varchar NOT NULL
             )
         `);
@@ -1397,19 +1338,19 @@ export class Default1659513439259 implements MigrationInterface {
                     "id",
                     "expires",
                     "scope",
+                    "access_token",
                     "client_id",
                     "user_id",
                     "robot_id",
-                    "access_token_id",
                     "realm_id"
                 )
             SELECT "id",
                 "expires",
                 "scope",
+                "access_token",
                 "client_id",
                 "user_id",
                 "robot_id",
-                "access_token_id",
                 "realm_id"
             FROM "temporary_auth_refresh_tokens"
         `);
@@ -1417,17 +1358,17 @@ export class Default1659513439259 implements MigrationInterface {
             DROP TABLE "temporary_auth_refresh_tokens"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_039f19cbf8eadd18be864fe0c6"
+            DROP INDEX "IDX_fadb9ce4df580cc42e78b74b2f"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_17c48da30a878499a38ac7e47c"
+            DROP INDEX "IDX_42df2e30eee05e54c74bced78b"
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_oauth2_provider_roles"
-                RENAME TO "temporary_auth_oauth2_provider_roles"
+            ALTER TABLE "auth_identity_provider_roles"
+                RENAME TO "temporary_auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_provider_roles" (
+            CREATE TABLE "auth_identity_provider_roles" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "external_id" varchar(36) NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -1439,7 +1380,7 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "auth_oauth2_provider_roles"(
+            INSERT INTO "auth_identity_provider_roles"(
                     "id",
                     "external_id",
                     "created_at",
@@ -1457,26 +1398,26 @@ export class Default1659513439259 implements MigrationInterface {
                 "role_realm_id",
                 "provider_id",
                 "provider_realm_id"
-            FROM "temporary_auth_oauth2_provider_roles"
+            FROM "temporary_auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            DROP TABLE "temporary_auth_oauth2_provider_roles"
+            DROP TABLE "temporary_auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_039f19cbf8eadd18be864fe0c6" ON "auth_oauth2_provider_roles" ("provider_id", "role_id")
+            CREATE UNIQUE INDEX "IDX_fadb9ce4df580cc42e78b74b2f" ON "auth_identity_provider_roles" ("provider_id", "role_id")
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_17c48da30a878499a38ac7e47c" ON "auth_oauth2_provider_roles" ("provider_id", "external_id")
+            CREATE UNIQUE INDEX "IDX_42df2e30eee05e54c74bced78b" ON "auth_identity_provider_roles" ("provider_id", "external_id")
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_54525c92a39b98d1b0b03ad708"
+            DROP INDEX "IDX_96a230c697b83505e073713507"
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_oauth2_provider_accounts"
-                RENAME TO "temporary_auth_oauth2_provider_accounts"
+            ALTER TABLE "auth_identity_provider_accounts"
+                RENAME TO "temporary_auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_provider_accounts" (
+            CREATE TABLE "auth_identity_provider_accounts" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "access_token" text,
                 "refresh_token" text,
@@ -1492,7 +1433,7 @@ export class Default1659513439259 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "auth_oauth2_provider_accounts"(
+            INSERT INTO "auth_identity_provider_accounts"(
                     "id",
                     "access_token",
                     "refresh_token",
@@ -1518,83 +1459,92 @@ export class Default1659513439259 implements MigrationInterface {
                 "updated_at",
                 "user_id",
                 "provider_id"
-            FROM "temporary_auth_oauth2_provider_accounts"
+            FROM "temporary_auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            DROP TABLE "temporary_auth_oauth2_provider_accounts"
+            DROP TABLE "temporary_auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_54525c92a39b98d1b0b03ad708" ON "auth_oauth2_provider_accounts" ("provider_id", "user_id")
+            CREATE UNIQUE INDEX "IDX_96a230c697b83505e073713507" ON "auth_identity_provider_accounts" ("provider_id", "user_id")
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_4dbdee0f1355d411972939967d"
+            ALTER TABLE "auth_identity_provider_attributes"
+                RENAME TO "temporary_auth_identity_provider_attributes"
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_oauth2_providers"
-                RENAME TO "temporary_auth_oauth2_providers"
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "auth_oauth2_providers" (
+            CREATE TABLE "auth_identity_provider_attributes" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(36) NOT NULL,
-                "open_id" boolean NOT NULL DEFAULT (0),
-                "client_id" varchar(256) NOT NULL,
-                "client_secret" varchar(256),
-                "token_host" varchar(256),
-                "token_path" varchar(128),
-                "token_revoke_path" varchar(128),
-                "authorize_host" varchar(256),
-                "authorize_path" varchar(128),
-                "user_info_host" varchar(256),
-                "user_info_path" varchar(128),
-                "scope" varchar,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "provider_id" varchar NOT NULL,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "realm_id" varchar NOT NULL
+                CONSTRAINT "UQ_994a26636cc20da801d5ef4ee40" UNIQUE ("name", "provider_id")
             )
         `);
         await queryRunner.query(`
-            INSERT INTO "auth_oauth2_providers"(
+            INSERT INTO "auth_identity_provider_attributes"(
                     "id",
                     "name",
-                    "open_id",
-                    "client_id",
-                    "client_secret",
-                    "token_host",
-                    "token_path",
-                    "token_revoke_path",
-                    "authorize_host",
-                    "authorize_path",
-                    "user_info_host",
-                    "user_info_path",
-                    "scope",
+                    "value",
+                    "provider_id",
+                    "created_at",
+                    "updated_at"
+                )
+            SELECT "id",
+                "name",
+                "value",
+                "provider_id",
+                "created_at",
+                "updated_at"
+            FROM "temporary_auth_identity_provider_attributes"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "temporary_auth_identity_provider_attributes"
+        `);
+        await queryRunner.query(`
+            ALTER TABLE "auth_identity_providers"
+                RENAME TO "temporary_auth_identity_providers"
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "auth_identity_providers" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "slug" varchar(36) NOT NULL,
+                "name" varchar(128) NOT NULL,
+                "protocol" varchar(64) NOT NULL,
+                "protocol_config" varchar(64),
+                "enabled" boolean NOT NULL DEFAULT (1),
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "realm_id" varchar NOT NULL,
+                CONSTRAINT "UQ_3752f24587d0405c13f5a790da7" UNIQUE ("slug", "realm_id")
+            )
+        `);
+        await queryRunner.query(`
+            INSERT INTO "auth_identity_providers"(
+                    "id",
+                    "slug",
+                    "name",
+                    "protocol",
+                    "protocol_config",
+                    "enabled",
                     "created_at",
                     "updated_at",
                     "realm_id"
                 )
             SELECT "id",
+                "slug",
                 "name",
-                "open_id",
-                "client_id",
-                "client_secret",
-                "token_host",
-                "token_path",
-                "token_revoke_path",
-                "authorize_host",
-                "authorize_path",
-                "user_info_host",
-                "user_info_path",
-                "scope",
+                "protocol",
+                "protocol_config",
+                "enabled",
                 "created_at",
                 "updated_at",
                 "realm_id"
-            FROM "temporary_auth_oauth2_providers"
+            FROM "temporary_auth_identity_providers"
         `);
         await queryRunner.query(`
-            DROP TABLE "temporary_auth_oauth2_providers"
-        `);
-        await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_4dbdee0f1355d411972939967d" ON "auth_oauth2_providers" ("name", "realm_id")
+            DROP TABLE "temporary_auth_identity_providers"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_authorization_codes"
@@ -1643,46 +1593,6 @@ export class Default1659513439259 implements MigrationInterface {
             DROP TABLE "temporary_auth_authorization_codes"
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_access_tokens"
-                RENAME TO "temporary_auth_access_tokens"
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "auth_access_tokens" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
-                "scope" varchar(512),
-                "client_id" varchar,
-                "user_id" varchar,
-                "robot_id" varchar,
-                "realm_id" varchar NOT NULL
-            )
-        `);
-        await queryRunner.query(`
-            INSERT INTO "auth_access_tokens"(
-                    "id",
-                    "content",
-                    "expires",
-                    "scope",
-                    "client_id",
-                    "user_id",
-                    "robot_id",
-                    "realm_id"
-                )
-            SELECT "id",
-                "content",
-                "expires",
-                "scope",
-                "client_id",
-                "user_id",
-                "robot_id",
-                "realm_id"
-            FROM "temporary_auth_access_tokens"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "temporary_auth_access_tokens"
-        `);
-        await queryRunner.query(`
             ALTER TABLE "auth_clients"
                 RENAME TO "temporary_auth_clients"
         `);
@@ -1695,11 +1605,14 @@ export class Default1659513439259 implements MigrationInterface {
                 "redirect_uri" varchar(2000),
                 "grant_types" varchar(512),
                 "scope" varchar(512),
+                "base_url" varchar(2000),
+                "root_url" varchar(2000),
                 "is_confidential" boolean NOT NULL DEFAULT (0),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "realm_id" varchar,
-                "user_id" varchar
+                "user_id" varchar,
+                CONSTRAINT "UQ_6018b722f28f1cc6fdac450e611" UNIQUE ("name", "realm_id")
             )
         `);
         await queryRunner.query(`
@@ -1711,6 +1624,8 @@ export class Default1659513439259 implements MigrationInterface {
                     "redirect_uri",
                     "grant_types",
                     "scope",
+                    "base_url",
+                    "root_url",
                     "is_confidential",
                     "created_at",
                     "updated_at",
@@ -1724,6 +1639,8 @@ export class Default1659513439259 implements MigrationInterface {
                 "redirect_uri",
                 "grant_types",
                 "scope",
+                "base_url",
+                "root_url",
                 "is_confidential",
                 "created_at",
                 "updated_at",
@@ -1839,9 +1756,6 @@ export class Default1659513439259 implements MigrationInterface {
             DROP INDEX "IDX_9c99802f3f360718344180c3f6"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_f32b0b8138a40ced608c7cfc3e"
-        `);
-        await queryRunner.query(`
             ALTER TABLE "auth_robots"
                 RENAME TO "temporary_auth_robots"
         `);
@@ -1855,7 +1769,8 @@ export class Default1659513439259 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar NOT NULL DEFAULT ('master')
+                "realm_id" varchar,
+                CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id")
             )
         `);
         await queryRunner.query(`
@@ -1888,7 +1803,42 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE INDEX "IDX_9c99802f3f360718344180c3f6" ON "auth_robots" ("realm_id")
         `);
         await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_f32b0b8138a40ced608c7cfc3e" ON "auth_robots" ("name")
+            ALTER TABLE "auth_user_attributes"
+                RENAME TO "temporary_auth_user_attributes"
+        `);
+        await queryRunner.query(`
+            CREATE TABLE "auth_user_attributes" (
+                "id" varchar PRIMARY KEY NOT NULL,
+                "name" varchar(255) NOT NULL,
+                "value" text,
+                "realm_id" varchar NOT NULL,
+                "user_id" varchar NOT NULL,
+                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
+                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
+                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id")
+            )
+        `);
+        await queryRunner.query(`
+            INSERT INTO "auth_user_attributes"(
+                    "id",
+                    "name",
+                    "value",
+                    "realm_id",
+                    "user_id",
+                    "created_at",
+                    "updated_at"
+                )
+            SELECT "id",
+                "name",
+                "value",
+                "realm_id",
+                "user_id",
+                "created_at",
+                "updated_at"
+            FROM "temporary_auth_user_attributes"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "temporary_auth_user_attributes"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_e1a21fc2e6ac12fa29b02c4382"
@@ -2047,9 +1997,6 @@ export class Default1659513439259 implements MigrationInterface {
             DROP INDEX "IDX_063e4bd5b708c304b51b7ee774"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_6e74f330e34555ae90068b0392"
-        `);
-        await queryRunner.query(`
             ALTER TABLE "auth_roles"
                 RENAME TO "temporary_auth_roles"
         `);
@@ -2062,7 +2009,7 @@ export class Default1659513439259 implements MigrationInterface {
                 "realm_id" varchar,
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_6e74f330e34555ae90068b03928" UNIQUE ("name")
+                CONSTRAINT "UQ_dce62a3739791bb4fb2fb5c137b" UNIQUE ("name", "realm_id")
             )
         `);
         await queryRunner.query(`
@@ -2091,16 +2038,10 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE INDEX "IDX_063e4bd5b708c304b51b7ee774" ON "auth_roles" ("realm_id")
         `);
         await queryRunner.query(`
-            CREATE INDEX "IDX_6e74f330e34555ae90068b0392" ON "auth_roles" ("name")
-        `);
-        await queryRunner.query(`
             DROP INDEX "IDX_1d5fcbfcbba74381ca8a58a3f1"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_13d8b49e55a8b06bee6bbc828f"
-        `);
-        await queryRunner.query(`
-            DROP INDEX "IDX_2d54113aa2edfc3955abcf524a"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_users"
@@ -2186,47 +2127,6 @@ export class Default1659513439259 implements MigrationInterface {
             CREATE INDEX "IDX_13d8b49e55a8b06bee6bbc828f" ON "auth_users" ("email")
         `);
         await queryRunner.query(`
-            CREATE INDEX "IDX_2d54113aa2edfc3955abcf524a" ON "auth_users" ("name")
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "auth_user_attributes"
-                RENAME TO "temporary_auth_user_attributes"
-        `);
-        await queryRunner.query(`
-            CREATE TABLE "auth_user_attributes" (
-                "id" varchar PRIMARY KEY NOT NULL,
-                "name" varchar(255) NOT NULL,
-                "value" text NOT NULL,
-                "realm_id" varchar NOT NULL,
-                "user_id" varchar NOT NULL,
-                "created_at" datetime NOT NULL DEFAULT (datetime('now')),
-                "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
-                CONSTRAINT "UQ_b748c46e233d86287b63b49d09f" UNIQUE ("name", "user_id")
-            )
-        `);
-        await queryRunner.query(`
-            INSERT INTO "auth_user_attributes"(
-                    "id",
-                    "name",
-                    "value",
-                    "realm_id",
-                    "user_id",
-                    "created_at",
-                    "updated_at"
-                )
-            SELECT "id",
-                "name",
-                "value",
-                "realm_id",
-                "user_id",
-                "created_at",
-                "updated_at"
-            FROM "temporary_auth_user_attributes"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "temporary_auth_user_attributes"
-        `);
-        await queryRunner.query(`
             DROP INDEX "IDX_e38d9d6e8be3d1d6e684b60342"
         `);
         await queryRunner.query(`
@@ -2294,31 +2194,28 @@ export class Default1659513439259 implements MigrationInterface {
             DROP TABLE "auth_refresh_tokens"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_039f19cbf8eadd18be864fe0c6"
+            DROP INDEX "IDX_fadb9ce4df580cc42e78b74b2f"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_17c48da30a878499a38ac7e47c"
+            DROP INDEX "IDX_42df2e30eee05e54c74bced78b"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_provider_roles"
+            DROP TABLE "auth_identity_provider_roles"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_54525c92a39b98d1b0b03ad708"
+            DROP INDEX "IDX_96a230c697b83505e073713507"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_provider_accounts"
+            DROP TABLE "auth_identity_provider_accounts"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_4dbdee0f1355d411972939967d"
+            DROP TABLE "auth_identity_provider_attributes"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_oauth2_providers"
+            DROP TABLE "auth_identity_providers"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_authorization_codes"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "auth_access_tokens"
         `);
         await queryRunner.query(`
             DROP TABLE "auth_clients"
@@ -2339,10 +2236,10 @@ export class Default1659513439259 implements MigrationInterface {
             DROP INDEX "IDX_9c99802f3f360718344180c3f6"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_f32b0b8138a40ced608c7cfc3e"
+            DROP TABLE "auth_robots"
         `);
         await queryRunner.query(`
-            DROP TABLE "auth_robots"
+            DROP TABLE "auth_user_attributes"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_e1a21fc2e6ac12fa29b02c4382"
@@ -2369,9 +2266,6 @@ export class Default1659513439259 implements MigrationInterface {
             DROP INDEX "IDX_063e4bd5b708c304b51b7ee774"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_6e74f330e34555ae90068b0392"
-        `);
-        await queryRunner.query(`
             DROP TABLE "auth_roles"
         `);
         await queryRunner.query(`
@@ -2381,13 +2275,7 @@ export class Default1659513439259 implements MigrationInterface {
             DROP INDEX "IDX_13d8b49e55a8b06bee6bbc828f"
         `);
         await queryRunner.query(`
-            DROP INDEX "IDX_2d54113aa2edfc3955abcf524a"
-        `);
-        await queryRunner.query(`
             DROP TABLE "auth_users"
-        `);
-        await queryRunner.query(`
-            DROP TABLE "auth_user_attributes"
         `);
         await queryRunner.query(`
             DROP INDEX "IDX_e38d9d6e8be3d1d6e684b60342"

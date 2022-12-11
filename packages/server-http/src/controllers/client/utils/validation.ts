@@ -92,8 +92,7 @@ export async function runOauth2ClientValidation(
 
     await check('realm_id')
         .exists()
-        .notEmpty()
-        .isString()
+        .isUUID()
         .optional({ nullable: true })
         .run(req);
 
@@ -113,13 +112,18 @@ export async function runOauth2ClientValidation(
         entity: 'realm',
     });
 
-    // ----------------------------------------------
-
     if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), result.data.realm_id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
+    } else if (
+        operation === CRUDOperation.CREATE &&
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
+    ) {
+        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
     }
+
+    // ----------------------------------------------
 
     return result;
 }

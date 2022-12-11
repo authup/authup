@@ -13,7 +13,7 @@ import {
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { PermissionEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { RequestValidationError } from '../../../validation';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
@@ -22,7 +22,7 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
         throw new ForbiddenError();
     }
 
-    await check('id')
+    await check('name')
         .exists()
         .notEmpty()
         .isLength({ min: 3, max: 30 })

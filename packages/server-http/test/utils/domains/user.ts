@@ -7,7 +7,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { SuperTest, Test } from 'supertest';
-import { MASTER_REALM_ID, User } from '@authup/common';
+import { User } from '@authup/common';
 
 export const TEST_DEFAULT_USER : Partial<User> = {
     name: 'test',
@@ -16,7 +16,6 @@ export const TEST_DEFAULT_USER : Partial<User> = {
     first_name: 'foo',
     last_name: 'bar',
     active: true,
-    realm_id: MASTER_REALM_ID,
 };
 
 export async function createSuperTestUser(superTest: SuperTest<Test>, entity?: Partial<User>) {

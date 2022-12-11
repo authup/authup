@@ -10,7 +10,7 @@ import {
     OAuth2SubKind, buildHTTPQuery,
 } from '@authup/common';
 import { Request, Response, sendRedirect } from 'routup';
-import { useRequestEnv } from '../../../../utils/env';
+import { useRequestEnv } from '../../../../utils';
 import { runAuthorizeValidation } from '../utils';
 import { useConfig } from '../../../../config';
 import {
@@ -42,11 +42,13 @@ export async function runAuthorizationRouteHandler(
             maxAge: this.config.tokenMaxAgeAccessToken,
         });
 
+        const { id: realmId } = useRequestEnv(req, 'realm');
+
         const token = await tokenBuilder.create({
             remoteAddress: req.socket.remoteAddress,
             sub: useRequestEnv(req, 'userId'),
             subKind: OAuth2SubKind.USER,
-            realmId: useRequestEnv(req, 'realmId'),
+            realmId,
             clientId: result.data.client_id,
             scope: result.data.scope,
         });

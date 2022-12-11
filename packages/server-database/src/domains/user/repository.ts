@@ -131,6 +131,9 @@ export class UserRepository extends Repository<UserEntity> {
             where: {
                 user_id: id,
             },
+            relations: {
+                permission: true,
+            },
             cache: {
                 id: buildKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,

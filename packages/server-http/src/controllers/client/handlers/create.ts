@@ -7,7 +7,6 @@
 
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    MASTER_REALM_ID,
     PermissionID, isPropertySet,
     isRealmResourceWritable,
 } from '@authup/common';
@@ -30,7 +29,7 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
     const result = await runOauth2ClientValidation(req, CRUDOperation.CREATE);
 
     if (!isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), MASTER_REALM_ID)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'))) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }

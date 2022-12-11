@@ -21,7 +21,7 @@ describe('src/http/controllers/permission', () => {
     });
 
     const details : Partial<Permission> = {
-        id: 'test_add',
+        name: 'test_add',
     };
 
     it('should read collection', async () => {

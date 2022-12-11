@@ -13,7 +13,7 @@ export type AbilityID = {
 };
 
 export type AbilityDescriptor<T extends Record<string, any> = Record<string, any>> = {
-    id: string,
+    name: string,
     inverse?: boolean,
     condition?: MongoQuery<T> | null,
     fields?: string[] | null,

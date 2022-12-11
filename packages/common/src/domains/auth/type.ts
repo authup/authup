@@ -96,6 +96,11 @@ export type OAuth2TokenPayload = JwtPayload & {
     realm_id?: string,
 
     /**
+     * Self: realm_name
+     */
+    realm_name?: string,
+
+    /**
      * Self: remote address
      */
     remote_address?: string

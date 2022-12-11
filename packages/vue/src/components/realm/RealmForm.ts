@@ -11,7 +11,7 @@ import {
 import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import { Realm, createNanoID } from '@authup/common';
+import { MASTER_REALM_NAME, Realm, createNanoID } from '@authup/common';
 import {
     buildFormInput,
     buildFormSubmit,
@@ -40,22 +40,16 @@ export const RealmForm = defineComponent({
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
-            id: '',
             name: '',
             description: '',
         });
 
         const $v = useVuelidate({
-            id: {
+            name: {
                 required,
                 alphaNumHyphenUnderscore,
                 minLength: minLength(3),
-                maxLength: maxLength(36),
-            },
-            name: {
-                required,
-                minLength: minLength(5),
-                maxLength: maxLength(100),
+                maxLength: maxLength(128),
             },
             description: {
                 minLength: minLength(5),
@@ -64,18 +58,18 @@ export const RealmForm = defineComponent({
         }, form);
 
         const isEditing = computed(() => !!props.entity && !!props.entity.id);
-        const isIDEmpty = computed(() => !form.id || form.id.length === 0);
+        const isNameEmpty = computed(() => !form.name || form.name.length === 0);
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
-        const generateID = () => {
-            form.id = createNanoID();
+        const generateName = () => {
+            form.name = createNanoID();
         };
 
         function initForm() {
             initFormAttributesFromEntity(form, props.entity);
 
-            if (form.id.length === 0) {
-                generateID();
+            if (form.name.length === 0) {
+                generateName();
             }
         }
 
@@ -98,15 +92,15 @@ export const RealmForm = defineComponent({
 
         const render = () => {
             const id = buildFormInput({
-                validationResult: $v.value.id,
+                validationResult: $v.value.name,
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                labelContent: 'ID',
-                value: form.id,
+                labelContent: 'Name',
+                value: form.name,
                 onChange(input) {
-                    form.id = input;
+                    form.name = input;
                 },
                 props: {
-                    disabled: props.entity && props.entity.id,
+                    disabled: props.entity && props.entity.name === MASTER_REALM_NAME,
                 },
             });
 
@@ -119,13 +113,13 @@ export const RealmForm = defineComponent({
                     }, [
                         h('button', {
                             class: ['btn btn-xs', {
-                                'btn-dark': isIDEmpty.value,
-                                'btn-warning': !isIDEmpty.value,
+                                'btn-dark': isNameEmpty.value,
+                                'btn-warning': !isNameEmpty.value,
                             }],
                             onClick($event: any) {
                                 $event.preventDefault();
 
-                                generateID.call(null);
+                                generateName.call(null);
                             },
                         }, [
                             h('i', { class: 'fa fa-wrench' }),
@@ -135,16 +129,6 @@ export const RealmForm = defineComponent({
                     ]),
                 ];
             }
-
-            const name = buildFormInput({
-                validationResult: $v.value.name,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                },
-            });
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
@@ -177,8 +161,6 @@ export const RealmForm = defineComponent({
             }, [
                 id,
                 idHint,
-                h('hr'),
-                name,
                 h('hr'),
                 description,
                 h('hr'),

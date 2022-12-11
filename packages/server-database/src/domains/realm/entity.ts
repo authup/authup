@@ -9,14 +9,14 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    PrimaryColumn,
+    PrimaryColumn, PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Realm } from '@authup/common';
 
 @Entity({ name: 'auth_realms' })
 export class RealmEntity implements Realm {
-    @PrimaryColumn({ type: 'varchar', length: 36 })
+    @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({ type: 'varchar', length: 128, unique: true })

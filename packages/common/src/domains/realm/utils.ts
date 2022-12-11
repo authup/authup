@@ -5,21 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_ID } from './constants';
+import { isPropertySet } from '../../utils';
+import { MASTER_REALM_NAME } from './constants';
 
 /**
  * Check if a realm resource is writable.
  *
- * @param realmId
+ * @param realm
  * @param resourceRealmId
  */
 export function isRealmResourceWritable(
-    realmId?: string,
+    realm?: { id: string, name?: string},
     resourceRealmId?: null | string | string[],
 ) : boolean {
     if (Array.isArray(resourceRealmId)) {
         for (let i = 0; i < resourceRealmId.length; i++) {
-            if (isRealmResourceWritable(realmId, resourceRealmId[i])) {
+            if (isRealmResourceWritable(realm, resourceRealmId[i])) {
                 return true;
             }
         }
@@ -27,20 +28,28 @@ export function isRealmResourceWritable(
         return false;
     }
 
-    if (!realmId) return false;
+    if (typeof realm === 'undefined') {
+        return false;
+    }
 
-    return realmId === MASTER_REALM_ID ||
-        realmId === resourceRealmId;
+    if (
+        isPropertySet(realm, 'name') &&
+        realm.name === MASTER_REALM_NAME
+    ) {
+        return true;
+    }
+
+    return realm.id === resourceRealmId;
 }
 
 /**
  * Check if realm resource is readable.
  *
- * @param realmId
+ * @param realm
  * @param resourceRealmId
  */
 export function isRealmResourceReadable(
-    realmId?: string,
+    realm?: { id: string, name?: string },
     resourceRealmId?: string | string[],
 ) : boolean {
     if (Array.isArray(resourceRealmId)) {
@@ -49,7 +58,7 @@ export function isRealmResourceReadable(
         }
 
         for (let i = 0; i < resourceRealmId.length; i++) {
-            if (isRealmResourceReadable(realmId, resourceRealmId[i])) {
+            if (isRealmResourceReadable(realm, resourceRealmId[i])) {
                 return true;
             }
         }
@@ -57,11 +66,19 @@ export function isRealmResourceReadable(
         return false;
     }
 
-    if (!realmId) return false;
+    if (typeof realm === 'undefined') {
+        return false;
+    }
+
+    if (
+        isPropertySet(realm, 'name') &&
+        realm.name === MASTER_REALM_NAME
+    ) {
+        return true;
+    }
 
     return !resourceRealmId ||
-        realmId === MASTER_REALM_ID ||
-        realmId === resourceRealmId;
+        realm.id === resourceRealmId;
 }
 
 export function isValidRealmName(name: string) : boolean {

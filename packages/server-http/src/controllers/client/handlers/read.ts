@@ -30,6 +30,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
     const options : QueryFieldsApplyOptions<ClientEntity> = {
         defaultAlias: 'client',
         default: [
+            'id',
             'name',
             'description',
             'base_url',
@@ -106,6 +107,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
     const options : QueryFieldsApplyOptions<ClientEntity> = {
         defaultAlias: 'client',
         default: [
+            'id',
             'name',
             'description',
             'base_url',

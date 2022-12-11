@@ -23,28 +23,19 @@ export async function runRealmValidation(
 ) : Promise<ExpressValidationResult<RealmEntity>> {
     const result : ExpressValidationResult<RealmEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
-        await check('id')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 36 })
-            .custom((value) => {
-                const isValid = isValidRealmName(value);
-                if (!isValid) {
-                    throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
-                }
-
-                return isValid;
-            })
-            .run(req);
-    }
-
-    const nameChain = await check('name')
+    const nameChain = check('name')
         .exists()
         .notEmpty()
         .isString()
-        .isLength({ min: 3, max: 128 });
+        .isLength({ min: 3, max: 128 })
+        .custom((value) => {
+            const isValid = isValidRealmName(value);
+            if (!isValid) {
+                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+            }
+
+            return isValid;
+        });
 
     if (operation === CRUDOperation.UPDATE) nameChain.optional({ nullable: true });
 

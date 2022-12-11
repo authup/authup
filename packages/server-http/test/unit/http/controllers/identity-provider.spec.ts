@@ -7,7 +7,6 @@
 
 import {
     IdentityProviderProtocol,
-    MASTER_REALM_ID,
     OAuth2IdentityProvider,
     buildIdentityProviderAuthorizePath,
 } from '@authup/common';
@@ -36,7 +35,6 @@ describe('src/http/controllers/identity-provider', () => {
         client_secret: 'start123',
         token_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/token',
         authorize_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/auth',
-        realm_id: MASTER_REALM_ID,
     };
 
     it('should read collection', async () => {

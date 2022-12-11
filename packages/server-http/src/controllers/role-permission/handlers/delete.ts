@@ -38,7 +38,7 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realmId'), entity.role_realm_id)) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)) {
         throw new ForbiddenError();
     }
 

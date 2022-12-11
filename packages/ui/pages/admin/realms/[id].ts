@@ -55,14 +55,14 @@ export default defineNuxtComponent({
             }
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             toast.warning(e.message);
         };
 
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-robot me-1' }),
-                entity.value.id,
+                h('i', { class: 'fa fa-university me-1' }),
+                entity.value.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),

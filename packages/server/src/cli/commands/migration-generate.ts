@@ -25,7 +25,7 @@ export class MigrationGenerateCommand implements CommandModule {
         await generateMigration({
             dataSource,
             name: 'Default',
-            directoryPath: path.join(__dirname, '..', 'database', 'migrations'),
+            directoryPath: path.join(__dirname, '..', '..', 'database', 'migrations'),
         });
 
         process.exit(0);
