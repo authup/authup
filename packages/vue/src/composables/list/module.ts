@@ -84,6 +84,9 @@ export function useListBuilder<T extends Record<string, any>>(
         await load({ offset: 0 });
     });
 
+    const handleDeleted = buildListDeletedHandler(data);
+    const handleUpdated = buildListUpdatedHandler(data);
+
     function build() {
         return buildList({
             ...buildListComponentOptions(context.props, context.components),
@@ -97,16 +100,20 @@ export function useListBuilder<T extends Record<string, any>>(
             onDeleted(value) {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
-
-                    // todo: delete data.value ref
                 }
+
+                if (meta.value.total) {
+                    meta.value.total--;
+                }
+
+                handleDeleted(value);
             },
             onUpdated(value) {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
-
-                    // todo: update data.value ref
                 }
+
+                handleUpdated(value);
             },
             slotItems: context.setup.slots || {},
         });
@@ -114,8 +121,8 @@ export function useListBuilder<T extends Record<string, any>>(
 
     context.setup.expose({
         handleCreated: buildListCreatedHandler(data),
-        handleDeleted: buildListDeletedHandler(data),
-        handleUpdated: buildListUpdatedHandler(data),
+        handleDeleted,
+        handleUpdated,
     });
 
     if (context.props.loadOnSetup) {

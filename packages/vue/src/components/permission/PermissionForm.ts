@@ -33,14 +33,14 @@ export const PermissionForm = defineComponent({
         const busy = ref(false);
 
         const form = reactive({
-            id: '',
+            name: '',
         });
 
         const $v = useVuelidate({
-            id: {
+            name: {
                 required,
                 minLength: minLength(3),
-                maxLength: maxLength(30),
+                maxLength: maxLength(128),
             },
         }, form);
 
@@ -64,21 +64,21 @@ export const PermissionForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().permission.create({ id: data.id as string }),
-            update: async (id, data) => useHTTPClient().permission.update(id, { id: data.id as string }),
+            create: async (data) => useHTTPClient().permission.create(data),
+            update: async (id, data) => useHTTPClient().permission.update(id, data),
         });
 
         const render = () => {
-            const id = buildFormInput({
+            const name = buildFormInput({
                 validationResult: $v.value.id,
                 validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                labelContent: 'ID',
-                value: form.id,
+                labelContent: 'Name',
+                value: form.name,
                 onChange(input) {
-                    form.id = input;
+                    form.name = input;
                 },
                 props: {
-                    disabled: isEditing.value,
+                    placeholder: '{object}_{action}',
                 },
             });
 
@@ -98,7 +98,7 @@ export const PermissionForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                id,
+                name,
                 submitButton,
             ]);
         };

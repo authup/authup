@@ -71,7 +71,7 @@ export default defineNuxtComponent({
         return () => h('div', [
             h('h1', { class: 'title no-border mb-3' }, [
                 h('i', { class: 'fa fa-robot me-1' }),
-                entity.value.id,
+                entity.value.name,
                 h('span', { class: 'sub-title ms-1' }, [
                     'Details',
                 ]),

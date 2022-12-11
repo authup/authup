@@ -242,7 +242,6 @@ export const ClientForm = defineComponent({
             let id : VNodeArrayChildren = [];
 
             if (props.entity) {
-                console.log(props.entity);
                 id = [
                     buildFormInput({
                         labelContent: 'ID',

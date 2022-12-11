@@ -9,7 +9,8 @@
     margin-bottom: 0.5rem;
 }
 
-.form-control {
+.form-control,
+.form-select {
     font-size: inherit;
 }
 

@@ -34,13 +34,13 @@ export class PermissionAPI implements DomainAPI<Permission> {
         return response.data;
     }
 
-    async create(data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
+    async create(data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
         const response = await this.client.post('permissions', data);
 
         return response.data;
     }
 
-    async update(id: Permission['id'], data: Pick<Permission, 'id'>): Promise<SingleResourceResponse<Permission>> {
+    async update(id: Permission['id'], data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
         const response = await this.client.post(`permissions/${id}`, data);
 
         return response.data;
