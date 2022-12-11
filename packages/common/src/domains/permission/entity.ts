@@ -8,7 +8,11 @@
 export interface Permission {
     id: string;
 
+    built_in: boolean;
+
     name: string;
+
+    description: string | null;
 
     target: string | null;
 

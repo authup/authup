@@ -14,7 +14,7 @@ import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { PermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
-import { RequestValidationError } from '../../../validation';
+import { runPermissionValidation } from '../utils';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -22,18 +22,7 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
         throw new ForbiddenError();
     }
 
-    await check('name')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 30 })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    const data = matchedData(req, { includeOptionals: false });
+    const { data } = await runPermissionValidation(req, 'create');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);

@@ -153,18 +153,27 @@ export class DatabaseSeeder implements Seeder {
         const permissionRepository = dataSource.getRepository(PermissionEntity);
 
         const existingPermissions = await permissionRepository.findBy({
-            name: In(permissionNames),
+            built_in: true,
         });
+        const removablePermissions : PermissionEntity[] = [];
 
         for (let i = 0; i < existingPermissions.length; i++) {
             const index = permissionNames.indexOf(existingPermissions[i].name);
-            if (index !== -1) {
+            if (index === -1) {
+                removablePermissions.push(existingPermissions[i]);
+            } else {
                 permissionIds.push(existingPermissions[i].id);
                 permissionNames.splice(index, 1);
             }
         }
 
-        const permissions : Permission[] = permissionNames.map((name: string) => permissionRepository.create({ name }));
+        if (removablePermissions.length > 0) {
+            await permissionRepository.remove(removablePermissions);
+        }
+
+        const permissions : Permission[] = permissionNames.map(
+            (name: string) => permissionRepository.create({ name, built_in: true }),
+        );
         if (permissions.length > 0) {
             await permissionRepository.save(permissions);
 

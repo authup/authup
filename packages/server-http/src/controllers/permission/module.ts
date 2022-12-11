@@ -6,12 +6,18 @@
  */
 
 import {
-    DBody, DController, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
 import { Permission } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
-import { createOnePermissionRouteHandler, getManyPermissionRouteHandler, getOnePermissionRouteHandler } from './handlers';
+import {
+    createOnePermissionRouteHandler,
+    deletePermissionRouteHandler,
+    getManyPermissionRouteHandler,
+    getOnePermissionRouteHandler,
+    updatePermissionRouteHandler,
+} from './handlers';
 
 @SwaggerTags('permission')
 @DController('/permissions')
@@ -40,5 +46,24 @@ export class PermissionController {
             @DResponse() res: any,
     ): Promise<Permission[]> {
         return createOnePermissionRouteHandler(req, res);
+    }
+
+    @DPost('/:id', [ForceLoggedInMiddleware])
+    async edit(
+        @DParam('id') id: string,
+            @DBody() user: NonNullable<Permission>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<Permission> {
+        return updatePermissionRouteHandler(req, res);
+    }
+
+    @DDelete('/:id', [ForceLoggedInMiddleware])
+    async drop(
+        @DParam('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<Permission> {
+        return deletePermissionRouteHandler(req, res);
     }
 }

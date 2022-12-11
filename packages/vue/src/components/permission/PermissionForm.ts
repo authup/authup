@@ -11,7 +11,7 @@ import {
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import { Permission } from '@authup/common';
-import { buildFormInput, buildFormSubmit } from '@vue-layout/hyperscript';
+import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/hyperscript';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -34,6 +34,7 @@ export const PermissionForm = defineComponent({
 
         const form = reactive({
             name: '',
+            description: '',
         });
 
         const $v = useVuelidate({
@@ -41,6 +42,10 @@ export const PermissionForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            description: {
+                minLength: minLength(5),
+                maxLength: maxLength(4096),
             },
         }, form);
 
@@ -79,6 +84,20 @@ export const PermissionForm = defineComponent({
                 },
                 props: {
                     placeholder: '{object}_{action}',
+                    disabled: props.entity && props.entity.built_in,
+                },
+            });
+
+            const description = buildFormTextarea({
+                validationResult: $v.value.description,
+                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                labelContent: 'Description',
+                value: form.description,
+                onChange(input) {
+                    form.description = input;
+                },
+                props: {
+                    rows: 4,
                 },
             });
 
@@ -99,6 +118,7 @@ export const PermissionForm = defineComponent({
                 },
             }, [
                 name,
+                description,
                 submitButton,
             ]);
         };

@@ -22,6 +22,12 @@ export class PermissionEntity implements Permission {
     @Column({ type: 'varchar', length: 128, unique: true })
         name: string;
 
+    @Column({ type: 'boolean', default: false })
+        built_in: boolean;
+
+    @Column({ type: 'text', nullable: true })
+        description: string | null;
+
     @Column({ type: 'varchar', length: 16, nullable: true })
         target: string | null;
 
