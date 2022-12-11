@@ -18,7 +18,7 @@ import {
     buildFormTextarea,
 } from '@vue-layout/hyperscript';
 import {
-    alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useHTTPClient,
+    alphaWithUpperNumHyphenUnderScore, createSubmitHandler, initFormAttributesFromEntity, useHTTPClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -47,7 +47,7 @@ export const RealmForm = defineComponent({
         const $v = useVuelidate({
             name: {
                 required,
-                alphaNumHyphenUnderscore,
+                alphaWithUpperNumHyphenUnderScore,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },

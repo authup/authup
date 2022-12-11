@@ -31,7 +31,7 @@ export async function runRealmValidation(
         .custom((value) => {
             const isValid = isValidRealmName(value);
             if (!isValid) {
-                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                throw new BadRequestError('Only the characters [a-zA-Z0-9-_]+ are allowed.');
             }
 
             return isValid;

@@ -163,6 +163,7 @@ export class UserRepository extends Repository<UserEntity> {
         const entity = await this.createQueryBuilder('user')
             .addSelect('user.password')
             .where('user.name LIKE :name', { name })
+            .leftJoinAndSelect('user.realm', 'realm')
             .getOne();
 
         if (

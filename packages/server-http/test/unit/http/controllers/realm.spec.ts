@@ -36,10 +36,7 @@ describe('src/http/controllers/realm', () => {
 
         let response = await superTest
             .post('/realms')
-            .send({
-                ...details,
-                id: 'test',
-            })
+            .send(details)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
