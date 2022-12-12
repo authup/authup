@@ -6,10 +6,15 @@
  */
 
 import { IncomingHttpHeaders } from 'http';
+import { RequestEnv } from '../http';
 
 export type SocketNextFunction = (err?: Error) => void;
+export type SocketData = RequestEnv & {
+    [k: string]: any
+};
+
 export type Socket = {
-    data: Partial<any>,
+    data: Partial<SocketData>,
 
     handshake: Handshake,
 

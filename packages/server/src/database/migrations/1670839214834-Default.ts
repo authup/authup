@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Default1670775868165 implements MigrationInterface {
-    name = 'Default1670775868165';
+export class Default1670839214834 implements MigrationInterface {
+    name = 'Default1670839214834';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
@@ -87,6 +87,8 @@ export class Default1670775868165 implements MigrationInterface {
             CREATE TABLE "auth_permissions" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "name" varchar(128) NOT NULL,
+                "built_in" boolean NOT NULL DEFAULT (0),
+                "description" text,
                 "target" varchar(16),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
@@ -165,7 +167,7 @@ export class Default1670775868165 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar,
+                "realm_id" varchar NOT NULL,
                 CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id")
             )
         `);
@@ -737,7 +739,7 @@ export class Default1670775868165 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar,
+                "realm_id" varchar NOT NULL,
                 CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id"),
                 CONSTRAINT "FK_b6d73e3026e15c0af6c41ef8139" FOREIGN KEY ("user_id") REFERENCES "auth_users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
                 CONSTRAINT "FK_9c99802f3f360718344180c3f68" FOREIGN KEY ("realm_id") REFERENCES "auth_realms" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
@@ -1769,7 +1771,7 @@ export class Default1670775868165 implements MigrationInterface {
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar,
-                "realm_id" varchar,
+                "realm_id" varchar NOT NULL,
                 CONSTRAINT "UQ_f89cc2abf1d7e284a7d6cd59c12" UNIQUE ("name", "realm_id")
             )
         `);

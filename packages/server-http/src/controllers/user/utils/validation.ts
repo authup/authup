@@ -153,7 +153,7 @@ export async function runUserValidation(
     }
 
     if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.realm.id)) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     }
