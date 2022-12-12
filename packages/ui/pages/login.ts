@@ -51,11 +51,16 @@ export default defineNuxtComponent({
 
                 const route = useRoute();
                 navigateTo({ path: (route.query.redirect || '/') as string });
-            } catch (e) {
-                const toast = useToast();
-                toast.warning(e.message);
+            } catch (e: any) {
+                if (e instanceof Error) {
+                    const toast = useToast();
+                    toast.warning(e.message);
+                }
             }
         };
+
+        Promise.resolve()
+            .then(store.logout);
 
         const render = () => {
             const name = buildFormInput({
@@ -108,7 +113,7 @@ export default defineNuxtComponent({
                     }),
                 ]),
                 h('form', {
-                    onSubmit($event) {
+                    onSubmit($event: any) {
                         $event.preventDefault();
 
                         return submit.call(null);

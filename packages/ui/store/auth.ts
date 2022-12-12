@@ -157,6 +157,8 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (e) {
             if (
                 isClientError(e) &&
+                e.response &&
+                e.response.data &&
                 hasOwnProperty(e.response.data, 'code') &&
                 e.response.data.code === ErrorCode.TOKEN_EXPIRED
             ) {
@@ -185,7 +187,10 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const unsetPermissions = () => {
-        permissions.value = undefined;
+        if (permissions) {
+            permissions.value = [];
+        }
+
         permissionsResolved = false;
 
         abilityManager.set([]);
@@ -201,6 +206,8 @@ export const useAuthStore = defineStore('auth', () => {
         } catch (e) {
             if (
                 isClientError(e) &&
+                e.response &&
+                e.response.data &&
                 hasOwnProperty(e.response.data, 'code') &&
                 e.response.data.code === ErrorCode.TOKEN_EXPIRED
             ) {

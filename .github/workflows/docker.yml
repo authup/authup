@@ -7,7 +7,7 @@ on:
             - '**'
 
 env:
-    IMAGE_NAME: authelion-server
+    IMAGE_NAME: authup-server
 
 jobs:
     # Push image to GitHub Packages.

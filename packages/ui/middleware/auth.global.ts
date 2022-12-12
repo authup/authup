@@ -7,13 +7,14 @@
 
 import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authup/common';
 import { isClientError } from 'hapic';
+import { RouteLocationNormalized } from 'vue-router';
 import {
     navigateTo,
 } from '#app';
 import { LayoutKey } from '../config/layout';
 import { useAuthStore } from '../store/auth';
 
-function checkAbilityOrPermission(route, has: (name: string) => boolean) {
+function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: string) => boolean) {
     const layoutKeys : string[] = [
         LayoutKey.REQUIRED_PERMISSIONS,
     ];
@@ -23,14 +24,14 @@ function checkAbilityOrPermission(route, has: (name: string) => boolean) {
     for (let i = 0; i < layoutKeys.length; i++) {
         const layoutKey = layoutKeys[i];
 
-        for (let j = 0; j < route.meta.length; j++) {
-            const matchedRecordMeta = route.meta[j];
+        for (let j = 0; j < route.matched.length; j++) {
+            const matchedRecord = route.matched[j];
 
-            if (!Object.prototype.hasOwnProperty.call(matchedRecordMeta, layoutKey)) {
+            if (!Object.prototype.hasOwnProperty.call(matchedRecord.meta, layoutKey)) {
                 continue;
             }
 
-            const value = matchedRecordMeta[layoutKey];
+            const value = matchedRecord.meta[layoutKey];
             if (Array.isArray(value)) {
                 isAllowed = value.some((val) => {
                     if (layoutKey !== LayoutKey.REQUIRED_PERMISSIONS) {
@@ -69,6 +70,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
         if (isClientError(e)) {
             if (
+                e.response &&
                 e.response.data &&
                 hasOwnProperty(e.response.data, 'code') &&
                 typeof e.response.data.code === 'string'
