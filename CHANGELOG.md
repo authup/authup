@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/Tada5hi/authup/compare/v0.3.0...v0.3.1) (2022-12-12)
+
+
+### Bug Fixes
+
+* **ui:** minor enahcenement to auth store & middleware ([80b97d0](https://github.com/Tada5hi/authup/commit/80b97d02977795ece02d60d4daff5eae58d03028))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/authup/compare/v0.2.2...v0.3.0) (2022-12-12)
 
 
