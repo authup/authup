@@ -59,12 +59,12 @@ export class RobotEntity implements Robot {
         user: User | null;
 
     @Index()
-    @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    @Column()
+        realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm | null;
+        realm: Realm;
 
     // ------------------------------------------------------------------
 

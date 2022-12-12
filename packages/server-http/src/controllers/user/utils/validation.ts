@@ -144,18 +144,18 @@ export async function runUserValidation(
         entity: 'realm',
     });
 
-    if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.realm.id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
-        }
-    }
-
     if (
         operation === CRUDOperation.CREATE &&
         !result.data.realm_id
     ) {
-        const { id } = useRequestEnv(req, 'realm');
-        result.data.realm_id = id;
+        const { id: realmId } = useRequestEnv(req, 'realm');
+        result.data.realm_id = realmId;
+    }
+
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.realm.id)) {
+            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+        }
     }
 
     return result;

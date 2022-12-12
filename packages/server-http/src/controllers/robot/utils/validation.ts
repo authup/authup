@@ -10,7 +10,7 @@ import { isPropertySet, isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { RealmEntity, RobotEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -79,15 +79,18 @@ export async function runRobotValidation(
         entity: 'realm',
     });
 
+    if (
+        operation === CRUDOperation.CREATE &&
+        !result.data.realm_id
+    ) {
+        const { id: realmId } = useRequestEnv(req, 'realm');
+        result.data.realm_id = realmId;
+    }
+
     if (isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
-    } else if (
-        operation === CRUDOperation.CREATE &&
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
-    ) {
-        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
     }
 
     // ----------------------------------------------

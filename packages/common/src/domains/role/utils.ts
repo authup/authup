@@ -6,5 +6,5 @@
  */
 
 export function isValidRoleName(name: string) : boolean {
-    return /^[A-Za-z0-9-_]{3,36}$/.test(name);
+    return /^[A-Za-z0-9-_]{3,128}$/.test(name);
 }

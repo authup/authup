@@ -35,7 +35,7 @@ export async function runRoleValidation(
         .custom((value) => {
             const isValid = isValidRoleName(value);
             if (!isValid) {
-                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                throw new BadRequestError('Only the characters [A-Za-z0-9-_]+ are allowed.');
             }
 
             return isValid;
