@@ -32,6 +32,13 @@ export default defineNuxtComponent({
             {
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
+            {
+                name: 'Scopes', icon: 'fas fa-bars', urlSuffix: '/scopes',
+            },
+            {
+                name: 'URL Generator', icon: 'fa-solid fa-link', urlSuffix: '/url-generator',
+                // todo: allow picking scopes -> generate url
+            },
         ];
 
         const toast = useToast();

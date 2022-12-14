@@ -50,7 +50,12 @@ export default defineNuxtComponent({
                 await store.login(form.name, form.password);
 
                 const route = useRoute();
-                navigateTo({ path: (route.query.redirect || '/') as string });
+                const { redirect, ...query } = route.query;
+
+                navigateTo({
+                    path: (redirect || '/') as string,
+                    query,
+                });
             } catch (e: any) {
                 if (e instanceof Error) {
                     const toast = useToast();

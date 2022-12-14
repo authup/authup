@@ -7,9 +7,12 @@
 
 import {
     OAuth2AuthorizationResponseType,
-    OAuth2SubKind, buildHTTPQuery,
+    OAuth2SubKind,
 } from '@authup/common';
-import { Request, Response, sendRedirect } from 'routup';
+import {
+    Request, Response, getRequestIp, send,
+} from 'routup';
+import { URL } from 'url';
 import { useRequestEnv } from '../../../../utils';
 import { runAuthorizeValidation } from '../utils';
 import { useConfig } from '../../../../config';
@@ -25,11 +28,12 @@ export async function runAuthorizationRouteHandler(
 ) : Promise<any> {
     const result = await runAuthorizeValidation(req);
 
+    const config = useConfig();
+
     const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
 
     // ---------------------------------------------------------
 
-    const config = useConfig();
     const codeBuilder = new OAuth2AuthorizationCodeBuilder({
         selfUrl: config.get('publicUrl'),
         maxAge: config.get('tokenMaxAgeAccessToken'),
@@ -45,7 +49,7 @@ export async function runAuthorizationRouteHandler(
         const { id: realmId, name: realmName } = useRequestEnv(req, 'realm');
 
         const token = await tokenBuilder.create({
-            remoteAddress: req.socket.remoteAddress,
+            remoteAddress: getRequestIp(req, { trustProxy: true }),
             sub: useRequestEnv(req, 'userId'),
             subKind: OAuth2SubKind.USER,
             realmId,
@@ -57,11 +61,13 @@ export async function runAuthorizationRouteHandler(
         accessToken = token.content;
     }
 
+    const { id: realmId } = useRequestEnv(req, 'realm');
+
     const code = await codeBuilder.create({
         sub: useRequestEnv(req, 'userId'),
         subKind: OAuth2SubKind.USER,
-        remoteAddress: req.socket.remoteAddress,
-        realmId: useRequestEnv(req, 'userId'),
+        remoteAddress: getRequestIp(req, { trustProxy: true }),
+        realmId,
         clientId: result.data.client_id,
         scope: result.data.scope,
         redirectUri: result.data.redirect_uri,
@@ -69,10 +75,30 @@ export async function runAuthorizationRouteHandler(
 
     // ---------------------------------------------------------
 
-    return sendRedirect(res, code.redirect_uri + buildHTTPQuery({
-        ...(result.data.state ? { state: result.data.state } : {}),
-        ...(responseTypes[OAuth2AuthorizationResponseType.CODE] ? { code: code.content } : {}),
-        ...(responseTypes[OAuth2AuthorizationResponseType.TOKEN] && accessToken ? { access_token: accessToken } : {}),
-        ...(responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] && code.id_token ? { id_token: code.id_token } : {}),
-    }));
+    const url = new URL(code.redirect_uri);
+    if (result.data.state) {
+        url.searchParams.set('state', result.data.state);
+    }
+
+    if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
+        url.searchParams.set('code', code.content);
+    }
+
+    if (
+        responseTypes[OAuth2AuthorizationResponseType.TOKEN] &&
+        accessToken
+    ) {
+        url.searchParams.set('access_token', accessToken);
+    }
+
+    if (
+        responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] &&
+        code.id_token
+    ) {
+        url.searchParams.set('id_token', code.id_token);
+    }
+
+    send(res, {
+        url: url.href,
+    });
 }

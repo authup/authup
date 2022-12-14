@@ -6,7 +6,7 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryColumn,
+    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
     Client, OAuth2AuthorizationCode, Realm, Robot,
@@ -19,7 +19,7 @@ import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_authorization_codes' })
 export class OAuth2AuthorizationCodeEntity implements OAuth2AuthorizationCode {
-    @PrimaryColumn({ type: 'uuid' })
+    @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({
