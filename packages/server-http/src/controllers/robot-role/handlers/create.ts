@@ -6,7 +6,7 @@
  */
 
 import { NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRoleEntity } from '@authup/server-database';
@@ -16,7 +16,7 @@ import { CRUDOperation } from '../../../constants';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROBOT_ROLE_ADD)) {
+    if (!ability.has(PermissionName.ROBOT_ROLE_ADD)) {
         throw new NotFoundError();
     }
 

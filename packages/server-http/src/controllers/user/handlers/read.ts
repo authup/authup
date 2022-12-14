@@ -16,7 +16,7 @@ import {
 } from 'typeorm-extension';
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
+import { OAuth2SubKind, PermissionName, isSelfId } from '@authup/common';
 import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
@@ -40,7 +40,7 @@ function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
         ],
     };
 
-    if (useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT)) {
+    if (useRequestEnv(req, 'ability').has(PermissionName.USER_EDIT)) {
         options.allowed = ['email'];
     }
 

@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { MASTER_REALM_NAME, PermissionID, isPropertySet } from '@authup/common';
+import { MASTER_REALM_NAME, PermissionName, isPropertySet } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -21,7 +21,7 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.REALM_EDIT)) {
+    if (!ability.has(PermissionName.REALM_EDIT)) {
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 

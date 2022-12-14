@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, Realm, User,
+    OAuth2SubKind, OAuth2TokenGrantResponse, Realm, ScopeName, User,
 } from '@authup/common';
 import { Request, getRequestIp } from 'routup';
 import { useRequestEnv } from '../../utils';
@@ -21,7 +21,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
         const realm = useRequestEnv(request, 'realm');
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIp(request, { trustProxy: true }),
-            scope: OAuth2Scope.GLOBAL,
+            scope: ScopeName.GLOBAL,
             realmId: realm.id,
             realmName: realm.name,
             sub: useRequestEnv(request, 'userId') as User['id'],

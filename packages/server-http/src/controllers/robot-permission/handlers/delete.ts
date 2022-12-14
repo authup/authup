@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -24,7 +24,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROBOT_PERMISSION_DROP)) {
+    if (!ability.has(PermissionName.ROBOT_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -44,7 +44,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!ability.matchTarget(PermissionID.ROBOT_PERMISSION_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionName.ROBOT_PERMISSION_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the robot-permission target.');
     }
 

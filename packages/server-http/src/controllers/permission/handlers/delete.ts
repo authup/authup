@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -19,7 +19,7 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.PERMISSION_DROP)) {
+    if (!ability.has(PermissionName.PERMISSION_DROP)) {
         throw new ForbiddenError('You are not allowed to drop a permission.');
     }
 

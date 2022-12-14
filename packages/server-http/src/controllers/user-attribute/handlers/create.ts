@@ -7,7 +7,7 @@
 
 import { ForbiddenError } from '@ebec/http';
 import {
-    PermissionID,
+    PermissionName,
     isRealmResourceWritable,
 } from '@authup/common';
 import {
@@ -29,7 +29,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
         result.data.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
+            !useRequestEnv(req, 'ability').has(PermissionName.USER_EDIT) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');

@@ -6,7 +6,7 @@
  */
 
 import {
-    Client, OAuth2Scope, OAuth2SubKind, Robot, User, hasOwnProperty, transformOAuth2ScopeToArray,
+    Client, OAuth2SubKind, Robot, ScopeName, User, hasOwnProperty, transformOAuth2ScopeToArray,
 } from '@authup/common';
 
 type ScopeSubFields<
@@ -15,17 +15,17 @@ type ScopeSubFields<
         [T in keyof I]: (keyof I[T])[]
     };
 
-const userFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`, User>>> = {
-    [OAuth2Scope.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'],
-    [OAuth2Scope.EMAIL]: ['email'],
+const userFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, User>>> = {
+    [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'],
+    [ScopeName.EMAIL]: ['email'],
 };
 
-const robotFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`, Robot>>> = {
-    [OAuth2Scope.IDENTITY]: ['name'],
+const robotFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, Robot>>> = {
+    [ScopeName.IDENTITY]: ['name'],
 };
 
-const clientFields : Partial<ScopeSubFields<Record<OAuth2Scope | `${OAuth2Scope}`, Client>>> = {
-    [OAuth2Scope.IDENTITY]: ['name'],
+const clientFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, Client>>> = {
+    [ScopeName.IDENTITY]: ['name'],
 };
 
 export function resolveOAuth2SubAttributesForScope(
@@ -42,7 +42,7 @@ export function resolveOAuth2SubAttributesForScope(
                     fields.push(...userFields[scopes[i]] as string[]);
                 }
 
-                if (scopes[i] === OAuth2Scope.GLOBAL) {
+                if (scopes[i] === ScopeName.GLOBAL) {
                     fields.push(...Object.values(userFields) as string[]);
                 }
                 break;
@@ -52,7 +52,7 @@ export function resolveOAuth2SubAttributesForScope(
                     fields.push(...robotFields[scopes[i]] as string[]);
                 }
 
-                if (scopes[i] === OAuth2Scope.GLOBAL) {
+                if (scopes[i] === ScopeName.GLOBAL) {
                     fields.push(...Object.values(robotFields) as string[]);
                 }
                 break;
@@ -62,7 +62,7 @@ export function resolveOAuth2SubAttributesForScope(
                     fields.push(...clientFields[scopes[i]] as string[]);
                 }
 
-                if (scopes[i] === OAuth2Scope.GLOBAL) {
+                if (scopes[i] === ScopeName.GLOBAL) {
                     fields.push(...Object.values(clientFields) as string[]);
                 }
                 break;

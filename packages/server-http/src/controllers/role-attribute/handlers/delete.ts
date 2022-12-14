@@ -7,7 +7,7 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -29,7 +29,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
 
     const ability = useRequestEnv(req, 'ability');
     if (
-        !ability.has(PermissionID.ROLE_EDIT) ||
+        !ability.has(PermissionName.ROLE_EDIT) ||
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to drop an attribute of this role...');

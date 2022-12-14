@@ -6,8 +6,8 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind,
-    OAuth2TokenGrantResponse,
+    OAuth2SubKind, OAuth2TokenGrantResponse,
+    ScopeName,
     UserError,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
@@ -24,7 +24,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIp(request, { trustProxy: true }),
-            scope: OAuth2Scope.GLOBAL,
+            scope: ScopeName.GLOBAL,
             sub: user.id,
             subKind: OAuth2SubKind.USER,
             realmId: user.realm.id,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, Realm } from '@authup/common';
+import { PermissionName, Realm } from '@authup/common';
 import { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
@@ -27,7 +27,7 @@ export default defineNuxtComponent({
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.REALM_EDIT,
+                PermissionName.REALM_EDIT,
             ],
         });
 

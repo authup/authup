@@ -8,7 +8,7 @@
 import { ForbiddenError } from '@ebec/http';
 import { check, matchedData, validationResult } from 'express-validator';
 import {
-    PermissionID,
+    PermissionName,
 } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -18,7 +18,7 @@ import { runPermissionValidation } from '../utils';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.PERMISSION_ADD)) {
+    if (!ability.has(PermissionName.PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
@@ -75,7 +75,7 @@ export async function runRobotPermissionValidation(
     }
 
     const permissionTarget = ability
-        .getTarget(PermissionID.ROBOT_PERMISSION_ADD);
+        .getTarget(PermissionName.ROBOT_PERMISSION_ADD);
 
     if (permissionTarget) {
         result.data.target = permissionTarget;

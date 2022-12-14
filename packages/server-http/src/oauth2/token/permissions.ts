@@ -6,7 +6,7 @@
  */
 
 import {
-    AbilityDescriptor, OAuth2Scope, OAuth2SubKind, transformOAuth2ScopeToArray,
+    AbilityDescriptor, OAuth2SubKind, ScopeName, transformOAuth2ScopeToArray,
 } from '@authup/common';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, UserRepository } from '@authup/server-database';
@@ -19,7 +19,7 @@ export async function loadOAuth2SubPermissions(
     const scopes = transformOAuth2ScopeToArray(scope);
 
     // todo: grant permissions depending on scopes :)
-    if (scopes.indexOf(OAuth2Scope.GLOBAL) === -1) {
+    if (scopes.indexOf(ScopeName.GLOBAL) === -1) {
         return [];
     }
 

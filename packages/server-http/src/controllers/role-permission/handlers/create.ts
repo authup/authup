@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
@@ -24,7 +24,7 @@ import { CRUDOperation } from '../../../constants';
  */
 export async function createRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROLE_PERMISSION_ADD)) {
+    if (!ability.has(PermissionName.ROLE_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

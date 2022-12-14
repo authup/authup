@@ -6,7 +6,7 @@
  */
 
 import {
-    Client, PermissionID,
+    Client, PermissionName,
 } from '@authup/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
@@ -24,7 +24,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.CLIENT_EDIT,
+                PermissionName.CLIENT_EDIT,
             ],
         });
 

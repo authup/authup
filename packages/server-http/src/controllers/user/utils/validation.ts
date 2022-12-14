@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import {
-    PermissionID, isPropertySet, isRealmResourceWritable, isValidUserName,
+    PermissionName, isPropertySet, isRealmResourceWritable, isValidUserName,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
@@ -47,8 +47,8 @@ export async function runUserValidation(
     await nameChain.run(req);
 
     if (
-        ability.has(PermissionID.USER_ADD) ||
-        ability.has(PermissionID.USER_EDIT)
+        ability.has(PermissionName.USER_ADD) ||
+        ability.has(PermissionName.USER_EDIT)
     ) {
         await check('name_locked')
             .isBoolean()
@@ -99,8 +99,8 @@ export async function runUserValidation(
     // ----------------------------------------------
 
     if (
-        ability.has(PermissionID.USER_ADD) ||
-        ability.has(PermissionID.USER_EDIT)
+        ability.has(PermissionName.USER_ADD) ||
+        ability.has(PermissionName.USER_EDIT)
     ) {
         await check('active')
             .isBoolean()

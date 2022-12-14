@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission, PermissionID } from '@authup/common';
+import { Permission, PermissionName } from '@authup/common';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -32,7 +32,7 @@ describe('src/http/controllers/permission', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(Object.values(PermissionID).length);
+        expect(response.body.data.length).toEqual(Object.values(PermissionName).length);
     });
 
     it('should create, read resource', async () => {

@@ -7,7 +7,7 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionID,
+    PermissionName,
 } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
@@ -28,7 +28,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROBOT_DROP)) {
+    if (!ability.has(PermissionName.ROBOT_DROP)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

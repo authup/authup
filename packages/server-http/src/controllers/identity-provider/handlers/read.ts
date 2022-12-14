@@ -14,7 +14,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { IdentityProviderEntity, IdentityProviderRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 
@@ -101,7 +101,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
 
     const ability = useRequestEnv(req, 'ability');
     if (
-        ability.has(PermissionID.PROVIDER_EDIT)
+        ability.has(PermissionName.PROVIDER_EDIT)
     ) {
         await repository.extendEntity(entity);
     }

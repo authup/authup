@@ -6,7 +6,7 @@
  */
 
 import {
-    IdentityProvider, IdentityProviderProtocol, PermissionID, Realm,
+    IdentityProvider, IdentityProviderProtocol, PermissionName, Realm,
 } from '@authup/common';
 import { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
@@ -29,7 +29,7 @@ export default defineNuxtComponent({
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.REALM_EDIT,
+                PermissionName.REALM_EDIT,
             ],
         });
 

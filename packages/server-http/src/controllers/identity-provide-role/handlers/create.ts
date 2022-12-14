@@ -7,7 +7,7 @@
 
 import { ForbiddenError } from '@ebec/http';
 import {
-    PermissionID,
+    PermissionName,
 } from '@authup/common';
 import {
     Request, Response, send, sendAccepted, sendCreated,
@@ -20,7 +20,7 @@ import { CRUDOperation } from '../../../constants';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
+    if (!ability.has(PermissionName.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 

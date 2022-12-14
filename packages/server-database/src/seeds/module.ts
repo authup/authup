@@ -10,12 +10,12 @@ import { Seeder } from 'typeorm-extension';
 import {
     MASTER_REALM_NAME,
     Permission,
-    PermissionID,
+    PermissionName,
     Robot,
     RobotPermission,
     RolePermission,
-    UserRole,
-    createNanoID,
+    ScopeName,
+    UserRole, createNanoID,
 } from '@authup/common';
 import { Config, hasOwnProperty, hash } from '@authup/server-common';
 import {
@@ -25,16 +25,16 @@ import {
     RobotPermissionEntity,
     RoleEntity,
     RolePermissionEntity,
+    ScopeEntity,
     UserRepository,
-    UserRoleEntity,
-    useRobotEventEmitter,
+    UserRoleEntity, useRobotEventEmitter,
 } from '../domains';
 import { Options, OptionsInput, useConfig } from '../config';
 import { DatabaseRootSeederResult } from './type';
 
 function getPermissions(permissions?: string[]) {
     return Array.from(new Set([
-        ...Object.values(PermissionID),
+        ...Object.values(PermissionName),
         ...(permissions || []),
     ]));
 }
@@ -80,6 +80,42 @@ export class DatabaseSeeder implements Seeder {
 
         await realmRepository.save(realm);
 
+        // -------------------------------------------------
+
+        // todo: maybe update existing scope attributes
+
+        const scopeNames : string[] = Object.values(ScopeName);
+        const scopeIds = [];
+
+        const scopeRepository = dataSource.getRepository(ScopeEntity);
+
+        const existingScopes = await scopeRepository.findBy({
+            built_in: true,
+        });
+        const removableScopes : ScopeEntity[] = [];
+
+        for (let i = 0; i < existingScopes.length; i++) {
+            const index = scopeNames.indexOf(existingScopes[i].name);
+            if (index === -1) {
+                removableScopes.push(existingScopes[i]);
+            } else {
+                scopeIds.push(existingScopes[i].id);
+                scopeNames.splice(index, 1);
+            }
+        }
+
+        if (removableScopes.length > 0) {
+            await scopeRepository.remove(removableScopes);
+        }
+
+        const scopes = scopeNames.map(
+            (name: string) => scopeRepository.create({ name, built_in: true }),
+        );
+        if (scopes.length > 0) {
+            await scopeRepository.save(scopes);
+
+            scopeIds.push(...scopes.map((permission) => permission.id));
+        }
         // -------------------------------------------------
 
         /**

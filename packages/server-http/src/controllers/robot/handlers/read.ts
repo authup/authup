@@ -17,7 +17,7 @@ import {
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     MASTER_REALM_NAME,
-    OAuth2SubKind, PermissionID, isSelfId,
+    OAuth2SubKind, PermissionName, isSelfId,
 } from '@authup/common';
 import { RobotEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
@@ -62,8 +62,8 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const env = useRequestEnv(req);
 
     if (
-        !env.ability.has(PermissionID.ROBOT_EDIT) &&
-        !env.ability.has(PermissionID.ROBOT_DROP)
+        !env.ability.has(PermissionName.ROBOT_EDIT) &&
+        !env.ability.has(PermissionName.ROBOT_DROP)
     ) {
         if (env.userId) {
             query.andWhere('robot.user_id = :userId', { userId: env.userId });
@@ -145,8 +145,8 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (
         env.robotId !== entity.id &&
-        !env.ability.has(PermissionID.ROBOT_DROP) &&
-        !env.ability.has(PermissionID.ROBOT_EDIT)
+        !env.ability.has(PermissionName.ROBOT_DROP) &&
+        !env.ability.has(PermissionName.ROBOT_EDIT)
     ) {
         if (
             !entity.user_id

@@ -8,9 +8,9 @@
 import {
     AbilityDescriptor,
     AbilityManager,
-    HeaderError, OAuth2Scope,
-    OAuth2SubKind,
+    HeaderError, OAuth2SubKind,
     OAuth2TokenKind,
+    ScopeName,
     TokenError, transformOAuth2ScopeToArray,
 } from '@authup/common';
 import {
@@ -118,7 +118,7 @@ async function verifyBasicAuthorizationHeader(
         permissions = await userRepository.getOwnedPermissions(entity.id);
 
         setRequestEnv(request, 'ability', new AbilityManager(permissions));
-        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
+        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
         setRequestEnv(request, 'user', entity);
         setRequestEnv(request, 'userId', entity.id);
@@ -132,7 +132,7 @@ async function verifyBasicAuthorizationHeader(
     if (robot) {
         // allow authentication but not authorization with basic auth for robots!
         setRequestEnv(request, 'ability', new AbilityManager());
-        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
+        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
         setRequestEnv(request, 'robot', robot);
         setRequestEnv(request, 'robotId', robot.id);
@@ -144,7 +144,7 @@ async function verifyBasicAuthorizationHeader(
     if (oauth2Client) {
         // allow authentication but not authorization with basic auth for robots!
         setRequestEnv(request, 'ability', new AbilityManager());
-        setRequestEnv(request, 'scopes', [OAuth2Scope.GLOBAL]);
+        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
         setRequestEnv(request, 'client', oauth2Client);
         setRequestEnv(request, 'clientId', oauth2Client.id);

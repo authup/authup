@@ -6,7 +6,7 @@
  */
 
 import {
-    PermissionID,
+    PermissionName,
 } from '@authup/common';
 import {
     Request, Response, send, sendCreated,
@@ -25,7 +25,7 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
     const ability = useRequestEnv(req, 'ability');
     const userId = useRequestEnv(req, 'userId');
 
-    if (!ability.has(PermissionID.ROBOT_ADD)) {
+    if (!ability.has(PermissionName.ROBOT_ADD)) {
         result.data.user_id = userId;
     } else if (
         result.data.user_id &&

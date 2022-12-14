@@ -6,7 +6,7 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, UserError,
+    OAuth2SubKind, OAuth2TokenGrantResponse, ScopeName, TokenError, UserError,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
@@ -24,7 +24,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIp(request, { trustProxy: true }),
-            scope: OAuth2Scope.GLOBAL,
+            scope: ScopeName.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
             realmId: client.realm.id,

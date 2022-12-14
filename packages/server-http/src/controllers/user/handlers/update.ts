@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -22,7 +22,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
     const env = useRequestEnv(req);
 
     if (
-        !env.ability.has(PermissionID.USER_EDIT) &&
+        !env.ability.has(PermissionName.USER_EDIT) &&
         env.userId !== id
     ) {
         throw new ForbiddenError('You are not authorized to modify a user.');

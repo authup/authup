@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum PermissionID {
+export enum PermissionName {
     CLIENT_ADD = 'client_add',
     CLIENT_DROP = 'client_drop',
     CLIENT_EDIT = 'client_edit',
@@ -39,6 +39,10 @@ export enum PermissionID {
 
     ROLE_PERMISSION_ADD = 'role_permission_add',
     ROLE_PERMISSION_DROP = 'role_permission_drop',
+
+    SCOPE_ADD = 'scope_add',
+    SCOPE_DROP = 'scope_drop',
+    SCOPE_EDIT = 'scope_edit',
 
     TOKEN_VERIFY = 'token_verify',
 

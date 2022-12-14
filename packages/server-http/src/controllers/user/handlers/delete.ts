@@ -6,7 +6,7 @@
  */
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -18,7 +18,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.USER_DROP)) {
+    if (!ability.has(PermissionName.USER_DROP)) {
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 

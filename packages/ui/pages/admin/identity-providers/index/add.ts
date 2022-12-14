@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol, PermissionID } from '@authup/common';
+import { IdentityProviderProtocol, PermissionName } from '@authup/common';
 import { buildFormSelect } from '@vue-layout/hyperscript';
 import { ref } from 'vue';
 import { navigateTo } from '#app';
@@ -19,7 +19,7 @@ export default defineComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.REALM_ADD,
+                PermissionName.REALM_ADD,
             ],
         });
 

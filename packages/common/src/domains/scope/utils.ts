@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Scope } from '../constants';
+import { ScopeName } from './constants';
 
 export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[] {
     if (typeof scope === 'undefined') {
@@ -20,7 +20,7 @@ export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[
 }
 
 export function hasOAuth2OpenIDScope(scope?: string | string[]) : boolean {
-    return transformOAuth2ScopeToArray(scope).indexOf(OAuth2Scope.OPEN_ID) !== -1;
+    return transformOAuth2ScopeToArray(scope).indexOf(ScopeName.OPEN_ID) !== -1;
 }
 
 export function isOAuth2ScopeAllowed(
@@ -29,7 +29,7 @@ export function isOAuth2ScopeAllowed(
 ) : boolean {
     available = transformOAuth2ScopeToArray(available);
 
-    if (available.indexOf(OAuth2Scope.GLOBAL) !== -1) {
+    if (available.indexOf(ScopeName.GLOBAL) !== -1) {
         return true;
     }
 

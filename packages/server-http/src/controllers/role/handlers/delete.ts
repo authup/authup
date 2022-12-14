@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -18,7 +18,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROLE_DROP)) {
+    if (!ability.has(PermissionName.ROLE_DROP)) {
         throw new ForbiddenError();
     }
 
@@ -38,7 +38,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!ability.matchTarget(PermissionID.ROLE_DROP, entity.target)) {
+    if (!ability.matchTarget(PermissionName.ROLE_DROP, entity.target)) {
         throw new ForbiddenError('You are not permitted for the role target.');
     }
 

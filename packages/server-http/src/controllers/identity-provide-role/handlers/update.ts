@@ -7,7 +7,7 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionID, isRealmResourceWritable,
+    PermissionName, isRealmResourceWritable,
 } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
@@ -22,7 +22,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.PROVIDER_EDIT)) {
+    if (!ability.has(PermissionName.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }
 

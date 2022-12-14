@@ -16,7 +16,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionID, isSelfId } from '@authup/common';
+import { OAuth2SubKind, PermissionName, isSelfId } from '@authup/common';
 import { ClientEntity } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
@@ -47,7 +47,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
     };
 
     const ability = useRequestEnv(req, 'ability');
-    if (ability.has(PermissionID.CLIENT_EDIT)) {
+    if (ability.has(PermissionName.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }
 
@@ -124,7 +124,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
     };
 
     const ability = useRequestEnv(req, 'ability');
-    if (ability.has(PermissionID.CLIENT_EDIT)) {
+    if (ability.has(PermissionName.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }
 

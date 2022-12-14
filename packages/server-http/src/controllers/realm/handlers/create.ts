@@ -7,7 +7,7 @@
 
 import { ForbiddenError } from '@ebec/http';
 import {
-    PermissionID, Realm,
+    PermissionName, Realm,
 } from '@authup/common';
 import {
     Request, Response, sendAccepted, sendCreated,
@@ -20,7 +20,7 @@ import { CRUDOperation } from '../../../constants';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.REALM_ADD)) {
+    if (!ability.has(PermissionName.REALM_ADD)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 

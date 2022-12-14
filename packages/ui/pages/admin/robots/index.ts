@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPage } from '#components';
 import { definePageMeta, resolveComponent } from '#imports';
@@ -18,9 +18,9 @@ export default defineComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.ROBOT_EDIT,
-                PermissionID.ROBOT_DROP,
-                PermissionID.ROBOT_ADD,
+                PermissionName.ROBOT_EDIT,
+                PermissionName.ROBOT_DROP,
+                PermissionName.ROBOT_ADD,
             ],
         });
 

@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, RoleEntity, RolePermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
@@ -74,7 +74,7 @@ export async function runRolePermissionValidation(
         }
     }
 
-    const permissionTarget = ability.getTarget(PermissionID.ROLE_PERMISSION_ADD);
+    const permissionTarget = ability.getTarget(PermissionName.ROLE_PERMISSION_ADD);
     if (permissionTarget) {
         result.data.target = permissionTarget;
     }

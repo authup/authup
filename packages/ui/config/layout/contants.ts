@@ -6,7 +6,7 @@
  */
 
 import { NavigationElement } from '@vue-layout/basic';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 
 export enum LayoutKey {
     NAVIGATION_ID = 'navigationId',
@@ -14,7 +14,6 @@ export enum LayoutKey {
     REQUIRED_LOGGED_OUT = 'requireLoggedOut',
 
     REQUIRED_PERMISSIONS = 'requirePermissions',
-    REQUIRED_ABILITIES = 'requireAbilities',
 }
 
 export enum LayoutNavigationID {
@@ -84,9 +83,9 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fas fa-university',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.REALM_ADD,
-            PermissionID.REALM_EDIT,
-            PermissionID.REALM_DROP,
+            PermissionName.REALM_ADD,
+            PermissionName.REALM_EDIT,
+            PermissionName.REALM_DROP,
         ],
     },
     {
@@ -96,9 +95,21 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fa-solid fa-ghost',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.CLIENT_ADD,
-            PermissionID.CLIENT_EDIT,
-            PermissionID.CLIENT_DROP,
+            PermissionName.CLIENT_ADD,
+            PermissionName.CLIENT_EDIT,
+            PermissionName.CLIENT_DROP,
+        ],
+    },
+    {
+        name: 'Scopes',
+        type: 'link',
+        url: '/admin/scopes',
+        icon: 'fa-solid fa-meteor',
+        [LayoutKey.REQUIRED_LOGGED_IN]: true,
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+            PermissionName.SCOPE_ADD,
+            PermissionName.SCOPE_EDIT,
+            PermissionName.SCOPE_DROP,
         ],
     },
     {
@@ -108,9 +119,9 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fa-solid fa-atom',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.PROVIDER_ADD,
-            PermissionID.PROVIDER_EDIT,
-            PermissionID.PROVIDER_DROP,
+            PermissionName.PROVIDER_ADD,
+            PermissionName.PROVIDER_EDIT,
+            PermissionName.PROVIDER_DROP,
         ],
     },
     {
@@ -120,9 +131,9 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fas fa-robot',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.ROBOT_ADD,
-            PermissionID.ROBOT_EDIT,
-            PermissionID.ROBOT_DROP,
+            PermissionName.ROBOT_ADD,
+            PermissionName.ROBOT_EDIT,
+            PermissionName.ROBOT_DROP,
         ],
     },
     {
@@ -132,9 +143,9 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fas fa-user',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.USER_ADD,
-            PermissionID.USER_EDIT,
-            PermissionID.USER_DROP,
+            PermissionName.USER_ADD,
+            PermissionName.USER_EDIT,
+            PermissionName.USER_DROP,
         ],
     },
     {
@@ -144,11 +155,11 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fa-solid fa-user-group',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.ROLE_ADD,
-            PermissionID.ROLE_EDIT,
-            PermissionID.ROLE_DROP,
-            PermissionID.ROLE_PERMISSION_ADD,
-            PermissionID.ROLE_PERMISSION_DROP,
+            PermissionName.ROLE_ADD,
+            PermissionName.ROLE_EDIT,
+            PermissionName.ROLE_DROP,
+            PermissionName.ROLE_PERMISSION_ADD,
+            PermissionName.ROLE_PERMISSION_DROP,
         ],
     },
     {
@@ -158,9 +169,9 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         icon: 'fas fa-key',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionID.PERMISSION_ADD,
-            PermissionID.PERMISSION_EDIT,
-            PermissionID.PERMISSION_DROP,
+            PermissionName.PERMISSION_ADD,
+            PermissionName.PERMISSION_EDIT,
+            PermissionName.PERMISSION_DROP,
         ],
     },
 ];

@@ -14,6 +14,7 @@ import { PermissionController } from './permission';
 import { RealmController } from './realm';
 import { RoleController } from './role';
 import { RolePermissionController } from './role-permission';
+import { ScopeController } from './scope';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
 import { AuthController, AuthTokenController } from './auth';
@@ -43,6 +44,7 @@ export function registerControllers(
         RoleController,
         RoleAttributeController,
         RolePermissionController,
+        ScopeController,
         UserController,
         UserAttributeController,
         UserPermissionController,

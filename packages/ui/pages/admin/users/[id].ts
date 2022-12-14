@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionID, User } from '@authup/common';
+import { PermissionName, User } from '@authup/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
@@ -20,10 +20,10 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionID.USER_EDIT,
-                PermissionID.USER_ROLE_ADD,
-                PermissionID.USER_ROLE_EDIT,
-                PermissionID.USER_ROLE_DROP,
+                PermissionName.USER_EDIT,
+                PermissionName.USER_ROLE_ADD,
+                PermissionName.USER_ROLE_EDIT,
+                PermissionName.USER_ROLE_DROP,
             ],
         });
 

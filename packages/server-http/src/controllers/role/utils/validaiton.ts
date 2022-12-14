@@ -6,7 +6,7 @@
  */
 
 import {
-    PermissionID, isPropertySet, isRealmResourceWritable, isValidRoleName,
+    PermissionName, isPropertySet, isRealmResourceWritable, isValidRoleName,
 } from '@authup/common';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
@@ -98,12 +98,12 @@ export async function runRoleValidation(
     const ability = useRequestEnv(req, 'ability');
 
     if (operation === CRUDOperation.CREATE) {
-        const permissionTarget = ability.getTarget(PermissionID.ROLE_ADD);
+        const permissionTarget = ability.getTarget(PermissionName.ROLE_ADD);
         if (permissionTarget) {
             result.data.target = permissionTarget;
         }
     } else {
-        const permissionTarget = ability.getTarget(PermissionID.ROLE_EDIT);
+        const permissionTarget = ability.getTarget(PermissionName.ROLE_EDIT);
         if (permissionTarget) {
             result.data.target = permissionTarget;
         }

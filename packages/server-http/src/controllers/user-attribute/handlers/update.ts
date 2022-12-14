@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, send, sendAccepted, useRequestParam,
 } from 'routup';
@@ -38,7 +38,7 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
         entity.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !useRequestEnv(req, 'ability').has(PermissionID.USER_EDIT) ||
+            !useRequestEnv(req, 'ability').has(PermissionName.USER_EDIT) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to update an attribute for the given user...');

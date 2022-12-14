@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { Request, Response, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
@@ -23,7 +23,7 @@ import { runRobotPermissionValidation } from '../utils';
  */
 export async function createRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROBOT_PERMISSION_ADD)) {
+    if (!ability.has(PermissionName.ROBOT_PERMISSION_ADD)) {
         throw new ForbiddenError();
     }
 

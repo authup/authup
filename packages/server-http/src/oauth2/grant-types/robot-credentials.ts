@@ -6,9 +6,9 @@
  */
 
 import {
-    OAuth2Scope, OAuth2SubKind,
-    OAuth2TokenGrantResponse,
+    OAuth2SubKind, OAuth2TokenGrantResponse,
     RobotError,
+    ScopeName,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { Request, getRequestIp } from 'routup';
@@ -24,7 +24,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIp(request, { trustProxy: true }),
-            scope: OAuth2Scope.GLOBAL,
+            scope: ScopeName.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
             sub: entity.id,
             realmId: entity.realm.id,

@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionID, isPropertySet } from '@authup/common';
+import { PermissionName, isPropertySet } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -21,7 +21,7 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.PERMISSION_EDIT)) {
+    if (!ability.has(PermissionName.PERMISSION_EDIT)) {
         throw new ForbiddenError('You are not permitted to edit a permission.');
     }
 

@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionID } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -33,7 +33,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.ROBOT_EDIT)) {
+    if (!ability.has(PermissionName.ROBOT_EDIT)) {
         if (!entity.user_id) {
             throw new ForbiddenError();
         }

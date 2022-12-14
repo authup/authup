@@ -46,8 +46,7 @@ export class ClientEntity implements Client {
         secret: string | null;
 
     @Column({
-        type: 'varchar',
-        length: 2000,
+        type: 'text',
         nullable: true,
     })
         redirect_uri: string | null;

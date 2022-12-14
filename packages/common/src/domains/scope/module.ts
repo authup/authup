@@ -19,4 +19,8 @@ export interface Scope {
     realm_id: Realm['id'] | null;
 
     realm: Realm | null;
+
+    created_at: Date | string;
+
+    updated_at: Date | string;
 }

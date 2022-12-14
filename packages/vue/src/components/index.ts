@@ -22,5 +22,6 @@ export * from './role-permission';
 export * from './role-robot';
 export * from './user-permission';
 export * from './role-user';
+export * from './scope';
 export * from './user';
 export * from './user-role';

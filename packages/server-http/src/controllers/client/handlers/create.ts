@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    PermissionID, isPropertySet,
+    PermissionName, isPropertySet,
     isRealmResourceWritable,
 } from '@authup/common';
 import {
@@ -22,7 +22,7 @@ import { CRUDOperation } from '../../../constants';
 
 export async function createClientRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
-    if (!ability.has(PermissionID.CLIENT_ADD)) {
+    if (!ability.has(PermissionName.CLIENT_ADD)) {
         throw new ForbiddenError();
     }
 
