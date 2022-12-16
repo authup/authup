@@ -48,7 +48,7 @@ export function extractOAuth2QueryParameters(
 
     return {
         client_id: decodeURIComponent(query.client_id),
-        response_type: query.response_type as 'code',
+        response_type: query.response_type,
         redirect_uri: decodeURIComponent(query.redirect_uri),
         scope: decodeURIComponent(query.scope || ''),
     };

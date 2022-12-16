@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
+
 export class Default1671093405047 implements MigrationInterface {
     name = 'Default1671093405047';
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE "auth_client_scopes" (
@@ -51,6 +53,7 @@ export class Default1671093405047 implements MigrationInterface {
                 RENAME TO "auth_client_scopes"
         `);
     }
+
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             ALTER TABLE "auth_client_scopes"

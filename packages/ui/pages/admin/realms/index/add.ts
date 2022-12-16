@@ -26,7 +26,6 @@ export default defineComponent({
         };
 
         const handleFailed = (e) => {
-            console.log(e);
             emit('failed', e);
         };
 
