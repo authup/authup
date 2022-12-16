@@ -28,10 +28,10 @@ export const useAuthStore = defineStore('auth', () => {
     client.mountResponseInterceptor((r) => r, ((error) => {
         if (typeof error?.response?.data?.message === 'string') {
             error.message = error.response.data.message;
-            throw error;
+            return Promise.reject(error);
         }
 
-        throw new Error('A network error occurred.');
+        return Promise.reject(new Error('A network error occurred.'));
     }));
 
     // --------------------------------------------------------------------

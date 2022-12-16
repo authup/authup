@@ -13,6 +13,7 @@ import {
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { ClientEntity, RealmEntity } from '@authup/server-database';
+import zod from 'zod';
 import { useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
@@ -47,8 +48,19 @@ export async function runOauth2ClientValidation(
     await check('redirect_uri')
         .exists()
         .notEmpty()
-        .isURL()
-        .isLength({ min: 3, max: 2000 })
+        .isString()
+        .custom((value) => {
+            const validator = zod.string().url();
+            const urls = value.split(',');
+            for (let i = 0; i < urls.length; i++) {
+                const output = validator.safeParse(urls[i]);
+                if (!output.success) {
+                    throw new BadRequestError(buildHTTPValidationErrorMessage('redirect_uri'));
+                }
+            }
+
+            return true;
+        })
         .optional({ nullable: true })
         .run(req);
 

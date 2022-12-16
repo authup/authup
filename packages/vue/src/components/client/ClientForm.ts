@@ -14,7 +14,7 @@ import {
     h,
     reactive,
     ref,
-    watch,
+    resolveComponent, watch,
 } from 'vue';
 import {
     maxLength, minLength, required, url,
@@ -89,14 +89,6 @@ export const ClientForm = defineComponent({
                 url,
                 maxLength: maxLength(2000),
             },
-            base_url: {
-                url,
-                maxLength: maxLength(2000),
-            },
-            root_url: {
-                url,
-                maxLength: maxLength(2000),
-            },
             is_confidential: {
 
             },
@@ -138,6 +130,8 @@ export const ClientForm = defineComponent({
         });
 
         initForm();
+
+        const clientRedirectUriList = resolveComponent('ClientRedirectUriList');
 
         const render = () => {
             const submit = createSubmitHandler<Client>({
@@ -182,51 +176,16 @@ export const ClientForm = defineComponent({
             ];
 
             const redirectUri = [
-                buildFormInput({
-                    validationResult: $v.value.redirect_uri,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                    labelContent: 'Redirect URL',
-                    value: form.redirect_uri,
-                    onChange(input) {
-                        form.redirect_uri = input;
-                    },
-                    props: {
-                        placeholder: '...',
+                h('label', { class: 'form-label' }, [
+                    'Redirect Uri(s)',
+                ]),
+                h(clientRedirectUriList, {
+                    uri: form.redirect_uri,
+                    onUpdated(value: string) {
+                        form.redirect_uri = value;
                     },
                 }),
                 h('small', 'URI pattern a browser can redirect to after a successful login.'),
-            ];
-
-            const rootURL = [
-                buildFormInput({
-                    validationResult: $v.value.base_url,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                    labelContent: 'Root URL',
-                    value: form.root_url,
-                    onChange(input) {
-                        form.root_url = input;
-                    },
-                    props: {
-                        placeholder: 'https://...',
-                    },
-                }),
-                h('small', 'URL prepended to relative URLs.'),
-            ];
-
-            const baseURL = [
-                buildFormInput({
-                    validationResult: $v.value.base_url,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
-                    labelContent: 'Base URL',
-                    value: form.base_url,
-                    onChange(input) {
-                        form.base_url = input;
-                    },
-                    props: {
-                        placeholder: 'https://...',
-                    },
-                }),
-                h('small', 'Default URL to use when the auth server needs to redirect or link back to the client.'),
             ];
 
             const isConfidential = buildFormInputCheckbox({
@@ -317,6 +276,7 @@ export const ClientForm = defineComponent({
 
             const leftColumn = h('div', { class: 'col' }, [
                 id,
+                h('hr'),
                 name,
                 h('hr'),
                 secret,
@@ -327,13 +287,9 @@ export const ClientForm = defineComponent({
                 h('div', {
                     class: 'col',
                 }, [
-                    rootURL,
-                    h('hr'),
-                    baseURL,
+                    description,
                     h('hr'),
                     redirectUri,
-                    h('hr'),
-                    description,
                     h('hr'),
                     isConfidential,
                     submitForm,

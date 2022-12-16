@@ -33,11 +33,10 @@ export default defineNuxtComponent({
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
             {
-                name: 'Scopes', icon: 'fas fa-bars', urlSuffix: '/scopes',
+                name: 'Scopes', icon: 'fa-solid fa-meteor', urlSuffix: '/scopes',
             },
             {
-                name: 'URL Generator', icon: 'fa-solid fa-link', urlSuffix: '/url-generator',
-                // todo: allow picking scopes -> generate url
+                name: 'URL', icon: 'fa-solid fa-link', urlSuffix: '/url',
             },
         ];
 
@@ -58,8 +57,10 @@ export default defineNuxtComponent({
         const handleUpdated = (e: Client) => {
             toast.success('The client was successfully updated.');
 
-            const keys = Object.keys(e) as (keyof Client)[];
+            const keys = Object.keys(e);
             for (let i = 0; i < keys.length; i++) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 entity.value[keys[i]] = e[keys[i]];
             }
         };

@@ -1,17 +1,21 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '@authup/common';
-import { Ref } from 'vue';
+import { BuildInput } from 'rapiq';
+import {
+    Client, ClientScope, isGlobMatch,
+} from '@authup/common';
+import { Ref, VNodeArrayChildren } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo } from '#app';
-import { useAPI } from '../../composables/api';
-import { LayoutKey, LayoutNavigationID } from '../../config/layout';
-import { useAuthStore } from '../../store/auth';
+import { useAPI } from '../composables/api';
+import { LayoutKey, LayoutNavigationID } from '../config/layout';
+import { extractOAuth2QueryParameters } from '../domains';
+import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     async setup() {
@@ -24,16 +28,27 @@ export default defineNuxtComponent({
 
         const authStore = useAuthStore();
         if (!authStore.loggedIn) {
-            navigateTo({
+            return navigateTo({
                 path: '/login',
                 query: {
                     ...route.query,
                     redirect: route.path,
                 },
             });
-
-            return;
         }
+
+        const renderError = (message: string | VNodeArrayChildren) => h('div', { class: 'd-flex align-items-center justify-content-center h-100' }, [
+            h('div', { class: 'oauth2-wrapper panel-card p-3 flex-column' }, [
+                h('div', { class: 'text-center' }, [
+                    h('i', { class: 'fa-solid fa-exclamation fa-10x text-danger' }),
+                ]),
+                h('div', { class: 'text-center fs-6 p-3' }, [
+                    message,
+                ]),
+            ]),
+        ]);
+
+        const parameters = extractOAuth2QueryParameters(route.query);
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -42,26 +57,65 @@ export default defineNuxtComponent({
         try {
             entity.value = await useAPI()
                 .client
-                .getOne(route.query.client_id as string);
-        } catch (e) {
-            navigateTo({ path: '/admin/roles' });
-
-            return;
+                .getOne(parameters.client_id as string);
+        } catch (e: any) {
+            return () => renderError([
+                'The',
+                h('strong', { class: 'ps-1 pe-1' }, 'client_id'),
+                'is invalid',
+            ]);
         }
 
-        // todo: verify redirect_uri -> error=redirect_uri_mismatch
-        // error_description=The redirect_uri must match the registered callback URL for this application
+        const redirectUriPatterns = (entity.value.redirect_uri || '')
+            .split(',');
+
+        if (!isGlobMatch(parameters.redirect_uri, redirectUriPatterns)) {
+            return () => renderError([
+                'The',
+                h('strong', { class: 'ps-1 pe-1' }, 'redirect_uri'),
+                'does not match.',
+            ]);
+        }
+
+        let scopeNames : string[] = [];
+        if (
+            typeof parameters.scope === 'string' &&
+            parameters.scope.length > 0
+        ) {
+            scopeNames = parameters.scope.split(' ');
+        }
+
+        const clientScopeQuery : BuildInput<ClientScope> = {
+            filter: {
+                client_id: entity.value.id,
+            },
+            relations: ['scope'],
+        };
+
+        if (
+            clientScopeQuery.filter &&
+            scopeNames.length > 0
+        ) {
+            clientScopeQuery.filter.scope = {
+                name: scopeNames,
+            };
+        }
+
+        const { data: clientScopes } = await useAPI().clientScope.getMany(clientScopeQuery);
 
         const abort = () => {
-            const url = new URL(entity.value.redirect_uri as string);
+            const url = new URL(`${parameters.redirect_uri}`);
             url.searchParams.set('error', 'access_denied');
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
             );
 
-            if (route.query.state) {
-                url.searchParams.set('state', route.query.state as string);
+            if (
+                route.query.state &&
+                typeof route.query.state === 'string'
+            ) {
+                url.searchParams.set('state', route.query.state);
             }
 
             window.location.href = url.href;
@@ -71,10 +125,11 @@ export default defineNuxtComponent({
             try {
                 const response = await useAPI()
                     .post('authorize', {
-                        response_type: 'code', // todo: get from route
+                        response_type: parameters.response_type,
                         client_id: entity.value.id,
-                        redirect_uri: entity.value.redirect_uri as string,
+                        redirect_uri: parameters.redirect_uri,
                         ...(route.query.state ? { state: route.query.state } : {}),
+                        scope: clientScopes.map((item) => item.scope.name).join(' '),
                     });
 
                 const { url } = response.data;
@@ -89,7 +144,7 @@ export default defineNuxtComponent({
         };
 
         const render = () => {
-            const header = h('div', { class: 'flex-column d-flex' }, [
+            const headerView = h('div', { class: 'flex-column d-flex' }, [
                 h('div', { class: 'text-center text-secondary' }, [
                     h('div', 'An external application'),
                     h('div', { class: 'fs-5 fw-bold' }, entity.value.name),
@@ -97,37 +152,39 @@ export default defineNuxtComponent({
                 ]),
             ]);
 
-            const scopes = h('div', { class: 'mt-2 mb-2' }, [
+            const scopeFilter : Record<string, any> = {
+                client_id: entity.value.id,
+            };
+
+            if (scopeNames.length > 0) {
+                scopeFilter['scope.name'] = scopeNames;
+            } else {
+                scopeFilter.default = true;
+            }
+
+            const scopeItems = clientScopes.map((clientScope) => h('div', { class: 'd-flex flex-row' }, [
+                h('div', { style: { width: '15px' }, class: 'text-center' }, [
+                    h('i', { class: 'fa-solid fa-check text-success' }),
+                ]),
+                h('div', { class: 'ms-1' }, [
+                    h('small', [
+                        clientScope.scope.name,
+                    ]),
+                ]),
+            ]));
+
+            const scopeView = h('div', { class: 'mt-2 mb-2' }, [
                 h('div', [
                     'This will allow the',
                     h('strong', { class: 'ps-1 pe-1' }, entity.value.name),
                     'developer to:',
                 ]),
                 h('div', { class: 'flex-column' }, [
-                    h('div', { class: 'd-flex flex-row' }, [
-                        h('div', { style: { width: '15px' }, class: 'text-center' }, [
-                            h('i', { class: 'fa-solid fa-check text-success' }),
-                        ]),
-                        h('div', { class: 'ms-1' }, [
-                            h('small', [
-                                '...',
-                            ]),
-                        ]),
-                    ]),
-                    h('div', { class: 'd-flex flex-row' }, [
-                        h('div', { style: { width: '15px' }, class: 'text-center' }, [
-                            h('i', { class: 'fa-solid fa-times text-danger' }),
-                        ]),
-                        h('div', { class: 'ms-1' }, [
-                            h('small', [
-                                '...',
-                            ]),
-                        ]),
-                    ]),
+                    scopeItems,
                 ]),
             ]);
 
-            const details = h('div', { class: 'mt-auto' }, [
+            const detailsView = h('div', { class: 'mt-auto' }, [
                 h('div', { class: 'd-flex flex-row' }, [
                     h('div', [
                         h('i', { class: 'fa-solid fa-link' }),
@@ -136,7 +193,7 @@ export default defineNuxtComponent({
                         h('small', [
                             'Once authorized, you will be redirected to:',
                             ' ',
-                            entity.value.redirect_uri,
+                            parameters.redirect_uri,
                         ]),
                     ]),
                 ]),
@@ -166,7 +223,7 @@ export default defineNuxtComponent({
                 ]),
             ]);
 
-            const footer = h('div', { class: 'd-flex justify-content-evenly mt-auto' }, [
+            const footerView = h('div', { class: 'd-flex justify-content-evenly mt-auto' }, [
                 h('div', [
                     h('button', {
                         type: 'button',
@@ -197,10 +254,10 @@ export default defineNuxtComponent({
 
             return h('div', { class: 'd-flex align-items-center justify-content-center h-100' }, [
                 h('div', { class: 'oauth2-wrapper panel-card p-3 flex-column' }, [
-                    header,
-                    scopes,
-                    details,
-                    footer,
+                    headerView,
+                    scopeView,
+                    detailsView,
+                    footerView,
                 ]),
             ]);
         };

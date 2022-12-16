@@ -53,7 +53,11 @@ export async function extendExpressValidationResultWithRelation<
         const dataSource = await useDataSource();
 
         const repository = dataSource.getRepository(target);
-        const entity = await repository.findOneBy({ id: result.data[keys.id] });
+        const entity = await repository.findOne({
+            where: {
+                id: result.data[keys.id],
+            },
+        });
         if (!entity) {
             throw new BadRequestError(buildHTTPValidationErrorMessage(keys.id));
         }

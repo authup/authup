@@ -7,6 +7,7 @@
 
 export * from './AuthEntityDelete';
 export * from './client';
+export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-role';
 export * from './permission';
@@ -23,5 +24,6 @@ export * from './role-robot';
 export * from './user-permission';
 export * from './role-user';
 export * from './scope';
+export * from './scope-client';
 export * from './user';
 export * from './user-role';

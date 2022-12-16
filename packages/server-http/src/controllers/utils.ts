@@ -7,6 +7,7 @@
 
 import { Router } from 'routup';
 import { mountControllers } from '@routup/decorators';
+import { ClientScopeController } from './client-scope';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
 import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
@@ -34,6 +35,7 @@ export function registerControllers(
         AuthController,
         AuthTokenController,
         ClientController,
+        ClientScopeController,
         OAuth2ProviderRoleController,
         IdentityProviderController,
         PermissionController,

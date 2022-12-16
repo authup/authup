@@ -14,11 +14,11 @@ import {
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
-import { ClientEntity } from '@authup/server-database';
+import { ClientEntity, ClientScopeEntity } from '@authup/server-database';
+import { useDataSource } from 'typeorm-extension';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -55,7 +55,6 @@ export async function runAuthorizeValidation(
         .notEmpty()
         .isURL()
         .isLength({ min: 3, max: 2000 })
-        .optional({ nullable: true })
         .run(req);
 
     await check('scope')
@@ -63,7 +62,6 @@ export async function runAuthorizeValidation(
         .notEmpty()
         .isString()
         .isLength({ min: 3, max: 512 })
-        .optional({ nullable: true })
         .run(req);
 
     await check('state')
@@ -101,8 +99,21 @@ export async function runAuthorizeValidation(
         result.relation.client &&
         result.data.scope
     ) {
-        if (!isOAuth2ScopeAllowed(result.relation.client.scope, result.data.scope)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('scope'));
+        const dataSource = await useDataSource();
+        const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
+        const clientScopes = await clientScopeRepository.find({
+            where: {
+                client_id: result.data.client_id,
+            },
+            relations: {
+                scope: true,
+            },
+        });
+
+        const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
+
+        if (!isOAuth2ScopeAllowed(scopeNames, result.data.scope)) {
+            throw new BadRequestError('The requested scope is not covered by the client scope.');
         }
     }
 

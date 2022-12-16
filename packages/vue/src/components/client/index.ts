@@ -7,3 +7,5 @@
 
 export { ClientForm } from './ClientForm';
 export { ClientList } from './ClientList';
+export { ClientRedirectUriList } from './ClientRedirectUriList';
+export { ClientRedirectUriListItem } from './ClientRedirectUriListItem';

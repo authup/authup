@@ -8,7 +8,7 @@
 import { ScopeName } from './constants';
 
 export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[] {
-    if (typeof scope === 'undefined') {
+    if (!scope) {
         return [];
     }
 
@@ -16,7 +16,7 @@ export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[
         return scope;
     }
 
-    return scope.split(' ');
+    return scope.split(/\s+|,+/);
 }
 
 export function hasOAuth2OpenIDScope(scope?: string | string[]) : boolean {
@@ -31,6 +31,10 @@ export function isOAuth2ScopeAllowed(
 
     if (available.indexOf(ScopeName.GLOBAL) !== -1) {
         return true;
+    }
+
+    if (available.length === 0) {
+        return false;
     }
 
     required = transformOAuth2ScopeToArray(required);
