@@ -47,6 +47,7 @@
         "@authup/server-http": "^0.3.0",
         "@trapi/swagger": "^0.3.8",
         "better-sqlite3": "^8.0.1",
+        "continu": "^1.0.3",
         "change-case": "^4.1.2",
         "dotenv": "^16.0.3",
         "locter": "^0.6.0",

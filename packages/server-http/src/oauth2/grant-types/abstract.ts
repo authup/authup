@@ -6,15 +6,15 @@
  */
 
 import { OAuth2TokenPayload } from '@authup/common';
-import { Config } from '@authup/server-common';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
+import { Continu } from 'continu';
 import { Options, OptionsInput, useConfig } from '../../config';
 import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
 import { OAuth2RefreshTokenCache } from '../cache';
 import { AccessTokenIssueContext } from './type';
 
 export abstract class AbstractGrant {
-    protected config : Config<Options, OptionsInput>;
+    protected config : Continu<Options, OptionsInput>;
 
     protected refreshTokenCache : OAuth2RefreshTokenCache;
 

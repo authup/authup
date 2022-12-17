@@ -13,5 +13,5 @@ export function setConfigOptions(
     const config = useConfig();
     config.setRaw(input);
 
-    return config.getAll();
+    return config.get();
 }

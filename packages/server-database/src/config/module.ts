@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Config } from '@authup/server-common';
+import { Continu } from 'continu';
 import path from 'path';
 import process from 'process';
 import zod from 'zod';
 import { Options, OptionsInput } from './type';
 
-let instance : Config<Options, OptionsInput> | undefined;
+let instance : Continu<Options, OptionsInput> | undefined;
 
-export function useConfig() : Config<Options, OptionsInput> {
+export function useConfig() : Continu<Options, OptionsInput> {
     if (typeof instance !== 'undefined') {
         return instance;
     }
@@ -24,7 +24,7 @@ export function useConfig() : Config<Options, OptionsInput> {
 }
 
 export function createConfig() {
-    return new Config<Options, OptionsInput>({
+    return new Continu<Options, OptionsInput>({
         defaults: {
             adminUsername: 'admin',
             adminPassword: 'start123',
@@ -62,7 +62,7 @@ export function createConfig() {
 }
 
 export function setConfig(
-    input: Config<Options, OptionsInput>,
+    input: Continu<Options, OptionsInput>,
 ) {
     instance = input;
 }

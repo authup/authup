@@ -26,5 +26,5 @@ export function setConfigOptions(options: OptionsInput) {
         );
     }
 
-    return config.getAll();
+    return config.get();
 }

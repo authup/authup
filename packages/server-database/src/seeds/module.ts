@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Continu } from 'continu';
 import { DataSource, FindOptionsWhere, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
@@ -17,7 +18,7 @@ import {
     ScopeName,
     UserRole, createNanoID,
 } from '@authup/common';
-import { Config, hasOwnProperty, hash } from '@authup/server-common';
+import { hasOwnProperty, hash } from '@authup/server-common';
 import {
     PermissionEntity,
     RealmEntity,
@@ -40,7 +41,7 @@ function getPermissions(permissions?: string[]) {
 }
 
 export class DatabaseSeeder implements Seeder {
-    protected config: Config<Options, OptionsInput>;
+    protected config: Continu<Options, OptionsInput>;
 
     protected options: Partial<Options>;
 
