@@ -4,7 +4,11 @@
 [![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
 
-This package contains the CLI for authup.
+This package contains the CLI.
+
+Authup is designed to be easy to use and flexible, with support for multiple authentication strategies.
+With Authup, developers can quickly and easily add authentication & authorization to their applications.
+
 
 **Table of Contents**
 

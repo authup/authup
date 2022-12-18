@@ -6,6 +6,8 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 `Authup` is an authentication & authorization framework.
+It is designed to be easy to use and flexible, with support for multiple authentication strategies.
+With Authup, developers can quickly and easily add authentication & authorization to their applications.
 
 **Table of Contents**
 
