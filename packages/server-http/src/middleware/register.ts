@@ -11,17 +11,16 @@ import {
     createRequestJsonHandler, createRequestUrlEncodedHandler,
 } from '@routup/body';
 import {
-    ParseOptions as CookieOptions,
     createRequestHandler as createRequestCookieHandler,
 } from '@routup/cookie';
 import {
-    ParseOptions as QueryOptions,
     createRequestHandler as createRequestQueryHandler,
 } from '@routup/query';
 import { createUIHandler } from '@routup/swagger';
 import path from 'path';
 import fs from 'fs';
 import { useLogger } from '@authup/server-common';
+import { isObject } from 'smob';
 import {
     useConfig,
 } from '../config';
@@ -46,24 +45,18 @@ export function registerMiddlewares(
         router.use(createRequestUrlEncodedHandler({ extended: false, ...options }));
     }
 
+    // only register middleware, if options are set.
+    // otherwise parse cookies on demand
     const cookieOptions = config.get('middlewareCookie');
-    if (cookieOptions) {
-        let options : CookieOptions = {};
-        if (typeof cookieOptions !== 'boolean') {
-            options = cookieOptions;
-        }
-
-        router.use(createRequestCookieHandler(options));
+    if (isObject(cookieOptions)) {
+        router.use(createRequestCookieHandler(cookieOptions));
     }
 
+    // only register middleware, if options are set.
+    // otherwise parse query on demand
     const queryMiddleware = config.get('middlewareQuery');
-    if (queryMiddleware) {
-        let options : QueryOptions = {};
-        if (typeof queryMiddleware !== 'boolean') {
-            options = queryMiddleware;
-        }
-
-        router.use(createRequestQueryHandler(options));
+    if (isObject(queryMiddleware)) {
+        router.use(createRequestQueryHandler(queryMiddleware));
     }
 
     //--------------------------------------------------------------------
