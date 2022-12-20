@@ -6,7 +6,18 @@
  */
 
 import { Router } from 'routup';
-import { createRequestJsonHandler, createRequestUrlEncodedHandler } from '@routup/body';
+import {
+    Options as BodyOptions,
+    createRequestJsonHandler, createRequestUrlEncodedHandler,
+} from '@routup/body';
+import {
+    ParseOptions as CookieOptions,
+    createRequestHandler as createRequestCookieHandler,
+} from '@routup/cookie';
+import {
+    ParseOptions as QueryOptions,
+    createRequestHandler as createRequestQueryHandler,
+} from '@routup/query';
 import { createUIHandler } from '@routup/swagger';
 import path from 'path';
 import fs from 'fs';
@@ -24,9 +35,35 @@ export function registerMiddlewares(
 
     router.use(createLoggerMiddleware());
 
-    if (config.get('middlewareBody')) {
-        router.use(createRequestJsonHandler());
-        router.use(createRequestUrlEncodedHandler({ extended: false }));
+    const middlewareBody = config.get('middlewareBody');
+    if (middlewareBody) {
+        let options : BodyOptions = {};
+        if (typeof middlewareBody !== 'boolean') {
+            options = middlewareBody;
+        }
+
+        router.use(createRequestJsonHandler(options));
+        router.use(createRequestUrlEncodedHandler({ extended: false, ...options }));
+    }
+
+    const cookieOptions = config.get('middlewareCookie');
+    if (cookieOptions) {
+        let options : CookieOptions = {};
+        if (typeof cookieOptions !== 'boolean') {
+            options = cookieOptions;
+        }
+
+        router.use(createRequestCookieHandler(options));
+    }
+
+    const queryMiddleware = config.get('middlewareQuery');
+    if (queryMiddleware) {
+        let options : QueryOptions = {};
+        if (typeof queryMiddleware !== 'boolean') {
+            options = queryMiddleware;
+        }
+
+        router.use(createRequestQueryHandler(options));
     }
 
     //--------------------------------------------------------------------

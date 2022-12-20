@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Options as BodyOptions } from '@routup/body';
+import { ParseOptions as CookieOptions } from '@routup/cookie';
+import { ParseOptions as QueryOptions } from '@routup/query';
+
 export type Options = {
     /**
      * default: process.cwd()
@@ -44,13 +48,17 @@ export type Options = {
      *
      * default: true
      */
-    middlewareBody: boolean,
+    middlewareBody: boolean | BodyOptions,
     /**
      * use cookie middleware
      *
      * default: true
      */
-    middlewareCookie: boolean,
+    middlewareCookie: boolean | CookieOptions,
+    /**
+     * Use query middleware
+     */
+    middlewareQuery: boolean | QueryOptions,
     /**
      * use swagger middleware
      *
