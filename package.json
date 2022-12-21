@@ -64,5 +64,8 @@
         "commitizen": {
             "path": "@commitlint/cz-commitlint"
         }
+    },
+    "dependencies": {
+        "@routup/static": "^0.1.1"
     }
 }
