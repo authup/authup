@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/authup/compare/v0.3.1...v0.4.0) (2022-12-21)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/nodemailer from 6.4.6 to 6.4.7 ([148e5fe](https://github.com/Tada5hi/authup/commit/148e5fe574a26b940be0de43a950852a832ae7dc))
+
+
+### Features
+
+* use continu for config management ([88b057d](https://github.com/Tada5hi/authup/commit/88b057dd6f15fb77c6a25197b51e6e0765e4fbe5))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/authup/compare/v0.2.2...v0.3.0) (2022-12-12)
 
 **Note:** Version bump only for package @authup/server-common

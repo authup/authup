@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/authup/compare/v0.3.1...v0.4.0) (2022-12-21)
+
+
+### Bug Fixes
+
+* updated routup dependency ([94f6797](https://github.com/Tada5hi/authup/commit/94f6797b51f4dff18e88e6a54836f5f131936802))
+
+
+### Features
+
+* further enhancement for client & scope management ([29d1f3e](https://github.com/Tada5hi/authup/commit/29d1f3ee5ecde14afa0b692dd9589887bc2df54e))
+* only pre-parse cookie & query if options are set ([528c414](https://github.com/Tada5hi/authup/commit/528c414756e6f6fddf362d12c37e4b0a549f92b0))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/authup/compare/v0.2.2...v0.3.0) (2022-12-12)
 
 
