@@ -2,18 +2,14 @@ name: docker
 
 on:
     push:
-        branches: [ docker, publish ]
+        branches:
+            - master
         tags:
-            - '**'
-
-env:
-    IMAGE_NAME: authup-server
+            - v*
 
 jobs:
-    # Push image to GitHub Packages.
-    # See also https://docs.docker.com/docker-hub/builds/
     push:
-        runs-on: ubuntu-latest
+        runs-on: [ self-hosted ]
         permissions:
             packages: write
             contents: read
@@ -21,18 +17,15 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
-            - name: Build API Image
-              run: docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+            - uses: tada5hi/action-docker-release@master
+              if: github.ref_type == 'tag'
+              with:
+                  registryRepository: authup-server
+                  imageTag: latest
 
-            - name: Log in to registry
-              run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            - name: Push API Image
-              run: |
-                  IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
-                  # Change all uppercase to lowercase
-                  IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-                  echo IMAGE_ID=$IMAGE_ID
-                  docker tag $IMAGE_NAME $IMAGE_ID:latest
-                  docker push $IMAGE_ID:latest
-                  exit 0
+            - uses: tada5hi/action-docker-release@master
+              if: github.ref_type == 'branch'
+              with:
+                  registryRepository: authup-server
+                  imageTag: next
+                  versionFile: false
