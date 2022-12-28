@@ -12,7 +12,7 @@
             "message": "build(release): publish"
         }
     },
-    "useNx": false,
+    "useNx": true,
     "useWorkspaces": true,
     "conventionalCommits": true,
     "version": "0.4.0",
