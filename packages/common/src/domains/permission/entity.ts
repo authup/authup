@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Realm } from '../realm';
+
 export interface Permission {
     id: string;
 
@@ -15,6 +17,14 @@ export interface Permission {
     description: string | null;
 
     target: string | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
+
+    // ------------------------------------------------------------------
 
     created_at: Date;
 

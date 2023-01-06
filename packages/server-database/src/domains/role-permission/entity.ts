@@ -72,4 +72,11 @@ export class RolePermissionEntity implements RolePermission {
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
         permission: Permission;
+
+    @Column({ nullable: true })
+        permission_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'permission_realm_id' })
+        permission_realm: Realm | null;
 }

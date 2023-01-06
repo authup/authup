@@ -33,7 +33,7 @@ export function readOptionsFromEnv() : OptionsInput {
         options.robotEnabled = requireBooleanFromEnv('ROBOT_ENABLED');
     }
 
-    if (hasEnv('ROBOT_SECRET')) {
+    if (hasEnv('<ROBOT_SECRET>')) {
         options.robotSecret = requireFromEnv('ROBOT_SECRET');
     }
 

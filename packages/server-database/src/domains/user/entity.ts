@@ -6,23 +6,28 @@
  */
 
 import {
-    BeforeInsert, BeforeUpdate,
+    BeforeInsert,
+    BeforeUpdate,
     Column,
     CreateDateColumn,
-    Entity, Index, JoinColumn,
+    Entity,
+    Index,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import { Realm, User } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_users' })
+@Unique(['name', 'realm_id'])
 export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 128, unique: true })
+    @Column({ type: 'varchar', length: 128 })
         name: string;
 
     @Column({ type: 'boolean', default: true })

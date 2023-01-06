@@ -6,7 +6,7 @@
  */
 
 import { User } from '../user';
-import { PermissionRelation } from '../permission';
+import { Permission, PermissionRelation } from '../permission';
 import { Realm } from '../realm';
 
 export interface UserPermission extends PermissionRelation {

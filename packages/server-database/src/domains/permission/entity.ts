@@ -9,10 +9,14 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    PrimaryColumn, PrimaryGeneratedColumn,
+    Index,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Permission } from '@authup/common';
+import { Permission, Realm } from '@authup/common';
+import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity implements Permission {
@@ -30,6 +34,18 @@ export class PermissionEntity implements Permission {
 
     @Column({ type: 'varchar', length: 16, nullable: true })
         target: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Index()
+    @Column({ nullable: true })
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'realm_id' })
+        realm: Realm | null;
+
+    // ------------------------------------------------------------------
 
     @CreateDateColumn()
         created_at: Date;
