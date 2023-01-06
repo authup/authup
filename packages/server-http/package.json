@@ -45,7 +45,7 @@
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
         "@ebec/http": "^0.1.0",
-        "@types/morgan": "^1.9.3",
+        "@types/morgan": "^1.9.4",
         "continu": "^1.0.3",
         "cors": "^2.8.5",
         "express-validator": "^6.14.2",
