@@ -158,12 +158,23 @@ export class UserRepository extends Repository<UserEntity> {
      *
      * @param name
      * @param password
+     * @param realmId
      */
-    async verifyCredentials(name: string, password: string) : Promise<UserEntity | undefined> {
-        const entity = await this.createQueryBuilder('user')
-            .addSelect('user.password')
-            .where('user.name LIKE :name', { name })
+    async verifyCredentials(
+        name: string,
+        password: string,
+        realmId?: string,
+    ) : Promise<UserEntity | undefined> {
+        const query = this.createQueryBuilder('user')
             .leftJoinAndSelect('user.realm', 'realm')
+            .where('user.name LIKE :name', { name });
+
+        if (realmId) {
+            query.andWhere('user.realm_id = :realmId', { realmId });
+        }
+
+        const entity = await query
+            .addSelect('user.password')
             .getOne();
 
         if (

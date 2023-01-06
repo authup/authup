@@ -30,8 +30,8 @@ describe('src/http/controllers/user', () => {
         ...TEST_DEFAULT_USER,
     };
 
-    it('should create, read, update, delete resource', async () => {
-        let response = await createSuperTestUser(superTest, {
+    it('should create resource', async () => {
+        const response = await createSuperTestUser(superTest, {
             ...details,
             password: await hash('start123'),
         });
@@ -41,8 +41,10 @@ describe('src/http/controllers/user', () => {
 
         expectPropertiesEqualToSrc(details, response.body);
 
-        // ---------------------------------------------------------
+        details.id = response.body.id;
+    });
 
+    it('should read many resource', async () => {
         const collectionResponse = await superTest
             .get('/users')
             .auth('admin', 'start123');
@@ -51,24 +53,24 @@ describe('src/http/controllers/user', () => {
         expect(collectionResponse.body).toBeDefined();
         expect(collectionResponse.body.data).toBeDefined();
         expect(collectionResponse.body.data.length).toEqual(2);
+    });
 
-        // ---------------------------------------------------------
-
-        response = await superTest
-            .get(`/users/${response.body.id}`)
+    it('should read single resource', async () => {
+        const response = await superTest
+            .get(`/users/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
+    });
 
-        // ---------------------------------------------------------
-
+    it('should update resource', async () => {
         details.name = 'TestA';
         details.first_name = 'bar';
         details.last_name = 'baz';
 
-        response = await superTest
-            .post(`/users/${response.body.id}`)
+        const response = await superTest
+            .post(`/users/${details.id}`)
             .send(details)
             .auth('admin', 'start123');
 
@@ -76,11 +78,11 @@ describe('src/http/controllers/user', () => {
         expect(response.body).toBeDefined();
 
         expectPropertiesEqualToSrc(details, response.body);
+    });
 
-        // ---------------------------------------------------------
-
-        response = await superTest
-            .delete(`/users/${response.body.id}`)
+    it('should delete resource', async () => {
+        const response = await superTest
+            .delete(`/users/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);

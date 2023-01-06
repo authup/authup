@@ -17,6 +17,7 @@ import { UserRepository } from '@authup/server-database';
 import {
     useConfig,
 } from '../../../../config';
+import { findRealm } from '../../../../helpers';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordForgotRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -46,6 +47,12 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
     ])
         .run(req);
 
+    await check('realm_id')
+        .exists()
+        .isUUID()
+        .optional({ nullable: true })
+        .run(req);
+
     const validation = validationResult(req);
     if (!validation.isEmpty()) {
         throw new RequestValidationError(validation);
@@ -57,6 +64,9 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         ...(data.name ? { name: data.name } : {}),
         ...(data.email ? { email: data.email } : {}),
     };
+
+    const realm = await findRealm(data.realm_id, true);
+    where.realm_id = realm.id;
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);

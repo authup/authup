@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/common';
 import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, send, useRequestParam,
@@ -16,6 +17,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { RoleEntity } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -63,8 +65,18 @@ export async function getOneRoleRouteHandler(req: Request, res: Response) : Prom
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
-    const query = repository.createQueryBuilder('role')
-        .where('role.id = :id', { id });
+    const query = repository.createQueryBuilder('role');
+
+    if (isUUID(id)) {
+        query.where('role.id = :id', { id });
+    } else {
+        query.where('role.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        if (realm) {
+            query.andWhere('role.realm_id = :realmId', { realmId: realm.id });
+        }
+    }
 
     applyFields(query, fields, {
         defaultAlias: 'role',

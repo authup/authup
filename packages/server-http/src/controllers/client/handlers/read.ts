@@ -16,8 +16,11 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionName, isSelfId } from '@authup/common';
+import {
+    OAuth2SubKind, PermissionName, isSelfId, isUUID,
+} from '@authup/common';
 import { ClientEntity } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
@@ -97,11 +100,13 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         }
 
         query.where('client.id = :id', { id });
+    } else if (isUUID(id)) {
+        query.where('client.id = :id', { id });
     } else {
-        query.where(new Brackets((q2) => {
-            q2.where('client.id = :id', { id });
-            q2.orWhere('client.name LIKE :name', { name: id });
-        }));
+        query.where('client.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('client.realm_id = :realmId', { realmId: realm.id });
     }
 
     const options : QueryFieldsApplyOptions<ClientEntity> = {

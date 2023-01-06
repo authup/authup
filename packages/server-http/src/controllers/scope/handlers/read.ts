@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/common';
 import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, send, useRequestParam,
@@ -16,6 +17,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ScopeEntity } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -63,8 +65,18 @@ export async function getOneScopeRouteHandler(req: Request, res: Response) : Pro
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ScopeEntity);
-    const query = repository.createQueryBuilder('scope')
-        .where('scope.id = :id', { id });
+    const query = repository.createQueryBuilder('scope');
+
+    if (isUUID(id)) {
+        query.where('scope.id = :id', { id });
+    } else {
+        query.where('scope.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        if (realm) {
+            query.andWhere('scope.realm_id = :realmId', { realmId: realm.id });
+        }
+    }
 
     applyFields(query, fields, {
         defaultAlias: 'scope',

@@ -14,9 +14,10 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/common';
+import { PermissionName, isUUID } from '@authup/common';
 import { IdentityProviderEntity, IdentityProviderRepository } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { findRealm } from '../../../helpers';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
@@ -70,8 +71,16 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
 
-    const query = repository.createQueryBuilder('provider')
-        .where('provider.id = :id', { id });
+    const query = repository.createQueryBuilder('provider');
+
+    if (isUUID(id)) {
+        query.where('provider.id = :id', { id });
+    } else {
+        query.where('provider.slug LIKE :slug', { slug: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
+    }
 
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',

@@ -12,3 +12,4 @@ export * from './nanoid';
 export * from './object-properties';
 export * from './self-id';
 export * from './url';
+export * from './uuid';

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/common';
 import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, send, useRequestParam,
@@ -14,6 +15,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { PermissionEntity } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
@@ -49,9 +51,18 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
-    const result = await repository.createQueryBuilder('permission')
-        .where('id = :id', { id })
-        .getOne();
+    const query = repository.createQueryBuilder('permission');
+
+    if (isUUID(id)) {
+        query.where('permission.id = :id', { id });
+    } else {
+        query.where('permission.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        query.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
+    }
+
+    const result = await query.getOne();
 
     if (!result) {
         throw new NotFoundError();

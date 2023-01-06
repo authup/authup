@@ -11,9 +11,10 @@ import {
     UserError,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request, getRequestIp } from 'routup';
+import { Request, getRequestIp, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserEntity, UserRepository } from '@authup/server-database';
+import { findRealm } from '../../helpers';
 import { AbstractGrant } from './abstract';
 import { OAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
@@ -45,10 +46,16 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<UserEntity> {
         const { username, password } = useRequestBody(request);
 
+        const realm = await findRealm(useRequestParam(request, 'realmId'), true);
+
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
 
-        const entity = await repository.verifyCredentials(username, password);
+        const entity = await repository.verifyCredentials(
+            username,
+            password,
+            realm.id,
+        );
 
         if (!entity) {
             throw UserError.credentialsInvalid();

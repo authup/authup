@@ -16,8 +16,11 @@ import {
 } from 'typeorm-extension';
 import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
-import { OAuth2SubKind, PermissionName, isSelfId } from '@authup/common';
+import {
+    OAuth2SubKind, PermissionName, isSelfId, isUUID,
+} from '@authup/common';
 import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
@@ -87,8 +90,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     const dataSource = await useDataSource();
     const userRepository = new UserRepository(dataSource);
-    const query = await userRepository.createQueryBuilder('user')
-        .andWhere('user.id = :id', { id });
+    const query = await userRepository.createQueryBuilder('user');
 
     let attributes : string[] = [];
 
@@ -104,11 +106,13 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         }
 
         query.where('user.id = :id', { id: useRequestEnv(req, 'userId') });
+    } else if (isUUID(id)) {
+        query.where('user.id = :id', { id });
     } else {
-        query.where(new Brackets((q2) => {
-            q2.where('user.id = :id', { id });
-            q2.orWhere('user.name LIKE :name', { name: id });
-        }));
+        query.where('user.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
     }
 
     onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));

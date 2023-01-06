@@ -17,9 +17,10 @@ import {
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     MASTER_REALM_NAME,
-    OAuth2SubKind, PermissionName, isSelfId,
+    OAuth2SubKind, PermissionName, isSelfId, isUUID,
 } from '@authup/common';
 import { RobotEntity } from '@authup/server-database';
+import { findRealm } from '../../../helpers';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
@@ -106,11 +107,13 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         }
 
         query.where('robot.id = :id', { id });
+    } else if (isUUID(id)) {
+        query.where('robot.id = :id', { id });
     } else {
-        query.where(new Brackets((q2) => {
-            q2.where('robot.id = :id', { id });
-            q2.orWhere('robot.name LIKE :name', { name: id });
-        }));
+        query.where('robot.name LIKE :name', { name: id });
+
+        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
     }
 
     applyQuery(query, useRequestQuery(req), {
