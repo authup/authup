@@ -6,7 +6,7 @@
  */
 
 import { isPropertySet } from '../../utils';
-import { MASTER_REALM_NAME } from './constants';
+import { REALM_MASTER_NAME } from './constants';
 
 /**
  * Check if a realm resource is writable.
@@ -34,7 +34,7 @@ export function isRealmResourceWritable(
 
     if (
         isPropertySet(realm, 'name') &&
-        realm.name === MASTER_REALM_NAME
+        realm.name === REALM_MASTER_NAME
     ) {
         return true;
     }
@@ -72,7 +72,7 @@ export function isRealmResourceReadable(
 
     if (
         isPropertySet(realm, 'name') &&
-        realm.name === MASTER_REALM_NAME
+        realm.name === REALM_MASTER_NAME
     ) {
         return true;
     }

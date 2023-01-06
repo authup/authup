@@ -12,7 +12,7 @@ import {
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 

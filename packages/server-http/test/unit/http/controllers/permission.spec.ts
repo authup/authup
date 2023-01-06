@@ -6,6 +6,7 @@
  */
 
 import { Permission, PermissionName } from '@authup/common';
+import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -24,6 +25,18 @@ describe('src/http/controllers/permission', () => {
         name: 'test_add',
     };
 
+    it('should create collection', async () => {
+        const response = await superTest
+            .post('/permissions')
+            .send(details)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+
+        details.id = response.body.id;
+    });
+
     it('should read collection', async () => {
         const response = await superTest
             .get('/permissions')
@@ -32,30 +45,51 @@ describe('src/http/controllers/permission', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(Object.values(PermissionName).length);
+        expect(response.body.data.length).toEqual(Object.values(PermissionName).length + 1);
     });
 
-    it('should create, read resource', async () => {
-        let response = await superTest
-            .post('/permissions')
-            .send(details)
-            .auth('admin', 'start123');
-
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-
-        const keys : string[] = Object.keys(details);
-        for (let i = 0; i < keys.length; i++) {
-            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
-        }
-
-        // ---------------------------------------------------------
-
-        response = await superTest
-            .get(`/permissions/${response.body.id}`)
+    it('should read resource', async () => {
+        const response = await superTest
+            .get(`/permissions/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should read resource by name', async () => {
+        const response = await superTest
+            .get(`/permissions/${details.name}`)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should update resource', async () => {
+        details.name = 'foo_add';
+
+        const response = await superTest
+            .post(`/permissions/${details.id}`)
+            .send(details)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should delete resource', async () => {
+        const response = await superTest
+            .delete(`/permissions/${details.id}`)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
     });
 });

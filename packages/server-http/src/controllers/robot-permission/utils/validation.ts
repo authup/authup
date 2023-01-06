@@ -10,7 +10,7 @@ import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
 import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { isRequestSubOwner, useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -69,7 +69,10 @@ export async function runRobotPermissionValidation(
             result.data.target = result.relation.permission.target;
         }
 
-        if (!ability.has(result.relation.permission.name)) {
+        if (
+            !isRequestSubOwner(req) &&
+            !ability.has(result.relation.permission.name)
+        ) {
             throw new ForbiddenError('It is only allowed to assign robot permissions, which are also owned.');
         }
     }

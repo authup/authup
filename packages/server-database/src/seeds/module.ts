@@ -9,14 +9,14 @@ import { Continu } from 'continu';
 import { DataSource, FindOptionsWhere, In } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import {
-    MASTER_REALM_NAME,
     Permission,
     PermissionName,
+    REALM_MASTER_NAME,
+    ROBOT_SYSTEM_NAME,
     Robot,
     RobotPermission,
     RolePermission,
-    ScopeName,
-    UserRole, createNanoID,
+    ScopeName, UserRole, createNanoID,
 } from '@authup/common';
 import { hasOwnProperty, hash } from '@authup/server-common';
 import {
@@ -69,12 +69,12 @@ export class DatabaseSeeder implements Seeder {
          */
         const realmRepository = dataSource.getRepository(RealmEntity);
         let realm = await realmRepository.findOneBy({
-            name: MASTER_REALM_NAME,
+            name: REALM_MASTER_NAME,
         });
 
         if (!realm) {
             realm = realmRepository.create({
-                name: MASTER_REALM_NAME,
+                name: REALM_MASTER_NAME,
                 drop_able: false,
             });
         }
@@ -256,13 +256,13 @@ export class DatabaseSeeder implements Seeder {
          */
         const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOneBy({
-            name: 'SYSTEM',
+            name: ROBOT_SYSTEM_NAME,
         });
 
         const secret = this.getOption('robotSecret') || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
-                name: 'SYSTEM',
+                name: ROBOT_SYSTEM_NAME,
                 realm_id: realm.id,
                 secret: await hash(secret),
             });

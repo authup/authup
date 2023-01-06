@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Realm } from '@authup/common';
+import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -19,22 +21,12 @@ describe('src/http/controllers/realm', () => {
         await dropTestDatabase();
     });
 
-    it('should read collection', async () => {
+    const details : Partial<Realm> = {
+        name: 'Test',
+    };
+
+    it('should create resource', async () => {
         const response = await superTest
-            .get('/realms');
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(1);
-    });
-
-    it('should create, read, update, delete resource', async () => {
-        const details = {
-            name: 'Test',
-        };
-
-        let response = await superTest
             .post('/realms')
             .send(details)
             .auth('admin', 'start123');
@@ -42,41 +34,58 @@ describe('src/http/controllers/realm', () => {
         expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
-        let keys : string[] = Object.keys(details);
-        for (let i = 0; i < keys.length; i++) {
-            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
-        }
+        expectPropertiesEqualToSrc(details, response.body);
 
-        // ---------------------------------------------------------
+        details.id = response.body.id;
+    });
 
-        response = await superTest
-            .get(`/realms/${response.body.id}`)
+    it('should read collection', async () => {
+        const response = await superTest
+            .get('/realms');
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+        expect(response.body.data).toBeDefined();
+        expect(response.body.data.length).toEqual(2);
+    });
+
+    it('should read resource', async () => {
+        const response = await superTest
+            .get(`/realms/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        // ---------------------------------------------------------
+        expectPropertiesEqualToSrc(details, response.body);
+    });
 
-        details.name = 'TestA';
+    it('should read resource by name', async () => {
+        const response = await superTest
+            .get(`/realms/${details.name}`)
+            .auth('admin', 'start123');
 
-        response = await superTest
-            .post(`/realms/${response.body.id}`)
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should update resource', async () => {
+        const response = await superTest
+            .post(`/realms/${details.id}`)
             .send(details)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
 
-        keys = Object.keys(details);
-        for (let i = 0; i < keys.length; i++) {
-            expect(response.body[keys[i]]).toEqual(details[keys[i]]);
-        }
+        expectPropertiesEqualToSrc(details, response.body);
+    });
 
-        // ---------------------------------------------------------
-
-        response = await superTest
-            .delete(`/realms/${response.body.id}`)
+    it('should delete resource', async () => {
+        const response = await superTest
+            .delete(`/realms/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);

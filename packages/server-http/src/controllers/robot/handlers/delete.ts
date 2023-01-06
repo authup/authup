@@ -5,16 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
+    REALM_MASTER_NAME,
+    ROBOT_SYSTEM_NAME,
 } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotEntity, useRobotEventEmitter } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { findRealm } from '../../../helpers';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -38,6 +41,13 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
             entity.user_id !== useRequestEnv(req, 'userId')
         ) {
             throw new ForbiddenError();
+        }
+    }
+
+    if (entity.name === ROBOT_SYSTEM_NAME) {
+        const realm = await findRealm(entity.realm_id);
+        if (realm.name === REALM_MASTER_NAME) {
+            throw new BadRequestError('The system robot can not be deleted.');
         }
     }
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     CookieName,
     IdentityProviderProtocol,
@@ -48,8 +48,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
         provider.protocol !== IdentityProviderProtocol.OAUTH2 &&
         provider.protocol !== IdentityProviderProtocol.OIDC
     ) {
-        throw new Error();
-        // todo: better error :)
+        throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
     }
 
     const config = await useConfig();

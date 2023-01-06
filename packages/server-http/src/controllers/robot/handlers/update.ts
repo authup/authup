@@ -5,14 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/common';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import {
+    PermissionName, REALM_MASTER_NAME, ROBOT_SYSTEM_NAME, isPropertySet,
+} from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, useRobotEventEmitter } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { findRealm } from '../../../helpers';
+import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
 
@@ -43,6 +46,17 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
             entity.user_id !== useRequestEnv(req, 'userId')
         ) {
             throw new ForbiddenError();
+        }
+    }
+
+    if (
+        isPropertySet(result.data, 'name') &&
+        entity.name !== result.data.name &&
+        entity.name === ROBOT_SYSTEM_NAME
+    ) {
+        const realm = await findRealm(entity.realm_id);
+        if (realm.name === REALM_MASTER_NAME) {
+            throw new BadRequestError('The system robot name can not be changed.');
         }
     }
 

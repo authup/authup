@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Robot } from '@authup/common';
+import {
+    RobotRole,
+} from '@authup/common';
+import { createSuperTestRobot, createSuperTestRole } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
-describe('src/http/controllers/robot', () => {
+describe('src/http/controllers/robot-role', () => {
     const superTest = useSuperTest();
 
     beforeAll(async () => {
@@ -21,67 +24,45 @@ describe('src/http/controllers/robot', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Robot> = {
-        name: 'foo',
-    };
+    const details : Partial<RobotRole> = {};
 
     it('should create resource', async () => {
+        const { body: robot } = await createSuperTestRobot(superTest);
+        const { body: role } = await createSuperTestRole(superTest);
+
         const response = await superTest
-            .post('/robots')
-            .send(details)
+            .post('/robot-roles')
+            .send({
+                robot_id: robot.id,
+                role_id: role.id,
+            })
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
-
         details.id = response.body.id;
+        details.robot_id = response.body.robot_id;
+        details.role_id = response.body.role_id;
     });
 
     it('should read collection', async () => {
         const response = await superTest
-            .get('/robots')
+            .get('/robot-roles')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(2);
+        expect(response.body.data.length).toEqual(1);
     });
 
     it('should read resource', async () => {
         const response = await superTest
-            .get(`/robots/${details.id}`)
+            .get(`/robot-roles/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
-    });
-
-    it('should read resource by name', async () => {
-        const response = await superTest
-            .get(`/robots/${details.name}`)
-            .auth('admin', 'start123');
-
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
-    });
-
-    it('should update resource', async () => {
-        details.name = 'baz';
-        details.description = 'bar';
-
-        const response = await superTest
-            .post(`/robots/${details.id}`)
-            .send(details)
-            .auth('admin', 'start123');
-
-        expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
 
         expectPropertiesEqualToSrc(details, response.body);
@@ -89,7 +70,7 @@ describe('src/http/controllers/robot', () => {
 
     it('should delete resource', async () => {
         const response = await superTest
-            .delete(`/robots/${details.id}`)
+            .delete(`/robot-roles/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);

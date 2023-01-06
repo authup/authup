@@ -9,8 +9,10 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { Request } from 'routup';
-import { PermissionEntity, UserEntity, UserPermissionEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import {
+    PermissionEntity, UserEntity, UserPermissionEntity,
+} from '@authup/server-database';
+import { isRequestSubOwner, useRequestEnv } from '../../../utils';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -69,7 +71,10 @@ export async function runUserPermissionValidation(
             result.data.target = result.relation.permission.target;
         }
 
-        if (!ability.has(result.relation.permission.name)) {
+        if (
+            !isRequestSubOwner(req) &&
+            !ability.has(result.relation.permission.name)
+        ) {
             throw new ForbiddenError('It is only allowed to assign user permissions, which are also owned.');
         }
     }

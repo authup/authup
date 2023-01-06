@@ -6,7 +6,7 @@
  */
 
 import { Brackets, SelectQueryBuilder } from 'typeorm';
-import { MASTER_REALM_NAME, Realm, isPropertySet } from '@authup/common';
+import { REALM_MASTER_NAME, Realm, isPropertySet } from '@authup/common';
 
 export function onlyRealmReadableQueryResources<T>(
     query: SelectQueryBuilder<T>,
@@ -22,7 +22,7 @@ export function onlyRealmReadableQueryResources<T>(
 
     if (
         isPropertySet(realm, 'name') &&
-        realm.name === MASTER_REALM_NAME
+        realm.name === REALM_MASTER_NAME
     ) {
         return;
     }

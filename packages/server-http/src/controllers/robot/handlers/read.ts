@@ -16,8 +16,8 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    MASTER_REALM_NAME,
-    OAuth2SubKind, PermissionName, isSelfId, isUUID,
+    OAuth2SubKind,
+    PermissionName, REALM_MASTER_NAME, isSelfId, isUUID,
 } from '@authup/common';
 import { RobotEntity } from '@authup/server-database';
 import { findRealm } from '../../../helpers';
@@ -75,7 +75,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
         }
     }
 
-    if (env.realm.name !== MASTER_REALM_NAME) {
+    if (env.realm.name !== REALM_MASTER_NAME) {
         query.andWhere('robot.realm_id = :realmId', { realmId: env.realm.id });
     }
 

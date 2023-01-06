@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_NAME, isUUID } from '@authup/common';
+import { REALM_MASTER_NAME, isUUID } from '@authup/common';
 import { RealmEntity } from '@authup/server-database';
 import { useDataSource } from 'typeorm-extension';
 
@@ -17,7 +17,7 @@ export async function findRealm(id: string | undefined, withFallback?: boolean) 
     const query = repository.createQueryBuilder('realm');
 
     if (withFallback && !id) {
-        id = MASTER_REALM_NAME;
+        id = REALM_MASTER_NAME;
     }
 
     if (isUUID(id)) {
@@ -34,7 +34,7 @@ export async function findRealm(id: string | undefined, withFallback?: boolean) 
     ) {
         entity = await repository.findOne({
             where: {
-                name: MASTER_REALM_NAME,
+                name: REALM_MASTER_NAME,
             },
         });
     }

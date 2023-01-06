@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MASTER_REALM_NAME } from '@authup/common';
+import { REALM_MASTER_NAME } from '@authup/common';
 import {
     DataSource, EntityManager, InstanceChecker, Repository,
 } from 'typeorm';
@@ -21,13 +21,13 @@ export class RealmRepository extends Repository<RealmEntity> {
 
         const entity = await repository.findOne({
             where: {
-                name: MASTER_REALM_NAME,
+                name: REALM_MASTER_NAME,
             },
             cache: true,
         });
 
         if (!entity) {
-            throw new Error(`The ${MASTER_REALM_NAME} does not exist.`);
+            throw new Error(`The ${REALM_MASTER_NAME} does not exist.`);
         }
 
         return entity;

@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { MASTER_REALM_NAME, PermissionName, isPropertySet } from '@authup/common';
+import { PermissionName, REALM_MASTER_NAME, isPropertySet } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
@@ -39,11 +39,11 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (
-        entity.name === MASTER_REALM_NAME &&
+        entity.name === REALM_MASTER_NAME &&
         isPropertySet(result.data, 'name') &&
         entity.name !== result.data.name
     ) {
-        throw new BadRequestError(`The name of the ${MASTER_REALM_NAME} can not be changed.`);
+        throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
     }
 
     entity = repository.merge(entity, result.data);

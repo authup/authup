@@ -59,7 +59,9 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
         query.where('permission.name LIKE :name', { name: id });
 
         const realm = await findRealm(useRequestParam(req, 'realmId'));
-        query.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
+        if (realm) {
+            query.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
+        }
     }
 
     const result = await query.getOne();

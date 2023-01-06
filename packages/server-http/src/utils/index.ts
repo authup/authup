@@ -6,4 +6,5 @@
  */
 
 export * from './env';
+export * from './owner';
 export * from './proxy-connection-string';

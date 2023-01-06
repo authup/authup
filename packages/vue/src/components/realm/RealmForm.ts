@@ -11,7 +11,7 @@ import {
 import {
     PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import { MASTER_REALM_NAME, Realm, createNanoID } from '@authup/common';
+import { REALM_MASTER_NAME, Realm, createNanoID } from '@authup/common';
 import {
     buildFormInput,
     buildFormSubmit,
@@ -100,7 +100,7 @@ export const RealmForm = defineComponent({
                     form.name = input;
                 },
                 props: {
-                    disabled: props.entity && props.entity.name === MASTER_REALM_NAME,
+                    disabled: props.entity && props.entity.name === REALM_MASTER_NAME,
                 },
             });
 

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/common';
 import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, send, useRequestParam,
@@ -61,7 +62,14 @@ export async function getOneRealmRouteHandler(
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
-    const entity = await repository.findOneBy({ id });
+    const query = repository.createQueryBuilder('realm');
+    if (isUUID(id)) {
+        query.where('realm.id = :id', { id });
+    } else {
+        query.where('realm.name LIKE :name', { name: id });
+    }
+
+    const entity = await query.getOne();
 
     if (!entity) {
         throw new NotFoundError();

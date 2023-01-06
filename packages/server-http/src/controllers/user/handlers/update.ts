@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authup/server-database';
+import { UserRepository, useConfig } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
 import { CRUDOperation } from '../../../constants';
@@ -63,6 +63,12 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
 
         if (entity.name_locked) {
             delete result.data.name;
+        }
+
+        const config = useConfig();
+
+        if (entity.name === config.get('adminUsername')) {
+            throw new BadRequestError('The default user name can not be changed.');
         }
     }
 

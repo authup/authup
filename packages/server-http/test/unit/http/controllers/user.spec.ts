@@ -44,7 +44,7 @@ describe('src/http/controllers/user', () => {
         details.id = response.body.id;
     });
 
-    it('should read many resource', async () => {
+    it('should read collection', async () => {
         const collectionResponse = await superTest
             .get('/users')
             .auth('admin', 'start123');
@@ -55,13 +55,26 @@ describe('src/http/controllers/user', () => {
         expect(collectionResponse.body.data.length).toEqual(2);
     });
 
-    it('should read single resource', async () => {
+    it('should read resource', async () => {
         const response = await superTest
             .get(`/users/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should read resource by name', async () => {
+        const response = await superTest
+            .get(`/users/${details.name}`)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+
+        expectPropertiesEqualToSrc(details, response.body);
     });
 
     it('should update resource', async () => {
