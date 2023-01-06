@@ -44,7 +44,7 @@
         "@authup/common": "^0.4.0",
         "@hapic/oauth2": "^0.3.0",
         "@routup/cookie": "^0.3.1",
-        "hapic": "^0.3.0",
+        "hapic": "^1.0.0",
         "redis-extension": "^1.2.0",
         "routup": "^0.9.0"
     },
