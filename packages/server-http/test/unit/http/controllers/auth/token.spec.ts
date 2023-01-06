@@ -9,8 +9,11 @@ import { ErrorCode, OAuth2TokenGrantResponse } from '@authup/common';
 import { DatabaseRootSeederResult } from '@authup/server-database';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { createSuperTestUser, updateSuperTestUser } from '../../../../utils/domains/user';
-import { updateSuperTestRobot } from '../../../../utils/domains/robot';
+import {
+    createSuperTestUser,
+    updateSuperTestRobot,
+    updateSuperTestUser,
+} from '../../../../utils/domains';
 
 describe('src/http/controllers/token', () => {
     const superTest = useSuperTest();
@@ -25,7 +28,7 @@ describe('src/http/controllers/token', () => {
         await dropTestDatabase();
     });
 
-    it('should grant token (password, refresh-token & robot-credentials)', async () => {
+    it('should grant token with password (+refresh_token)', async () => {
         let response = await superTest
             .post('/token')
             .send({
@@ -52,8 +55,10 @@ describe('src/http/controllers/token', () => {
         expect(response.body.access_token).toBeDefined();
         expect(response.body.expires_in).toBeDefined();
         expect(response.body.refresh_token).toBeDefined();
+    });
 
-        response = await superTest
+    it('should grant token with robot credentials', async () => {
+        const response = await superTest
             .post('/token')
             .send({
                 id: seederResponse.robot.id,
