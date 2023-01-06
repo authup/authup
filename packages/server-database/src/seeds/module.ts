@@ -265,6 +265,7 @@ export class DatabaseSeeder implements Seeder {
                 name: ROBOT_SYSTEM_NAME,
                 realm_id: realm.id,
                 secret: await hash(secret),
+                active: this.getOption('robotEnabled'),
             });
 
             await robotRepository.save(robot);
@@ -273,6 +274,7 @@ export class DatabaseSeeder implements Seeder {
             response.robot = robot;
         } else if (this.getOption('robotSecretReset')) {
             robot.secret = await hash(secret);
+            robot.active = this.getOption('robotEnabled');
 
             await robotRepository.save(robot);
 
