@@ -27,6 +27,7 @@ jobs:
             -   uses: tada5hi/action-docker-image-publish@master
                 if: github.ref_type == 'tag'
                 with:
+                    registryHost: docker.io
                     registryProject: tada5hi
                     registryRepository: authup
                     registryUser: tada5hi
@@ -36,13 +37,14 @@ jobs:
             -   uses: tada5hi/action-docker-image-publish@master
                 if: github.ref_type == 'branch'
                 with:
+                    cache: true
                     registryRepository: authup-server
                     registryTag: next
 
             -   uses: tada5hi/action-docker-image-publish@master
                 if: github.ref_type == 'branch'
                 with:
-                    cache: true
+                    registryHost: docker.io
                     registryProject: tada5hi
                     registryRepository: authup
                     registryUser: tada5hi
