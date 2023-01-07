@@ -27,6 +27,7 @@ export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    @Index()
     @Column({ type: 'varchar', length: 128 })
         name: string;
 

@@ -37,7 +37,8 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
 
     Object.assign(dataSourceOptions, {
         logging: ['error'],
-    } as Partial<DataSourceOptions>);
+        migrationsTransactionMode: 'each',
+    } satisfies Partial<DataSourceOptions>);
 
     if (hasClient() || hasConfig()) {
         Object.assign(dataSourceOptions, {
