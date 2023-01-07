@@ -18,37 +18,18 @@ jobs:
             -   uses: actions/checkout@v3
 
             -   uses: tada5hi/action-docker-image-publish@master
-                if: github.ref_type == 'tag'
                 with:
                     cache: true
                     registryRepository: authup-server
-                    registryTag: latest
+                    registryTag: ${{ github.ref_type == 'tag' && 'latest' || 'next' }}
 
             -   uses: tada5hi/action-docker-image-publish@master
-                if: github.ref_type == 'tag'
                 with:
                     registryHost: docker.io
                     registryProject: tada5hi
-                    registryRepository: authup
-                    registryUser: tada5hi
-                    registryTag: next
-                    registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-            -   uses: tada5hi/action-docker-image-publish@master
-                if: github.ref_type == 'branch'
-                with:
-                    cache: true
                     registryRepository: authup-server
-                    registryTag: next
-
-            -   uses: tada5hi/action-docker-image-publish@master
-                if: github.ref_type == 'branch'
-                with:
-                    registryHost: docker.io
-                    registryProject: tada5hi
-                    registryRepository: authup
                     registryUser: tada5hi
-                    registryTag: next
+                    registryTag: ${{ github.ref_type == 'tag' && 'latest' || 'next' }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
 
 

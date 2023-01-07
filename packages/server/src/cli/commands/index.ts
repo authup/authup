@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './healthcheck';
 export * from './migration-generate';
 export * from './migration-revert';
 export * from './migration-status';

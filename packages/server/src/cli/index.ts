@@ -11,6 +11,7 @@ import 'reflect-metadata';
 import yargs from 'yargs';
 import dotenv from 'dotenv';
 import {
+    HealthCheckCommand,
     MigrationGenerateCommand,
     MigrationRevertCommand,
     MigrationStatusCommand,
@@ -26,6 +27,7 @@ dotenv.config();
 yargs
     .usage('Usage: $0 <command> [options]')
     .demandCommand(1)
+    .command(new HealthCheckCommand())
     .command(new MigrationGenerateCommand())
     .command(new MigrationRevertCommand())
     .command(new MigrationStatusCommand())
