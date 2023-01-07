@@ -23,5 +23,8 @@ ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
 
 EXPOSE 3010
 
+HEALTHCHECK --interval=10s --timeout=2s \
+    CMD node packages/server/dist/cli/index.js -- healthcheck
+
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
 CMD ["start"]
