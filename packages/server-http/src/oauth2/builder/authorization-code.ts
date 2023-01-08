@@ -80,6 +80,7 @@ export class OAuth2AuthorizationCodeBuilder {
             client_id: context.clientId,
             user_id: context.sub,
             realm_id: context.realmId,
+            scope: context.scope,
         });
 
         if (hasOAuth2OpenIDScope(entity.scope)) {
