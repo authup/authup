@@ -66,10 +66,6 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             }
         }
 
-        if (!entity.content) {
-            entity.content = code;
-        }
-
         return entity;
     }
 
@@ -95,7 +91,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         }
 
         if (!redirectUri || typeof redirectUri !== 'string') {
-            throw TokenError.requestInvalid();
+            throw TokenError.redirectUriMismatch();
         }
 
         return redirectUri;

@@ -95,10 +95,7 @@ export async function runAuthorizeValidation(
         entity: 'client',
     });
 
-    if (
-        result.relation.client &&
-        result.data.scope
-    ) {
+    if (result.relation.client) {
         const dataSource = await useDataSource();
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
         const clientScopes = await clientScopeRepository.find({
@@ -112,8 +109,12 @@ export async function runAuthorizeValidation(
 
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
 
-        if (!isOAuth2ScopeAllowed(scopeNames, result.data.scope)) {
-            throw new BadRequestError('The requested scope is not covered by the client scope.');
+        if (result.data.scope) {
+            if (!isOAuth2ScopeAllowed(scopeNames, result.data.scope)) {
+                throw new BadRequestError('The requested scope is not covered by the client scope.');
+            }
+        } else {
+            result.data.scope = scopeNames.join(' ');
         }
     }
 

@@ -11,10 +11,10 @@ import { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
     constructor(options?: Options) {
-        super(mergeOptions({
+        super(mergeOptions((options || {}), {
             code: ErrorCode.TOKEN_INVALID,
             message: 'The Token is invalid.',
-        }, (options || {})));
+        }));
     }
 
     // -------------------------------------------------

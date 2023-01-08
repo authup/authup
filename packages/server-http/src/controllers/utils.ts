@@ -18,7 +18,7 @@ import { RolePermissionController } from './role-permission';
 import { ScopeController } from './scope';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
-import { AuthController, AuthTokenController } from './auth';
+import { AuthController, AuthTokenController } from './root';
 import { RobotPermissionController } from './robot-permission';
 import { RobotRoleController } from './robot-role';
 import { UserPermissionController } from './user-permission';
