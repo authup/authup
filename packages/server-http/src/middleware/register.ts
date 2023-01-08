@@ -5,25 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
+import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/common';
+import {
+    Request, Router, useRequestPath, withLeadingSlash,
+} from 'routup';
 import {
     Options as BodyOptions,
     createRequestJsonHandler, createRequestUrlEncodedHandler,
 } from '@routup/body';
 import {
+    ParseOptions as CookieOptions,
     createRequestHandler as createRequestCookieHandler,
 } from '@routup/cookie';
 import {
+    OptionsInput as PrometheusOptions,
+    createHandler as createPrometheusHandler,
+    registerMetrics,
+} from '@routup/prometheus';
+import {
+    ParseOptions as QueryOptions,
     createRequestHandler as createRequestQueryHandler,
 } from '@routup/query';
+import {
+    OptionsInput as RateLimitOptions,
+    createHandler as createRateLimitHandler,
+} from '@routup/rate-limit';
 import { createUIHandler } from '@routup/swagger';
 import path from 'path';
 import fs from 'fs';
 import { useLogger } from '@authup/server-common';
-import { isObject } from 'smob';
+import { merge } from 'smob';
 import {
     useConfig,
 } from '../config';
+import { useRequestEnv } from '../utils';
 import { createLoggerMiddleware } from './logger';
 import { createMiddleware } from './core';
 
@@ -47,16 +62,84 @@ export function registerMiddlewares(
 
     // only register middleware, if options are set.
     // otherwise parse cookies on demand
-    const cookieOptions = config.get('middlewareCookie');
-    if (isObject(cookieOptions)) {
-        router.use(createRequestCookieHandler(cookieOptions));
+    const middlewareCookie = config.get('middlewareCookie');
+    if (middlewareCookie) {
+        let options : CookieOptions = {};
+        if (typeof middlewareCookie !== 'boolean') {
+            options = middlewareCookie;
+        }
+
+        router.use(createRequestCookieHandler(options));
+    }
+
+    const middlewarePrometheus = config.get('middlewarePrometheus');
+    if (middlewarePrometheus) {
+        let options : PrometheusOptions = {
+            skip(req) {
+                const path = withLeadingSlash(useRequestPath(req));
+
+                return path.startsWith('/authorize');
+            },
+        };
+        if (typeof middlewarePrometheus !== 'boolean') {
+            options = merge(options, middlewarePrometheus);
+        }
+
+        registerMetrics(router, options);
+
+        router.get('/metrics', createPrometheusHandler(options.registry));
     }
 
     // only register middleware, if options are set.
     // otherwise parse query on demand
     const queryMiddleware = config.get('middlewareQuery');
-    if (isObject(queryMiddleware)) {
-        router.use(createRequestQueryHandler(queryMiddleware));
+    if (queryMiddleware) {
+        let options : QueryOptions = {};
+        if (typeof queryMiddleware !== 'boolean') {
+            options = queryMiddleware;
+        }
+
+        router.use(createRequestQueryHandler(options));
+    }
+
+    const rateLimitMiddleware = config.get('middlewareRateLimit');
+    if (rateLimitMiddleware) {
+        let options : RateLimitOptions = {
+            skip(req: Request) {
+                const robot = useRequestEnv(req, 'robot');
+                if (robot) {
+                    const { name } = useRequestEnv(req, 'realm');
+
+                    if (
+                        name === REALM_MASTER_NAME &&
+                        robot.name === ROBOT_SYSTEM_NAME
+                    ) {
+                        return true;
+                    }
+                }
+
+                return false;
+            },
+            max(req: Request) {
+                if (useRequestEnv(req, 'userId')) {
+                    return 100 * 60; // 6.000 req = 10 req p. sec
+                }
+
+                const robot = useRequestEnv(req, 'robot');
+                if (robot) {
+                    return 1000 * 60; // 60.000 req = 100 req p. sec
+                }
+
+                return 5 * 60; // 300 req = 1/2 req p. sec
+            },
+            windowMs: 15 * 60 * 1000,
+        };
+
+        if (typeof rateLimitMiddleware !== 'boolean') {
+            options = merge(options, rateLimitMiddleware);
+        }
+
+        router.use(createRateLimitHandler(options));
     }
 
     //--------------------------------------------------------------------

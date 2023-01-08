@@ -19,9 +19,9 @@ import { useDataSource } from 'typeorm-extension';
 import {
     ExpressValidationResult,
     RequestValidationError,
+    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
+    initExpressValidationResult, matchedValidationData,
 } from '../../../../validation';
 
 export async function runAuthorizeValidation(
@@ -113,7 +113,9 @@ export async function runAuthorizeValidation(
             if (!isOAuth2ScopeAllowed(scopeNames, result.data.scope)) {
                 throw new BadRequestError('The requested scope is not covered by the client scope.');
             }
-        } else {
+        }
+
+        if (!result.data.scope) {
             result.data.scope = scopeNames.join(' ');
         }
     }
