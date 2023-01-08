@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/Tada5hi/authup/compare/v0.6.0...v0.6.1) (2023-01-08)
+
+
+### Bug Fixes
+
+* robot secret env parsing ([19e81cb](https://github.com/Tada5hi/authup/commit/19e81cb3efb20d92101f39b5feff4c0b3ab5fc39))
+
+
+
+
+
 # [0.6.0](https://github.com/Tada5hi/authup/compare/v0.5.0...v0.6.0) (2023-01-08)
 
 **Note:** Version bump only for package @authup/server-database
