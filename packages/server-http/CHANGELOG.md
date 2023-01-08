@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/Tada5hi/authup/compare/v0.5.0...v0.6.0) (2023-01-08)
+
+
+### Bug Fixes
+
+* oauth2 authorization code grant flow ([6422a9b](https://github.com/Tada5hi/authup/commit/6422a9b207474596363b3d48ce12e0c8e184ae8d))
+
+
+### Features
+
+* add prometheus + rate-limit support ([5b1a9cd](https://github.com/Tada5hi/authup/commit/5b1a9cdb7edafa7b1e696a2b68d41bef5ae2c397))
+
+
+
+
+
 # [0.5.0](https://github.com/Tada5hi/authup/compare/v0.4.0...v0.5.0) (2023-01-08)
 
 
