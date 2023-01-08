@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/Tada5hi/authup/compare/v0.4.0...v0.5.0) (2023-01-08)
+
+
+### Bug Fixes
+
+* **deps:** bump jsonwebtoken from 8.5.1 to 9.0.0 ([34e9209](https://github.com/Tada5hi/authup/commit/34e9209d27899f6cf7a0be72676290ba2a62ebed))
+
+
+
+
+
 # [0.4.0](https://github.com/Tada5hi/authup/compare/v0.3.1...v0.4.0) (2022-12-21)
 
 
