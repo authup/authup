@@ -46,6 +46,13 @@ This will lunch the following application with default settings:
 
 To customize the settings follow the [documentation](#documentation).
 
+## Contributing
+
+Before starting to work on a pull request, it is important to review the guidelines for
+[contributing](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md).
+These guidelines will help to ensure that contributions are made effectively and are accepted.
+
+
 ## License
 
 Made with 💚
