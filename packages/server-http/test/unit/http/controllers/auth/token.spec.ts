@@ -7,6 +7,7 @@
 
 import { ErrorCode, OAuth2TokenGrantResponse, ScopeName } from '@authup/common';
 import { DatabaseRootSeederResult } from '@authup/server-database';
+import { SuperTest, Test } from 'supertest';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import {
@@ -17,12 +18,13 @@ import {
 } from '../../../../utils/domains';
 
 describe('src/http/controllers/token', () => {
-    const superTest = useSuperTest();
+    let superTest : SuperTest<Test>;
 
     let seederResponse : DatabaseRootSeederResult | undefined;
     let robotCredentials : { id: string, secret: string };
 
     beforeAll(async () => {
+        superTest = useSuperTest();
         seederResponse = await useTestDatabase();
 
         robotCredentials = {
@@ -33,6 +35,8 @@ describe('src/http/controllers/token', () => {
 
     afterAll(async () => {
         await dropTestDatabase();
+
+        superTest = undefined;
     });
 
     let tokenPayload : OAuth2TokenGrantResponse;

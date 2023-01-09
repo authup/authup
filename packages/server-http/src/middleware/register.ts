@@ -148,7 +148,8 @@ export function registerMiddlewares(
 
     //--------------------------------------------------------------------
 
-    if (config.get('middlewareSwagger')) {
+    const middlewareSwagger = config.get('middlewareSwagger');
+    if (middlewareSwagger) {
         const swaggerDocumentPath: string = path.join(config.get('writableDirectoryPath'), 'swagger.json');
 
         if (fs.existsSync(swaggerDocumentPath)) {

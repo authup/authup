@@ -7,6 +7,7 @@
 
 import {
     setConfigOptions,
+    unsetConfig,
     useConfig,
 } from '../../../src';
 
@@ -23,5 +24,7 @@ describe('src/config/*.ts', () => {
 
         expect(config).toBeDefined();
         expect(config.get('middlewareBody')).toBeFalsy();
+
+        unsetConfig();
     });
 });

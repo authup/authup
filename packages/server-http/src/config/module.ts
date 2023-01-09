@@ -69,3 +69,7 @@ export function createConfig() {
 export function setConfig(input: Continu<Options, OptionsInput>) {
     instance = input;
 }
+
+export function unsetConfig() {
+    instance = undefined;
+}

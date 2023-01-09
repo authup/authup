@@ -11,7 +11,7 @@ import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
 describe('src/http/controllers/permission', () => {
-    const superTest = useSuperTest();
+    let superTest = useSuperTest();
 
     beforeAll(async () => {
         await useTestDatabase();
@@ -19,6 +19,8 @@ describe('src/http/controllers/permission', () => {
 
     afterAll(async () => {
         await dropTestDatabase();
+
+        superTest = undefined;
     });
 
     const details : Partial<Permission> = {

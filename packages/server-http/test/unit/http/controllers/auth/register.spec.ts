@@ -12,7 +12,7 @@ import { setConfigOptions } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
-    const superTest = useSuperTest();
+    let superTest = useSuperTest();
 
     let seederResponse : DatabaseRootSeederResult | undefined;
 
@@ -22,6 +22,8 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
 
     afterAll(async () => {
         await dropTestDatabase();
+
+        superTest = undefined;
     });
 
     it('should register a new user', async () => {

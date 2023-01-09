@@ -7,9 +7,14 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import supertest, { SuperTest, Test } from 'supertest';
-import { createRouter } from '../../src';
+import { createRouter, useConfig } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
+    const config = useConfig();
+    config.set('middlewareRateLimit', false);
+    config.set('middlewarePrometheus', false);
+    config.set('middlewareSwagger', false);
+
     const router = createRouter();
 
     return supertest(router.createListener());

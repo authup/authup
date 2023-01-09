@@ -17,7 +17,7 @@ import { dropTestDatabase, useTestDatabase } from '../../../utils/database/conne
 import { useConfig } from '../../../../src';
 
 describe('src/http/controllers/identity-provider', () => {
-    const superTest = useSuperTest();
+    let superTest = useSuperTest();
 
     beforeAll(async () => {
         await useTestDatabase();
@@ -25,6 +25,8 @@ describe('src/http/controllers/identity-provider', () => {
 
     afterAll(async () => {
         await dropTestDatabase();
+
+        superTest = undefined;
     });
 
     const details : Partial<OAuth2IdentityProvider> = {
