@@ -80,7 +80,7 @@
         "@authup/common": "^0.6.0",
         "@authup/server-common": "^0.6.0",
         "@authup/server-database": "^0.6.1",
-        "@hapic/oauth2": "^0.3.0",
+        "@hapic/oauth2": "^1.0.0",
         "@routup/body": "^0.4.0",
         "@routup/cookie": "^0.4.0",
         "@routup/decorators": "^0.2.0",
