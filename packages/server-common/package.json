@@ -38,6 +38,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
+        "@types/jsonwebtoken": "^9.0.0",
         "@types/nodemailer": "^6.4.7",
         "bcrypt": "^5.1.0",
         "jsonwebtoken": "^9.0.0",

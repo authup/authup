@@ -42,7 +42,7 @@
     },
     "devDependencies": {
         "@authup/common": "^0.6.0",
-        "@hapic/oauth2": "^0.3.0",
+        "@hapic/oauth2": "^1.0.1",
         "@routup/cookie": "^0.3.1",
         "hapic": "^1.0.0",
         "redis-extension": "^1.2.0",
@@ -50,9 +50,9 @@
     },
     "peerDependencies": {
         "@authup/common": "^0.x",
-        "@hapic/oauth2": ">=0.3.0 <1.0.0",
+        "@hapic/oauth2": "^1.x",
         "@routup/cookie": ">=0.3.1 <1.0.0",
-        "hapic": ">=0.3.0 <1.0.0",
+        "hapic": "^1.x",
         "redis-extension": "^1.x",
         "routup": ">=0.9.0 <1.0.0"
     },
