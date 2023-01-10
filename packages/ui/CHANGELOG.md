@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/tada5hi/authup/compare/v0.6.1...v0.6.2) (2023-01-10)
+
+
+### Bug Fixes
+
+* **deps:** updated peer-dependencies + oauth2 client library ([d91981e](https://github.com/tada5hi/authup/commit/d91981e7cafe0def6fef26e5daa3042524c9a3e0))
+
+
+
+
+
 # [0.6.0](https://github.com/tada5hi/authup/compare/v0.5.0...v0.6.0) (2023-01-08)
 
 **Note:** Version bump only for package @authup/ui

@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-http",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "description": "This package contains the http module.",
     "main": "dist/index.js",
     "scripts": {
@@ -77,9 +77,9 @@
         "typeorm-extension": ">=2.3.0 <3.0.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.6.0",
-        "@authup/server-common": "^0.6.0",
-        "@authup/server-database": "^0.6.1",
+        "@authup/common": "^0.6.2",
+        "@authup/server-common": "^0.6.2",
+        "@authup/server-database": "^0.6.2",
         "@hapic/oauth2": "^1.0.1",
         "@routup/body": "^0.4.0",
         "@routup/cookie": "^0.4.0",

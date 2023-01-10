@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/Tada5hi/authup/compare/v0.6.1...v0.6.2) (2023-01-10)
+
+
+### Bug Fixes
+
+* **deps:** bump json5 from 1.0.1 to 1.0.2 ([8f9e305](https://github.com/Tada5hi/authup/commit/8f9e30537e934fd9d0e871224b019ea60d92191d))
+* **deps:** bump luxon from 1.28.0 to 1.28.1 ([b7cde23](https://github.com/Tada5hi/authup/commit/b7cde236b60b5042c0ccda66671f52b8b2b275b6))
+* **deps:** updated peer-dependencies + oauth2 client library ([d91981e](https://github.com/Tada5hi/authup/commit/d91981e7cafe0def6fef26e5daa3042524c9a3e0))
+
+
+
+
+
 ## [0.6.1](https://github.com/Tada5hi/authup/compare/v0.6.0...v0.6.1) (2023-01-08)
 
 
