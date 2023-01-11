@@ -23,9 +23,9 @@ export async function generateMigration(context: MigrationGenerateCommandContext
         context.directoryPath = path.join(process.cwd(), context.directoryPath);
     }
 
-    context.name = context.name || 'Auth';
+    context.name = context.name || 'Default';
 
-    const timestamp = new Date().getTime();
+    const timestamp = context.timestamp || new Date().getTime();
     const fileName = `${timestamp}-${context.name}.ts`;
 
     const { dataSource } = context;
@@ -50,6 +50,7 @@ export async function generateMigration(context: MigrationGenerateCommandContext
         sqlInMemory.upQueries.forEach((upQuery) => {
             upStatements.push(`        await queryRunner.query(\`${upQuery.query.replace(/`/g, '\\`')}\`${queryParams(upQuery.parameters)});`);
         });
+
         sqlInMemory.downQueries.forEach((downQuery) => {
             downStatements.push(`        await queryRunner.query(\`${downQuery.query.replace(/`/g, '\\`')}\`${queryParams(downQuery.parameters)});`);
         });
@@ -57,6 +58,13 @@ export async function generateMigration(context: MigrationGenerateCommandContext
         if (!context.dataSource) {
             await dataSource.destroy();
         }
+    }
+
+    if (
+        upStatements.length === 0 &&
+        downStatements.length === 0
+    ) {
+        return;
     }
 
     const fileContent = getTemplate(context.name, timestamp, upStatements, downStatements.reverse());

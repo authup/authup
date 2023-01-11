@@ -34,9 +34,9 @@ export interface User {
 
     reset_hash: string | null;
 
-    reset_at: Date | null;
+    reset_at: string | null;
 
-    reset_expires: Date | null;
+    reset_expires: string | null;
 
     // ------------------------------------------------------------------
 

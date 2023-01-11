@@ -10,11 +10,12 @@ import { DataSourceOptions } from 'typeorm';
 import { buildDataSourceOptions as _buildDataSourceOptions } from '@authup/server-database';
 
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
+    // todo: parse data-source options by config.
     const dataSourceOptions = await _buildDataSourceOptions();
 
     Object.assign(dataSourceOptions, {
         migrations: [
-            path.join(__dirname, 'migrations', '*{.ts,.js}'),
+            path.join(__dirname, 'migrations', dataSourceOptions.type, '*{.ts,.js}'),
         ],
     } as DataSourceOptions);
 

@@ -72,7 +72,7 @@ export async function createAuthPasswordResetRouteHandler(req: Request, res: Res
         throw new NotFoundError();
     }
 
-    entity.reset_at = new Date();
+    entity.reset_at = new Date().toISOString();
     entity.reset_hash = null;
     entity.reset_expires = null;
 

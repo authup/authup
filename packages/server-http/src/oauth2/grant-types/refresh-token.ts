@@ -63,13 +63,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
             throw TokenError.refreshTokenInvalid();
         }
 
-        let expires : number;
-        if (typeof entity.expires === 'string') {
-            expires = Date.parse(entity.expires);
-        } else {
-            expires = entity.expires.getTime();
-        }
-
+        const expires = Date.parse(entity.expires);
         if (expires < Date.now()) {
             throw TokenError.refreshTokenInvalid();
         }

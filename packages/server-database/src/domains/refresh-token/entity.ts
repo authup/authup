@@ -22,9 +22,10 @@ export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
         id: string;
 
     @Column({
-        type: 'datetime',
+        type: 'varchar',
+        length: 28,
     })
-        expires: Date;
+        expires: string;
 
     @Column({
         type: 'varchar', length: 512, nullable: true, default: null,

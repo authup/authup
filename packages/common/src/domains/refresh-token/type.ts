@@ -13,7 +13,7 @@ import { Robot } from '../robot';
 export interface OAuth2RefreshToken {
     id: string;
 
-    expires: Date | string;
+    expires: string;
 
     scope: string | null;
 

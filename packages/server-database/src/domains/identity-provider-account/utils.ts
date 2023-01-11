@@ -43,7 +43,7 @@ export async function createOauth2ProviderAccount(
     });
 
     const expiresIn : number = ((payload.exp as number) - (payload.iat as number));
-    const expireDate: Date = new Date(((payload.iat as number) * 1000) + (expiresIn * 1000));
+    const expireDate : string = new Date(((payload.iat as number) * 1000) + (expiresIn * 1000)).toISOString();
 
     if (account) {
         account = accountRepository.merge(account, {

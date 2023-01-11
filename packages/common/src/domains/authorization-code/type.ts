@@ -15,7 +15,7 @@ export interface OAuth2AuthorizationCode {
 
     content: string,
 
-    expires: Date,
+    expires: string,
 
     scope: string | null,
 

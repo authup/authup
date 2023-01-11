@@ -70,14 +70,14 @@ export class UserEntity implements User {
         reset_hash: string | null;
 
     @Column({
-        type: 'datetime', nullable: true, default: null, select: false,
+        type: 'varchar', length: 28, nullable: true, default: null, select: false,
     })
-        reset_at: Date | null;
+        reset_at: string | null;
 
     @Column({
-        type: 'datetime', nullable: true, default: null, select: false,
+        type: 'varchar', length: 28, nullable: true, default: null, select: false,
     })
-        reset_expires: Date | null;
+        reset_expires: string | null;
 
     // ------------------------------------------------------------------
 

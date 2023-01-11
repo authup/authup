@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-
-export class Default1673109936534 implements MigrationInterface {
-    name = 'Default1673109936534';
-
+export class Default1673449341125 implements MigrationInterface {
+    name = 'Default1673449341125';
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE "auth_realms" (
@@ -50,8 +48,8 @@ export class Default1673109936534 implements MigrationInterface {
                 "avatar" varchar(255),
                 "cover" varchar(255),
                 "reset_hash" varchar(256),
-                "reset_at" datetime,
-                "reset_expires" datetime,
+                "reset_at" varchar(28),
+                "reset_expires" varchar(28),
                 "status" varchar(256),
                 "status_message" varchar(256),
                 "active" boolean NOT NULL DEFAULT (1),
@@ -240,7 +238,7 @@ export class Default1673109936534 implements MigrationInterface {
             CREATE TABLE "auth_authorization_codes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "redirect_uri" varchar(2000),
                 "id_token" varchar(1000),
@@ -307,7 +305,7 @@ export class Default1673109936534 implements MigrationInterface {
                 "provider_user_name" varchar(256),
                 "provider_user_email" varchar(512),
                 "expires_in" integer,
-                "expires_at" datetime,
+                "expires_at" varchar(28),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar NOT NULL,
@@ -338,7 +336,7 @@ export class Default1673109936534 implements MigrationInterface {
         await queryRunner.query(`
             CREATE TABLE "auth_refresh_tokens" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "access_token" varchar,
                 "client_id" varchar,
@@ -443,8 +441,8 @@ export class Default1673109936534 implements MigrationInterface {
                 "avatar" varchar(255),
                 "cover" varchar(255),
                 "reset_hash" varchar(256),
-                "reset_at" datetime,
-                "reset_expires" datetime,
+                "reset_at" varchar(28),
+                "reset_expires" varchar(28),
                 "status" varchar(256),
                 "status_message" varchar(256),
                 "active" boolean NOT NULL DEFAULT (1),
@@ -1050,7 +1048,7 @@ export class Default1673109936534 implements MigrationInterface {
             CREATE TABLE "temporary_auth_authorization_codes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "redirect_uri" varchar(2000),
                 "id_token" varchar(1000),
@@ -1265,7 +1263,7 @@ export class Default1673109936534 implements MigrationInterface {
                 "provider_user_name" varchar(256),
                 "provider_user_email" varchar(512),
                 "expires_in" integer,
-                "expires_at" datetime,
+                "expires_at" varchar(28),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar NOT NULL,
@@ -1372,7 +1370,7 @@ export class Default1673109936534 implements MigrationInterface {
         await queryRunner.query(`
             CREATE TABLE "temporary_auth_refresh_tokens" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "access_token" varchar,
                 "client_id" varchar,
@@ -1454,7 +1452,6 @@ export class Default1673109936534 implements MigrationInterface {
                 RENAME TO "auth_role_attributes"
         `);
     }
-
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             ALTER TABLE "auth_role_attributes"
@@ -1501,7 +1498,7 @@ export class Default1673109936534 implements MigrationInterface {
         await queryRunner.query(`
             CREATE TABLE "auth_refresh_tokens" (
                 "id" varchar PRIMARY KEY NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "access_token" varchar,
                 "client_id" varchar,
@@ -1602,7 +1599,7 @@ export class Default1673109936534 implements MigrationInterface {
                 "provider_user_name" varchar(256),
                 "provider_user_email" varchar(512),
                 "expires_in" integer,
-                "expires_at" datetime,
+                "expires_at" varchar(28),
                 "created_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "updated_at" datetime NOT NULL DEFAULT (datetime('now')),
                 "user_id" varchar NOT NULL,
@@ -1804,7 +1801,7 @@ export class Default1673109936534 implements MigrationInterface {
             CREATE TABLE "auth_authorization_codes" (
                 "id" varchar PRIMARY KEY NOT NULL,
                 "content" varchar(4096) NOT NULL,
-                "expires" datetime NOT NULL,
+                "expires" varchar(28) NOT NULL,
                 "scope" varchar(512),
                 "redirect_uri" varchar(2000),
                 "id_token" varchar(1000),
@@ -2369,8 +2366,8 @@ export class Default1673109936534 implements MigrationInterface {
                 "avatar" varchar(255),
                 "cover" varchar(255),
                 "reset_hash" varchar(256),
-                "reset_at" datetime,
-                "reset_expires" datetime,
+                "reset_at" varchar(28),
+                "reset_expires" varchar(28),
                 "status" varchar(256),
                 "status_message" varchar(256),
                 "active" boolean NOT NULL DEFAULT (1),

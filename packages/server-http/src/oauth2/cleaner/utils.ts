@@ -21,7 +21,7 @@ export async function cleanUp(log?: boolean) {
 
     await authorizationCodeRepository
         .delete({
-            expires: LessThan(new Date()),
+            expires: LessThan(new Date().toISOString()),
         });
 
     // ------------------------------------------------------------------------------
@@ -30,6 +30,6 @@ export async function cleanUp(log?: boolean) {
 
     await refreshTokenRepository
         .delete({
-            expires: LessThan(new Date()),
+            expires: LessThan(new Date().toISOString()),
         });
 }

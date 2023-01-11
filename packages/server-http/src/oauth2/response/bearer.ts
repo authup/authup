@@ -66,7 +66,7 @@ export class OAuth2BearerTokenResponse {
                 key,
                 {
                     keyid: key.id,
-                    expiresIn: Math.ceil((this.context.refreshToken.expires.getTime() - Date.now()) / 1000),
+                    expiresIn: Math.ceil((Date.parse(this.context.refreshToken.expires) - Date.now()) / 1000),
                 },
             );
         }

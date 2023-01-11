@@ -8,7 +8,21 @@
 import { DataSource } from 'typeorm';
 
 export type MigrationGenerateCommandContext = {
+    /**
+     * Directory path where migrations should be placed.
+     */
     directoryPath?: string,
+    /**
+     * Name of the migration class.
+     */
     name?: string,
-    dataSource: DataSource
+    /**
+     * DataSource used for reference of existing schema.
+     */
+    dataSource: DataSource,
+
+    /**
+     * Timestamp in milliseconds.
+     */
+    timestamp?: number
 };

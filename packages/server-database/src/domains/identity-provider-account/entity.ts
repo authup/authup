@@ -49,10 +49,12 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column({
         type: 'int', unsigned: true, nullable: true, default: null,
     })
-        expires_in: number;
+        expires_in: number | null;
 
-    @Column({ type: 'datetime', nullable: true, default: null })
-        expires_at: Date;
+    @Column({
+        type: 'varchar', length: 28, nullable: true, default: null,
+    })
+        expires_at: string | null;
 
     @CreateDateColumn()
         created_at: Date;

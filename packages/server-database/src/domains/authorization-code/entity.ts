@@ -30,9 +30,10 @@ export class OAuth2AuthorizationCodeEntity implements OAuth2AuthorizationCode {
         content: string;
 
     @Column({
-        type: 'datetime',
+        type: 'varchar',
+        length: 28,
     })
-        expires: Date;
+        expires: string;
 
     @Column({
         type: 'varchar', length: 512, nullable: true, default: null,

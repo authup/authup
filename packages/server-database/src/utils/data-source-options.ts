@@ -24,7 +24,6 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         });
     } catch (e) {
         dataSourceOptions = {
-            name: 'default',
             type: 'better-sqlite3',
             database: path.join(
                 config.get('writableDirectoryPath'),
@@ -35,13 +34,17 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         };
     }
 
-    Object.assign(dataSourceOptions, {
+    return extendDataSourceOptions(dataSourceOptions);
+}
+
+export function extendDataSourceOptions(options: DataSourceOptions) {
+    Object.assign(options, {
         logging: ['error'],
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);
 
     if (hasClient() || hasConfig()) {
-        Object.assign(dataSourceOptions, {
+        Object.assign(options, {
             cache: {
                 provider(dataSource) {
                     return new DatabaseQueryResultCache();
@@ -50,10 +53,6 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         } as Partial<DataSourceOptions>);
     }
 
-    return extendDataSourceOptions(dataSourceOptions);
-}
-
-export function extendDataSourceOptions(options: DataSourceOptions) {
     options = setEntitiesForDataSourceOptions(options);
     options = setSubscribersForDataSourceOptions(options);
 
