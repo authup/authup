@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
+
 export class Default1673449341125 implements MigrationInterface {
     name = 'Default1673449341125';
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE \`auth_realms\` (
@@ -550,6 +552,7 @@ export class Default1673449341125 implements MigrationInterface {
             ADD CONSTRAINT \`FK_cd014be6be330f64b8405d0c72a\` FOREIGN KEY (\`role_id\`) REFERENCES \`auth_roles\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
         `);
     }
+
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             ALTER TABLE \`auth_role_attributes\` DROP FOREIGN KEY \`FK_cd014be6be330f64b8405d0c72a\`

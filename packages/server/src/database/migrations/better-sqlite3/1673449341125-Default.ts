@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
+
 export class Default1673449341125 implements MigrationInterface {
     name = 'Default1673449341125';
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE TABLE "auth_realms" (
@@ -1452,6 +1454,7 @@ export class Default1673449341125 implements MigrationInterface {
                 RENAME TO "auth_role_attributes"
         `);
     }
+
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             ALTER TABLE "auth_role_attributes"
