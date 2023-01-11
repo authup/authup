@@ -26,7 +26,7 @@ export class Oauth2RefreshTokenBuilder {
 
         const entity = repository.create({
             client_id: context.accessToken.client_id,
-            expires: new Date(Date.now() + (1000 * (this.context.maxAge || 7200))),
+            expires: new Date(Date.now() + (1000 * (this.context.maxAge || 7200))).toISOString(),
             scope: context.accessToken.scope,
             access_token: context.accessToken.jti,
             realm_id: context.accessToken.realm_id,
