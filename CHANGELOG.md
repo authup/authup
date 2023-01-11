@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/Tada5hi/authup/compare/v0.6.3...v0.7.0) (2023-01-11)
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/static from 0.2.1 to 0.4.0 ([3cd7461](https://github.com/Tada5hi/authup/commit/3cd7461fb0a36221c5db1e8d34ad9930a8cc1b68))
+* **deps:** bump locter from 0.6.1 to 0.6.2 ([b50a892](https://github.com/Tada5hi/authup/commit/b50a892101f677a91d8661c1d74627310c8d54c6))
+* **server-http:** expire date creation for authorization code ([07ba21a](https://github.com/Tada5hi/authup/commit/07ba21ae9227068b1618c65012f47ae2da0a616a))
+* **server-http:** expire date creation for refresh token ([3cd443c](https://github.com/Tada5hi/authup/commit/3cd443c559c45d901c613e946470dd4aabb3a916))
+
+
+### Features
+
+* unified entity columns for sqlite, mysql & postgres ([f379caa](https://github.com/Tada5hi/authup/commit/f379caac7b7f95145629734b692a7d38a472c9b2))
+
+
+
+
+
 ## [0.6.3](https://github.com/Tada5hi/authup/compare/v0.6.2...v0.6.3) (2023-01-10)
 
 
