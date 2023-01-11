@@ -75,7 +75,7 @@ export class OAuth2AuthorizationCodeBuilder {
 
         const entity = repository.create({
             content: randomBytes(10).toString('hex'),
-            expires: new Date(Date.now() + (1000 * 300)),
+            expires: new Date(Date.now() + (1000 * 300)).toISOString(),
             redirect_uri: context.redirectUri,
             client_id: context.clientId,
             user_id: context.sub,
