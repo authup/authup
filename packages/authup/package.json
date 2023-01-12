@@ -39,7 +39,7 @@
         "locter": "^0.6.2",
         "rc9": "^2.0.0",
         "resolve-package-path": "^4.0.3",
-        "smob": "^0.0.6",
+        "smob": "^0.0.7",
         "zod": "^3.20.2"
     },
     "publishConfig": {
