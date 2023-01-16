@@ -54,6 +54,7 @@ export default [
                 format: 'esm',
                 exports: 'named',
                 assetFileNames: '[name]-[hash][extname]',
+                sourcemap: true
             },
         ],
     }),
@@ -68,6 +69,7 @@ export default [
                 exports: 'named',
                 footer: 'module.exports = Object.assign(exports.default, exports);',
                 assetFileNames: '[name]-[hash][extname]',
+                sourcemap: true
             },
         ],
     }),
