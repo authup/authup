@@ -4,7 +4,7 @@
     "description": "This package contains vue components.",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
-    "types": "dist/types/index.d.ts",
+    "types": "dist/index.d.ts",
     "files": [
         "dist/"
     ],
@@ -45,9 +45,6 @@
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "devDependencies": {
         "@authup/common": "^0.7.0",
-        "@babel/core": "^7.20.12",
-        "@babel/preset-env": "^7.20.2",
-        "@babel/preset-typescript": "^7.18.6",
         "@rollup/plugin-alias": "^4.0.0",
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-commonjs": "^24.0.0",
@@ -58,9 +55,11 @@
         "@vuelidate/core": "^2.0.0",
         "@vuelidate/validators": "^2.0.0",
         "cross-env": "^7.0.3",
+        "esbuild": "^0.17.0",
         "ilingo": "^2.0.4",
         "rapiq": "^0.6.3",
         "rollup": "^3.10.0",
+        "rollup-plugin-esbuild": "^5.0.0",
         "rollup-plugin-postcss": "^4.0.2",
         "rollup-plugin-vue": "^6.0.0-beta.11",
         "vue": "^3.2.45",

@@ -9,7 +9,7 @@ import vue from 'rollup-plugin-vue';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import babel from '@rollup/plugin-babel';
+import esbuild from 'rollup-plugin-esbuild';
 import postcss from 'rollup-plugin-postcss';
 import pkg from './package.json' assert { type: 'json' };
 
@@ -30,10 +30,8 @@ function buildConfig(config) {
                 extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
             }),
             commonjs(),
-            babel({
-                exclude: 'node_modules/**',
-                extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
-                babelHelpers: 'bundled',
+            esbuild({
+                tsconfig: 'tsconfig.build.json'
             }),
             ...(config.plugins ? config.plugins : []),
         ],

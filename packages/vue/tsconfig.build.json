@@ -14,7 +14,7 @@
         "jsx": "preserve",
 
         "declaration": true,
-        "declarationDir": "dist/types",
+        "declarationDir": "dist",
         "isolatedModules": true
     },
     "exclude": [

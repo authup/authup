@@ -9,7 +9,21 @@ module.exports = {
     testSequencer: './test/utils/test-sequencer.js',
     testEnvironment: 'node',
     transform: {
-        '^.+\\.tsx?$': 'ts-jest',
+        '^.+\\.tsx?$': [
+            '@swc/jest',
+            {
+                jsc: {
+                    parser: {
+                        syntax: 'typescript',
+                        decorators: true,
+                    },
+                    transform: {
+                        decoratorMetadata: true,
+                        legacyDecorator: true,
+                    },
+                },
+            },
+        ],
     },
     moduleFileExtensions: [
         'ts',
