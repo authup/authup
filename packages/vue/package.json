@@ -1,6 +1,6 @@
 {
     "name": "@authup/vue",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "devDependencies": {
-        "@authup/common": "^0.7.0",
+        "@authup/common": "^0.8.0",
         "@rollup/plugin-alias": "^4.0.0",
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-commonjs": "^24.0.0",
