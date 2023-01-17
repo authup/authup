@@ -33,7 +33,7 @@
     },
     "devDependencies": {
         "@commitlint/cli": "^17.4.2",
-        "@commitlint/config-angular": "^17.4.0",
+        "@commitlint/config-angular": "^17.4.2",
         "@commitlint/config-conventional": "^17.4.2",
         "@commitlint/cz-commitlint": "^17.4.2",
         "@swc/cli": "^0.1.59",
