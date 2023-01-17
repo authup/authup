@@ -6,6 +6,7 @@
  */
 
 import { hasOwnProperty } from '@authup/common';
+import { useLogger } from '../logger';
 
 export function hasEnv(key: string) : boolean {
     return hasOwnProperty(process.env, key);
@@ -16,8 +17,7 @@ export function requireFromEnv<T>(key: string, alt?: T) : T | string {
         typeof process.env[key] === 'undefined' &&
         typeof alt === 'undefined'
     ) {
-        // eslint-disable-next-line no-console
-        console.error(`[APP ERROR] Missing variable: ${key}`);
+        useLogger().error(`Missing variable: ${key}`);
 
         return process.exit(1);
     }

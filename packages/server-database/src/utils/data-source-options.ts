@@ -46,7 +46,7 @@ export function extendDataSourceOptions(options: DataSourceOptions) {
     if (hasClient() || hasConfig()) {
         Object.assign(options, {
             cache: {
-                provider(dataSource) {
+                provider() {
                     return new DatabaseQueryResultCache();
                 },
             },
