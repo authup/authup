@@ -74,7 +74,7 @@
         "redis-extension": "^1.x",
         "routup": ">=0.12.0 <1.0.0",
         "typeorm": "^0.3.x",
-        "typeorm-extension": ">=2.3.0 <3.0.0"
+        "typeorm-extension": ">=2.4.2 <3.0.0"
     },
     "devDependencies": {
         "@authup/common": "^0.8.0",
@@ -101,7 +101,7 @@
         "supertest": "^6.3.3",
         "ts-node": "^10.8.2",
         "typeorm": "^0.3.10",
-        "typeorm-extension": "^2.4.1"
+        "typeorm-extension": "^2.4.2"
     },
     "publishConfig": {
         "access": "public"
