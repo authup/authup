@@ -65,7 +65,7 @@
         "cross-env": "^7.0.3",
         "esbuild": "^0.17.2",
         "ilingo": "^2.0.4",
-        "rapiq": "^0.6.3",
+        "rapiq": "^0.6.4",
         "rollup": "^3.10.0",
         "rollup-plugin-esbuild": "^5.0.0",
         "rollup-plugin-postcss": "^4.0.2",
