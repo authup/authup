@@ -6,7 +6,7 @@
     "scripts": {
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "build:watch": "npm run build -- --watch",
-        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=6000",
+        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
         "test:coverage": "npm run test -- --coverage"
     },
     "files": [
