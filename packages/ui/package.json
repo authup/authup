@@ -33,7 +33,7 @@
         "ilingo": "^2.0.4",
         "nuxt": "3.0.0",
         "pinia": "^2.0.29",
-        "rapiq": "^0.6.3",
+        "rapiq": "^0.6.6",
         "vue": "^3.2.45",
         "vue-router": "^4.1.5",
         "vue-toastification": "next"

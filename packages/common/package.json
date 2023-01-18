@@ -55,7 +55,7 @@
     },
     "devDependencies": {
         "hapic": "^1.0.0",
-        "rapiq": "^0.6.3"
+        "rapiq": "^0.6.6"
     },
     "peerDependencies": {
         "hapic": "^1.x",
