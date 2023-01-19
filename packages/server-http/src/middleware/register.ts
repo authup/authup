@@ -122,17 +122,17 @@ export function registerMiddlewares(
             },
             max(req: Request) {
                 if (useRequestEnv(req, 'userId')) {
-                    return 100 * 60; // 6.000 req = 10 req p. sec
+                    return 60 * 10; // 10 req p. sec
                 }
 
                 const robot = useRequestEnv(req, 'robot');
                 if (robot) {
-                    return 1000 * 60; // 60.000 req = 100 req p. sec
+                    return 60 * 100; // 100 req p. sec
                 }
 
-                return 5 * 60; // 300 req = 1/2 req p. sec
+                return 60 * 0.5; // 1/2 req p. sec
             },
-            windowMs: 15 * 60 * 1000,
+            windowMs: 60 * 1000, // 60 sec
         };
 
         if (typeof rateLimitMiddleware !== 'boolean') {
