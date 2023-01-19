@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import { NavigationComponents } from '@vue-layout/basic';
+import { storeToRefs } from 'pinia';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../store/auth';
 
@@ -14,7 +15,8 @@ export default defineNuxtComponent({
         NavigationComponents,
     },
     setup() {
-        const { loggedIn, user } = useAuthStore();
+        const store = useAuthStore();
+        const { loggedIn, user } = storeToRefs(store);
 
         return {
             loggedIn,

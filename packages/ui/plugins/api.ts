@@ -70,6 +70,7 @@ export default defineNuxtPlugin((ctx) => {
                 (error) => {
                     if (
                         isClientError(error) &&
+                        error.config &&
                         error.response &&
                         error.response.data &&
                         hasOwnProperty(error.response.data, 'code') &&
@@ -79,7 +80,7 @@ export default defineNuxtPlugin((ctx) => {
                             .then(() => store.attemptRefreshToken())
                             .then(() => client.setAuthorizationHeader({
                                 type: 'Bearer',
-                                token: store.accessToken,
+                                token: store.accessToken as string,
                             }))
                             .then(() => client.request(error.config));
                     }

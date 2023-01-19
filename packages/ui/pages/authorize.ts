@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { storeToRefs } from 'pinia';
 import { BuildInput } from 'rapiq';
 import {
     Client, ClientScope, isGlobMatch,
@@ -26,8 +27,9 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const authStore = useAuthStore();
-        if (!authStore.loggedIn) {
+        const store = useAuthStore();
+        const { loggedIn } = storeToRefs(store);
+        if (!loggedIn.value) {
             return navigateTo({
                 path: '/login',
                 query: {

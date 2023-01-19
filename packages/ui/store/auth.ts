@@ -6,7 +6,14 @@
  */
 
 import {
-    AbilityDescriptor, AbilityManager, ErrorCode, OAuth2TokenGrantResponse, OAuth2TokenKind, User, hasOwnProperty,
+    AbilityManager,
+    ErrorCode,
+    OAuth2TokenGrantResponse,
+    OAuth2TokenIntrospectionResponse,
+    OAuth2TokenKind,
+    Realm,
+    User,
+    hasOwnProperty,
 } from '@authup/common';
 import { Client } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
@@ -175,34 +182,65 @@ export const useAuthStore = defineStore('auth', () => {
     // --------------------------------------------------------------------
 
     const abilityManager = new AbilityManager();
+
+    const token = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
+    let tokenResolved = false;
+
     const has = (name: string) => abilityManager.has(name);
-    const permissions = ref<AbilityDescriptor[]>([]);
-    let permissionsResolved = false;
 
-    const setPermissions = (data: AbilityDescriptor[]) => {
-        permissions.value = data;
-        permissionsResolved = true;
+    const realm = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
+    const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
+    const realmName = computed<string | undefined>(() => (realm.value ? realm.value.name : undefined));
 
-        abilityManager.set(data);
+    const realmManagement = ref<undefined | Partial<Realm>>(undefined);
+    const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
+    const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
+
+    const setRealmManagement = (entity: Pick<Realm, 'id' | 'name'>) => {
+        realmManagement.value = entity;
+        console.log(realmManagement.value);
     };
 
-    const unsetPermissions = () => {
-        if (permissions) {
-            permissions.value = [];
+    const setTokenInfo = (entity: OAuth2TokenIntrospectionResponse) => {
+        tokenResolved = true;
+
+        token.value = entity;
+
+        if (
+            entity.realm_id &&
+            entity.realm_name
+        ) {
+            realm.value = {
+                id: entity.realm_id,
+                name: entity.realm_name,
+            };
+
+            setRealmManagement(realm.value);
         }
 
-        permissionsResolved = false;
+        if (entity.permissions) {
+            abilityManager.set(entity.permissions);
+        }
+    };
+
+    const unsetTokenInfo = () => {
+        tokenResolved = false;
+
+        token.value = undefined;
+
+        realm.value = undefined;
+        realmManagement.value = {};
 
         abilityManager.set([]);
     };
 
-    const resolvePermissions = async (force?: boolean) => {
-        if (!accessToken.value || (permissionsResolved && !force)) return;
-        permissionsResolved = true;
+    const introspectToken = async (force?: boolean) => {
+        if (!accessToken.value || (tokenResolved && !force)) return;
+        tokenResolved = true;
 
         try {
-            const token = await client.token.introspect(accessToken.value);
-            setPermissions(token.permissions);
+            const token = await client.token.introspect(accessToken.value) as OAuth2TokenIntrospectionResponse;
+            setTokenInfo(token);
         } catch (e) {
             if (
                 isClientError(e) &&
@@ -212,7 +250,7 @@ export const useAuthStore = defineStore('auth', () => {
                 e.response.data.code === ErrorCode.TOKEN_EXPIRED
             ) {
                 await attemptRefreshToken();
-                await resolvePermissions(true);
+                await introspectToken(true);
 
                 return;
             }
@@ -227,7 +265,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (!accessToken.value) return;
 
         await resolveUser();
-        await resolvePermissions();
+        await introspectToken();
     };
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
@@ -260,7 +298,7 @@ export const useAuthStore = defineStore('auth', () => {
         unsetToken(OAuth2TokenKind.REFRESH);
 
         unsetUser();
-        unsetPermissions();
+        unsetTokenInfo();
     };
 
     return {
@@ -277,14 +315,24 @@ export const useAuthStore = defineStore('auth', () => {
         setTokenExpireDate,
         unsetToken,
 
+        token,
+        setTokenInfo,
+        unsetTokenInfo,
+
+        realm,
+        realmId,
+        realmName,
+
+        realmManagement,
+        realmManagementId,
+        realmManagementName,
+        setRealmManagement,
+
         user,
         userId,
         setUser,
         unsetUser,
 
-        abilityManager,
         has,
-        setPermissions,
-        unsetPermissions,
     };
 });

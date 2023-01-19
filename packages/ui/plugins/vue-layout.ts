@@ -6,6 +6,7 @@
  */
 
 import { NavigationStore, createPlugin } from '@vue-layout/basic';
+import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin } from '#app';
 import { buildNavigationProvider } from '../config/layout';
 import { useAuthStore } from '../store/auth';
@@ -17,11 +18,12 @@ export default defineNuxtPlugin((ctx) => {
     }));
 
     const store = useAuthStore(ctx.$pinia);
+    const { loggedIn } = storeToRefs(store);
 
     ctx.vueApp.use(createPlugin({
         navigationStore,
         navigationProvider: buildNavigationProvider({
-            isLoggedIn: () => store.loggedIn,
+            isLoggedIn: () => loggedIn.value,
             hasPermission: (name) => store.has(name),
         }),
         presets: [

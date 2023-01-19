@@ -8,15 +8,21 @@
 import { Realm } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
+import { storeToRefs } from 'pinia';
+import { VNodeChild } from 'vue';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
+import { useAuthStore } from '../../../../store/auth';
 
 export default defineComponent({
     emits: ['deleted'],
     setup(props, { emit }) {
         const list = resolveComponent('RealmList');
 
-        const handleDeleted = (e) => {
+        const store = useAuthStore();
+        const { realmManagementId } = storeToRefs(store);
+
+        const handleDeleted = (e: Realm) => {
             emit('deleted', e);
         };
 
@@ -27,25 +33,47 @@ export default defineComponent({
                 h('i', { class: 'fa-solid fa-list pe-1' }),
                 'Overview',
             ]),
-            [SlotName.ITEM_ACTIONS]: (props: ListItemSlotProps<Realm>) => h('div', [
-                h(
-                    NuxtLink,
-                    {
-                        class: 'btn btn-xs btn-outline-primary me-1',
-                        to: `/admin/realms/${props.data.id}`,
-                    },
-                    {
-                        default: () => h('i', { class: 'fa fa-bars' }),
-                    },
-                ),
-                h(AuthEntityDelete, {
-                    class: 'btn btn-xs btn-outline-danger',
-                    entityId: props.data.id,
-                    entityType: 'realm',
-                    withText: false,
-                    onDeleted: props.deleted,
-                }),
-            ]),
+            [SlotName.ITEM_ACTIONS]: (props: ListItemSlotProps<Realm>) => {
+                let realmButton : VNodeChild = [];
+
+                if (realmManagementId.value !== props.data.id) {
+                    realmButton = h(
+                        'button',
+                        {
+                            class: 'btn btn-xs btn-primary me-1',
+                            onClick($event: any) {
+                                $event.preventDefault();
+
+                                store.setRealmManagement(props.data);
+                            },
+                        },
+                        [
+                            h('i', { class: 'fa-solid fa-check' }),
+                        ],
+                    );
+                }
+
+                return h('div', [
+                    realmButton,
+                    h(
+                        NuxtLink,
+                        {
+                            class: 'btn btn-xs btn-outline-primary me-1',
+                            to: `/admin/realms/${props.data.id}`,
+                        },
+                        {
+                            default: () => h('i', { class: 'fa fa-bars' }),
+                        },
+                    ),
+                    h(AuthEntityDelete, {
+                        class: 'btn btn-xs btn-outline-danger',
+                        entityId: props.data.id,
+                        entityType: 'realm',
+                        withText: false,
+                        onDeleted: props.deleted,
+                    }),
+                ]);
+            },
         });
     },
 });

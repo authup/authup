@@ -7,6 +7,7 @@
 <script lang="ts">
 
 import { Countdown, NavigationComponents } from '@vue-layout/basic';
+import { storeToRefs } from 'pinia';
 import { defineNuxtComponent } from '#app';
 import { computed, useAPI } from '#imports';
 import { useAuthStore } from '../store/auth';
@@ -14,14 +15,15 @@ import { useAuthStore } from '../store/auth';
 export default defineNuxtComponent({
     components: { Countdown, NavigationComponents },
     setup() {
-        const { loggedIn, accessTokenExpireDate: tokenExpireDate } = useAuthStore();
+        const store = useAuthStore();
+        const { loggedIn, accessTokenExpireDate: tokenExpireDate, realmManagement } = storeToRefs(store);
 
         const tokenExpiresIn = computed(() => {
-            if (!tokenExpireDate) {
+            if (!tokenExpireDate.value) {
                 return 0;
             }
 
-            return tokenExpireDate.getTime() - Date.now();
+            return tokenExpireDate.value.getTime() - Date.now();
         });
 
         const docsUrl = computed(() => {
@@ -34,12 +36,22 @@ export default defineNuxtComponent({
             loggedIn,
             tokenExpiresIn,
             docsUrl,
+            realmManagement,
         };
     },
 });
 </script>
 <template>
     <div class="page-sidebar">
+        <div
+            v-if="realmManagement"
+            class="sidebar-header"
+        >
+            <div class="text-center">
+                {{ realmManagement.name }}
+            </div>
+        </div>
+
         <navigation-components
             class="sidebar-menu navbar-nav"
             :tier="1"
