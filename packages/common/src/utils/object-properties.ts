@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from './has-own-property';
+
 export function nullifyEmptyObjectProperties<T extends Record<string, any>>(data: T) : T {
     const keys : (keyof T)[] = Object.keys(data);
 
@@ -27,4 +29,19 @@ export function deleteUndefinedObjectProperties<T extends Record<string, any>>(d
     }
 
     return data;
+}
+
+export function extractObjectProperty<T extends Record<string, any>, K extends keyof T>(
+    data: T | undefined,
+    key: K,
+) : T[K] | undefined {
+    if (!data) {
+        return undefined;
+    }
+
+    if (isPropertySet(data, key)) {
+        return data[key];
+    }
+
+    return undefined;
 }

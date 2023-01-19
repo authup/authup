@@ -28,7 +28,7 @@ export function isRealmResourceWritable(
         return false;
     }
 
-    if (typeof realm === 'undefined') {
+    if (!realm) {
         return false;
     }
 

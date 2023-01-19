@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, Realm } from '@authup/common';
+import { PermissionName, Realm, isRealmResourceWritable } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
@@ -20,7 +20,7 @@ export default defineComponent({
         const list = resolveComponent('RealmList');
 
         const store = useAuthStore();
-        const { realmManagementId } = storeToRefs(store);
+        const { realmManagement, realmManagementId } = storeToRefs(store);
 
         const handleDeleted = (e: Realm) => {
             emit('deleted', e);
@@ -34,10 +34,13 @@ export default defineComponent({
                 'Overview',
             ]),
             [SlotName.ITEM_ACTIONS]: (props: ListItemSlotProps<Realm>) => {
-                let realmButton : VNodeChild = [];
+                const buttons : VNodeChild = [];
 
-                if (realmManagementId.value !== props.data.id) {
-                    realmButton = h(
+                if (
+                    realmManagementId.value !== props.data.id &&
+                    isRealmResourceWritable(realmManagement.value)
+                ) {
+                    buttons.push(h(
                         'button',
                         {
                             class: 'btn btn-xs btn-primary me-1',
@@ -50,31 +53,35 @@ export default defineComponent({
                         [
                             h('i', { class: 'fa-solid fa-check' }),
                         ],
+                    ));
+                }
+
+                if (isRealmResourceWritable(realmManagement.value, props.data.id)) {
+                    buttons.push(
+                        h(
+                            NuxtLink,
+                            {
+                                class: 'btn btn-xs btn-outline-primary me-1',
+                                to: `/admin/realms/${props.data.id}`,
+                                disabled: !store.has(PermissionName.REALM_EDIT),
+                            },
+                            {
+                                default: () => h('i', { class: 'fa fa-bars' }),
+                            },
+                        ),
+                        h(AuthEntityDelete, {
+                            class: 'btn btn-xs btn-outline-danger',
+                            entityId: props.data.id,
+                            entityType: 'realm',
+                            withText: false,
+                            onDeleted: props.deleted,
+                            disabled: !store.has(PermissionName.REALM_DROP) ||
+                                !props.data.drop_able,
+                        }),
                     );
                 }
 
-                return h('div', [
-                    realmButton,
-                    h(
-                        NuxtLink,
-                        {
-                            class: 'btn btn-xs btn-outline-primary me-1',
-                            to: `/admin/realms/${props.data.id}`,
-                            disabled: !store.has(PermissionName.REALM_EDIT),
-                        },
-                        {
-                            default: () => h('i', { class: 'fa fa-bars' }),
-                        },
-                    ),
-                    h(AuthEntityDelete, {
-                        class: 'btn btn-xs btn-outline-danger',
-                        entityId: props.data.id,
-                        entityType: 'realm',
-                        withText: false,
-                        onDeleted: props.deleted,
-                        disabled: !store.has(PermissionName.REALM_DROP) || !props.data.drop_able,
-                    }),
-                ]);
+                return h('div', buttons);
             },
         });
     },

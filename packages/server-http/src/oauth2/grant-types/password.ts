@@ -6,9 +6,10 @@
  */
 
 import {
-    OAuth2SubKind, OAuth2TokenGrantResponse,
-    ScopeName,
+    OAuth2SubKind,
+    OAuth2TokenGrantResponse, ScopeName,
     UserError,
+    extractObjectProperty,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { Request, getRequestIp, useRequestParam } from 'routup';
@@ -44,9 +45,11 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<UserEntity> {
-        const { username, password } = useRequestBody(request);
+        const { username, password, realm_id: realmId } = useRequestBody(request);
 
-        const realm = await findRealm(useRequestParam(request, 'realmId'), true);
+        const realm = await findRealm(
+            useRequestParam(request, 'realmId') || realmId,
+        );
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
@@ -54,7 +57,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const entity = await repository.verifyCredentials(
             username,
             password,
-            realm.id,
+            extractObjectProperty(realm, 'id'),
         );
 
         if (!entity) {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName } from '@authup/common';
+import { IdentityProvider, PermissionName } from '@authup/common';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
 import { definePageMeta } from '#imports';
@@ -37,12 +37,12 @@ export default defineComponent({
             },
         ];
 
-        const handleDeleted = (e) => {
+        const handleDeleted = (e: IdentityProvider) => {
             const toast = useToast();
             toast.success(`The identity-provider ${e.name} was successfully deleted.`);
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             const toast = useToast();
             toast.warning(e.message);
         };

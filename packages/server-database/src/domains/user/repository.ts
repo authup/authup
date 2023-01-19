@@ -173,23 +173,22 @@ export class UserRepository extends Repository<UserEntity> {
             query.andWhere('user.realm_id = :realmId', { realmId });
         }
 
-        const entity = await query
+        const entities = await query
             .addSelect('user.password')
-            .getOne();
+            .getMany();
 
-        if (
-            !entity ||
-            !entity.password
-        ) {
-            return undefined;
+        for (let i = 0; i < entities.length; i++) {
+            if (!entities[i].password) {
+                continue;
+            }
+
+            const verified = await compare(password, entities[i].password);
+            if (verified) {
+                return entities[i];
+            }
         }
 
-        const verified = await compare(password, entity.password);
-        if (!verified) {
-            return undefined;
-        }
-
-        return entity;
+        return undefined;
     }
 
     async createWithPassword(data: Partial<User>) : Promise<{

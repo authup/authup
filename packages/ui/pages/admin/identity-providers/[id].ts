@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProvider, PermissionName, Realm } from '@authup/common';
+import {
+    IdentityProvider, PermissionName, Realm, isRealmResourceWritable,
+} from '@authup/common';
+import { storeToRefs } from 'pinia';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
@@ -15,6 +18,7 @@ import {
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
+import { useAuthStore } from '../../../store/auth';
 import { updateObjectProperties } from '../../../utils';
 
 export default defineNuxtComponent({
@@ -44,6 +48,13 @@ export default defineNuxtComponent({
                 .identityProvider
                 .getOne(route.params.id as string);
         } catch (e) {
+            return navigateTo({ path: '/admin/identity-providers' });
+        }
+
+        const store = useAuthStore();
+        const { realmManagement } = storeToRefs(store);
+
+        if (!isRealmResourceWritable(realmManagement.value, entity.value.realm_id)) {
             return navigateTo({ path: '/admin/identity-providers' });
         }
 

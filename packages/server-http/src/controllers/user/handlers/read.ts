@@ -55,8 +55,6 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
-
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
         fields: buildFieldsOption(req),
@@ -73,6 +71,8 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
             allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'],
         },
     });
+
+    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
     const [entities, total] = await query.getManyAndCount();
 

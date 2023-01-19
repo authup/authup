@@ -6,8 +6,9 @@
  */
 
 import {
-    Client, PermissionName,
+    Client, PermissionName, isRealmResourceWritable,
 } from '@authup/common';
+import { storeToRefs } from 'pinia';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
@@ -17,6 +18,7 @@ import {
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
+import { useAuthStore } from '../../../store/auth';
 import { updateObjectProperties } from '../../../utils';
 
 export default defineNuxtComponent({
@@ -52,6 +54,13 @@ export default defineNuxtComponent({
                 .client
                 .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch (e) {
+            return navigateTo({ path: '/admin/clients' });
+        }
+
+        const store = useAuthStore();
+        const { realmManagement } = storeToRefs(store);
+
+        if (!isRealmResourceWritable(realmManagement.value, entity.value.realm_id)) {
             return navigateTo({ path: '/admin/clients' });
         }
 

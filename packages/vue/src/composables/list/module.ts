@@ -54,8 +54,6 @@ export function useListBuilder<T extends Record<string, any>>(
             targetMeta = {};
         }
 
-        console.log(context.props.query.value);
-
         const response = await context.load(merge(
             {
                 page: {
