@@ -47,7 +47,6 @@ export const RealmForm = defineComponent({
         const $v = useVuelidate({
             name: {
                 required,
-                alphaWithUpperNumHyphenUnderScore,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },

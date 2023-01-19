@@ -192,13 +192,16 @@ export const useAuthStore = defineStore('auth', () => {
     const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
     const realmName = computed<string | undefined>(() => (realm.value ? realm.value.name : undefined));
 
-    const realmManagement = ref<undefined | Partial<Realm>>(undefined);
+    const setRealm = (entity: Pick<Realm, 'id' | 'name'>) => {
+        realm.value = entity;
+    };
+
+    const realmManagement = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
     const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
 
     const setRealmManagement = (entity: Pick<Realm, 'id' | 'name'>) => {
         realmManagement.value = entity;
-        console.log(realmManagement.value);
     };
 
     const setTokenInfo = (entity: OAuth2TokenIntrospectionResponse) => {
@@ -215,7 +218,9 @@ export const useAuthStore = defineStore('auth', () => {
                 name: entity.realm_name,
             };
 
-            setRealmManagement(realm.value);
+            if (typeof realmManagement.value === 'undefined') {
+                setRealmManagement(realm.value);
+            }
         }
 
         if (entity.permissions) {
@@ -229,7 +234,7 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = undefined;
 
         realm.value = undefined;
-        realmManagement.value = {};
+        realmManagement.value = undefined;
 
         abilityManager.set([]);
     };
@@ -322,6 +327,7 @@ export const useAuthStore = defineStore('auth', () => {
         realm,
         realmId,
         realmName,
+        setRealm,
 
         realmManagement,
         realmManagementId,

@@ -66,6 +66,12 @@ export default defineNuxtPlugin((ctx) => {
             case AuthBrowserStorageKey.USER:
                 authStore.setUser(value);
                 break;
+            case AuthBrowserStorageKey.REALM:
+                authStore.setRealm(value);
+                break;
+            case AuthBrowserStorageKey.REALM_MANAGEMENT:
+                authStore.setRealmManagement(value);
+                break;
         }
     }
 
@@ -95,6 +101,18 @@ export default defineNuxtPlugin((ctx) => {
             warehouse.remove(AuthBrowserStorageKey.USER);
         } else {
             warehouse.set(AuthBrowserStorageKey.USER, state.user);
+        }
+
+        if (typeof state.realm === 'undefined') {
+            warehouse.remove(AuthBrowserStorageKey.REALM);
+        } else {
+            warehouse.set(AuthBrowserStorageKey.REALM, state.realm);
+        }
+
+        if (typeof state.realmManagement === 'undefined') {
+            warehouse.remove(AuthBrowserStorageKey.REALM_MANAGEMENT);
+        } else {
+            warehouse.set(AuthBrowserStorageKey.REALM_MANAGEMENT, state.realmManagement);
         }
     });
 });

@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, Robot, Role } from '@authup/common';
+import { PermissionName, Robot } from '@authup/common';
 import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, useAPI,
+    definePageMeta, updateObjectProperties, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
@@ -45,7 +45,7 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const entity: Ref<Robot> = ref(null);
+        const entity: Ref<Robot> = ref(null) as any;
 
         try {
             entity.value = await useAPI()
@@ -58,13 +58,10 @@ export default defineNuxtComponent({
         const handleUpdated = (e: Robot) => {
             toast.success('The robot was successfully updated.');
 
-            const keys = Object.keys(e);
-            for (let i = 0; i < keys.length; i++) {
-                entity.value[keys[i]] = e[keys[i]];
-            }
+            updateObjectProperties(entity, e);
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             toast.warning(e.message);
         };
 

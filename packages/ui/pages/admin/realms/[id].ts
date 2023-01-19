@@ -11,7 +11,7 @@ import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, useAPI,
+    definePageMeta, updateObjectProperties, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
@@ -36,7 +36,7 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const entity: Ref<Realm> = ref(null);
+        const entity: Ref<Realm> = ref(null) as any;
 
         try {
             entity.value = await useAPI()
@@ -49,10 +49,7 @@ export default defineNuxtComponent({
         const handleUpdated = (e: Realm) => {
             toast.success('The realm was successfully updated.');
 
-            const keys = Object.keys(e);
-            for (let i = 0; i < keys.length; i++) {
-                entity.value[keys[i]] = e[keys[i]];
-            }
+            updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {

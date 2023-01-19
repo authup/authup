@@ -17,6 +17,7 @@ import {
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
+import { updateObjectProperties } from '../../../utils';
 
 export default defineNuxtComponent({
     async setup() {
@@ -57,12 +58,7 @@ export default defineNuxtComponent({
         const handleUpdated = (e: Client) => {
             toast.success('The client was successfully updated.');
 
-            const keys = Object.keys(e);
-            for (let i = 0; i < keys.length; i++) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                entity.value[keys[i]] = e[keys[i]];
-            }
+            updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {

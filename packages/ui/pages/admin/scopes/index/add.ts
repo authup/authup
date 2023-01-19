@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, PermissionName } from '@authup/common';
+import { PermissionName, Scope, isRealmResourceWritable } from '@authup/common';
+import { storeToRefs } from 'pinia';
 import { navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
+import { useAuthStore } from '../../../../store/auth';
 
 export default defineComponent({
     emits: ['failed', 'created'],
@@ -21,19 +23,30 @@ export default defineComponent({
             ],
         });
 
-        const handleCreated = (e: Client) => {
+        const handleCreated = (e: Scope) => {
             navigateTo({ path: `/admin/clients/${e.id}` });
         };
-
         const handleFailed = (e: Error) => {
             emit('failed', e);
         };
 
+        const store = useAuthStore();
+        const { realmManagement, realmManagementId } = storeToRefs(store);
+
         const form = resolveComponent('ScopeForm');
 
-        return () => h(form, {
-            onCreated: handleCreated,
-            onFailed: handleFailed,
-        });
+        return () => {
+            let realmId : string | undefined;
+
+            if (!isRealmResourceWritable(realmManagement.value)) {
+                realmId = realmManagementId.value;
+            }
+
+            return h(form, {
+                onCreated: handleCreated,
+                onFailed: handleFailed,
+                realmId: realmManagementId,
+            });
+        };
     },
 });

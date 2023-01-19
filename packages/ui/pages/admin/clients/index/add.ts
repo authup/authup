@@ -6,9 +6,11 @@
  */
 
 import { Client, PermissionName } from '@authup/common';
+import { storeToRefs } from 'pinia';
 import { navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
+import { useAuthStore } from '../../../../store/auth';
 
 export default defineComponent({
     emits: ['failed', 'created'],
@@ -29,11 +31,15 @@ export default defineComponent({
             emit('failed', e);
         };
 
+        const store = useAuthStore();
+        const { realmManagementId } = storeToRefs(store);
+
         const form = resolveComponent('ClientForm');
 
         return () => h(form, {
             onCreated: handleCreated,
             onFailed: handleFailed,
+            realmId: realmManagementId,
         });
     },
 });

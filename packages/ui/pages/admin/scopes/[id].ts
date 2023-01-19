@@ -13,7 +13,7 @@ import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import {
-    definePageMeta, useAPI,
+    definePageMeta, updateObjectProperties, useAPI,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
@@ -54,10 +54,7 @@ export default defineNuxtComponent({
         const handleUpdated = (e: Scope) => {
             toast.success('The scope was successfully updated.');
 
-            const keys = Object.keys(e) as (keyof Scope)[];
-            for (let i = 0; i < keys.length; i++) {
-                entity.value[keys[i]] = e[keys[i]];
-            }
+            updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {

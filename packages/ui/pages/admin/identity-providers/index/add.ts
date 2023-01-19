@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol, PermissionName } from '@authup/common';
+import { IdentityProvider, IdentityProviderProtocol, PermissionName } from '@authup/common';
 import { buildFormSelect } from '@vue-layout/hyperscript';
+import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
+import { useAuthStore } from '../../../../store/auth';
 
 export default defineComponent({
     emits: ['failed', 'created'],
@@ -23,15 +25,15 @@ export default defineComponent({
             ],
         });
 
-        const handleCreated = (e) => {
+        const handleCreated = (e: IdentityProvider) => {
             navigateTo({ path: `/admin/identity-providers/${e.id}` });
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             emit('failed', e);
         };
 
-        const protocol = ref(null);
+        const protocol = ref<null | `${IdentityProviderProtocol}`>(null);
 
         const select = buildFormSelect({
             labelContent: 'Protocol',
@@ -46,6 +48,9 @@ export default defineComponent({
             },
         });
 
+        const store = useAuthStore();
+        const { realmManagementId } = storeToRefs(store);
+
         const form = resolveComponent('OAuth2ProviderForm');
 
         const renderForm = () => {
@@ -56,6 +61,7 @@ export default defineComponent({
                         h(form, {
                             onCreated: handleCreated,
                             onFailed: handleFailed,
+                            realmId: realmManagementId,
                         }),
                     ];
             }

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Realm } from '@authup/common';
+import { PermissionName, Realm } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
@@ -60,6 +60,7 @@ export default defineComponent({
                         {
                             class: 'btn btn-xs btn-outline-primary me-1',
                             to: `/admin/realms/${props.data.id}`,
+                            disabled: !store.has(PermissionName.REALM_EDIT),
                         },
                         {
                             default: () => h('i', { class: 'fa fa-bars' }),
@@ -71,6 +72,7 @@ export default defineComponent({
                         entityType: 'realm',
                         withText: false,
                         onDeleted: props.deleted,
+                        disabled: !store.has(PermissionName.REALM_DROP) || !props.data.drop_able,
                     }),
                 ]);
             },

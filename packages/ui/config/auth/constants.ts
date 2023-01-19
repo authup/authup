@@ -11,4 +11,6 @@ export enum AuthBrowserStorageKey {
     ACCESS_TOKEN = 'access_token',
     ACCESS_TOKEN_EXPIRE_DATE = 'access_token_expire_date',
     REFRESH_TOKEN = 'refresh_token',
+    REALM = 'realm',
+    REALM_MANAGEMENT = 'realm_management',
 }

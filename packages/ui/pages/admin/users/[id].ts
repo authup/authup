@@ -10,7 +10,7 @@ import { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import { NuxtPage } from '#components';
-import { definePageMeta, useAPI } from '#imports';
+import { definePageMeta, updateObjectProperties, useAPI } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
 
@@ -43,7 +43,7 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const entity : Ref<User> = ref(null);
+        const entity : Ref<User> = ref(null) as any;
 
         try {
             entity.value = await useAPI()
@@ -56,13 +56,10 @@ export default defineNuxtComponent({
         const handleUpdated = (e: User) => {
             toast.success('The user was successfully updated.');
 
-            const keys = Object.keys(e);
-            for (let i = 0; i < keys.length; i++) {
-                entity.value[keys[i]] = e[keys[i]];
-            }
+            updateObjectProperties(entity, e);
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             toast.warning(e.message);
         };
 
