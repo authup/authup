@@ -9,7 +9,7 @@ export * from './duplicate-slashes';
 export * from './glob';
 export * from './has-own-property';
 export * from './nanoid';
-export * from './object-properties';
+export * from './object-property';
 export * from './self-id';
 export * from './url';
 export * from './uuid';
