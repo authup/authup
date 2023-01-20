@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/Tada5hi/authup/compare/v0.8.0...v0.9.0) (2023-01-20)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 0.6.2 to 0.7.1 ([9e1d44b](https://github.com/Tada5hi/authup/commit/9e1d44b580826202f8e210c7e4f2e45531398b22))
+* **deps:** bump minimatch from 5.1.2 to 6.1.5 ([#763](https://github.com/Tada5hi/authup/issues/763)) ([179226c](https://github.com/Tada5hi/authup/commit/179226cc1c312cc7c95c2fe1711164df15b1dfe1))
+* **deps:** bump vitepress from 1.0.0-alpha.36 to 1.0.0-alpha.38 ([#757](https://github.com/Tada5hi/authup/issues/757)) ([327b220](https://github.com/Tada5hi/authup/commit/327b220512f789d014092274d34347b8fadd8d6d))
+* **deps:** updated typeorm-extension ([3b0aee9](https://github.com/Tada5hi/authup/commit/3b0aee95c23fbe619b611f67c11f77832c2a582e))
+* **server-common:** use logger for env loading error ([985bee9](https://github.com/Tada5hi/authup/commit/985bee9ae0842aa8c2583561fe971b04d5376d0c))
+
+
+### Features
+
+* lazy password grant + minor entity management ui guards ([127ec1c](https://github.com/Tada5hi/authup/commit/127ec1c13f108f2a032aba67dd3b662d35251dc7))
+* **server-http:** increase max requests per minute ([9e82df4](https://github.com/Tada5hi/authup/commit/9e82df4399be7b295163a06694c6d147cf34dc33))
+* **ui:** fix store usage + implemented realm state ([4384c55](https://github.com/Tada5hi/authup/commit/4384c55d66dcc7919df3508e4f96b5189cbc3a60))
+* **ui:** implemented realm switching in admin area ([d902af7](https://github.com/Tada5hi/authup/commit/d902af78d85c270f75425eef01e191a1cc7504ac))
+
+
+
+
+
 # [0.8.0](https://github.com/Tada5hi/authup/compare/v0.7.0...v0.8.0) (2023-01-16)
 
 

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/Tada5hi/authup/compare/v0.8.0...v0.9.0) (2023-01-20)
+
+
+### Bug Fixes
+
+* **server-common:** use logger for env loading error ([985bee9](https://github.com/Tada5hi/authup/commit/985bee9ae0842aa8c2583561fe971b04d5376d0c))
+
+
+### Features
+
+* lazy password grant + minor entity management ui guards ([127ec1c](https://github.com/Tada5hi/authup/commit/127ec1c13f108f2a032aba67dd3b662d35251dc7))
+
+
+
+
+
 # [0.8.0](https://github.com/Tada5hi/authup/compare/v0.7.0...v0.8.0) (2023-01-16)
 
 
