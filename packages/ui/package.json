@@ -30,7 +30,7 @@
         "bootstrap": "^5.2.3",
         "browser-storage-adapter": "^1.0.3",
         "hapic": "^1.0.0",
-        "ilingo": "^2.0.4",
+        "ilingo": "^2.1.0",
         "nuxt": "3.0.0",
         "pinia": "^2.0.29",
         "rapiq": "^0.6.6",
