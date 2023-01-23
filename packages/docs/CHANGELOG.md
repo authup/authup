@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.1](https://github.com/tada5hi/authup/compare/v0.10.0...v0.10.1) (2023-01-23)
+
+
+### Bug Fixes
+
+* **deps:** bump vitepress from 1.0.0-alpha.38 to 1.0.0-alpha.40 ([#771](https://github.com/tada5hi/authup/issues/771)) ([47b8f94](https://github.com/tada5hi/authup/commit/47b8f944ea4b8d1062c2dec9986c0893a0d0849a))
+
+
+
+
+
 # [0.10.0](https://github.com/tada5hi/authup/compare/v0.9.0...v0.10.0) (2023-01-20)
 
 **Note:** Version bump only for package @authup/docs

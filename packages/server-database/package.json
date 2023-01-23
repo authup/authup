@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-database",
-    "version": "0.10.0",
+    "version": "0.10.1",
     "description": "Database related modules and classes.",
     "main": "dist/index.js",
     "files": [
@@ -45,8 +45,8 @@
         "zod": "^3.20.2"
     },
     "devDependencies": {
-        "@authup/common": "^0.10.0",
-        "@authup/server-common": "^0.10.0",
+        "@authup/common": "^0.10.1",
+        "@authup/server-common": "^0.10.1",
         "redis-extension": "^1.2.0",
         "typeorm": "^0.3.11",
         "typeorm-extension": "^2.4.1"
