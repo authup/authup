@@ -86,7 +86,7 @@
         "@routup/decorators": "^0.4.0",
         "@routup/prometheus": "^0.5.0",
         "@routup/query": "^0.6.0",
-        "@routup/rate-limit": "^0.5.0",
+        "@routup/rate-limit": "^0.6.0",
         "@routup/swagger": "^0.10.0",
         "@trapi/swagger": "^0.3.8",
         "@types/express-validator": "^3.0.0",
