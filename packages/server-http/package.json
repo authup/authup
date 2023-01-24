@@ -87,7 +87,7 @@
         "@routup/cookie": "^0.6.0",
         "@routup/decorators": "^0.5.0",
         "@routup/prometheus": "^0.6.0",
-        "@routup/query": "^0.6.0",
+        "@routup/query": "^0.7.0",
         "@routup/rate-limit": "^0.6.0",
         "@routup/swagger": "^0.11.0",
         "@trapi/swagger": "^0.3.8",
