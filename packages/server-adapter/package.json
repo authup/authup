@@ -43,7 +43,7 @@
     "devDependencies": {
         "@authup/common": "^0.10.1",
         "@hapic/oauth2": "^1.0.1",
-        "@routup/cookie": "^0.6.0",
+        "@routup/cookie": "^0.7.0",
         "hapic": "^1.0.0",
         "redis-extension": "^1.2.0",
         "routup": "^0.12.0"
