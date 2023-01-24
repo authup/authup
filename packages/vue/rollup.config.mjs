@@ -9,8 +9,8 @@ import vue from 'rollup-plugin-vue';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import esbuild from 'rollup-plugin-esbuild';
 import postcss from 'rollup-plugin-postcss';
+import { transform } from "@swc/core";
 import pkg from './package.json' assert { type: 'json' };
 
 function buildConfig(config) {
@@ -30,9 +30,26 @@ function buildConfig(config) {
                 extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
             }),
             commonjs(),
-            esbuild({
-                tsconfig: 'tsconfig.build.json'
-            }),
+            {
+                name: 'swc',
+                transform(code) {
+                    return transform(code, {
+                        jsc: {
+                            target: 'es2020',
+                            parser: {
+                                syntax: 'typescript',
+                                decorators: true
+                            },
+                            transform: {
+                                decoratorMetadata: true,
+                                legacyDecorator: true
+                            },
+                            loose: true
+                        },
+                        sourceMaps: true
+                    });
+                }
+            },
             ...(config.plugins ? config.plugins : []),
         ],
 

@@ -4,7 +4,9 @@
     "description": "This package contains the http module.",
     "main": "dist/index.js",
     "scripts": {
-        "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "build:types": "tsc  -p tsconfig.build.json --emitDeclarationOnly",
+        "build:js": "npx swc ./src -d dist --config-file ../../.swcrc.json",
+        "build": "rimraf dist && npm run build:types && npm run build:js",
         "build:watch": "npm run build -- --watch",
         "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
         "test:coverage": "npm run test -- --coverage"
