@@ -53,7 +53,7 @@
         "mysql": "^2.18.1",
         "pg": "^8.8.0",
         "rc9": "^2.0.1",
-        "redis-extension": "^1.2.0",
+        "redis-extension": "^1.2.1",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.0.7",
         "typeorm": "^0.3.10",
