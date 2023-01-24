@@ -46,7 +46,7 @@
         "@routup/cookie": "^0.6.0",
         "hapic": "^1.0.0",
         "redis-extension": "^1.2.0",
-        "routup": "^0.12.0"
+        "routup": "^0.13.0"
     },
     "peerDependencies": {
         "@authup/common": "^0.x",
