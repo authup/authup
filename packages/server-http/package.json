@@ -81,7 +81,7 @@
         "@authup/server-common": "^0.10.1",
         "@authup/server-database": "^0.10.1",
         "@hapic/oauth2": "^1.0.1",
-        "@routup/body": "^0.6.0",
+        "@routup/body": "^0.7.0",
         "@routup/cookie": "^0.6.0",
         "@routup/decorators": "^0.5.0",
         "@routup/prometheus": "^0.6.0",
