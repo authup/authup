@@ -7,6 +7,7 @@
 <script lang="ts">
 import { NavigationComponents } from '@vue-layout/basic';
 import { storeToRefs } from 'pinia';
+import { ref } from '#imports';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../store/auth';
 
@@ -18,9 +19,17 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         const { loggedIn, user } = storeToRefs(store);
 
+        const displayNav = ref(false);
+
+        const toggleNav = () => {
+            displayNav.value = !displayNav.value;
+        };
+
         return {
             loggedIn,
             user,
+            toggleNav,
+            displayNav,
         };
     },
 });
@@ -33,6 +42,7 @@ export default defineNuxtComponent({
                     <button
                         type="button"
                         class="toggle-trigger"
+                        @click="toggleNav"
                     >
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar" />
@@ -48,7 +58,8 @@ export default defineNuxtComponent({
             <nav class="page-navbar navbar-expand-md">
                 <div
                     id="page-navbar"
-                    class="navbar-content navbar-collapse"
+                    class="navbar-content navbar-collapse collapse"
+                    :class="{'show': displayNav}"
                 >
                     <navigation-components
                         class="navbar-nav"

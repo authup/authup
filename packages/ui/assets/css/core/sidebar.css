@@ -6,7 +6,8 @@
  */
 
 .page-sidebar {
-    width:300px;
+    height: 100%;
+    width:240px;
     background-color: #34353a;
     color: #fff;
     transition: all 0.3s;

@@ -15,9 +15,11 @@ export default {
 };
 </script>
 <template>
-    <div class="page-footer">
-        <div class="copyright">
-            &copy; Authup {{ year }}
+    <div>
+        <div class="page-footer">
+            <div class="copyright">
+                &copy; Authup {{ year }}
+            </div>
         </div>
     </div>
 </template>
