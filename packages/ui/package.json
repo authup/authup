@@ -31,7 +31,7 @@
         "browser-storage-adapter": "^1.1.1",
         "hapic": "^1.0.0",
         "ilingo": "^2.1.1",
-        "nuxt": "3.1.0",
+        "nuxt": "3.1.1",
         "pinia": "^2.0.29",
         "rapiq": "^0.6.6",
         "vue": "^3.2.45",
