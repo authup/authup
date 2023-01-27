@@ -51,7 +51,7 @@
         "dotenv": "^16.0.3",
         "locter": "^0.7.1",
         "mysql": "^2.18.1",
-        "pg": "^8.8.0",
+        "pg": "^8.9.0",
         "rc9": "^2.0.1",
         "redis-extension": "^1.2.1",
         "reflect-metadata": "^0.1.13",
