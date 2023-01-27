@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/tada5hi/authup/compare/v0.10.1...v0.11.0) (2023-01-27)
+
+
+### Bug Fixes
+
+* **deps:** updated nuxt to v3.1.1 ([8070cf0](https://github.com/tada5hi/authup/commit/8070cf083b7efe2a21b4fd2e8106a612eaba5de4))
+* **ui:** add nav toggling + add additional nesting layer header/sidebar ([07ea051](https://github.com/tada5hi/authup/commit/07ea051a5226a266699d1e849a21b6c5c85d0613))
+
+
+### Features
+
+* **ui:** add initial head meta tags ([536cb08](https://github.com/tada5hi/authup/commit/536cb08fad8e887ec7b334d577dd40bfe685f310))
+
+
+
+
+
 ## [0.10.1](https://github.com/tada5hi/authup/compare/v0.10.0...v0.10.1) (2023-01-23)
 
 **Note:** Version bump only for package @authup/ui

@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-common",
-    "version": "0.10.1",
+    "version": "0.11.0",
     "description": "Common server services and utilities.",
     "exports": {
         "./package.json": "./package.json",
@@ -57,7 +57,7 @@
         "nodemailer": "^6.9.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.10.1",
+        "@authup/common": "^0.11.0",
         "@types/bcrypt": "^5.0.0"
     },
     "peerDependencies": {

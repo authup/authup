@@ -15,7 +15,7 @@
     "useNx": true,
     "useWorkspaces": true,
     "conventionalCommits": true,
-    "version": "0.10.1",
+    "version": "0.11.0",
     "changelog": {
         "labels": {
             "build": "Build",

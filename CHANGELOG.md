@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/Tada5hi/authup/compare/v0.10.1...v0.11.0) (2023-01-27)
+
+
+### Bug Fixes
+
+* **deps:** bump cookiejar from 2.1.3 to 2.1.4 ([#777](https://github.com/Tada5hi/authup/issues/777)) ([3aa1a41](https://github.com/Tada5hi/authup/commit/3aa1a414a971d3f13c28388df0c2ff0fc6fe71a9))
+* **deps:** bump express-validator from 6.14.2 to 6.14.3 ([#772](https://github.com/Tada5hi/authup/issues/772)) ([632a942](https://github.com/Tada5hi/authup/commit/632a94288fa5f7017cf6e0731647c0517f4dc058))
+* **deps:** bump rc9 from 2.0.0 to 2.0.1 ([#789](https://github.com/Tada5hi/authup/issues/789)) ([943df77](https://github.com/Tada5hi/authup/commit/943df77563c2d282ff1fc716179409fd41e30036))
+* **deps:** bump redis-extension from 1.2.0 to 1.2.1 ([#795](https://github.com/Tada5hi/authup/issues/795)) ([17afd4e](https://github.com/Tada5hi/authup/commit/17afd4e3ffaaf4320d1f5847a91ef160a5acbafe))
+* **deps:** updated nuxt to v3.1.1 ([8070cf0](https://github.com/Tada5hi/authup/commit/8070cf083b7efe2a21b4fd2e8106a612eaba5de4))
+* prefix node module imports with node: ([e866876](https://github.com/Tada5hi/authup/commit/e866876f6a64f50946ca7fd9945fce0958ebd6d9))
+* **ui:** add nav toggling + add additional nesting layer header/sidebar ([07ea051](https://github.com/Tada5hi/authup/commit/07ea051a5226a266699d1e849a21b6c5c85d0613))
+* **vue:** replaced esbuild with swc core ([a59a667](https://github.com/Tada5hi/authup/commit/a59a667fb5ca580464703311b776159f91bbc91a))
+
+
+### Features
+
+* **ui:** add initial head meta tags ([536cb08](https://github.com/Tada5hi/authup/commit/536cb08fad8e887ec7b334d577dd40bfe685f310))
+
+
+
+
+
 ## [0.10.1](https://github.com/Tada5hi/authup/compare/v0.10.0...v0.10.1) (2023-01-23)
 
 

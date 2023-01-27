@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-http",
-    "version": "0.10.1",
+    "version": "0.11.0",
     "description": "This package contains the http module.",
     "exports": {
         "./package.json": "./package.json",
@@ -89,9 +89,9 @@
         "typeorm-extension": ">=2.4.2 <3.0.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.10.1",
-        "@authup/server-common": "^0.10.1",
-        "@authup/server-database": "^0.10.1",
+        "@authup/common": "^0.11.0",
+        "@authup/server-common": "^0.11.0",
+        "@authup/server-database": "^0.11.0",
         "@hapic/oauth2": "^1.0.1",
         "@routup/body": "^0.7.0",
         "@routup/cookie": "^0.7.0",
