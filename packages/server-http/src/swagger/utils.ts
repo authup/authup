@@ -6,10 +6,11 @@
  */
 
 import path from 'node:path';
+import { resolveRootPath } from '../path';
 
 export function getSwaggerEntrypoint() : { pattern: string, cwd: string } {
     return {
-        cwd: path.resolve(__dirname, '..', '..', 'src', 'controllers'),
+        cwd: path.join(resolveRootPath(), 'src', 'controllers'),
         pattern: '**/*{.ts,.js,.d.ts}',
     };
 }
