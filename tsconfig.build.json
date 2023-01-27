@@ -12,10 +12,10 @@
 
         "esModuleInterop": true,
         "lib": ["ESNext"],
-        "target": "ES6",
+        "target": "ESNext",
 
         "moduleResolution": "Node",
-        "module": "CommonJS"
+        "module": "ESNext"
     },
     "exclude": [
         "node_modules",

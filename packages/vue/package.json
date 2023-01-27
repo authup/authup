@@ -59,7 +59,7 @@
         "@vuelidate/validators": "^2.0.0",
         "cross-env": "^7.0.3",
         "ilingo": "^2.1.1",
-        "rapiq": "^0.6.6",
+        "rapiq": "^0.7.0",
         "rollup-plugin-vue": "^6.0.0-beta.11",
         "vue": "^3.2.45",
         "vue-tsc": "^1.0.24"
@@ -70,8 +70,7 @@
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "ilingo": "^2.x",
-        "rapiq": ">=0.5.0 <1.0.0",
-        "smob": "^0.x",
+        "rapiq": ">=0.7.0 <1.0.0",
         "vue": "^3.x"
     },
     "publishConfig": {
