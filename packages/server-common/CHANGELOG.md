@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.1](https://github.com/Tada5hi/authup/compare/v0.11.0...v0.11.1) (2023-01-27)
+
+
+### Bug Fixes
+
+* **deps:** bump nodemailer from 6.9.0 to 6.9.1 ([#808](https://github.com/Tada5hi/authup/issues/808)) ([bb240b3](https://github.com/Tada5hi/authup/commit/bb240b33d87fc1eeaab5ee55c1dc9f8a4da50bb4))
+
+
+
+
+
 # [0.11.0](https://github.com/Tada5hi/authup/compare/v0.10.1...v0.11.0) (2023-01-27)
 
 
