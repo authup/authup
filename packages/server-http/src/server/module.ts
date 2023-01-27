@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import http from 'http';
+import http from 'node:http';
 import { HttpServerContext, HttpServerInterface } from './type';
 
 export function createHttpServer({ router } : HttpServerContext) : HttpServerInterface {

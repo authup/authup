@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
 import { merge } from 'smob';
@@ -70,9 +69,6 @@ export function createConfig(
 
             // Allows node_modules resolution
             resolve({ extensions}),
-
-            // Allow bundling cjs modules. Rollup doesn't understand cjs
-            commonjs(),
 
             // Compile TypeScript/JavaScript files
             {

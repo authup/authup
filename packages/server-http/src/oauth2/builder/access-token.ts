@@ -6,7 +6,7 @@
  */
 
 import { OAuth2TokenKind, OAuth2TokenPayload } from '@authup/common';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { OAuth2AccessTokenBuilderContext, OAuth2AccessTokenBuilderCreateContext } from './type';
 
 export class Oauth2AccessTokenBuilder {

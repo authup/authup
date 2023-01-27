@@ -12,9 +12,9 @@ import {
     SwaggerDocFormatType,
     generateDocumentation,
 } from '@trapi/swagger';
-import fs from 'fs';
-import path from 'path';
-import { URL } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { URL } from 'node:url';
 import { loadJsonFile } from 'locter';
 import { SwaggerDocumentCreateContext } from './type';
 import { getSwaggerEntrypoint } from './utils';

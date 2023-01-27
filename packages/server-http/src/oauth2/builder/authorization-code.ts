@@ -10,7 +10,7 @@ import {
     OAuth2TokenKind,
     OAuth2TokenPayload, hasOAuth2OpenIDScope,
 } from '@authup/common';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '@authup/server-database';
 import { OAuth2AuthorizationCodeBuilderContext, OAuth2AuthorizationCodeBuilderCreateContext } from './type';

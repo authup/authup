@@ -8,7 +8,7 @@
 import { check, validationResult } from 'express-validator';
 import { User, isValidUserName } from '@authup/common';
 import { BadRequestError, ServerError } from '@ebec/http';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import {
     Request, Response, sendAccepted,
 } from 'routup';

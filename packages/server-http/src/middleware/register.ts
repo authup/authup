@@ -31,8 +31,8 @@ import {
     createHandler as createRateLimitHandler,
 } from '@routup/rate-limit';
 import { createUIHandler } from '@routup/swagger';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import { useLogger } from '@authup/server-common';
 import { merge } from 'smob';
 import {

@@ -12,7 +12,7 @@ import {
 import {
     Request, Response, getRequestIp, send,
 } from 'routup';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { useRequestEnv } from '../../../../utils';
 import { runAuthorizeValidation } from '../utils';
 import { useConfig } from '../../../../config';

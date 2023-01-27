@@ -17,7 +17,7 @@ import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, sendRedirect, useRequestParam,
 } from 'routup';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '@authup/server-database';

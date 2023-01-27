@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Server } from 'http';
+import type { Server } from 'node:http';
 import { Router } from 'routup';
 
 export interface HttpServerContext {

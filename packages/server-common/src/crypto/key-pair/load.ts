@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createPublicKey } from 'crypto';
-import path from 'path';
-import fs from 'fs';
+import { createPublicKey } from 'node:crypto';
+import path from 'node:path';
+import fs from 'node:fs';
 import { KeyPair, KeyPairOptions } from './type';
 import { buildKeyFileName, decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
 import { KeyPairKind } from './constants';

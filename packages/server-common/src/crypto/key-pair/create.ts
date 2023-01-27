@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { generateKeyPair } from 'crypto';
+import { generateKeyPair } from 'node:crypto';
 import { KeyPair, KeyPairOptions } from './type';
 import { decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
 import { saveKeyPair } from './save';

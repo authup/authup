@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
-import { hasOwnProperty } from '@authup/common';
+import path from 'node:path';
 import { KeyPairOptions } from '../type';
 
 export function extendKeyPairOptions(

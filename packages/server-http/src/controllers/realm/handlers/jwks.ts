@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JsonWebKey, createPublicKey } from 'crypto';
+import { JsonWebKey, createPublicKey } from 'node:crypto';
 import {
     Request, Response, send, useRequestParam,
 } from 'routup';

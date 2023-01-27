@@ -6,8 +6,8 @@
  */
 
 import { Continu } from 'continu';
-import path from 'path';
-import process from 'process';
+import path from 'node:path';
+import process from 'node:process';
 import zod from 'zod';
 import { Options, OptionsInput } from './type';
 

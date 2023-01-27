@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     DSAKeyPairOptions,
     ECKeyPairOptions,
     RSAKeyPairOptions,
     RSAPSSKeyPairOptions,
-} from 'crypto';
+} from 'node:crypto';
 
 export type KeyPair = {
     privateKey: string,

@@ -10,7 +10,7 @@ import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authup/common';
 import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useSMTPClient } from '@authup/server-common';
 import { UserRepository } from '@authup/server-database';
