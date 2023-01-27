@@ -2,8 +2,7 @@
     "extends": "../../tsconfig.build.json",
 
     "compilerOptions": {
-        "outDir": "./dist",
-        "lib": ["dom"]
+        "outDir": "./dist"
     },
 
     "include": [

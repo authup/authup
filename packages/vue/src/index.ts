@@ -1,5 +1,3 @@
-import 'regenerator-runtime';
-
 import { Component, Plugin } from 'vue';
 
 // Import vue components
