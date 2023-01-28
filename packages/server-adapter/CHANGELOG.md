@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0](https://github.com/Tada5hi/authup/compare/v0.12.1...v0.13.0) (2023-01-28)
+
+
+### Features
+
+* reverted server-* packages back to cjs to strange behaviour ([9cc9c36](https://github.com/Tada5hi/authup/commit/9cc9c360447b9ca39f04cda93ecb7e9eeb7966f7))
+
+
+
+
+
 ## [0.12.1](https://github.com/Tada5hi/authup/compare/v0.12.0...v0.12.1) (2023-01-28)
 
 

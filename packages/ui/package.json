@@ -1,6 +1,6 @@
 {
     "name": "@authup/ui",
-    "version": "0.12.1",
+    "version": "0.13.0",
     "description": "This is a standalone application.",
     "main": ".output/server/index.mjs",
     "files": [
@@ -16,8 +16,8 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/common": "^0.12.1",
-        "@authup/vue": "^0.12.1",
+        "@authup/common": "^0.13.0",
+        "@authup/vue": "^0.13.0",
         "@fortawesome/fontawesome-free": "^6.2.1",
         "@hapic/oauth2": "^1.1.0",
         "@nuxtjs/google-fonts": "^3.0.0-0",
