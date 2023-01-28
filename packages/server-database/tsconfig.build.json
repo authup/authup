@@ -3,7 +3,7 @@
 
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["ESNext"],
+        "lib": ["ES2020"],
         "module": "CommonJS"
     },
 
