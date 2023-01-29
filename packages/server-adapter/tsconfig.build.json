@@ -2,9 +2,7 @@
     "extends": "../../tsconfig.build.json",
 
     "compilerOptions": {
-        "outDir": "./dist",
-        "lib": ["dom"],
-        "module": "CommonJS"
+        "outDir": "./dist"
     },
 
     "include": [

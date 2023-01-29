@@ -1,8 +1,6 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "strict": true,
-        "lib": ["ES6"],
         "paths": {
             "@authup/common": ["./packages/common/src"]
         }

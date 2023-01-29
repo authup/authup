@@ -2,13 +2,24 @@
     "name": "@authup/server-adapter",
     "version": "0.13.0",
     "description": "An adapter package to integrate into other services.",
-    "main": "./dist/index.js",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "files": [
         "dist/"
     ],
     "scripts": {
-        "build": "rimraf ./dist && cross-env NODE_ENV=production tsc -p tsconfig.build.json"
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "rollup -c",
+        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
     },
     "keywords": [
         "auth",
