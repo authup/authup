@@ -9,7 +9,7 @@ import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { Next, Request, Response } from 'routup';
 import { unsetResponseCookie, useRequestCookie } from '@routup/cookie';
 import { AbilityManager, CookieName } from '@authup/common';
-import { setRequestEnv } from '../../utils/env';
+import { setRequestEnv } from '../../utils';
 import { verifyAuthorizationHeader } from './verify';
 
 function parseRequestAccessTokenCookie(request: Request): string | undefined {

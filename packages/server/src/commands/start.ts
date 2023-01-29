@@ -32,7 +32,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const logger = useLogger();
 
-    logger.info(`Redis: ${hasConfig()}`);
+    logger.info(`Redis: ${hasConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Environment: ${config.get('env')}`);
     logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
     logger.info(`Port: ${config.get('port')}`);
