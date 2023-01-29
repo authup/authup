@@ -33,6 +33,10 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         return `database:${id}`;
     }
 
+    protected clearQuery(query: string) {
+        return query.replace(/[^a-zA-Z0-9_-]+/g, '');
+    }
+
     async clear(queryRunner?: QueryRunner): Promise<void> {
         if (
             !hasConfig(this.options.redisAlias) &&
@@ -68,7 +72,9 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             return undefined;
         }
 
-        if (!options.query && !options.identifier) {
+        // todo: allow options.query
+
+        if (!options.identifier) {
             return undefined;
         }
 
@@ -124,7 +130,9 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             return;
         }
 
-        if (!options.query && !options.identifier) {
+        // todo: allow options.query
+
+        if (!options.identifier) {
             return;
         }
 

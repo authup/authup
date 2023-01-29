@@ -16,7 +16,7 @@ import {
     extractOAuth2TokenPayload, loadOAuth2SubEntity,
     loadOAuth2SubPermissions, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
-import { useRequestEnv } from '../../../../utils/env';
+import { useRequestEnv } from '../../../../utils';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function introspectTokenRouteHandler(
@@ -49,7 +49,7 @@ export async function introspectTokenRouteHandler(
     const payload = await extractOAuth2TokenPayload(validationData.token);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    return send(res, {
+    const output : OAuth2TokenIntrospectionResponse = {
         active: true,
         permissions,
         ...payload,
@@ -57,5 +57,7 @@ export async function introspectTokenRouteHandler(
             payload.sub_kind,
             await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
         ),
-    } as OAuth2TokenIntrospectionResponse);
+    };
+
+    return send(res, output);
 }

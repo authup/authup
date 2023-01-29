@@ -8,8 +8,10 @@
 import {
     Next, Request, Response, send,
 } from 'routup';
+
 import { hasOwnProperty } from 'typeorm-extension';
 import {
+    BaseError,
     ConflictError,
     InsufficientStorageError,
     InternalServerError,
@@ -25,6 +27,8 @@ export function errorMiddleware(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: Next,
 ) {
+    console.log(error);
+
     const code : string | undefined = hasOwnProperty(error, 'code') && typeof error.code === 'string' ?
         error.code :
         undefined;

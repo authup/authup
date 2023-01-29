@@ -19,17 +19,18 @@ import {
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from 'hapic';
+import { buildKeyPath } from 'redis-extension';
 import { Request } from 'routup';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import {
+    CachePrefix,
     ClientEntity,
     OAuth2ClientRepository,
     RealmEntity,
-    RobotEntity,
-    RobotRepository, UserEntity,
+    RobotEntity, RobotRepository,
 
-    UserRepository, useConfig,
+    UserEntity, UserRepository, useConfig,
 } from '@authup/server-database';
 import {
     extractOAuth2TokenPayload,
@@ -56,7 +57,13 @@ async function verifyBearerAuthorizationHeader(
         where: {
             id: payload.realm_id,
         },
-        cache: true,
+        cache: {
+            id: buildKeyPath({
+                prefix: CachePrefix.REALM,
+                id: payload.realm_id,
+            }),
+            milliseconds: 60.000,
+        },
     });
     setRequestEnv(request, 'realm', realm);
 

@@ -45,7 +45,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
-        "@ebec/http": "^0.2.1",
+        "@ebec/http": "^0.2.2",
         "@types/morgan": "^1.9.4",
         "continu": "^1.0.5",
         "cors": "^2.8.5",
@@ -97,7 +97,7 @@
         "coveralls": "^3.1.0",
         "hapic": "^1.1.0",
         "jest-serial-runner": "^1.2.1",
-        "redis-extension": "^1.2.1",
+        "redis-extension": "^1.2.2",
         "routup": "^0.13.0",
         "supertest": "^6.3.3",
         "ts-node": "^10.8.2",

@@ -6,41 +6,42 @@
  */
 
 import {
-    Client, ClientOptions, setClient, setConfig, useClient,
+    Client, ClientOptions, buildConfig, setClient, setConfig,
 } from 'redis-extension';
-import { hasOwnProperty } from '@authup/common';
+import { isObject } from 'smob';
 
 export function isRedisClient(data: unknown) : data is Client {
-    return typeof data === 'object' &&
-        data !== null &&
-        hasOwnProperty(data, 'connect') &&
-        hasOwnProperty(data, 'disconnect');
+    return isObject(data) &&
+        typeof data.connect === 'function' &&
+        typeof data.disconnect === 'function';
 }
 
 export function setupRedis(data: string | boolean | Client | ClientOptions): void {
     if (
         typeof data === 'boolean' ||
-        typeof data === 'undefined'
+        !data
     ) {
         if (data) {
-            useClient();
+            setConfig(buildConfig({
+                connectionString: 'redis://127.0.0.1',
+            }));
         }
 
         return;
     }
 
     if (typeof data === 'string') {
-        setConfig({
+        setConfig(buildConfig({
             connectionString: data,
-        });
+        }));
 
         return;
     }
 
     if (!isRedisClient(data)) {
-        setConfig({
+        setConfig(buildConfig({
             options: data,
-        });
+        }));
 
         return;
     }

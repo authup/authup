@@ -7,8 +7,9 @@
 
 export enum CachePrefix {
     OAUTH2_AUTHORIZATION_CODE = 'oauth2_authorization_code',
-    OAUTH2_ACCESS_TOKEN = 'oauth2_access_token',
     OAUTH2_REFRESH_TOKEN = 'oauth2_refresh_token',
+
+    CLIENT = 'client',
 
     USER = 'user',
     USER_OWNED_ATTRIBUTES = 'user_owned_attributes',
@@ -16,6 +17,8 @@ export enum CachePrefix {
     USER_OWNED_ROLES = 'user_owned_roles',
 
     KEY = 'key',
+
+    REALM = 'realm',
 
     ROBOT = 'robot',
     ROBOT_OWNED_PERMISSIONS = 'robot_owned_permissions',

@@ -7,7 +7,7 @@
 
 import { Router, send } from 'routup';
 import cors from 'cors';
-import { createMetricsRouteHandler, registerControllers } from '../controllers';
+import { registerControllers } from '../controllers';
 
 import { errorMiddleware, registerMiddlewares } from '../middleware';
 
@@ -21,12 +21,9 @@ export function createRouter() : Router {
         credentials: true,
     }));
 
-    router.get('/metrics', createMetricsRouteHandler);
-
     registerMiddlewares(router);
     registerControllers(router);
 
-    // needs to be last :/
     router.use(errorMiddleware);
 
     return router;

@@ -49,6 +49,7 @@ export function extendDataSourceOptions(options: DataSourceOptions) {
                 provider() {
                     return new DatabaseQueryResultCache();
                 },
+                ignoreErrors: true,
             },
         } as Partial<DataSourceOptions>);
     }

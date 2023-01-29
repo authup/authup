@@ -48,7 +48,7 @@
     "devDependencies": {
         "@authup/common": "^0.13.0",
         "@authup/server-common": "^0.13.0",
-        "redis-extension": "^1.2.1",
+        "redis-extension": "^1.2.2",
         "typeorm": "^0.3.11",
         "typeorm-extension": "^2.4.1"
     },

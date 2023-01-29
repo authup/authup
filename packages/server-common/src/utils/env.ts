@@ -41,7 +41,7 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
             return false;
     }
 
-    return alt ?? !!value;
+    return alt;
 }
 
 export function requireBoolOrStringFromEnv(

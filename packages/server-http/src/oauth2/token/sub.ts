@@ -10,8 +10,10 @@ import {
     TokenError,
 } from '@authup/common';
 import { NotFoundError } from '@ebec/http';
+import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import {
+    CachePrefix,
     ClientEntity,
     RobotEntity,
     RobotRepository,
@@ -55,7 +57,13 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
 
             const query = repository.createQueryBuilder('client')
                 .where('client.id = :id', { id })
-                .cache(true);
+                .cache({
+                    id: buildKeyPath({
+                        prefix: CachePrefix.CLIENT,
+                        id,
+                    }),
+                    milliseconds: 60.000,
+                });
 
             for (let i = 0; i < fields.length; i++) {
                 query.addSelect(`client.${fields[i]}`);
@@ -75,7 +83,13 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
 
             const query = repository.createQueryBuilder('user')
                 .where('user.id = :id', { id })
-                .cache(true);
+                .cache({
+                    id: buildKeyPath({
+                        prefix: CachePrefix.USER,
+                        id,
+                    }),
+                    milliseconds: 60.000,
+                });
 
             for (let i = 0; i < fields.length; i++) {
                 query.addSelect(`user.${fields[i]}`);
@@ -101,7 +115,13 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
 
             const query = repository.createQueryBuilder('robot')
                 .where('robot.id = :id', { id })
-                .cache(true);
+                .cache({
+                    id: buildKeyPath({
+                        prefix: CachePrefix.ROBOT,
+                        id,
+                    }),
+                    milliseconds: 60.000,
+                });
 
             for (let i = 0; i < fields.length; i++) {
                 query.addSelect(`robot.${fields[i]}`);

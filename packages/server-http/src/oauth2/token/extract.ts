@@ -10,6 +10,7 @@ import {
     TokenError,
 } from '@authup/common';
 import { decodeToken } from '@authup/server-common';
+import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '@authup/server-database';
 
@@ -37,7 +38,13 @@ export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2T
             where: {
                 id: payload.header.kid,
             },
-            cache: 60.000,
+            cache: {
+                id: buildKeyPath({
+                    prefix: 'realm_key',
+                    id: payload.header.kid,
+                }),
+                milliseconds: 60.000,
+            },
         });
 
         if (entity) {

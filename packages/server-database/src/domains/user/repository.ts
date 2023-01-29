@@ -52,7 +52,13 @@ export class UserRepository extends Repository<UserEntity> {
             where: {
                 user_id: entity.id,
             },
-            cache: 60.000,
+            cache: {
+                id: buildKeyPath({
+                    prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                    id: entity.id,
+                }),
+                milliseconds: 60.000,
+            },
         });
 
         const attributes = transformAttributesToRecord(rawAttributes);

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasConfig } from 'redis-extension';
 import { URL } from 'url';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import {
@@ -31,6 +32,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const logger = useLogger();
 
+    logger.info(`Redis: ${hasConfig()}`);
     logger.info(`Environment: ${config.get('env')}`);
     logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
     logger.info(`Port: ${config.get('port')}`);
