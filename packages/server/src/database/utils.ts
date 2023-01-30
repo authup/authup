@@ -13,11 +13,17 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     // todo: parse data-source options by config.
     const dataSourceOptions = await _buildDataSourceOptions();
 
-    Object.assign(dataSourceOptions, {
-        migrations: [
-            path.join(__dirname, 'migrations', dataSourceOptions.type, '*{.ts,.js}'),
-        ],
-    } as DataSourceOptions);
+    if (process.env.NODE_ENV === 'test') {
+        Object.assign(dataSourceOptions, {
+            migrations: [],
+        } as DataSourceOptions);
+    } else {
+        Object.assign(dataSourceOptions, {
+            migrations: [
+                path.join(__dirname, 'migrations', dataSourceOptions.type, '*{.ts,.js}'),
+            ],
+        } as DataSourceOptions);
+    }
 
     return dataSourceOptions;
 }

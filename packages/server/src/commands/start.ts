@@ -17,14 +17,17 @@ import {
 import {
     createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner, useConfig as useHTTPConfig,
 } from '@authup/server-http';
-import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '@authup/server-database';
+import {
+    DatabaseSeeder, buildDataSourceOptions, saveSeedResult, useConfig as useDatabaseConfig,
+} from '@authup/server-database';
 import { setLogger, useLogger } from '@authup/server-common';
 import { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
-    const config = await useHTTPConfig();
+    const httpConfig = await useHTTPConfig();
+    const databaseConfig = await useDatabaseConfig();
 
     if (context.logger) {
         setLogger(context.logger);
@@ -32,13 +35,15 @@ export async function startCommand(context?: StartCommandContext) {
 
     const logger = useLogger();
 
+    logger.info(`Environment: ${httpConfig.get('env')}`);
+    logger.info(`WritableDirectoryPath: ${httpConfig.get('writableDirectoryPath')}`);
+    logger.info(`Port: ${httpConfig.get('port')}`);
+    logger.info(`Host: ${httpConfig.get('host')}`);
+    logger.info(`Public-URL: ${httpConfig.get('publicUrl')}`);
+    logger.info(`Docs-URL: ${new URL('docs/', httpConfig.get('publicUrl')).href}`);
+
     logger.info(`Redis: ${hasConfig() ? 'enabled' : 'disabled'}`);
-    logger.info(`Environment: ${config.get('env')}`);
-    logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
-    logger.info(`Port: ${config.get('port')}`);
-    logger.info(`Host: ${config.get('host')}`);
-    logger.info(`Public-URL: ${config.get('publicUrl')}`);
-    logger.info(`Docs-URL: ${new URL('docs/', config.get('publicUrl')).href}`);
+    logger.info(`Robot: ${databaseConfig.get('robotEnabled') ? 'enabled' : 'disabled'}`);
 
     /*
     HTTP Server & Express App
@@ -47,9 +52,9 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info('Generating documentation...');
 
     await generateSwaggerDocumentation({
-        rootPath: config.get('rootPath'),
-        writableDirectoryPath: config.get('writableDirectoryPath'),
-        baseUrl: config.get('publicUrl'),
+        rootPath: httpConfig.get('rootPath'),
+        writableDirectoryPath: httpConfig.get('writableDirectoryPath'),
+        baseUrl: httpConfig.get('publicUrl'),
     });
 
     logger.info('Generated documentation.');
@@ -100,7 +105,7 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     if (seederData.robot) {
-        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+        await saveSeedResult(httpConfig.get('writableDirectoryPath'), seederData);
     }
 
     logger.info('Starting oauth2 cleaner...');
@@ -114,7 +119,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const router = createRouter();
     const httpServer = createHttpServer({ router });
-    httpServer.listen(config.get('port'), config.get('host'), () => {
+    httpServer.listen(httpConfig.get('port'), httpConfig.get('host'), () => {
         logger.info('Started http server.');
     });
 }

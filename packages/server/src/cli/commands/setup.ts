@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import process from 'node:process';
 import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { DataSourceOptions } from 'typeorm';
-import {
-    setupCommand,
-} from '../../commands';
+import { setupLogger } from '../../utils';
+import { setupCommand } from '../../commands';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
@@ -66,27 +65,22 @@ export class SetupCommand implements CommandModule {
         const fileConfig = await readConfig(args.root);
         const envConfig = readConfigFromEnv();
 
-        setOptions(merge(
+        const config = setOptions(merge(
             envConfig,
             fileConfig,
         ));
 
         const dataSourceOptions = await buildDataSourceOptions();
-
-        if (process.env.NODE_ENV === 'test') {
-            Object.assign(dataSourceOptions, {
-                migrations: [],
-            } as DataSourceOptions);
-        }
+        const logger = setupLogger(config.base.writableDirectoryPath);
 
         try {
             await setupCommand({
                 dataSourceOptions,
+                logger,
                 ...args,
             });
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.log(e);
+            logger.error(e);
 
             process.exit(1);
         }

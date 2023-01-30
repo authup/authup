@@ -7,13 +7,8 @@
 
 import { merge } from 'smob';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { DataSourceOptions } from 'typeorm';
-
-import { createLogger, format, transports } from 'winston';
-import path from 'path';
-import {
-    startCommand,
-} from '../../commands';
+import { setupLogger } from '../../utils';
+import { startCommand } from '../../commands';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
@@ -45,28 +40,7 @@ export class StartCommand implements CommandModule {
         ));
 
         const dataSourceOptions = await buildDataSourceOptions();
-
-        if (process.env.NODE_ENV === 'test') {
-            Object.assign(dataSourceOptions, {
-                migrations: [],
-            } as DataSourceOptions);
-        }
-
-        const logger = createLogger({
-            format: format.combine(
-                format.timestamp(),
-                format.json(),
-            ),
-            transports: [
-                new transports.Console({
-                    level: 'debug',
-                }),
-                new transports.File({
-                    filename: path.join(config.base.writableDirectoryPath, 'error.log'),
-                    level: 'warn',
-                }),
-            ],
-        });
+        const logger = setupLogger(config.base.writableDirectoryPath);
 
         try {
             await startCommand({
@@ -74,8 +48,7 @@ export class StartCommand implements CommandModule {
                 dataSourceOptions,
             });
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.log(e);
+            logger.error(e);
 
             process.exit(1);
         }

@@ -102,10 +102,10 @@ export async function setupCommand(context?: SetupCommandContext) {
 
                 if (context.logger) {
                     context.logger.info('Seeded database.');
+                }
 
-                    if (seederData.robot) {
-                        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
-                    }
+                if (seederData.robot) {
+                    await saveSeedResult(config.get('writableDirectoryPath'), seederData);
                 }
             }
         } catch (e) {
