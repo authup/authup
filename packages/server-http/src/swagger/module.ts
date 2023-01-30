@@ -15,7 +15,7 @@ import {
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
-import { loadJsonFile } from 'locter';
+import { loadFile } from 'locter';
 import { SwaggerDocumentCreateContext } from './type';
 import { getSwaggerEntrypoint } from './utils';
 
@@ -72,7 +72,7 @@ export async function generateSwaggerDocumentation(
         const filePath = path.join(context.rootPath, 'package.json');
 
         await fs.promises.access(filePath);
-        const packageJson : Record<string, any> = await loadJsonFile(filePath);
+        const packageJson : Record<string, any> = await loadFile(filePath);
         if (packageJson.name) {
             swaggerConfig.name = `${packageJson.name} - API Documentation`;
         }
