@@ -57,7 +57,7 @@
         "@hapic/oauth2": "^1.1.0",
         "@routup/cookie": "^0.7.0",
         "hapic": "^1.1.0",
-        "redis-extension": "^1.2.1",
+        "redis-extension": "^1.2.3",
         "routup": "^0.13.0"
     },
     "peerDependencies": {
