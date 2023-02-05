@@ -9,28 +9,20 @@ import {
     createDatabase, dropDatabase, setDataSource, unsetDataSource, useDataSource,
 } from 'typeorm-extension';
 import {
-    DataSource, DataSourceOptions,
+    DataSource,
 } from 'typeorm';
 import {
     DatabaseRootSeederResult,
     DatabaseSeeder,
-    buildDataSourceOptions,
+    extendDataSourceOptions,
 } from '@authup/server-database';
 
-async function buildOptions() {
-    const options = await buildDataSourceOptions();
-
-    return {
-        ...options,
-        ...(
-            options.type !== 'sqlite' &&
-            options.type !== 'better-sqlite3' ? { database: 'test' } : {}
-        ),
-    } as DataSourceOptions;
-}
-
 export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
-    const options = await buildOptions();
+    const options = extendDataSourceOptions({
+        type: 'better-sqlite3',
+        database: ':memory:',
+    });
+
     await createDatabase({ options });
 
     const dataSource = new DataSource(options);
