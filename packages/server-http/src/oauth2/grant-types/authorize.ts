@@ -66,6 +66,8 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             }
         }
 
+        await repository.remove(entity);
+
         return entity;
     }
 

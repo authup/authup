@@ -83,7 +83,7 @@ export class OAuth2AuthorizationCodeBuilder {
             scope: context.scope,
         });
 
-        if (hasOAuth2OpenIDScope(entity.scope)) {
+        if (context.idToken || hasOAuth2OpenIDScope(entity.scope)) {
             entity.id_token = await this.generateOpenIdToken({
                 sub: context.sub,
                 sub_kind: context.subKind,

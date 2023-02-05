@@ -36,6 +36,8 @@ export type OAuth2AccessTokenBuilderCreateContext = {
 export type OAuth2AuthorizationCodeBuilderContext = OAuth2AccessTokenBuilderContext;
 
 export type OAuth2AuthorizationCodeBuilderCreateContext = {
+    idToken?: boolean,
+
     sub: string,
     subKind: `${OAuth2SubKind}`,
 

@@ -47,7 +47,6 @@ export async function runAuthorizeValidation(
 
             return true;
         })
-        .isIn(Object.values(OAuth2AuthorizationResponseType))
         .run(req);
 
     await check('redirect_uri')

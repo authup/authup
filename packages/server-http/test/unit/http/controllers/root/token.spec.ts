@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, OAuth2TokenGrantResponse, ScopeName } from '@authup/common';
+import {
+    ErrorCode, OAuth2AuthorizationResponseType, OAuth2TokenGrantResponse, ScopeName,
+} from '@authup/common';
 import { DatabaseRootSeederResult } from '@authup/server-database';
 import { SuperTest, Test } from 'supertest';
 import { useSuperTest } from '../../../../utils/supertest';
@@ -167,10 +169,10 @@ describe('src/http/controllers/token', () => {
         let response = await superTest
             .post('/authorize')
             .send({
-                response_type: 'code',
+                response_type: OAuth2AuthorizationResponseType.CODE,
                 client_id: client.id,
                 redirect_uri: 'https://example.com/redirect',
-                scope: ScopeName.GLOBAL,
+                scope: `${ScopeName.GLOBAL} ${ScopeName.OPEN_ID}`,
             })
             .auth('admin', 'start123');
 
@@ -178,6 +180,10 @@ describe('src/http/controllers/token', () => {
         expect(response.body.url).toBeDefined();
 
         const url = new URL(response.body.url);
+        expect(url.searchParams.get('access_token')).toBeFalsy();
+        expect(url.searchParams.get('code')).toBeDefined();
+        expect(url.searchParams.get('id_token')).toBeDefined();
+
         const code = url.searchParams.get('code');
 
         response = await superTest
@@ -191,6 +197,7 @@ describe('src/http/controllers/token', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.access_token).toBeDefined();
+        expect(response.body.id_token).toBeDefined();
         expect(response.body.expires_in).toBeDefined();
         expect(response.body.refresh_token).toBeDefined();
     });

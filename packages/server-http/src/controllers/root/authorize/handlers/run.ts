@@ -9,6 +9,7 @@ import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
 } from '@authup/common';
+import { signOAuth2TokenWithKey, useKey } from '@authup/server-database';
 import {
     Request, Response, getRequestIp, send,
 } from 'routup';
@@ -42,8 +43,8 @@ export async function runAuthorizationRouteHandler(
     let accessToken : string | undefined;
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
         const tokenBuilder = new Oauth2AccessTokenBuilder({
-            selfUrl: this.config.selfUrl,
-            maxAge: this.config.tokenMaxAgeAccessToken,
+            selfUrl: config.get('publicUrl'),
+            maxAge: config.get('tokenMaxAgeAccessToken'),
         });
 
         const { id: realmId, name: realmName } = useRequestEnv(req, 'realm');
@@ -58,12 +59,22 @@ export async function runAuthorizationRouteHandler(
             scope: result.data.scope,
         });
 
-        accessToken = token.content;
+        const key = await useKey({ realm_id: realmId });
+        accessToken = await signOAuth2TokenWithKey(
+            token,
+            key,
+            {
+                keyid: key.id,
+                expiresIn: config.get('tokenMaxAgeAccessToken'),
+            },
+        );
     }
 
     const { id: realmId } = useRequestEnv(req, 'realm');
 
     const code = await codeBuilder.create({
+        idToken: responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN],
+
         sub: useRequestEnv(req, 'userId'),
         subKind: OAuth2SubKind.USER,
         remoteAddress: getRequestIp(req, { trustProxy: true }),
