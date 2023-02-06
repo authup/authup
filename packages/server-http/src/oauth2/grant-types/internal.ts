@@ -14,7 +14,7 @@ import { AbstractGrant } from './abstract';
 import {
     Grant,
 } from './type';
-import { OAuth2BearerTokenResponse } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
@@ -30,12 +30,10 @@ export class InternalGrantType extends AbstractGrant implements Grant {
 
         const refreshToken = await this.issueRefreshToken(accessToken);
 
-        const response = new OAuth2BearerTokenResponse({
+        return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
-
-        return response.build();
     }
 }

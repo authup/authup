@@ -6,11 +6,18 @@
  */
 
 import { OAuth2TokenPayload } from '@authup/common';
-import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 
-export type OAuth2BearerResponseContext = {
-    accessToken: Partial<OAuth2TokenPayload>,
-    accessTokenMaxAge: number,
-    refreshToken?: OAuth2RefreshTokenEntity,
-    idToken?: string
+export type OAuth2BearerResponseBuildContext = {
+    accessToken: Partial<OAuth2TokenPayload> | string,
+    accessTokenMaxAge?: number,
+
+    refreshToken?: Partial<OAuth2TokenPayload> | string,
+    refreshTokenMaxAge?: number,
+
+    idToken?: Partial<OAuth2TokenPayload> | string,
+    idTokenMaxAge?: number,
+
+    realmId?: string,
+
+    scope?: string
 };

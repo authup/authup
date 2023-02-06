@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './builder';
+export * from './authorize';
+export * from './cache';
 export * from './cleaner';
-export * from './token';
 export * from './grant-types';
 export * from './openid';
 export * from './response';
 export * from './scope';
+export * from './token';

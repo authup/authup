@@ -6,8 +6,14 @@
  */
 
 import {
-    OAuth2AuthorizationCodeRequest, OAuth2AuthorizationResponseType, ScopeName,
+    OAuth2AuthorizationCodeRequest,
+    OAuth2AuthorizationResponseType,
+    OAuth2SubKind,
+    OAuth2TokenKind,
+    OAuth2TokenPayload,
+    ScopeName,
 } from '@authup/common';
+import { decodeToken } from '@authup/server-common';
 import { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestClientWithScope } from '../../../../utils/domains';
@@ -69,6 +75,21 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeDefined();
+
+        const tokenPayload = await decodeToken(url.searchParams.get('id_token')) as OAuth2TokenPayload;
+        expect(tokenPayload).toBeDefined();
+
+        expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ID_TOKEN);
+        expect(tokenPayload.realm_id).toBeDefined();
+        expect(tokenPayload.realm_name).toBeDefined();
+        expect(tokenPayload.sub).toBeDefined();
+        expect(tokenPayload.sub_kind).toEqual(OAuth2SubKind.USER);
+
+        // verify claims
+        expect(tokenPayload.name).toBeDefined();
+        expect(tokenPayload.nickname).toBeDefined();
+        expect(tokenPayload.email).toBeDefined();
+        expect(tokenPayload.email_verified).toBeDefined();
     });
 
     it('should authorize with response_type: token', async () => {
@@ -87,6 +108,15 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('access_token')).toBeDefined();
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeFalsy();
+
+        const tokenPayload = await decodeToken(url.searchParams.get('access_token')) as OAuth2TokenPayload;
+        expect(tokenPayload).toBeDefined();
+
+        expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ACCESS);
+        expect(tokenPayload.realm_id).toBeDefined();
+        expect(tokenPayload.realm_name).toBeDefined();
+        expect(tokenPayload.sub).toBeDefined();
+        expect(tokenPayload.sub_kind).toEqual(OAuth2SubKind.USER);
     });
 
     it('should authorize with response_type: id_token & token', async () => {

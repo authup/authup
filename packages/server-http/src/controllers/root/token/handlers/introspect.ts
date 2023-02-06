@@ -13,8 +13,8 @@ import {
 } from 'express-validator';
 import { Request, Response, send } from 'routup';
 import {
-    extractOAuth2TokenPayload, loadOAuth2SubEntity,
-    loadOAuth2SubPermissions, resolveOpenIdClaimsFromSubEntity,
+    loadOAuth2SubEntity, loadOAuth2SubPermissions,
+    readOAuth2TokenPayload, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
 import { useRequestEnv } from '../../../../utils';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
@@ -46,7 +46,7 @@ export async function introspectTokenRouteHandler(
         validationData.token = useRequestEnv(req, 'token');
     }
 
-    const payload = await extractOAuth2TokenPayload(validationData.token);
+    const payload = await readOAuth2TokenPayload(validationData.token);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
     const output : OAuth2TokenIntrospectionResponse = {

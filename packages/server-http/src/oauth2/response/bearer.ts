@@ -6,71 +6,89 @@
  */
 
 import {
-    OAuth2TokenGrantResponse,
-    OAuth2TokenKind,
-    OAuth2TokenPayload,
+    OAuth2TokenGrantResponse, OAuth2TokenPayload, TokenError,
 } from '@authup/common';
-import { signOAuth2TokenWithKey, useKey } from '@authup/server-database';
-import { OAuth2BearerResponseContext } from './type';
+import { KeyEntity, signOAuth2TokenWithKey, useKey } from '@authup/server-database';
+import { OAuth2BearerResponseBuildContext } from './type';
 
-export class OAuth2BearerTokenResponse {
-    protected context : OAuth2BearerResponseContext;
+export async function buildOAuth2BearerTokenResponse(
+    context: OAuth2BearerResponseBuildContext,
+) {
+    const accessTokenMaxAge : number = context.accessTokenMaxAge || 7200;
 
-    // ------------------------------------------------
+    const getRealmId = () : string | undefined => {
+        if (context.realmId) {
+            return context.realmId;
+        }
 
-    constructor(context: OAuth2BearerResponseContext) {
-        this.context = context;
-    }
+        if (typeof context.accessToken !== 'string') {
+            return context.accessToken.realm_id;
+        }
 
-    // ------------------------------------------------
+        if (
+            context.refreshToken &&
+            typeof context.refreshToken !== 'string'
+        ) {
+            return context.refreshToken.realm_id;
+        }
 
-    async build() : Promise<OAuth2TokenGrantResponse> {
-        const key = await useKey({ realm_id: this.context.accessToken.realm_id });
+        return context.idToken &&
+            typeof context.idToken !== 'string' ?
+            context.idToken.realm_id :
+            undefined;
+    };
 
-        const content = await signOAuth2TokenWithKey(
-            this.context.accessToken,
+    let key : KeyEntity | undefined;
+
+    const signToken = async (
+        token: string | Partial<OAuth2TokenPayload>,
+        maxAge?: number,
+    ) : Promise<string> => {
+        if (typeof token === 'string') {
+            return token;
+        }
+
+        if (typeof key === 'undefined') {
+            const realmId = getRealmId();
+            if (!realmId) {
+                throw TokenError.signingKeyMissing();
+            }
+
+            key = await useKey({ realm_id: realmId });
+        }
+
+        return signOAuth2TokenWithKey(
+            token,
             key,
             {
                 keyid: key.id,
-                expiresIn: this.context.accessTokenMaxAge,
+                expiresIn: maxAge || accessTokenMaxAge,
             },
         );
+    };
 
-        const response : OAuth2TokenGrantResponse = {
-            access_token: content,
-            expires_in: this.context.accessTokenMaxAge,
-            token_type: 'Bearer',
-            ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
-        };
+    const response : OAuth2TokenGrantResponse = {
+        access_token: await signToken(context.accessToken),
+        expires_in: accessTokenMaxAge,
+        token_type: 'Bearer',
+    };
 
-        if (this.context.idToken) {
-            response.id_token = this.context.idToken;
-        }
-
-        if (this.context.refreshToken) {
-            const refreshTokenPayload : Partial<OAuth2TokenPayload> = {
-                jti: this.context.refreshToken.id,
-                kind: OAuth2TokenKind.REFRESH,
-                realm_id: this.context.accessToken.realm_id,
-                sub: this.context.accessToken.sub,
-                sub_kind: this.context.accessToken.sub_kind,
-                scope: this.context.accessToken.scope,
-                ...(this.context.accessToken.client_id ? { client_id: this.context.accessToken.client_id } : {}),
-                ...(this.context.accessToken.scope ? { scope: this.context.accessToken.scope } : {}),
-            };
-
-            const key = await useKey({ realm_id: this.context.accessToken.realm_id });
-
-            response.refresh_token = await signOAuth2TokenWithKey(
-                refreshTokenPayload,
-                key,
-                {
-                    keyid: key.id,
-                    expiresIn: Math.ceil((Date.parse(this.context.refreshToken.expires) - Date.now()) / 1000),
-                },
-            );
-        }
-
-        return response;
+    if (
+        typeof context.accessToken !== 'string' &&
+        context.accessToken.scope
+    ) {
+        response.scope = context.accessToken.scope;
+    } else if (context.scope) {
+        response.scope = context.scope;
     }
+
+    if (context.refreshToken) {
+        response.refresh_token = await signToken(context.refreshToken, context.refreshTokenMaxAge);
+    }
+
+    if (context.idToken) {
+        response.id_token = await signToken(context.idToken, context.idTokenMaxAge);
+    }
+
+    return response;
 }

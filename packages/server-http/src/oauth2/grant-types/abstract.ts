@@ -8,8 +8,13 @@
 import { OAuth2TokenPayload } from '@authup/common';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { Continu } from 'continu';
+import { useDataSource } from 'typeorm-extension';
 import { Options, OptionsInput, useConfig } from '../../config';
-import { Oauth2AccessTokenBuilder, Oauth2RefreshTokenBuilder } from '../builder';
+import {
+    buildOAuth2AccessTokenPayload,
+    transformToRefreshTokenEntity,
+    transformToRefreshTokenPayload,
+} from '../token/builder';
 import { OAuth2RefreshTokenCache } from '../cache';
 import { AccessTokenIssueContext } from './type';
 
@@ -29,12 +34,8 @@ export abstract class AbstractGrant {
     // -----------------------------------------------------
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<Partial<OAuth2TokenPayload>> {
-        const tokenBuilder = new Oauth2AccessTokenBuilder({
-            selfUrl: this.config.get('publicUrl'),
-            maxAge: this.config.get('tokenMaxAgeAccessToken'),
-        });
-
-        return tokenBuilder.create({
+        return buildOAuth2AccessTokenPayload({
+            issuer: this.config.get('publicUrl'),
             realmId: context.realmId,
             realmName: context.realmName,
             sub: context.sub,
@@ -45,15 +46,23 @@ export abstract class AbstractGrant {
         });
     }
 
-    protected async issueRefreshToken(accessToken: Partial<OAuth2TokenPayload>) : Promise<OAuth2RefreshTokenEntity> {
-        const tokenBuilder = new Oauth2RefreshTokenBuilder({
-            maxAge: this.config.get('tokenMaxAgeRefreshToken'),
-        });
+    protected async issueRefreshToken(accessToken: Partial<OAuth2TokenPayload>) : Promise<Partial<OAuth2TokenPayload>> {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
-        const token = await tokenBuilder.create({ accessToken });
+        const token = repository.create(
+            transformToRefreshTokenEntity(
+                accessToken,
+                this.config.get('tokenMaxAgeAccessToken'),
+            ),
+        );
+
+        await repository.insert(token);
 
         await this.refreshTokenCache.set(token);
 
-        return token;
+        return transformToRefreshTokenPayload(accessToken, {
+            id: token.id,
+        });
     }
 }

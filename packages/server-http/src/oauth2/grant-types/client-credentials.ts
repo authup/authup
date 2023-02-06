@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ClientEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { OAuth2BearerTokenResponse } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -34,13 +34,11 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         const refreshToken = await this.issueRefreshToken(accessToken);
 
-        const response = new OAuth2BearerTokenResponse({
+        return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
-
-        return response.build();
     }
 
     async validate(request: Request) : Promise<ClientEntity> {

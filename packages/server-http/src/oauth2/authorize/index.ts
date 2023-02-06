@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './access-token';
-export * from './authorization-code';
-export * from './refresh-token';
+export * from './module';
 export * from './type';
+export * from './validation';

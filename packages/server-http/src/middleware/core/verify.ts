@@ -33,9 +33,9 @@ import {
     UserEntity, UserRepository, useConfig,
 } from '@authup/server-database';
 import {
-    extractOAuth2TokenPayload,
     loadOAuth2SubEntity,
     loadOAuth2SubPermissions,
+    readOAuth2TokenPayload,
 } from '../../oauth2';
 import { setRequestEnv } from '../../utils';
 
@@ -43,7 +43,7 @@ async function verifyBearerAuthorizationHeader(
     request: Request,
     header: BearerAuthorizationHeader,
 ) {
-    const payload = await extractOAuth2TokenPayload(header.token);
+    const payload = await readOAuth2TokenPayload(header.token);
     if (payload.kind !== OAuth2TokenKind.ACCESS) {
         throw TokenError.accessTokenRequired();
     }

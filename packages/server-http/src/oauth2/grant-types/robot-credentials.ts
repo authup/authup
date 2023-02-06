@@ -15,7 +15,7 @@ import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotEntity, RobotRepository } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
-import { OAuth2BearerTokenResponse } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
@@ -31,12 +31,10 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             realmName: entity.realm.name,
         });
 
-        const response = new OAuth2BearerTokenResponse({
+        return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
         });
-
-        return response.build();
     }
 
     async validate(request: Request) : Promise<RobotEntity> {

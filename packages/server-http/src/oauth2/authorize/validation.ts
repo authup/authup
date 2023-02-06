@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -19,12 +19,12 @@ import { useDataSource } from 'typeorm-extension';
 import {
     ExpressValidationResult,
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,
-    initExpressValidationResult, matchedValidationData,
-} from '../../../../validation';
+    initExpressValidationResult,
+    matchedValidationData,
+} from '../../validation';
 
-export async function runAuthorizeValidation(
+export async function validateAuthorizeRequest(
     req: Request,
 ) : Promise<ExpressValidationResult<OAuth2AuthorizationCodeRequest & { client: ClientEntity, client_id: string }>> {
     const result : ExpressValidationResult<OAuth2AuthorizationCodeRequest & {

@@ -14,7 +14,7 @@ import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '@authup/server-database';
 
-export async function extractOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
+export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
     if (typeof token === 'undefined' || token === null) {
         throw TokenError.requestInvalid('The token is not defined.');
     }

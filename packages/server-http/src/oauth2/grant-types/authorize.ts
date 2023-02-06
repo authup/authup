@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2SubKind, OAuth2TokenGrantResponse, TokenError } from '@authup/common';
+import {
+    OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, hasOAuth2OpenIDScope,
+} from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
@@ -13,7 +15,7 @@ import { Request, getRequestIp } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { Grant } from './type';
-import { OAuth2BearerTokenResponse } from '../response';
+import { OAuth2BearerResponseBuildContext, buildOAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -30,15 +32,17 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);
-
-        const response = new OAuth2BearerTokenResponse({
+        const buildContext : OAuth2BearerResponseBuildContext = {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
-            idToken: authorizationCode.id_token,
-        });
+        };
 
-        return response.build();
+        if (hasOAuth2OpenIDScope(authorizationCode.scope)) {
+            buildContext.idToken = authorizationCode.id_token;
+        }
+
+        return buildOAuth2BearerTokenResponse(buildContext);
     }
 
     async validate(request: Request) : Promise<OAuth2AuthorizationCodeEntity> {

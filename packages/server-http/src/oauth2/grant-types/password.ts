@@ -17,7 +17,7 @@ import { useDataSource } from 'typeorm-extension';
 import { UserEntity, UserRepository } from '@authup/server-database';
 import { findRealm } from '../../helpers';
 import { AbstractGrant } from './abstract';
-import { OAuth2BearerTokenResponse } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
@@ -35,13 +35,11 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
         const refreshToken = await this.issueRefreshToken(accessToken);
 
-        const response = new OAuth2BearerTokenResponse({
+        return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
-
-        return response.build();
     }
 
     async validate(request: Request) : Promise<UserEntity> {

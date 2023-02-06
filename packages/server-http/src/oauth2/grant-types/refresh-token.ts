@@ -14,9 +14,9 @@ import { Request, getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
-import { OAuth2BearerTokenResponse } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
-import { extractOAuth2TokenPayload } from '../token';
+import { readOAuth2TokenPayload } from '../token';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -36,19 +36,17 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         const refreshToken = await this.issueRefreshToken(accessToken);
 
-        const response = new OAuth2BearerTokenResponse({
+        return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
         });
-
-        return response.build();
     }
 
     async validate(request: Request) : Promise<OAuth2RefreshTokenEntity> {
         const refreshToken = useRequestBody(request, 'refresh_token');
 
-        const payload = await extractOAuth2TokenPayload(refreshToken);
+        const payload = await readOAuth2TokenPayload(refreshToken);
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);

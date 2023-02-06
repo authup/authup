@@ -127,4 +127,10 @@ export class TokenError extends BadRequestError {
             message: `The target token ${kind} is not active.`,
         });
     }
+
+    static signingKeyMissing() {
+        return new TokenError({
+            message: 'A token signing key could not be retrieved.',
+        });
+    }
 }
