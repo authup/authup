@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import path from 'path';
 import { buildDataSourceOptions as build } from 'typeorm-extension';
 import { DataSourceOptions } from 'typeorm';
 import { hasClient, hasConfig } from 'redis-extension';
@@ -15,9 +16,18 @@ import { DatabaseQueryResultCache } from '../cache';
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const config = useConfig();
 
-    const dataSourceOptions = await build({
-        directory: config.get('rootPath'),
-    });
+    let dataSourceOptions : DataSourceOptions;
+
+    try {
+        dataSourceOptions = await build({
+            directory: config.get('rootPath'),
+        });
+    } catch (e) {
+        dataSourceOptions = {
+            type: 'better-sqlite3',
+            database: path.join(config.get('writableDirectoryPath'), 'db.sql'),
+        };
+    }
 
     return extendDataSourceOptions(dataSourceOptions);
 }

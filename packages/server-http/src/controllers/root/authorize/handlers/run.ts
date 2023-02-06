@@ -10,14 +10,14 @@ import {
 } from 'routup';
 import { URL } from 'node:url';
 import { useConfig } from '../../../../config';
-import { authorizeRequest } from '../../../../oauth2';
+import { runOAuth2Authorization } from '../../../../oauth2';
 
 export async function runAuthorizationRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
     const config = useConfig();
-    const result = await authorizeRequest(req, {
+    const result = await runOAuth2Authorization(req, {
         issuer: config.get('publicUrl'),
         accessTokenMaxAge: config.get('tokenMaxAgeAccessToken'),
     });

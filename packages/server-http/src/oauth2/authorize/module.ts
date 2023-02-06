@@ -19,14 +19,15 @@ import {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
     buildOAuth2AccessTokenPayload,
-    buildOpenIdTokenPayload, extendOpenIdTokenPayload,
-} from '../token/builder';
+    buildOpenIdTokenPayload,
+    extendOpenIdTokenPayload,
+} from '../token';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
 import { validateAuthorizeRequest } from './validation';
 
-export async function authorizeRequest(
+export async function runOAuth2Authorization(
     req: Request,
     options: AuthorizeRequestOptions,
 ) : Promise<AuthorizeRequestResult> {
