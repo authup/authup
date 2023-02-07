@@ -1,6 +1,6 @@
 {
     "name": "@authup/server",
-    "version": "0.14.1",
+    "version": "0.15.0",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -41,10 +41,10 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
-        "@authup/common": "^0.14.0",
-        "@authup/server-common": "^0.14.0",
-        "@authup/server-database": "^0.14.0",
-        "@authup/server-http": "^0.14.1",
+        "@authup/common": "^0.15.0",
+        "@authup/server-common": "^0.15.0",
+        "@authup/server-database": "^0.15.0",
+        "@authup/server-http": "^0.15.0",
         "@trapi/swagger": "^0.3.8",
         "better-sqlite3": "^8.0.1",
         "change-case": "^4.1.2",

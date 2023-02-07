@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0](https://github.com/Tada5hi/authup/compare/v0.14.1...v0.15.0) (2023-02-07)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 0.8.0 to 0.8.2 ([#813](https://github.com/Tada5hi/authup/issues/813)) ([719de90](https://github.com/Tada5hi/authup/commit/719de90521c4878714fed3b2911e2c94d0a0872a))
+* **deps:** bump locter to v1 ([bcd53ac](https://github.com/Tada5hi/authup/commit/bcd53acad4a9591a2aa1f7676d6baa4d4416bef5))
+* **deps:** bump redis-extension from 1.2.2 to 1.2.3 ([#824](https://github.com/Tada5hi/authup/issues/824)) ([914fe7e](https://github.com/Tada5hi/authup/commit/914fe7e6c72989eeaf4c5b0134e419340c5c964a))
+* **deps:** bump vitepress from 1.0.0-alpha.43 to 1.0.0-alpha.45 ([#811](https://github.com/Tada5hi/authup/issues/811)) ([539abca](https://github.com/Tada5hi/authup/commit/539abca2a05e56d93444b3f4fadd3283ac02dc4f))
+* **deps:** bump vue from 3.2.45 to 3.2.47 ([#825](https://github.com/Tada5hi/authup/issues/825)) ([69d44a6](https://github.com/Tada5hi/authup/commit/69d44a62684e980225cb5c416d4ccb4d5e5f902d))
+* oauth2 code flow with open-id or access-token response type ([0ccb3e5](https://github.com/Tada5hi/authup/commit/0ccb3e5c0a1c869eb2235101e4d98445f77c3b0a))
+* **server-database:** use default database options as fallback ([3fdc229](https://github.com/Tada5hi/authup/commit/3fdc2298d161324459bca957b7d3a227776728a6))
+
+
+### Features
+
+* error response payload builder ([7c92967](https://github.com/Tada5hi/authup/commit/7c92967f1c3fa1fb706927626d286cbb50a5846e))
+* renamed process env handling ([4fbdef2](https://github.com/Tada5hi/authup/commit/4fbdef2a661948969a8bfad5bfced5a4289ed465))
+* **server-http:** restructured & optimized oauth2 sub module ([8d8802d](https://github.com/Tada5hi/authup/commit/8d8802d002616880e289b9eacc3ad60df5d3e2b6))
+
+
+
+
+
 ## [0.14.1](https://github.com/Tada5hi/authup/compare/v0.14.0...v0.14.1) (2023-01-30)
 
 
