@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { User, isValidUserName } from '@authup/common';
-import { BadRequestError, ServerError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { randomBytes } from 'node:crypto';
 import {
     Request, Response, sendAccepted,
@@ -25,7 +25,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     const config = useConfig();
 
     if (!config.get('registration')) {
-        throw new ServerError('User registration is not enabled.');
+        throw new BadRequestError('User registration is not enabled.');
     }
 
     if (
@@ -33,7 +33,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
         config.get('env') !== 'test' &&
         !hasSmtpConfig()
     ) {
-        throw new ServerError('SMTP options are not defined.');
+        throw new BadRequestError('SMTP options are not defined.');
     }
 
     await check('email')

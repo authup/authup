@@ -41,7 +41,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
                 password: 'my-password',
             });
 
-        expect(response.status).toEqual(500);
+        expect(response.status).toEqual(400);
 
         setConfigOptions({
             registration: true,

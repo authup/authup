@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NotFoundError, ServerError } from '@ebec/http';
+import { BadRequestError, NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
 import { User } from '@authup/common';
 import { Request, Response, sendAccepted } from 'routup';
@@ -24,15 +24,15 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
     const config = await useConfig();
 
     if (!config.get('registration')) {
-        throw new ServerError('User registration is not enabled.');
+        throw new BadRequestError('User registration is not enabled.');
     }
 
     if (!config.get('emailVerification')) {
-        throw new ServerError('Email verification is not enabled, but required to reset a password.');
+        throw new BadRequestError('Email verification is not enabled, but required to reset a password.');
     }
 
     if (!hasSmtpConfig() && config.get('env') !== 'test') {
-        throw new ServerError('SMTP modul is not configured.');
+        throw new BadRequestError('SMTP modul is not configured.');
     }
 
     await oneOf([

@@ -36,7 +36,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
                 name: 'admin',
             });
 
-        expect(response.status).toEqual(500);
+        expect(response.status).toEqual(400);
 
         setConfigOptions({
             registration: true,

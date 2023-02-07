@@ -9,16 +9,11 @@ import {
     Next, Request, Response, send,
 } from 'routup';
 
-import { hasOwnProperty } from 'typeorm-extension';
 import {
-    BaseError,
-    ConflictError,
-    InsufficientStorageError,
-    InternalServerError,
-    InternalServerErrorOptions,
     extendsBaseError,
 } from '@ebec/http';
 import { useLogger } from '@authup/server-common';
+import { buildErrorResponsePayloadFromError } from '../helpers';
 
 export function errorMiddleware(
     error: Error,
@@ -27,49 +22,14 @@ export function errorMiddleware(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: Next,
 ) {
-    const code : string | undefined = hasOwnProperty(error, 'code') && typeof error.code === 'string' ?
-        error.code :
-        undefined;
+    if (extendsBaseError(error)) {
+        response.statusCode = error.getOption('statusCode') || 500;
 
-    // catch and decorate some mysql errors :)
-    // eslint-disable-next-line default-case
-    switch (code) {
-        case 'ER_DUP_ENTRY':
-        case 'SQLITE_CONSTRAINT_UNIQUE':
-            error = new ConflictError('An entry with some unique attributes already exist.', { previous: error });
-            break;
-        case 'ER_DISK_FULL':
-            error = new InsufficientStorageError('No database operation possible, due the leak of free disk space.', { previous: error });
-            break;
+        const logMessage = error.getOption('logMessage');
+        if (logMessage) {
+            useLogger().error(`${error.message}`);
+        }
     }
 
-    const baseError = extendsBaseError(error) ?
-        error :
-        new InternalServerError(error, { decorateMessage: true });
-
-    const statusCode : number = baseError.getOption('statusCode') ?? InternalServerErrorOptions.statusCode;
-
-    if (
-        baseError.getOption('logMessage') ||
-        process.env.NODE_ENV === 'test'
-    ) {
-        const isInspected = extendsBaseError(error);
-
-        useLogger().error(`${!isInspected ? error.message : (baseError.message || baseError)}`);
-    }
-
-    if (baseError.getOption('decorateMessage')) {
-        baseError.message = 'An error occurred.';
-    }
-
-    const extra = baseError.getOption('extra');
-
-    response.statusCode = statusCode;
-
-    send(response, {
-        code: baseError.getOption('code') ?? InternalServerErrorOptions.code,
-        message: baseError.message ?? InternalServerErrorOptions.message,
-        statusCode,
-        ...(extra ? { extra } : {}),
-    });
+    send(response, buildErrorResponsePayloadFromError(error));
 }

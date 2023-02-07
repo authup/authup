@@ -5,5 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './error';
-export * from './realm';
+export type ErrorResponsePayload = {
+    code: string,
+    message: string,
+    statusCode: number,
+
+    [key: string]: any
+};
