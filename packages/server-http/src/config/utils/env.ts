@@ -6,58 +6,58 @@
  */
 
 import {
-    hasEnv,
-    requireBooleanFromEnv,
-    requireFromEnv,
-    requireIntegerFromEnv,
+    hasProcessEnv,
+    readBoolFromProcessEnv,
+    readFromProcessEnv,
+    readIntFromProcessEnv,
 } from '@authup/server-common';
 import { OptionsInput } from '../type';
 
 export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = {};
 
-    if (hasEnv('NODE_ENV')) {
-        options.env = requireFromEnv('NODE_ENV');
+    if (hasProcessEnv('NODE_ENV')) {
+        options.env = readFromProcessEnv('NODE_ENV');
     }
 
-    if (hasEnv('WRITABLE_DIRECTORY_PATH')) {
-        options.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH');
+    if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
+        options.writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
     }
 
-    if (hasEnv('HOST')) {
-        options.host = requireFromEnv('HOST');
+    if (hasProcessEnv('HOST')) {
+        options.host = readFromProcessEnv('HOST');
     }
 
-    if (hasEnv('PORT')) {
-        options.port = requireIntegerFromEnv('PORT');
+    if (hasProcessEnv('PORT')) {
+        options.port = readIntFromProcessEnv('PORT');
     }
 
-    if (hasEnv('PUBLIC_URL')) {
-        options.publicUrl = requireFromEnv('PUBLIC_URL');
+    if (hasProcessEnv('PUBLIC_URL')) {
+        options.publicUrl = readFromProcessEnv('PUBLIC_URL');
     }
 
-    if (hasEnv('AUTHORIZE_REDIRECT_URL')) {
-        options.authorizeRedirectUrl = requireFromEnv('AUTHORIZE_REDIRECT_URL');
+    if (hasProcessEnv('AUTHORIZE_REDIRECT_URL')) {
+        options.authorizeRedirectUrl = readFromProcessEnv('AUTHORIZE_REDIRECT_URL');
     }
 
-    if (hasEnv('ACCESS_TOKEN_MAX_AGE')) {
-        options.tokenMaxAgeRefreshToken = requireIntegerFromEnv('ACCESS_TOKEN_MAX_AGE');
+    if (hasProcessEnv('ACCESS_TOKEN_MAX_AGE')) {
+        options.tokenMaxAgeRefreshToken = readIntFromProcessEnv('ACCESS_TOKEN_MAX_AGE');
     }
 
-    if (hasEnv('REFRESH_TOKEN_MAX_AGE')) {
-        options.tokenMaxAgeAccessToken = requireIntegerFromEnv('REFRESH_TOKEN_MAX_AGE');
+    if (hasProcessEnv('REFRESH_TOKEN_MAX_AGE')) {
+        options.tokenMaxAgeAccessToken = readIntFromProcessEnv('REFRESH_TOKEN_MAX_AGE');
     }
 
-    if (hasEnv('REGISTRATION')) {
-        options.registration = requireBooleanFromEnv('REGISTRATION');
+    if (hasProcessEnv('REGISTRATION')) {
+        options.registration = readBoolFromProcessEnv('REGISTRATION');
     }
 
-    if (hasEnv('EMAIL_VERIFICATION')) {
-        options.emailVerification = requireBooleanFromEnv('EMAIL_VERIFICATION');
+    if (hasProcessEnv('EMAIL_VERIFICATION')) {
+        options.emailVerification = readBoolFromProcessEnv('EMAIL_VERIFICATION');
     }
 
-    if (hasEnv('FORGOT_PASSWORD')) {
-        options.forgotPassword = requireBooleanFromEnv('FORGOT_PASSWORD');
+    if (hasProcessEnv('FORGOT_PASSWORD')) {
+        options.forgotPassword = readBoolFromProcessEnv('FORGOT_PASSWORD');
     }
 
     return options;

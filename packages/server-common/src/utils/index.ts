@@ -7,4 +7,3 @@
 
 export * from './env';
 export * from './has-property';
-export * from './object';

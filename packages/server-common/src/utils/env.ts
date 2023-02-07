@@ -6,27 +6,24 @@
  */
 
 import { hasOwnProperty } from '@authup/common';
-import { useLogger } from '../logger';
+import process from 'node:process';
 
-export function hasEnv(key: string) : boolean {
+export function hasProcessEnv(key: string) : boolean {
     return hasOwnProperty(process.env, key);
 }
 
-export function requireFromEnv<T>(key: string, alt?: T) : T | string {
-    if (
-        typeof process.env[key] === 'undefined' &&
-        typeof alt === 'undefined'
-    ) {
-        useLogger().error(`Missing variable: ${key}`);
-
-        return process.exit(1);
+export function readFromProcessEnv(key: string) : string | undefined;
+export function readFromProcessEnv<T>(key: string, alt: T) : T | string;
+export function readFromProcessEnv<T>(key: string, alt?: T): any {
+    if (hasOwnProperty(process.env, key)) {
+        return process.env[key];
     }
 
-    return (process.env[key] ?? alt) as T | string;
+    return alt;
 }
 
-export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | undefined {
-    const value = requireFromEnv(key, alt);
+export function readBoolFromProcessEnv(key: string, alt?: boolean): boolean | undefined {
+    const value = readFromProcessEnv(key, alt);
 
     switch (value) {
         case true:
@@ -44,14 +41,14 @@ export function requireBooleanFromEnv(key: string, alt?: boolean): boolean | und
     return alt;
 }
 
-export function requireBoolOrStringFromEnv(
+export function readBoolOrStringFromProcessEnv(
     key: string,
     alt?: boolean | string,
 ) : boolean | string | undefined {
-    if (hasEnv(key)) {
-        const value = requireBooleanFromEnv(key, undefined);
+    if (hasProcessEnv(key)) {
+        const value = readBoolFromProcessEnv(key, undefined);
         if (typeof value === 'undefined') {
-            return requireFromEnv(key, alt);
+            return readFromProcessEnv(key, alt);
         }
 
         return value;
@@ -60,8 +57,8 @@ export function requireBoolOrStringFromEnv(
     return alt;
 }
 
-export function requireIntegerFromEnv(key: string, alt?: number): number | undefined {
-    const value = requireFromEnv(key, alt);
+export function readIntFromProcessEnv(key: string, alt?: number): number | undefined {
+    const value = readFromProcessEnv(key, alt);
     const intValue = parseInt(`${value}`, 10);
 
     if (Number.isNaN(intValue)) {

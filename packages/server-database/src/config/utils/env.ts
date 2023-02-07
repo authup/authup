@@ -6,39 +6,41 @@
  */
 
 import {
-    hasEnv, requireBooleanFromEnv, requireFromEnv,
+    hasProcessEnv,
+    readBoolFromProcessEnv,
+    readFromProcessEnv,
 } from '@authup/server-common';
 import { OptionsInput } from '../type';
 
 export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = { };
 
-    if (hasEnv('NODE_ENV')) {
-        options.env = requireFromEnv('NODE_ENV');
+    if (hasProcessEnv('NODE_ENV')) {
+        options.env = readFromProcessEnv('NODE_ENV');
     }
 
-    if (hasEnv('WRITABLE_DIRECTORY_PATH')) {
-        options.writableDirectoryPath = requireFromEnv('WRITABLE_DIRECTORY_PATH');
+    if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
+        options.writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
     }
 
-    if (hasEnv('ADMIN_USERNAME')) {
-        options.adminUsername = requireFromEnv('ADMIN_USERNAME');
+    if (hasProcessEnv('ADMIN_USERNAME')) {
+        options.adminUsername = readFromProcessEnv('ADMIN_USERNAME');
     }
 
-    if (hasEnv('ADMIN_PASSWORD')) {
-        options.adminPassword = requireFromEnv('ADMIN_PASSWORD');
+    if (hasProcessEnv('ADMIN_PASSWORD')) {
+        options.adminPassword = readFromProcessEnv('ADMIN_PASSWORD');
     }
 
-    if (hasEnv('ROBOT_ENABLED')) {
-        options.robotEnabled = requireBooleanFromEnv('ROBOT_ENABLED');
+    if (hasProcessEnv('ROBOT_ENABLED')) {
+        options.robotEnabled = readBoolFromProcessEnv('ROBOT_ENABLED');
     }
 
-    if (hasEnv('ROBOT_SECRET')) {
-        options.robotSecret = requireFromEnv('ROBOT_SECRET');
+    if (hasProcessEnv('ROBOT_SECRET')) {
+        options.robotSecret = readFromProcessEnv('ROBOT_SECRET');
     }
 
-    if (hasEnv('PERMISSIONS')) {
-        options.permissions = requireFromEnv('PERMISSIONS');
+    if (hasProcessEnv('PERMISSIONS')) {
+        options.permissions = readFromProcessEnv('PERMISSIONS');
     }
 
     return options;

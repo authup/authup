@@ -40,6 +40,6 @@ export function handleJWTError(e: unknown) {
         previous: e as Error,
         decorateMessage: true,
         logMessage: true,
-        message: 'The JWT error could not be handled.',
+        message: 'The JWT error could not be determined.',
     });
 }
