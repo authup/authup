@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router, send } from 'routup';
+import { Router } from 'routup';
 import cors from 'cors';
 import { registerControllers } from '../controllers';
 
-import { errorMiddleware, registerMiddlewares } from '../middleware';
+import { registerErrorMiddleware, registerMiddlewares } from '../middleware';
 
 export function createRouter() : Router {
     const router = new Router();
@@ -23,8 +23,7 @@ export function createRouter() : Router {
 
     registerMiddlewares(router);
     registerControllers(router);
-
-    router.use(errorMiddleware);
+    registerErrorMiddleware(router);
 
     return router;
 }

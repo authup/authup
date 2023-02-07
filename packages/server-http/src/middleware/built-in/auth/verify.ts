@@ -28,7 +28,8 @@ import {
     ClientEntity,
     OAuth2ClientRepository,
     RealmEntity,
-    RobotEntity, RobotRepository,
+    RobotEntity,
+    RobotRepository,
 
     UserEntity, UserRepository, useConfig,
 } from '@authup/server-database';
@@ -36,8 +37,8 @@ import {
     loadOAuth2SubEntity,
     loadOAuth2SubPermissions,
     readOAuth2TokenPayload,
-} from '../../oauth2';
-import { setRequestEnv } from '../../utils';
+} from '../../../oauth2';
+import { setRequestEnv } from '../../../utils';
 
 async function verifyBearerAuthorizationHeader(
     request: Request,

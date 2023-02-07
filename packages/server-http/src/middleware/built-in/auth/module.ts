@@ -6,10 +6,12 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import { Next, Request, Response } from 'routup';
+import {
+    Next, Request, Response, Router,
+} from 'routup';
 import { unsetResponseCookie, useRequestCookie } from '@routup/cookie';
 import { AbilityManager, CookieName } from '@authup/common';
-import { setRequestEnv } from '../../utils';
+import { setRequestEnv } from '../../../utils';
 import { verifyAuthorizationHeader } from './verify';
 
 function parseRequestAccessTokenCookie(request: Request): string | undefined {
@@ -22,8 +24,8 @@ function unsetCookies(res: Response) {
     unsetResponseCookie(res, CookieName.ACCESS_TOKEN_EXPIRE_DATE);
 }
 
-export function createMiddleware() {
-    return async (request: Request, response: Response, next: Next) => {
+export function registerAuthMiddleware(router: Router) {
+    router.use(async (request: Request, response: Response, next: Next) => {
         let { authorization: headerValue } = request.headers;
 
         setRequestEnv(request, 'ability', new AbilityManager());
@@ -49,5 +51,5 @@ export function createMiddleware() {
             unsetCookies(response);
             next(e);
         }
-    };
+    });
 }
