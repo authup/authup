@@ -12,13 +12,13 @@ import {
     registerAuthMiddleware,
     registerBodyMiddleware,
     registerCookieMiddleware,
+    registerCorsMiddleware,
     registerLoggerMiddleware,
     registerPrometheusMiddleware,
     registerQueryMiddleware,
     registerRateLimitMiddleware,
     registerSwaggerMiddleware,
 } from './built-in';
-import {registerCorsMiddleware} from "./built-in";
 import {
     isBuiltInMiddlewareEnabled,
     transformBoolToEmptyObject,
@@ -30,7 +30,7 @@ export function registerMiddlewares(router: Router) {
     registerLoggerMiddleware(router);
 
     const cors = config.get('middlewareCors');
-    if(isBuiltInMiddlewareEnabled(cors)) {
+    if (isBuiltInMiddlewareEnabled(cors)) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 

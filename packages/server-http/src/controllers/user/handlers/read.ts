@@ -18,7 +18,9 @@ import { NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind, PermissionName, isSelfId, isUUID,
 } from '@authup/common';
-import { UserEntity, UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '@authup/server-database';
+import {
+    UserEntity, UserRepository, onlyRealmReadableQueryResources, resolveRealm,
+} from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
