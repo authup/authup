@@ -15,8 +15,7 @@ import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, useRobotEventEmitter } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { RobotEntity, resolveRealm, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -45,7 +44,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (entity.name === ROBOT_SYSTEM_NAME) {
-        const realm = await findRealm(entity.realm_id);
+        const realm = await resolveRealm(entity.realm_id);
         if (realm.name === REALM_MASTER_NAME) {
             throw new BadRequestError('The system robot can not be deleted.');
         }

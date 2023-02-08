@@ -16,8 +16,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ScopeEntity } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { ScopeEntity, resolveRealm } from '@authup/server-database';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -72,7 +71,7 @@ export async function getOneScopeRouteHandler(req: Request, res: Response) : Pro
     } else {
         query.where('scope.name LIKE :name', { name: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'));
         if (realm) {
             query.andWhere('scope.realm_id = :realmId', { realmId: realm.id });
         }

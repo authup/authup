@@ -14,7 +14,7 @@ import {
 } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRolePermissionValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 /**
  * Add an permission by id to a specific user.
@@ -30,7 +30,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    const result = await runRolePermissionValidation(req, CRUDOperation.CREATE);
+    const result = await runRolePermissionValidation(req, RequestHandlerOperation.CREATE);
 
     // ----------------------------------------------
 

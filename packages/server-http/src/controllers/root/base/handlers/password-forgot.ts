@@ -13,11 +13,10 @@ import { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useSMTPClient } from '@authup/server-common';
-import { UserRepository } from '@authup/server-database';
+import { UserRepository, resolveRealm } from '@authup/server-database';
 import {
     useConfig,
 } from '../../../../config';
-import { findRealm } from '../../../../helpers';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordForgotRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -65,7 +64,7 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         ...(data.email ? { email: data.email } : {}),
     };
 
-    const realm = await findRealm(data.realm_id, true);
+    const realm = await resolveRealm(data.realm_id, true);
     where.realm_id = realm.id;
 
     const dataSource = await useDataSource();

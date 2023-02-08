@@ -19,15 +19,15 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runUserRoleValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserRoleEntity>> {
     const result : ExpressValidationResult<UserRoleEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await check('user_id')
             .exists()
             .isUUID()

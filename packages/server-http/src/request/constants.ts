@@ -5,5 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './query';
-export * from './resolve';
+export enum RequestHandlerOperation {
+    COMMAND = 'command',
+    CREATE = 'create',
+    READ = 'read',
+    UPDATE = 'update',
+    DELETE = 'delete',
+}

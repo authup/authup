@@ -13,15 +13,14 @@ import {
     extendsBaseError,
 } from '@ebec/http';
 import { useLogger } from '@authup/server-common';
-import { buildErrorResponsePayloadFromError } from '../../helpers';
+import { buildResponseErrorPayloadFromError } from '../../response';
 
 export function registerErrorMiddleware(router: Router) {
     router.use((
         error: Error,
         request: Request,
         response: Response,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        next: Next,
+        _next: Next,
     ) => {
         if (extendsBaseError(error)) {
             response.statusCode = error.getOption('statusCode') || 500;
@@ -32,6 +31,6 @@ export function registerErrorMiddleware(router: Router) {
             }
         }
 
-        send(response, buildErrorResponsePayloadFromError(error));
+        send(response, buildResponseErrorPayloadFromError(error));
     });
 }

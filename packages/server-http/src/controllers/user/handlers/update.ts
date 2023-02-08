@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { UserRepository, useConfig } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -28,7 +28,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError('You are not authorized to modify a user.');
     }
 
-    const result = await runUserValidation(req, CRUDOperation.UPDATE);
+    const result = await runUserValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

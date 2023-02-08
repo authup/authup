@@ -14,8 +14,7 @@ import {
 import { useRequestBody } from '@routup/body';
 import { Request, getRequestIp, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserEntity, UserRepository } from '@authup/server-database';
-import { findRealm } from '../../helpers';
+import { UserEntity, UserRepository, resolveRealm } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import { Grant } from './type';
@@ -45,7 +44,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<UserEntity> {
         const { username, password, realm_id: realmId } = useRequestBody(request);
 
-        const realm = await findRealm(
+        const realm = await resolveRealm(
             useRequestParam(request, 'realmId') || realmId,
         );
 

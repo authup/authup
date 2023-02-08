@@ -10,7 +10,7 @@ import { isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { IdentityProviderEntity, IdentityProviderRoleEntity, RoleEntity } from '@authup/server-database';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 import { useRequestEnv } from '../../../utils/env';
 import {
     ExpressValidationResult,
@@ -23,11 +23,11 @@ import {
 
 export async function runIdentityProviderRoleValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<IdentityProviderRoleEntity>> {
     const result : ExpressValidationResult<IdentityProviderRoleEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await check('provider_id')
             .exists()
             .isUUID()
@@ -43,7 +43,7 @@ export async function runIdentityProviderRoleValidation(
         .exists()
         .isLength({ min: 3, max: 36 });
 
-    if (operation === CRUDOperation.UPDATE) externalPromise.optional();
+    if (operation === RequestHandlerOperation.UPDATE) externalPromise.optional();
 
     await externalPromise.run(req);
 

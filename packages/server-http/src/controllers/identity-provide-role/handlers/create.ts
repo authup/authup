@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runIdentityProviderRoleValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -24,7 +24,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new ForbiddenError();
     }
 
-    const result = await runIdentityProviderRoleValidation(req, CRUDOperation.CREATE);
+    const result = await runIdentityProviderRoleValidation(req, RequestHandlerOperation.CREATE);
     if (!result.data) {
         return sendAccepted(res);
     }

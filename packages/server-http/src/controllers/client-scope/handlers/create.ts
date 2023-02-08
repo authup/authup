@@ -12,7 +12,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ClientScopeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runClientScopeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -20,7 +20,7 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    const result = await runClientScopeValidation(req, CRUDOperation.CREATE);
+    const result = await runClientScopeValidation(req, RequestHandlerOperation.CREATE);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);

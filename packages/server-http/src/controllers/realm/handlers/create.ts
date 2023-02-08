@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRealmValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -24,7 +24,7 @@ export async function createRealmRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
-    const result = await runRealmValidation(req, CRUDOperation.CREATE);
+    const result = await runRealmValidation(req, RequestHandlerOperation.CREATE);
     if (!result.data) {
         return sendAccepted(res);
     }

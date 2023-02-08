@@ -6,20 +6,12 @@
  */
 
 import { Router } from 'routup';
-import cors from 'cors';
 import { registerControllers } from '../controllers';
 
 import { registerErrorMiddleware, registerMiddlewares } from '../middleware';
 
 export function createRouter() : Router {
     const router = new Router();
-
-    router.use(cors({
-        origin(origin, callback) {
-            callback(null, true);
-        },
-        credentials: true,
-    }));
 
     registerMiddlewares(router);
     registerControllers(router);

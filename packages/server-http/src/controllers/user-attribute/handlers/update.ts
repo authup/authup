@@ -14,12 +14,12 @@ import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserAttributeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const result = await runUserAttributeValidation(req, CRUDOperation.UPDATE);
+    const result = await runUserAttributeValidation(req, RequestHandlerOperation.UPDATE);
     if (!result) {
         return sendAccepted(res);
     }

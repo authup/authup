@@ -12,7 +12,7 @@ import { useDataSource } from 'typeorm-extension';
 import { UserPermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserPermissionValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 /**
  * Add a permission by id to a specific user.
@@ -28,7 +28,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    const result = await runUserPermissionValidation(req, CRUDOperation.CREATE);
+    const result = await runUserPermissionValidation(req, RequestHandlerOperation.CREATE);
 
     // ----------------------------------------------
 

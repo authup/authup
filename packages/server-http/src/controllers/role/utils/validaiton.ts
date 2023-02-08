@@ -21,11 +21,11 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runRoleValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RoleEntity>> {
     const result : ExpressValidationResult<RoleEntity> = initExpressValidationResult();
 
@@ -41,7 +41,7 @@ export async function runRoleValidation(
             return isValid;
         });
 
-    if (operation === CRUDOperation.UPDATE) nameChain.optional();
+    if (operation === RequestHandlerOperation.UPDATE) nameChain.optional();
 
     await nameChain.run(req);
 
@@ -87,7 +87,7 @@ export async function runRoleValidation(
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     } else if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
@@ -97,7 +97,7 @@ export async function runRoleValidation(
 
     const ability = useRequestEnv(req, 'ability');
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         const permissionTarget = ability.getTarget(PermissionName.ROLE_ADD);
         if (permissionTarget) {
             result.data.target = permissionTarget;

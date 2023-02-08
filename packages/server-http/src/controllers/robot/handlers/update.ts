@@ -13,16 +13,15 @@ import {
     Request, Response, sendAccepted, useRequestParam,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, useRobotEventEmitter } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { RobotRepository, resolveRealm, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const result = await runRobotValidation(req, CRUDOperation.UPDATE);
+    const result = await runRobotValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }
@@ -54,7 +53,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
         entity.name !== result.data.name &&
         entity.name === ROBOT_SYSTEM_NAME
     ) {
-        const realm = await findRealm(entity.realm_id);
+        const realm = await resolveRealm(entity.realm_id);
         if (realm.name === REALM_MASTER_NAME) {
             throw new BadRequestError('The system robot name can not be changed.');
         }

@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRoleValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -22,7 +22,7 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError();
     }
 
-    const result = await runRoleValidation(req, CRUDOperation.CREATE);
+    const result = await runRoleValidation(req, RequestHandlerOperation.CREATE);
 
     // ----------------------------------------------
 

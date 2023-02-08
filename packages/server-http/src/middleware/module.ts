@@ -18,6 +18,7 @@ import {
     registerRateLimitMiddleware,
     registerSwaggerMiddleware,
 } from './built-in';
+import {registerCorsMiddleware} from "./built-in";
 import {
     isBuiltInMiddlewareEnabled,
     transformBoolToEmptyObject,
@@ -27,6 +28,11 @@ export function registerMiddlewares(router: Router) {
     const config = useConfig();
 
     registerLoggerMiddleware(router);
+
+    const cors = config.get('middlewareCors');
+    if(isBuiltInMiddlewareEnabled(cors)) {
+        registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
+    }
 
     const body = config.get('middlewareBody');
     if (isBuiltInMiddlewareEnabled(body)) {

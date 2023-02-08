@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ProviderValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -24,7 +24,7 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ProviderValidation(req, CRUDOperation.CREATE);
+    const result = await runOauth2ProviderValidation(req, RequestHandlerOperation.CREATE);
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);

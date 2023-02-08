@@ -22,11 +22,11 @@ import {
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runOauth2ClientValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<ClientEntity>> {
     const result : ExpressValidationResult<ClientEntity> = initExpressValidationResult();
 
@@ -129,7 +129,7 @@ export async function runOauth2ClientValidation(
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     } else if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));

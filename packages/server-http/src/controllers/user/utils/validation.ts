@@ -21,11 +21,11 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runUserValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserEntity>> {
     const ability = useRequestEnv(req, 'ability');
     const result : ExpressValidationResult<UserEntity> = initExpressValidationResult();
@@ -41,7 +41,7 @@ export async function runUserValidation(
 
             return isValid;
         });
-    if (operation === CRUDOperation.UPDATE) {
+    if (operation === RequestHandlerOperation.UPDATE) {
         nameChain.optional();
     }
     await nameChain.run(req);
@@ -107,7 +107,7 @@ export async function runUserValidation(
             .optional()
             .run(req);
 
-        if (operation === CRUDOperation.CREATE) {
+        if (operation === RequestHandlerOperation.CREATE) {
             await check('realm_id')
                 .exists()
                 .isUUID()
@@ -145,7 +145,7 @@ export async function runUserValidation(
     });
 
     if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !result.data.realm_id
     ) {
         const { id: realmId } = useRequestEnv(req, 'realm');

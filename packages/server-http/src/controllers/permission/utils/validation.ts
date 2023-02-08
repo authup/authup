@@ -10,7 +10,7 @@ import { isValidRealmName } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { Request } from 'routup';
 import { PermissionEntity, RealmEntity } from '@authup/server-database';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 import {
     ExpressValidationResult,
     RequestValidationError,
@@ -19,7 +19,7 @@ import {
 
 export async function runPermissionValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<PermissionEntity>> {
     const result : ExpressValidationResult<PermissionEntity> = initExpressValidationResult();
 
@@ -29,7 +29,7 @@ export async function runPermissionValidation(
         .isString()
         .isLength({ min: 3, max: 128 });
 
-    if (operation === CRUDOperation.UPDATE) nameChain.optional({ nullable: true });
+    if (operation === RequestHandlerOperation.UPDATE) nameChain.optional({ nullable: true });
 
     await nameChain.run(req);
 

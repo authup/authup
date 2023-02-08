@@ -33,11 +33,11 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runOauth2ProviderValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}>> {
     const result : ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}> = initExpressValidationResult();
 
@@ -144,7 +144,7 @@ export async function runOauth2ProviderValidation(
     }
 
     if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !result.data.realm_id
     ) {
         const { id } = useRequestEnv(req, 'realm');

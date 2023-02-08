@@ -17,10 +17,10 @@ import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRoleAttributeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const result = await runRoleAttributeValidation(req, CRUDOperation.CREATE);
+    const result = await runRoleAttributeValidation(req, RequestHandlerOperation.CREATE);
     if (!result) {
         return sendAccepted(res);
     }

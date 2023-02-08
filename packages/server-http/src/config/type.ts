@@ -10,6 +10,7 @@ import { ParseOptions as CookieOptions } from '@routup/cookie';
 import { OptionsInput as PrometheusOptions } from '@routup/prometheus';
 import { ParseOptions as QueryOptions } from '@routup/query';
 import { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
+import { CorsOptions } from 'cors';
 
 export type Options = {
     /**
@@ -51,6 +52,12 @@ export type Options = {
      * default: true
      */
     middlewareBody: boolean | BodyOptions,
+    /**
+     * use cors middleware
+     *
+     * default: true
+     */
+    middlewareCors: boolean | CorsOptions,
     /**
      * use cookie middleware
      *

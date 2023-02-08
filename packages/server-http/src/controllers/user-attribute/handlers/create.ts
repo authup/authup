@@ -17,10 +17,10 @@ import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserAttributeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const result = await runUserAttributeValidation(req, CRUDOperation.CREATE);
+    const result = await runUserAttributeValidation(req, RequestHandlerOperation.CREATE);
     if (!result) {
         return sendAccepted(res);
     }

@@ -19,11 +19,11 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runRobotValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RobotEntity>> {
     const result : ExpressValidationResult<RobotEntity> = initExpressValidationResult();
 
@@ -80,7 +80,7 @@ export async function runRobotValidation(
     });
 
     if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !result.data.realm_id
     ) {
         const { id: realmId } = useRequestEnv(req, 'realm');

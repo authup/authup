@@ -17,10 +17,10 @@ import {
 } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const result = await runRobotValidation(req, CRUDOperation.CREATE);
+    const result = await runRobotValidation(req, RequestHandlerOperation.CREATE);
 
     const ability = useRequestEnv(req, 'ability');
     const userId = useRequestEnv(req, 'userId');

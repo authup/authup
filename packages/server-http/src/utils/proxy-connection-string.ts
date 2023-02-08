@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasProcessEnv, readFromProcessEnv } from '@authup/server-common';
+
 export type ProxyConnectionConfig = {
     protocol: 'http' | 'https',
     host: string,
@@ -46,13 +48,9 @@ export function detectProxyConnectionConfig() : ProxyConnectionConfig | undefine
 
     for (let i = 0; i < envKeys.length; i++) {
         const envKey = envKeys[i];
-        const envVal = process.env[envKey];
 
-        if (
-            envVal !== undefined &&
-            envVal !== null
-        ) {
-            result = result || envVal;
+        if (hasProcessEnv(envKey)) {
+            result = readFromProcessEnv(envKey, result);
         }
     }
 

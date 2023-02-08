@@ -18,7 +18,7 @@ import { ClientEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { buildHTTPValidationErrorMessage } from '../../../validation';
 import { runOauth2ClientValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createClientRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -26,7 +26,7 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ClientValidation(req, CRUDOperation.CREATE);
+    const result = await runOauth2ClientValidation(req, RequestHandlerOperation.CREATE);
 
     if (!isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'))) {

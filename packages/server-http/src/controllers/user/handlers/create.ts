@@ -12,7 +12,7 @@ import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -20,7 +20,7 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
-    const result = await runUserValidation(req, CRUDOperation.CREATE);
+    const result = await runUserValidation(req, RequestHandlerOperation.CREATE);
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);

@@ -14,15 +14,15 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runRoleAttributeValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<RoleAttributeEntity>> {
     const result : ExpressValidationResult<RoleAttributeEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await check('name')
             .exists()
             .notEmpty()
@@ -59,7 +59,7 @@ export async function runRoleAttributeValidation(
         entity: 'role',
     });
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         result.data.realm_id = result.relation.role.realm_id;
         result.data.role_id = result.relation.role.id;
     }

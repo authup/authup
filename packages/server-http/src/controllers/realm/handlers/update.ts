@@ -15,7 +15,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runRealmValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -25,7 +25,7 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
-    const result = await runRealmValidation(req, CRUDOperation.UPDATE);
+    const result = await runRealmValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

@@ -14,13 +14,11 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { Brackets } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind, PermissionName, isSelfId, isUUID,
 } from '@authup/common';
-import { UserEntity, UserRepository, onlyRealmReadableQueryResources } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { UserEntity, UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
@@ -111,7 +109,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     } else {
         query.where('user.name LIKE :name', { name: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
     }
 

@@ -21,15 +21,15 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runUserPermissionValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserPermissionEntity>> {
     const result : ExpressValidationResult<UserPermissionEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await check('user_id')
             .exists()
             .isUUID()

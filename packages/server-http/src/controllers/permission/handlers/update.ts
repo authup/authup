@@ -15,7 +15,7 @@ import { useDataSource } from 'typeorm-extension';
 import { PermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updatePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -25,7 +25,7 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
         throw new ForbiddenError('You are not permitted to edit a permission.');
     }
 
-    const result = await runPermissionValidation(req, CRUDOperation.UPDATE);
+    const result = await runPermissionValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

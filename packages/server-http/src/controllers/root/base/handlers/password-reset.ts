@@ -11,8 +11,7 @@ import { Request, Response, sendAccepted } from 'routup';
 import { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authup/server-database';
-import { findRealm } from '../../../../helpers';
+import { UserRepository, resolveRealm } from '@authup/server-database';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -61,7 +60,7 @@ export async function createAuthPasswordResetRouteHandler(req: Request, res: Res
         reset_hash: data.token,
     };
 
-    const realm = await findRealm(data.realm_id, true);
+    const realm = await resolveRealm(data.realm_id, true);
     where.realm_id = realm.id;
 
     const dataSource = await useDataSource();

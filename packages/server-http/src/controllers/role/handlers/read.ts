@@ -16,8 +16,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { RoleEntity } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { RoleEntity, resolveRealm } from '@authup/server-database';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -72,7 +71,7 @@ export async function getOneRoleRouteHandler(req: Request, res: Response) : Prom
     } else {
         query.where('role.name LIKE :name', { name: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'));
         if (realm) {
             query.andWhere('role.realm_id = :realmId', { realmId: realm.id });
         }

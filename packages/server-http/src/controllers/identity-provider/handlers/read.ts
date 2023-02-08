@@ -15,8 +15,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName, isUUID } from '@authup/common';
-import { IdentityProviderEntity, IdentityProviderRepository } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
@@ -78,7 +77,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     } else {
         query.where('provider.slug LIKE :slug', { slug: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
     }
 

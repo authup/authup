@@ -13,9 +13,8 @@ import {
     Request, Response, sendAccepted,
 } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '@authup/server-database';
+import { UserRepository, resolveRealm } from '@authup/server-database';
 import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-common';
-import { findRealm } from '../../../../helpers';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
     useConfig,
@@ -86,7 +85,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     const entity = repository.create(data);
 
-    const realm = await findRealm(entity.realm_id, true);
+    const realm = await resolveRealm(entity.realm_id, true);
     entity.realm_id = realm.id;
 
     await repository.save(entity);

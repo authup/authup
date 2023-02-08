@@ -14,8 +14,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionEntity } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { PermissionEntity, resolveRealm } from '@authup/server-database';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
@@ -58,7 +57,7 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
     } else {
         query.where('permission.name LIKE :name', { name: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'));
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'));
         if (realm) {
             query.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
         }

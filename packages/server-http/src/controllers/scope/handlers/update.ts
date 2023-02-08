@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ScopeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -24,7 +24,7 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    const result = await runScopeValidation(req, CRUDOperation.UPDATE);
+    const result = await runScopeValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

@@ -12,7 +12,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RobotRoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotRoleValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -20,7 +20,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
         throw new NotFoundError();
     }
 
-    const result = await runRobotRoleValidation(req, CRUDOperation.CREATE);
+    const result = await runRobotRoleValidation(req, RequestHandlerOperation.CREATE);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);

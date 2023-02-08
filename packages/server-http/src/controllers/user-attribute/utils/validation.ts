@@ -15,15 +15,15 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runUserAttributeValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserAttributeEntity>> {
     const result : ExpressValidationResult<UserAttributeEntity> = initExpressValidationResult();
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await check('name')
             .exists()
             .notEmpty()
@@ -54,7 +54,7 @@ export async function runUserAttributeValidation(
 
     result.data = matchedValidationData(req, { includeOptionals: true });
 
-    if (operation === CRUDOperation.CREATE) {
+    if (operation === RequestHandlerOperation.CREATE) {
         await extendExpressValidationResultWithRelation(result, UserEntity, {
             id: 'user_id',
             entity: 'user',

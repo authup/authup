@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RoleEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -24,7 +24,7 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    const result = await runRoleValidation(req, CRUDOperation.UPDATE);
+    const result = await runRoleValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

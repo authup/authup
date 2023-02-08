@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ClientEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runOauth2ClientValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function updateClientRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -24,7 +24,7 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ClientValidation(req, CRUDOperation.UPDATE);
+    const result = await runOauth2ClientValidation(req, RequestHandlerOperation.UPDATE);
     if (!result.data) {
         return sendAccepted(res);
     }

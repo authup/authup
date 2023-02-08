@@ -8,6 +8,7 @@
 export * from './auth';
 export * from './body';
 export * from './cookie';
+export * from './cors';
 export * from './error';
 export * from './logger';
 export * from './loggedin';

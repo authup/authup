@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ScopeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'ability');
@@ -22,7 +22,7 @@ export async function createScopeRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError();
     }
 
-    const result = await runScopeValidation(req, CRUDOperation.CREATE);
+    const result = await runScopeValidation(req, RequestHandlerOperation.CREATE);
 
     // ----------------------------------------------
 

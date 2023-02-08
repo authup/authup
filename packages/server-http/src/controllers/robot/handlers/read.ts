@@ -9,7 +9,6 @@ import { useRequestQuery } from '@routup/query';
 import {
     Request, Response, send, useRequestParam,
 } from 'routup';
-import { Brackets } from 'typeorm';
 import {
     applyQuery,
     useDataSource,
@@ -19,8 +18,7 @@ import {
     OAuth2SubKind,
     PermissionName, REALM_MASTER_NAME, isSelfId, isUUID,
 } from '@authup/common';
-import { RobotEntity } from '@authup/server-database';
-import { findRealm } from '../../../helpers';
+import { RobotEntity , resolveRealm } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
@@ -112,7 +110,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     } else {
         query.where('robot.name LIKE :name', { name: id });
 
-        const realm = await findRealm(useRequestParam(req, 'realmId'), true);
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
     }
 

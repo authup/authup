@@ -21,11 +21,11 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { CRUDOperation } from '../../../constants';
+import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function runScopeValidation(
     req: Request,
-    operation: `${CRUDOperation.CREATE}` | `${CRUDOperation.UPDATE}`,
+    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<ScopeEntity>> {
     const result : ExpressValidationResult<ScopeEntity> = initExpressValidationResult();
 
@@ -34,7 +34,7 @@ export async function runScopeValidation(
         .isString()
         .notEmpty();
 
-    if (operation === CRUDOperation.UPDATE) nameChain.optional();
+    if (operation === RequestHandlerOperation.UPDATE) nameChain.optional();
 
     await nameChain.run(req);
 
@@ -73,7 +73,7 @@ export async function runScopeValidation(
             throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
         }
     } else if (
-        operation === CRUDOperation.CREATE &&
+        operation === RequestHandlerOperation.CREATE &&
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));

@@ -13,9 +13,9 @@ import {
     extendsBaseError,
 } from '@ebec/http';
 import { isObject } from 'smob';
-import { ErrorResponsePayload } from './type';
+import { ResponseErrorPayload } from './type';
 
-export function buildErrorResponsePayload(input: Partial<ErrorResponsePayload>) : ErrorResponsePayload {
+export function buildResponseErrorPayload(input: Partial<ResponseErrorPayload>) : ResponseErrorPayload {
     return {
         ...input,
         statusCode: input.statusCode || InternalServerErrorOptions.statusCode,
@@ -24,7 +24,7 @@ export function buildErrorResponsePayload(input: Partial<ErrorResponsePayload>) 
     };
 }
 
-export function buildErrorResponsePayloadFromError(error: Error) {
+export function buildResponseErrorPayloadFromError(error: Error) {
     let code : string | undefined;
 
     if (
@@ -65,7 +65,7 @@ export function buildErrorResponsePayloadFromError(error: Error) {
 
     const extra = baseError.getOption('extra');
 
-    return buildErrorResponsePayload({
+    return buildResponseErrorPayload({
         statusCode: baseError.getOption('statusCode'),
         code: `${baseError.getOption('code')}`,
         message: baseError.message,
