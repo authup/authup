@@ -57,7 +57,7 @@
         "pascal-case": "^3.1.2",
         "reflect-metadata": "^0.1.13",
         "smob": "^0.1.0",
-        "zod": "^3.20.2"
+        "zod": "^3.20.6"
     },
     "peerDependencies": {
         "@authup/common": "^0.x",
