@@ -33,7 +33,7 @@
     },
     "devDependencies": {
         "@commitlint/cli": "^17.4.3",
-        "@commitlint/config-angular": "^17.4.2",
+        "@commitlint/config-angular": "^17.4.3",
         "@commitlint/config-conventional": "^17.4.3",
         "@commitlint/cz-commitlint": "^17.4.2",
         "@rollup/plugin-node-resolve": "^15.0.1",
