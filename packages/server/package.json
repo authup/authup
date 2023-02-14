@@ -1,6 +1,6 @@
 {
     "name": "@authup/server",
-    "version": "0.15.1",
+    "version": "0.15.2",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -43,8 +43,8 @@
     "dependencies": {
         "@authup/common": "^0.15.0",
         "@authup/server-common": "^0.15.0",
-        "@authup/server-database": "^0.15.1",
-        "@authup/server-http": "^0.15.1",
+        "@authup/server-database": "^0.15.2",
+        "@authup/server-http": "^0.15.2",
         "@trapi/swagger": "^0.3.8",
         "better-sqlite3": "^8.1.0",
         "change-case": "^4.1.2",

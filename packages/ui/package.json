@@ -1,6 +1,6 @@
 {
     "name": "@authup/ui",
-    "version": "0.15.1",
+    "version": "0.15.2",
     "description": "This is a standalone application.",
     "main": ".output/server/index.mjs",
     "files": [
