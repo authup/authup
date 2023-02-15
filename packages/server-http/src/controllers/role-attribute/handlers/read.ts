@@ -14,7 +14,10 @@ import {
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isRealmResourceReadable } from '@authup/common';
-import { RoleAttributeEntity, onlyRealmReadableQueryResources } from '@authup/server-database';
+import {
+    RoleAttributeEntity,
+    onlyRealmWritableQueryResources,
+} from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,7 +26,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('roleAttribute');
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
+    onlyRealmWritableQueryResources(query, useRequestEnv(req, 'realm'));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',
