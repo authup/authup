@@ -21,7 +21,9 @@ import {
     UpgradeCommand,
 } from './commands';
 
-dotenv.config();
+dotenv.config({
+    debug: false,
+});
 
 // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
 yargs

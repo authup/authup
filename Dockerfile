@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 RUN mkdir -p /usr/src/app
 
@@ -6,12 +6,10 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN rm -rf ./node-modules && \
-    npm ci && \
-    npm run bootstrap && \
-    npm run build && \
-    touch packages/server/.env
-
+RUN rm -rf ./node-modules
+RUN npm ci
+RUN node ./node_modules/@swc/core/postinstall.js
+RUN npm run build
 
 COPY ./entrypoint.sh ./entrypoint.sh
 
