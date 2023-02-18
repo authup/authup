@@ -7,7 +7,8 @@
 
 import { hasConfig } from 'redis-extension';
 import { URL } from 'url';
-import { DataSource, DataSourceOptions } from 'typeorm';
+import type { DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
     checkDatabase,
     createDatabase,
@@ -21,7 +22,7 @@ import {
     DatabaseSeeder, buildDataSourceOptions, saveSeedResult, useConfig as useDatabaseConfig,
 } from '@authup/server-database';
 import { setLogger, useLogger } from '@authup/server-common';
-import { StartCommandContext } from './type';
+import type { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
@@ -40,7 +41,7 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info(`Port: ${httpConfig.get('port')}`);
     logger.info(`Host: ${httpConfig.get('host')}`);
     logger.info(`Public-URL: ${httpConfig.get('publicUrl')}`);
-    logger.info(`Docs-URL: ${new URL('docs/', httpConfig.get('publicUrl')).href}`);
+    logger.info(`Docs-URL: ${new URL('docs', httpConfig.get('publicUrl')).href}`);
 
     logger.info(`Redis: ${hasConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Robot: ${databaseConfig.get('robotEnabled') ? 'enabled' : 'disabled'}`);
