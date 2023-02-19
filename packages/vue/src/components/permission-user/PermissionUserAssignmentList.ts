@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import { User } from '@authup/common';
+import type { User } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import { UserPermissionAssignmentListItemActions } from '../user-permission';
 import { UserList } from '../user';

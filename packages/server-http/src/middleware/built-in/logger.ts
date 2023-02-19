@@ -7,9 +7,10 @@
 
 import { useLogger } from '@authup/server-common';
 import morgan from 'morgan';
-import {
-    Next, Request, Response, Router, getRequestIp,
+import type {
+    Next, Request, Response, Router,
 } from 'routup';
+import { getRequestIp } from 'routup';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {

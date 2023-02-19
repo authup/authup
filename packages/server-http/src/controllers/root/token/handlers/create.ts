@@ -6,14 +6,16 @@
  */
 
 /* istanbul ignore next */
+import type { OAuth2TokenGrantResponse } from '@authup/common';
 import {
-    OAuth2TokenGrant, OAuth2TokenGrantResponse, TokenError,
+    OAuth2TokenGrant, TokenError,
 } from '@authup/common';
-import { Request, Response, send } from 'routup';
+import type { Request, Response } from 'routup';
+import { send } from 'routup';
+import type { Grant } from '../../../../oauth2';
 import {
     AuthorizeGrantType,
     ClientCredentialsGrant,
-    Grant,
     PasswordGrantType,
     RefreshTokenGrantType,
     RobotCredentialsGrantType,

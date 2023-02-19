@@ -6,7 +6,7 @@
  */
 
 import { VoidLogger } from './presets';
-import { Logger } from './type';
+import type { Logger } from './type';
 
 let instance: Logger | undefined;
 

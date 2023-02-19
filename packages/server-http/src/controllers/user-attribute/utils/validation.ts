@@ -6,11 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { Request } from 'routup';
-import { UserAttributeEntity, UserEntity } from '@authup/server-database';
+import type { Request } from 'routup';
+import type { UserAttributeEntity } from '@authup/server-database';
+import { UserEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError, extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,

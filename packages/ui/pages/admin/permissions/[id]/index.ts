@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission, PermissionName } from '@authup/common';
-import { PropType } from 'vue';
+import type { Permission } from '@authup/common';
+import { PermissionName } from '@authup/common';
+import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
 

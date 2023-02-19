@@ -5,18 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     MetadataConfig,
     Specification,
     SwaggerDocFormatData,
     SwaggerDocFormatType,
+} from '@trapi/swagger';
+import {
     generateDocumentation,
 } from '@trapi/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 import { load } from 'locter';
-import { SwaggerDocumentCreateContext } from './type';
+import type { SwaggerDocumentCreateContext } from './type';
 import { getSwaggerEntrypoint } from './utils';
 
 export async function generateSwaggerDocumentation(

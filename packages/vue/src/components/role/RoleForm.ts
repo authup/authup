@@ -6,11 +6,12 @@
  */
 
 import useVuelidate from '@vuelidate/core';
+import type { PropType } from 'vue';
 import {
-    PropType, computed, defineComponent, h, reactive, ref, watch,
+    computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import { Role } from '@authup/common';
+import type { Role } from '@authup/common';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/hyperscript';

@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput, buildQuery } from 'rapiq';
-import { ClientDriverInstance } from 'hapic';
-import { RolePermission } from './entity';
-import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { ClientDriverInstance } from 'hapic';
+import type { RolePermission } from './entity';
+import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
 
 export class RolePermissionAPI implements DomainAPISlim<RolePermission> {
     protected client: ClientDriverInstance;

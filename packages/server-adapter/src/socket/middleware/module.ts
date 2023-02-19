@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
     AbilityManager,
     OAuth2SubKind,
-    OAuth2TokenIntrospectionResponse,
 } from '@authup/common';
-import { Socket, SocketNextFunction } from '../type';
-import { SocketMiddlewareContext } from './type';
+import type { Socket, SocketNextFunction } from '../type';
+import type { SocketMiddlewareContext } from './type';
 import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {

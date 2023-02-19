@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from 'hapic';
-import { BuildInput, buildQuery } from 'rapiq';
-import { Robot } from './entity';
+import type { ClientDriverInstance } from 'hapic';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { Robot } from './entity';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
 export class RobotAPI implements DomainAPI<Robot> {
     protected client: ClientDriverInstance;

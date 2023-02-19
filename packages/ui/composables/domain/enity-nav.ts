@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { VNodeChild } from 'vue';
+import type { VNodeChild } from 'vue';
 import { NuxtLink } from '#components';
 
 type EntityNavItem = {

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LdapIdentityProvider, OpenIDConnectIdentityProvider } from '@authup/common';
+import type { LdapIdentityProvider } from '@authup/common';
+import { OpenIDConnectIdentityProvider } from '@authup/common';
 
 export function extractLdapIdentityProviderProtocolAttributes(
     input: unknown,

@@ -6,9 +6,11 @@
  */
 
 import useVuelidate from '@vuelidate/core';
-import {
+import type {
     PropType,
     VNodeArrayChildren,
+} from 'vue';
+import {
     computed,
     defineComponent,
     h,
@@ -19,7 +21,8 @@ import {
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
-import { Realm, Robot, createNanoID } from '@authup/common';
+import type { Realm, Robot } from '@authup/common';
+import { createNanoID } from '@authup/common';
 import {
     SlotName,
     buildFormInput,

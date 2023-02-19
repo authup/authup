@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     OAuth2TokenIntrospectionResponse,
 } from '@authup/common';
+import type { ValidationChain } from 'express-validator';
 import {
-    ValidationChain, body, oneOf, param, query, validationResult,
+    body, oneOf, param, query, validationResult,
 } from 'express-validator';
-import { Request, Response, send } from 'routup';
+import type { Request, Response } from 'routup';
+import { send } from 'routup';
 import {
     loadOAuth2SubEntity, loadOAuth2SubPermissions,
     readOAuth2TokenPayload, resolveOpenIdClaimsFromSubEntity,

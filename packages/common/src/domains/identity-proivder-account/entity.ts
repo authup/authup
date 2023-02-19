@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '../user';
-import { IdentityProvider } from '../identity-provider';
+import type { User } from '../user';
+import type { IdentityProvider } from '../identity-provider';
 
 export interface IdentityProviderAccount {
     id: string;

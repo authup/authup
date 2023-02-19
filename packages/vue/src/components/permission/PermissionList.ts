@@ -4,11 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import {
-    PropType, defineComponent, toRefs,
-} from 'vue';
-import { Permission } from '@authup/common';
-import { BuildInput } from 'rapiq';
+import type { PropType } from 'vue';
+import { defineComponent, toRefs } from 'vue';
+import type { Permission } from '@authup/common';
+import type { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

@@ -8,12 +8,12 @@
 import {
     DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
-import {
+import type {
     Next, Request, Response, Router,
 } from 'routup';
 import { SwaggerTags } from '@trapi/swagger';
+import type { IdentityProvider } from '@authup/common';
 import {
-    IdentityProvider,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authup/common';

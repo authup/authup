@@ -7,10 +7,11 @@
 
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
+import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref,
+    computed, defineComponent, h, reactive, ref,
 } from 'vue';
-import { IdentityProviderRole, Role } from '@authup/common';
+import type { IdentityProviderRole, Role } from '@authup/common';
 import { buildFormInput } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';

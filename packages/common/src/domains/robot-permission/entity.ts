@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionRelation } from '../permission';
-import { Robot } from '../robot';
-import { Realm } from '../realm';
+import type { PermissionRelation } from '../permission';
+import type { Robot } from '../robot';
+import type { Realm } from '../realm';
 
 export interface RobotPermission extends PermissionRelation {
     id: string;

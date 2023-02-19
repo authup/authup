@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '../user';
-import { Permission, PermissionRelation } from '../permission';
-import { Realm } from '../realm';
+import type { User } from '../user';
+import type { PermissionRelation } from '../permission';
+import { Permission } from '../permission';
+import type { Realm } from '../realm';
 
 export interface UserPermission extends PermissionRelation {
     id: string;

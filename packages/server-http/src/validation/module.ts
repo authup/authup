@@ -6,7 +6,7 @@
  */
 
 import { BadRequestError } from '@ebec/http';
-import { Result, ValidationError } from 'express-validator';
+import type { Result, ValidationError } from 'express-validator';
 import { buildHTTPValidationErrorMessage } from './utils';
 
 export class RequestValidationError extends BadRequestError {

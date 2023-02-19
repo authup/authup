@@ -10,11 +10,12 @@ import {
 } from '@authup/common';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { Request } from 'routup';
-import { RealmEntity, RoleEntity } from '@authup/server-database';
+import type { Request } from 'routup';
+import type { RoleEntity } from '@authup/server-database';
+import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, Scope, isRealmResourceWritable } from '@authup/common';
+import type { Scope } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { storeToRefs } from 'pinia';
 import { navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';

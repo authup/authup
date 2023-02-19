@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput, buildQuery } from 'rapiq';
-import { ClientDriverInstance } from 'hapic';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { Realm } from './entity';
-import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { Realm } from './entity';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
 export class RealmAPI implements DomainAPI<Realm> {
     protected client: ClientDriverInstance;

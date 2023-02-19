@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Algorithm } from 'jsonwebtoken';
-import { KeyType } from './constants';
-import { Realm } from '../realm';
+import type { Algorithm } from 'jsonwebtoken';
+import type { KeyType } from './constants';
+import type { Realm } from '../realm';
 
 export interface Key {
     id: string,

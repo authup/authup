@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HandlerInterface } from '@routup/decorators';
-import { Next, Request, Response } from 'routup';
+import type { HandlerInterface } from '@routup/decorators';
+import type { Next, Request, Response } from 'routup';
 import { UnauthorizedError } from '@ebec/http';
 import { useRequestEnv } from '../../../utils';
 

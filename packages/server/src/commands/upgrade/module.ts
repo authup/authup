@@ -8,7 +8,7 @@
 import { DataSource } from 'typeorm';
 import { setupDatabaseSchema } from 'typeorm-extension';
 import { DatabaseSeeder, buildDataSourceOptions } from '@authup/server-database';
-import { UpgradeCommandContext } from '../type';
+import type { UpgradeCommandContext } from '../type';
 
 export async function upgradeCommand(context: UpgradeCommandContext) {
     if (context.logger) {

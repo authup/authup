@@ -6,7 +6,7 @@
  */
 
 import { createPrivateKey } from 'node:crypto';
-import { KeyPairOptions } from '../type';
+import type { KeyPairOptions } from '../type';
 
 export function decryptRSAPrivateKey(
     context: KeyPairOptions,

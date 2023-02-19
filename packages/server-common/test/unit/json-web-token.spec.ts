@@ -6,9 +6,8 @@
  */
 
 import path from 'path';
-import {
-    KeyPairOptions, decodeToken, deleteKeyPair, signToken,
-} from '../../src';
+import type { KeyPairOptions } from '../../src';
+import { decodeToken, deleteKeyPair, signToken } from '../../src';
 
 describe('src/json-web-token', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');

@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
-import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata, Realm } from '@authup/common';
+import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata, Realm } from '@authup/common';
 import {
     createRealmRouteHandler,
     deleteRealmRouteHandler,

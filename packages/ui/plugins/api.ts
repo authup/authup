@@ -7,9 +7,8 @@
 
 import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/common';
 import install from '@authup/vue';
-import {
-    Config, isClientError,
-} from 'hapic';
+import type { Config } from 'hapic';
+import { isClientError } from 'hapic';
 import { useRuntimeConfig } from '#imports';
 import { defineNuxtPlugin } from '#app';
 import { useAuthStore } from '../store/auth';

@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MongoQuery, guard } from '@ucast/mongo2js';
+import type { MongoQuery } from '@ucast/mongo2js';
+import { guard } from '@ucast/mongo2js';
 
-import {
+import type {
     Ability,
     AbilityDescriptor,
     AbilityID,

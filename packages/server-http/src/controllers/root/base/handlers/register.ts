@@ -6,12 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { User, isValidUserName } from '@authup/common';
+import type { User } from '@authup/common';
+import { isValidUserName } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { randomBytes } from 'node:crypto';
-import {
-    Request, Response, sendAccepted,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository, resolveRealm } from '@authup/server-database';
 import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-common';

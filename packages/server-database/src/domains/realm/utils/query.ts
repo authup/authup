@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Brackets, SelectQueryBuilder } from 'typeorm';
-import { REALM_MASTER_NAME, Realm, isPropertySet } from '@authup/common';
+import type { SelectQueryBuilder } from 'typeorm';
+import { Brackets } from 'typeorm';
+import type { Realm } from '@authup/common';
+import { REALM_MASTER_NAME, isPropertySet } from '@authup/common';
 
 function prepareRealm(
     input: Partial<Realm> | string,

@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Jwt, JwtPayload, verify } from 'jsonwebtoken';
+import type { Jwt, JwtPayload } from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { KeyType, TokenError } from '@authup/common';
 import { isKeyPair, useKeyPair } from '../key-pair';
-import { TokenVerifyOptions } from './type';
+import type { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';
 
 /**

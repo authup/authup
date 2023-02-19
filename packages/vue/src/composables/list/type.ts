@@ -5,15 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CollectionResourceResponse } from '@authup/common';
-import {
+import type { CollectionResourceResponse } from '@authup/common';
+import type {
     ListHeaderBuildOptionsInput,
     ListItemsBuildOptionsInput,
     ListNoMoreBuildOptionsInput, ListPaginationBuildOptionsInput,
     ListSearchBuildOptionsInput,
 } from '@vue-layout/hyperscript';
-import { BuildInput } from 'rapiq';
-import { SetupContext, Slots, ToRefs } from 'vue';
+import type { BuildInput } from 'rapiq';
+import type { SetupContext, ToRefs } from 'vue';
+import { Slots } from 'vue';
 
 export type ListBuilderComponentOptions<T extends Record<string, any>> = {
     header: ListHeaderBuildOptionsInput | boolean,

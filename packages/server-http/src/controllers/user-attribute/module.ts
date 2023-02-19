@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
-import { UserAttribute } from '@authup/common';
+import type { UserAttribute } from '@authup/common';
 import {
     createUserAttributeRouteHandler, deleteUserAttributeRouteHandler,
     getManyUserAttributeRouteHandler,

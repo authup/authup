@@ -5,33 +5,37 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { AbilityDescriptor } from '@authup/common';
 import {
-    AbilityDescriptor,
     AbilityManager,
     HeaderError, OAuth2SubKind,
     OAuth2TokenKind,
     ScopeName,
     TokenError, transformOAuth2ScopeToArray,
 } from '@authup/common';
-import {
+import type {
     AuthorizationHeader,
-    AuthorizationHeaderType,
     BasicAuthorizationHeader,
     BearerAuthorizationHeader,
 } from 'hapic';
+import {
+    AuthorizationHeaderType,
+} from 'hapic';
 import { buildKeyPath } from 'redis-extension';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
+import type {
+    ClientEntity,
+    RobotEntity,
+
+    UserEntity,
+} from '@authup/server-database';
 import {
     CachePrefix,
-    ClientEntity,
     OAuth2ClientRepository,
     RealmEntity,
-    RobotEntity,
-    RobotRepository,
-
-    UserEntity, UserRepository, useConfig,
+    RobotRepository, UserRepository, useConfig,
 } from '@authup/server-database';
 import {
     loadOAuth2SubEntity,

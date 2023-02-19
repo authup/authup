@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, Options, mergeOptions } from '@ebec/http';
+import type { Options } from '@ebec/http';
+import { BadRequestError, mergeOptions } from '@ebec/http';
 import { ErrorCode } from '../../error';
-import { OAuth2SubKind } from './constants';
+import type { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
     constructor(options?: Options) {

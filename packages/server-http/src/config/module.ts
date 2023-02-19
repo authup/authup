@@ -9,7 +9,7 @@ import { Continu } from 'continu';
 import path from 'node:path';
 import process from 'node:process';
 import zod from 'zod';
-import { Options, OptionsInput } from './type';
+import type { Options, OptionsInput } from './type';
 
 let instance : Continu<Options, OptionsInput> | undefined;
 

@@ -15,11 +15,12 @@ import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
 } from '@vuelidate/validators';
+import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
+    computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 
-import { Realm, User } from '@authup/common';
+import type { Realm, User } from '@authup/common';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';

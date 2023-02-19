@@ -6,11 +6,11 @@
  */
 
 import { storeToRefs } from 'pinia';
-import {
-    Client, PermissionName, Robot, isRealmResourceWritable,
-} from '@authup/common';
+import type { Client, Robot } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
-import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
+import type { ListItemSlotProps } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/hyperscript';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';

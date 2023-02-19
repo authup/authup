@@ -8,7 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'rc9';
-import { OptionsInput } from './type';
+import type { OptionsInput } from './type';
 
 export async function readConfig(
     directoryPath?: string,

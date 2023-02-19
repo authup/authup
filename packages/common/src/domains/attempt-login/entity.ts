@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '../user';
+import type { User } from '../user';
 
 export interface AttemptLogin {
     id: string,

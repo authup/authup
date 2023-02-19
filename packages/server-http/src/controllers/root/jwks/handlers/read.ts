@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JsonWebKey, createPublicKey } from 'node:crypto';
-import {
-    Request, Response, send, useRequestParam,
-} from 'routup';
+import type { JsonWebKey } from 'node:crypto';
+import { createPublicKey } from 'node:crypto';
+import type { Request, Response } from 'routup';
+import { send, useRequestParam } from 'routup';
 import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authup/common';
 import { NotFoundError } from '@ebec/http';

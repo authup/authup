@@ -6,8 +6,8 @@
  */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { SuperTest, Test } from 'supertest';
-import { User } from '@authup/common';
+import type { SuperTest, Test } from 'supertest';
+import type { User } from '@authup/common';
 
 export const TEST_DEFAULT_USER : Partial<User> = {
     name: 'test',

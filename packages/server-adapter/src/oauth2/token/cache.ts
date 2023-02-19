@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Cache, Client, useClient } from 'redis-extension';
+import type { Client } from 'redis-extension';
+import { Cache, useClient } from 'redis-extension';
 
 let instance : Cache<string> | undefined;
 

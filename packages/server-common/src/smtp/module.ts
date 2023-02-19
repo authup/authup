@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Transporter, createTransport } from 'nodemailer';
-import { SmtpConfig } from './type';
+import type { Transporter } from 'nodemailer';
+import { createTransport } from 'nodemailer';
+import type { SmtpConfig } from './type';
 import { useLogger } from '../logger';
 
 export function createSmtpClient(options?: SmtpConfig | string) : Transporter {

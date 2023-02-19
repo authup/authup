@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenGrantResponse } from '@authup/common';
+import type { OAuth2TokenGrantResponse } from '@authup/common';
 import { SwaggerTags } from '@trapi/swagger';
 import {
     DController, DGet, DPost, DRequest, DResponse,

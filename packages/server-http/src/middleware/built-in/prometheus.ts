@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OptionsInput, createHandler, registerMetrics } from '@routup/prometheus';
-import { Router, useRequestPath, withLeadingSlash } from 'routup';
+import type { OptionsInput } from '@routup/prometheus';
+import { createHandler, registerMetrics } from '@routup/prometheus';
+import type { Router } from 'routup';
+import { useRequestPath, withLeadingSlash } from 'routup';
 import { merge } from 'smob';
 
 export function registerPrometheusMiddleware(router: Router, input?: OptionsInput) {

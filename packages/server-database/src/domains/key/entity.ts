@@ -8,7 +8,7 @@
 import {
     Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     Key,
     KeyType,
     Realm,

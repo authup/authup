@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CAC } from 'cac';
+import type { CAC } from 'cac';
 import consola from 'consola';
 import { createConfig } from '../config';
 

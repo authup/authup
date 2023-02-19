@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
-    OAuth2TokenIntrospectionResponse,
     TokenError,
     hasOwnProperty,
 } from '@authup/common';
 import { isClientError } from 'hapic';
 import { useOAuth2Client } from '../client';
-import { TokenVerifyContext } from './type';
+import type { TokenVerifyContext } from './type';
 import { useOAuth2TokenCache } from './cache';
 
 export async function verifyOAuth2Token(token: string, context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {

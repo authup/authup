@@ -15,7 +15,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import { Realm, Scope } from '@authup/common';
+import type { Realm, Scope } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_scopes' })

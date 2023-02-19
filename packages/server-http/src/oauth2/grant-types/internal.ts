@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenGrantResponse, User } from '@authup/common';
 import {
-    OAuth2SubKind, OAuth2TokenGrantResponse, Realm, ScopeName, User,
+    OAuth2SubKind, Realm, ScopeName,
 } from '@authup/common';
-import { Request, getRequestIp } from 'routup';
+import type { Request } from 'routup';
+import { getRequestIp } from 'routup';
 import { useRequestEnv } from '../../utils';
 import { AbstractGrant } from './abstract';
-import {
+import type {
     Grant,
 } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';

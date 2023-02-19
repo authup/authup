@@ -11,12 +11,13 @@ import {
     isRealmResourceWritable,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
-import { Request } from 'routup';
-import { ClientEntity, RealmEntity } from '@authup/server-database';
+import type { Request } from 'routup';
+import type { ClientEntity } from '@authup/server-database';
+import { RealmEntity } from '@authup/server-database';
 import zod from 'zod';
 import { useRequestEnv } from '../../../utils';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,

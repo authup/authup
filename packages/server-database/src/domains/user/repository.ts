@@ -5,17 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     DataSource,
     EntityManager, FindOptionsWhere,
+} from 'typeorm';
+import {
     In,
     InstanceChecker,
     Repository,
 } from 'typeorm';
-import {
+import type {
     AbilityDescriptor,
     Role, User,
     UserRole,
+} from '@authup/common';
+import {
     buildPermissionDescriptorFromRelation,
     createNanoID,
 } from '@authup/common';

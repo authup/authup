@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { useConfig } from '../module';
-import { Options, OptionsInput } from '../type';
+import type { Options, OptionsInput } from '../type';
 
 export function setConfigOptions(
     input: OptionsInput,

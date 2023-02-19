@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Next, Request, Response, Router, send,
+import type {
+    Next, Request, Response, Router,
 } from 'routup';
+import { send } from 'routup';
 
 import {
     extendsBaseError,

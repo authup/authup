@@ -6,9 +6,11 @@
  */
 
 import useVuelidate from '@vuelidate/core';
-import {
+import type {
     PropType,
     VNodeArrayChildren,
+} from 'vue';
+import {
     computed,
     defineComponent,
     h,
@@ -19,9 +21,8 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import {
-    IdentityProvider, IdentityProviderProtocol, OAuth2IdentityProvider, createNanoID,
-} from '@authup/common';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/common';
+import { IdentityProviderProtocol, createNanoID } from '@authup/common';
 import {
     buildFormInput, buildFormInputCheckbox,
     buildFormSubmit,

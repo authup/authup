@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import cors, { CorsOptions } from 'cors';
-import { Router } from 'routup';
+import type { CorsOptions } from 'cors';
+import cors from 'cors';
+import type { Router } from 'routup';
 import { merge } from 'smob';
 
 export function registerCorsMiddleware(router: Router, input?: CorsOptions) {

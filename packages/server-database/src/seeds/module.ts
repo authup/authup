@@ -5,18 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Continu } from 'continu';
-import { DataSource, FindOptionsWhere, In } from 'typeorm';
-import { Seeder } from 'typeorm-extension';
-import {
+import type { Continu } from 'continu';
+import type { DataSource, FindOptionsWhere } from 'typeorm';
+import { In } from 'typeorm';
+import type { Seeder } from 'typeorm-extension';
+import type {
     Permission,
+    Robot,
+    RobotPermission,
+    RolePermission, UserRole,
+} from '@authup/common';
+import {
     PermissionName,
     REALM_MASTER_NAME,
     ROBOT_SYSTEM_NAME,
-    Robot,
-    RobotPermission,
-    RolePermission,
-    ScopeName, UserRole, createNanoID,
+    ScopeName, createNanoID,
 } from '@authup/common';
 import { hasOwnProperty, hash } from '@authup/server-common';
 import {
@@ -30,8 +33,9 @@ import {
     UserRepository,
     UserRoleEntity, useRobotEventEmitter,
 } from '../domains';
-import { Options, OptionsInput, useConfig } from '../config';
-import { DatabaseRootSeederResult } from './type';
+import type { Options, OptionsInput } from '../config';
+import { useConfig } from '../config';
+import type { DatabaseRootSeederResult } from './type';
 
 function getPermissions(permissions?: string[]) {
     return Array.from(new Set([

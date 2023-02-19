@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    DataSource, EntityManager, In, InstanceChecker, Repository,
-} from 'typeorm';
-import {
+import type { DataSource, EntityManager } from 'typeorm';
+import { In, InstanceChecker, Repository } from 'typeorm';
+import type {
     AbilityDescriptor,
     Role,
+} from '@authup/common';
+import {
     buildPermissionDescriptorFromRelation,
 
 } from '@authup/common';

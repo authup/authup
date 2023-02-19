@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput, buildQuery } from 'rapiq';
-import { ClientDriverInstance } from 'hapic';
-import { IdentityProvider } from './entity';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { ClientDriverInstance } from 'hapic';
+import type { IdentityProvider } from './entity';
 import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
-import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 import { buildIdentityProviderAuthorizePath } from './utils';
 
 export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {

@@ -6,8 +6,9 @@
  */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { SuperTest, Test } from 'supertest';
-import { Client, ScopeName } from '@authup/common';
+import type { SuperTest, Test } from 'supertest';
+import type { Client } from '@authup/common';
+import { ScopeName } from '@authup/common';
 
 export const TEST_DEFAULT_CLIENT : Partial<Client> = {
     name: 'test',

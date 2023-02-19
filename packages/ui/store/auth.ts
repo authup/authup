@@ -5,14 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type {
+    OAuth2TokenGrantResponse,
+    OAuth2TokenIntrospectionResponse,
+    Realm,
+    User,
+} from '@authup/common';
 import {
     AbilityManager,
     ErrorCode,
-    OAuth2TokenGrantResponse,
-    OAuth2TokenIntrospectionResponse,
     OAuth2TokenKind,
-    Realm,
-    User,
     hasOwnProperty,
 } from '@authup/common';
 import { Client } from '@hapic/oauth2';

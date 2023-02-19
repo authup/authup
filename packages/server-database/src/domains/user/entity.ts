@@ -18,7 +18,8 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import { Realm, User } from '@authup/common';
+import type { User } from '@authup/common';
+import { Realm } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_users' })

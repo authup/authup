@@ -5,14 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Client, ClientScope, Robot, Scope,
-} from '@authup/common';
+import type { Client, ClientScope } from '@authup/common';
+import { Robot, Scope } from '@authup/common';
 import { buildVuelidateTranslator } from '@authup/vue/language/utils';
-import {
-    ListItemSlotProps, SlotName, buildFormInput, buildFormInputCheckbox,
-} from '@vue-layout/hyperscript';
-import { PropType } from 'vue';
+import type { ListItemSlotProps } from '@vue-layout/hyperscript';
+import { SlotName, buildFormInput, buildFormInputCheckbox } from '@vue-layout/hyperscript';
+import type { PropType } from 'vue';
 import { defineNuxtComponent, resolveComponent } from '#imports';
 
 export default defineNuxtComponent({

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Ref } from 'vue';
+import type { Ref } from 'vue';
 
 export function buildListCreatedHandler<T extends Record<string, any>>(items: Ref<T[]>) {
     return (item: T, options?: { unshift?: boolean}) => {

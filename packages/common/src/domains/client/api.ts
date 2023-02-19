@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from 'hapic';
-import { BuildInput, buildQuery } from 'rapiq';
-import { Client } from './type';
+import type { ClientDriverInstance } from 'hapic';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { Client } from './type';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
 
 export class ClientAPI implements DomainAPI<Client> {
     protected client: ClientDriverInstance;

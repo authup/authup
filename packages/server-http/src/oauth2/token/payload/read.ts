@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenPayload } from '@authup/common';
 import {
-    OAuth2TokenPayload,
     TokenError,
 } from '@authup/common';
 import { decodeToken } from '@authup/server-common';

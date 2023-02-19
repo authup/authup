@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     RobotPermission,
 } from '@authup/common';
 import { createSuperTestPermission, createSuperTestRobot } from '../../../utils/domains';

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2IdentityProvider, OAuth2IdentityProviderBase, hasOwnProperty } from '@authup/common';
+import type { OAuth2IdentityProvider, OAuth2IdentityProviderBase } from '@authup/common';
+import { hasOwnProperty } from '@authup/common';
 
 export function extractOAuth2IdentityProviderProtocolAttributes(
     input: unknown,

@@ -7,8 +7,9 @@
 
 import { merge } from 'smob';
 import { createDatabase, dropDatabase } from 'typeorm-extension';
-import { CommandModule } from 'yargs';
-import { DataSource, DataSourceOptions } from 'typeorm';
+import type { CommandModule } from 'yargs';
+import type { DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import path from 'path';
 import { extendDataSourceOptions, generateMigration } from '@authup/server-database';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';

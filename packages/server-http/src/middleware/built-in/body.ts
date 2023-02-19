@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Options } from '@routup/body';
 import {
-    Options,
     createRequestJsonHandler,
     createRequestUrlEncodedHandler,
 } from '@routup/body';
-import { Router } from 'routup';
+import type { Router } from 'routup';
 
 export function registerBodyMiddleware(router: Router, input?: Options) {
     const options = input || {};

@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { SwaggerTags } from '@trapi/swagger';
-import { Scope } from '@authup/common';
+import type { Scope } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createScopeRouteHandler,

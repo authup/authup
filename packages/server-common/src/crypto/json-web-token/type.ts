@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
-import * as Buffer from 'buffer';
-import { KeyType } from '@authup/common';
-import { KeyPair, KeyPairOptions } from '../key-pair';
+import type { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
+import type * as Buffer from 'buffer';
+import type { KeyType } from '@authup/common';
+import type { KeyPair, KeyPairOptions } from '../key-pair';
 
 export type TokenSignOptions = ({
     type: `${KeyType.RSA}` | KeyType.RSA,

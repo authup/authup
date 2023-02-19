@@ -12,7 +12,7 @@ import {
 } from '@authup/server-common';
 import { readOptionsFromEnv as readHttpOptionsFromEnv } from '@authup/server-http';
 import { readOptionsFromEnv as readDBOptionsFromEnv } from '@authup/server-database';
-import { BaseOptions, OptionsInput } from '../type';
+import type { BaseOptions, OptionsInput } from '../type';
 
 export function readBaseOptionsFromEnv() : Partial<BaseOptions> {
     const options : Partial<BaseOptions> = {};

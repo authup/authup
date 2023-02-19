@@ -17,8 +17,9 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import type { Robot, User } from '@authup/common';
 import {
-    Realm, Robot, User, createNanoID,
+    Realm, createNanoID,
 } from '@authup/common';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';

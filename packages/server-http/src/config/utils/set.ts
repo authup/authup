@@ -7,7 +7,7 @@
 
 import { makeURLPublicAccessible } from '@authup/common';
 import { useConfig } from '../module';
-import { OptionsInput } from '../type';
+import type { OptionsInput } from '../type';
 
 export function setConfigOptions(options: OptionsInput) {
     const config = useConfig();

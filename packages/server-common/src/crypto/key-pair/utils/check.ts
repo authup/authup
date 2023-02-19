@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty } from '@authup/common';
-import { KeyPair } from '../type';
+import type { KeyPair } from '../type';
 
 export function isKeyPair(data: unknown) : data is KeyPair {
     return typeof data === 'object' &&

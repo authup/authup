@@ -6,11 +6,10 @@
  */
 
 import { useRequestQuery } from '@routup/query';
+import type { Request, Response } from 'routup';
+import { send, useRequestParam } from 'routup';
+import type { QueryFieldsApplyOptions } from 'typeorm-extension';
 import {
-    Request, Response, send, useRequestParam,
-} from 'routup';
-import {
-    QueryFieldsApplyOptions,
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
@@ -18,9 +17,8 @@ import { NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind, PermissionName, isSelfId, isUUID,
 } from '@authup/common';
-import {
-    UserEntity, UserRepository, onlyRealmReadableQueryResources, resolveRealm,
-} from '@authup/server-database';
+import type { UserEntity } from '@authup/server-database';
+import { UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 

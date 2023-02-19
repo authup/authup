@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthorizeParameters } from '@hapic/oauth2';
-import { LocationQuery } from 'vue-router';
+import type { AuthorizeParameters } from '@hapic/oauth2';
+import type { LocationQuery } from 'vue-router';
 
 export function extractOAuth2QueryParameters(
     query: LocationQuery,

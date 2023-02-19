@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, PermissionName } from '@authup/common';
+import type { Client } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { useToast } from 'vue-toastification';
 import { NuxtLink, NuxtPage } from '#components';
 import { definePageMeta, resolveComponent } from '#imports';

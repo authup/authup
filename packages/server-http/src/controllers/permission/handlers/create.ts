@@ -10,7 +10,8 @@ import { check, matchedData, validationResult } from 'express-validator';
 import {
     PermissionName,
 } from '@authup/common';
-import { Request, Response, sendCreated } from 'routup';
+import type { Request, Response } from 'routup';
+import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { PermissionEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';

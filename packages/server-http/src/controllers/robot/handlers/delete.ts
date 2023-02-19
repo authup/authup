@@ -11,9 +11,8 @@ import {
     REALM_MASTER_NAME,
     ROBOT_SYSTEM_NAME,
 } from '@authup/common';
-import {
-    Request, Response, sendAccepted, useRequestParam,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotEntity, resolveRealm, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';

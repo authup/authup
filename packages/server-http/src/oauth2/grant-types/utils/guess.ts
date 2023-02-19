@@ -9,7 +9,7 @@ import { OAuth2TokenGrant } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 
 export function guessOauth2GrantTypeByRequest(
     request: Request,

@@ -8,7 +8,7 @@
 import { OAuth2AuthorizationResponseType, TokenError } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 
 export function getOauth2AuthorizeResponseTypesByRequest(
     request: Request,

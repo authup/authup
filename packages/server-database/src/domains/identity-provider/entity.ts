@@ -14,9 +14,8 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import {
-    IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig, Realm,
-} from '@authup/common';
+import type { IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig } from '@authup/common';
+import { Realm } from '@authup/common';
 import { RealmEntity } from '../realm';
 
 @Unique(['slug', 'realm_id'])

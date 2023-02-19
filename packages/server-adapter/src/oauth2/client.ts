@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, ClientOptions } from '@hapic/oauth2';
+import type { ClientOptions } from '@hapic/oauth2';
+import { Client } from '@hapic/oauth2';
 
 let instance : Client | undefined;
 

@@ -5,16 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     OAuth2AuthorizationCodeRequest,
+    OAuth2TokenPayload,
+} from '@authup/common';
+import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     OAuth2TokenKind,
-    OAuth2TokenPayload,
     ScopeName,
 } from '@authup/common';
 import { decodeToken } from '@authup/server-common';
-import { SuperTest, Test } from 'supertest';
+import type { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestClientWithScope } from '../../../../utils/domains';
 import { useSuperTest } from '../../../../utils/supertest';

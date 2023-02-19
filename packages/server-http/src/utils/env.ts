@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request, setRequestEnv as setEnv, useRequestEnv as useEnv } from 'routup';
-import { RequestEnv } from '../type';
+import type { Request } from 'routup';
+import { setRequestEnv as setEnv, useRequestEnv as useEnv } from 'routup';
+import type { RequestEnv } from '../type';
 
 export function useRequestEnv(req: Request) : RequestEnv;
 export function useRequestEnv<T extends keyof RequestEnv>(req: Request, key: T) : RequestEnv[T];

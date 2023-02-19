@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '../client';
-import { Realm } from '../realm';
-import { User } from '../user';
-import { Robot } from '../robot';
+import type { Client } from '../client';
+import type { Realm } from '../realm';
+import type { User } from '../user';
+import type { Robot } from '../robot';
 
 export interface OAuth2RefreshToken {
     id: string;

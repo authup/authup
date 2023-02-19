@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    IdentityProvider, IdentityProviderProtocol, PermissionName, Realm,
-} from '@authup/common';
-import { PropType } from 'vue';
+import type { IdentityProvider } from '@authup/common';
+import { IdentityProviderProtocol, PermissionName, Realm } from '@authup/common';
+import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
 

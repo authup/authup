@@ -13,7 +13,7 @@ import {
     extendsBaseError,
 } from '@ebec/http';
 import { isObject } from 'smob';
-import { ResponseErrorPayload } from './type';
+import type { ResponseErrorPayload } from './type';
 
 export function buildResponseErrorPayload(input: Partial<ResponseErrorPayload>) : ResponseErrorPayload {
     return {

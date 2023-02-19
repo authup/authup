@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Request, Response, send,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send } from 'routup';
 import { URL } from 'node:url';
 import { useConfig } from '../../../../config';
 import { runOAuth2Authorization } from '../../../../oauth2';

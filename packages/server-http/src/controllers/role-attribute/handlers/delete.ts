@@ -8,9 +8,8 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
-import {
-    Request, Response, sendAccepted, useRequestParam,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';

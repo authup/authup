@@ -7,7 +7,7 @@
 
 import { dropDatabase } from 'typeorm-extension';
 import { buildDataSourceOptions } from '../database';
-import { ResetCommandContext } from './type';
+import type { ResetCommandContext } from './type';
 
 export async function resetCommand(context?: ResetCommandContext) {
     context = context || {};

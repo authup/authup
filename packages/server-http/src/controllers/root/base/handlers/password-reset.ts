@@ -6,9 +6,10 @@
  */
 
 import { check, oneOf, validationResult } from 'express-validator';
-import { User } from '@authup/common';
-import { Request, Response, sendAccepted } from 'routup';
-import { FindOptionsWhere } from 'typeorm';
+import type { User } from '@authup/common';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
+import type { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository, resolveRealm } from '@authup/server-database';

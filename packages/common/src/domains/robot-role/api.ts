@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput, buildQuery } from 'rapiq';
-import { ClientDriverInstance } from 'hapic';
-import { RobotRole } from './entity';
-import {
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { ClientDriverInstance } from 'hapic';
+import type { RobotRole } from './entity';
+import type {
     CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
 } from '../type';
 

@@ -5,17 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenGrantResponse } from '@authup/common';
 import {
-    OAuth2SubKind, OAuth2TokenGrantResponse, TokenError, hasOAuth2OpenIDScope,
+    OAuth2SubKind, TokenError, hasOAuth2OpenIDScope,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
-import { Request, getRequestIp } from 'routup';
+import type { Request } from 'routup';
+import { getRequestIp } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
-import { Grant } from './type';
-import { OAuth2BearerResponseBuildContext, buildOAuth2BearerTokenResponse } from '../response';
+import type { Grant } from './type';
+import type { OAuth2BearerResponseBuildContext } from '../response';
+import { buildOAuth2BearerTokenResponse } from '../response';
 
 export class AuthorizeGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {

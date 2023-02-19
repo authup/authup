@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { QueryResultCache } from 'typeorm/cache/QueryResultCache';
+import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
 import { hasClient, hasConfig, useClient } from 'redis-extension';
-import { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
-import { QueryRunner } from 'typeorm';
+import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
+import type { QueryRunner } from 'typeorm';
 
 type DatabaseQueryResultCacheOptions = {
     redisAlias?: string,

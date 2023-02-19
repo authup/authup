@@ -6,9 +6,8 @@
  */
 
 import path from 'path';
-import {
-    KeyPair, createKeyPair, deleteKeyPair, loadKeyPair,
-} from '../../src';
+import type { KeyPair } from '../../src';
+import { createKeyPair, deleteKeyPair, loadKeyPair } from '../../src';
 
 describe('sc/key-pair', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');

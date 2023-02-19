@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Lines } from 'ilingo';
+import type { Lines } from 'ilingo';
 
 export const LanguageFormEnglish : Lines = {
     update: {

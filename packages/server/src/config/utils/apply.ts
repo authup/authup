@@ -7,7 +7,7 @@
 
 import { setConfigOptions as setHTTPOptions } from '@authup/server-http';
 import { setConfigOptions as setDatabaseOptions } from '@authup/server-database';
-import { Options, OptionsInput } from '../type';
+import type { Options, OptionsInput } from '../type';
 import { buildBaseOptions } from './build';
 import { setupRedis } from './redis';
 import { setupSmtp } from './smtp';

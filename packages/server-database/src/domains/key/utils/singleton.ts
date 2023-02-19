@@ -5,15 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Realm } from '@authup/common';
 import {
-    KeyType, Realm,
+    KeyType,
     unwrapPrivateKeyPem,
     unwrapPublicKeyPem,
 } from '@authup/common';
 import {
     createKeyPair,
 } from '@authup/server-common';
-import { FindOptionsWhere } from 'typeorm';
+import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';
 

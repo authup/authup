@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenSignOptions, signToken } from '@authup/server-common';
+import type { TokenSignOptions } from '@authup/server-common';
+import { signToken } from '@authup/server-common';
 import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/common';
-import { KeyEntity } from '../entity';
+import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(
     payload: string | object | Buffer | Record<string, any>,

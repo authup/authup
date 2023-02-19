@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MatchedDataOptions, matchedData } from 'express-validator';
+import type { MatchedDataOptions } from 'express-validator';
+import { matchedData } from 'express-validator';
 import { deleteUndefinedObjectProperties } from '@authup/common';
-import { Request } from 'routup';
-import { EntityTarget } from 'typeorm';
+import type { Request } from 'routup';
+import type { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
+import type { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
 
 export function buildHTTPValidationErrorMessage<
     T extends Record<string, any> = Record<string, any>,

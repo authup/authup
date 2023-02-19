@@ -6,18 +6,18 @@
  */
 
 import { check, validationResult } from 'express-validator';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/common';
 import {
-    OAuth2AuthorizationCodeRequest,
     OAuth2AuthorizationResponseType,
     TokenError,
     isOAuth2ScopeAllowed,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 import { ClientEntity, ClientScopeEntity } from '@authup/server-database';
 import { useDataSource } from 'typeorm-extension';
+import type { ExpressValidationResult } from '../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,

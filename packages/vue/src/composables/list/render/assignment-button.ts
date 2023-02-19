@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Ref, VNodeArrayChildren, h } from 'vue';
+import type { Ref, VNodeArrayChildren } from 'vue';
+import { h } from 'vue';
 
 type Context<T> = {
     add: () => Promise<void>,

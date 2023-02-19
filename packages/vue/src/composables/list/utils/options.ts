@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ToRefs } from 'vue';
-import { ListBuilderComponentOptions, ListProps } from '../type';
+import type { ToRefs } from 'vue';
+import type { ListBuilderComponentOptions, ListProps } from '../type';
 
 export function buildListComponentOptions<T extends Record<string, any>>(
     props: ToRefs<ListProps<T>>,

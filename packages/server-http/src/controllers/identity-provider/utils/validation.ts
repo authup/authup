@@ -14,9 +14,9 @@ import {
     isValidIdentityProviderSub,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
-import { Request } from 'routup';
+import type { Request } from 'routup';
+import type { IdentityProviderEntity } from '@authup/server-database';
 import {
-    IdentityProviderEntity,
     RealmEntity,
     extractLdapIdentityProviderProtocolAttributes,
     extractOAuth2IdentityProviderProtocolAttributes,
@@ -25,8 +25,8 @@ import {
     validateOAuth2IdentityProviderProtocol, validateOidcIdentityProviderProtocol,
 } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,

@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, Role, isRealmResourceWritable } from '@authup/common';
+import type { Role } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
-import { ListItemSlotProps, SlotName } from '@vue-layout/hyperscript';
+import type { ListItemSlotProps } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';

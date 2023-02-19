@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingHttpHeaders } from 'http';
-import { RequestEnv } from '../http';
+import type { IncomingHttpHeaders } from 'http';
+import type { RequestEnv } from '../http';
 
 export type SocketNextFunction = (err?: Error) => void;
 export type SocketData = RequestEnv & {

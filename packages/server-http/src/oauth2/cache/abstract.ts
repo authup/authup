@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { KeyPathID } from 'redis-extension';
 import {
-    Cache, KeyPathID, hasClient, hasConfig, useClient,
+    Cache, hasClient, hasConfig, useClient,
 } from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authup/common';
 

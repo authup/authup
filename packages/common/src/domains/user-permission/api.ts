@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClientDriverInstance } from 'hapic';
-import { BuildInput, buildQuery } from 'rapiq';
-import { UserPermission } from './entity';
-import { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
+import type { ClientDriverInstance } from 'hapic';
+import type { BuildInput } from 'rapiq';
+import { buildQuery } from 'rapiq';
+import type { UserPermission } from './entity';
+import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
 import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class UserPermissionAPI implements DomainAPISlim<UserPermission> {

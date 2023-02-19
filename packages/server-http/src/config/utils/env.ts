@@ -11,7 +11,7 @@ import {
     readFromProcessEnv,
     readIntFromProcessEnv,
 } from '@authup/server-common';
-import { OptionsInput } from '../type';
+import type { OptionsInput } from '../type';
 
 export function readOptionsFromEnv() : OptionsInput {
     const options : OptionsInput = {};

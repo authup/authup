@@ -8,11 +8,12 @@
 import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
-import { Request } from 'routup';
-import { PermissionEntity, RobotEntity, RobotPermissionEntity } from '@authup/server-database';
+import type { Request } from 'routup';
+import type { RobotPermissionEntity } from '@authup/server-database';
+import { PermissionEntity, RobotEntity } from '@authup/server-database';
 import { isRequestSubOwner, useRequestEnv } from '../../../utils';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     buildHTTPValidationErrorMessage,
     extendExpressValidationResultWithRelation,

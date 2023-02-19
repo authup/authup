@@ -6,11 +6,12 @@
  */
 
 import useVuelidate from '@vuelidate/core';
+import type { PropType } from 'vue';
 import {
-    PropType, computed, defineComponent, h, reactive, ref, watch,
+    computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import { Permission } from '@authup/common';
+import type { Permission } from '@authup/common';
 import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/hyperscript';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';

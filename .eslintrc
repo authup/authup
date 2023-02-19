@@ -3,8 +3,7 @@
         "@tada5hi/eslint-config-vue-typescript"
     ],
     "parserOptions": {
-        "project": "./tsconfig.json",
-        "extraFileExtensions": [".vue"]
+        "project": "./tsconfig.json"
     },
     "ignorePatterns": ["**/dist/*"],
     "globals": {
@@ -16,12 +15,13 @@
         "import/no-extraneous-dependencies": [
             "error", {
                 "devDependencies": [
-                    "**/*.test.js",
-                    "**/*.test.ts",
-                    "**/*.spec.js",
-                    "**/*.spec.ts",
+                    "**/test/**/*.js",
+                    "**/test/**/*.ts",
+                    "**/test/**/*.spec.js",
+                    "**/test/**/*.spec.ts",
+                    "**/rollup.config.mjs",
                     "packages/ui/**",
-                    "**/rollup.config.js"
+                    "packages/vue/**"
                 ]
             }
         ],

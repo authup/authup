@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
+import type { Router } from 'routup';
 import { mountControllers } from '@routup/decorators';
 import { ClientScopeController } from './client-scope';
 import { RobotController } from './robot';

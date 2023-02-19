@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    OAuth2TokenGrantResponse, OAuth2TokenPayload, TokenError,
-} from '@authup/common';
-import { KeyEntity, signOAuth2TokenWithKey, useKey } from '@authup/server-database';
-import { OAuth2BearerResponseBuildContext } from './type';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/common';
+import { TokenError } from '@authup/common';
+import type { KeyEntity } from '@authup/server-database';
+import { signOAuth2TokenWithKey, useKey } from '@authup/server-database';
+import type { OAuth2BearerResponseBuildContext } from './type';
 
 export async function buildOAuth2BearerTokenResponse(
     context: OAuth2BearerResponseBuildContext,

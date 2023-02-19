@@ -7,7 +7,7 @@
 
 import process from 'node:process';
 import { merge } from 'smob';
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { setupLogger } from '../../utils';
 import { setupCommand } from '../../commands';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';

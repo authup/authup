@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import { KeyPairOptions } from '../type';
+import type { KeyPairOptions } from '../type';
 
 export function extendKeyPairOptions(
     options?: Partial<KeyPairOptions>,

@@ -6,7 +6,8 @@
  */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import supertest, { SuperTest, Test } from 'supertest';
+import type { SuperTest, Test } from 'supertest';
+import supertest from 'supertest';
 import { createRouter, useConfig } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {

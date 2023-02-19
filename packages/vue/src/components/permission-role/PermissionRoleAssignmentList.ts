@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import { Role } from '@authup/common';
+import type { Role } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import { RolePermissionAssignmentListItemActions } from '../role-permission';
 import { RoleList } from '../role';

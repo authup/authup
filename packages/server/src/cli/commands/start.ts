@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import { Arguments, Argv, CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { setupLogger } from '../../utils';
 import { startCommand } from '../../commands';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';

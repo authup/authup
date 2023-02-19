@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Options as BodyOptions } from '@routup/body';
-import { ParseOptions as CookieOptions } from '@routup/cookie';
-import { OptionsInput as PrometheusOptions } from '@routup/prometheus';
-import { ParseOptions as QueryOptions } from '@routup/query';
-import { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
-import { CorsOptions } from 'cors';
+import type { Options as BodyOptions } from '@routup/body';
+import type { ParseOptions as CookieOptions } from '@routup/cookie';
+import type { OptionsInput as PrometheusOptions } from '@routup/prometheus';
+import type { ParseOptions as QueryOptions } from '@routup/query';
+import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
+import type { CorsOptions } from 'cors';
 
 export type Options = {
     /**

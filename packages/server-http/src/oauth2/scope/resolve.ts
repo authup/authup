@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, Robot, User } from '@authup/common';
 import {
-    Client, OAuth2SubKind, Robot, ScopeName, User, hasOwnProperty, transformOAuth2ScopeToArray,
+    OAuth2SubKind, ScopeName, hasOwnProperty, transformOAuth2ScopeToArray,
 } from '@authup/common';
 
 type ScopeSubFields<

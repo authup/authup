@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuildInput } from 'rapiq';
+import type { BuildInput } from 'rapiq';
 
 export type SingleResourceResponse<R> = R;
 export type CollectionResourceResponse<R> = {

@@ -11,7 +11,7 @@ import { buildLoaderFilePath, loadSync, locateSync } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { Router } from 'routup';
+import type { Router } from 'routup';
 
 type SwaggerMiddlewareOptions = {
     documentPath: string,

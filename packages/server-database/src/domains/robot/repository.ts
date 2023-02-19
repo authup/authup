@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     AbilityDescriptor, Robot,
-    Role, buildPermissionDescriptorFromRelation, createNanoID,
+    Role,
 } from '@authup/common';
+import { buildPermissionDescriptorFromRelation, createNanoID } from '@authup/common';
 
 import { compare, hash } from '@authup/server-common';
-import {
-    DataSource, EntityManager, InstanceChecker, Repository,
-} from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
+import { InstanceChecker, Repository } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';

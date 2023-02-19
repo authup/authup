@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SmtpConfig, setSmtpConfig } from '@authup/server-common';
+import type { SmtpConfig } from '@authup/server-common';
+import { setSmtpConfig } from '@authup/server-common';
 
 export function setupSmtp(data: string | boolean | SmtpConfig): void {
     if (

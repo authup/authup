@@ -8,10 +8,12 @@ import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
+import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    PropType, VNodeArrayChildren, computed, defineComponent, h, reactive, ref, watch,
+    computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import { REALM_MASTER_NAME, Realm, createNanoID } from '@authup/common';
+import type { Realm } from '@authup/common';
+import { REALM_MASTER_NAME, createNanoID } from '@authup/common';
 import {
     buildFormInput,
     buildFormSubmit,

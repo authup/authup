@@ -9,9 +9,8 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
 } from '@authup/common';
-import {
-    Request, Response, send, sendCreated,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';

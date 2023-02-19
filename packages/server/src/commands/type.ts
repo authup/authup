@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { Logger } from '@authup/server-common';
+import type { DataSource, DataSourceOptions } from 'typeorm';
+import type { Logger } from '@authup/server-common';
 
 export type CommandContext = {
     logger?: Logger,

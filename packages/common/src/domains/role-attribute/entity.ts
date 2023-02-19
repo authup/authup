@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Realm } from '../realm';
-import { Role } from '../role';
+import type { Realm } from '../realm';
+import type { Role } from '../role';
 
 export interface RoleAttribute {
     id: string;

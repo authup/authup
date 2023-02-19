@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PropType, defineComponent, toRefs } from 'vue';
-import { Realm } from '@authup/common';
-import { BuildInput } from 'rapiq';
+import type { PropType } from 'vue';
+import { defineComponent, toRefs } from 'vue';
+import type { Realm } from '@authup/common';
+import type { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     Jwt,
     JwtPayload,
+} from 'jsonwebtoken';
+import {
     decode,
 } from 'jsonwebtoken';
 import { TokenError } from '@authup/common';
-import { TokenDecodeOptions } from './type';
+import type { TokenDecodeOptions } from './type';
 import { handleJWTError } from './utils';
 
 /**

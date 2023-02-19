@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NavigationStore, createPlugin } from '@vue-layout/basic';
+import type { NavigationStore } from '@vue-layout/basic';
+import { createPlugin } from '@vue-layout/basic';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin } from '#app';
 import { buildNavigationProvider } from '../config/layout';

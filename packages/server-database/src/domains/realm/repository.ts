@@ -6,9 +6,8 @@
  */
 
 import { REALM_MASTER_NAME } from '@authup/common';
-import {
-    DataSource, EntityManager, InstanceChecker, Repository,
-} from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
+import { InstanceChecker, Repository } from 'typeorm';
 import { RealmEntity } from './entity';
 
 export class RealmRepository extends Repository<RealmEntity> {

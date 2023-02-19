@@ -6,7 +6,7 @@
  */
 
 import type { Server } from 'node:http';
-import { Router } from 'routup';
+import type { Router } from 'routup';
 
 export interface HttpServerContext {
     router: Router

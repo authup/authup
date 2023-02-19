@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2IdentityProvider } from './oauth2';
-import { LdapIdentityProvider } from './ldap';
-import { OpenIDConnectIdentityProvider } from './oidc';
+import type { OAuth2IdentityProvider } from './oauth2';
+import type { LdapIdentityProvider } from './ldap';
+import type { OpenIDConnectIdentityProvider } from './oidc';
 
 export type IdentityProviderProtocolType = OAuth2IdentityProvider |
 LdapIdentityProvider |

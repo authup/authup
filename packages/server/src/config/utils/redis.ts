@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Client, ClientOptions, buildConfig, setClient, setConfig,
-} from 'redis-extension';
+import type { Client, ClientOptions } from 'redis-extension';
+import { buildConfig, setClient, setConfig } from 'redis-extension';
 import { isObject } from 'smob';
 
 export function isRedisClient(data: unknown) : data is Client {

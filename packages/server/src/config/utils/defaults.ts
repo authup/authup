@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { BaseOptions } from '../type';
+import type { BaseOptions } from '../type';
 
 export function extendCoreOptionsWithDefaults(config: Partial<BaseOptions>) : BaseOptions {
     config.env = config.env || 'production';

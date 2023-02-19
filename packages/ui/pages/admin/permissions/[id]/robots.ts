@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Permission } from '@authup/common';
-import { PropType } from 'vue';
+import type { Permission } from '@authup/common';
+import type { PropType } from 'vue';
 import { defineNuxtComponent, resolveComponent } from '#imports';
 
 export default defineNuxtComponent({

@@ -6,7 +6,7 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import {
+import type {
     Next, Request, Response, Router,
 } from 'routup';
 import { unsetResponseCookie, useRequestCookie } from '@routup/cookie';

@@ -6,7 +6,7 @@
  */
 
 import { generateKeyPair } from 'node:crypto';
-import { KeyPair, KeyPairOptions } from './type';
+import type { KeyPair, KeyPairOptions } from './type';
 import { decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
 import { saveKeyPair } from './save';
 

@@ -12,19 +12,22 @@ import {
 } from '@authup/common';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '@authup/server-database';
 import { randomBytes } from 'node:crypto';
-import { Request, getRequestIp } from 'routup';
+import type { Request } from 'routup';
+import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useRequestEnv } from '../../utils';
-import {
+import type {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
+} from '../token';
+import {
     buildOAuth2AccessTokenPayload,
     buildOpenIdTokenPayload,
     extendOpenIdTokenPayload,
 } from '../token';
 import { OAuth2AuthorizationCodeCache } from '../cache';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
-import { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
+import type { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
 import { validateAuthorizeRequest } from './validation';
 
 export async function runOAuth2Authorization(

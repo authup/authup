@@ -6,11 +6,10 @@
  */
 
 import { useRequestQuery } from '@routup/query';
+import type { Request, Response } from 'routup';
+import { send, useRequestParam } from 'routup';
+import type { QueryFieldsApplyOptions } from 'typeorm-extension';
 import {
-    Request, Response, send, useRequestParam,
-} from 'routup';
-import {
-    QueryFieldsApplyOptions,
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';

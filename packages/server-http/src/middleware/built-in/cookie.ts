@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ParseOptions } from '@routup/cookie';
 import {
-    ParseOptions,
     createRequestHandler as createRequestCookieHandler,
 } from '@routup/cookie';
-import { Router } from 'routup';
+import type { Router } from 'routup';
 
 export function registerCookieMiddleware(router: Router, input?: ParseOptions) {
     router.use(createRequestCookieHandler(input || {}));

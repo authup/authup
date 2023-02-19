@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, User, isRealmResourceWritable } from '@authup/common';
+import type { User } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import { storeToRefs } from 'pinia';
-import { Ref } from 'vue';
+import type { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import { NuxtPage } from '#components';

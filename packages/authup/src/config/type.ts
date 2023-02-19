@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Options as ServerOptions, OptionsInput as ServerOptionsInput } from '@authup/server';
-import { UIOptions, UIOptionsInput } from '../packages';
+import type { Options as ServerOptions, OptionsInput as ServerOptionsInput } from '@authup/server';
+import type { UIOptions, UIOptionsInput } from '../packages';
 
 export type Options = {
     server: ServerOptions,

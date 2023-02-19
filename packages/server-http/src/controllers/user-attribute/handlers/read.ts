@@ -6,9 +6,8 @@
  */
 
 import { useRequestQuery } from '@routup/query';
-import {
-    Request, Response, send, useRequestParam,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send, useRequestParam } from 'routup';
 import { Brackets } from 'typeorm';
 import {
     applyQuery, useDataSource,

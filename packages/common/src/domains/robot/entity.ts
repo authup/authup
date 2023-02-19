@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Realm } from '../realm';
-import { User } from '../user';
+import type { Realm } from '../realm';
+import type { User } from '../user';
 
 export interface Robot {
     id: string;

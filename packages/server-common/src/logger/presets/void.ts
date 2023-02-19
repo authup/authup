@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Logger } from '../type';
+import type { Logger } from '../type';
 
 export class VoidLogger implements Logger {
     error(message: any) : any;

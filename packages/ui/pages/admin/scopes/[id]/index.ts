@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Robot, Scope } from '@authup/common';
-import { PropType } from 'vue';
+import type { Scope } from '@authup/common';
+import { Robot } from '@authup/common';
+import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
 

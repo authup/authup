@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authup/common';
-import { Request, Response, send } from 'routup';
+import type { OAuth2OpenIDProviderMetadata } from '@authup/common';
+import { OAuth2AuthorizationResponseType } from '@authup/common';
+import type { Request, Response } from 'routup';
+import { send } from 'routup';
 import { useConfig } from '../../../../config';
 
 export async function getOpenIdConfigurationRouteHandler(req: Request, res: Response) : Promise<any> {

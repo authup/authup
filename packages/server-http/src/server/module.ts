@@ -6,7 +6,7 @@
  */
 
 import http from 'node:http';
-import { HttpServerContext, HttpServerInterface } from './type';
+import type { HttpServerContext, HttpServerInterface } from './type';
 
 export function createHttpServer({ router } : HttpServerContext) : HttpServerInterface {
     return new http.Server(router.createListener());

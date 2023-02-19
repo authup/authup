@@ -6,7 +6,7 @@
  */
 
 import EventEmitter from 'events';
-import { RobotEntity } from '../entity';
+import type { RobotEntity } from '../entity';
 
 export declare interface RobotEventEmitter {
     on(event: 'credentials', listener: (entity: Partial<RobotEntity>) => void): this;

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client as BaseClient, Config } from 'hapic';
+import type { Config } from 'hapic';
+import { Client as BaseClient } from 'hapic';
 
 import {
     ClientAPI, ClientScopeAPI,

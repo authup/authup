@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, Options, mergeOptions } from '@ebec/http';
-import { AuthorizationHeaderType } from 'hapic';
+import type { Options } from '@ebec/http';
+import { BadRequestError, mergeOptions } from '@ebec/http';
+import type { AuthorizationHeaderType } from 'hapic';
 import { ErrorCode } from '../constants';
 
 export class HeaderError extends BadRequestError {

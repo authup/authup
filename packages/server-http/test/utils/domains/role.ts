@@ -6,8 +6,8 @@
  */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { SuperTest, Test } from 'supertest';
-import { Role } from '@authup/common';
+import type { SuperTest, Test } from 'supertest';
+import type { Role } from '@authup/common';
 
 export const TEST_DEFAULT_ROLE : Partial<Role> = {
     name: 'test',

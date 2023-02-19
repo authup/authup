@@ -8,9 +8,8 @@
 import {
     PermissionName,
 } from '@authup/common';
-import {
-    Request, Response, send, sendCreated,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     RobotRepository, useRobotEventEmitter,

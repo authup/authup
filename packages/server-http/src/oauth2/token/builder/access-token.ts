@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind, OAuth2TokenPayload } from '@authup/common';
+import type { OAuth2TokenPayload } from '@authup/common';
+import { OAuth2TokenKind } from '@authup/common';
 import { randomUUID } from 'node:crypto';
-import { OAuth2AccessTokenBuildContext } from './type';
+import type { OAuth2AccessTokenBuildContext } from './type';
 
 export function buildOAuth2AccessTokenPayload(
     context: OAuth2AccessTokenBuildContext,

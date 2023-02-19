@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProvider } from '../identity-provider';
+import type { IdentityProvider } from '../identity-provider';
 
 export interface IdentityProviderAttribute {
     id: string;

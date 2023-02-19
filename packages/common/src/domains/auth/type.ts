@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JwtPayload } from 'jsonwebtoken';
-import { AbilityDescriptor } from '../../ability-manager';
-import { OAuth2SubKind, OAuth2TokenKind } from './constants';
+import type { JwtPayload } from 'jsonwebtoken';
+import type { AbilityDescriptor } from '../../ability-manager';
+import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2TokenGrantResponse = {
     access_token: string,

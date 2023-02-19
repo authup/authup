@@ -9,9 +9,8 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName, REALM_MASTER_NAME, ROBOT_SYSTEM_NAME, isPropertySet,
 } from '@authup/common';
-import {
-    Request, Response, sendAccepted, useRequestParam,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, resolveRealm, useRobotEventEmitter } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';

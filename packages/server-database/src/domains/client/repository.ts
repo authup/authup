@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    DataSource, EntityManager, InstanceChecker, Repository,
-} from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
+import { InstanceChecker, Repository } from 'typeorm';
 import { ClientEntity } from './entity';
 
 export class OAuth2ClientRepository extends Repository<ClientEntity> {

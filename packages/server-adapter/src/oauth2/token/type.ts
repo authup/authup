@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Logger, VerifyContext } from '../../type';
+import type { VerifyContext } from '../../type';
+import { Logger } from '../../type';
 
 export type TokenVerifyContext = VerifyContext;

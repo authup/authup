@@ -14,8 +14,9 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import type { Realm, RobotPermission } from '@authup/common';
 import {
-    Permission, Realm, Robot, RobotPermission,
+    Permission, Robot,
 } from '@authup/common';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot/entity';

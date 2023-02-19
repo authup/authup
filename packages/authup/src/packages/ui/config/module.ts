@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { UIOptions, UIOptionsInput } from '../type';
+import type { UIOptions, UIOptionsInput } from '../type';
 import { validateUiConfig } from './validate';
 
 export function applyUiConfig(input: UIOptionsInput) : UIOptions {

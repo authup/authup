@@ -7,9 +7,10 @@
 
 import { BadRequestError, NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
-import { User } from '@authup/common';
-import { Request, Response, sendAccepted } from 'routup';
-import { FindOptionsWhere } from 'typeorm';
+import type { User } from '@authup/common';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
+import type { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useSMTPClient } from '@authup/server-common';

@@ -7,7 +7,7 @@
 
 import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/common';
 import { useConfig } from '@authup/server-database';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 import { useRequestEnv } from './env';
 
 export function isRequestSubOwner(req: Request) : boolean {

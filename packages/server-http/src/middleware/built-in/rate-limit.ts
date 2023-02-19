@@ -6,11 +6,11 @@
  */
 
 import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/common';
+import type { OptionsInput } from '@routup/rate-limit';
 import {
-    OptionsInput,
     createHandler,
 } from '@routup/rate-limit';
-import { Request, Router } from 'routup';
+import type { Request, Router } from 'routup';
 import { merge } from 'smob';
 import { useRequestEnv } from '../../utils';
 import { transformBoolToEmptyObject } from '../utils';

@@ -8,7 +8,7 @@
 import {
     defineComponent, h,
 } from 'vue';
-import { User } from '@authup/common';
+import type { User } from '@authup/common';
 import { SlotName } from '@vue-layout/hyperscript';
 import { UserRoleAssignmentListItemActions } from '../user-role';
 import { UserList } from '../user/UserList';

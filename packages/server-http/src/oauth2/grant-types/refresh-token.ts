@@ -5,17 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenGrantResponse } from '@authup/common';
 import {
-    OAuth2TokenGrantResponse,
     TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request, getRequestIp } from 'routup';
+import type { Request } from 'routup';
+import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import { Grant } from './type';
+import type { Grant } from './type';
 import { readOAuth2TokenPayload } from '../token';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {

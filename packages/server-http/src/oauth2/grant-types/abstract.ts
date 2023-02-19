@@ -5,18 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenPayload } from '@authup/common';
+import type { OAuth2TokenPayload } from '@authup/common';
 import { OAuth2RefreshTokenEntity } from '@authup/server-database';
-import { Continu } from 'continu';
+import type { Continu } from 'continu';
 import { useDataSource } from 'typeorm-extension';
-import { Options, OptionsInput, useConfig } from '../../config';
+import type { Options, OptionsInput } from '../../config';
+import { useConfig } from '../../config';
 import {
     buildOAuth2AccessTokenPayload,
     transformToRefreshTokenEntity,
     transformToRefreshTokenPayload,
 } from '../token/builder';
 import { OAuth2RefreshTokenCache } from '../cache';
-import { AccessTokenIssueContext } from './type';
+import type { AccessTokenIssueContext } from './type';
 
 export abstract class AbstractGrant {
     protected config : Continu<Options, OptionsInput>;

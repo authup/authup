@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import zod from 'zod';
-import { UIOptionsInput } from '../type';
+import type { UIOptionsInput } from '../type';
 
 const configValidation = zod.object({
     port: zod.number().nonnegative(),

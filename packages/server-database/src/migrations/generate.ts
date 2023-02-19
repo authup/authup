@@ -10,7 +10,7 @@ import path from 'path';
 import fs from 'fs';
 import process from 'process';
 import { MigrationGenerateCommand } from 'typeorm/commands/MigrationGenerateCommand';
-import { MigrationGenerateCommandContext } from './type';
+import type { MigrationGenerateCommandContext } from './type';
 
 class GenerateCommand extends MigrationGenerateCommand {
     static prettify(query: string) {

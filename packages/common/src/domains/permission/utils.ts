@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MongoQuery } from '@ucast/mongo2js';
-import { PermissionRelation } from './type';
-import { AbilityDescriptor } from '../../ability-manager';
+import type { MongoQuery } from '@ucast/mongo2js';
+import type { PermissionRelation } from './type';
+import type { AbilityDescriptor } from '../../ability-manager';
 
 export function buildPermissionMetaCondition(input: string | null): MongoQuery {
     if (typeof input === 'undefined') {

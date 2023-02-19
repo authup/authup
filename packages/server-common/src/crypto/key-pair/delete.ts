@@ -7,7 +7,7 @@
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { KeyPairOptions } from './type';
+import type { KeyPairOptions } from './type';
 import { buildKeyFileName, extendKeyPairOptions } from './utils';
 import { KeyPairKind } from './constants';
 

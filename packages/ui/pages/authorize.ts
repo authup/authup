@@ -6,11 +6,10 @@
  */
 
 import { storeToRefs } from 'pinia';
-import { BuildInput } from 'rapiq';
-import {
-    Client, ClientScope, isGlobMatch,
-} from '@authup/common';
-import { Ref, VNodeArrayChildren } from 'vue';
+import type { BuildInput } from 'rapiq';
+import type { Client, ClientScope } from '@authup/common';
+import { isGlobMatch } from '@authup/common';
+import type { Ref, VNodeArrayChildren } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { useAPI } from '../composables/api';

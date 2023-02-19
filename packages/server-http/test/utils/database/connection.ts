@@ -11,8 +11,8 @@ import {
 import {
     DataSource,
 } from 'typeorm';
+import type { DatabaseRootSeederResult } from '@authup/server-database';
 import {
-    DatabaseRootSeederResult,
     DatabaseSeeder,
     extendDataSourceOptions,
 } from '@authup/server-database';

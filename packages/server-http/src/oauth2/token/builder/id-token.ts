@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2OpenIdTokenPayload, OAuth2TokenKind } from '@authup/common';
+import type { OAuth2OpenIdTokenPayload } from '@authup/common';
+import { OAuth2TokenKind } from '@authup/common';
 import { randomUUID } from 'node:crypto';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
-import { OAuth2OpenIdTokenBuildContext } from './type';
+import type { OAuth2OpenIdTokenBuildContext } from './type';
 
 export function buildOpenIdTokenPayload(
     context: OAuth2OpenIdTokenBuildContext,

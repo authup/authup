@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import Toast, { POSITION, PluginOptions } from 'vue-toastification';
+import type { PluginOptions } from 'vue-toastification';
+import Toast, { POSITION } from 'vue-toastification';
 import { defineNuxtPlugin } from '#app';
 
 export default defineNuxtPlugin((ctx) => {

@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Request, Response, send,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send } from 'routup';
 
 export function createMetricsRouteHandler(req: Request, res: Response) {
     // todo: use prom-client to provide detailed metrics

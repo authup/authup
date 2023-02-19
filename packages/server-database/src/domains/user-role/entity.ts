@@ -15,9 +15,8 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import {
-    Realm, Role, User, UserRole,
-} from '@authup/common';
+import type { Realm, UserRole } from '@authup/common';
+import { Role, User } from '@authup/common';
 import { RoleEntity } from '../role';
 import { UserEntity } from '../user/entity';
 import { RealmEntity } from '../realm';

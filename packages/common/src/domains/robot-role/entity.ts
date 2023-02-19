@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Role } from '../role';
-import { Robot } from '../robot';
-import { Realm } from '../realm';
+import type { Role } from '../role';
+import type { Robot } from '../robot';
+import type { Realm } from '../realm';
 
 export interface RobotRole {
     id: string;

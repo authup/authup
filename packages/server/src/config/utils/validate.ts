@@ -6,7 +6,7 @@
  */
 
 import zod from 'zod';
-import { BaseOptionsInput } from '../type';
+import type { BaseOptionsInput } from '../type';
 
 const configValidation = zod.object({
     env: zod.string(),

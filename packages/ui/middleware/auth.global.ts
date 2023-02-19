@@ -7,7 +7,7 @@
 
 import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authup/common';
 import { isClientError } from 'hapic';
-import { RouteLocationNormalized } from 'vue-router';
+import type { RouteLocationNormalized } from 'vue-router';
 import {
     navigateTo,
 } from '#app';

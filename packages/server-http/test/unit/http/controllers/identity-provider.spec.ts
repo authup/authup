@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2IdentityProvider } from '@authup/common';
 import {
     IdentityProviderProtocol,
-    OAuth2IdentityProvider,
     buildIdentityProviderAuthorizePath,
 } from '@authup/common';
 import { Client } from '@hapic/oauth2';

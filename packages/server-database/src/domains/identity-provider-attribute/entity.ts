@@ -12,7 +12,7 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     IdentityProvider, IdentityProviderAttribute,
 } from '@authup/common';
 import { IdentityProviderEntity } from '../identity-provider/entity';

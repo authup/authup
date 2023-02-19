@@ -5,19 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
     AbilityManager,
     CookieName, OAuth2SubKind,
-    OAuth2TokenIntrospectionResponse,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import { useRequestCookies } from '@routup/cookie';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import {
-    Handler, Next, Request, Response, setRequestEnv,
+import type {
+    Handler, Next, Request, Response,
 } from 'routup';
-import { RequestEnv } from '../type';
-import { HTTPMiddlewareContext } from './type';
+import { setRequestEnv } from 'routup';
+import type { RequestEnv } from '../type';
+import type { HTTPMiddlewareContext } from './type';
 import { verifyOAuth2Token } from '../../oauth2';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {

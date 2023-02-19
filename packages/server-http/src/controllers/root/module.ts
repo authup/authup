@@ -9,7 +9,7 @@ import { SwaggerTags } from '@trapi/swagger';
 import {
     DController, DGet, DParam, DPost, DRequest, DResponse,
 } from '@routup/decorators';
-import {
+import type {
     OAuth2JsonWebKey,
     OAuth2OpenIDProviderMetadata,
 } from '@authup/common';

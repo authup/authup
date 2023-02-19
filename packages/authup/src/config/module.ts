@@ -10,7 +10,7 @@ import { setOptions } from '@authup/server';
 import consola from 'consola';
 import { extendUiConfig, validateUiConfig } from '../packages';
 import { readConfig } from './read';
-import { Options } from './type';
+import type { Options } from './type';
 
 export async function createConfig() : Promise<Options> {
     const global = await readConfig();

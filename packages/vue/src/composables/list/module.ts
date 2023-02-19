@@ -5,16 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ListLoadMeta } from '@vue-layout/hyperscript';
 import {
-    ListLoadMeta,
     buildList,
     extractValueFromOptionValueInput,
 } from '@vue-layout/hyperscript';
+import type { Ref } from 'vue';
 import {
-    Ref, computed, ref, unref, watch,
+    computed, ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
-import { ListBuilderContext } from './type';
+import type { ListBuilderContext } from './type';
 import {
     buildListComponentOptions,
     buildListCreatedHandler,

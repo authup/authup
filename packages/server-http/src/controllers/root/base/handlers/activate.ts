@@ -7,9 +7,8 @@
 
 import { check, validationResult } from 'express-validator';
 import { NotFoundError } from '@ebec/http';
-import {
-    Request, Response, sendAccepted,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '@authup/server-database';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';

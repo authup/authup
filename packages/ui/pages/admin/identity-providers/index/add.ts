@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProvider, IdentityProviderProtocol, PermissionName } from '@authup/common';
+import type { IdentityProvider } from '@authup/common';
+import { IdentityProviderProtocol, PermissionName } from '@authup/common';
 import { buildFormSelect } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';

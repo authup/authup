@@ -15,9 +15,9 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import type { ClientScope } from '@authup/common';
 import {
     Client,
-    ClientScope,
     Scope,
 } from '@authup/common';
 import { ClientEntity } from '../client';

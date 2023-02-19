@@ -5,18 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2TokenGrantResponse } from '@authup/common';
 import {
-    OAuth2SubKind, OAuth2TokenGrantResponse,
+    OAuth2SubKind,
     RobotError,
     ScopeName,
 } from '@authup/common';
 import { useRequestBody } from '@routup/body';
-import { Request, getRequestIp } from 'routup';
+import type { Request } from 'routup';
+import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, RobotRepository } from '@authup/server-database';
+import type { RobotEntity } from '@authup/server-database';
+import { RobotRepository } from '@authup/server-database';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import { Grant } from './type';
+import type { Grant } from './type';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {

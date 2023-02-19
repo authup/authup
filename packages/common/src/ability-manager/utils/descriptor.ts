@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityDescriptor } from '../type';
+import type { AbilityDescriptor } from '../type';
 
 export function extendPermissionDescriptor(descriptor: AbilityDescriptor) {
     if (typeof descriptor.target === 'undefined') {

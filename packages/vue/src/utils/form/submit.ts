@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Ref, SetupContext } from 'vue';
+import type { SetupContext } from 'vue';
+import { Ref } from 'vue';
 
 type Context<T extends Record<string, any>> = {
     ctx: SetupContext<('created' | 'deleted' | 'updated' | 'failed')[]>,

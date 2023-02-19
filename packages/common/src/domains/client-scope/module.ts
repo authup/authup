@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '../client';
-import { Scope } from '../scope';
+import type { Client } from '../client';
+import type { Scope } from '../scope';
 
 export interface ClientScope {
     id: string;

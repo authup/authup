@@ -5,14 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ChildProcess, exec } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { exec } from 'child_process';
 import consola from 'consola';
 import path from 'path';
 import process from 'process';
 import findUpPackagePath from 'resolve-package-path';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
-import { CommandExecutionContext } from '../../type';
-import { UICommand } from '../constants';
+import type { CommandExecutionContext } from '../../type';
+import type { UICommand } from '../constants';
 
 export function executeUICommand(
     command: `${UICommand}`,

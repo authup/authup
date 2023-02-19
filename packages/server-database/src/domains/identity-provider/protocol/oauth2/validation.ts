@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2IdentityProviderBase } from '@authup/common';
+import type { OAuth2IdentityProviderBase } from '@authup/common';
 import zod from 'zod';
 
 const validationSchema = zod.object({

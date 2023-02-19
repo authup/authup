@@ -6,7 +6,7 @@
  */
 
 import consola from 'consola';
-import { CommandExecutionContext } from '../../type';
+import type { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
 import { handleServerCommandOutput } from './utils';

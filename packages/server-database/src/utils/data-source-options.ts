@@ -6,7 +6,7 @@
  */
 import path from 'path';
 import { buildDataSourceOptions as build } from 'typeorm-extension';
-import { DataSourceOptions } from 'typeorm';
+import type { DataSourceOptions } from 'typeorm';
 import { hasClient, hasConfig } from 'redis-extension';
 import { useConfig } from '../config';
 import { setEntitiesForDataSourceOptions } from './entities';

@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PropType } from 'vue';
 import {
-    PropType, VNodeArrayChildren, defineComponent, h, ref,
+    VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
-import { RobotRole } from '@authup/common';
+import type { RobotRole } from '@authup/common';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
 import { useHTTPClient } from '../../utils';
 

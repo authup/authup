@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Ilingo } from 'ilingo';
+import type { Ilingo } from 'ilingo';
 import { useNuxtApp } from '#app';
 
 export const useIlingo = () : Ilingo => {

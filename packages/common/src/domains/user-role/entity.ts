@@ -4,9 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { Role } from '../role';
-import { User } from '../user';
-import { Realm } from '../realm';
+import type { Role } from '../role';
+import type { User } from '../user';
+import type { Realm } from '../realm';
 
 export interface UserRole {
     id: string;

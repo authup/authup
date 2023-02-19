@@ -5,20 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     IdentityProviderAccount,
     KeycloakJWTPayload,
     OAuth2IdentityProvider,
     OAuth2TokenGrantResponse,
     OpenIDConnectIdentityProvider,
-    TokenError,
     User,
+} from '@authup/common';
+import {
+    TokenError,
     createNanoID, hasOwnProperty, isValidUserName,
 } from '@authup/common';
 import { decodeToken } from '@authup/server-common';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
-import { UserEntity, UserRepository } from '../user';
+import type { UserEntity } from '../user';
+import { UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 import { IdentityProviderRoleEntity } from '../identity-provider-role';
 

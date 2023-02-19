@@ -1,8 +1,8 @@
-import { Component, Plugin } from 'vue';
+import type { Component, Plugin } from 'vue';
 
 // Import vue components
 import * as components from './components';
-import { InstallOptions } from './type';
+import type { InstallOptions } from './type';
 import { setHTTPClient } from './utils';
 
 // install function executed by Vue.use()

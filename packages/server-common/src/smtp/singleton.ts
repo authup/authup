@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Transporter, createTestAccount } from 'nodemailer';
+import type { Transporter } from 'nodemailer';
+import { createTestAccount } from 'nodemailer';
 import { createSmtpClient } from './module';
 import { useSmtpConfig } from './config';
-import { SmtpConfig } from './type';
+import type { SmtpConfig } from './type';
 
 let instance : Transporter | undefined;
 

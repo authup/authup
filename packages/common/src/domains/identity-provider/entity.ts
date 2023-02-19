@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Realm } from '../realm';
-import { IdentityProviderProtocol, IdentityProviderProtocolConfig } from './constants';
+import type { Realm } from '../realm';
+import type { IdentityProviderProtocol, IdentityProviderProtocolConfig } from './constants';
 
 export interface IdentityProvider {
     id: string,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Adapter } from 'browser-storage-adapter';
+import type { Adapter } from 'browser-storage-adapter';
 import { useNuxtApp } from '#app';
 
 export const useWarehouse = () : Adapter => {

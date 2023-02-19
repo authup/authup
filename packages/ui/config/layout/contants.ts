@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { NavigationElement } from '@vue-layout/basic';
+import type { NavigationElement } from '@vue-layout/basic';
 import { PermissionName } from '@authup/common';
 
 export enum LayoutKey {

@@ -6,7 +6,7 @@
  */
 
 import { KeyPairKind } from '../constants';
-import { KeyPairOptions } from '../type';
+import type { KeyPairOptions } from '../type';
 import { extendKeyPairOptions } from './options';
 
 export function buildKeyFileName(

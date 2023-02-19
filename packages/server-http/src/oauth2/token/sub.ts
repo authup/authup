@@ -12,12 +12,14 @@ import {
 import { NotFoundError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
+import type {
+    RobotEntity,
+    UserEntity,
+} from '@authup/server-database';
 import {
     CachePrefix,
     ClientEntity,
-    RobotEntity,
     RobotRepository,
-    UserEntity,
     UserRepository,
 } from '@authup/server-database';
 import { resolveOAuth2SubAttributesForScope } from '../scope';

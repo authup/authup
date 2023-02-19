@@ -8,11 +8,12 @@
 import { check, validationResult } from 'express-validator';
 import { isValidRealmName } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
-import { Request } from 'routup';
-import { PermissionEntity, RealmEntity } from '@authup/server-database';
+import type { Request } from 'routup';
+import type { PermissionEntity } from '@authup/server-database';
+import { RealmEntity } from '@authup/server-database';
 import { RequestHandlerOperation } from '../../../request/constants';
+import type { ExpressValidationResult } from '../../../validation';
 import {
-    ExpressValidationResult,
     RequestValidationError,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';

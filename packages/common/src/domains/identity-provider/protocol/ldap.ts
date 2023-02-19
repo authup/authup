@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProvider } from '../entity';
-import { IdentityProviderProtocol } from '../constants';
+import type { IdentityProvider } from '../entity';
+import type { IdentityProviderProtocol } from '../constants';
 
 export interface LdapIdentityProvider extends IdentityProvider {
     protocol: IdentityProviderProtocol.LDAP | `${IdentityProviderProtocol.LDAP}`;

@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import { Router } from 'routup';
+import type { Router } from 'routup';
 import { useConfig } from '../config';
 import {
     registerAuthMiddleware,

@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    PropType, defineComponent, h, ref,
-} from 'vue';
-import { RobotPermission } from '@authup/common';
+import type { PropType } from 'vue';
+import { defineComponent, h, ref } from 'vue';
+import type { RobotPermission } from '@authup/common';
 import { renderListItemAssignmentButton } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

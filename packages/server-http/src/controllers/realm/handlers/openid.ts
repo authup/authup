@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, OAuth2OpenIDProviderMetadata } from '@authup/common';
+import type { OAuth2OpenIDProviderMetadata } from '@authup/common';
+import { OAuth2AuthorizationResponseType } from '@authup/common';
 import { NotFoundError } from '@ebec/http';
-import {
-    Request, Response, send, useRequestParam,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { send, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '@authup/server-database';
 import { useConfig } from '../../../config';

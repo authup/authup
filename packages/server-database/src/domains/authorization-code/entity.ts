@@ -8,7 +8,7 @@
 import {
     Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
 } from 'typeorm';
-import {
+import type {
     Client, OAuth2AuthorizationCode, Realm, Robot,
     User,
 } from '@authup/common';

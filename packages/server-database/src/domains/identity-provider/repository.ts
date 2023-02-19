@@ -5,14 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     IdentityProvider,
     IdentityProviderProtocolType,
-    hasOwnProperty,
 } from '@authup/common';
 import {
-    DataSource, EntityManager, In, InstanceChecker, Repository,
-} from 'typeorm';
+    hasOwnProperty,
+} from '@authup/common';
+import type { DataSource, EntityManager } from 'typeorm';
+import { In, InstanceChecker, Repository } from 'typeorm';
 import { IdentityProviderEntity } from './entity';
 import { transformAttributesToEntities, transformAttributesToRecord } from '../utils';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute';

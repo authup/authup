@@ -13,7 +13,7 @@ import {
     buildDataSourceOptions,
     saveSeedResult,
 } from '@authup/server-database';
-import { SetupCommandContext } from './type';
+import type { SetupCommandContext } from './type';
 
 export async function setupCommand(context?: SetupCommandContext) {
     context = context || {};

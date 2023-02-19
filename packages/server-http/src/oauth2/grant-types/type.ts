@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     OAuth2SubKind, OAuth2TokenGrantResponse,
 } from '@authup/common';
-import { Request } from 'routup';
+import type { Request } from 'routup';
 
 export type AccessTokenIssueContext = {
     remoteAddress: string,

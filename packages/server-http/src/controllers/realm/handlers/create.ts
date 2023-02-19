@@ -9,9 +9,8 @@ import { ForbiddenError } from '@ebec/http';
 import {
     PermissionName, Realm,
 } from '@authup/common';
-import {
-    Request, Response, sendAccepted, sendCreated,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils/env';

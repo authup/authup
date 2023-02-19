@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { KeyPair, KeyPairOptions } from './type';
+import type { KeyPair, KeyPairOptions } from './type';
 import { extendKeyPairOptions } from './utils';
 import { loadKeyPair } from './load';
 import { createKeyPair } from './create';

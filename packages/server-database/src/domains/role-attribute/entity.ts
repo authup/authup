@@ -12,7 +12,7 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     Realm, Role, RoleAttribute,
 } from '@authup/common';
 import { RealmEntity } from '../realm';

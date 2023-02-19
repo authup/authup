@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityID, buildAbilityMetaFromName } from '../../../../src';
+import type { AbilityID } from '../../../../src';
+import { buildAbilityMetaFromName } from '../../../../src';
 
 describe('src/ability/utils/index.ts', () => {
     it('should build ability', () => {

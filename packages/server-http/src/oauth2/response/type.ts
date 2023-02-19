@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenPayload } from '@authup/common';
+import type { OAuth2TokenPayload } from '@authup/common';
 
 export type OAuth2BearerResponseBuildContext = {
     accessToken: Partial<OAuth2TokenPayload> | string,

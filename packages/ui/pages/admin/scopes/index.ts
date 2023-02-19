@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName, Scope } from '@authup/common';
+import type { Scope } from '@authup/common';
+import { PermissionName } from '@authup/common';
 import { useToast } from 'vue-toastification';
 import { NuxtPage } from '#components';
 import { definePageMeta } from '#imports';

@@ -7,7 +7,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DatabaseRootSeederResult } from './type';
+import type { DatabaseRootSeederResult } from './type';
 
 export async function saveSeedResult(
     writableDirectoryPath: string,
