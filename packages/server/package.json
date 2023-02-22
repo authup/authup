@@ -58,7 +58,7 @@
         "typeorm": "^0.3.12",
         "typeorm-extension": "^2.5.2",
         "winston": "^3.8.2",
-        "yargs": "^17.7.0",
+        "yargs": "^17.7.1",
         "zod": "^3.20.6"
     },
     "devDependencies": {
