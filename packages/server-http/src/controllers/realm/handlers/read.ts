@@ -27,7 +27,7 @@ export async function getManyRealmRouteHandler(
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'realm',
         filters: {
-            allowed: ['id', 'name'],
+            allowed: ['id', 'name', 'drop_able'],
         },
         pagination: {
             maxLimit: 50,
