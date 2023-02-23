@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.3](https://github.com/Tada5hi/authup/compare/v0.15.2...v0.15.3) (2023-02-23)
+
+
+### Bug Fixes
+
+* bum routup dependencies + adjusted docs url in star command ([cdd7f5a](https://github.com/Tada5hi/authup/commit/cdd7f5acde04155d3fd4d694583265bd5724dcba))
+* **deps:** bump @ucast/mongo2js from 1.3.3 to 1.3.4 ([#863](https://github.com/Tada5hi/authup/issues/863)) ([baee990](https://github.com/Tada5hi/authup/commit/baee990378cc7fe613042ebae66b80f0139fe713))
+* **deps:** bump express-validator from 6.14.3 to 6.15.0 ([#864](https://github.com/Tada5hi/authup/issues/864)) ([653f5d7](https://github.com/Tada5hi/authup/commit/653f5d7c4fd3bbe5b2f5b32d0a824cc340fed43b))
+* **deps:** bump locter from 1.0.1 to 1.0.2 ([#853](https://github.com/Tada5hi/authup/issues/853)) ([e593ab6](https://github.com/Tada5hi/authup/commit/e593ab6df880294d1d1d4ed81d05910ac20be706))
+* **deps:** bump locter from 1.0.3 to 1.0.5 ([#867](https://github.com/Tada5hi/authup/issues/867)) ([37de7af](https://github.com/Tada5hi/authup/commit/37de7afb2eccaf830f8567959f34e91492fe3689))
+* **deps:** bump typeorm-extension from 2.5.0 to 2.5.2 ([#884](https://github.com/Tada5hi/authup/issues/884)) ([7689aea](https://github.com/Tada5hi/authup/commit/7689aea07323e28fac7f97e692fb3c11e44d3f80))
+* **deps:** bump undici from 5.16.0 to 5.19.1 ([#866](https://github.com/Tada5hi/authup/issues/866)) ([bfcfaa5](https://github.com/Tada5hi/authup/commit/bfcfaa53ae26d4da012d2d29a46b9f76f34ee801))
+* **deps:** bump vitepress from 1.0.0-alpha.45 to 1.0.0-alpha.46 ([#852](https://github.com/Tada5hi/authup/issues/852)) ([32bc42d](https://github.com/Tada5hi/authup/commit/32bc42d359788f0b89bcad439ca3ffa7640d1745))
+* **deps:** bump vitepress from 1.0.0-alpha.46 to 1.0.0-alpha.47 ([#882](https://github.com/Tada5hi/authup/issues/882)) ([535ddbb](https://github.com/Tada5hi/authup/commit/535ddbb8dcf4c894f6907d8bfc7cf39c4129a5ab))
+* **deps:** bump yargs from 17.6.2 to 17.7.0 ([#874](https://github.com/Tada5hi/authup/issues/874)) ([e1aa371](https://github.com/Tada5hi/authup/commit/e1aa371bf833a255dfa07da33ce88fd7f1ee61ff))
+* **deps:** bump yargs from 17.7.0 to 17.7.1 ([#890](https://github.com/Tada5hi/authup/issues/890)) ([2035fd8](https://github.com/Tada5hi/authup/commit/2035fd8fe70bbbdc4fbf51f646b9c5344790cf4b))
+* **deps:** updated typeorm-extension ([fc74f4a](https://github.com/Tada5hi/authup/commit/fc74f4ad114904a74d0e46416aa564306ec32082))
+
+
+
+
+
 ## [0.15.2](https://github.com/Tada5hi/authup/compare/v0.15.1...v0.15.2) (2023-02-14)
 
 

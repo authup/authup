@@ -1,33 +1,33 @@
 {
-    "packages": [
-        "packages/*"
-    ],
-    "command": {
-        "publish": {
-            "ignoreChanges": [
-                "*.md"
-            ]
-        },
-        "version": {
-            "message": "build(release): publish"
-        }
+  "packages": [
+    "packages/*"
+  ],
+  "command": {
+    "publish": {
+      "ignoreChanges": [
+        "*.md"
+      ]
     },
-    "useNx": true,
-    "useWorkspaces": true,
-    "conventionalCommits": true,
-    "version": "0.15.2",
-    "changelog": {
-        "labels": {
-            "build": "Build",
-            "ci": "Continuous Integration",
-            "docs": "Documentation",
-            "feat": "New Feature",
-            "fix": "Bug Fix",
-            "perf": "Performance",
-            "refactor": "Refactor",
-            "revert": "Revert",
-            "style": "Style",
-            "test": "Test"
-        }
+    "version": {
+      "message": "build(release): publish"
     }
+  },
+  "useNx": true,
+  "useWorkspaces": true,
+  "conventionalCommits": true,
+  "version": "0.15.3",
+  "changelog": {
+    "labels": {
+      "build": "Build",
+      "ci": "Continuous Integration",
+      "docs": "Documentation",
+      "feat": "New Feature",
+      "fix": "Bug Fix",
+      "perf": "Performance",
+      "refactor": "Refactor",
+      "revert": "Revert",
+      "style": "Style",
+      "test": "Test"
+    }
+  }
 }

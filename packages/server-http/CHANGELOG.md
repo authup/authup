@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.3](https://github.com/Tada5hi/authup/compare/v0.15.2...v0.15.3) (2023-02-23)
+
+
+### Bug Fixes
+
+* bum routup dependencies + adjusted docs url in star command ([cdd7f5a](https://github.com/Tada5hi/authup/commit/cdd7f5acde04155d3fd4d694583265bd5724dcba))
+* **deps:** bump express-validator from 6.14.3 to 6.15.0 ([#864](https://github.com/Tada5hi/authup/issues/864)) ([653f5d7](https://github.com/Tada5hi/authup/commit/653f5d7c4fd3bbe5b2f5b32d0a824cc340fed43b))
+* **deps:** bump locter from 1.0.1 to 1.0.2 ([#853](https://github.com/Tada5hi/authup/issues/853)) ([e593ab6](https://github.com/Tada5hi/authup/commit/e593ab6df880294d1d1d4ed81d05910ac20be706))
+* **deps:** bump locter from 1.0.3 to 1.0.5 ([#867](https://github.com/Tada5hi/authup/issues/867)) ([37de7af](https://github.com/Tada5hi/authup/commit/37de7afb2eccaf830f8567959f34e91492fe3689))
+* **deps:** bump typeorm-extension from 2.5.0 to 2.5.2 ([#884](https://github.com/Tada5hi/authup/issues/884)) ([7689aea](https://github.com/Tada5hi/authup/commit/7689aea07323e28fac7f97e692fb3c11e44d3f80))
+* **deps:** updated typeorm-extension ([fc74f4a](https://github.com/Tada5hi/authup/commit/fc74f4ad114904a74d0e46416aa564306ec32082))
+
+
+
+
+
 ## [0.15.2](https://github.com/Tada5hi/authup/compare/v0.15.1...v0.15.2) (2023-02-14)
 
 
