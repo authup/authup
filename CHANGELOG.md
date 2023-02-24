@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.4](https://github.com/Tada5hi/authup/compare/v0.15.3...v0.15.4) (2023-02-24)
+
+
+### Bug Fixes
+
+* allow dot character in user name ([e430b4c](https://github.com/Tada5hi/authup/commit/e430b4c6b54dee72303bceeb33dcc8692abde73a))
+* allow filtering by drop_able realm attribute ([5cd20a3](https://github.com/Tada5hi/authup/commit/5cd20a39f63436c6550f2b1fb1e50c7cb862798e))
+
+
+
+
+
 ## [0.15.3](https://github.com/Tada5hi/authup/compare/v0.15.2...v0.15.3) (2023-02-23)
 
 
