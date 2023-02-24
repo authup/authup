@@ -22,7 +22,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runUserValidation(
     req: Request,
@@ -37,7 +37,7 @@ export async function runUserValidation(
         .custom((value) => {
             const isValid = isValidUserName(value);
             if (!isValid) {
-                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
             }
 
             return isValid;
