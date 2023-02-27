@@ -108,6 +108,11 @@ export async function runUserValidation(
             .optional()
             .run(req);
 
+        await check('name_locked')
+            .isBoolean()
+            .optional()
+            .run(req);
+
         if (operation === RequestHandlerOperation.CREATE) {
             await check('realm_id')
                 .exists()

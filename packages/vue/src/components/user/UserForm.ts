@@ -53,6 +53,7 @@ export const UserForm = defineComponent({
         const form = reactive({
             active: true,
             name: '',
+            name_locked: true,
             display_name: '',
             email: '',
             realm_id: '',
@@ -66,6 +67,9 @@ export const UserForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            name_locked: {
+
             },
             display_name: {
                 required,
@@ -84,7 +88,6 @@ export const UserForm = defineComponent({
 
         const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isRealmLocked = computed(() => !!props.realmId);
-        const isNameLocked = computed(() => props.entity && props.entity.name_locked);
 
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
@@ -133,7 +136,7 @@ export const UserForm = defineComponent({
                     updateDisplayName.call(null, input);
                 },
                 props: {
-                    disabled: isNameLocked.value,
+                    disabled: form.name_locked,
                 },
             });
 
@@ -162,23 +165,43 @@ export const UserForm = defineComponent({
                 },
             });
 
-            let activate : VNodeArrayChildren = [];
+            let checks : VNodeArrayChildren = [];
 
             if (props.canManage) {
-                activate = [
-                    buildFormInputCheckbox({
-                        groupClass: 'form-switch mt-3',
-                        labelContent: h('span', {
-                            class: {
-                                'text-warning': !form.active,
-                                'text-success': form.active,
-                            },
-                        }, [form.active ? 'active' : 'inactive']),
-                        value: form.active,
-                        onChange(input) {
-                            form.active = input;
-                        },
-                    }),
+                checks = [
+                    h('div', { class: 'row' }, [
+                        h('div', { class: 'col' }, [
+                            buildFormInputCheckbox({
+                                groupClass: 'form-switch mt-3',
+                                labelContent: h('span', {
+                                    class: {
+                                        'text-warning': !form.active,
+                                        'text-success': form.active,
+                                    },
+                                }, [form.active ? 'active' : 'inactive']),
+                                value: form.active,
+                                onChange(input) {
+                                    form.active = input;
+                                },
+                            }),
+                        ]),
+                        h('div', { class: 'col' }, [
+                            buildFormInputCheckbox({
+                                groupClass: 'form-switch mt-3',
+                                labelContent: h('span', {
+                                    class: {
+                                        'text-warning': !form.name_locked,
+                                        'text-success': form.name_locked,
+                                    },
+                                }, [form.name_locked ? 'locked' : 'not locked']), // todo: add translation
+                                value: form.name_locked,
+                                onChange(input) {
+                                    form.name_locked = input;
+                                },
+                            }),
+                        ]),
+                    ]),
+
                 ];
             }
 
@@ -195,18 +218,19 @@ export const UserForm = defineComponent({
                 name,
                 displayName,
                 email,
-                activate,
+                checks,
                 h('hr'),
                 submitForm,
             ]);
 
             let rightColumn : VNodeArrayChildren = [];
+
             if (
-                !isRealmLocked.value &&
-                props.canManage
+                props.canManage &&
+                !isRealmLocked.value
             ) {
                 const realm = h(RealmList, {}, {
-                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: boolean}) => buildItemActionToggle({
+                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: boolean }) => buildItemActionToggle({
                         value: props.data.id,
                         currentValue: form.realm_id,
                         busy: props.busy,
@@ -214,7 +238,6 @@ export const UserForm = defineComponent({
                             form.realm_id = value as string;
                         },
                     }),
-
                 });
 
                 rightColumn = [
