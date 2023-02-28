@@ -7,21 +7,19 @@
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
+    ErrorCode,
     TokenError,
-    hasOwnProperty,
 } from '@authup/common';
 import { isClientError } from 'hapic';
+import { isObject } from 'routup';
 import { useOAuth2Client } from '../client';
 import type { TokenVerifyContext } from './type';
-import { useOAuth2TokenCache } from './cache';
 
 export async function verifyOAuth2Token(token: string, context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {
-    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
-
     let data : OAuth2TokenIntrospectionResponse | undefined;
 
-    if (cache) {
-        data = await cache.get(token);
+    if (context.cache) {
+        data = await context.cache.get(token);
 
         if (context.logger) {
             context.logger.info(`The token ${token} could be verified from cache.`);
@@ -33,37 +31,54 @@ export async function verifyOAuth2Token(token: string, context: TokenVerifyConte
 
         try {
             const oauth2Client = await useOAuth2Client(context.oauth2);
-            payload = await oauth2Client.token.introspect(token);
+
             if (context.logger) {
-                context.logger.info(`The token ${token} could be verified.`);
+                context.logger.debug(
+                    `Requesting introspection endpoint: ${oauth2Client.options.introspection_endpoint}`,
+                    {
+                        token,
+                    },
+                );
+            }
+
+            payload = await oauth2Client.token.introspect(token);
+
+            if (context.logger) {
+                context.logger.debug('The token could be verified.', {
+                    token,
+                });
             }
         } catch (e) {
             if (
                 isClientError(e) &&
                 e.response &&
-                e.response.data &&
-                hasOwnProperty(e.response.data, 'code') &&
-                hasOwnProperty(e.response.data, 'message')
+                isObject(e.response.data) &&
+                typeof e.response.data.message === 'string'
             ) {
                 if (context.logger) {
-                    context.logger.debug(e.response.data.message as string, {
+                    context.logger.warn(e.response.data.message, {
                         error: e,
                     });
                 }
+
+                const code = typeof e.response.data.code === 'string' ?
+                    e.response.data.code :
+                    ErrorCode.TOKEN_INVALID;
 
                 throw new TokenError({
                     statusCode: e.response.status,
-                    code: e.response.data.code as string | number,
-                    message: e.response.data.message as string,
+                    code,
+                    message: e.response.data.message,
                 });
             } else {
                 if (context.logger) {
-                    context.logger.debug(`The token ${token} could not be verified.`, {
-                        error: e,
+                    context.logger.warn(`The token ${token} could not be verified.`, {
+                        error: isObject(e) && typeof e.message === 'string' ? e.message : e,
                     });
                 }
 
                 throw new TokenError({
+                    message: 'An unexpected error occurred.',
                     previous: e,
                 });
             }
@@ -76,8 +91,14 @@ export async function verifyOAuth2Token(token: string, context: TokenVerifyConte
             throw TokenError.expired();
         }
 
-        if (cache) {
-            await cache.set(token, payload, { seconds: secondsDiff });
+        if (context.cache) {
+            await context.cache.set(
+                token,
+                payload,
+                {
+                    seconds: secondsDiff,
+                },
+            );
         }
 
         data = payload;

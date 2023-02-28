@@ -17,11 +17,18 @@ import type {
     Handler, Next, Request, Response,
 } from 'routup';
 import { setRequestEnv } from 'routup';
-import type { RequestEnv } from '../type';
-import type { HTTPMiddlewareContext } from './type';
-import { verifyOAuth2Token } from '../../oauth2';
+import type { HTTPMiddlewareContext, RequestEnv } from './type';
+import type { TokenVerifyContext } from '../../oauth2';
+import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
+    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
+
+    const tokenVerifyContext : TokenVerifyContext = {
+        ...context,
+        cache,
+    };
+
     return async (req: Request, res: Response, next: Next) => {
         let { authorization: headerValue } = req.headers;
 
@@ -61,7 +68,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
         let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
-            data = await verifyOAuth2Token(header.token, context);
+            data = await verifyOAuth2Token(header.token, tokenVerifyContext);
         } catch (e) {
             next(e);
 

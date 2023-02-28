@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Cache } from 'redis-extension';
 import type { VerifyContext } from '../../type';
-import { Logger } from '../../type';
 
-export type TokenVerifyContext = VerifyContext;
+export type TokenVerifyContext = VerifyContext & {
+    cache?: Cache
+};

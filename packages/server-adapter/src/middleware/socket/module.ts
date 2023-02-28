@@ -8,27 +8,41 @@
 import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
     AbilityManager,
-    OAuth2SubKind,
+    OAuth2SubKind, TokenError,
 } from '@authup/common';
-import type { Socket, SocketNextFunction } from '../type';
-import type { SocketMiddlewareContext } from './type';
+import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
+import type { TokenVerifyContext } from '../../oauth2';
 import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
-    const tokenCache = useOAuth2TokenCache(context.redis, context.redisPrefix);
+    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
+
+    const tokenVerifyContext : TokenVerifyContext = {
+        ...context,
+        cache,
+    };
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
 
         if (!token) {
+            if (context.logger) {
+                context.logger.debug('No token is present.');
+            }
             return next();
         }
 
         let data : OAuth2TokenIntrospectionResponse | undefined;
 
         try {
-            data = await verifyOAuth2Token(token, context);
+            data = await verifyOAuth2Token(token, tokenVerifyContext);
         } catch (e) {
+            if (!(e instanceof TokenError)) {
+                context.logger.warn('Token verification was not possible', {
+                    error: e.message,
+                });
+            }
+
             return next(e);
         }
 

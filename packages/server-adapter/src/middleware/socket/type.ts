@@ -4,15 +4,15 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
 import type { IncomingHttpHeaders } from 'http';
+import type { VerifyContext } from '../../type';
 import type { RequestEnv } from '../http';
 
+export type SocketMiddlewareContext = VerifyContext;
 export type SocketNextFunction = (err?: Error) => void;
 export type SocketData = RequestEnv & {
     [k: string]: any
 };
-
 export type Socket = {
     data: Partial<SocketData>,
 

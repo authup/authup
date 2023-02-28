@@ -8,7 +8,11 @@
 import type {
     AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
 } from '@authup/common';
+import type { TokenVerifyContext } from '../../oauth2';
 
+export type HTTPMiddlewareContext = TokenVerifyContext & {
+    cookieHandler?: (cookies: any) => string | undefined
+};
 export type RequestEnv = {
     userId?: User['id'],
     robotId?: Robot['id'],
