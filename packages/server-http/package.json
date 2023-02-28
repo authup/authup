@@ -96,7 +96,7 @@
         "@types/validator": "^13.7.12",
         "better-sqlite3": "^8.1.0",
         "coveralls": "^3.1.0",
-        "hapic": "^1.2.0",
+        "hapic": "^1.2.1",
         "jest-serial-runner": "^1.2.1",
         "redis-extension": "^1.2.3",
         "routup": "^0.13.1",
