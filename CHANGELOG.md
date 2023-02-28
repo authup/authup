@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.0.5 to 1.0.6 ([#902](https://github.com/Tada5hi/authup/issues/902)) ([626900d](https://github.com/Tada5hi/authup/commit/626900de382aca81ed6f25e14fca693bffeeb28b))
+* **deps:** bump vitepress from 1.0.0-alpha.47 to 1.0.0-alpha.48 ([#897](https://github.com/Tada5hi/authup/issues/897)) ([e2cd682](https://github.com/Tada5hi/authup/commit/e2cd6823c3aa52c6cbf56de58ae47919b8a3a5af))
+
+
+### Features
+
+* add support to lock/unlock user name manipulation ([2fcb2c5](https://github.com/Tada5hi/authup/commit/2fcb2c5e50c62aa727b0109dd1dff0647b699231))
+* **server-adapter:** restructured package structure + enhanced logging ([f01ad48](https://github.com/Tada5hi/authup/commit/f01ad4872031199bd90e85f4913c3a0d01a29722))
+
+
+
+
+
 ## [0.15.4](https://github.com/Tada5hi/authup/compare/v0.15.3...v0.15.4) (2023-02-24)
 
 

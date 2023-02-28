@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.0.5 to 1.0.6 ([#902](https://github.com/Tada5hi/authup/issues/902)) ([626900d](https://github.com/Tada5hi/authup/commit/626900de382aca81ed6f25e14fca693bffeeb28b))
+
+
+### Features
+
+* add support to lock/unlock user name manipulation ([2fcb2c5](https://github.com/Tada5hi/authup/commit/2fcb2c5e50c62aa727b0109dd1dff0647b699231))
+
+
+
+
+
 ## [0.15.4](https://github.com/Tada5hi/authup/compare/v0.15.3...v0.15.4) (2023-02-24)
 
 
