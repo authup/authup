@@ -15,7 +15,10 @@ import { isObject } from 'routup';
 import { useOAuth2Client } from '../client';
 import type { TokenVerifyContext } from './type';
 
-export async function verifyOAuth2Token(token: string, context: TokenVerifyContext) : Promise<OAuth2TokenIntrospectionResponse> {
+export async function verifyOAuth2Token(
+    token: string,
+    context: TokenVerifyContext,
+) : Promise<OAuth2TokenIntrospectionResponse> {
     let data : OAuth2TokenIntrospectionResponse | undefined;
 
     if (context.cache) {
