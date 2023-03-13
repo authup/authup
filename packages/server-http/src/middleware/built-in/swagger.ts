@@ -6,6 +6,7 @@
  */
 
 import { useLogger } from '@authup/server-common';
+import type { UIOptions } from '@routup/swagger';
 import { createUIHandler } from '@routup/swagger';
 import { buildLoaderFilePath, loadSync, locateSync } from 'locter';
 import fs from 'node:fs';
@@ -15,8 +16,8 @@ import type { Router } from 'routup';
 
 type SwaggerMiddlewareOptions = {
     documentPath: string,
-
-    mountPath: string
+    mountPath: string,
+    options?: UIOptions
 };
 export function registerSwaggerMiddleware(router: Router, input?: Partial<SwaggerMiddlewareOptions>) {
     input = input || {};
@@ -42,5 +43,5 @@ export function registerSwaggerMiddleware(router: Router, input?: Partial<Swagge
     }
 
     const document = loadSync(documentPath);
-    router.use(mountPath, createUIHandler(document));
+    router.use(mountPath, createUIHandler(document, input.options));
 }

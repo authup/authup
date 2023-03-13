@@ -10,6 +10,7 @@ import type { ParseOptions as CookieOptions } from '@routup/cookie';
 import type { OptionsInput as PrometheusOptions } from '@routup/prometheus';
 import type { ParseOptions as QueryOptions } from '@routup/query';
 import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
+import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { CorsOptions } from 'cors';
 
 export type Options = {
@@ -82,7 +83,7 @@ export type Options = {
      *
      * default: true
      */
-    middlewareSwagger: boolean,
+    middlewareSwagger: boolean | SwaggerUIOptions,
 
     /**
      * default: 3600

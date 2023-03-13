@@ -63,6 +63,10 @@ export function registerMiddlewares(router: Router) {
     if (isBuiltInMiddlewareEnabled(swagger)) {
         registerSwaggerMiddleware(router, {
             documentPath: path.join(config.get('writableDirectoryPath'), 'swagger.json'),
+            options: {
+                baseUrl: config.get('publicUrl'),
+                ...transformBoolToEmptyObject(swagger),
+            },
         });
     }
 
