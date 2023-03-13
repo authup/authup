@@ -91,7 +91,7 @@
         "@routup/swagger": "^0.13.3",
         "@types/express-validator": "^3.0.0",
         "@types/supertest": "^2.0.12",
-        "@types/validator": "^13.7.13",
+        "@types/validator": "^13.7.14",
         "better-sqlite3": "^8.1.0",
         "coveralls": "^3.1.0",
         "hapic": "^1.2.1",
