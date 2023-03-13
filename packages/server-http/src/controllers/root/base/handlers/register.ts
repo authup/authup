@@ -83,7 +83,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
 
-    const entity = repository.create(data);
+    const { entity } = await repository.createWithPassword(data);
 
     const realm = await resolveRealm(entity.realm_id, true);
     entity.realm_id = realm.id;
