@@ -50,14 +50,14 @@
         "@authup/server-common": "^0.17.0",
         "redis-extension": "^1.2.3",
         "typeorm": "^0.3.12",
-        "typeorm-extension": "^2.5.2"
+        "typeorm-extension": "^2.5.3"
     },
     "peerDependencies": {
         "@authup/common": "^0.x",
         "@authup/server-common": "^0.x",
         "redis-extension": ">=1.2.0 <2.0.0",
         "typeorm": "~0.3.11",
-        "typeorm-extension": "^2.5.2"
+        "typeorm-extension": "^2.5.3"
     },
     "publishConfig": {
         "access": "public"
