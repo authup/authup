@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](https://github.com/Tada5hi/authup/compare/v0.16.0...v0.17.0) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/* dependencies ([c1e8cfe](https://github.com/Tada5hi/authup/commit/c1e8cfed9ac8a16d11682640446b6ad6654abbdc))
+
+
+
+
+
 # [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
 
 

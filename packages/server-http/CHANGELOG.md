@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](https://github.com/Tada5hi/authup/compare/v0.16.0...v0.17.0) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/* dependencies ([c1e8cfe](https://github.com/Tada5hi/authup/commit/c1e8cfed9ac8a16d11682640446b6ad6654abbdc))
+* **deps:** bump zod from 3.20.6 to 3.21.4 ([#919](https://github.com/Tada5hi/authup/issues/919)) ([e24a5ef](https://github.com/Tada5hi/authup/commit/e24a5efcc7201aba2b747d9352927a648d88e954))
+* hash user password on registration endpoint ([bd3bc18](https://github.com/Tada5hi/authup/commit/bd3bc1855e735e7d36d742952fe14b8d43bb1609))
+
+
+### Features
+
+* enhanced swagger generation ([50a171f](https://github.com/Tada5hi/authup/commit/50a171f5b070f1faf22ee5a81913c908365571c7))
+
+
+
+
+
 # [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
 
 
