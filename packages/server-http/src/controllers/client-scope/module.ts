@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { ClientScope } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -18,7 +17,7 @@ import {
     getOneClientScopeRouteHandler,
 } from './handlers';
 
-@SwaggerTags('client', 'scope')
+@DTags('client', 'scope')
 @DController('/client-scopes')
 export class ClientScopeController {
     @DGet('', [])
@@ -40,7 +39,7 @@ export class ClientScopeController {
 
     @DGet('/:id', [])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<ClientScope> {
@@ -49,7 +48,7 @@ export class ClientScopeController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<ClientScope> {

@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { Role } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -18,7 +17,7 @@ import {
     updateRoleRouteHandler,
 } from './handlers';
 
-@SwaggerTags('role')
+@DTags('role')
 @DController('/roles')
 export class RoleController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -40,7 +39,7 @@ export class RoleController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Role> {
@@ -49,7 +48,7 @@ export class RoleController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() data: Pick<Role, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -59,7 +58,7 @@ export class RoleController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Role> {

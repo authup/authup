@@ -6,13 +6,12 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/common';
-import { SwaggerTags } from '@trapi/swagger';
 import {
-    DController, DGet, DPost, DRequest, DResponse,
+    DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { createTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
 
-@SwaggerTags('auth')
+@DTags('auth')
 @DController('/token')
 export class AuthTokenController {
     @DGet('/introspect', [])

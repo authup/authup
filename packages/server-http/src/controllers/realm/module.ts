@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata, Realm } from '@authup/common';
 import {
     createRealmRouteHandler,
@@ -21,7 +20,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('realm')
+@DTags('realm')
 @DController('/realms')
 export class RealmController {
     @DGet('', [])
@@ -43,7 +42,7 @@ export class RealmController {
 
     @DGet('/:id', [])
     async get(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Realm> {
@@ -52,7 +51,7 @@ export class RealmController {
 
     @DGet('/:id/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2OpenIDProviderMetadata> {
@@ -61,7 +60,7 @@ export class RealmController {
 
     @DGet('/:id/jwks', [])
     async getCerts(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
@@ -70,7 +69,7 @@ export class RealmController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<Realm>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -80,7 +79,7 @@ export class RealmController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Realm> {

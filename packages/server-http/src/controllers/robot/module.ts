@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import { Robot } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -19,7 +18,7 @@ import {
     updateRobotRouteHandler,
 } from './handlers';
 
-@SwaggerTags('robot')
+@DTags('robot')
 @DController('/robots')
 export class RobotController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -41,7 +40,7 @@ export class RobotController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Robot> {
@@ -50,7 +49,7 @@ export class RobotController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() data: Pick<Robot, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -60,7 +59,7 @@ export class RobotController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Robot> {

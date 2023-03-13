@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { Permission } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -19,7 +18,7 @@ import {
     updatePermissionRouteHandler,
 } from './handlers';
 
-@SwaggerTags('permission')
+@DTags('permission')
 @DController('/permissions')
 export class PermissionController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -32,7 +31,7 @@ export class PermissionController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getPermission(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Permission> {
@@ -50,7 +49,7 @@ export class PermissionController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<Permission>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -60,7 +59,7 @@ export class PermissionController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Permission> {

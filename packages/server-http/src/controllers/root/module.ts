@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SwaggerTags } from '@trapi/swagger';
 import {
-    DController, DGet, DParam, DPost, DRequest, DResponse,
+    DController, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type {
     OAuth2JsonWebKey,
@@ -24,7 +23,7 @@ import {
     createAuthRegisterRouteHandler,
 } from './base';
 
-@SwaggerTags('auth')
+@DTags('auth')
 @DController('')
 export class AuthController {
     @DPost('/authorize', [ForceUserLoggedInMiddleware])
@@ -57,7 +56,7 @@ export class AuthController {
 
     @DGet('/jwks/:id', [])
     async getOneJwks(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {

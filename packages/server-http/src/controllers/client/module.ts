@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type {
     Client,
 } from '@authup/common';
@@ -21,7 +20,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('oauth2')
+@DTags('oauth2')
 @DController('/clients')
 export class ClientController {
     @DGet('', [])
@@ -34,7 +33,7 @@ export class ClientController {
 
     @DGet('/:id', [])
     async getClient(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Client> {
@@ -43,7 +42,7 @@ export class ClientController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editClient(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<Client>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -53,7 +52,7 @@ export class ClientController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropClient(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Client> {

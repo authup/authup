@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { Scope } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -19,7 +18,7 @@ import {
     updateScopeRouteHandler,
 } from './handlers';
 
-@SwaggerTags('scope')
+@DTags('scope')
 @DController('/scopes')
 export class ScopeController {
     @DGet('', [])
@@ -41,7 +40,7 @@ export class ScopeController {
 
     @DGet('/:id', [])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Scope> {
@@ -50,7 +49,7 @@ export class ScopeController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() data: Pick<Scope, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -60,7 +59,7 @@ export class ScopeController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Scope> {

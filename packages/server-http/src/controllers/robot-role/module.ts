@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { RobotRole } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -18,7 +17,7 @@ import {
     getOneRobotRoleRouteHandler,
 } from './handlers';
 
-@SwaggerTags('robot')
+@DTags('robot')
 @DController('/robot-roles')
 export class RobotRoleController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -40,7 +39,7 @@ export class RobotRoleController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<RobotRole> {
@@ -49,7 +48,7 @@ export class RobotRoleController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<RobotRole> {

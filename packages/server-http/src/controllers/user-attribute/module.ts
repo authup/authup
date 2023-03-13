@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { UserAttribute } from '@authup/common';
 import {
     createUserAttributeRouteHandler, deleteUserAttributeRouteHandler,
@@ -18,7 +17,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('user')
+@DTags('user')
 @DController('/user-attributes')
 export class UserAttributeController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -40,7 +39,7 @@ export class UserAttributeController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<UserAttribute> {
@@ -49,7 +48,7 @@ export class UserAttributeController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<UserAttribute>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -59,7 +58,7 @@ export class UserAttributeController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<UserAttribute> {

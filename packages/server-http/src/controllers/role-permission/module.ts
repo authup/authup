@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import type { RolePermission } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -18,7 +17,7 @@ import {
     getOneRolePermissionRouteHandler,
 } from './handlers';
 
-@SwaggerTags('role')
+@DTags('role')
 @DController('/role-permissions')
 export class RolePermissionController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -40,7 +39,7 @@ export class RolePermissionController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<RolePermission> {
@@ -49,7 +48,7 @@ export class RolePermissionController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<RolePermission> {

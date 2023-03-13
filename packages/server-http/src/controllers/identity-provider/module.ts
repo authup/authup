@@ -6,12 +6,11 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type {
     Next, Request, Response, Router,
 } from 'routup';
-import { SwaggerTags } from '@trapi/swagger';
 import type { IdentityProvider } from '@authup/common';
 import {
     buildIdentityProviderAuthorizeCallbackPath,
@@ -28,7 +27,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('identity')
+@DTags('identity')
 @DController('/identity-providers')
 export class IdentityProviderController {
     @DGet('', [])
@@ -41,7 +40,7 @@ export class IdentityProviderController {
 
     @DGet('/:id', [])
     async getProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<IdentityProvider> {
@@ -50,7 +49,7 @@ export class IdentityProviderController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<IdentityProvider>,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -60,7 +59,7 @@ export class IdentityProviderController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<IdentityProvider> {

@@ -6,9 +6,8 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { SwaggerTags } from '@trapi/swagger';
 import { User } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -19,7 +18,7 @@ import {
     updateUserRouteHandler,
 } from './handlers';
 
-@SwaggerTags('user')
+@DTags('user')
 @DController('/users')
 export class UserController {
     @DGet('', [ForceLoggedInMiddleware])
@@ -41,7 +40,7 @@ export class UserController {
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<User | undefined> {
@@ -50,7 +49,7 @@ export class UserController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: User,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -60,7 +59,7 @@ export class UserController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<User | undefined> {

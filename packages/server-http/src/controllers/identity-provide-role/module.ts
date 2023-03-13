@@ -6,10 +6,9 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DParam, DPost, DRequest, DResponse,
+    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { Request, Response } from 'routup';
-import { SwaggerTags } from '@trapi/swagger';
 import type { IdentityProviderRole } from '@authup/common';
 import {
     createOauth2ProviderRoleRouteHandler,
@@ -20,7 +19,7 @@ import {
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
-@SwaggerTags('identity-provider')
+@DTags('identity-provider')
 @DController('/identity-provider-roles')
 export class OAuth2ProviderRoleController {
     @DGet('', [])
@@ -33,7 +32,7 @@ export class OAuth2ProviderRoleController {
 
     @DGet('/:id', [])
     async getProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: Request,
             @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
@@ -42,7 +41,7 @@ export class OAuth2ProviderRoleController {
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DBody() user: NonNullable<IdentityProviderRole>,
             @DRequest() req: Request,
             @DResponse() res: Response,
@@ -52,7 +51,7 @@ export class OAuth2ProviderRoleController {
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
-        @DParam('id') id: string,
+        @DPath('id') id: string,
             @DRequest() req: Request,
             @DResponse() res: Response,
     ): Promise<IdentityProviderRole> {
