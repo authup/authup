@@ -45,7 +45,7 @@
         "@authup/server-common": "^0.17.0",
         "@authup/server-database": "^0.17.0",
         "@authup/server-http": "^0.17.0",
-        "better-sqlite3": "^8.1.0",
+        "better-sqlite3": "^8.2.0",
         "change-case": "^4.1.2",
         "dotenv": "^16.0.3",
         "mysql": "^2.18.1",
