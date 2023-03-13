@@ -20,7 +20,7 @@
         "@authup/vue": "^0.17.0",
         "@fortawesome/fontawesome-free": "^6.3.0",
         "@hapic/oauth2": "^1.2.1",
-        "@nuxtjs/google-fonts": "^3.0.0-0",
+        "@nuxtjs/google-fonts": "^3.0.0",
         "@pinia/nuxt": "^0.4.7",
         "@vue-layout/basic": "^0.4.0",
         "@vue-layout/core": "^0.4.0",
