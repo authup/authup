@@ -1,1 +1,0 @@
-import{_ as e,o as i,c as o,N as r}from"./chunks/framework.83178613.js";const h=JSON.parse('{"title":"Domains","description":"","frontmatter":{},"headers":[],"relativePath":"packages/common/domains.md"}'),l={name:"packages/common/domains.md"},n=r("",3),t=[n];function s(a,c,d,m,f,u){return i(),o("div",null,t)}const p=e(l,[["render",s]]);export{h as __pageData,p as default};
