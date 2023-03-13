@@ -55,7 +55,7 @@
         "reflect-metadata": "^0.1.13",
         "smob": "^0.1.0",
         "typeorm": "^0.3.12",
-        "typeorm-extension": "^2.5.3",
+        "typeorm-extension": "^2.5.4",
         "winston": "^3.8.2",
         "yargs": "^17.7.1",
         "zod": "^3.21.4"
