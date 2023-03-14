@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-adapter",
-    "version": "0.17.0",
+    "version": "0.17.1",
     "description": "An adapter package to integrate into other services.",
     "exports": {
         "./package.json": "./package.json",

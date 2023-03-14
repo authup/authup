@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-http",
-    "version": "0.17.0",
+    "version": "0.17.1",
     "description": "This package contains the http module.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -80,7 +80,7 @@
     "devDependencies": {
         "@authup/common": "^0.17.0",
         "@authup/server-common": "^0.17.0",
-        "@authup/server-database": "^0.17.0",
+        "@authup/server-database": "^0.17.1",
         "@hapic/oauth2": "^1.2.1",
         "@routup/body": "^0.7.3",
         "@routup/cookie": "^0.8.1",

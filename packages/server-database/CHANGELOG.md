@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.1](https://github.com/Tada5hi/authup/compare/v0.17.0...v0.17.1) (2023-03-14)
+
+
+### Bug Fixes
+
+* **deps:** bump typeorm-extension from 2.5.2 to 2.5.3 ([#927](https://github.com/Tada5hi/authup/issues/927)) ([376e352](https://github.com/Tada5hi/authup/commit/376e352a62c711416776bd301b39e10390f9184e))
+* **deps:** bump typeorm-extension from 2.5.3 to 2.5.4 ([#929](https://github.com/Tada5hi/authup/issues/929)) ([7884f49](https://github.com/Tada5hi/authup/commit/7884f49b200ad90717ed165ab817e569dfaa6b25))
+
+
+
+
+
 # [0.17.0](https://github.com/Tada5hi/authup/compare/v0.16.0...v0.17.0) (2023-03-13)
 
 
