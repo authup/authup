@@ -31,10 +31,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
-    if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
-    ) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id)) {
         throw new ForbiddenError();
     }
 

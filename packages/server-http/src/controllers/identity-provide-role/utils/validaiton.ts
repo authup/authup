@@ -11,8 +11,8 @@ import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { IdentityProviderRoleEntity } from '@authup/server-database';
 import { IdentityProviderEntity, RoleEntity } from '@authup/server-database';
-import { RequestHandlerOperation } from '../../../request/constants';
-import { useRequestEnv } from '../../../utils/env';
+import { RequestHandlerOperation } from '../../../request';
+import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
@@ -72,6 +72,8 @@ export async function runIdentityProviderRoleValidation(
             throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
         }
 
+        // todo: check if req.user has role permissions
+
         result.data.role_realm_id = result.relation.role.realm_id;
     }
 
@@ -86,6 +88,14 @@ export async function runIdentityProviderRoleValidation(
         }
 
         result.data.provider_realm_id = result.relation.provider.realm_id;
+    }
+
+    if (
+        result.data.role_realm_id &&
+        result.data.provider_realm_id &&
+        result.data.role_realm_id !== result.data.provider_realm_id
+    ) {
+        throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
     return result;

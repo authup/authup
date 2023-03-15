@@ -13,9 +13,9 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRoleEntity } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runIdentityProviderRoleValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -38,10 +38,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new NotFoundError();
     }
 
-    if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)
-    ) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id)) {
         throw new ForbiddenError();
     }
 
