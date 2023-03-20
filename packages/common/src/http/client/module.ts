@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config } from 'hapic';
+import type { ConfigInput } from 'hapic';
 import { Client as BaseClient } from 'hapic';
 
 import {
@@ -60,7 +60,7 @@ export class HTTPClient extends BaseClient {
 
     public readonly userRole : UserRoleAPI;
 
-    constructor(config: Config) {
+    constructor(config: ConfigInput) {
         super(config);
 
         this.client = new ClientAPI(this.driver);

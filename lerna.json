@@ -1,33 +1,23 @@
 {
-  "packages": [
-    "packages/*"
-  ],
-  "command": {
-    "publish": {
-      "ignoreChanges": [
-        "*.md"
-      ]
+    "packages": [
+        "packages/*"
+    ],
+    "command": {
+        "create": {
+            "homepage": "https://github.com/tada5hi/authup",
+            "license": "MIT"
+        },
+        "publish": {
+            "tempTag": true
+        },
+        "version": {
+            "conventionalCommits": true,
+            "createRelease": "github",
+            "exact": true,
+            "message": "chore(release): %s"
+        }
     },
-    "version": {
-      "message": "build(release): publish"
-    }
-  },
-  "useNx": true,
-  "useWorkspaces": true,
-  "conventionalCommits": true,
-  "version": "0.17.2",
-  "changelog": {
-    "labels": {
-      "build": "Build",
-      "ci": "Continuous Integration",
-      "docs": "Documentation",
-      "feat": "New Feature",
-      "fix": "Bug Fix",
-      "perf": "Performance",
-      "refactor": "Refactor",
-      "revert": "Revert",
-      "style": "Style",
-      "test": "Test"
-    }
-  }
+    "useWorkspaces": true,
+    "useNx": true,
+    "version": "0.17.2"
 }
