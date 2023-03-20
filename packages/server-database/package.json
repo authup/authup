@@ -42,7 +42,7 @@
     "dependencies": {
         "continu": "^1.0.5",
         "pascal-case": "^3.1.2",
-        "smob": "^0.1.0",
+        "smob": "^1.0.0",
         "zod": "^3.21.4"
     },
     "devDependencies": {

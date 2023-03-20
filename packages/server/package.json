@@ -53,7 +53,7 @@
         "rc9": "^2.0.1",
         "redis-extension": "^1.2.3",
         "reflect-metadata": "^0.1.13",
-        "smob": "^0.1.0",
+        "smob": "^1.0.0",
         "typeorm": "^0.3.12",
         "typeorm-extension": "^2.5.4",
         "winston": "^3.8.2",
