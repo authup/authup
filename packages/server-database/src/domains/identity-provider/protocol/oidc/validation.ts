@@ -6,12 +6,23 @@
  */
 
 import type { OpenIDConnectIdentityProvider } from '@authup/common';
-import { validateOAuth2IdentityProviderProtocol } from '../oauth2';
+import zod from 'zod';
+import {
+    OAuth2IdentityProviderBaseSchema,
+    OAuth2IdentityProviderSchema,
+} from '../oauth2';
+
+const schema = OAuth2IdentityProviderBaseSchema.merge(zod.object({
+    discovery_endpoint: zod.string().url(),
+})).or(OAuth2IdentityProviderSchema);
 
 export function validateOidcIdentityProviderProtocol(
     entity: Partial<OpenIDConnectIdentityProvider>,
 ) : Partial<OpenIDConnectIdentityProvider> {
-    validateOAuth2IdentityProviderProtocol(entity);
+    const result = schema.safeParse(entity);
+    if (result.success === false) {
+        throw result.error;
+    }
 
     return entity;
 }

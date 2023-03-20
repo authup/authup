@@ -8,11 +8,7 @@
 import type { OAuth2IdentityProviderBase } from '@authup/common';
 import zod from 'zod';
 
-const validationSchema = zod.object({
-    token_url: zod.string().url(),
-    token_revoke_url: zod.string().url().optional().nullable(),
-    authorize_url: zod.string().url(),
-    user_info_url: zod.string().url().optional().nullable(),
+export const OAuth2IdentityProviderBaseSchema = zod.object({
     scope: zod.string().min(3).max(2000).optional()
         .nullable(),
     client_id: zod.string().min(3).max(128),
@@ -20,10 +16,17 @@ const validationSchema = zod.object({
         .nullable(),
 });
 
+export const OAuth2IdentityProviderSchema = zod.object({
+    token_url: zod.string().url(),
+    token_revoke_url: zod.string().url().optional().nullable(),
+    authorize_url: zod.string().url(),
+    user_info_url: zod.string().url().optional().nullable(),
+}).merge(OAuth2IdentityProviderBaseSchema);
+
 export function validateOAuth2IdentityProviderProtocol<
     T extends Partial<OAuth2IdentityProviderBase>,
 >(entity: T) : T {
-    const result = validationSchema.safeParse(entity);
+    const result = OAuth2IdentityProviderSchema.safeParse(entity);
     if (result.success === false) {
         throw result.error;
     }
