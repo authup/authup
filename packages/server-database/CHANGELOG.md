@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.2](https://github.com/Tada5hi/authup/compare/v0.17.1...v0.17.2) (2023-03-20)
+
+
+### Bug Fixes
+
+* **deps:** bump hapci/** to v1.3.0 ([2e7068a](https://github.com/Tada5hi/authup/commit/2e7068ae21e5a4d0dae0b9cde90a308efbc247de))
+* revert oauth2 protocol validation changes ([7d8fd5d](https://github.com/Tada5hi/authup/commit/7d8fd5d5ed42db07fefc656be7a38bbc843b59d2))
+
+
+
+
+
 ## [0.17.1](https://github.com/Tada5hi/authup/compare/v0.17.0...v0.17.1) (2023-03-14)
 
 
