@@ -50,6 +50,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
+        "@socket.io/redis-emitter": "^5.1.0",
         "@types/jsonwebtoken": "^9.0.1",
         "@types/nodemailer": "^6.4.7",
         "bcrypt": "^5.1.0",
@@ -58,10 +59,12 @@
     },
     "devDependencies": {
         "@authup/common": "^0.17.2",
-        "@types/bcrypt": "^5.0.0"
+        "@types/bcrypt": "^5.0.0",
+        "redis-extension": "^1.2.3"
     },
     "peerDependencies": {
-        "@authup/common": "^0.x"
+        "@authup/common": "^0.x",
+        "redis-extension": "^1.2.x"
     },
     "publishConfig": {
         "access": "public"

@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role, SocketEventOperations } from '@authup/common';
+import type { IdentityProvider, SocketEventOperations } from '@authup/common';
 import { emitSocketEvent } from '@authup/server-common';
 import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
 import type {
-    EntitySubscriberInterface,
-    InsertEvent,
+    EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
@@ -18,21 +17,21 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RobotEntity, RoleEntity } from '../domains';
+import { IdentityProviderEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
 function publishEvent(
-    operation: SocketEventOperations<'role'>,
-    data: Role,
+    operation: SocketEventOperations<'identityProvider'>,
+    data: IdentityProvider,
 ) {
     emitSocketEvent({
         destinations: [
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('role', id),
+                roomNameFn: (id) => buildSocketEntityRoomName('identityProvider', id),
                 namespace: buildSocketRealmNamespaceName(data.realm_id),
             },
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('role', id),
+                roomNameFn: (id) => buildSocketEntityRoomName('identityProvider', id),
             },
         ],
         operation,
@@ -41,38 +40,21 @@ function publishEvent(
 }
 
 @EventSubscriber()
-export class RoleSubscriber implements EntitySubscriberInterface<RoleEntity> {
+export class IdentityProviderSubscriber implements EntitySubscriberInterface<IdentityProviderEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RoleEntity;
+        return IdentityProviderEntity;
     }
 
-    afterInsert(event: InsertEvent<RoleEntity>): Promise<any> | void {
+    afterInsert(event: InsertEvent<IdentityProviderEntity>): Promise<any> | void {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('roleCreated', event.entity);
+        publishEvent('identityProviderCreated', event.entity as IdentityProvider);
     }
 
-    async afterUpdate(event: UpdateEvent<RoleEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROLE,
-                    id: event.entity.id,
-                }),
-            ]);
-        }
-
-        publishEvent('roleUpdated', event.entity as RoleEntity);
-    }
-
-    async afterRemove(event: RemoveEvent<RoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<IdentityProviderEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -80,12 +62,29 @@ export class RoleSubscriber implements EntitySubscriberInterface<RoleEntity> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROLE,
+                    prefix: CachePrefix.ROBOT,
                     id: event.entity.id,
                 }),
             ]);
         }
 
-        publishEvent('roleDeleted', event.entity as RoleEntity);
+        publishEvent('identityProviderUpdated', event.entity as IdentityProvider);
+    }
+
+    async afterRemove(event: RemoveEvent<IdentityProviderEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildKeyPath({
+                    prefix: CachePrefix.ROBOT,
+                    id: event.entity.id,
+                }),
+            ]);
+        }
+
+        publishEvent('identityProviderDeleted', event.entity as IdentityProvider);
     }
 }

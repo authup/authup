@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { SocketEventOperations, UserPermission } from '@authup/common';
+import type { SocketEmitterEventDestination } from '@authup/server-common';
+import { emitSocketEvent } from '@authup/server-common';
+import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -16,6 +20,36 @@ import {
 import { buildKeyPath } from 'redis-extension';
 import { UserPermissionEntity } from '../domains';
 import { CachePrefix } from '../constants';
+
+function publishEvent(
+    operation: SocketEventOperations<'userPermission'>,
+    data: UserPermission,
+) {
+    const destinations : SocketEmitterEventDestination[] = [
+        {
+            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
+        },
+    ];
+    if (data.user_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
+            namespace: buildSocketRealmNamespaceName(data.user_realm_id),
+        });
+    }
+
+    if (data.permission_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
+            namespace: buildSocketRealmNamespaceName(data.permission_realm_id),
+        });
+    }
+
+    emitSocketEvent({
+        destinations,
+        operation,
+        data,
+    });
+}
 
 @EventSubscriber()
 export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermissionEntity> {
@@ -34,6 +68,8 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             ]);
         }
 
+        publishEvent('userPermissionCreated', event.entity);
+
         return Promise.resolve(undefined);
     }
 
@@ -50,6 +86,8 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
                 }),
             ]);
         }
+
+        publishEvent('userPermissionUpdated', event.entity as UserPermission);
     }
 
     async afterRemove(event: RemoveEvent<UserPermissionEntity>): Promise<any> {
@@ -65,5 +103,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
                 }),
             ]);
         }
+
+        publishEvent('userPermissionDeleted', event.entity as UserPermission);
     }
 }

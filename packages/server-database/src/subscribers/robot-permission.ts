@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { RobotPermission, SocketEventOperations } from '@authup/common';
+import type { SocketEmitterEventDestination } from '@authup/server-common';
+import { emitSocketEvent } from '@authup/server-common';
+import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -16,6 +20,32 @@ import {
 import { buildKeyPath } from 'redis-extension';
 import { RobotPermissionEntity } from '../domains';
 import { CachePrefix } from '../constants';
+
+function publishEvent(
+    operation: SocketEventOperations<'robotPermission'>,
+    data: RobotPermission,
+) {
+    const destinations : SocketEmitterEventDestination[] = [
+        { roomNameFn: (id) => buildSocketEntityRoomName('robotPermission', id) },
+    ];
+    if (data.robot_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('robotPermission', id),
+            namespace: buildSocketRealmNamespaceName(data.robot_realm_id),
+        });
+    }
+    if (data.permission_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('robotPermission', id),
+            namespace: buildSocketRealmNamespaceName(data.permission_realm_id),
+        });
+    }
+    emitSocketEvent({
+        destinations,
+        operation,
+        data,
+    });
+}
 
 @EventSubscriber()
 export class RobotPermissionSubscriber implements EntitySubscriberInterface<RobotPermissionEntity> {
@@ -34,6 +64,8 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             ]);
         }
 
+        publishEvent('robotPermissionCreated', event.entity);
+
         return Promise.resolve(undefined);
     }
 
@@ -50,6 +82,8 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
                 }),
             ]);
         }
+
+        publishEvent('robotPermissionUpdated', event.entity as RobotPermission);
     }
 
     async afterRemove(event: RemoveEvent<RobotPermissionEntity>): Promise<any> {
@@ -65,5 +99,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
                 }),
             ]);
         }
+
+        publishEvent('robotPermissionDeleted', event.entity);
     }
 }

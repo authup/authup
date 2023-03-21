@@ -7,10 +7,17 @@
 
 import type { DataSourceOptions } from 'typeorm';
 import {
+    ClientScopeSubscriber,
+    ClientSubscriber,
+    IdentityProviderAccountSubscriber,
+
+    IdentityProviderAttributeSubscriber,
+    IdentityProviderRoleSubscriber,
+
+    IdentityProviderSubscriber,
     RobotPermissionSubscriber,
     RobotRoleSubscriber,
-    RobotSubscriber,
-
+    RobotSubscriber, RoleAttributeSubscriber,
     RolePermissionSubscriber,
     RoleSubscriber,
 
@@ -24,17 +31,26 @@ export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
     options = {
         ...options,
         subscribers: [
-            RobotRoleSubscriber,
+            ClientSubscriber,
+            ClientScopeSubscriber,
+
+            IdentityProviderSubscriber,
+            IdentityProviderAccountSubscriber,
+            IdentityProviderAttributeSubscriber,
+            IdentityProviderRoleSubscriber,
+
             RobotSubscriber,
+            RobotRoleSubscriber,
             RobotPermissionSubscriber,
 
             RoleSubscriber,
+            RoleAttributeSubscriber,
             RolePermissionSubscriber,
 
-            UserRoleSubscriber,
             UserSubscriber,
             UserAttributeSubscriber,
             UserPermissionSubscriber,
+            UserRoleSubscriber,
             ...(options.subscribers ? options.subscribers : []) as string[],
         ],
     };

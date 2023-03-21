@@ -5,11 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './client';
+export * from './client-scope';
+
+export * from './identity-provider';
+export * from './identity-provider-account';
+export * from './identity-provider-attribute';
+export * from './identity-provider-role';
+
 export * from './robot';
 export * from './robot-permission';
 export * from './robot-role';
 
 export * from './role';
+export * from './role-attribute';
 export * from './role-permission';
 
 export * from './user';

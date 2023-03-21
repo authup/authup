@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RobotRole, SocketEventOperations } from '@authup/common';
+import type { IdentityProviderRole, SocketEventOperations } from '@authup/common';
 import type { SocketEmitterEventDestination } from '@authup/server-common';
 import { emitSocketEvent } from '@authup/server-common';
 import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
@@ -18,29 +18,30 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RobotRoleEntity } from '../domains';
+import { IdentityProviderRoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
 function publishEvent(
-    operation: SocketEventOperations<'robotRole'>,
-    data: RobotRole,
+    operation: SocketEventOperations<'identityProviderRole'>,
+    data: IdentityProviderRole,
 ) {
     const destinations : SocketEmitterEventDestination[] = [
-        { roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id) },
+        { roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id) },
     ];
-    if (data.robot_realm_id) {
+
+    if (data.provider_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id),
-            namespace: buildSocketRealmNamespaceName(data.robot_realm_id),
-        });
-    }
-    if (data.role_realm_id) {
-        destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id),
-            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+            roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id),
+            namespace: buildSocketRealmNamespaceName(data.provider_realm_id),
         });
     }
 
+    if (data.role_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id),
+            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+        });
+    }
     emitSocketEvent({
         destinations,
         operation,
@@ -49,13 +50,21 @@ function publishEvent(
 }
 
 @EventSubscriber()
-export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleEntity> {
+export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RobotRoleEntity;
+        return IdentityProviderRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<RobotRoleEntity>): Promise<any> {
+    afterInsert(event: InsertEvent<IdentityProviderRoleEntity>): Promise<any> | void {
+        if (!event.entity) {
+            return;
+        }
+
+        publishEvent('identityProviderRoleCreated', event.entity as IdentityProviderRole);
+    }
+
+    async afterUpdate(event: UpdateEvent<IdentityProviderRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -63,16 +72,16 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
+                    prefix: CachePrefix.ROBOT,
+                    id: event.entity.id,
                 }),
             ]);
         }
 
-        publishEvent('robotRoleCreated', event.entity);
+        publishEvent('identityProviderRoleUpdated', event.entity as IdentityProviderRole);
     }
 
-    async afterUpdate(event: UpdateEvent<RobotRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<IdentityProviderRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -80,29 +89,12 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
+                    prefix: CachePrefix.ROBOT,
+                    id: event.entity.id,
                 }),
             ]);
         }
 
-        publishEvent('robotRoleUpdated', event.entity as RobotRoleEntity);
-    }
-
-    async afterRemove(event: RemoveEvent<RobotRoleEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
-                }),
-            ]);
-        }
-
-        publishEvent('robotRoleDeleted', event.entity);
+        publishEvent('identityProviderRoleDeleted', event.entity as IdentityProviderRole);
     }
 }

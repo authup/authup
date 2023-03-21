@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RolePermission, SocketEventOperations } from '@authup/common';
-import type { SocketEmitterEventDestination } from '@authup/server-common';
+import type { RoleAttribute, SocketEventOperations } from '@authup/common';
 import { emitSocketEvent } from '@authup/server-common';
 import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
 import type {
@@ -18,43 +17,36 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RolePermissionEntity } from '../domains';
+import { RoleAttributeEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
 function publishEvent(
-    operation: SocketEventOperations<'rolePermission'>,
-    data: RolePermission,
+    operation: SocketEventOperations<'roleAttribute'>,
+    data: RoleAttribute,
 ) {
-    const destinations : SocketEmitterEventDestination[] = [
-        { roomNameFn: (id) => buildSocketEntityRoomName('rolePermission', id) },
-    ];
-    if (data.role_realm_id) {
-        destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('rolePermission', id),
-            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
-        });
-    }
-    if (data.permission_realm_id) {
-        destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('rolePermission', id),
-            namespace: buildSocketRealmNamespaceName(data.permission_realm_id),
-        });
-    }
     emitSocketEvent({
-        destinations,
+        destinations: [
+            {
+                roomNameFn: (id) => buildSocketEntityRoomName('roleAttribute', id),
+                namespace: buildSocketRealmNamespaceName(data.realm_id),
+            },
+            {
+                roomNameFn: (id) => buildSocketEntityRoomName('roleAttribute', id),
+            },
+        ],
         operation,
         data,
     });
 }
 
 @EventSubscriber()
-export class RolePermissionSubscriber implements EntitySubscriberInterface<RolePermissionEntity> {
+export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAttributeEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RolePermissionEntity;
+        return RoleAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<RolePermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -68,10 +60,10 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        publishEvent('rolePermissionCreated', event.entity);
+        publishEvent('roleAttributeCreated', event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -85,10 +77,10 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        publishEvent('rolePermissionUpdated', event.entity as RolePermission);
+        publishEvent('roleAttributeUpdated', event.entity as RoleAttribute);
     }
 
-    async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -102,6 +94,6 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        publishEvent('rolePermissionDeleted', event.entity);
+        publishEvent('roleAttributeDeleted', event.entity);
     }
 }

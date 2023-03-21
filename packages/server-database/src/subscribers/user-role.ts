@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { SocketEventOperations, UserRole } from '@authup/common';
+import type { SocketEmitterEventDestination } from '@authup/server-common';
+import { emitSocketEvent } from '@authup/server-common';
+import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -16,6 +20,33 @@ import {
 import { buildKeyPath } from 'redis-extension';
 import { UserRoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
+
+function publishEvent(
+    operation: SocketEventOperations<'userRole'>,
+    data: UserRole,
+) {
+    const destinations : SocketEmitterEventDestination[] = [
+        { roomNameFn: (id) => buildSocketEntityRoomName('userRole', id) },
+    ];
+    if (data.user_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('userRole', id),
+            namespace: buildSocketRealmNamespaceName(data.user_realm_id),
+        });
+    }
+    if (data.role_realm_id) {
+        destinations.push({
+            roomNameFn: (id) => buildSocketEntityRoomName('userRole', id),
+            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+        });
+    }
+
+    emitSocketEvent({
+        destinations,
+        operation,
+        data,
+    });
+}
 
 @EventSubscriber()
 export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEntity> {
@@ -37,6 +68,8 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
                 }),
             ]);
         }
+
+        publishEvent('userRoleCreated', event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
@@ -52,6 +85,8 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
                 }),
             ]);
         }
+
+        publishEvent('userRoleUpdated', event.entity as UserRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
@@ -67,5 +102,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
                 }),
             ]);
         }
+
+        publishEvent('userRoleDeleted', event.entity);
     }
 }
