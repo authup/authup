@@ -50,7 +50,7 @@
     },
     "homepage": "https://github.com/Tada5hi/authup#readme",
     "dependencies": {
-        "@ebec/http": "^0.2.2"
+        "@ebec/http": "^1.0.0"
     },
     "devDependencies": {
         "@authup/common": "^0.17.2",
