@@ -16,6 +16,7 @@ import {
     mergeProps,
     ref,
 } from 'vue';
+import type { DomainType } from '@authup/common';
 import { useHTTPClientAPI } from '@authup/common';
 import { useHTTPClient } from '../utils';
 import { useAuthIlingo } from '../language/singleton';
@@ -47,7 +48,7 @@ export const AuthEntityDelete = defineComponent({
             required: true,
         },
         entityType: {
-            type: String,
+            type: String as PropType<`${DomainType}`>,
             required: true,
         },
 

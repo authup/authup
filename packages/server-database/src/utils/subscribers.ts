@@ -19,13 +19,14 @@ import {
     RobotRoleSubscriber,
     RobotSubscriber, RoleAttributeSubscriber,
     RolePermissionSubscriber,
-    RoleSubscriber,
+    RoleSubscriber, ScopeSubscriber,
 
     UserAttributeSubscriber,
     UserPermissionSubscriber,
     UserRoleSubscriber,
     UserSubscriber,
 } from '../subscribers';
+import { RealmSubscriber } from '../subscribers/realm';
 
 export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     options = {
@@ -39,6 +40,8 @@ export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
             IdentityProviderAttributeSubscriber,
             IdentityProviderRoleSubscriber,
 
+            RealmSubscriber,
+
             RobotSubscriber,
             RobotRoleSubscriber,
             RobotPermissionSubscriber,
@@ -46,6 +49,8 @@ export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
             RoleSubscriber,
             RoleAttributeSubscriber,
             RolePermissionSubscriber,
+
+            ScopeSubscriber,
 
             UserSubscriber,
             UserAttributeSubscriber,

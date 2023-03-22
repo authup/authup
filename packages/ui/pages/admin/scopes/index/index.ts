@@ -6,7 +6,9 @@
  */
 
 import type { Client, Scope } from '@authup/common';
-import { PermissionName, Robot, isRealmResourceWritable } from '@authup/common';
+import {
+    DomainType, PermissionName, Robot, isRealmResourceWritable,
+} from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import type { ListItemSlotProps } from '@vue-layout/hyperscript';
 import { SlotName } from '@vue-layout/hyperscript';
@@ -51,7 +53,7 @@ export default defineComponent({
                 h(AuthEntityDelete, {
                     class: 'btn btn-xs btn-outline-danger',
                     entityId: props.data.id,
-                    entityType: 'scope',
+                    entityType: DomainType.SCOPE,
                     withText: false,
                     onDeleted: props.deleted,
                     disabled: props.data.built_in || !store.has(PermissionName.SCOPE_DROP) ||

@@ -6,7 +6,7 @@
  */
 
 import type { Robot } from '@authup/common';
-import { PermissionName, isRealmResourceWritable } from '@authup/common';
+import { DomainType, PermissionName, isRealmResourceWritable } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import type { ListItemSlotProps } from '@vue-layout/hyperscript';
 import { SlotName } from '@vue-layout/hyperscript';
@@ -51,7 +51,7 @@ export default defineComponent({
                 h(AuthEntityDelete, {
                     class: 'btn btn-xs btn-outline-danger',
                     entityId: props.data.id,
-                    entityType: 'robot',
+                    entityType: DomainType.ROBOT,
                     withText: false,
                     onDeleted: props.deleted,
                     disabled: !store.has(PermissionName.ROBOT_DROP) ||

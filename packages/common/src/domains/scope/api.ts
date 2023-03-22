@@ -9,7 +9,7 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import type { Scope } from './module';
+import type { Scope } from './types';
 import type {
     CollectionResourceResponse, DomainAPI, SingleResourceResponse,
 } from '../types-base';

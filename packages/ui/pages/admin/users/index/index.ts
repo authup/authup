@@ -7,7 +7,7 @@
 
 import type { User } from '@authup/common';
 import {
-    PermissionName, isRealmResourceWritable,
+    DomainType, PermissionName, isRealmResourceWritable,
 } from '@authup/common';
 import { AuthEntityDelete } from '@authup/vue';
 import type { ListItemSlotProps } from '@vue-layout/hyperscript';
@@ -53,7 +53,7 @@ export default defineComponent({
                 h(AuthEntityDelete, {
                     class: 'btn btn-xs btn-outline-danger',
                     entityId: props.data.id,
-                    entityType: 'user',
+                    entityType: DomainType.USER,
                     withText: false,
                     onDeleted: props.deleted,
                     disabled: !store.has(PermissionName.USER_DROP) ||

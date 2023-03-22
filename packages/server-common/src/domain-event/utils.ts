@@ -8,7 +8,7 @@
 import { isObject } from '@authup/common';
 import type { DomainEventChannelName } from './type';
 
-export function transformEventData<T>(input: T) : T {
+export function transformDomainEventData<T>(input: T) : T {
     if (isObject(input)) {
         const keys = Object.keys(input);
         for (let i = 0; i < keys.length; i++) {

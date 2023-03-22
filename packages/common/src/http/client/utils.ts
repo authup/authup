@@ -5,37 +5,43 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '../../domains';
 import type { HTTPClient } from './module';
 
-export function useHTTPClientAPI(client: HTTPClient, name: string) {
+export function useHTTPClientAPI(
+    client: HTTPClient,
+    name: `${DomainType}`,
+) {
     switch (name) {
-        case 'client':
+        case DomainType.CLIENT:
             return client.client;
-        case 'oauth2Provider':
+        case DomainType.IDENTITY_PROVIDER:
             return client.identityProvider;
-        case 'oauth2ProviderRole':
+        case DomainType.IDENTITY_PROVIDER_ROLE:
             return client.identityProviderRole;
-        case 'permission':
+        case DomainType.PERMISSION:
             return client.permission;
-        case 'realm':
+        case DomainType.REALM:
             return client.realm;
-        case 'robot':
+        case DomainType.ROBOT:
             return client.robot;
-        case 'robotPermission':
+        case DomainType.ROBOT_PERMISSION:
             return client.robotPermission;
-        case 'role':
+        case DomainType.ROLE:
             return client.role;
-        case 'roleAttribute':
+        case DomainType.ROLE_ATTRIBUTE:
             return client.roleAttribute;
-        case 'rolePermission':
+        case DomainType.ROLE_PERMISSION:
             return client.rolePermission;
-        case 'user':
+        case DomainType.SCOPE:
+            return client.scope;
+        case DomainType.USER:
             return client.user;
-        case 'userAttribute':
+        case DomainType.USER_ATTRIBUTE:
             return client.userAttribute;
-        case 'userPermission':
+        case DomainType.USER_PERMISSION:
             return client.userPermission;
-        case 'userRole':
+        case DomainType.USER_ROLE:
             return client.userRole;
     }
 

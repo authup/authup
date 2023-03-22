@@ -7,5 +7,5 @@
 
 export * from './api';
 export * from './constants';
-export * from './module';
+export * from './types';
 export * from './utils';

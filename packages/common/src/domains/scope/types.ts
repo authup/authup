@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
+import type { DomainEventBaseContext } from '../types-base';
 
 export interface Scope {
     id: string;
@@ -24,3 +26,8 @@ export interface Scope {
 
     updated_at: Date | string;
 }
+
+export type ScopeEventContext = DomainEventBaseContext & {
+    type: `${DomainType.SCOPE}`,
+    data: Scope
+};

@@ -9,7 +9,7 @@ import { DomainEventName } from '@authup/common';
 import type { DomainEventContext } from '@authup/common';
 import { hasClient, hasConfig, useClient } from 'redis-extension';
 import type { DomainEventDestinations } from '../type';
-import { buildDomainEventChannelName, transformEventData } from '../utils';
+import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
 
 export async function publishDomainRedisEvent(
     context: DomainEventContext,
@@ -19,7 +19,7 @@ export async function publishDomainRedisEvent(
         return Promise.resolve();
     }
 
-    context = transformEventData(context);
+    context = transformDomainEventData(context);
 
     const json = JSON.stringify(context);
 

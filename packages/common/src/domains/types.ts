@@ -20,6 +20,7 @@ import type { RobotRoleEventContext } from './robot-role';
 import type { RoleEventContext } from './role';
 import type { RoleAttributeEventContext } from './role-attribute';
 import type { RolePermissionEventContext } from './role-permission';
+import type { ScopeEventContext } from './scope';
 import type { UserEventContext } from './user';
 import type { UserAttributeEventContext } from './user-attribute';
 import type { UserPermissionEventContext } from './user-permission';
@@ -39,6 +40,7 @@ RobotRoleEventContext |
 RoleEventContext |
 RoleAttributeEventContext |
 RolePermissionEventContext |
+ScopeEventContext |
 UserEventContext |
 UserAttributeEventContext |
 UserPermissionEventContext |

@@ -9,7 +9,7 @@ import type { DomainEventContext } from '@authup/common';
 import { DomainEventName, buildDomainEventFullName } from '@authup/common';
 import { hasClient, hasConfig } from 'redis-extension';
 import type { DomainEventDestinations } from '../type';
-import { buildDomainEventChannelName, transformEventData } from '../utils';
+import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
 import { useSocketEmitter } from './singleton';
 
 export function publishDomainSocketEvent(
@@ -20,7 +20,7 @@ export function publishDomainSocketEvent(
         return;
     }
 
-    context = transformEventData(context);
+    context = transformDomainEventData(context);
 
     for (let i = 0; i < destinations.length; i++) {
         let emitter = useSocketEmitter();

@@ -9,7 +9,8 @@ import type { ConfigInput } from 'hapic';
 import { Client as BaseClient } from 'hapic';
 
 import {
-    ClientAPI, ClientScopeAPI,
+    ClientAPI,
+    ClientScopeAPI,
     IdentityProviderAPI,
     IdentityProviderRoleAPI,
     PermissionAPI,

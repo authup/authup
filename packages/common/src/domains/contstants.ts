@@ -20,6 +20,7 @@ export enum DomainType {
     ROLE = 'role',
     ROLE_ATTRIBUTE = 'roleAttribute',
     ROLE_PERMISSION = 'rolePermission',
+    SCOPE = 'scope', // todo: add
     USER = 'user',
     USER_ATTRIBUTE = 'userAttribute',
     USER_PERMISSION = 'userPermission',
