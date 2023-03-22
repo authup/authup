@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientScope, SocketEventOperations } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName } from '@authup/common';
+import type { ClientScope } from '@authup/common';
+import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -20,21 +20,24 @@ import { buildKeyPath } from 'redis-extension';
 import { ClientScopeEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'clientScope'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: ClientScope,
 ) {
-    emitSocketEvent({
-        destinations: [
+    await publishDomainEvent(
+        {
+            type: DomainType.CLIENT_SCOPE,
+            event,
+            data,
+        },
+        [
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('clientScope', id),
+                channel: (id) => buildDomainChannelName(DomainType.CLIENT_SCOPE, id),
             },
 
             // todo: realm attribute
         ],
-        operation,
-        data,
-    });
+    );
 }
 
 @EventSubscriber()
@@ -44,12 +47,12 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
         return ClientScopeEntity;
     }
 
-    afterInsert(event: InsertEvent<ClientScopeEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<ClientScopeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('clientScopeCreated', event.entity as ClientScope);
+        await publishEvent(DomainEventName.CREATED, event.entity as ClientScope);
     }
 
     async afterUpdate(event: UpdateEvent<ClientScopeEntity>): Promise<any> {
@@ -66,7 +69,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        publishEvent('clientScopeUpdated', event.entity as ClientScope);
+        await publishEvent(DomainEventName.UPDATED, event.entity as ClientScope);
     }
 
     async afterRemove(event: RemoveEvent<ClientScopeEntity>): Promise<any> {
@@ -83,6 +86,6 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        publishEvent('clientScopeDeleted', event.entity as ClientScope);
+        await publishEvent(DomainEventName.DELETED, event.entity as ClientScope);
     }
 }

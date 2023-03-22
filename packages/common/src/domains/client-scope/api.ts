@@ -8,8 +8,8 @@
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
-import type { ClientScope } from './module';
-import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
+import type { ClientScope } from './types';
+import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
 export class ClientScopeAPI implements DomainAPISlim<ClientScope> {
     protected client: ClientDriverInstance;

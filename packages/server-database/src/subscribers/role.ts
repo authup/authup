@@ -5,9 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role, SocketEventOperations } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    Role,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -18,26 +24,29 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RobotEntity, RoleEntity } from '../domains';
+import { RoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'role'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: Role,
 ) {
-    emitSocketEvent({
-        destinations: [
+    await publishDomainEvent(
+        {
+            type: DomainType.ROLE,
+            event,
+            data,
+        },
+        [
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('role', id),
-                namespace: buildSocketRealmNamespaceName(data.realm_id),
+                channel: (id) => buildDomainChannelName(DomainType.ROLE, id),
+                namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('role', id),
+                channel: (id) => buildDomainChannelName(DomainType.ROLE, id),
             },
         ],
-        operation,
-        data,
-    });
+    );
 }
 
 @EventSubscriber()
@@ -47,12 +56,12 @@ export class RoleSubscriber implements EntitySubscriberInterface<RoleEntity> {
         return RoleEntity;
     }
 
-    afterInsert(event: InsertEvent<RoleEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<RoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('roleCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RoleEntity>): Promise<any> {
@@ -69,7 +78,7 @@ export class RoleSubscriber implements EntitySubscriberInterface<RoleEntity> {
             ]);
         }
 
-        publishEvent('roleUpdated', event.entity as RoleEntity);
+        await publishEvent(DomainEventName.UPDATED, event.entity as RoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<RoleEntity>): Promise<any> {
@@ -86,6 +95,6 @@ export class RoleSubscriber implements EntitySubscriberInterface<RoleEntity> {
             ]);
         }
 
-        publishEvent('roleDeleted', event.entity as RoleEntity);
+        await publishEvent(DomainEventName.DELETED, event.entity as RoleEntity);
     }
 }

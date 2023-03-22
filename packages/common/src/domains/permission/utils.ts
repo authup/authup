@@ -6,7 +6,7 @@
  */
 
 import type { MongoQuery } from '@ucast/mongo2js';
-import type { PermissionRelation } from './type';
+import type { PermissionRelation } from './types';
 import type { AbilityDescriptor } from '../../ability-manager';
 
 export function buildPermissionMetaCondition(input: string | null): MongoQuery {

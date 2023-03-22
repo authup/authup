@@ -8,8 +8,8 @@
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
-import type { UserRole } from './entity';
-import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
+import type { UserRole } from './types';
+import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
 export class UserRoleAPI implements DomainAPISlim<UserRole> {
     protected client: ClientDriverInstance;

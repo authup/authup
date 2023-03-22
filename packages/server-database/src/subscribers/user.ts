@@ -5,9 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SocketEventOperations, User } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    User,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -18,26 +24,26 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RobotEntity, UserEntity } from '../domains';
+import { UserEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'user'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: User,
 ) {
-    emitSocketEvent({
-        destinations: [
-            {
-                roomNameFn: (id) => buildSocketEntityRoomName('user', id),
-                namespace: buildSocketRealmNamespaceName(data.realm_id),
-            },
-            {
-                roomNameFn: (id) => buildSocketEntityRoomName('user', id),
-            },
-        ],
-        operation,
+    await publishDomainEvent({
+        type: DomainType.USER,
+        event,
         data,
-    });
+    }, [
+        {
+            channel: (id) => buildDomainChannelName(DomainType.USER, id),
+            namespace: buildDomainNamespaceName(data.realm_id),
+        },
+        {
+            channel: (id) => buildDomainChannelName(DomainType.USER, id),
+        },
+    ]);
 }
 
 @EventSubscriber()
@@ -47,12 +53,12 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
         return UserEntity;
     }
 
-    afterInsert(event: InsertEvent<UserEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<UserEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('userCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<UserEntity>): Promise<any> {
@@ -69,7 +75,7 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        publishEvent('userUpdated', event.entity as UserEntity);
+        await publishEvent(DomainEventName.UPDATED, event.entity as UserEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserEntity>): Promise<any> {
@@ -86,6 +92,6 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        publishEvent('userDeleted', event.entity as UserEntity);
+        await publishEvent(DomainEventName.DELETED, event.entity as UserEntity);
     }
 }

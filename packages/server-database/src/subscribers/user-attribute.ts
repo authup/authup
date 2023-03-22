@@ -5,9 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SocketEventOperations, UserAttribute } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    UserAttribute,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -21,23 +27,23 @@ import { buildKeyPath } from 'redis-extension';
 import { UserAttributeEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'userAttribute'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: UserAttribute,
 ) {
-    emitSocketEvent({
-        destinations: [
-            {
-                roomNameFn: (id) => buildSocketEntityRoomName('userAttribute', id),
-                namespace: buildSocketRealmNamespaceName(data.realm_id),
-            },
-            {
-                roomNameFn: (id) => buildSocketEntityRoomName('userAttribute', id),
-            },
-        ],
-        operation,
+    await publishDomainEvent({
+        type: DomainType.USER_ATTRIBUTE,
+        event,
         data,
-    });
+    }, [
+        {
+            channel: (id) => buildDomainChannelName(DomainType.USER_ATTRIBUTE, id),
+            namespace: buildDomainNamespaceName(data.realm_id),
+        },
+        {
+            channel: (id) => buildDomainChannelName(DomainType.USER_ATTRIBUTE, id),
+        },
+    ]);
 }
 
 @EventSubscriber()
@@ -57,7 +63,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        publishEvent('userAttributeCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
 
         return Promise.resolve(undefined);
     }
@@ -76,7 +82,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        publishEvent('userAttributeUpdated', event.entity as UserAttributeEntity);
+        await publishEvent(DomainEventName.UPDATED, event.entity as UserAttributeEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserAttributeEntity>): Promise<any> {
@@ -93,6 +99,6 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        publishEvent('userAttributeDeleted', event.entity);
+        await publishEvent(DomainEventName.DELETED, event.entity);
     }
 }

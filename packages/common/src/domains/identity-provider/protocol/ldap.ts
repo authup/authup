@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider } from '../entity';
+import type { IdentityProvider } from '../types';
 import type { IdentityProviderProtocol } from '../constants';
 
 export interface LdapIdentityProvider extends IdentityProvider {

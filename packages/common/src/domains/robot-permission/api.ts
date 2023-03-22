@@ -8,10 +8,10 @@
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
-import type { RobotPermission } from './entity';
+import type { RobotPermission } from './types';
 import type {
     CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
-} from '../type';
+} from '../types-base';
 
 export class RobotPermissionAPI implements DomainAPISlim<RobotPermission> {
     protected client: ClientDriverInstance;

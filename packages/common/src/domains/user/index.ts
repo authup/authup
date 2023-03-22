@@ -6,6 +6,6 @@
  */
 
 export * from './api';
-export * from './entity';
+export * from './types';
 export * from './error';
 export * from './utils';

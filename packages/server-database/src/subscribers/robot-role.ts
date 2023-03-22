@@ -5,10 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RobotRole, SocketEventOperations } from '@authup/common';
-import type { SocketEmitterEventDestination } from '@authup/server-common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    RobotRole,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import type { DomainEventDestination } from '@authup/server-common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,31 +27,31 @@ import { buildKeyPath } from 'redis-extension';
 import { RobotRoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'robotRole'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: RobotRole,
 ) {
-    const destinations : SocketEmitterEventDestination[] = [
-        { roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id) },
+    const destinations : DomainEventDestination[] = [
+        { channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id) },
     ];
     if (data.robot_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id),
-            namespace: buildSocketRealmNamespaceName(data.robot_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id),
+            namespace: buildDomainNamespaceName(data.robot_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('robotRole', id),
-            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id),
+            namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
-    emitSocketEvent({
-        destinations,
-        operation,
+    await publishDomainEvent({
+        type: DomainType.ROBOT_ROLE,
+        event,
         data,
-    });
+    }, destinations);
 }
 
 @EventSubscriber()
@@ -69,7 +75,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        publishEvent('robotRoleCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RobotRoleEntity>): Promise<any> {
@@ -86,7 +92,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        publishEvent('robotRoleUpdated', event.entity as RobotRoleEntity);
+        await publishEvent(DomainEventName.UPDATED, event.entity as RobotRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<RobotRoleEntity>): Promise<any> {
@@ -103,6 +109,6 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        publishEvent('robotRoleDeleted', event.entity);
+        await publishEvent(DomainEventName.DELETED, event.entity);
     }
 }

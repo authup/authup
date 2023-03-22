@@ -9,8 +9,8 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import type { User } from './entity';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { User } from './types';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
 export class UserAPI implements DomainAPI<User> {
     protected client: ClientDriverInstance;

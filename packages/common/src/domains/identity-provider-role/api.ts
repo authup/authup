@@ -9,8 +9,8 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import type { IdentityProviderRole } from './entity';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { IdentityProviderRole } from './types';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
 export class IdentityProviderRoleAPI implements DomainAPI<IdentityProviderRole> {
     protected client: ClientDriverInstance;

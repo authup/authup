@@ -5,9 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, SocketEventOperations } from '@authup/common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
+import type {
+    Client,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
+} from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -20,23 +24,26 @@ import { buildKeyPath } from 'redis-extension';
 import { ClientEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'client'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: Client,
 ) {
-    emitSocketEvent({
-        destinations: [
+    await publishDomainEvent(
+        {
+            type: DomainType.CLIENT,
+            event,
+            data,
+        },
+        [
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('client', id),
-                namespace: buildSocketRealmNamespaceName(data.realm_id),
+                channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
+                namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('client', id),
+                channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
             },
         ],
-        operation,
-        data,
-    });
+    );
 }
 
 @EventSubscriber()
@@ -46,12 +53,12 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
         return ClientEntity;
     }
 
-    afterInsert(event: InsertEvent<ClientEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<ClientEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('clientCreated', event.entity as Client);
+        await publishEvent(DomainEventName.CREATED, event.entity as Client);
     }
 
     async afterUpdate(event: UpdateEvent<ClientEntity>): Promise<any> {
@@ -68,7 +75,7 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
             ]);
         }
 
-        publishEvent('clientUpdated', event.entity as Client);
+        await publishEvent(DomainEventName.UPDATED, event.entity as Client);
     }
 
     async afterRemove(event: RemoveEvent<ClientEntity>): Promise<any> {
@@ -85,6 +92,6 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
             ]);
         }
 
-        publishEvent('clientDeleted', event.entity as Client);
+        await publishEvent(DomainEventName.DELETED, event.entity as Client);
     }
 }

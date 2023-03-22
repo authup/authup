@@ -12,7 +12,7 @@ import { nullifyEmptyObjectProperties } from '../../utils';
 import type { Scope } from './module';
 import type {
     CollectionResourceResponse, DomainAPI, SingleResourceResponse,
-} from '../type';
+} from '../types-base';
 
 export class ScopeAPI implements DomainAPI<Scope> {
     protected client: ClientDriverInstance;

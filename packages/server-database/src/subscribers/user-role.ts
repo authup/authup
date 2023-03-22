@@ -5,10 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SocketEventOperations, UserRole } from '@authup/common';
-import type { SocketEmitterEventDestination } from '@authup/server-common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    UserRole,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import type { DomainEventDestination } from '@authup/server-common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,31 +27,31 @@ import { buildKeyPath } from 'redis-extension';
 import { UserRoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'userRole'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: UserRole,
 ) {
-    const destinations : SocketEmitterEventDestination[] = [
-        { roomNameFn: (id) => buildSocketEntityRoomName('userRole', id) },
+    const destinations : DomainEventDestination[] = [
+        { channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id) },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('userRole', id),
-            namespace: buildSocketRealmNamespaceName(data.user_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id),
+            namespace: buildDomainNamespaceName(data.user_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('userRole', id),
-            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id),
+            namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
-    emitSocketEvent({
-        destinations,
-        operation,
+    await publishDomainEvent({
+        type: DomainType.USER_ROLE,
+        event,
         data,
-    });
+    }, destinations);
 }
 
 @EventSubscriber()
@@ -69,7 +75,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        publishEvent('userRoleCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
@@ -86,7 +92,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        publishEvent('userRoleUpdated', event.entity as UserRoleEntity);
+        await publishEvent(DomainEventName.UPDATED, event.entity as UserRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
@@ -103,6 +109,6 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        publishEvent('userRoleDeleted', event.entity);
+        await publishEvent(DomainEventName.DELETED, event.entity);
     }
 }

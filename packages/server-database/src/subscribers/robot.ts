@@ -5,9 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot, SocketEventOperations } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    Robot,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -20,23 +26,26 @@ import { buildKeyPath } from 'redis-extension';
 import { RobotEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'robot'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: Robot,
 ) {
-    emitSocketEvent({
-        destinations: [
+    await publishDomainEvent(
+        {
+            type: DomainType.ROBOT,
+            event,
+            data,
+        },
+        [
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('robot', id),
-                namespace: buildSocketRealmNamespaceName(data.realm_id),
+                channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
+                namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                roomNameFn: (id) => buildSocketEntityRoomName('robot', id),
+                channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
             },
         ],
-        operation,
-        data,
-    });
+    );
 }
 
 @EventSubscriber()
@@ -46,12 +55,12 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
         return RobotEntity;
     }
 
-    afterInsert(event: InsertEvent<RobotEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<RobotEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('robotCreated', event.entity as Robot);
+        await publishEvent(DomainEventName.CREATED, event.entity as Robot);
     }
 
     async afterUpdate(event: UpdateEvent<RobotEntity>): Promise<any> {
@@ -68,7 +77,7 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             ]);
         }
 
-        publishEvent('robotUpdated', event.entity as Robot);
+        await publishEvent(DomainEventName.UPDATED, event.entity as Robot);
     }
 
     async afterRemove(event: RemoveEvent<RobotEntity>): Promise<any> {
@@ -85,6 +94,6 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             ]);
         }
 
-        publishEvent('robotDeleted', event.entity as Robot);
+        await publishEvent(DomainEventName.DELETED, event.entity as Robot);
     }
 }

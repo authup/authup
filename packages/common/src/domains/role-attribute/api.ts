@@ -9,10 +9,10 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import type { RoleAttribute } from './entity';
+import type { RoleAttribute } from './types';
 import type {
     CollectionResourceResponse, DomainAPI, SingleResourceResponse,
-} from '../type';
+} from '../types-base';
 
 export class RoleAttributeAPI implements DomainAPI<RoleAttribute> {
     protected client: ClientDriverInstance;

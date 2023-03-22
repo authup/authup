@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAccount, SocketEventOperations } from '@authup/common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName } from '@authup/common';
+import type { IdentityProviderAccount } from '@authup/common';
+import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -20,19 +20,19 @@ import { buildKeyPath } from 'redis-extension';
 import { IdentityProviderAccountEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'identityProviderAccount'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: IdentityProviderAccount,
 ) {
-    emitSocketEvent({
-        destinations: [
-            {
-                roomNameFn: (id) => buildSocketEntityRoomName('identityProviderAccount', id),
-            },
-        ],
-        operation,
+    await publishDomainEvent({
+        type: DomainType.IDENTITY_PROVIDER_ACCOUNT,
+        event,
         data,
-    });
+    }, [
+        {
+            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ACCOUNT, id),
+        },
+    ]);
 }
 
 @EventSubscriber()
@@ -42,12 +42,12 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
         return IdentityProviderAccountEntity;
     }
 
-    afterInsert(event: InsertEvent<IdentityProviderAccountEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<IdentityProviderAccountEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('identityProviderAccountCreated', event.entity as IdentityProviderAccount);
+        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderAccount);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderAccountEntity>): Promise<any> {
@@ -64,7 +64,7 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             ]);
         }
 
-        publishEvent('identityProviderAccountUpdated', event.entity as IdentityProviderAccount);
+        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderAccount);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderAccountEntity>): Promise<any> {
@@ -81,6 +81,6 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             ]);
         }
 
-        publishEvent('identityProviderAccountDeleted', event.entity as IdentityProviderAccount);
+        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderAccount);
     }
 }

@@ -9,10 +9,10 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
-import type { UserAttribute } from './entity';
+import type { UserAttribute } from './types';
 import type {
     CollectionResourceResponse, DomainAPI, SingleResourceResponse,
-} from '../type';
+} from '../types-base';
 
 export class UserAttributeAPI implements DomainAPI<UserAttribute> {
     protected client: ClientDriverInstance;

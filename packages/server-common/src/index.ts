@@ -6,7 +6,7 @@
  */
 
 export * from './crypto';
+export * from './domain-event';
 export * from './logger';
 export * from './smtp';
-export * from './socket';
 export * from './utils';

@@ -5,10 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SocketEventOperations, UserPermission } from '@authup/common';
-import type { SocketEmitterEventDestination } from '@authup/server-common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    UserPermission,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import type { DomainEventDestination } from '@authup/server-common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,34 +27,34 @@ import { buildKeyPath } from 'redis-extension';
 import { UserPermissionEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'userPermission'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: UserPermission,
 ) {
-    const destinations : SocketEmitterEventDestination[] = [
+    const destinations : DomainEventDestination[] = [
         {
-            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
+            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
         },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
-            namespace: buildSocketRealmNamespaceName(data.user_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
+            namespace: buildDomainNamespaceName(data.user_realm_id),
         });
     }
 
     if (data.permission_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('userPermission', id),
-            namespace: buildSocketRealmNamespaceName(data.permission_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
+            namespace: buildDomainNamespaceName(data.permission_realm_id),
         });
     }
 
-    emitSocketEvent({
-        destinations,
-        operation,
+    await publishDomainEvent({
+        type: DomainType.USER_PERMISSION,
+        event,
         data,
-    });
+    }, destinations);
 }
 
 @EventSubscriber()
@@ -68,7 +74,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             ]);
         }
 
-        publishEvent('userPermissionCreated', event.entity);
+        await publishEvent(DomainEventName.CREATED, event.entity);
 
         return Promise.resolve(undefined);
     }
@@ -87,7 +93,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             ]);
         }
 
-        publishEvent('userPermissionUpdated', event.entity as UserPermission);
+        await publishEvent(DomainEventName.UPDATED, event.entity as UserPermission);
     }
 
     async afterRemove(event: RemoveEvent<UserPermissionEntity>): Promise<any> {
@@ -104,6 +110,6 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             ]);
         }
 
-        publishEvent('userPermissionDeleted', event.entity as UserPermission);
+        await publishEvent(DomainEventName.DELETED, event.entity as UserPermission);
     }
 }

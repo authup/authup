@@ -8,8 +8,8 @@
 import type { ClientDriverInstance } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { UserPermission } from './entity';
-import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../type';
+import type { UserPermission } from './types';
+import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class UserPermissionAPI implements DomainAPISlim<UserPermission> {

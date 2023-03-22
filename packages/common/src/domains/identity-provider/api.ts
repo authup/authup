@@ -8,9 +8,9 @@
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientDriverInstance } from 'hapic';
-import type { IdentityProvider } from './entity';
+import type { IdentityProvider } from './types';
 import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../type';
+import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 import { buildIdentityProviderAuthorizePath } from './utils';
 
 export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {

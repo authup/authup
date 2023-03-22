@@ -5,10 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderRole, SocketEventOperations } from '@authup/common';
-import type { SocketEmitterEventDestination } from '@authup/server-common';
-import { emitSocketEvent } from '@authup/server-common';
-import { buildSocketEntityRoomName, buildSocketRealmNamespaceName } from '@authup/common';
+import type {
+    IdentityProviderRole,
+} from '@authup/common';
+import {
+    DomainEventName, DomainType,
+    buildDomainChannelName,
+    buildDomainNamespaceName,
+} from '@authup/common';
+import type { DomainEventDestination } from '@authup/server-common';
+import { publishDomainEvent } from '@authup/server-common';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,32 +27,33 @@ import { buildKeyPath } from 'redis-extension';
 import { IdentityProviderRoleEntity } from '../domains';
 import { CachePrefix } from '../constants';
 
-function publishEvent(
-    operation: SocketEventOperations<'identityProviderRole'>,
+async function publishEvent(
+    event: `${DomainEventName}`,
     data: IdentityProviderRole,
 ) {
-    const destinations : SocketEmitterEventDestination[] = [
-        { roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id) },
+    const destinations : DomainEventDestination[] = [
+        { channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id) },
     ];
 
     if (data.provider_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id),
-            namespace: buildSocketRealmNamespaceName(data.provider_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id),
+            namespace: buildDomainNamespaceName(data.provider_realm_id),
         });
     }
 
     if (data.role_realm_id) {
         destinations.push({
-            roomNameFn: (id) => buildSocketEntityRoomName('identityProviderRole', id),
-            namespace: buildSocketRealmNamespaceName(data.role_realm_id),
+            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id),
+            namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
-    emitSocketEvent({
-        destinations,
-        operation,
+
+    await publishDomainEvent({
+        type: DomainType.IDENTITY_PROVIDER_ROLE,
+        event,
         data,
-    });
+    }, destinations);
 }
 
 @EventSubscriber()
@@ -56,12 +63,12 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
         return IdentityProviderRoleEntity;
     }
 
-    afterInsert(event: InsertEvent<IdentityProviderRoleEntity>): Promise<any> | void {
+    async afterInsert(event: InsertEvent<IdentityProviderRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        publishEvent('identityProviderRoleCreated', event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderRole);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderRoleEntity>): Promise<any> {
@@ -78,7 +85,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        publishEvent('identityProviderRoleUpdated', event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderRole);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderRoleEntity>): Promise<any> {
@@ -95,6 +102,6 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        publishEvent('identityProviderRoleDeleted', event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderRole);
     }
 }
