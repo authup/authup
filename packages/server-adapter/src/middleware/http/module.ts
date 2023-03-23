@@ -80,17 +80,25 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
         switch (data.sub_kind) {
             case OAuth2SubKind.CLIENT:
                 env.clientId = data.sub;
+                env.clientName = data.sub_name;
+                env.client = { id: env.clientId, name: env.clientName };
                 break;
             case OAuth2SubKind.ROBOT:
                 env.robotId = data.sub;
+                env.robotName = data.sub_name;
+                env.robot = { id: env.robotId, name: env.robotName };
                 break;
             case OAuth2SubKind.USER:
                 env.userId = data.sub;
+                env.userName = data.sub_name;
+                env.user = { id: env.userId, name: env.userName };
                 break;
         }
 
         env.realmId = data.realm_id;
         env.realmName = data.realm_name;
+        env.realm = { id: env.realmId, name: env.realmName };
+
         env.token = header.token;
         env.permissions = data.permissions;
         env.ability = new AbilityManager(data.permissions);

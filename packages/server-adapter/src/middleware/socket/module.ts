@@ -49,17 +49,25 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
         switch (data.sub_kind) {
             case OAuth2SubKind.CLIENT:
                 socket.data.clientId = data.sub;
+                socket.data.clientName = data.sub_name;
+                socket.data.client = { id: socket.data.clientId, name: socket.data.clientName };
                 break;
             case OAuth2SubKind.ROBOT:
                 socket.data.robotId = data.sub;
+                socket.data.robotName = data.sub_name;
+                socket.data.robot = { id: socket.data.robotId, name: socket.data.robotName };
                 break;
             case OAuth2SubKind.USER:
                 socket.data.userId = data.sub;
+                socket.data.userName = data.sub_name;
+                socket.data.user = { id: socket.data.userId, name: socket.data.userName };
                 break;
         }
 
         socket.data.realmId = data.realm_id;
         socket.data.realmName = data.realm_name;
+        socket.data.realm = { id: socket.data.realmId, name: socket.data.realmName };
+
         socket.data.token = token;
         socket.data.permissions = data.permissions;
         socket.data.ability = new AbilityManager(data.permissions);

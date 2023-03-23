@@ -14,10 +14,19 @@ export type HTTPMiddlewareContext = TokenVerifyContext & {
     cookieHandler?: (cookies: any) => string | undefined
 };
 export type RequestEnv = {
+    user?: Pick<User, 'id' | 'name'>,
+    userName?: User['id'],
     userId?: User['id'],
+
+    robot?: Pick<Robot, 'id' | 'name'>,
+    robotName?: Robot['name'],
     robotId?: Robot['id'],
+
+    client?: Pick<Client, 'id' | 'name'>,
+    clientName?: Client['name'],
     clientId?: Client['id']
 
+    realm?: Pick<Realm, 'id' | 'name'>,
     realmId?: Realm['id'],
     realmName?: Realm['name'],
 
