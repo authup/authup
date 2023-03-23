@@ -7,10 +7,9 @@
 
 import { setConfigOptions as setHTTPOptions } from '@authup/server-http';
 import { setConfigOptions as setDatabaseOptions } from '@authup/server-database';
+import { setupRedis, setupSmtp, setupVault } from '../clients';
 import type { Options, OptionsInput } from '../type';
 import { buildBaseOptions } from './build';
-import { setupRedis } from './redis';
-import { setupSmtp } from './smtp';
 
 export function setOptions(config?: OptionsInput) : Options {
     config = config || {};
@@ -37,6 +36,10 @@ export function setOptions(config?: OptionsInput) : Options {
 
     if (base.smtp) {
         setupSmtp(base.smtp);
+    }
+
+    if (base.vault) {
+        setupVault(base.vault);
     }
 
     return {

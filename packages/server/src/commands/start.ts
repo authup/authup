@@ -21,7 +21,7 @@ import {
 import {
     DatabaseSeeder, buildDataSourceOptions, saveSeedResult, useConfig as useDatabaseConfig,
 } from '@authup/server-database';
-import { setLogger, useLogger } from '@authup/server-common';
+import { saveRobotCredentialsToVault, setLogger, useLogger } from '@authup/server-common';
 import type { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
@@ -106,6 +106,8 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     if (seederData.robot) {
+        await saveRobotCredentialsToVault(seederData.robot);
+
         await saveSeedResult(httpConfig.get('writableDirectoryPath'), seederData);
     }
 

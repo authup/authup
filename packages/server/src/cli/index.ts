@@ -18,7 +18,6 @@ import {
     ResetCommand,
     SetupCommand,
     StartCommand,
-    UpgradeCommand,
 } from './commands';
 
 dotenv.config({
@@ -36,7 +35,6 @@ yargs
     .command(new ResetCommand())
     .command(new SetupCommand())
     .command(new StartCommand())
-    .command(new UpgradeCommand())
     .strict()
     .alias('v', 'version')
     .help('h')

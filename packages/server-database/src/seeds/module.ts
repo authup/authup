@@ -31,7 +31,7 @@ import {
     RolePermissionEntity,
     ScopeEntity,
     UserRepository,
-    UserRoleEntity, useRobotEventEmitter,
+    UserRoleEntity,
 } from '../domains';
 import type { Options, OptionsInput } from '../config';
 import { useConfig } from '../config';
@@ -285,12 +285,6 @@ export class DatabaseSeeder implements Seeder {
             robot.secret = secret;
             response.robot = robot;
         }
-
-        useRobotEventEmitter()
-            .emit('credentials', {
-                ...robot,
-                secret,
-            });
 
         // -------------------------------------------------
 

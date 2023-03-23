@@ -33,6 +33,10 @@ export function readBaseOptionsFromEnv() : Partial<BaseOptions> {
         options.smtp = readBoolOrStringFromProcessEnv('SMTP');
     }
 
+    if (hasProcessEnv('VAULT')) {
+        options.vault = readBoolOrStringFromProcessEnv('VAULT');
+    }
+
     return options;
 }
 

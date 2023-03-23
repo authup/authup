@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { removeRobotCredentialsFromVault } from '@authup/server-common';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -14,7 +15,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, resolveRealm, useRobotEventEmitter } from '@authup/server-database';
+import { RobotEntity, resolveRealm } from '@authup/server-database';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -59,10 +60,9 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
 
     // ----------------------------------------------
 
-    useRobotEventEmitter()
-        .emit('deleted', {
-            ...entity,
-        });
+    // todo: this should be executed through a message broker
+    await removeRobotCredentialsFromVault(entity);
+
     // ----------------------------------------------
 
     return sendAccepted(res, entity);

@@ -12,4 +12,3 @@ export * from './migration-status';
 export * from './reset';
 export * from './setup';
 export * from './start';
-export * from './upgrade';

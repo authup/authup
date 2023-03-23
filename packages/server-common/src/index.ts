@@ -7,6 +7,8 @@
 
 export * from './crypto';
 export * from './domain-event';
+export * from './domains';
 export * from './logger';
 export * from './smtp';
+export * from './vault';
 export * from './utils';

@@ -10,6 +10,4 @@ export * from './build';
 export * from './defaults';
 export * from './env';
 export * from './read';
-export * from './redis';
-export * from './smtp';
 export * from './validate';

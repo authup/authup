@@ -36,6 +36,11 @@ export type BaseOptions = {
     /**
      * default: false
      */
+    vault: string | boolean,
+
+    /**
+     * default: false
+     */
     smtp: string | boolean | SmtpConfig,
 };
 

@@ -8,15 +8,16 @@
 import {
     PermissionName,
 } from '@authup/common';
+import { saveRobotCredentialsToVault } from '@authup/server-common';
 import type { Request, Response } from 'routup';
-import { send, sendCreated } from 'routup';
+import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
-    RobotRepository, useRobotEventEmitter,
+    RobotRepository,
 } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runRobotValidation(req, RequestHandlerOperation.CREATE);
@@ -41,16 +42,15 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
 
     entity.secret = secret;
 
-    useRobotEventEmitter()
-        .emit('credentials', {
-            ...entity,
-            secret,
-        });
+    // ----------------------------------------------
 
-    useRobotEventEmitter()
-        .emit('created', {
-            ...entity,
-        });
+    // todo: this should be executed through a message broker
+    await saveRobotCredentialsToVault({
+        ...entity,
+        secret,
+    });
 
-    return sendCreated(res, entity);
+    // ----------------------------------------------
+
+    sendCreated(res, entity);
 }
