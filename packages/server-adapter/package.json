@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-adapter",
-    "version": "0.18.0",
+    "version": "0.19.0",
     "description": "An adapter package to integrate into other services.",
     "exports": {
         "./package.json": "./package.json",
@@ -53,7 +53,7 @@
         "@ebec/http": "^1.0.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.18.0",
+        "@authup/common": "^0.19.0",
         "@hapic/oauth2": "^1.4.0",
         "@routup/cookie": "^0.8.1",
         "hapic": "^1.4.0",

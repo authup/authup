@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.19.0](https://github.com/Tada5hi/authup/compare/v0.18.0...v0.19.0) (2023-03-23)
+
+
+### Features
+
+* extend socket-/http-request env context ([56819ea](https://github.com/Tada5hi/authup/commit/56819ea4bd0fe79806fc0f620b384af1b497d851))
+
+
+
+
+
 # [0.18.0](https://github.com/Tada5hi/authup/compare/v0.17.2...v0.18.0) (2023-03-23)
 
 
