@@ -32,6 +32,9 @@ export function registerErrorMiddleware(router: Router) {
             }
         }
 
-        send(response, buildResponseErrorPayloadFromError(error));
+        const data = buildResponseErrorPayloadFromError(error);
+        response.statusCode = data.statusCode || 500;
+
+        send(response, data);
     });
 }

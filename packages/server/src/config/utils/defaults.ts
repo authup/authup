@@ -24,6 +24,7 @@ export function extendCoreOptionsWithDefaults(config: Partial<BaseOptions>) : Ba
 
     config.redis = config.redis ?? false;
     config.smtp = config.smtp ?? false;
+    config.vault = config.vault ?? false;
 
     return config as BaseOptions;
 }

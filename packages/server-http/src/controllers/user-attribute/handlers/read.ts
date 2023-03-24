@@ -13,12 +13,12 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isRealmResourceReadable } from '@authup/common';
+import { PermissionName, isRealmResourceReadable } from '@authup/common';
 import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,
 } from '@authup/server-database';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -26,10 +26,14 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('userAttribute');
 
+    const ability = useRequestEnv(req, 'ability');
+
     query.where(new Brackets((qb) => {
         onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
-        qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
+        if (!ability.has(PermissionName.USER_EDIT)) {
+            qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
+        }
     }));
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {

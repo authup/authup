@@ -23,6 +23,11 @@ const configValidation = zod.object({
         zod.boolean(),
         zod.any(),
     ])),
+    vault: zod.lazy(() => zod.union([
+        zod.string(),
+        zod.boolean(),
+        zod.any(),
+    ])),
 });
 
 export function validateBaseOptionsInput(input: unknown) : BaseOptionsInput {

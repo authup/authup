@@ -21,6 +21,7 @@ export function buildBaseOptions(config: BaseOptionsInput) : BaseOptions {
 
                 redis: config.redis,
                 smtp: config.smtp,
+                vault: config.vault,
             },
         ),
     );

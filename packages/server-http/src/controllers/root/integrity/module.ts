@@ -6,7 +6,11 @@
  */
 
 import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME, createNanoID } from '@authup/common';
-import { findRobotCredentialsInVault, hasVaultClient, saveRobotCredentialsToVault } from '@authup/server-common';
+import {
+    findRobotCredentialsInVault,
+    hasVaultConfig,
+    saveRobotCredentialsToVault,
+} from '@authup/server-common';
 import { RealmEntity, RobotRepository } from '@authup/server-database';
 import { sendAccepted } from 'routup';
 import type { Request, Response } from 'routup';
@@ -16,7 +20,7 @@ export async function checkIntegrityRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    if (!hasVaultClient()) {
+    if (!hasVaultConfig()) {
         sendAccepted(res);
         return;
     }

@@ -276,14 +276,19 @@ export class DatabaseSeeder implements Seeder {
 
             robot.secret = secret;
             response.robot = robot;
-        } else if (this.getOption('robotSecretReset')) {
-            robot.secret = await hash(secret);
+        } else {
+            if (this.getOption('robotSecretReset')) {
+                robot.secret = await hash(secret);
+            }
+
             robot.active = this.getOption('robotEnabled');
 
             await robotRepository.save(robot);
 
-            robot.secret = secret;
-            response.robot = robot;
+            if (this.getOption('robotSecretReset')) {
+                robot.secret = secret;
+                response.robot = robot;
+            }
         }
 
         // -------------------------------------------------

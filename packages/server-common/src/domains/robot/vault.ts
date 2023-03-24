@@ -6,14 +6,14 @@
  */
 
 import type { Robot } from '@authup/common';
-import { hasClient, useClient } from '@hapic/vault';
+import { hasClient, hasConfig, useClient } from '@hapic/vault';
 
 export function hasVaultClient() {
     return hasClient();
 }
 
 export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
-    if (!hasClient()) {
+    if (!hasConfig()) {
         return;
     }
 
@@ -26,7 +26,7 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
 }
 
 export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'>) {
-    if (!hasClient()) {
+    if (!hasConfig()) {
         return;
     }
 
@@ -38,7 +38,7 @@ export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'
 export async function findRobotCredentialsInVault(
     entity: Pick<Robot, 'name'>,
 ) : Promise<Pick<Robot, 'id' | 'secret'> | undefined> {
-    if (!hasClient()) {
+    if (!hasConfig()) {
         return undefined;
     }
 

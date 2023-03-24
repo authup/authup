@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, ConfigInput } from '@hapic/vault';
+import type { ConfigInput } from '@hapic/vault';
 import {
-    hasClient, setConfig, unsetClient, useClient,
+    hasClient, hasConfig, setConfig, unsetClient,
 } from '@hapic/vault';
 
 export function setVaultConfig(input: ConfigInput) {
@@ -18,6 +18,6 @@ export function setVaultConfig(input: ConfigInput) {
     setConfig(input);
 }
 
-export function useVaultClient() : Client {
-    return useClient();
+export function hasVaultConfig() {
+    return hasConfig();
 }

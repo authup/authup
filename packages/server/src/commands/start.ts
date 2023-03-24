@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasConfig } from 'redis-extension';
+import { hasConfig as hasRedisConfig } from 'redis-extension';
+import {
+    hasVaultConfig, saveRobotCredentialsToVault, setLogger, useLogger,
+} from '@authup/server-common';
 import { URL } from 'url';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
@@ -21,7 +24,6 @@ import {
 import {
     DatabaseSeeder, buildDataSourceOptions, saveSeedResult, useConfig as useDatabaseConfig,
 } from '@authup/server-database';
-import { saveRobotCredentialsToVault, setLogger, useLogger } from '@authup/server-common';
 import type { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
@@ -43,7 +45,8 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info(`Public-URL: ${httpConfig.get('publicUrl')}`);
     logger.info(`Docs-URL: ${new URL('docs', httpConfig.get('publicUrl')).href}`);
 
-    logger.info(`Redis: ${hasConfig() ? 'enabled' : 'disabled'}`);
+    logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
+    logger.info(`Vault: ${hasVaultConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Robot: ${databaseConfig.get('robotEnabled') ? 'enabled' : 'disabled'}`);
 
     /*
