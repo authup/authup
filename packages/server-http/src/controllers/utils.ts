@@ -18,7 +18,7 @@ import { RolePermissionController } from './role-permission';
 import { ScopeController } from './scope';
 import { UserController } from './user';
 import { UserRoleController } from './user-role';
-import { AuthController, AuthTokenController } from './root';
+import { AuthTokenController, RootController } from './root';
 import { RobotPermissionController } from './robot-permission';
 import { RobotRoleController } from './robot-role';
 import { UserPermissionController } from './user-permission';
@@ -32,7 +32,7 @@ export function registerControllers(
     registerIdentityProviderController(router);
 
     mountControllers(router, [
-        AuthController,
+        RootController,
         AuthTokenController,
         ClientController,
         ClientScopeController,
