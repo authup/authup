@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ROBOT_SYSTEM_NAME } from '@authup/common';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
     hasVaultConfig, saveRobotCredentialsToVault, setLogger, useLogger,
@@ -109,7 +110,11 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     if (seederData.robot) {
-        await saveRobotCredentialsToVault(seederData.robot);
+        try {
+            await saveRobotCredentialsToVault(seederData.robot);
+        } catch (e) {
+            useLogger().warn(`The ${ROBOT_SYSTEM_NAME} robot credentials could not saved to vault.`);
+        }
 
         await saveSeedResult(httpConfig.get('writableDirectoryPath'), seederData);
     }
