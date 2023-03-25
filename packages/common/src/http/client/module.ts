@@ -20,7 +20,7 @@ import {
     RobotRoleAPI,
     RoleAPI, RoleAttributeAPI,
     RolePermissionAPI,
-    RootAPI, ScopeAPI,
+    ScopeAPI,
     UserAPI,
     UserAttributeAPI,
     UserPermissionAPI,
@@ -52,8 +52,6 @@ export class HTTPClient extends BaseClient {
 
     public readonly rolePermission : RolePermissionAPI;
 
-    public readonly root: RootAPI;
-
     public readonly scope: ScopeAPI;
 
     public readonly user : UserAPI;
@@ -84,8 +82,6 @@ export class HTTPClient extends BaseClient {
         this.role = new RoleAPI(this.driver);
         this.roleAttribute = new RoleAttributeAPI(this.driver);
         this.rolePermission = new RolePermissionAPI(this.driver);
-
-        this.root = new RootAPI(this.driver);
 
         this.scope = new ScopeAPI(this.driver);
 

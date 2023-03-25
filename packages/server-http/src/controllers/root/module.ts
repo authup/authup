@@ -14,7 +14,6 @@ import type {
 } from '@authup/common';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
-import { checkIntegrityRouteHandler } from './integrity';
 import { getJwkRouteHandler, getJwksRouteHandler } from './jwks';
 import { getOpenIdConfigurationRouteHandler } from './openid';
 import {
@@ -27,16 +26,6 @@ import {
 @DTags('root')
 @DController('')
 export class RootController {
-    @DGet('/integrity')
-    async integrity(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ) : Promise<void> {
-        return checkIntegrityRouteHandler(req, res);
-    }
-
-    // ----------------------------------------------------------
-
     @DPost('/authorize', [ForceUserLoggedInMiddleware])
     async confirmAuthorization(
         @DRequest() req: any,

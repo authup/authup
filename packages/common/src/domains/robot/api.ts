@@ -8,6 +8,7 @@
 import type { ClientDriverInstance } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
+import type { RobotAPICommand } from './constants';
 import type { Robot } from './types';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
@@ -74,5 +75,19 @@ export class RobotAPI implements DomainAPI<Robot> {
         const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
+    }
+
+    async runCommand(
+        id: Robot['id'],
+        command: `${RobotAPICommand}`,
+        data: Record<string, any> = {},
+    ): Promise<SingleResourceResponse<Robot>> {
+        const { data: response } = await this.client
+            .post(`robots/${id}/command`, {
+                ...data,
+                command,
+            });
+
+        return response;
     }
 }

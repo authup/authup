@@ -261,6 +261,7 @@ export class DatabaseSeeder implements Seeder {
         const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOneBy({
             name: ROBOT_SYSTEM_NAME,
+            realm_id: realm.id,
         });
 
         const secret = this.getOption('robotSecret') || createNanoID(64);
