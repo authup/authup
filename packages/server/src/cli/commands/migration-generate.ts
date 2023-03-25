@@ -6,12 +6,12 @@
  */
 
 import { merge } from 'smob';
-import { createDatabase, dropDatabase } from 'typeorm-extension';
+import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extension';
 import type { CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
-import path from 'path';
-import { extendDataSourceOptions, generateMigration } from '@authup/server-database';
+import path from 'node:path';
+import { extendDataSourceOptions } from '@authup/server-database';
 import { readConfig, readConfigFromEnv, setOptions } from '../../config';
 
 export class MigrationGenerateCommand implements CommandModule {
@@ -76,6 +76,7 @@ export class MigrationGenerateCommand implements CommandModule {
                 name: 'Default',
                 directoryPath,
                 timestamp,
+                prettify: true,
             });
         }
 
