@@ -1,0 +1,1 @@
+import{_ as e,o as a,c as s,N as t}from"./chunks/framework.e09863ab.js";const u=JSON.parse('{"title":"Deploying","description":"","frontmatter":{},"headers":[],"relativePath":"packages/server/docker.md"}'),o={name:"packages/server/docker.md"},n=t("",4),l=[n];function r(p,c,i,d,_,h){return a(),s("div",null,l)}const v=e(o,[["render",r]]);export{u as __pageData,v as default};

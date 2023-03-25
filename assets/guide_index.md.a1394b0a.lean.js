@@ -1,1 +1,0 @@
-import{_ as t,o as e,c as a,N as r}from"./chunks/framework.f5290017.js";const m=JSON.parse('{"title":"What is Authup?","description":"","frontmatter":{},"headers":[],"relativePath":"guide/index.md"}'),o={name:"guide/index.md"},n=r("",5),i=[n];function s(l,c,p,u,h,d){return e(),a("div",null,i)}const _=t(o,[["render",s]]);export{m as __pageData,_ as default};
