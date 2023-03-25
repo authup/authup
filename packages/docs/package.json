@@ -10,5 +10,5 @@
         "vitepress": "^1.0.0-alpha.61",
         "vue": "^3.2.47"
     },
-    "version": "0.20.0"
+    "version": "0.20.1"
 }
