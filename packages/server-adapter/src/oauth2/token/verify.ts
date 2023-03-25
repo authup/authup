@@ -35,22 +35,7 @@ export async function verifyOAuth2Token(
         try {
             const oauth2Client = await useOAuth2Client(context.oauth2);
 
-            if (context.logger) {
-                context.logger.debug(
-                    `Requesting introspection endpoint: ${oauth2Client.options.introspection_endpoint}`,
-                    {
-                        token,
-                    },
-                );
-            }
-
             payload = await oauth2Client.token.introspect(token);
-
-            if (context.logger) {
-                context.logger.debug('The token could be verified.', {
-                    token,
-                });
-            }
         } catch (e) {
             if (
                 isClientError(e) &&
