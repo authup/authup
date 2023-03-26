@@ -8,7 +8,7 @@
 import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
     AbilityManager,
-    OAuth2SubKind, TokenError,
+    TokenError,
 } from '@authup/common';
 import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
 import type { TokenVerifyContext } from '../../oauth2';
@@ -29,6 +29,9 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             if (context.logger) {
                 context.logger.debug('No token is present.');
             }
+
+            socket.data.ability = new AbilityManager();
+
             return next();
         }
 

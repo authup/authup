@@ -7,6 +7,7 @@
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
 import {
+    AbilityManager,
     CookieName,
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
@@ -55,6 +56,8 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
         }
 
         if (!headerValue) {
+            setRequestEnv(req, 'ability', new AbilityManager());
+
             next();
             return;
         }
