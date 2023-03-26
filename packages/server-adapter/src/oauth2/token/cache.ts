@@ -20,7 +20,7 @@ export function useOAuth2TokenCache(
 
     if (redis) {
         redis = typeof redis === 'boolean' ?
-            useClient('default') :
+            useClient() :
             redis;
 
         instance = new Cache<string>({

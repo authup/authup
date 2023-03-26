@@ -4,9 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { IncomingHttpHeaders } from 'http';
+import type { IncomingHttpHeaders } from 'node:http';
 import type { VerifyContext } from '../../type';
-import type { RequestEnv } from '../http';
+import type { RequestEnv } from '../type';
 
 export type SocketMiddlewareContext = VerifyContext;
 export type SocketNextFunction = (err?: Error) => void;

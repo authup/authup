@@ -23,10 +23,6 @@ export async function verifyOAuth2Token(
 
     if (context.cache) {
         data = await context.cache.get(token);
-
-        if (context.logger) {
-            context.logger.info(`The token ${token} could be verified from cache.`);
-        }
     }
 
     if (!data) {

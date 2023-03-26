@@ -12,7 +12,7 @@ import {
 } from '@authup/common';
 import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
 import type { TokenVerifyContext } from '../../oauth2';
-import { useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
+import { applyOAuth2IntrospectionResponse, useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
     const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
@@ -46,31 +46,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        switch (data.sub_kind) {
-            case OAuth2SubKind.CLIENT:
-                socket.data.clientId = data.sub;
-                socket.data.clientName = data.sub_name;
-                socket.data.client = { id: socket.data.clientId, name: socket.data.clientName };
-                break;
-            case OAuth2SubKind.ROBOT:
-                socket.data.robotId = data.sub;
-                socket.data.robotName = data.sub_name;
-                socket.data.robot = { id: socket.data.robotId, name: socket.data.robotName };
-                break;
-            case OAuth2SubKind.USER:
-                socket.data.userId = data.sub;
-                socket.data.userName = data.sub_name;
-                socket.data.user = { id: socket.data.userId, name: socket.data.userName };
-                break;
-        }
-
-        socket.data.realmId = data.realm_id;
-        socket.data.realmName = data.realm_name;
-        socket.data.realm = { id: socket.data.realmId, name: socket.data.realmName };
-
-        socket.data.token = token;
-        socket.data.permissions = data.permissions;
-        socket.data.ability = new AbilityManager(data.permissions);
+        applyOAuth2IntrospectionResponse(socket.data, data);
 
         return next();
     };
