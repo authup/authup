@@ -48,7 +48,6 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
 
     if (entity.realm) {
         realm = entity.realm;
-        delete entity.realm;
     }
 
     if (
