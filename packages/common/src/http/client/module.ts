@@ -7,6 +7,7 @@
 
 import type { ConfigInput } from 'hapic';
 import { Client as BaseClient } from 'hapic';
+import { Client as OAuth2Client } from '@hapic/oauth2';
 
 import {
     ClientAPI,
@@ -28,6 +29,8 @@ import {
 } from '../../domains';
 
 export class HTTPClient extends BaseClient {
+    public readonly oauth2 : OAuth2Client;
+
     public readonly client : ClientAPI;
 
     public readonly clientScope : ClientScopeAPI;
@@ -64,6 +67,15 @@ export class HTTPClient extends BaseClient {
 
     constructor(config: ConfigInput) {
         super(config);
+
+        this.oauth2 = new OAuth2Client({
+            options: {
+                authorization_endpoint: new URL('authorize', this.driver.defaults.baseURL).href,
+                introspection_endpoint: new URL('token/introspect', this.driver.defaults.baseURL).href,
+                token_endpoint: new URL('token', this.driver.defaults.baseURL).href,
+                userinfo_endpoint: new URL('users/@me', this.driver.defaults.baseURL).href,
+            },
+        });
 
         this.client = new ClientAPI(this.driver);
         this.clientScope = new ClientScopeAPI(this.driver);
