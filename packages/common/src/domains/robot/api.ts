@@ -8,7 +8,6 @@
 import type { ClientDriverInstance } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { RobotAPICommand } from './constants';
 import type { Robot } from './types';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
@@ -18,17 +17,6 @@ export class RobotAPI implements DomainAPI<Robot> {
 
     constructor(client: ClientDriverInstance) {
         this.client = client;
-    }
-
-    async executeCommand(
-        id: Robot['id'],
-        command: string,
-        data: Record<string, any>,
-    ): Promise<SingleResourceResponse<Robot>> {
-        const { data: resultData } = await this.client
-            .post(`robots/${id}/command`, { command, ...data });
-
-        return resultData;
     }
 
     async getMany(
@@ -77,16 +65,11 @@ export class RobotAPI implements DomainAPI<Robot> {
         return response.data;
     }
 
-    async runCommand(
-        id: Robot['id'],
-        command: `${RobotAPICommand}`,
-        data: Record<string, any> = {},
+    async integrity(
+        id: Robot['id'] | Robot['name'],
     ): Promise<SingleResourceResponse<Robot>> {
         const { data: response } = await this.client
-            .post(`robots/${id}/command`, {
-                ...data,
-                command,
-            });
+            .get(`robots/${id}/integrity`);
 
         return response;
     }

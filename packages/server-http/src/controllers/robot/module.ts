@@ -8,7 +8,6 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RobotAPICommand } from '@authup/common';
 import { Robot } from '@authup/common';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
@@ -16,7 +15,7 @@ import {
     deleteRobotRouteHandler,
     getManyRobotRouteHandler,
     getOneRobotRouteHandler,
-    handleRobotCommandRouteHandler,
+    handleRobotIntegrityRouteHandler,
     updateRobotRouteHandler,
 } from './handlers';
 
@@ -40,16 +39,13 @@ export class RobotController {
         return createRobotRouteHandler(req, res);
     }
 
-    @DPost('/:id/command', [])
+    @DGet('/:id/integrity', [])
     async command(
         @DPath('id') id: string,
-            @DBody() data: {
-                command: RobotAPICommand
-            },
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Robot> {
-        return handleRobotCommandRouteHandler(req, res);
+        return handleRobotIntegrityRouteHandler(req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])

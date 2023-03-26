@@ -6,7 +6,3 @@
  */
 
 export const ROBOT_SYSTEM_NAME = 'SYSTEM';
-export enum RobotAPICommand {
-    CHECK = 'CHECK',
-    RESET = 'RESET',
-}
