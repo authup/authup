@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-common",
-    "version": "0.20.1",
+    "version": "0.21.0",
     "description": "Common server services and utilities.",
     "exports": {
         "./package.json": "./package.json",
@@ -58,7 +58,7 @@
         "nodemailer": "^6.9.1"
     },
     "devDependencies": {
-        "@authup/common": "^0.20.0",
+        "@authup/common": "^0.21.0",
         "@hapic/vault": "^1.5.0",
         "@types/bcrypt": "^5.0.0",
         "redis-extension": "^1.2.3"
