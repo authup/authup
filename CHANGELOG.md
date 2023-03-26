@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.22.0](https://github.com/Tada5hi/authup/compare/v0.21.0...v0.22.0) (2023-03-26)
+
+
+### Bug Fixes
+
+* removed redundancy for applying token introspection response ([4ca4e18](https://github.com/Tada5hi/authup/commit/4ca4e18f3944e866e549e7bde78a9ffb55e0889d))
+
+
+### Features
+
+* add oauth2 client as http-client property ([ab5c260](https://github.com/Tada5hi/authup/commit/ab5c2609fe7e88b63bc75b4077846f1875ba0571))
+
+
+
+
+
 # [0.21.0](https://github.com/Tada5hi/authup/compare/v0.20.1...v0.21.0) (2023-03-26)
 
 
