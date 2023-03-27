@@ -47,7 +47,7 @@
         "lerna": "^6.6.1",
         "nx": "^15.8.9",
         "rimraf": "^4.4.1",
-        "rollup": "^3.20.0",
+        "rollup": "^3.20.2",
         "typescript": "5.0.2"
     },
     "scripts": {
