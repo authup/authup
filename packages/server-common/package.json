@@ -42,13 +42,13 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authup.git",
+        "url": "git+https://github.com/authup/authup.git",
         "directory": "server/common"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authup/issues"
+        "url": "https://github.com/authup/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authup#readme",
+    "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/jsonwebtoken": "^9.0.1",

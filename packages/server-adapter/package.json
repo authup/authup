@@ -42,13 +42,13 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/authup.git",
+        "url": "git+https://github.com/authup/authup.git",
         "directory": "packages/server-adapter"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authup/issues"
+        "url": "https://github.com/authup/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authup#readme",
+    "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@ebec/http": "^1.0.0"
     },

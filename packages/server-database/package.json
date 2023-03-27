@@ -36,9 +36,9 @@
         "directory": "packages/server-database"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/authup/issues"
+        "url": "https://github.com/authup/authup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/authup#readme",
+    "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "continu": "^1.0.5",
         "pascal-case": "^3.1.2",

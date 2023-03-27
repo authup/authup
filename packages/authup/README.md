@@ -1,8 +1,8 @@
 # authup 💎
 
 [![npm version](https://badge.fury.io/js/authup.svg)](https://badge.fury.io/js/authup)
-[![main](https://github.com/Tada5hi/authup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/authup/actions/workflows/main.yml)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/authup/badge.svg)](https://snyk.io/test/github/Tada5hi/authup)
+[![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
+[![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
 This package contains the CLI.
 
