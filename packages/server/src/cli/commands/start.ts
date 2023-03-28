@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { setupLogger } from '../../utils';
 import { startCommand } from '../../commands';
-import { readConfig, readConfigFromEnv, setOptions } from '../../config';
+import { setupConfig } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
 interface StartArguments extends Arguments {
@@ -31,16 +30,10 @@ export class StartCommand implements CommandModule {
     }
 
     async handler(args: StartArguments) {
-        const fileConfig = await readConfig(args.root);
-        const envConfig = readConfigFromEnv();
-
-        const config = setOptions(merge(
-            envConfig,
-            fileConfig,
-        ));
+        const config = await setupConfig();
 
         const dataSourceOptions = await buildDataSourceOptions();
-        const logger = setupLogger(config.base.writableDirectoryPath);
+        const logger = setupLogger(config.get('writableDirectoryPath'));
 
         try {
             await startCommand({

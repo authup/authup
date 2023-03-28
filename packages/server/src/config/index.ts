@@ -6,5 +6,7 @@
  */
 
 export * from './clients';
+export * from './module';
 export * from './type';
+export * from './setup';
 export * from './utils';

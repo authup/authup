@@ -7,12 +7,9 @@
 
 import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
-import { generateSwaggerDocumentation, useConfig as useHTTPConfig } from '@authup/server-http';
-import {
-    DatabaseSeeder,
-    buildDataSourceOptions,
-    saveSeedResult,
-} from '@authup/server-database';
+import { useConfig } from '../config';
+import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
+import { generateSwaggerDocumentation } from '../http';
 import type { SetupCommandContext } from './type';
 
 export async function setupCommand(context?: SetupCommandContext) {
@@ -28,7 +25,7 @@ export async function setupCommand(context?: SetupCommandContext) {
         context.database = context.databaseSeed = context.databaseSchema = context.documentation = true;
     }
 
-    const config = await useHTTPConfig();
+    const config = await useConfig();
 
     if (context.documentation) {
         if (context.logger) {

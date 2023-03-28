@@ -73,8 +73,7 @@ jobs:
             matrix:
                 package: [
                     'server-common',
-                    'server-database',
-                    'server-http',
+                    'server',
                     'common'
                 ]
         steps:

@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extension';
 import type { CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
 import path from 'node:path';
-import { extendDataSourceOptions } from '@authup/server-database';
-import { readConfig, readConfigFromEnv, setOptions } from '../../config';
+import { setupConfig } from '../../config';
+import { extendDataSourceOptions } from '../../database';
 
 export class MigrationGenerateCommand implements CommandModule {
     command = 'migration:generate';
@@ -20,13 +19,7 @@ export class MigrationGenerateCommand implements CommandModule {
     describe = 'Generate database migrations.';
 
     async handler(args: any) {
-        const fileConfig = await readConfig(args.root);
-        const envConfig = readConfigFromEnv();
-
-        const config = setOptions(merge(
-            envConfig,
-            fileConfig,
-        ));
+        const config = await setupConfig();
 
         const connections : DataSourceOptions[] = [
             {
@@ -47,7 +40,7 @@ export class MigrationGenerateCommand implements CommandModule {
             },
             {
                 type: 'better-sqlite3',
-                database: path.join(config.base.writableDirectoryPath, 'migrations.sql'),
+                database: path.join(config.get('writableDirectoryPath'), 'migrations.sql'),
             },
         ];
 

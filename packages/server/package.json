@@ -5,7 +5,9 @@
     "main": "dist/index.js",
     "scripts": {
         "cli": "ts-node src/cli/index.ts",
-        "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
+        "test:coverage": "npm run test -- --coverage"
     },
     "files": [
         "dist/"
@@ -43,16 +45,31 @@
     "dependencies": {
         "@authup/common": "^0.22.0",
         "@authup/server-common": "^0.22.0",
-        "@authup/server-database": "^0.22.0",
-        "@authup/server-http": "^0.22.0",
+        "@ebec/http": "^1.0.0",
+        "@hapic/oauth2": "^1.5.0",
+        "@routup/body": "^0.7.3",
+        "@routup/cookie": "^0.8.1",
+        "@routup/decorators": "^0.6.2",
+        "@routup/prometheus": "^0.7.1",
+        "@routup/query": "^0.7.3",
+        "@routup/rate-limit": "^0.6.3",
+        "@routup/swagger": "^0.13.4",
+        "@types/cors": "^2.8.13",
+        "@types/morgan": "^1.9.4",
         "better-sqlite3": "^8.2.0",
         "change-case": "^4.1.2",
+        "continu": "^1.0.5",
         "dotenv": "^16.0.3",
+        "express-validator": "^6.15.0",
+        "hapic": "^1.4.0",
+        "locter": "^1.1.0",
+        "morgan": "^1.10.0",
         "mysql": "^2.18.1",
         "pg": "^8.10.0",
         "rc9": "^2.0.1",
         "redis-extension": "^1.2.3",
         "reflect-metadata": "^0.1.13",
+        "routup": "^0.14.1",
         "smob": "^1.0.0",
         "typeorm": "^0.3.12",
         "typeorm-extension": "^2.6.2",
@@ -62,7 +79,10 @@
     },
     "devDependencies": {
         "@types/change-case": "^2.3.1",
+        "@types/supertest": "^2.0.12",
         "@types/yargs": "^17.0.23",
+        "jest-serial-runner": "^1.2.1",
+        "supertest": "^6.3.3",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {

@@ -4,8 +4,6 @@
         "module": "CommonJS",
         "paths": {
             "@authup/server-common": ["./packages/server-common/src"],
-            "@authup/server-database": ["./packages/server-database/src"],
-            "@authup/server-http": ["./packages/server-http/src"],
             "@authup/common": ["./packages/common/src"]
         }
     }

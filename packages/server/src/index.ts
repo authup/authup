@@ -7,5 +7,6 @@
 
 export * from './cli/commands';
 export * from './config';
-export * from './commands';
 export * from './database';
+export * from './http';
+export * from './commands';

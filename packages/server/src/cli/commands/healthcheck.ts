@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import http from 'http';
-import * as process from 'process';
-import { merge } from 'smob';
+import http from 'node:http';
+import * as process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { readConfig, readConfigFromEnv, setOptions } from '../../config';
+import { setupConfig } from '../../config';
 
 interface HealthCheckArguments extends Arguments {
     root: string;
@@ -30,19 +29,13 @@ export class HealthCheckCommand implements CommandModule {
     }
 
     async handler(args: HealthCheckArguments) {
-        const fileConfig = await readConfig(args.root);
-        const envConfig = readConfigFromEnv();
-
-        const config = setOptions(merge(
-            envConfig,
-            fileConfig,
-        ));
+        const config = await setupConfig();
 
         const healthCheck = http.request(
             {
                 path: '/metrics',
                 host: '0.0.0.0',
-                port: config.http.port,
+                port: config.get('port'),
                 timeout: 2000,
             },
             (res) => {

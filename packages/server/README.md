@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/authup/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/authup/authup)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-This package contains an authentication & authorization server.
+This package contains the authentication & authorization server.
 
 **Table of Contents**
 

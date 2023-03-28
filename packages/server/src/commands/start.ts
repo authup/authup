@@ -19,19 +19,17 @@ import {
     setDataSource,
     setupDatabaseSchema,
 } from 'typeorm-extension';
+import { useConfig } from '../config';
+import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import {
-    createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner, useConfig as useHTTPConfig,
-} from '@authup/server-http';
-import {
-    DatabaseSeeder, buildDataSourceOptions, saveSeedResult, useConfig as useDatabaseConfig,
-} from '@authup/server-database';
+    createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner,
+} from '../http';
 import type { StartCommandContext } from './type';
 
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
-    const httpConfig = await useHTTPConfig();
-    const databaseConfig = await useDatabaseConfig();
+    const config = await useConfig();
 
     if (context.logger) {
         setLogger(context.logger);
@@ -39,16 +37,16 @@ export async function startCommand(context?: StartCommandContext) {
 
     const logger = useLogger();
 
-    logger.info(`Environment: ${httpConfig.get('env')}`);
-    logger.info(`WritableDirectoryPath: ${httpConfig.get('writableDirectoryPath')}`);
-    logger.info(`Port: ${httpConfig.get('port')}`);
-    logger.info(`Host: ${httpConfig.get('host')}`);
-    logger.info(`Public-URL: ${httpConfig.get('publicUrl')}`);
-    logger.info(`Docs-URL: ${new URL('docs', httpConfig.get('publicUrl')).href}`);
+    logger.info(`Environment: ${config.get('env')}`);
+    logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
+    logger.info(`Port: ${config.get('port')}`);
+    logger.info(`Host: ${config.get('host')}`);
+    logger.info(`Public-URL: ${config.get('publicUrl')}`);
+    logger.info(`Docs-URL: ${new URL('docs', config.get('publicUrl')).href}`);
 
     logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Vault: ${hasVaultConfig() ? 'enabled' : 'disabled'}`);
-    logger.info(`Robot: ${databaseConfig.get('robotEnabled') ? 'enabled' : 'disabled'}`);
+    logger.info(`Robot: ${config.get('robotEnabled') ? 'enabled' : 'disabled'}`);
 
     /*
     HTTP Server & Express App
@@ -57,9 +55,9 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info('Generating documentation...');
 
     await generateSwaggerDocumentation({
-        rootPath: httpConfig.get('rootPath'),
-        writableDirectoryPath: httpConfig.get('writableDirectoryPath'),
-        baseUrl: httpConfig.get('publicUrl'),
+        rootPath: config.get('rootPath'),
+        writableDirectoryPath: config.get('writableDirectoryPath'),
+        baseUrl: config.get('publicUrl'),
     });
 
     logger.info('Generated documentation.');
@@ -116,7 +114,7 @@ export async function startCommand(context?: StartCommandContext) {
             useLogger().warn(`The ${ROBOT_SYSTEM_NAME} robot credentials could not saved to vault.`);
         }
 
-        await saveSeedResult(httpConfig.get('writableDirectoryPath'), seederData);
+        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
     }
 
     logger.info('Starting oauth2 cleaner...');
@@ -130,7 +128,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const router = createRouter();
     const httpServer = createHttpServer({ router });
-    httpServer.listen(httpConfig.get('port'), httpConfig.get('host'), () => {
+    httpServer.listen(config.get('port'), config.get('host'), () => {
         logger.info('Started http server.');
     });
 }

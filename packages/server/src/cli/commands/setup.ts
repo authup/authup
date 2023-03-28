@@ -6,11 +6,12 @@
  */
 
 import process from 'node:process';
-import { merge } from 'smob';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { setupLogger } from '../../utils';
 import { setupCommand } from '../../commands';
-import { readConfig, readConfigFromEnv, setOptions } from '../../config';
+import {
+    setupConfig,
+} from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
@@ -62,16 +63,10 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const fileConfig = await readConfig(args.root);
-        const envConfig = readConfigFromEnv();
-
-        const config = setOptions(merge(
-            envConfig,
-            fileConfig,
-        ));
+        const config = await setupConfig();
 
         const dataSourceOptions = await buildDataSourceOptions();
-        const logger = setupLogger(config.base.writableDirectoryPath);
+        const logger = setupLogger(config.get('writableDirectoryPath'));
 
         try {
             await setupCommand({

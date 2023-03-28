@@ -7,6 +7,7 @@
 
 import type { CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
+import { setupConfig } from '../../config';
 
 import { buildDataSourceOptions } from '../../database';
 
@@ -16,6 +17,8 @@ export class MigrationRevertCommand implements CommandModule {
     describe = 'Revert database migration.';
 
     async handler(args: any) {
+        await setupConfig();
+
         const options = await buildDataSourceOptions();
 
         const dataSource = new DataSource(options);
