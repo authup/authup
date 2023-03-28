@@ -54,8 +54,6 @@
         "@routup/query": "^0.7.3",
         "@routup/rate-limit": "^0.6.3",
         "@routup/swagger": "^0.13.4",
-        "@types/cors": "^2.8.13",
-        "@types/morgan": "^1.9.4",
         "better-sqlite3": "^8.2.0",
         "change-case": "^4.1.2",
         "continu": "^1.0.5",
@@ -65,6 +63,7 @@
         "locter": "^1.1.0",
         "morgan": "^1.10.0",
         "mysql": "^2.18.1",
+        "node-cron": "^3.0.2",
         "pg": "^8.10.0",
         "rc9": "^2.0.1",
         "redis-extension": "^1.2.3",
@@ -78,7 +77,10 @@
         "zod": "^3.21.4"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.13",
         "@types/change-case": "^2.3.1",
+        "@types/morgan": "^1.9.4",
+        "@types/node-cron": "^3.0.7",
         "@types/supertest": "^2.0.12",
         "@types/yargs": "^17.0.23",
         "jest-serial-runner": "^1.2.1",
