@@ -18,7 +18,7 @@ describe('src/config/**', () => {
         expect(config.api.host).toEqual('1.1.1.1');
         expect(config.api.port).toEqual(4010);
         expect(config.ui).toBeDefined();
-        expect(config.ui.host).toEqual('1.1.1.1');
+        expect(config.ui.host).toEqual('1.1.1.2');
         expect(config.ui.port).toEqual(4000);
     });
 
@@ -40,7 +40,7 @@ describe('src/config/**', () => {
         });
 
         expect(config).toBeDefined();
-        expect(config.host).toEqual('1.1.1.1');
+        expect(config.host).toEqual('1.1.1.2');
         expect(config.port).toEqual(4000);
     });
 });
