@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'node:path';
 import { readConfigFile } from '../../src';
 
 describe('src/config/**', () => {
     it('should read config file', async () => {
         const config = await readConfigFile({
-            directoryPath: 'test/data',
+            directoryPath: path.join(__dirname, '..', 'data'),
         });
 
         expect(config).toBeDefined();
@@ -24,7 +25,7 @@ describe('src/config/**', () => {
 
     it('should read config for api', async () => {
         const config = await readConfigFile({
-            directoryPath: 'test/data',
+            directoryPath: path.join(__dirname, '..', 'data'),
             name: 'api',
         });
 
@@ -35,7 +36,7 @@ describe('src/config/**', () => {
 
     it('should read config for ui', async () => {
         const config = await readConfigFile({
-            directoryPath: 'test/data',
+            directoryPath: path.join(__dirname, '..', 'data'),
             name: 'ui',
         });
 
