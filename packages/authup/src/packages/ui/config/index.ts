@@ -6,4 +6,4 @@
  */
 
 export * from './module';
-export * from './validate';
+export * from './type';

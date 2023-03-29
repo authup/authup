@@ -6,7 +6,7 @@
  */
 
 import type { CAC } from 'cac';
-import process from 'process';
+import process from 'node:process';
 import { createConfig } from '../config';
 import {
     startServer, startUI,
@@ -34,9 +34,9 @@ export function buildStartCommand(cac: CAC) {
             if (services.indexOf('ui') !== -1) {
                 await startUI({
                     env: {
-                        port: config.ui.port,
-                        host: config.ui.host,
-                        apiUrl: config.server.http.publicUrl,
+                        port: config.ui.get('port'),
+                        host: config.ui.get('host'),
+                        apiUrl: config.api.get('publicUrl'),
                     },
                 });
             }

@@ -8,9 +8,9 @@
 import type { CAC } from 'cac';
 import consola from 'consola';
 import chalk from 'chalk';
-import process from 'process';
+import process from 'node:process';
 import {
-    ServerCommand, executeServerCommand, handleServerCommandOutput, resetServer, startServer,
+    ServerCommand, resetServer, startServer,
 } from '../packages';
 
 export function buildServerCommand(cac: CAC) {

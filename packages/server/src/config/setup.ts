@@ -5,19 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { readConfigFile } from '@authup/server-common';
 import { merge } from 'smob';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { useConfig } from './module';
+import type { OptionsInput } from './type';
 import { readCofnigFromEnv, readConfigFromFile } from './utils';
 
-export async function setupConfig() {
-    const fileConfig = await readConfigFromFile();
+export async function setupConfig(
+    input?: OptionsInput,
+) {
+    const fileConfig = await readConfigFile({
+        name: 'api',
+    });
     const envConfig = await readCofnigFromEnv();
 
-    const input = merge({}, envConfig, fileConfig);
-
     const config = useConfig();
-    config.setRaw(input);
+    config.setRaw(merge({}, input || {}, envConfig, fileConfig));
 
     if (config.has('redis')) {
         setupRedis(config.get('redis'));

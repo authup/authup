@@ -23,8 +23,8 @@ export function buildUiCommand(cac: CAC) {
                 case UICommand.START: {
                     await startUI({
                         env: {
-                            port: ctx.port || config.ui.port,
-                            host: ctx.host || config.ui.host,
+                            port: ctx.port || config.ui.get('port'),
+                            host: ctx.host || config.ui.get('host'),
                         },
                     });
                     break;

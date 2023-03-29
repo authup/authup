@@ -6,27 +6,29 @@
  */
 
 import { makeURLPublicAccessible } from '@authup/common';
-import { setOptions } from '@authup/server';
-import consola from 'consola';
-import { extendUiConfig, validateUiConfig } from '../packages';
-import { readConfig } from './read';
-import type { Options } from './type';
+import { createConfig as createApiConfig } from '@authup/server';
+import { readConfigFile } from '@authup/server-common';
+import { createUIConfig } from '../packages';
+import type { Config } from './type';
 
-export async function createConfig() : Promise<Options> {
-    const global = await readConfig();
+export async function createConfig() : Promise<Config> {
+    const global = await readConfigFile();
 
-    const server = setOptions(global.server || {});
-    const ui = validateUiConfig(global.ui || {});
+    const api = createApiConfig();
+    const ui = createUIConfig();
+
+    api.setRaw(global.api || {});
+    ui.setRaw(global.ui || {});
 
     if (
-        typeof ui.apiUrl === 'undefined' &&
-        server.http.publicUrl
+        !ui.has('apiUrl') &&
+        api.has('publicUrl')
     ) {
-        ui.apiUrl = makeURLPublicAccessible(server.http.publicUrl);
+        ui.setRaw('apiUrl', makeURLPublicAccessible(api.get('publicUrl')));
     }
 
     return {
-        server,
-        ui: extendUiConfig(ui),
+        api,
+        ui,
     };
 }

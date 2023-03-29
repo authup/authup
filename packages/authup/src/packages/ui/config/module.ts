@@ -5,16 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { UIOptions, UIOptionsInput } from '../type';
-import { validateUiConfig } from './validate';
+import { Continu } from 'continu';
+import zod from 'zod';
+import type { UIConfig, UIOptions, UIOptionsInput } from './type';
 
-export function applyUiConfig(input: UIOptionsInput) : UIOptions {
-    return extendUiConfig(validateUiConfig(input));
-}
-
-export function extendUiConfig(input: UIOptionsInput) : UIOptions {
-    return {
-        port: input.port || 3000,
-        host: input.host || '0.0.0.0',
-    };
+export function createUIConfig() : UIConfig {
+    return new Continu<UIOptions, UIOptionsInput>({
+        defaults: {
+            port: 3000,
+            host: '0.0.0.0',
+            apiUrl: 'http://127.0.0.1:3010/',
+        },
+        validators: {
+            port: (value) => zod.number().nonnegative().safeParse(value),
+            host: (value) => zod.string().safeParse(value),
+            apiUrl: (value) => zod.string().url().safeParse(value),
+        },
+    });
 }

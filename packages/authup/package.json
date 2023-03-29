@@ -32,11 +32,12 @@
     "dependencies": {
         "@authup/common": "^0.22.0",
         "@authup/server": "^0.22.0",
+        "@authup/server-common": "^0.22.0",
         "@authup/ui": "^0.22.0",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^2.15.3",
-        "rc9": "^2.0.1",
+        "continu": "^1.0.5",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.0.0",
         "zod": "^3.21.4"
