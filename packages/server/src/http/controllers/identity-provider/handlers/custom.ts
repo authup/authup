@@ -21,8 +21,7 @@ import { URL } from 'node:url';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../database';
-import type { ProxyConnectionConfig } from '../../../utils';
-import { detectProxyConnectionConfig, setRequestEnv } from '../../../utils';
+import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../../config';
 
@@ -95,10 +94,8 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     }
 
     const config = await useConfig();
-    const proxyConfig : ProxyConnectionConfig | undefined = detectProxyConnectionConfig();
 
     const oauth2Client = new Client({
-        ...(proxyConfig ? { driver: { proxy: proxyConfig } } : {}),
         options: {
             client_id: provider.client_id,
             client_secret: provider.client_secret,

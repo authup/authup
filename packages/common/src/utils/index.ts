@@ -11,6 +11,7 @@ export * from './has-own-property';
 export * from './nanoid';
 export * from './object';
 export * from './object-property';
+export * from './proxy';
 export * from './self-id';
 export * from './url';
 export * from './uuid';
