@@ -9,4 +9,7 @@ npm-debug.log*
 .output
 .temp
 authup.conf
+authup.**.conf
+!**/test/**/authup.conf
+!**/test/**/authup.*.conf
 .vitepress/cache

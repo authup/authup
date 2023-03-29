@@ -11,7 +11,7 @@ import { readConfigFile } from '../../src';
 describe('src/config/**', () => {
     it('should read config file', async () => {
         const config = await readConfigFile({
-            directoryPath: path.join(__dirname, '..', 'data'),
+            directoryPath: 'test/data',
         });
 
         expect(config).toBeDefined();
@@ -25,7 +25,7 @@ describe('src/config/**', () => {
 
     it('should read config for api', async () => {
         const config = await readConfigFile({
-            directoryPath: path.join(__dirname, '..', 'data'),
+            directoryPath: 'test/data',
             name: 'api',
         });
 
@@ -36,7 +36,7 @@ describe('src/config/**', () => {
 
     it('should read config for ui', async () => {
         const config = await readConfigFile({
-            directoryPath: path.join(__dirname, '..', 'data'),
+            directoryPath: 'test/data',
             name: 'ui',
         });
 

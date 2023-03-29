@@ -11,7 +11,7 @@ import type { Router } from 'routup';
 import { merge } from 'smob';
 
 export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
-    const options : CorsOptions = merge(input || {}, {
+    const options : CorsOptions = merge({}, input || {}, {
         origin(origin, callback) {
             callback(null, true);
         },

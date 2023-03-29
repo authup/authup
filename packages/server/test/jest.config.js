@@ -26,9 +26,13 @@ module.exports = {
         ],
     },
     moduleFileExtensions: [
+        'mts',
+        'cts',
         'ts',
         'tsx',
         'js',
+        'cjs',
+        'mjs',
         'jsx',
         'json',
         'node',
@@ -41,7 +45,6 @@ module.exports = {
     ],
     coverageDirectory: 'writable/coverage',
     collectCoverageFrom: [
-        'src/http/controllers/**/*.{ts,tsx,js,jsx}',
         '!src/**/*.d.ts',
     ],
     coverageThreshold: {
