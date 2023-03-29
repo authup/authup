@@ -10,7 +10,7 @@ import { merge } from 'smob';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { useConfig } from './module';
 import type { OptionsInput } from './type';
-import { readCofnigFromEnv, readConfigFromFile } from './utils';
+import { readCofnigFromEnv } from './utils';
 
 export async function setupConfig(
     input?: OptionsInput,

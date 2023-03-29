@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'node:path';
 import { readConfigFile } from '../../src';
 
 describe('src/config/**', () => {
