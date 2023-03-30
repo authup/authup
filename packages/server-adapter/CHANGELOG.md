@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.23.0](https://github.com/authup/authup/compare/v0.22.0...v0.23.0) (2023-03-30)
+
+
+### Bug Fixes
+
+* set ability-manager also for unauthorized reuests/sockets ([99b0662](https://github.com/authup/authup/commit/99b0662190f0d0991f44a5551e7f5617fa267700))
+
+
+
+
+
 # [0.22.0](https://github.com/Tada5hi/authup/compare/v0.21.0...v0.22.0) (2023-03-26)
 
 

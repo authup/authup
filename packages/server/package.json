@@ -1,6 +1,6 @@
 {
     "name": "@authup/server",
-    "version": "0.22.0",
+    "version": "0.23.0",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -44,8 +44,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/common": "^0.22.0",
-        "@authup/server-common": "^0.22.0",
+        "@authup/common": "^0.23.0",
+        "@authup/server-common": "^0.23.0",
         "@ebec/http": "^1.0.0",
         "@hapic/oauth2": "^1.5.0",
         "@routup/body": "^0.7.3",
@@ -78,8 +78,8 @@
         "zod": "^3.21.4"
     },
     "devDependencies": {
-        "@types/cors": "^2.8.13",
         "@types/change-case": "^2.3.1",
+        "@types/cors": "^2.8.13",
         "@types/morgan": "^1.9.4",
         "@types/node-cron": "^3.0.7",
         "@types/supertest": "^2.0.12",

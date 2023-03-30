@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.23.0](https://github.com/authup/authup/compare/v0.22.0...v0.23.0) (2023-03-30)
+
+
+### Bug Fixes
+
+* adjusted docker entrypoint + typos + cli start script ([f63296c](https://github.com/authup/authup/commit/f63296ce48e3ce20d8926fd5473f140379b89a02))
+* **deps:** bump continu from 1.0.5 to 1.1.0 ([#982](https://github.com/authup/authup/issues/982)) ([91d901d](https://github.com/authup/authup/commit/91d901d1200cacf140dbda407813db5ad1a1f2b3))
+* **deps:** bump locter from 1.0.10 to 1.1.0 ([#971](https://github.com/authup/authup/issues/971)) ([f778cd2](https://github.com/authup/authup/commit/f778cd2c240484ac4cef357db93afd3a7b02514e))
+* set ability-manager also for unauthorized reuests/sockets ([99b0662](https://github.com/authup/authup/commit/99b0662190f0d0991f44a5551e7f5617fa267700))
+
+
+### Features
+
+* add support for docker image to run multiple apps simultanously ([dfae6d5](https://github.com/authup/authup/commit/dfae6d54539a2d14620eed4d97aec56f6817b50f))
+* cleanup cli package & prefix node built-in module imports ([1ee269f](https://github.com/authup/authup/commit/1ee269f085e221f078adfa51cf87ddabde05715f))
+* merge server-{,http,database} packages ([488070d](https://github.com/authup/authup/commit/488070dd73f8ba972fc5e01433b935d48e77bccd))
+* refactored config loading & building ([07de0e3](https://github.com/authup/authup/commit/07de0e38542f2760d00ba3df77c76d673f76b6a8))
+* replaced manual proxy parsing with http client detection ([18c3751](https://github.com/authup/authup/commit/18c3751f3dd3defdd9dfa34ec41522ac14d3b476))
+
+
+
+
+
 # [0.22.0](https://github.com/Tada5hi/authup/compare/v0.21.0...v0.22.0) (2023-03-26)
 
 
