@@ -6,11 +6,7 @@
  */
 
 import type { Robot } from '@authup/common';
-import { hasClient, hasConfig, useClient } from '@hapic/vault';
-
-export function hasVaultClient() {
-    return hasClient();
-}
+import { hasConfig, useClient } from '@hapic/vault';
 
 export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
     if (!hasConfig()) {
