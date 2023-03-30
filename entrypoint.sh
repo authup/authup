@@ -32,9 +32,13 @@ fi
 
 case "${PACKAGE}" in
     api)
+        export HOST=0.0.0.0
+        export PORT=3000
         exec npm run cli --workspace=packages/server -- "$@"
         ;;
     ui)
+        export NUXT_HOST=0.0.0.0
+        export NUXT_PORT=3000
         exec npm run start --workspace=packages/ui
         ;;
     cli)
