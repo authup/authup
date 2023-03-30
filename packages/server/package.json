@@ -4,7 +4,8 @@
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/cli/index.ts",
+        "cli": "node dist/cli/index.js",
+        "cli-dev": "ts-node src/cli/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
         "test:coverage": "npm run test -- --coverage"

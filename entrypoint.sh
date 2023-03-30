@@ -32,10 +32,10 @@ fi
 
 case "${PACKAGE}" in
     api)
-        exec npm run "$1" --workspace=packages/server -- "$@"
+        exec npm run cli --workspace=packages/server -- "$@"
         ;;
     ui)
-        exec npm run "$1" --workspace=packages/ui -- "$@"
+        exec npm run start --workspace=packages/ui
         ;;
     cli)
         export UI_PORT=3000

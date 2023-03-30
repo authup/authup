@@ -10,7 +10,7 @@ import { merge } from 'smob';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { useConfig } from './module';
 import type { OptionsInput } from './type';
-import { readCofnigFromEnv } from './utils';
+import { readConfigFromEnv } from './utils';
 
 export async function setupConfig(
     input?: OptionsInput,
@@ -18,7 +18,7 @@ export async function setupConfig(
     const fileConfig = await readConfigFile({
         name: 'api',
     });
-    const envConfig = await readCofnigFromEnv();
+    const envConfig = await readConfigFromEnv();
 
     const config = useConfig();
     config.setRaw(merge({}, input || {}, envConfig, fileConfig));

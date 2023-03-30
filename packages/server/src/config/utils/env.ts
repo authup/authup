@@ -12,7 +12,7 @@ import {
 } from '@authup/server-common';
 import type { OptionsInput } from '../type';
 
-export function readCofnigFromEnv() : Partial<OptionsInput> {
+export function readConfigFromEnv() : Partial<OptionsInput> {
     const options : OptionsInput = {};
 
     if (hasProcessEnv('NODE_ENV')) {
