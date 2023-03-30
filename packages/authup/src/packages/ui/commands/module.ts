@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ChildProcess } from 'child_process';
-import { exec } from 'child_process';
+import type { ChildProcess } from 'node:child_process';
+import { exec } from 'node:child_process';
 import consola from 'consola';
 import path from 'node:path';
 import process from 'node:process';

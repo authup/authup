@@ -6,7 +6,7 @@
  */
 
 import consola from 'consola';
-import type { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'node:child_process';
 import { parseProcessOutputData } from '../../../utils';
 import { UICommand } from '../constants';
 import { executeUICommand } from './module';

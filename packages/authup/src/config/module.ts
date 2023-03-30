@@ -8,7 +8,7 @@
 import { makeURLPublicAccessible } from '@authup/common';
 import { createConfig as createApiConfig } from '@authup/server';
 import { readConfigFile } from '@authup/server-common';
-import { createUIConfig } from '../packages';
+import { createUIConfig, extendServerConfigWithEnv, extendUIConfigWithEnv } from '../packages';
 import type { Config } from './type';
 
 export async function createConfig() : Promise<Config> {
@@ -20,12 +20,12 @@ export async function createConfig() : Promise<Config> {
     api.setRaw(global.api || {});
     ui.setRaw(global.ui || {});
 
-    if (
-        !ui.has('apiUrl') &&
-        api.has('publicUrl')
-    ) {
+    if (!ui.has('apiUrl') && api.has('publicUrl')) {
         ui.setRaw('apiUrl', makeURLPublicAccessible(api.get('publicUrl')));
     }
+
+    extendServerConfigWithEnv(api);
+    extendUIConfigWithEnv(ui);
 
     return {
         api,

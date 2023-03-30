@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-common';
 import type { CAC } from 'cac';
 import { createConfig } from '../config';
 import type { ApiStartCommandContext, UIStartCommandContext } from '../packages';
@@ -33,14 +32,6 @@ export function buildStartCommand(cac: CAC) {
                     },
                 };
 
-                if (hasProcessEnv('API_PORT')) {
-                    ctx.env.PORT = readIntFromProcessEnv('API_PORT');
-                }
-
-                if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
-                    ctx.env.WRITABLE_DIRECTORY_PATH = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
-                }
-
                 await startServer(ctx);
             }
 
@@ -52,10 +43,6 @@ export function buildStartCommand(cac: CAC) {
                         NUXT_API_URL: config.api.get('publicUrl'),
                     },
                 };
-
-                if (hasProcessEnv('UI_PORT')) {
-                    ctx.env.NUXT_PORT = readIntFromProcessEnv('UI_PORT');
-                }
 
                 await startUI(ctx);
             }

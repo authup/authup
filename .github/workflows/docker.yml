@@ -20,14 +20,14 @@ jobs:
             -   uses: tada5hi/action-docker-image-publish@master
                 with:
                     cache: true
-                    registryRepository: authup-server
+                    registryRepository: authup
                     registryTag: ${{ github.ref_type == 'tag' && 'latest' || 'next' }}
 
             -   uses: tada5hi/action-docker-image-publish@master
                 with:
                     registryHost: docker.io
                     registryProject: tada5hi
-                    registryRepository: authup-server
+                    registryRepository: authup
                     registryUser: tada5hi
                     registryTag: ${{ github.ref_type == 'tag' && 'latest' || 'next' }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}

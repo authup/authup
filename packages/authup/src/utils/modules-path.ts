@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 
 export function getClosestNodeModulesPath() {
     return path.resolve(__dirname, '..', '..', 'node_modules');

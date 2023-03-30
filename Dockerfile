@@ -18,9 +18,9 @@ RUN chmod +x ./entrypoint.sh
 RUN mkdir -p writable
 
 ENV PORT 3000
-ENV NUXT_PORT 3000
-
 ENV HOST 0.0.0.0
+
+ENV NUXT_PORT 3000
 ENV NUXT_HOST 0.0.0.0
 
 ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable

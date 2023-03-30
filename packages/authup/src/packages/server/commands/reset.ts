@@ -6,7 +6,7 @@
  */
 
 import consola from 'consola';
-import type { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'node:child_process';
 import type { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
