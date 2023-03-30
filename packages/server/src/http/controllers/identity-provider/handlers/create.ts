@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { send, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository } from '../../../../database';
+import { IdentityProviderRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runOauth2ProviderValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

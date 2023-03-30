@@ -11,7 +11,7 @@ import { PermissionName, isPropertySet } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity } from '../../../../database';
+import { PermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

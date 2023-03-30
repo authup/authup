@@ -10,7 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderEntity } from '../../../../database';
+import { IdentityProviderEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteIdentityProviderRouteHandler(

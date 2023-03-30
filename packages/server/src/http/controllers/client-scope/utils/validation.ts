@@ -9,10 +9,10 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import { isRealmResourceWritable } from '@authup/common';
 import type { Request } from 'routup';
-import type { ClientScopeEntity } from '../../../../database';
+import type { ClientScopeEntity } from '../../../../domains';
 import {
     ClientEntity, ScopeEntity,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

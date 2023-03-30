@@ -10,7 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ScopeEntity } from '../../../../database';
+import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteScopeRouteHandler(req: Request, res: Response) : Promise<any> {

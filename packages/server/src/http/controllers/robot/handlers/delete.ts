@@ -15,7 +15,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, resolveRealm } from '../../../../database';
+import { RobotEntity, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {

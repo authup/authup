@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../../../../database';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runRealmValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

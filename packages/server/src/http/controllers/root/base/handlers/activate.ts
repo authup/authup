@@ -10,7 +10,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '../../../../../database';
+import { UserRepository } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthActivateRouteHandler(req: Request, res: Response) : Promise<any> {

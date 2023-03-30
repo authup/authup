@@ -10,7 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RoleEntity } from '../../../../database';
+import { RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

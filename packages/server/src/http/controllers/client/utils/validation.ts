@@ -13,8 +13,8 @@ import {
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import zod from 'zod';
-import type { ClientEntity } from '../../../../database';
-import { RealmEntity } from '../../../../database';
+import type { ClientEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

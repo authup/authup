@@ -27,7 +27,7 @@ import {
     UserEntity,
     UserPermissionEntity,
     UserRoleEntity,
-} from '../domains';
+} from '../../domains';
 
 export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     return {

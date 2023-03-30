@@ -10,7 +10,7 @@ import { PermissionName } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRoleEntity } from '../../../../database';
+import { UserRoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runUserRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

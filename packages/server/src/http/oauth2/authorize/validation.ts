@@ -15,7 +15,7 @@ import {
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientEntity, ClientScopeEntity } from '../../../database';
+import { ClientEntity, ClientScopeEntity } from '../../../domains';
 import type { ExpressValidationResult } from '../../validation';
 import {
     RequestValidationError,

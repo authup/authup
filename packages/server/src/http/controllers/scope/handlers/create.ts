@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ScopeEntity } from '../../../../database';
+import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

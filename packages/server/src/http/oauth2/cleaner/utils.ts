@@ -7,7 +7,7 @@
 import { LessThan } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { useLogger } from '@authup/server-common';
-import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../database';
+import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 
 export async function cleanUp(log?: boolean) {
     if (log) {

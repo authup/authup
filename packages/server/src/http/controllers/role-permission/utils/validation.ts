@@ -9,8 +9,8 @@ import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import type { Request } from 'routup';
-import type { RolePermissionEntity } from '../../../../database';
-import { PermissionEntity, RoleEntity } from '../../../../database';
+import type { RolePermissionEntity } from '../../../../domains';
+import { PermissionEntity, RoleEntity } from '../../../../domains';
 import { isRequestSubOwner, useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

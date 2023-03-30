@@ -7,8 +7,8 @@
 
 import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
-import type { UserAttributeEntity } from '../../../../database';
-import { UserEntity } from '../../../../database';
+import type { UserAttributeEntity } from '../../../../domains';
+import { UserEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import type { ExpressValidationResult } from '../../../validation';
 import {

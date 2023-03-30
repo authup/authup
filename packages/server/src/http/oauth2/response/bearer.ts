@@ -7,8 +7,8 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/common';
 import { TokenError } from '@authup/common';
-import type { KeyEntity } from '../../../database';
-import { signOAuth2TokenWithKey, useKey } from '../../../database';
+import type { KeyEntity } from '../../../domains';
+import { signOAuth2TokenWithKey, useKey } from '../../../domains';
 import type { OAuth2BearerResponseBuildContext } from './type';
 
 export async function buildOAuth2BearerTokenResponse(

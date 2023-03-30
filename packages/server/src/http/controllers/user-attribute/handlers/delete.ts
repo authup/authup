@@ -11,7 +11,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserAttributeEntity } from '../../../../database';
+import { UserAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 
 export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

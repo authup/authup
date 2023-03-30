@@ -12,7 +12,7 @@ import {
 import { decodeToken } from '@authup/server-common';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../database';
+import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';
 
 export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
     if (typeof token === 'undefined' || token === null) {

@@ -23,7 +23,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RobotEntity } from '../domains';
+import { RobotEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
 async function publishEvent(

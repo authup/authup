@@ -14,7 +14,7 @@ import type { FindOptionsWhere } from 'typeorm';
 import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useSMTPClient } from '@authup/server-common';
-import { UserRepository, resolveRealm } from '../../../../../database';
+import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
     useConfig,
 } from '../../../../../config';

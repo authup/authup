@@ -13,7 +13,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { IdentityProviderRoleEntity } from '../../../../database';
+import { IdentityProviderRoleEntity } from '../../../../domains';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

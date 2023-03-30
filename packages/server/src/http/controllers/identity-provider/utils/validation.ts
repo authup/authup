@@ -15,7 +15,7 @@ import {
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { IdentityProviderEntity } from '../../../../database';
+import type { IdentityProviderEntity } from '../../../../domains';
 import {
     RealmEntity,
     extractLdapIdentityProviderProtocolAttributes,
@@ -23,7 +23,7 @@ import {
     extractOidcConnectIdentityProviderProtocolAttributes,
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol, validateOidcIdentityProviderProtocol,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

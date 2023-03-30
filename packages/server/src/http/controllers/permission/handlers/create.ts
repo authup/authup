@@ -13,7 +13,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity } from '../../../../database';
+import { PermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
 

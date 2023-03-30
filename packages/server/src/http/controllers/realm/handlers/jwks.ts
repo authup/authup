@@ -12,7 +12,7 @@ import { send, useRequestParam } from 'routup';
 import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authup/common';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../database';
+import { KeyEntity } from '../../../../domains';
 
 export async function getRealmJwksRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');

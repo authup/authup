@@ -11,7 +11,7 @@ import { PermissionName, REALM_MASTER_NAME, isPropertySet } from '@authup/common
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../../../../database';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRealmValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

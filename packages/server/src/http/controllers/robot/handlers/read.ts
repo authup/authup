@@ -17,7 +17,7 @@ import {
     OAuth2SubKind,
     PermissionName, REALM_MASTER_NAME, isSelfId, isUUID,
 } from '@authup/common';
-import { RobotEntity, resolveRealm } from '../../../../database';
+import { RobotEntity, resolveRealm } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 

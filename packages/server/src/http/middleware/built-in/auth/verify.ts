@@ -26,18 +26,19 @@ import type { Request } from 'routup';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
+import { CachePrefix } from '../../../../database';
 import type {
     ClientEntity,
     RobotEntity,
 
     UserEntity,
-} from '../../../../database';
+} from '../../../../domains';
 import {
-    CachePrefix,
     OAuth2ClientRepository,
     RealmEntity,
-    RobotRepository, UserRepository,
-} from '../../../../database';
+    RobotRepository,
+    UserRepository,
+} from '../../../../domains';
 import {
     loadOAuth2SubEntity,
     loadOAuth2SubPermissions,

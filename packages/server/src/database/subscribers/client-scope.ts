@@ -17,7 +17,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { ClientScopeEntity } from '../domains';
+import { ClientScopeEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
 async function publishEvent(

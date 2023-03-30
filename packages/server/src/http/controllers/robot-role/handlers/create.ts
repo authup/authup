@@ -10,7 +10,7 @@ import { PermissionName } from '@authup/common';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRoleEntity } from '../../../../database';
+import { RobotRoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

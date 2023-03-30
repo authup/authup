@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RoleEntity } from '../../../../database';
+import { RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

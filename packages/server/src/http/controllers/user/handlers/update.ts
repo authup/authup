@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
-import { UserRepository } from '../../../../database';
+import { UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';

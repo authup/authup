@@ -13,7 +13,7 @@ import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../database';
+import { OAuth2RefreshTokenEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { Grant } from './type';

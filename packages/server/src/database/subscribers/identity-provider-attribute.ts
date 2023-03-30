@@ -22,7 +22,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { IdentityProviderAttributeEntity } from '../domains';
+import { IdentityProviderAttributeEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
 async function publishEvent(

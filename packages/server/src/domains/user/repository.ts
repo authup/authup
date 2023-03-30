@@ -30,7 +30,7 @@ import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
-import { CachePrefix } from '../../constants';
+import { CachePrefix } from '../../database/constants';
 import { UserAttributeEntity } from '../user-attribute';
 import { appendAttributes, transformAttributesToRecord } from '../utils';
 

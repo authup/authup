@@ -14,7 +14,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-common';
-import { UserRepository, resolveRealm } from '../../../../../database';
+import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
     useConfig,

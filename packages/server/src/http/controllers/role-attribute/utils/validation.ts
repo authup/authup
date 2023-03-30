@@ -7,8 +7,8 @@
 
 import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
-import type { RoleAttributeEntity } from '../../../../database';
-import { RoleEntity } from '../../../../database';
+import type { RoleAttributeEntity } from '../../../../domains';
+import { RoleEntity } from '../../../../domains';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError, extendExpressValidationResultWithRelation,

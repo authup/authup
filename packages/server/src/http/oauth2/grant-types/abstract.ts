@@ -8,7 +8,7 @@
 import type { OAuth2TokenPayload } from '@authup/common';
 import type { Continu } from 'continu';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../database';
+import { OAuth2RefreshTokenEntity } from '../../../domains';
 import type { Options, OptionsInput } from '../../../config';
 import { useConfig } from '../../../config';
 import {

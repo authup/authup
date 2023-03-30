@@ -11,8 +11,8 @@ import {
 } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { UserEntity } from '../../../../database';
-import { RealmEntity } from '../../../../database';
+import type { UserEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

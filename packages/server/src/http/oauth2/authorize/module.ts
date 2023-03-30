@@ -14,7 +14,7 @@ import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../database';
+import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
 import { useRequestEnv } from '../../utils';
 import type {
     OAuth2AccessTokenBuildContext,

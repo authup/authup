@@ -9,7 +9,7 @@ import { check, validationResult } from 'express-validator';
 import { isValidRealmName } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RealmEntity } from '../../../../database';
+import type { RealmEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request/constants';
 import type { ExpressValidationResult } from '../../../validation';
 import {

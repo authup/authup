@@ -16,7 +16,7 @@ import { isRealmResourceReadable } from '@authup/common';
 import {
     RoleAttributeEntity,
     onlyRealmWritableQueryResources,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

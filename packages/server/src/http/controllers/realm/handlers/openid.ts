@@ -11,7 +11,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../../../../database';
+import { RealmEntity } from '../../../../domains';
 import { useConfig } from '../../../../config';
 
 export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res: Response) : Promise<any> {

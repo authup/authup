@@ -15,7 +15,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { RoleEntity, resolveRealm } from '../../../../database';
+import { RoleEntity, resolveRealm } from '../../../../domains';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

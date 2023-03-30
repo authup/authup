@@ -32,7 +32,7 @@ import {
     ScopeEntity,
     UserRepository,
     UserRoleEntity,
-} from '../domains';
+} from '../../domains';
 import type { Options, OptionsInput } from '../../config';
 import { useConfig } from '../../config';
 import type { DatabaseRootSeederResult } from './type';

@@ -14,7 +14,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName, isUUID } from '@authup/common';
-import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../database';
+import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {

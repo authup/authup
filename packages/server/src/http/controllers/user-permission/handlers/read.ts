@@ -12,7 +12,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { UserPermissionEntity } from '../../../../database';
+import { UserPermissionEntity } from '../../../../domains';
 
 /**
  * Receive user permissions of a specific user.

@@ -11,8 +11,8 @@ import {
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RoleEntity } from '../../../../database';
-import { RealmEntity } from '../../../../database';
+import type { RoleEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

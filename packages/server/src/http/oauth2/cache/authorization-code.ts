@@ -7,7 +7,8 @@
 
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { CachePrefix, OAuth2AuthorizationCodeEntity } from '../../../database';
+import { CachePrefix } from '../../../database';
+import { OAuth2AuthorizationCodeEntity } from '../../../domains';
 import { OAuth2AbstractCache } from './abstract';
 
 export class OAuth2AuthorizationCodeCache extends OAuth2AbstractCache<OAuth2AuthorizationCodeEntity> {

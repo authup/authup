@@ -19,7 +19,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
-import { RoleAttributeEntity } from '../domains';
+import { RoleAttributeEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
 async function publishEvent(

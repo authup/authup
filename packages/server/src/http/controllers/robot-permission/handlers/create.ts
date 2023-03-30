@@ -12,7 +12,7 @@ import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     RobotPermissionEntity,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils/env';
 import { runRobotPermissionValidation } from '../utils';
 

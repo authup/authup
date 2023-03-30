@@ -9,8 +9,8 @@ import { check, validationResult } from 'express-validator';
 import { isPropertySet, isRealmResourceWritable } from '@authup/common';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RobotEntity } from '../../../../database';
-import { RealmEntity } from '../../../../database';
+import type { RobotEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {

@@ -12,7 +12,7 @@ import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository, resolveRealm } from '../../../../../database';
+import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {

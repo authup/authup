@@ -15,7 +15,7 @@ import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientEntity } from '../../../database';
+import { ClientEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';

@@ -13,7 +13,7 @@ import { In } from 'typeorm';
 import { KeyType, wrapPublicKeyPem } from '@authup/common';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../database';
+import { KeyEntity } from '../../../../../domains';
 
 export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();

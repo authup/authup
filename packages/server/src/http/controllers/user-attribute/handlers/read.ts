@@ -17,7 +17,7 @@ import { PermissionName, isRealmResourceReadable } from '@authup/common';
 import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

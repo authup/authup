@@ -22,7 +22,7 @@ import { URL } from 'node:url';
 import type { ClientRequestConfig } from '@hapic/oauth2';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../database';
+import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../../config';

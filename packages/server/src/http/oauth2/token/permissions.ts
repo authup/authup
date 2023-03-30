@@ -8,7 +8,7 @@
 import type { AbilityDescriptor } from '@authup/common';
 import { OAuth2SubKind, ScopeName, transformOAuth2ScopeToArray } from '@authup/common';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, UserRepository } from '../../../database';
+import { RobotRepository, UserRepository } from '../../../domains';
 
 export async function loadOAuth2SubPermissions(
     kind: `${OAuth2SubKind}`,

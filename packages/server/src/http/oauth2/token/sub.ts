@@ -12,16 +12,16 @@ import {
 import { NotFoundError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
+import { CachePrefix } from '../../../database';
 import type {
     RobotEntity,
     UserEntity,
-} from '../../../database';
+} from '../../../domains';
 import {
-    CachePrefix,
     ClientEntity,
     RobotRepository,
     UserRepository,
-} from '../../../database';
+} from '../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =

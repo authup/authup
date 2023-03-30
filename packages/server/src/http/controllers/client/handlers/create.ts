@@ -13,7 +13,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientEntity } from '../../../../database';
+import { ClientEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildHTTPValidationErrorMessage } from '../../../validation';
 import { runOauth2ClientValidation } from '../utils';

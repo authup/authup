@@ -13,7 +13,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, resolveRealm } from '../../../../database';
+import { RobotRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';

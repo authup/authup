@@ -14,7 +14,7 @@ import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     RobotRepository,
-} from '../../../../database';
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';

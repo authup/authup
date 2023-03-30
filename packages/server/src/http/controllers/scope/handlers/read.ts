@@ -15,7 +15,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ScopeEntity, resolveRealm } from '../../../../database';
+import { ScopeEntity, resolveRealm } from '../../../../domains';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
