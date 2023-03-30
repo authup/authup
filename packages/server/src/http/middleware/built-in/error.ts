@@ -30,6 +30,10 @@ export function registerErrorMiddleware(router: Router) {
             if (logMessage) {
                 useLogger().error(`${error.message}`);
             }
+        } else {
+            useLogger().warn('Unknown error occurred.', {
+                error,
+            });
         }
 
         const data = buildResponseErrorPayloadFromError(error);

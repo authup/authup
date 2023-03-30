@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildHTTPClientConfigForProxy } from '@authup/server-common';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { OAuth2TokenGrantResponse } from '@authup/common';
 import {
@@ -18,6 +19,7 @@ import { useRequestQuery } from '@routup/query';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { URL } from 'node:url';
+import type { ClientRequestConfig } from '@hapic/oauth2';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../database';
@@ -89,13 +91,20 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         provider.protocol !== IdentityProviderProtocol.OAUTH2 &&
         provider.protocol !== IdentityProviderProtocol.OIDC
     ) {
-        throw new Error();
-        // todo: better error :)
+        throw new Error(`The provider protocol ${provider.protocol} is not valid.`);
     }
 
     const config = await useConfig();
 
+    let driver: ClientRequestConfig;
+    try {
+        driver = await buildHTTPClientConfigForProxy(provider.token_url);
+    } catch (e) {
+        throw new BadRequestError(`The http tunnel could not be created for url: ${provider.token_url}`);
+    }
+
     const oauth2Client = new Client({
+        driver,
         options: {
             client_id: provider.client_id,
             client_secret: provider.client_secret,
@@ -106,10 +115,16 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         },
     });
 
-    const tokenResponse : OAuth2TokenGrantResponse = await oauth2Client.token.createWithAuthorizeGrant({
-        code: code as string,
-        state: state as string,
-    });
+    let tokenResponse : OAuth2TokenGrantResponse;
+
+    try {
+        tokenResponse = await oauth2Client.token.createWithAuthorizeGrant({
+            code: code as string,
+            state: state as string,
+        });
+    } catch (e) {
+        throw new BadRequestError('The oauth2 code could not be exchanged for an access-token.');
+    }
 
     const account = await createOauth2ProviderAccount(provider, tokenResponse);
     const grant = new InternalGrantType();
