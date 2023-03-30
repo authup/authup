@@ -8,8 +8,8 @@
 import type { ChildProcess } from 'child_process';
 import { exec } from 'child_process';
 import consola from 'consola';
-import path from 'path';
-import process from 'process';
+import path from 'node:path';
+import process from 'node:process';
 import findUpPackagePath from 'resolve-package-path';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import type { CommandExecutionContext } from '../../type';
@@ -36,7 +36,7 @@ export function executeUICommand(
 
         const childProcess = exec(`${base} ${stringifyObjectArgs(ctx.args)}`, {
             env: {
-                ...process.env,
+                PATH: process.env.PATH,
                 ...ctx.env,
             } as Record<string, any>,
         });

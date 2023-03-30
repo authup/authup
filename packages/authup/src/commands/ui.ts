@@ -14,17 +14,28 @@ import { UICommand, startUI } from '../packages';
 export function buildUiCommand(cac: CAC) {
     cac
         .command('ui <cmd>', 'Run a specific command')
-        .option('-p, --port [port]', 'Specify the port for starting the application')
-        .option('-h, --host [host]', 'Specify the host for starting a specific application')
+        .option('-p, --port [port]', 'Specify the port for starting the application.')
+        .option('-h, --host [host]', 'Specify the host for starting a specific application.')
+        .option('-d, --apiUrl [apiUrl]', 'Specify the apiUrl of the backend application.')
         .action(async (command: string, ctx: Record<string, any>) => {
             const config = await createConfig();
+
+            let apiUrL = ctx.apiUrl;
+            if (!apiUrL && config.api.has('publicUrl')) {
+                apiUrL = config.api.get('publicUrl');
+            }
+
+            if (!apiUrL) {
+                apiUrL = config.ui.get('apiUrl');
+            }
 
             switch (command) {
                 case UICommand.START: {
                     await startUI({
                         env: {
-                            port: ctx.port || config.ui.get('port'),
-                            host: ctx.host || config.ui.get('host'),
+                            NUXT_PORT: ctx.port || config.ui.get('port'),
+                            NUXT_HOST: ctx.host || config.ui.get('host'),
+                            NUXT_API_URL: apiUrL,
                         },
                     });
                     break;

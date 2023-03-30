@@ -12,7 +12,8 @@ import cac from 'cac';
 import {
     buildInfoCommand,
     buildServerCommand,
-    buildStartCommand, buildUiCommand,
+    buildStartCommand,
+    buildUiCommand,
 } from './commands';
 
 const cli = cac();

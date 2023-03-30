@@ -7,3 +7,4 @@
 
 export * from './module';
 export * from './start';
+export * from './type';

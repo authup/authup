@@ -4,7 +4,7 @@
     "description": "This is the CLI for the authup framework.",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/index.ts",
+        "cli": "node dist/index.js",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [

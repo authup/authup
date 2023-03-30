@@ -6,13 +6,15 @@
  */
 
 import consola from 'consola';
-import type { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
+import type { ApiStartCommandContext } from './type';
 import { handleServerCommandOutput } from './utils';
 
-export async function startServer(ctx?: CommandExecutionContext) {
+export async function startServer(ctx: ApiStartCommandContext) {
     consola.info('Server: Starting...');
+    consola.info(`Server: Port ${ctx.env.PORT}`);
+
     const childProcess = await executeServerCommand(ServerCommand.START, ctx);
     consola.success('Server: Started');
 

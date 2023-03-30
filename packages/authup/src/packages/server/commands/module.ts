@@ -35,7 +35,10 @@ export async function executeServerCommand(
         }
 
         const childProcess = exec(`${base} ${command} ${stringifyObjectArgs(ctx.args)}`, {
-            env: ctx.env,
+            env: {
+                PATH: process.env.PATH,
+                ...ctx.env,
+            },
         });
         childProcess.on('spawn', () => {
             resolve(childProcess);

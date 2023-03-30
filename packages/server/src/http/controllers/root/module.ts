@@ -22,10 +22,22 @@ import {
     createAuthPasswordResetRouteHandler,
     createAuthRegisterRouteHandler,
 } from './base';
+import type { EndpointInfo } from './status';
+import { useStatusRouteHandler } from './status';
 
 @DTags('root')
 @DController('')
 export class RootController {
+    @DGet('/', [])
+    async status(
+        @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<EndpointInfo> {
+        return useStatusRouteHandler(req, res);
+    }
+
+    // ----------------------------------------------------------
+
     @DPost('/authorize', [ForceUserLoggedInMiddleware])
     async confirmAuthorization(
         @DRequest() req: any,
