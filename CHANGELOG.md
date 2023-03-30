@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.24.0](https://github.com/authup/authup/compare/v0.23.1...v0.24.0) (2023-03-30)
+
+
+### Bug Fixes
+
+* only start api application by default in docker container ([3e41a4e](https://github.com/authup/authup/commit/3e41a4ebd8ee1b6231d6944bbc716f452a2009e9))
+
+
+### Features
+
+* dynamic config getter for public-url ([5e17b05](https://github.com/authup/authup/commit/5e17b055c4e29fe43938fda90e465eccc7157d8e))
+
+
+
+
+
 ## [0.23.1](https://github.com/authup/authup/compare/v0.23.0...v0.23.1) (2023-03-30)
 
 
