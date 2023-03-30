@@ -23,9 +23,9 @@ jobs:
             -   uses: tada5hi/action-docker-image-publish@master
                 with:
                     registryHost: docker.io
-                    registryProject: tada5hi
+                    registryProject: authup
                     registryRepository: authup
-                    registryUser: tada5hi
+                    registryUser: authup
                     registryTag: next
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
 
