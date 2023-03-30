@@ -21,7 +21,12 @@ export async function setupConfig(
     const envConfig = await readConfigFromEnv();
 
     const config = useConfig();
-    config.setRaw(merge({}, input || {}, envConfig, fileConfig));
+    const rawInput = merge({}, input || {}, envConfig, fileConfig);
+    console.log(rawInput);
+
+    config.setRaw(rawInput);
+
+    console.log(config.get());
 
     if (config.has('redis')) {
         setupRedis(config.get('redis'));

@@ -74,17 +74,17 @@ export function createConfig() : Config {
                 zod.string(),
                 zod.boolean(),
                 zod.any(),
-            ])),
+            ])).safeParse(value),
             smtp: (value) => zod.lazy(() => zod.union([
                 zod.string(),
                 zod.boolean(),
                 zod.any(),
-            ])),
+            ])).safeParse(value),
             vault: (value) => zod.lazy(() => zod.union([
                 zod.string(),
                 zod.boolean(),
                 zod.any(),
-            ])),
+            ])).safeParse(value),
 
             port: (value) => zod.number().nonnegative().safeParse(value),
             host: (value) => zod.string().safeParse(value),
