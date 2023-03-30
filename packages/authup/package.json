@@ -35,7 +35,7 @@
         "@authup/server-common": "^0.23.0",
         "@authup/ui": "^0.23.0",
         "cac": "^6.7.14",
-        "chalk": "^4.1.2",
+        "chalk": "^5.2.0",
         "consola": "^2.15.3",
         "continu": "^1.1.0",
         "resolve-package-path": "^4.0.3",
