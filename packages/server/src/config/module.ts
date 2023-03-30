@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { makeURLPublicAccessible } from '@authup/common';
 import { Continu } from 'continu';
 import path from 'node:path';
 import process from 'node:process';
@@ -63,7 +64,18 @@ export function createConfig() : Config {
             adminPassword: 'start123',
             robotEnabled: false,
             permissions: [],
+        },
+        getters: {
+            publicUrl: (context) => {
+                if (
+                    !context.has('publicUrl') &&
+                    (context.has('host') || context.has('port'))
+                ) {
+                    return makeURLPublicAccessible(`http://${context.get('host')}:${context.get('port')}`);
+                }
 
+                return context.getDefault('publicUrl');
+            },
         },
         validators: {
             env: (value) => zod.string().safeParse(value),
