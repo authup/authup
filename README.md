@@ -42,7 +42,7 @@ $ npx authup start
 
 This will lunch the following application with default settings:
 - Frontend Application: `http://localhost:3000/`
-- Backend Application: `http://localhost:3010/`
+- Backend Application: `http://localhost:3001/`
 
 To customize the settings follow the [documentation](#documentation).
 

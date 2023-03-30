@@ -54,7 +54,7 @@ export type Options = {
     // ----------------------------------------------------
 
     /**
-     * default: 3010
+     * default: 3001
      */
     port: number,
 
@@ -64,7 +64,7 @@ export type Options = {
     host: string,
 
     /**
-     * default: http://127.0.0.1:3010
+     * default: http://127.0.0.1:3001
      */
     publicUrl: string,
     /**

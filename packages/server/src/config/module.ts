@@ -42,9 +42,9 @@ export function createConfig() : Config {
             smtp: false,
             vault: false,
 
-            port: 3010,
+            port: 3001,
             host: '0.0.0.0',
-            publicUrl: 'http://127.0.0.1:3010',
+            publicUrl: 'http://127.0.0.1:3001',
             authorizeRedirectUrl: 'http://127.0.0.1:3000',
             middlewareBody: true,
             middlewareCookie: true,

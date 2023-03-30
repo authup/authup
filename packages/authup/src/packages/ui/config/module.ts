@@ -14,7 +14,7 @@ export function createUIConfig() : UIConfig {
         defaults: {
             port: 3000,
             host: '0.0.0.0',
-            apiUrl: 'http://127.0.0.1:3010/',
+            apiUrl: 'http://127.0.0.1:3001/',
         },
         validators: {
             port: (value) => zod.number().nonnegative().safeParse(value),
