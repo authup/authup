@@ -56,7 +56,7 @@
         "@types/node": "^18.15.5",
         "@vue-layout/hyperscript": "^1.0.0",
         "@vuelidate/core": "^2.0.2",
-        "@vuelidate/validators": "^2.0.1",
+        "@vuelidate/validators": "^2.0.2",
         "cross-env": "^7.0.3",
         "ilingo": "^2.2.1",
         "rapiq": "^0.8.0",
