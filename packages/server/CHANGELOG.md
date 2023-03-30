@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.23.1](https://github.com/authup/authup/compare/v0.23.0...v0.23.1) (2023-03-30)
+
+
+### Bug Fixes
+
+* config validation for redis-,smtp- & vault-config ([19dd368](https://github.com/authup/authup/commit/19dd368cc833a1592676df2e1387f0699cc72f0f))
+
+
+
+
+
 # [0.23.0](https://github.com/authup/authup/compare/v0.22.0...v0.23.0) (2023-03-30)
 
 

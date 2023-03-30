@@ -1,6 +1,6 @@
 {
     "name": "@authup/server",
-    "version": "0.23.0",
+    "version": "0.23.1",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
