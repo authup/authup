@@ -1,6 +1,6 @@
 {
     "name": "@authup/vue",
-    "version": "0.24.0",
+    "version": "0.25.0",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/common": "^0.24.0",
+        "@authup/common": "^0.25.0",
         "@types/node": "^18.15.5",
         "@vue-layout/hyperscript": "^1.0.0",
         "@vuelidate/core": "^2.0.2",
