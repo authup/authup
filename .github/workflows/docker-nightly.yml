@@ -1,9 +1,8 @@
-name: docker
+name: docker-nightly
 
 on:
-    push:
-        tags:
-            - v*
+    schedule:
+        - cron: "0 0 * * *"
 
 jobs:
     push:
@@ -19,7 +18,7 @@ jobs:
                 with:
                     cache: true
                     registryRepository: authup
-                    registryTag: latest
+                    registryTag: next
 
             -   uses: tada5hi/action-docker-image-publish@master
                 with:
@@ -27,7 +26,7 @@ jobs:
                     registryProject: tada5hi
                     registryRepository: authup
                     registryUser: tada5hi
-                    registryTag: latest
+                    registryTag: next
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
 
 
