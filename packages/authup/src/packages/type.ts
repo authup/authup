@@ -10,5 +10,6 @@ export type CommandExecutionContext<
     ARGS extends Record<string, any> = Record<string, any>,
 > = {
     env?: ENV,
+    envFromProcess?: boolean,
     args?: ARGS
 };

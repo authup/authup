@@ -37,6 +37,7 @@ export function executeUICommand(
         const childProcess = exec(`${base} ${stringifyObjectArgs(ctx.args)}`, {
             env: {
                 PATH: process.env.PATH,
+                ...(ctx.envFromProcess ? process.env : {}),
                 ...ctx.env,
             } as Record<string, any>,
         });

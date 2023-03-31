@@ -7,7 +7,7 @@
 
 import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/common';
 import install from '@authup/vue';
-import type { Config } from 'hapic';
+import type { ConfigInput } from 'hapic';
 import { isClientError } from 'hapic';
 import { useRuntimeConfig } from '#imports';
 import { defineNuxtPlugin } from '#app';
@@ -28,7 +28,7 @@ declare module '@vue/runtime-core' {
 export default defineNuxtPlugin((ctx) => {
     const runtimeConfig = useRuntimeConfig();
 
-    const config : Config = {
+    const config : ConfigInput = {
         driver: {
             baseURL: runtimeConfig.public.apiUrl,
             withCredentials: true,

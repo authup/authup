@@ -12,5 +12,7 @@ export type UIStartCommandContext = CommandExecutionContext<{
 
     NUXT_HOST: string,
 
-    NUXT_API_URL: string
+    NUXT_API_URL: string,
+
+    NUXT_PUBLIC_URL: string
 }>;

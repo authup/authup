@@ -34,6 +34,7 @@ export default defineNuxtConfig({
     ],
     alias: {
         '@authup/common': path.join(__dirname, '..', 'common', 'src'),
+        '@authup/server-common': path.join(__dirname, '..', 'server-common', 'src'),
         '@authup/vue': path.join(__dirname, '..', 'vue', 'src'),
     },
     runtimeConfig: {

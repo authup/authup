@@ -21,10 +21,6 @@ export function buildUiCommand(cac: CAC) {
             const config = await createConfig();
 
             let apiUrL = ctx.apiUrl;
-            if (!apiUrL && config.api.has('publicUrl')) {
-                apiUrL = config.api.get('publicUrl');
-            }
-
             if (!apiUrL) {
                 apiUrL = config.ui.get('apiUrl');
             }
@@ -35,8 +31,10 @@ export function buildUiCommand(cac: CAC) {
                         env: {
                             NUXT_PORT: ctx.port || config.ui.get('port'),
                             NUXT_HOST: ctx.host || config.ui.get('host'),
+                            NUXT_PUBLIC_URL: config.ui.get('publicUrl'),
                             NUXT_API_URL: apiUrL,
                         },
+                        envFromProcess: true,
                     });
                     break;
                 }

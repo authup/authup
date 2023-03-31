@@ -8,34 +8,46 @@
 import { hasOwnProperty } from '@authup/common';
 import process from 'node:process';
 
-export function hasProcessEnv(key: string) : boolean {
-    return hasOwnProperty(process.env, key);
+export function hasProcessEnv(key: string | string[]) : boolean {
+    const keys = Array.isArray(key) ? key : [key];
+    for (let i = 0; i < keys.length; i++) {
+        if (hasOwnProperty(process.env, keys[i])) {
+            return true;
+        }
+    }
+    return false;
 }
 
-export function readFromProcessEnv(key: string) : string | undefined;
-export function readFromProcessEnv<T>(key: string, alt: T) : T | string;
-export function readFromProcessEnv<T>(key: string, alt?: T): any {
-    if (hasOwnProperty(process.env, key)) {
-        return process.env[key];
+export function readFromProcessEnv(key: string | string[]) : string | undefined;
+export function readFromProcessEnv<T>(key: string | string[], alt: T) : T | string;
+export function readFromProcessEnv<T>(key: string | string[], alt?: T): any {
+    const keys = Array.isArray(key) ? key : [key];
+    for (let i = 0; i < keys.length; i++) {
+        if (hasOwnProperty(process.env, keys[i])) {
+            return process.env[keys[i]];
+        }
     }
 
     return alt;
 }
 
-export function readBoolFromProcessEnv(key: string, alt?: boolean): boolean | undefined {
-    const value = readFromProcessEnv(key, alt);
+export function readBoolFromProcessEnv(key: string | string[], alt?: boolean): boolean | undefined {
+    const keys = Array.isArray(key) ? key : [key];
+    for (let i = 0; i < keys.length; i++) {
+        const value = readFromProcessEnv(keys[i], alt);
 
-    switch (value) {
-        case true:
-        case 'true':
-        case 't':
-        case '1':
-            return true;
-        case false:
-        case 'false':
-        case 'f':
-        case '0':
-            return false;
+        switch (value) {
+            case true:
+            case 'true':
+            case 't':
+            case '1':
+                return true;
+            case false:
+            case 'false':
+            case 'f':
+            case '0':
+                return false;
+        }
     }
 
     return alt;
@@ -57,13 +69,20 @@ export function readBoolOrStringFromProcessEnv(
     return alt;
 }
 
-export function readIntFromProcessEnv(key: string, alt?: number): number | undefined {
-    const value = readFromProcessEnv(key, alt);
-    const intValue = parseInt(`${value}`, 10);
+export function readIntFromProcessEnv(
+    key: string | string[],
+    alt?: number,
+): number | undefined {
+    const keys = Array.isArray(key) ? key : [key];
 
-    if (Number.isNaN(intValue)) {
-        return alt;
+    for (let i = 0; i < keys.length; i++) {
+        const value = readFromProcessEnv(keys[i], alt);
+        const intValue = parseInt(`${value}`, 10);
+
+        if (!Number.isNaN(intValue)) {
+            return intValue;
+        }
     }
 
-    return intValue;
+    return alt;
 }

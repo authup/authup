@@ -12,7 +12,9 @@ export type UIOptions = {
 
     host: string,
 
-    apiUrl?: string
+    apiUrl?: string,
+
+    publicUrl?: string
 };
 export type UIOptionsInput = Partial<UIOptions>;
 

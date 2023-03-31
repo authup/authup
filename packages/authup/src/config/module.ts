@@ -24,6 +24,10 @@ export async function createConfig() : Promise<Config> {
         ui.setRaw('apiUrl', makeURLPublicAccessible(api.get('publicUrl')));
     }
 
+    if (!ui.has('publicUrl') && api.has('authorizeRedirectUrl')) {
+        ui.set('publicUrl', api.get('authorizeRedirectUrl'));
+    }
+
     extendServerConfigWithEnv(api);
     extendUIConfigWithEnv(ui);
 

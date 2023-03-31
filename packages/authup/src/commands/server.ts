@@ -24,6 +24,7 @@ export function buildServerCommand(cac: CAC) {
                         args: {
                             root,
                         },
+                        envFromProcess: true,
                     });
                     break;
                 }
@@ -32,6 +33,7 @@ export function buildServerCommand(cac: CAC) {
                         args: {
                             root,
                         },
+                        envFromProcess: true,
                     });
                     break;
                 }

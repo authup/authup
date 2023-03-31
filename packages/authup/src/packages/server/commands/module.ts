@@ -37,6 +37,7 @@ export async function executeServerCommand(
         const childProcess = exec(`${base} ${command} ${stringifyObjectArgs(ctx.args)}`, {
             env: {
                 PATH: process.env.PATH,
+                ...(ctx.envFromProcess ? process.env : {}),
                 ...ctx.env,
             },
         });

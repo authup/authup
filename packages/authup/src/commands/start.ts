@@ -6,6 +6,7 @@
  */
 
 import type { CAC } from 'cac';
+import process from 'node:process';
 import { createConfig } from '../config';
 import type { ApiStartCommandContext, UIStartCommandContext } from '../packages';
 import {
@@ -22,10 +23,14 @@ export function buildStartCommand(cac: CAC) {
                 services = Object.values(ServiceName);
             }
 
+            const root = process.cwd();
             const config = await createConfig();
 
             if (services.indexOf(ServiceName.API) !== -1) {
                 const ctx : ApiStartCommandContext = {
+                    args: {
+                        root,
+                    },
                     env: {
                         PORT: config.api.get('port'),
                         WRITABLE_DIRECTORY_PATH: config.api.get('writableDirectoryPath'),
@@ -37,9 +42,13 @@ export function buildStartCommand(cac: CAC) {
 
             if (services.indexOf(ServiceName.UI) !== -1) {
                 const ctx : UIStartCommandContext = {
+                    args: {
+                        root,
+                    },
                     env: {
                         NUXT_PORT: config.ui.get('port'),
                         NUXT_HOST: config.ui.get('host'),
+                        NUXT_PUBLIC_URL: config.ui.get('publicUrl'),
                         NUXT_API_URL: config.api.get('publicUrl'),
                     },
                 };
