@@ -14,7 +14,7 @@ import {
 } from '../packages';
 
 export function buildServerCommand(cac: CAC) {
-    cac.command('server <cmd>', 'Run a specific command.')
+    cac.command('api <cmd>', 'Run a specific command.')
         .action(async (command :string) => {
             const root = process.cwd();
 
