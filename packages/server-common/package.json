@@ -65,7 +65,7 @@
         "@hapic/vault": "^1.5.0",
         "@types/bcrypt": "^5.0.0",
         "@types/proxy-from-env": "^1.0.1",
-        "redis-extension": "^1.2.3"
+        "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
         "@authup/common": "^0.x",
