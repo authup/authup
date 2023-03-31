@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+export enum EnvironmentVariableName {
+    NODE_ENV = 'NODE_ENV',
+    WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',
+    REDIS = 'REDIS',
+    SMTP = 'SMTP',
+    VAULT = 'VAULT',
+    HOST = 'HOST',
+    PORT = 'PORT',
+    PUBLIC_URL = 'PUBLIC_URL',
+    AUTHORIZE_REDIRECT_URL = 'AUTHORIZE_REDIRECT_URL',
+    ACCESS_TOKEN_MAX_AGE = 'ACCESS_TOKEN_MAX_AGE',
+    REFRESH_TOKEN_MAX_AGE = 'REFRESH_TOKEN_MAX_AGE',
+    REGISTRATION = 'REGISTRATION',
+    EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
+    FORGOT_PASSWORD = 'FORGOT_PASSWORD',
+    ADMIN_USERNAME = 'ADMIN_USERNAME',
+    ADMIN_PASSWORD = 'ADMIN_PASSWORD',
+    ROBOT_ENABLED = 'ROBOT_ENABLED',
+    ROBOT_SECRET = 'ROBOT_SECRET',
+    PERMISSIONS = 'PERMISSIONS',
+}

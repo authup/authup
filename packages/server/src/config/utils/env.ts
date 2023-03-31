@@ -6,93 +6,98 @@
  */
 
 import {
-    hasProcessEnv, readBoolFromProcessEnv,
+    hasProcessEnv,
+    readBoolFromProcessEnv,
     readBoolOrStringFromProcessEnv,
-    readFromProcessEnv, readIntFromProcessEnv,
+    readFromProcessEnv,
+    readIntFromProcessEnv,
 } from '@authup/server-common';
+import { EnvironmentVariableName } from '../constants';
 import type { OptionsInput } from '../type';
 
 export function readConfigFromEnv() : Partial<OptionsInput> {
     const options : OptionsInput = {};
 
-    if (hasProcessEnv('NODE_ENV')) {
-        options.env = readFromProcessEnv('NODE_ENV');
+    if (hasProcessEnv(EnvironmentVariableName.NODE_ENV)) {
+        options.env = readFromProcessEnv(EnvironmentVariableName.NODE_ENV);
     }
 
-    if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
-        options.writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
-    }
-
-    if (hasProcessEnv('REDIS')) {
-        options.redis = readBoolOrStringFromProcessEnv('REDIS');
-    }
-
-    if (hasProcessEnv('SMTP')) {
-        options.smtp = readBoolOrStringFromProcessEnv('SMTP');
-    }
-
-    if (hasProcessEnv('VAULT')) {
-        options.vault = readBoolOrStringFromProcessEnv('VAULT');
+    if (hasProcessEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH)) {
+        options.writableDirectoryPath = readFromProcessEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH);
     }
 
     // -------------------------------------------------------------
 
-    if (hasProcessEnv('HOST')) {
-        options.host = readFromProcessEnv('HOST');
+    if (hasProcessEnv(EnvironmentVariableName.REDIS)) {
+        options.redis = readBoolOrStringFromProcessEnv(EnvironmentVariableName.REDIS);
     }
 
-    if (hasProcessEnv('PORT')) {
-        options.port = readIntFromProcessEnv('PORT');
+    if (hasProcessEnv(EnvironmentVariableName.SMTP)) {
+        options.smtp = readBoolOrStringFromProcessEnv(EnvironmentVariableName.SMTP);
     }
 
-    if (hasProcessEnv('PUBLIC_URL')) {
-        options.publicUrl = readFromProcessEnv('PUBLIC_URL');
+    if (hasProcessEnv(EnvironmentVariableName.VAULT)) {
+        options.vault = readBoolOrStringFromProcessEnv(EnvironmentVariableName.VAULT);
     }
 
-    if (hasProcessEnv('AUTHORIZE_REDIRECT_URL')) {
-        options.authorizeRedirectUrl = readFromProcessEnv('AUTHORIZE_REDIRECT_URL');
+    // -------------------------------------------------------------
+
+    if (hasProcessEnv(EnvironmentVariableName.HOST)) {
+        options.host = readFromProcessEnv(EnvironmentVariableName.HOST);
     }
 
-    if (hasProcessEnv('ACCESS_TOKEN_MAX_AGE')) {
-        options.tokenMaxAgeRefreshToken = readIntFromProcessEnv('ACCESS_TOKEN_MAX_AGE');
+    if (hasProcessEnv(EnvironmentVariableName.PORT)) {
+        options.port = readIntFromProcessEnv(EnvironmentVariableName.PORT);
     }
 
-    if (hasProcessEnv('REFRESH_TOKEN_MAX_AGE')) {
-        options.tokenMaxAgeAccessToken = readIntFromProcessEnv('REFRESH_TOKEN_MAX_AGE');
+    if (hasProcessEnv(EnvironmentVariableName.PUBLIC_URL)) {
+        options.publicUrl = readFromProcessEnv(EnvironmentVariableName.PUBLIC_URL);
     }
 
-    if (hasProcessEnv('REGISTRATION')) {
-        options.registration = readBoolFromProcessEnv('REGISTRATION');
+    if (hasProcessEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL)) {
+        options.authorizeRedirectUrl = readFromProcessEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);
     }
 
-    if (hasProcessEnv('EMAIL_VERIFICATION')) {
-        options.emailVerification = readBoolFromProcessEnv('EMAIL_VERIFICATION');
+    if (hasProcessEnv(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE)) {
+        options.tokenMaxAgeAccessToken = readIntFromProcessEnv(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
     }
 
-    if (hasProcessEnv('FORGOT_PASSWORD')) {
-        options.forgotPassword = readBoolFromProcessEnv('FORGOT_PASSWORD');
+    if (hasProcessEnv(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE)) {
+        options.tokenMaxAgeRefreshToken = readIntFromProcessEnv(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
+    }
+
+    if (hasProcessEnv(EnvironmentVariableName.REGISTRATION)) {
+        options.registration = readBoolFromProcessEnv(EnvironmentVariableName.REGISTRATION);
+    }
+
+    if (hasProcessEnv(EnvironmentVariableName.EMAIL_VERIFICATION)) {
+        options.emailVerification = readBoolFromProcessEnv(EnvironmentVariableName.EMAIL_VERIFICATION);
+    }
+
+    if (hasProcessEnv(EnvironmentVariableName.FORGOT_PASSWORD)) {
+        options.forgotPassword = readBoolFromProcessEnv(EnvironmentVariableName.FORGOT_PASSWORD);
     }
 
     // ---------------------------------------------------------------
 
-    if (hasProcessEnv('ADMIN_USERNAME')) {
-        options.adminUsername = readFromProcessEnv('ADMIN_USERNAME');
+    if (hasProcessEnv(EnvironmentVariableName.ADMIN_USERNAME)) {
+        options.adminUsername = readFromProcessEnv(EnvironmentVariableName.ADMIN_USERNAME);
     }
 
-    if (hasProcessEnv('ADMIN_PASSWORD')) {
-        options.adminPassword = readFromProcessEnv('ADMIN_PASSWORD');
+    if (hasProcessEnv(EnvironmentVariableName.ADMIN_PASSWORD)) {
+        options.adminPassword = readFromProcessEnv(EnvironmentVariableName.ADMIN_PASSWORD);
     }
 
-    if (hasProcessEnv('ROBOT_ENABLED')) {
-        options.robotEnabled = readBoolFromProcessEnv('ROBOT_ENABLED');
+    if (hasProcessEnv(EnvironmentVariableName.ROBOT_ENABLED)) {
+        options.robotEnabled = readBoolFromProcessEnv(EnvironmentVariableName.ROBOT_ENABLED);
     }
 
-    if (hasProcessEnv('ROBOT_SECRET')) {
-        options.robotSecret = readFromProcessEnv('ROBOT_SECRET');
+    if (hasProcessEnv(EnvironmentVariableName.ROBOT_SECRET)) {
+        options.robotSecret = readFromProcessEnv(EnvironmentVariableName.ROBOT_SECRET);
     }
 
-    if (hasProcessEnv('PERMISSIONS')) {
-        options.permissions = readFromProcessEnv('PERMISSIONS');
+    if (hasProcessEnv(EnvironmentVariableName.PERMISSIONS)) {
+        options.permissions = readFromProcessEnv(EnvironmentVariableName.PERMISSIONS);
     }
 
     return options;
