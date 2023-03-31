@@ -6,6 +6,6 @@
  */
 
 export type ConfigFileReadContext = {
-    directoryPath?: string,
+    cwd?: string | string[],
     name?: string
 };

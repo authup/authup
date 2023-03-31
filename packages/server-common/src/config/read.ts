@@ -11,20 +11,35 @@ import path from 'node:path';
 import process from 'node:process';
 import { merge } from 'smob';
 import type { ConfigFileReadContext } from './type';
+import { buildWorkingDirectoryPathsForConfigFile } from './utils';
 
 export async function readConfigFile(context?: ConfigFileReadContext) : Promise<Record<string, any>> {
     context = context || {};
 
-    let directoryPath = context.directoryPath || process.cwd();
-    if (!path.isAbsolute(directoryPath)) {
-        directoryPath = path.join(process.cwd(), directoryPath);
+    const cwd : string[] = [];
+    if (context.cwd) {
+        const arr = Array.isArray(context.cwd) ?
+            context.cwd :
+            [context.cwd];
+
+        for (let i = 0; i < arr.length; i++) {
+            if (path.isAbsolute(arr[i])) {
+                cwd.push(arr[i]);
+            } else {
+                cwd.push(path.join(process.cwd(), arr[i]));
+            }
+        }
+    }
+
+    if (cwd.length === 0) {
+        cwd.push(...buildWorkingDirectoryPathsForConfigFile());
     }
 
     const locations = await locateMany([
         'authup.*.{conf,js,mjs,cjs,ts,mts,mts}',
         'authup.{conf,js,mjs,cjs,ts,mts,mts}',
     ], {
-        path: directoryPath,
+        path: cwd,
     });
 
     const content : Record<string, any> = {};

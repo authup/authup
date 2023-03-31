@@ -7,3 +7,4 @@
 
 export * from './read';
 export * from './type';
+export * from './utils';
