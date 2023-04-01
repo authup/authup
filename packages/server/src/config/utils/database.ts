@@ -9,10 +9,12 @@ export function isDatabaseTypeSupported(type: DatabaseType) : type is DatabaseTy
     return type === 'mysql' || type === 'postgres' || type === 'better-sqlite3';
 }
 
-export type DataSourceConfiguration = Omit<MysqlConnectionOptions, 'replication' | 'ssl'> |
+export type DatabaseConnectionOptions = Omit<MysqlConnectionOptions, 'replication' | 'ssl'> |
 Omit<PostgresConnectionOptions, 'replication' | 'ssl' | 'nativeDriver'> |
 Omit<BetterSqlite3ConnectionOptions, 'verbose'>;
 
-export function isDataSourceConfigurationSupported(input: DataSourceOptions) : input is DataSourceConfiguration {
+export function isDatabaseConnectionConfigurationSupported(
+    input: DataSourceOptions,
+) : input is DatabaseConnectionOptions {
     return isDatabaseTypeSupported(input.type);
 }

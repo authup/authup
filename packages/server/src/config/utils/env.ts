@@ -15,7 +15,7 @@ import {
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
 import type { OptionsInput } from '../type';
-import { isDataSourceConfigurationSupported, isDatabaseTypeSupported } from './database';
+import { isDatabaseConnectionConfigurationSupported, isDatabaseTypeSupported } from './database';
 
 export function readConfigFromEnv() : Partial<OptionsInput> {
     const options : OptionsInput = {};
@@ -34,7 +34,7 @@ export function readConfigFromEnv() : Partial<OptionsInput> {
         const databaseOptions = readDataSourceOptionsFromEnv();
         if (
             databaseOptions &&
-            isDataSourceConfigurationSupported(databaseOptions)
+            isDatabaseConnectionConfigurationSupported(databaseOptions)
         ) {
             options.database = databaseOptions;
         }

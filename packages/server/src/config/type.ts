@@ -15,7 +15,7 @@ import type { Continu } from 'continu';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
 import type { SmtpConfig } from '@authup/server-common';
-import type { DataSourceConfiguration } from './utils/database';
+import type { DatabaseConnectionOptions } from './utils/database';
 
 export type Options = {
     /**
@@ -40,7 +40,7 @@ export type Options = {
     /**
      * default driver: better-sqlite3
      */
-    database: DataSourceConfiguration,
+    database: DatabaseConnectionOptions,
 
     /**
      * default: true
