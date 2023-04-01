@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.29.0](https://github.com/authup/authup/compare/v0.28.0...v0.29.0) (2023-04-01)
+
+
+### Bug Fixes
+
+* adjusted README.md, package.json files + renamed http client ([fcf8423](https://github.com/authup/authup/commit/fcf8423228fa73aa2a61ba8de96c0af51dfb0c5f))
+* better naming for checking database options ([b2ff0a2](https://github.com/authup/authup/commit/b2ff0a28173fd79d87cbd2e303fa2438e08ff2fb))
+* enhance executorÂ ([31624c1](https://github.com/authup/authup/commit/31624c1a6a91c33a0fd29a9e33f451e9133d5cf1))
+* vue-layout preset usage for production build ([368a6c7](https://github.com/authup/authup/commit/368a6c774ccade2fcf7c51bc912b1262174c51ae))
+
+
+### Features
+
+* add realm & identity-provider selection to login form ([5678540](https://github.com/authup/authup/commit/5678540256e7fb59443548e5fe4eb4705d9346f1))
+* renamed database-option to db-option ([ce9c2a1](https://github.com/authup/authup/commit/ce9c2a1e793637a392725996ebedacd96d2507ad))
+* restructured & renamed packages ([dd587a8](https://github.com/authup/authup/commit/dd587a8102f375b56c6c64cd09b13c92b624a6e1))
+
+
+
+
+
 # [0.28.0](https://github.com/authup/authup/compare/v0.27.0...v0.28.0) (2023-04-01)
 
 

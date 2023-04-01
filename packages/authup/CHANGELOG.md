@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.29.0](https://github.com/authup/authup/compare/v0.28.0...v0.29.0) (2023-04-01)
+
+
+### Bug Fixes
+
+* enhance executorÂ ([31624c1](https://github.com/authup/authup/commit/31624c1a6a91c33a0fd29a9e33f451e9133d5cf1))
+
+
+### Features
+
+* restructured & renamed packages ([dd587a8](https://github.com/authup/authup/commit/dd587a8102f375b56c6c64cd09b13c92b624a6e1))
+
+
+
+
+
 # [0.28.0](https://github.com/authup/authup/compare/v0.27.0...v0.28.0) (2023-04-01)
 
 **Note:** Version bump only for package authup
