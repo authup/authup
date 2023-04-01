@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { setPresets } from '@authup/vue';
 import type { NavigationStore } from '@vue-layout/basic';
 import { createPlugin } from '@vue-layout/basic';
+import { getBuildInPresets } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
+import type { Pinia } from 'pinia';
 import { defineNuxtPlugin } from '#app';
 import { buildNavigationProvider } from '../config/layout';
 import { useAuthStore } from '../store/auth';
@@ -18,8 +21,11 @@ export default defineNuxtPlugin((ctx) => {
         itemsActive: [],
     }));
 
-    const store = useAuthStore(ctx.$pinia);
+    const store = useAuthStore(ctx.$pinia as Pinia);
     const { loggedIn } = storeToRefs(store);
+
+    const presets = getBuildInPresets(['bootstrapV5', 'fontAwesome']);
+    setPresets(presets);
 
     ctx.vueApp.use(createPlugin({
         navigationStore,
@@ -27,9 +33,6 @@ export default defineNuxtPlugin((ctx) => {
             isLoggedIn: () => loggedIn.value,
             hasPermission: (name) => store.has(name),
         }),
-        presets: [
-            'bootstrapV5',
-            'fontAwesome',
-        ],
+        presets,
     }));
 });

@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ComponentsOptions } from '@vue-layout/hyperscript';
 import type { HTTPClient } from '@authup/common';
 
 export type InstallOptions = {
-    httpClient?: HTTPClient
+    httpClient?: HTTPClient,
+    presets?: Record<string, ComponentsOptions>
 };
