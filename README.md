@@ -4,7 +4,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-`Authup` is an authentication & authorization framework.
+`Authup` is an authentication & authorization system.
 It is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
 
@@ -45,7 +45,7 @@ The easiest way to get the framework up and running, is by using the global CLI.
 Therefore, execute the following shell command.
 
 ```shell
-$ npx authup start
+$ npx authup@latest start
 ```
 
 To find out how to configure and set up the bare metal variant in detail, click here.
