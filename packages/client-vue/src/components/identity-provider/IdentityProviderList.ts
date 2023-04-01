@@ -11,7 +11,7 @@ import type { BuildInput } from 'rapiq';
 import type { IdentityProvider } from '@authup/core';
 import { useListBuilder } from '../../composables';
 import {
-    useHTTPClient,
+    useAPIClient,
 } from '../../utils';
 
 export const IdentityProviderList = defineComponent({
@@ -52,7 +52,7 @@ export const IdentityProviderList = defineComponent({
         const { build } = useListBuilder<IdentityProvider>({
             props: toRefs(props),
             setup: ctx,
-            load: (buildInput) => useHTTPClient().identityProvider.getMany(buildInput),
+            load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
             components: {
                 header: {
                     title: {

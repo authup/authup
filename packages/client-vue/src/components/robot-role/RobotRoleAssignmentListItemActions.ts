@@ -11,7 +11,7 @@ import {
 } from 'vue';
 import type { RobotRole } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export type RobotRoleListItemActionsProperties = {
     items?: RobotRole[],
@@ -46,7 +46,7 @@ export const RobotRoleAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useHTTPClient().robotRole.getMany({
+                const response = await useAPIClient().robotRole.getMany({
                     filters: {
                         role_id: props.roleId,
                         robot_id: props.robotId,
@@ -81,7 +81,7 @@ export const RobotRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().robotRole.create({
+                const data = await useAPIClient().robotRole.create({
                     robot_id: props.robotId,
                     role_id: props.roleId,
                 });
@@ -104,7 +104,7 @@ export const RobotRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().robotRole.delete(item.value.id);
+                const data = await useAPIClient().robotRole.delete(item.value.id);
 
                 item.value = null;
 

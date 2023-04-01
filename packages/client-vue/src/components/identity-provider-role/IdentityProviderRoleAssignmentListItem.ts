@@ -13,7 +13,7 @@ import {
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity, useHTTPClient } from '../../utils';
+import { initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
@@ -68,13 +68,13 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                 let response;
 
                 if (item.value) {
-                    response = await useHTTPClient().identityProviderRole.update(item.value.id, {
+                    response = await useAPIClient().identityProviderRole.update(item.value.id, {
                         ...form,
                     });
 
                     ctx.emit('updated', response);
                 } else {
-                    response = await useHTTPClient().identityProviderRole.create({
+                    response = await useAPIClient().identityProviderRole.create({
                         ...form,
                         role_id: props.role.id,
                         provider_id: props.entityId,
@@ -99,7 +99,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
             busy.value = true;
 
             try {
-                const response = await useHTTPClient().identityProviderRole.delete(item.value.id);
+                const response = await useAPIClient().identityProviderRole.delete(item.value.id);
 
                 item.value = null;
 
@@ -120,7 +120,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                 loaded.value = false;
 
                 try {
-                    const { data } = await useHTTPClient().identityProviderRole.getMany({
+                    const { data } = await useAPIClient().identityProviderRole.getMany({
                         filter: {
                             role_id: props.role.id,
                             provider_id: props.entityId,

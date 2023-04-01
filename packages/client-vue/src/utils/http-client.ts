@@ -9,13 +9,13 @@ import type { APIClient } from '@authup/core';
 
 let instance : undefined | APIClient;
 
-export function setHTTPClient(client: APIClient) {
+export function setAPIClient(client: APIClient) {
     instance = client;
 }
 
-export function useHTTPClient() {
+export function useAPIClient() {
     if (typeof instance === 'undefined') {
-        throw new Error();
+        throw new Error('The API Client is not set.');
     }
 
     return instance;

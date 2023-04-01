@@ -13,7 +13,7 @@ import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
 import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/hyperscript';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -59,7 +59,7 @@ export const UserPasswordForm = defineComponent({
             busy.value = true;
 
             try {
-                const user = await useHTTPClient().user.update(props.id, {
+                const user = await useAPIClient().user.update(props.id, {
                     password: form.password,
                     password_repeat: form.password_repeat,
                 });

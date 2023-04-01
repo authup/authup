@@ -21,7 +21,7 @@ import {
 } from 'vue';
 
 import type { Realm, User } from '@authup/core';
-import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 import { RealmList } from '../realm';
@@ -112,8 +112,8 @@ export const UserForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().user.create(data),
-            update: async (id, data) => useHTTPClient().user.update(id, data),
+            create: async (data) => useAPIClient().user.create(data),
+            update: async (id, data) => useAPIClient().user.update(id, data),
         });
 
         const updateDisplayName = (value: string) => {

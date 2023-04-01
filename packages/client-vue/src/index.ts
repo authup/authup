@@ -4,14 +4,14 @@ import { setPresets as _setPresets } from '@vue-layout/hyperscript';
 // Import vue components
 import * as components from './components';
 import type { InstallOptions } from './type';
-import { setHTTPClient } from './utils';
+import { setAPIClient } from './utils';
 
 // install function executed by Vue.use()
 const install: Plugin = function install(instance: App, options?: InstallOptions) {
     options = options || {};
 
     if (options.httpClient) {
-        setHTTPClient(options.httpClient);
+        setAPIClient(options.httpClient);
     }
 
     if (options.presets) {

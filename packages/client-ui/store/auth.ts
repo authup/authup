@@ -276,11 +276,12 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
-    const login = async (name: string, password: string) => {
+    const login = async (ctx: { name: string, password: string, realmId?: string}) => {
         try {
             const data = await client.token.createWithPasswordGrant({
-                username: name,
-                password,
+                username: ctx.name,
+                password: ctx.password,
+                ...(realmId ? { realm_id: ctx.realmId } : {}),
             });
 
             const expireDate = new Date(Date.now() + data.expires_in * 1000);

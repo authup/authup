@@ -32,7 +32,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
-    useHTTPClient,
+    useAPIClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -122,13 +122,13 @@ export const RobotForm = defineComponent({
                 ctx,
                 form,
                 formIsValid: () => !$v.value.$invalid,
-                create: (data) => useHTTPClient().robot.create(data),
+                create: (data) => useAPIClient().robot.create(data),
                 update: (id, data) => {
                     if (isSecretHashed.value) {
                         delete data.secret;
                     }
 
-                    return useHTTPClient().robot.update(id, data);
+                    return useAPIClient().robot.update(id, data);
                 },
             });
 

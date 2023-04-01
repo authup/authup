@@ -10,7 +10,7 @@ import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { ClientScope } from '@authup/core';
 import { useListBuilder } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const ClientScopeList = defineComponent({
     name: 'ClientScopeList',
@@ -50,7 +50,7 @@ export const ClientScopeList = defineComponent({
         const { build } = useListBuilder<ClientScope>({
             props: toRefs(props),
             setup: ctx,
-            load: (buildInput) => useHTTPClient().clientScope.getMany(buildInput),
+            load: (buildInput) => useAPIClient().clientScope.getMany(buildInput),
             components: {
                 header: {
                     title: {

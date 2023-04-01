@@ -28,7 +28,7 @@ import {
     buildFormSubmit,
 } from '@vue-layout/hyperscript';
 import {
-    alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useHTTPClient,
+    alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
 } from '../../utils';
 import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
 import { useAuthIlingo } from '../../language/singleton';
@@ -49,6 +49,10 @@ export const OAuth2ProviderForm = defineComponent({
         translatorLocale: {
             type: String,
             default: undefined,
+        },
+        apiUrl: {
+            type: String,
+            default: 'http://localhost:3001',
         },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
@@ -116,6 +120,13 @@ export const OAuth2ProviderForm = defineComponent({
             },
         }, form);
 
+        const authorizeUri = computed<string>(() => {
+            if (!props.entity) {
+                return '';
+            }
+
+            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, props.entity.id);
+        });
         const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
@@ -152,8 +163,8 @@ export const OAuth2ProviderForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().identityProvider.create(data),
-            update: async (id, data) => useHTTPClient().identityProvider.update(id, data),
+            create: async (data) => useAPIClient().identityProvider.create(data),
+            update: async (id, data) => useAPIClient().identityProvider.update(id, data),
         });
 
         const render = () => {
@@ -165,6 +176,25 @@ export const OAuth2ProviderForm = defineComponent({
                     form.enabled = input;
                 },
             });
+
+            let details : VNodeArrayChildren = [];
+            if (isEditing.value) {
+                details = [
+                    h('h6', [
+                        h('i', { class: 'fas fa-info-circle' }),
+                        ' ',
+                        'Details',
+                    ]),
+                    buildFormInput({
+                        labelContent: 'Authorize URL',
+                        value: authorizeUri,
+                        props: {
+                            disabled: true,
+                        },
+                    }),
+                    h('hr'),
+                ];
+            }
 
             const firstRow = h('div', {
                 class: 'row',
@@ -325,6 +355,7 @@ export const OAuth2ProviderForm = defineComponent({
                     return submit.call(null);
                 },
             }, [
+                details,
                 firstRow,
                 h('hr'),
                 thirdRow,

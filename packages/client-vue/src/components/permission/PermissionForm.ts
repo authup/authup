@@ -13,7 +13,7 @@ import {
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
 import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/hyperscript';
-import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -70,8 +70,8 @@ export const PermissionForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().permission.create(data),
-            update: async (id, data) => useHTTPClient().permission.update(id, data),
+            create: async (data) => useAPIClient().permission.create(data),
+            update: async (id, data) => useAPIClient().permission.update(id, data),
         });
 
         const render = () => {

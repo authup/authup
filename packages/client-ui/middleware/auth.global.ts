@@ -7,6 +7,7 @@
 
 import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authup/core';
 import { isClientError } from 'hapic';
+import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
     navigateTo,
@@ -63,6 +64,14 @@ function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: st
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const store = useAuthStore();
+    const { loggedIn } = storeToRefs(store);
+
+    let redirectPath = '/';
+
+    if (typeof from !== 'undefined') {
+        redirectPath = from.fullPath;
+    }
+
     try {
         await store.resolve();
     } catch (e) {
@@ -88,21 +97,20 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             }
         }
 
-        if (!processed) {
-            throw e;
+        if (!to.fullPath.startsWith('/logout')) {
+            return navigateTo({
+                path: '/logout',
+                query: {
+                    redirect: redirectPath,
+                },
+            });
         }
-    }
-
-    let redirectPath = '/';
-
-    if (typeof from !== 'undefined') {
-        redirectPath = from.fullPath;
     }
 
     if (
         to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])
     ) {
-        if (!store.loggedIn) {
+        if (!loggedIn.value) {
             const query : Record<string, any> = {};
 
             if (!to.fullPath.startsWith('/logout')) {
@@ -131,7 +139,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             query.redirect = redirectPath;
         }
 
-        if (store.loggedIn) {
+        if (loggedIn.value) {
             return navigateTo({
                 path: '/logout',
                 query,

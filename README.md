@@ -21,7 +21,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - 🏭 **Clustering** - Cluster and scale authup for high availability and performance
 - 🚀 **Fast & Reliable** - Fast and reliable system due to microservice architecture
 - ️‍️🕵️‍♀️ **Logging & Monitoring** - Logs and monitors activities and transactions to detect potential security issues
-- **Single-Sign On** - Login once to multiple applications
+- 👤 **Single-Sign On** - Login once to multiple applications
 - 📜 **Standard Protocols** - [OAuth2.0](https://tools.ietf.org/html/rfc6749) & [OpenID Connect](https://openid.net/connect/)
 - 👍 **Social Login** - Easy enable social login
 - 🤝 **Identity Brokering** - OpenID Connect

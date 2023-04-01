@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { RolePermission } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const RolePermissionAssignmentListItemActions = defineComponent({
     name: 'RolePermissionAssignmentListItemActions',
@@ -39,7 +39,7 @@ export const RolePermissionAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useHTTPClient().rolePermission.getMany({
+                const response = await useAPIClient().rolePermission.getMany({
                     filters: {
                         role_id: props.roleId,
                         permission_id: props.permissionId,
@@ -74,7 +74,7 @@ export const RolePermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().rolePermission.create({
+                const data = await useAPIClient().rolePermission.create({
                     role_id: props.roleId,
                     permission_id: props.permissionId,
                 });
@@ -97,7 +97,7 @@ export const RolePermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().rolePermission.delete(item.value.id);
+                const data = await useAPIClient().rolePermission.delete(item.value.id);
 
                 item.value = null;
 

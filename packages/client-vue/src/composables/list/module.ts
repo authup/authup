@@ -124,6 +124,7 @@ export function useListBuilder<T extends Record<string, any>>(
         handleCreated: buildListCreatedHandler(data),
         handleDeleted,
         handleUpdated,
+        load,
     });
 
     if (context.props.loadOnSetup) {

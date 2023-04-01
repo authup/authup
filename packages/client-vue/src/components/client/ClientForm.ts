@@ -32,7 +32,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
-    useHTTPClient,
+    useAPIClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -140,8 +140,8 @@ export const ClientForm = defineComponent({
                 ctx,
                 form,
                 formIsValid: () => !$v.value.$invalid,
-                create: (data) => useHTTPClient().client.create(data),
-                update: (id, data) => useHTTPClient().client.update(id, data),
+                create: (data) => useAPIClient().client.create(data),
+                update: (id, data) => useAPIClient().client.update(id, data),
             });
 
             const name = [

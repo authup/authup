@@ -10,7 +10,7 @@ import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Role } from '@authup/core';
 import { useListBuilder } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const RoleList = defineComponent({
     name: 'RoleList',
@@ -50,7 +50,7 @@ export const RoleList = defineComponent({
         const { build } = useListBuilder<Role>({
             props: toRefs(props),
             setup: ctx,
-            load: (buildInput) => useHTTPClient().role.getMany(buildInput),
+            load: (buildInput) => useAPIClient().role.getMany(buildInput),
             components: {
                 header: {
                     title: {

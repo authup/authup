@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserPermission } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const UserPermissionAssignmentListItemActions = defineComponent({
     name: 'UserPermissionAssignmentListItemActions',
@@ -39,7 +39,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useHTTPClient().userPermission.getMany({
+                const response = await useAPIClient().userPermission.getMany({
                     filters: {
                         user_id: props.userId,
                         permission_id: props.permissionId,
@@ -74,7 +74,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().userPermission.create({
+                const data = await useAPIClient().userPermission.create({
                     user_id: props.userId,
                     permission_id: props.permissionId,
                 });
@@ -97,7 +97,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().userPermission.delete(item.value.id);
+                const data = await useAPIClient().userPermission.delete(item.value.id);
 
                 item.value = null;
 

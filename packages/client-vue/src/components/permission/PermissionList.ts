@@ -9,7 +9,7 @@ import { defineComponent, toRefs } from 'vue';
 import type { Permission } from '@authup/core';
 import type { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
@@ -49,7 +49,7 @@ export const PermissionList = defineComponent({
         const { build } = useListBuilder<Permission>({
             props: toRefs(props),
             setup: ctx,
-            load: (buildInput) => useHTTPClient().permission.getMany(buildInput),
+            load: (buildInput) => useAPIClient().permission.getMany(buildInput),
             components: {
                 header: {
                     title: {

@@ -20,7 +20,7 @@ import {
     buildFormTextarea,
 } from '@vue-layout/hyperscript';
 import {
-    alphaWithUpperNumHyphenUnderScore, createSubmitHandler, initFormAttributesFromEntity, useHTTPClient,
+    alphaWithUpperNumHyphenUnderScore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -87,8 +87,8 @@ export const RealmForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().realm.create(data),
-            update: async (id, data) => useHTTPClient().realm.update(id, data),
+            create: async (data) => useAPIClient().realm.create(data),
+            update: async (id, data) => useAPIClient().realm.update(id, data),
         });
 
         const render = () => {

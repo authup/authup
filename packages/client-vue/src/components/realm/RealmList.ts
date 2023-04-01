@@ -10,7 +10,7 @@ import { defineComponent, toRefs } from 'vue';
 import type { Realm } from '@authup/core';
 import type { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const RealmList = defineComponent({
     name: 'RealmList',
@@ -50,7 +50,7 @@ export const RealmList = defineComponent({
         const { build } = useListBuilder<Realm>({
             props: toRefs(props),
             setup: ctx,
-            load: (buildInput) => useHTTPClient().realm.getMany(buildInput),
+            load: (buildInput) => useAPIClient().realm.getMany(buildInput),
             components: {
                 header: {
                     title: {

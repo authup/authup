@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserRole } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const UserRoleAssignmentListItemActions = defineComponent({
     name: 'UserRoleAssignmentListItemActions',
@@ -40,7 +40,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
 
         const init = async () => {
             try {
-                const response = await useHTTPClient().userRole.getMany({
+                const response = await useAPIClient().userRole.getMany({
                     filters: {
                         user_id: props.userId,
                         role_id: props.roleId,
@@ -75,7 +75,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().userRole.create({
+                const data = await useAPIClient().userRole.create({
                     user_id: props.userId,
                     role_id: props.roleId,
                 });
@@ -98,7 +98,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().userRole.delete(item.value.id);
+                const data = await useAPIClient().userRole.delete(item.value.id);
 
                 item.value = null;
 

@@ -7,6 +7,7 @@
 
 import { OAuth2TokenKind } from '@authup/core';
 import { Adapter } from 'browser-storage-adapter';
+import type { Pinia } from 'pinia';
 import { defineNuxtPlugin, useCookie } from '#app';
 import { AuthBrowserStorageKey } from '../config/auth';
 import { useAuthStore } from '../store/auth';
@@ -30,7 +31,6 @@ export default defineNuxtPlugin((ctx) => {
                 path: '/',
             },
         },
-        namespace: 'app',
         isServer: () => process.server,
         setCookie: (key, value) => {
             const cookie = useCookie<unknown>(key);
@@ -44,7 +44,7 @@ export default defineNuxtPlugin((ctx) => {
 
     ctx.provide('warehouse', warehouse);
 
-    const authStore = useAuthStore(ctx.$pinia);
+    const authStore = useAuthStore(ctx.$pinia as Pinia);
 
     const keys : string[] = Object.values(AuthBrowserStorageKey);
     for (let i = 0; i < keys.length; i++) {

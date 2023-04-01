@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { ClientScope } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables';
-import { useHTTPClient } from '../../utils';
+import { useAPIClient } from '../../utils';
 
 export const ClientScopeAssignmentListItemActions = defineComponent({
     name: 'ClientScopeAssignmentListItemActions',
@@ -39,7 +39,7 @@ export const ClientScopeAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useHTTPClient().clientScope.getMany({
+                const response = await useAPIClient().clientScope.getMany({
                     filters: {
                         client_id: props.clientId,
                         scope_id: props.scopeId,
@@ -74,7 +74,7 @@ export const ClientScopeAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().clientScope.create({
+                const data = await useAPIClient().clientScope.create({
                     client_id: props.clientId,
                     scope_id: props.scopeId,
                 });
@@ -97,7 +97,7 @@ export const ClientScopeAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useHTTPClient().clientScope.delete(item.value.id);
+                const data = await useAPIClient().clientScope.delete(item.value.id);
 
                 item.value = null;
 

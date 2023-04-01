@@ -33,7 +33,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
-    useHTTPClient,
+    useAPIClient,
 } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
@@ -121,8 +121,8 @@ export const ScopeForm = defineComponent({
                 ctx,
                 form,
                 formIsValid: () => !$v.value.$invalid,
-                create: (data) => useHTTPClient().scope.create(data),
-                update: (id, data) => useHTTPClient().scope.update(id, data),
+                create: (data) => useAPIClient().scope.create(data),
+                update: (id, data) => useAPIClient().scope.update(id, data),
             });
 
             const name = [

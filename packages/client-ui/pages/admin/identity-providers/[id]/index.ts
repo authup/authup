@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider } from '@authup/core';
-import { IdentityProviderProtocol, PermissionName, Realm } from '@authup/core';
+import { IdentityProviderProtocol, PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';
@@ -32,13 +32,15 @@ export default defineNuxtComponent({
             ],
         });
 
-        const handleUpdated = (e) => {
+        const handleUpdated = (e: IdentityProvider) => {
             emit('updated', e);
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             emit('failed', e);
         };
+
+        const app = useNuxtApp();
 
         const renderForm = () => {
             switch (props.entity.protocol) {
@@ -46,6 +48,7 @@ export default defineNuxtComponent({
                     const form = resolveComponent('OAuth2ProviderForm');
                     return h(form, {
                         entity: props.entity,
+                        apiUrl: app.$config.public.apiUrl,
                         onUpdated: handleUpdated,
                         onFailed: handleFailed,
                     });

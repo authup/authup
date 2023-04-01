@@ -32,7 +32,9 @@ export const LayoutTopNavigation : NavigationElement[] = [
         name: 'Admin',
         icon: 'fas fa-cog',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        [LayoutKey.REQUIRED_PERMISSIONS]: [],
+        [LayoutKey.REQUIRED_PERMISSIONS]: [
+
+        ],
     },
 ];
 

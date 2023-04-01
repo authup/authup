@@ -15,7 +15,7 @@ import type { Role } from '@authup/core';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/hyperscript';
-import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
+import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';
 
@@ -71,8 +71,8 @@ export const RoleForm = defineComponent({
             ctx,
             form,
             formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useHTTPClient().role.create(data),
-            update: async (id, data) => useHTTPClient().role.update(id, data),
+            create: async (data) => useAPIClient().role.create(data),
+            update: async (id, data) => useAPIClient().role.update(id, data),
         });
 
         const render = () => {
