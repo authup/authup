@@ -72,9 +72,9 @@ jobs:
         strategy:
             matrix:
                 package: [
-                    'server/core',
-                    'server/api',
-                    'global/core'
+                    'server-core',
+                    'server-api',
+                    'core'
                 ]
         steps:
             -   name: Checkout

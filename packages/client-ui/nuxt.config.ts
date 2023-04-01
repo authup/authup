@@ -33,9 +33,9 @@ export default defineNuxtConfig({
         '@/assets/css/oauth2.css',
     ],
     alias: {
-        '@authup/core': path.join(__dirname, '..', '..', 'global', 'core', 'src'),
-        '@authup/server-api-core': path.join(__dirname, '..', '..', 'server', 'core', 'src'),
-        '@authup/client-vue': path.join(__dirname, '..', 'vue', 'src'),
+        '@authup/core': path.join(__dirname, '..', 'core', 'src'),
+        '@authup/server-api-core': path.join(__dirname, '..', 'server-core', 'src'),
+        '@authup/client-vue': path.join(__dirname, '..', 'client-vue', 'src'),
     },
     runtimeConfig: {
         public: {
