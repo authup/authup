@@ -63,7 +63,6 @@
         "prepare": "husky install"
     },
     "lint-staged": {
-        "*.ts": "eslint --fix",
-        "*.js": "eslint --fix"
+        "*.ts": "eslint --ext .ts ./packages/"
     }
 }
