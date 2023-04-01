@@ -1,42 +1,15 @@
-# Nuxt 3 Minimal Starter
+# @authup/client-ui 🎨
 
-Look at the [nuxt 3 documentation](https://v3.nuxtjs.org) to learn more.
+[![npm version](https://badge.fury.io/js/@authup%2Fclient-ui.svg)](https://badge.fury.io/js/@authup%2Fclient-ui)
+[![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/authup/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/authup/authup)
+[![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-## Setup
 
-Make sure to install the dependencies:
+This is the frontend application for Authup, a flexible and secure authentication and authorization system.
 
-```bash
-# yarn
-yarn install
+## License
 
-# npm
-npm install
+Made with 💚
 
-# pnpm
-pnpm install --shamefully-hoist
-```
-
-## Development Server
-
-Start the development server on http://localhost:3000
-
-```bash
-npm run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-npm run build
-```
-
-Locally preview production build:
-
-```bash
-npm run preview
-```
-
-Checkout the [deployment documentation](https://v3.nuxtjs.org/guide/deploy/presets) for more information.
+Published under [MIT License](./LICENSE).
