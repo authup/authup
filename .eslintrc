@@ -20,8 +20,8 @@
                     "**/test/**/*.spec.js",
                     "**/test/**/*.spec.ts",
                     "**/rollup.config.mjs",
-                    "packages/ui/**",
-                    "packages/vue/**"
+                    "packages/client-ui/**",
+                    "packages/client-vue/**"
                 ]
             }
         ],

@@ -28,7 +28,7 @@ import {
     UserRoleAPI,
 } from '../../domains';
 
-export class HTTPClient extends BaseClient {
+export class APIClient extends BaseClient {
     public readonly oauth2 : OAuth2Client;
 
     public readonly client : ClientAPI;

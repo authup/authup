@@ -6,6 +6,11 @@
     "files": [
         ".output/"
     ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/client-ui"
+    },
     "scripts": {
         "build": "nuxt prepare && nuxt build && node postbuild.mjs",
         "dev": "nuxt dev",

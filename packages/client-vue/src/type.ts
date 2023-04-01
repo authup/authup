@@ -6,9 +6,9 @@
  */
 
 import type { ComponentsOptions } from '@vue-layout/hyperscript';
-import type { HTTPClient } from '@authup/core';
+import type { APIClient } from '@authup/core';
 
 export type InstallOptions = {
-    httpClient?: HTTPClient,
+    httpClient?: APIClient,
     presets?: Record<string, ComponentsOptions>
 };

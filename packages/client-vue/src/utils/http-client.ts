@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { HTTPClient } from '@authup/core';
+import type { APIClient } from '@authup/core';
 
-let instance : undefined | HTTPClient;
+let instance : undefined | APIClient;
 
-export function setHTTPClient(client: HTTPClient) {
+export function setHTTPClient(client: APIClient) {
     instance = client;
 }
 

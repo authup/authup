@@ -6,10 +6,10 @@
  */
 
 import { DomainType } from '../../domains';
-import type { HTTPClient } from './module';
+import type { APIClient } from './module';
 
 export function useHTTPClientAPI(
-    client: HTTPClient,
+    client: APIClient,
     name: `${DomainType}`,
 ) {
     switch (name) {

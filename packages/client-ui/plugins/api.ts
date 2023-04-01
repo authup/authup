@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/core';
+import { APIClient, ErrorCode, hasOwnProperty } from '@authup/core';
 import type { ConfigInput } from 'hapic';
 import { isClientError } from 'hapic';
 import { useRuntimeConfig } from '#imports';
@@ -14,13 +14,13 @@ import { useAuthStore } from '../store/auth';
 
 declare module '#app' {
     interface NuxtApp {
-        $api: HTTPClient;
+        $api: APIClient;
     }
 }
 
 declare module '@vue/runtime-core' {
     interface ComponentCustomProperties {
-        $api: HTTPClient;
+        $api: APIClient;
     }
 }
 
@@ -34,7 +34,7 @@ export default defineNuxtPlugin((ctx) => {
         },
     };
 
-    const client = new HTTPClient(config);
+    const client = new APIClient(config);
     client.mountResponseInterceptor(
         (data) => data,
         (error) => {
