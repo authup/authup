@@ -6,7 +6,6 @@
  */
 
 import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/common';
-import install from '@authup/vue';
 import type { ConfigInput } from 'hapic';
 import { isClientError } from 'hapic';
 import { useRuntimeConfig } from '#imports';
@@ -97,8 +96,4 @@ export default defineNuxtPlugin((ctx) => {
     });
 
     ctx.provide('api', client);
-
-    ctx.vueApp.use(install, {
-        httpClient: client,
-    });
 });

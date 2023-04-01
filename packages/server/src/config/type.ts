@@ -40,7 +40,7 @@ export type Options = {
     /**
      * default driver: better-sqlite3
      */
-    database: DatabaseConnectionOptions,
+    db: DatabaseConnectionOptions,
 
     /**
      * default: true
@@ -141,7 +141,7 @@ export type Options = {
     emailVerification: boolean,
 
     /**
-     * Allow password reset?
+     * Allow password reset via email?
      *
      * default: false
      */

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setPresets } from '@authup/vue';
+import { install, setPresets } from '@authup/vue';
 import type { NavigationStore } from '@vue-layout/basic';
 import { createPlugin } from '@vue-layout/basic';
 import { getBuildInPresets } from '@vue-layout/hyperscript';
@@ -25,7 +25,6 @@ export default defineNuxtPlugin((ctx) => {
     const { loggedIn } = storeToRefs(store);
 
     const presets = getBuildInPresets(['bootstrapV5', 'fontAwesome']);
-    setPresets(presets);
 
     ctx.vueApp.use(createPlugin({
         navigationStore,
@@ -35,4 +34,9 @@ export default defineNuxtPlugin((ctx) => {
         }),
         presets,
     }));
+
+    ctx.vueApp.use(install, {
+        httpClient: ctx.$api,
+        presets,
+    });
 });
