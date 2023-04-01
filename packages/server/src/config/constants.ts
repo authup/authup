@@ -8,9 +8,11 @@
 export enum EnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',
     WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',
+
     REDIS = 'REDIS',
     SMTP = 'SMTP',
     VAULT = 'VAULT',
+
     HOST = 'HOST',
     PORT = 'PORT',
     PUBLIC_URL = 'PUBLIC_URL',

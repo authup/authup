@@ -66,6 +66,10 @@ export function createConfig() : Config {
             permissions: [],
         },
         getters: {
+            database: (context) => ({
+                type: 'better-sqlite3',
+                database: path.join(context.get('writableDirectoryPath'), 'db.sql'),
+            }),
             publicUrl: (context) => {
                 if (
                     !context.has('publicUrl') &&

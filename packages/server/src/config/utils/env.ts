@@ -12,8 +12,10 @@ import {
     readFromProcessEnv,
     readIntFromProcessEnv,
 } from '@authup/server-common';
+import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
 import type { OptionsInput } from '../type';
+import { isDataSourceConfigurationSupported, isDatabaseTypeSupported } from './database';
 
 export function readConfigFromEnv() : Partial<OptionsInput> {
     const options : OptionsInput = {};
@@ -27,6 +29,16 @@ export function readConfigFromEnv() : Partial<OptionsInput> {
     }
 
     // -------------------------------------------------------------
+
+    if (hasEnvDataSourceOptions()) {
+        const databaseOptions = readDataSourceOptionsFromEnv();
+        if (
+            databaseOptions &&
+            isDataSourceConfigurationSupported(databaseOptions)
+        ) {
+            options.database = databaseOptions;
+        }
+    }
 
     if (hasProcessEnv(EnvironmentVariableName.REDIS)) {
         options.redis = readBoolOrStringFromProcessEnv(EnvironmentVariableName.REDIS);

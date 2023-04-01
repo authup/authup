@@ -5,16 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ParseOptions as CookieOptions } from '@routup/cookie/dist/type';
-import type { OptionsInput as PrometheusOptions } from '@routup/prometheus/dist/type';
-import type { ParseOptions as QueryOptions } from '@routup/query/dist/type';
-import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit/dist/type';
-import type { UIOptions as SwaggerUIOptions } from '@routup/swagger/dist/ui/type';
+import type { ParseOptions as CookieOptions } from '@routup/cookie';
+import type { OptionsInput as PrometheusOptions } from '@routup/prometheus';
+import type { ParseOptions as QueryOptions } from '@routup/query';
+import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
+import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { Options as BodyOptions } from 'body-parser';
 import type { Continu } from 'continu';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
 import type { SmtpConfig } from '@authup/server-common';
+import type { DataSourceConfiguration } from './utils/database';
 
 export type Options = {
     /**
@@ -35,6 +36,11 @@ export type Options = {
     writableDirectoryPath: string,
 
     // ----------------------------------------------------
+
+    /**
+     * default driver: better-sqlite3
+     */
+    database: DataSourceConfiguration,
 
     /**
      * default: true

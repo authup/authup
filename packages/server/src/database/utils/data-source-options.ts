@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import path from 'node:path';
-import { buildDataSourceOptions as build } from 'typeorm-extension';
 import type { DataSourceOptions } from 'typeorm';
 import { hasClient, hasConfig } from 'redis-extension';
-import { useConfig } from '../../config';
+import { isDatabaseTypeSupported, useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
@@ -16,17 +15,9 @@ import { DatabaseQueryResultCache } from '../cache';
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const config = useConfig();
 
-    let dataSourceOptions : DataSourceOptions;
-
-    try {
-        dataSourceOptions = await build({
-            directory: config.get('rootPath'),
-        });
-    } catch (e) {
-        dataSourceOptions = {
-            type: 'better-sqlite3',
-            database: path.join(config.get('writableDirectoryPath'), 'db.sql'),
-        };
+    const dataSourceOptions = config.get('database');
+    if (!isDatabaseTypeSupported(dataSourceOptions.type)) {
+        throw new Error('At the moment only the database types mysql, better-sqlite3 and postgres are supported.');
     }
 
     if (process.env.NODE_ENV === 'test') {
