@@ -10,3 +10,7 @@ import path from 'node:path';
 export function resolveRootPath() {
     return path.resolve(__dirname, '..');
 }
+
+export function resolvePackagePath() {
+    return path.resolve(resolveRootPath(), '..');
+}

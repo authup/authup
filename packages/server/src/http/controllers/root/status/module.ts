@@ -9,7 +9,7 @@ import { load } from 'locter';
 import path from 'node:path';
 import { send } from 'routup';
 import type { Request, Response } from 'routup';
-import { resolveRootPath } from '../../../path';
+import { resolvePackagePath, resolveRootPath } from '../../../path';
 
 export type EndpointInfo = {
     version: string,
@@ -23,7 +23,7 @@ export async function useInfo() {
         return info;
     }
 
-    const pkgJson = await load(path.join(resolveRootPath(), '..', 'package.json'));
+    const pkgJson = await load(path.join(resolvePackagePath(), 'package.json'));
 
     info = {
         version: pkgJson.version,
