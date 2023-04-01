@@ -7,11 +7,11 @@
 
 import type {
     Client,
-} from '@authup/common';
+} from '@authup/core';
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
-} from '@authup/common';
-import { publishDomainEvent } from '@authup/server-common';
+} from '@authup/core';
+import { publishDomainEvent } from '@authup/server-core';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,

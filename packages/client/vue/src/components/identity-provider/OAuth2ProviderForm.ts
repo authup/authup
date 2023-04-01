@@ -21,8 +21,8 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/common';
-import { IdentityProviderProtocol, createNanoID } from '@authup/common';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
+import { IdentityProviderProtocol, createNanoID } from '@authup/core';
 import {
     buildFormInput, buildFormInputCheckbox,
     buildFormSubmit,

@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { UserAttribute } from '@authup/common';
+import type { UserAttribute } from '@authup/core';
 import {
     createUserAttributeRouteHandler, deleteUserAttributeRouteHandler,
     getManyUserAttributeRouteHandler,

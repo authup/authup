@@ -7,7 +7,7 @@
 
 import type {
     RobotRole,
-} from '@authup/common';
+} from '@authup/core';
 import { createSuperTestRobot, createSuperTestRole } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';

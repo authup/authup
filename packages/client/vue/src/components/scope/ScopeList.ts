@@ -8,7 +8,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
-import type { Scope } from '@authup/common';
+import type { Scope } from '@authup/core';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

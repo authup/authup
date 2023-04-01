@@ -6,7 +6,7 @@
  */
 
 import type { ComponentsOptions } from '@vue-layout/hyperscript';
-import type { HTTPClient } from '@authup/common';
+import type { HTTPClient } from '@authup/core';
 
 export type InstallOptions = {
     httpClient?: HTTPClient,

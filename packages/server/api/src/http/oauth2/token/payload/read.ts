@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPayload } from '@authup/common';
+import type { OAuth2TokenPayload } from '@authup/core';
 import {
     TokenError,
-} from '@authup/common';
-import { decodeToken } from '@authup/server-common';
+} from '@authup/core';
+import { decodeToken } from '@authup/server-core';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';

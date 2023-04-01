@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/common';
+import type { Realm } from '@authup/core';
 import {
     REALM_MASTER_NAME,
     createNanoID,
     isUUID,
-} from '@authup/common';
-import { findRobotCredentialsInVault, hasVaultConfig, saveRobotCredentialsToVault } from '@authup/server-common';
+} from '@authup/core';
+import { findRobotCredentialsInVault, hasVaultConfig, saveRobotCredentialsToVault } from '@authup/server-core';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';

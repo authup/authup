@@ -1,4 +1,4 @@
-# @authup/server-common 🛠
+# @authup/server-core 🛠
 
 [![npm version](https://badge.fury.io/js/@authup%2Fserver-common.svg)](https://badge.fury.io/js/@authup%2Fserver-common)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)

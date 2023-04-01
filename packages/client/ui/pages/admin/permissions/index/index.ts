@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Permission } from '@authup/common';
-import { PermissionName, isRealmResourceWritable } from '@authup/common';
+import type { Client, Permission } from '@authup/core';
+import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { SlotName } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';
 import { NuxtLink } from '#components';

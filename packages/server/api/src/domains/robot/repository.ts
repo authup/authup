@@ -8,10 +8,10 @@
 import type {
     AbilityDescriptor, Robot,
     Role,
-} from '@authup/common';
-import { buildPermissionDescriptorFromRelation, createNanoID } from '@authup/common';
+} from '@authup/core';
+import { buildPermissionDescriptorFromRelation, createNanoID } from '@authup/core';
 
-import { compare, hash } from '@authup/server-common';
+import { compare, hash } from '@authup/server-core';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';

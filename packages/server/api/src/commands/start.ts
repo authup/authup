@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ROBOT_SYSTEM_NAME } from '@authup/common';
+import { ROBOT_SYSTEM_NAME } from '@authup/core';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
     hasVaultConfig, saveRobotCredentialsToVault, setLogger, useLogger,
-} from '@authup/server-common';
+} from '@authup/server-core';
 import { URL } from 'url';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';

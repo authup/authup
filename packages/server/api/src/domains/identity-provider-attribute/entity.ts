@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 import type {
     IdentityProvider, IdentityProviderAttribute,
-} from '@authup/common';
+} from '@authup/core';
 import { IdentityProviderEntity } from '../identity-provider/entity';
 
 @Unique(['name', 'provider_id'])

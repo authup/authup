@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPayload } from '@authup/common';
+import type { OAuth2TokenPayload } from '@authup/core';
 import type { Continu } from 'continu';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';

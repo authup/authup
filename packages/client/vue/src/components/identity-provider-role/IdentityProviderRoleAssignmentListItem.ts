@@ -11,7 +11,7 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
-import type { IdentityProviderRole, Role } from '@authup/common';
+import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/hyperscript';
 import { initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';

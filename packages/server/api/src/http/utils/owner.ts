@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/common';
+import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/core';
 import type { Request } from 'routup';
 import { useConfig } from '../../config';
 import { useRequestEnv } from './env';

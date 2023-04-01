@@ -7,7 +7,7 @@
 
 import type { PropType } from 'vue';
 import { defineComponent, h, ref } from 'vue';
-import type { RobotPermission } from '@authup/common';
+import type { RobotPermission } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

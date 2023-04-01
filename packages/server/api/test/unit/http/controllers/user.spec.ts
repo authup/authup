@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/common';
-import { hash } from '@authup/server-common';
+import type { User } from '@authup/core';
+import { hash } from '@authup/server-core';
 import type { DatabaseRootSeederResult } from '../../../../src';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';

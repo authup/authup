@@ -7,7 +7,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
-import type { Permission } from '@authup/common';
+import type { Permission } from '@authup/core';
 
 export const TEST_DEFAULT_PERMISSION : Partial<Permission> = {
     name: 'foo_add',

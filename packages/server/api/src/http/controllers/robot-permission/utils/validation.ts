@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/common';
+import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import type { Request } from 'routup';
 import type { RobotPermissionEntity } from '../../../../domains';
 import { PermissionEntity, RobotEntity } from '../../../../domains';

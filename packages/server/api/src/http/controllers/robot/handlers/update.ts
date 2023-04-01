@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { saveRobotCredentialsToVault } from '@authup/server-common';
+import { saveRobotCredentialsToVault } from '@authup/server-core';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName, REALM_MASTER_NAME, ROBOT_SYSTEM_NAME, isPropertySet,
-} from '@authup/common';
+} from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';

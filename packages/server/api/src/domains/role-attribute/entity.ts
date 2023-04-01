@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 import type {
     Realm, Role, RoleAttribute,
-} from '@authup/common';
+} from '@authup/core';
 import { RealmEntity } from '../realm';
 import { RoleEntity } from '../role';
 

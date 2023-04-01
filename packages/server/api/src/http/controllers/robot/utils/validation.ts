@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isPropertySet, isRealmResourceWritable } from '@authup/common';
+import { isPropertySet, isRealmResourceWritable } from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { RobotEntity } from '../../../../domains';

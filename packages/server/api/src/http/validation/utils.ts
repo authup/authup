@@ -7,7 +7,7 @@
 
 import type { MatchedDataOptions } from 'express-validator';
 import { matchedData } from 'express-validator';
-import { deleteUndefinedObjectProperties } from '@authup/common';
+import { deleteUndefinedObjectProperties } from '@authup/core';
 import type { Request } from 'routup';
 import type { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@ebec/http';

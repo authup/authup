@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RoleAttribute } from '@authup/common';
+import type { RoleAttribute } from '@authup/core';
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
-} from '@authup/common';
-import { publishDomainEvent } from '@authup/server-common';
+} from '@authup/core';
+import { publishDomainEvent } from '@authup/server-core';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,

@@ -9,7 +9,7 @@ import { ForbiddenError } from '@ebec/http';
 import { check, matchedData, validationResult } from 'express-validator';
 import {
     PermissionName,
-} from '@authup/common';
+} from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';

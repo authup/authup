@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError, hasOwnProperty } from '@authup/common';
+import { TokenError, hasOwnProperty } from '@authup/core';
 
 export function handleJWTError(e: unknown) {
     if (

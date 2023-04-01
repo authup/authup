@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 import {
     AbilityManager,
     TokenError,
-} from '@authup/common';
+} from '@authup/core';
 import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
 import type { TokenVerifyContext } from '../../oauth2';
 import { applyOAuth2IntrospectionResponse, useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';

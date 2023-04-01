@@ -16,8 +16,8 @@ import {
     mergeProps,
     ref,
 } from 'vue';
-import type { DomainType } from '@authup/common';
-import { useHTTPClientAPI } from '@authup/common';
+import type { DomainType } from '@authup/core';
+import { useHTTPClientAPI } from '@authup/core';
 import { useHTTPClient } from '../utils';
 import { useAuthIlingo } from '../language/singleton';
 

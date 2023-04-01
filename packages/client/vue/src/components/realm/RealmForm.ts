@@ -12,8 +12,8 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import type { Realm } from '@authup/common';
-import { REALM_MASTER_NAME, createNanoID } from '@authup/common';
+import type { Realm } from '@authup/core';
+import { REALM_MASTER_NAME, createNanoID } from '@authup/core';
 import {
     buildFormInput,
     buildFormSubmit,

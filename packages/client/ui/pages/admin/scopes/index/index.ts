@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Scope } from '@authup/common';
+import type { Client, Scope } from '@authup/core';
 import {
     DomainType, PermissionName, Robot, isRealmResourceWritable,
-} from '@authup/common';
-import { AuthEntityDelete } from '@authup/vue';
+} from '@authup/core';
+import { AuthEntityDelete } from '@authup/client-vue';
 import type { ListItemSlotProps } from '@vue-layout/hyperscript';
 import { SlotName } from '@vue-layout/hyperscript';
 import { storeToRefs } from 'pinia';

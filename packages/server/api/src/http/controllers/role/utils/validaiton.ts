@@ -7,7 +7,7 @@
 
 import {
     PermissionName, isPropertySet, isRealmResourceWritable, isValidRoleName,
-} from '@authup/common';
+} from '@authup/core';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';

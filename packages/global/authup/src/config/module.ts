@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { makeURLPublicAccessible } from '@authup/common';
-import { createConfig as createApiConfig } from '@authup/server';
-import { readConfigFile } from '@authup/server-common';
+import { makeURLPublicAccessible } from '@authup/core';
+import { createConfig as createApiConfig } from '@authup/server-api';
+import { readConfigFile } from '@authup/server-core';
 import { createUIConfig, extendServerConfigWithEnv, extendUIConfigWithEnv } from '../packages';
 import type { Config } from './type';
 

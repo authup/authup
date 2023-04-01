@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isUUID } from '@authup/common';
+import { isUUID } from '@authup/core';
 import { useRequestQuery } from '@routup/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';

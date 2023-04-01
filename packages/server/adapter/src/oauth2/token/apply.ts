@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AbilityManager, OAuth2SubKind } from '@authup/common';
-import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
+import { AbilityManager, OAuth2SubKind } from '@authup/core';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 
 export function applyOAuth2IntrospectionResponse(
     target: Record<string, any>,

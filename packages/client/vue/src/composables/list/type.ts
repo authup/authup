@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CollectionResourceResponse } from '@authup/common';
+import type { CollectionResourceResponse } from '@authup/core';
 import type {
     ListHeaderBuildOptionsInput,
     ListItemsBuildOptionsInput,

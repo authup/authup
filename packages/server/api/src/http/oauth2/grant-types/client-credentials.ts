@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/common';
+import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
     OAuth2SubKind, ScopeName, TokenError, UserError,
-} from '@authup/common';
+} from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';

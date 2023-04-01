@@ -15,11 +15,11 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { ClientScope } from '@authup/common';
+import type { ClientScope } from '@authup/core';
 import {
     Client,
     Scope,
-} from '@authup/common';
+} from '@authup/core';
 import { ClientEntity } from '../client';
 import { ScopeEntity } from '../scope';
 

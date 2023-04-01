@@ -1,4 +1,4 @@
-# @authup/vue 🏝
+# @authup/client-vue 🏝
 
 [![npm version](https://badge.fury.io/js/@authup%2Fvue.svg)](https://badge.fury.io/js/@authup%2Fvue)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)

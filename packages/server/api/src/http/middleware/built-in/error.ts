@@ -13,7 +13,7 @@ import { send } from 'routup';
 import {
     extendsBaseError,
 } from '@ebec/http';
-import { useLogger } from '@authup/server-common';
+import { useLogger } from '@authup/server-core';
 import { buildResponseErrorPayloadFromError } from '../../response';
 
 export function registerErrorMiddleware(router: Router) {

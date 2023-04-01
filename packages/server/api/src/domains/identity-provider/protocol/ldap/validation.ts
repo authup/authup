@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LdapIdentityProvider } from '@authup/common';
+import type { LdapIdentityProvider } from '@authup/core';
 
 export function validateLdapIdentityProviderProtocol(
     entity: Partial<LdapIdentityProvider>,

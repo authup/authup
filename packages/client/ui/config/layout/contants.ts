@@ -6,7 +6,7 @@
  */
 
 import type { NavigationElement } from '@vue-layout/basic';
-import { PermissionName } from '@authup/common';
+import { PermissionName } from '@authup/core';
 
 export enum LayoutKey {
     NAVIGATION_ID = 'navigationId',

@@ -7,8 +7,8 @@
 
 import type { SelectQueryBuilder } from 'typeorm';
 import { Brackets } from 'typeorm';
-import type { Realm } from '@authup/common';
-import { REALM_MASTER_NAME, isPropertySet } from '@authup/common';
+import type { Realm } from '@authup/core';
+import { REALM_MASTER_NAME, isPropertySet } from '@authup/core';
 
 function prepareRealm(
     input: Partial<Realm> | string,

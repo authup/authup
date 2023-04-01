@@ -6,7 +6,7 @@
  */
 
 import { check, oneOf, validationResult } from 'express-validator';
-import type { User } from '@authup/common';
+import type { User } from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';

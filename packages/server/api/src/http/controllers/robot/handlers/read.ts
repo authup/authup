@@ -16,7 +16,7 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind,
     PermissionName, REALM_MASTER_NAME, isSelfId, isUUID,
-} from '@authup/common';
+} from '@authup/core';
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';

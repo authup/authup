@@ -16,7 +16,7 @@ import {
 import { NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind, PermissionName, isSelfId, isUUID,
-} from '@authup/common';
+} from '@authup/core';
 import { ClientEntity, resolveRealm } from '../../../../domains';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';

@@ -14,14 +14,14 @@ import type {
     Robot,
     RobotPermission,
     RolePermission, UserRole,
-} from '@authup/common';
+} from '@authup/core';
 import {
     PermissionName,
     REALM_MASTER_NAME,
     ROBOT_SYSTEM_NAME,
     ScopeName, createNanoID,
-} from '@authup/common';
-import { hasOwnProperty, hash } from '@authup/server-common';
+} from '@authup/core';
+import { hasOwnProperty, hash } from '@authup/server-core';
 import {
     PermissionEntity,
     RealmEntity,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/common';
+import { isObject } from '@authup/core';
 import { getModuleExport, load, locateMany } from 'locter';
 import path from 'node:path';
 import process from 'node:process';

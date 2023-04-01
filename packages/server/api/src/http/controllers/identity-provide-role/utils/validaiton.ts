@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isRealmResourceWritable } from '@authup/common';
+import { isRealmResourceWritable } from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { IdentityProviderRoleEntity } from '../../../../domains';

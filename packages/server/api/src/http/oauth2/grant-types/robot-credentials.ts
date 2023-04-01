@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/common';
+import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
     OAuth2SubKind,
     RobotError,
     ScopeName,
-} from '@authup/common';
+} from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';

@@ -7,7 +7,7 @@
 
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
-import type { UserPermission } from '@authup/common';
+import type { UserPermission } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables';
 import { useHTTPClient } from '../../utils';
 

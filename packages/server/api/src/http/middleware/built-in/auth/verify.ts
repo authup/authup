@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityDescriptor } from '@authup/common';
+import type { AbilityDescriptor } from '@authup/core';
 import {
     AbilityManager,
     HeaderError, OAuth2SubKind,
     OAuth2TokenKind,
     ScopeName,
     TokenError, transformOAuth2ScopeToArray,
-} from '@authup/common';
+} from '@authup/core';
 import type {
     AuthorizationHeader,
     BasicAuthorizationHeader,

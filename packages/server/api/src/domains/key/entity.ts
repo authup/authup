@@ -12,7 +12,7 @@ import type {
     Key,
     KeyType,
     Realm,
-} from '@authup/common';
+} from '@authup/core';
 import { RealmEntity } from '../realm';
 
 @Index([

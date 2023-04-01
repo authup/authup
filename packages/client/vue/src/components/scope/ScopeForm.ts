@@ -23,7 +23,7 @@ import {
 } from '@vuelidate/validators';
 import type {
     Realm, Scope,
-} from '@authup/common';
+} from '@authup/core';
 import {
     SlotName,
     buildFormInput,

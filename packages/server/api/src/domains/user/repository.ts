@@ -18,13 +18,13 @@ import type {
     AbilityDescriptor,
     Role, User,
     UserRole,
-} from '@authup/common';
+} from '@authup/core';
 import {
     buildPermissionDescriptorFromRelation,
     createNanoID,
-} from '@authup/common';
+} from '@authup/core';
 
-import { compare, hash } from '@authup/server-common';
+import { compare, hash } from '@authup/server-core';
 import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';

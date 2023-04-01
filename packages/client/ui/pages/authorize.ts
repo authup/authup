@@ -7,8 +7,8 @@
 
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import type { Client, ClientScope } from '@authup/common';
-import { isGlobMatch } from '@authup/common';
+import type { Client, ClientScope } from '@authup/core';
+import { isGlobMatch } from '@authup/core';
 import type { Ref, VNodeArrayChildren } from 'vue';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent, navigateTo } from '#app';

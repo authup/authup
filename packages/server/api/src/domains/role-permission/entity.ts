@@ -14,10 +14,10 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Realm, RolePermission } from '@authup/common';
+import type { Realm, RolePermission } from '@authup/core';
 import {
     Permission, Role,
-} from '@authup/common';
+} from '@authup/core';
 import { RoleEntity } from '../role/entity';
 import { PermissionEntity } from '../permission';
 import { RealmEntity } from '../realm';

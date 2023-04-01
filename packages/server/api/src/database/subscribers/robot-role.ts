@@ -7,14 +7,14 @@
 
 import type {
     RobotRole,
-} from '@authup/common';
+} from '@authup/core';
 import {
     DomainEventName, DomainType,
     buildDomainChannelName,
     buildDomainNamespaceName,
-} from '@authup/common';
-import type { DomainEventDestination } from '@authup/server-common';
-import { publishDomainEvent } from '@authup/server-common';
+} from '@authup/core';
+import type { DomainEventDestination } from '@authup/server-core';
+import { publishDomainEvent } from '@authup/server-core';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot } from '@authup/common';
+import type { Robot } from '@authup/core';
 import { hasConfig, useClient } from '@hapic/vault';
 
 export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {

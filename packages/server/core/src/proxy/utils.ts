@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseProxyConnectionString } from '@authup/common';
+import { parseProxyConnectionString } from '@authup/core';
 import type { ClientRequestConfig } from '@hapic/vault';
 import { getProxyForUrl } from 'proxy-from-env';
 import { ProxyClient } from './module';

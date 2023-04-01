@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from '@authup/common';
+import { OAuth2TokenKind } from '@authup/core';
 import { Adapter } from 'browser-storage-adapter';
 import { defineNuxtPlugin, useCookie } from '#app';
 import { AuthBrowserStorageKey } from '../config/auth';

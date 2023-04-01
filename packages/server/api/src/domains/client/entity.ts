@@ -15,7 +15,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Client, Realm, User } from '@authup/common';
+import type { Client, Realm, User } from '@authup/core';
 import { UserEntity } from '../user';
 import { RealmEntity } from '../realm';
 

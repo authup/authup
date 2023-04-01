@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/common';
+import { ErrorCode, HTTPClient, hasOwnProperty } from '@authup/core';
 import type { ConfigInput } from 'hapic';
 import { isClientError } from 'hapic';
 import { useRuntimeConfig } from '#imports';

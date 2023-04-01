@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import type {
     Client, OAuth2RefreshToken, Realm, Robot, User,
-} from '@authup/common';
+} from '@authup/core';
 import { ClientEntity } from '../client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';

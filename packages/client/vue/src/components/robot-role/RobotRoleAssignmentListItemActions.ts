@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import {
     VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
-import type { RobotRole } from '@authup/common';
+import type { RobotRole } from '@authup/core';
 import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
 import { useHTTPClient } from '../../utils';
 

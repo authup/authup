@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, User } from '@authup/common';
+import type { OAuth2TokenGrantResponse, User } from '@authup/core';
 import {
     OAuth2SubKind, Realm, ScopeName,
-} from '@authup/common';
+} from '@authup/core';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';
 import { useRequestEnv } from '../../utils';

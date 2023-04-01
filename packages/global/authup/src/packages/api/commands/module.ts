@@ -24,9 +24,9 @@ export async function executeServerCommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx @authup/server';
-        const modulePath = findUpPackagePath('@authup/server', process.cwd()) ||
-            findUpPackagePath('@authup/server', getClosestNodeModulesPath());
+        let base = 'npx @authup/server-api';
+        const modulePath = findUpPackagePath('@authup/server-api', process.cwd()) ||
+            findUpPackagePath('@authup/server-api', getClosestNodeModulesPath());
 
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);

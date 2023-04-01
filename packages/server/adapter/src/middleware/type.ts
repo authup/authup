@@ -6,7 +6,7 @@
  */
 import type {
     AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
-} from '@authup/common';
+} from '@authup/core';
 
 export type RequestEnv = {
     user?: Pick<User, 'id' | 'name'>,

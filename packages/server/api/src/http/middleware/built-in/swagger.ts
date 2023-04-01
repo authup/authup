@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useLogger } from '@authup/server-common';
+import { useLogger } from '@authup/server-core';
 import type { UIOptions } from '@routup/swagger';
 import { createUIHandler } from '@routup/swagger';
 import { buildFilePath, loadSync, locateSync } from 'locter';

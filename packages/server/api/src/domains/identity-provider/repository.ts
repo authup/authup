@@ -8,10 +8,10 @@
 import type {
     IdentityProvider,
     IdentityProviderProtocolType,
-} from '@authup/common';
+} from '@authup/core';
 import {
     hasOwnProperty,
-} from '@authup/common';
+} from '@authup/core';
 import type { DataSource, EntityManager } from 'typeorm';
 import { In, InstanceChecker, Repository } from 'typeorm';
 import { IdentityProviderEntity } from './entity';

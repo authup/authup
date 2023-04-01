@@ -1,4 +1,4 @@
-# @authup/common 🎉
+# @authup/core 🎉
 
 [![npm version](https://badge.fury.io/js/@authup%2Fcommon.svg)](https://badge.fury.io/js/@authup%2Fcommon)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)

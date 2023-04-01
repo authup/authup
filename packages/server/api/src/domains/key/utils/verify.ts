@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerifyOptions } from '@authup/server-common';
-import { verifyToken } from '@authup/server-common';
-import type { OAuth2TokenPayload } from '@authup/common';
+import type { TokenVerifyOptions } from '@authup/server-core';
+import { verifyToken } from '@authup/server-core';
+import type { OAuth2TokenPayload } from '@authup/core';
 import {
     KeyType, wrapPrivateKeyPem, wrapPublicKeyPem,
-} from '@authup/common';
+} from '@authup/core';
 import type { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(

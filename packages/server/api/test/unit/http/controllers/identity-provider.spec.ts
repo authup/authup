@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/common';
+import type { OAuth2IdentityProvider } from '@authup/core';
 import {
     IdentityProviderProtocol,
     buildIdentityProviderAuthorizePath,
-} from '@authup/common';
+} from '@authup/core';
 import { Client } from '@hapic/oauth2';
 import { useConfig } from '../../../../src';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';

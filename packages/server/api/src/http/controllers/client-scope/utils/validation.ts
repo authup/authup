@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authup/common';
+import { isRealmResourceWritable } from '@authup/core';
 import type { Request } from 'routup';
 import type { ClientScopeEntity } from '../../../../domains';
 import {

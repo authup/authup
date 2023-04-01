@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config } from '@authup/server';
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-common';
+import type { Config } from '@authup/server-api';
+import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-core';
 
 export function extendServerConfigWithEnv(config: Config) {
     if (hasProcessEnv('PORT')) {

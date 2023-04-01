@@ -7,7 +7,7 @@
 
 import {
     hasProcessEnv, readConfigFile, readFromProcessEnv, readIntFromProcessEnv,
-} from '@authup/server-common';
+} from '@authup/server-core';
 import { Continu } from 'continu';
 import { defineNuxtModule } from 'nuxt/kit';
 import zod from 'zod';

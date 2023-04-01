@@ -7,7 +7,7 @@
 
 import type {
     OAuth2SubKind, OAuth2TokenGrantResponse,
-} from '@authup/common';
+} from '@authup/core';
 import type { Request } from 'routup';
 
 export type AccessTokenIssueContext = {

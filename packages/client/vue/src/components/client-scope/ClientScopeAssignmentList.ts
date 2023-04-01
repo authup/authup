@@ -8,7 +8,7 @@
 import {
     defineComponent, h,
 } from 'vue';
-import type { Scope } from '@authup/common';
+import type { Scope } from '@authup/core';
 import { SlotName } from '@vue-layout/hyperscript';
 import { ScopeList } from '../scope';
 import {

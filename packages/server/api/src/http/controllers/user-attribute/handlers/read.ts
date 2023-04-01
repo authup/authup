@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceReadable } from '@authup/common';
+import { PermissionName, isRealmResourceReadable } from '@authup/core';
 import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,

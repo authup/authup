@@ -12,7 +12,7 @@ import type {
 import {
     decode,
 } from 'jsonwebtoken';
-import { TokenError } from '@authup/common';
+import { TokenError } from '@authup/core';
 import type { TokenDecodeOptions } from './type';
 import { handleJWTError } from './utils';
 

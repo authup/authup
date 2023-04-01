@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/common';
-import { PermissionName, isRealmResourceWritable } from '@authup/common';
+import type { Client } from '@authup/core';
+import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
 import { useToast } from 'vue-toastification';

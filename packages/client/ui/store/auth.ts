@@ -10,13 +10,13 @@ import type {
     OAuth2TokenIntrospectionResponse,
     Realm,
     User,
-} from '@authup/common';
+} from '@authup/core';
 import {
     AbilityManager,
     ErrorCode,
     OAuth2TokenKind,
     hasOwnProperty,
-} from '@authup/common';
+} from '@authup/core';
 import { Client } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
 import { defineStore } from 'pinia';

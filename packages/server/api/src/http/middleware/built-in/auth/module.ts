@@ -10,7 +10,7 @@ import type {
     Next, Request, Response, Router,
 } from 'routup';
 import { unsetResponseCookie, useRequestCookie } from '@routup/cookie';
-import { AbilityManager, CookieName } from '@authup/common';
+import { AbilityManager, CookieName } from '@authup/core';
 import { setRequestEnv } from '../../../utils';
 import { verifyAuthorizationHeader } from './verify';
 

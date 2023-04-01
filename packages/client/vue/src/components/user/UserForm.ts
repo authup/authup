@@ -20,7 +20,7 @@ import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 
-import type { Realm, User } from '@authup/common';
+import type { Realm, User } from '@authup/core';
 import { createSubmitHandler, initFormAttributesFromEntity, useHTTPClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';

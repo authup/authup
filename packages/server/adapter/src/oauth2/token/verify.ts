@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 import {
     ErrorCode,
     TokenError,
-} from '@authup/common';
+} from '@authup/core';
 import { isClientError } from 'hapic';
 import { isObject } from 'routup';
 import { useOAuth2Client } from '../client';

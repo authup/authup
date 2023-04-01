@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { makeURLPublicAccessible } from '@authup/common';
+import { makeURLPublicAccessible } from '@authup/core';
 import { Continu } from 'continu';
 import path from 'node:path';
 import process from 'node:process';

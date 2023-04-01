@@ -7,8 +7,8 @@
 
 import {
     PermissionName,
-} from '@authup/common';
-import { saveRobotCredentialsToVault } from '@authup/server-common';
+} from '@authup/core';
+import { saveRobotCredentialsToVault } from '@authup/server-core';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';

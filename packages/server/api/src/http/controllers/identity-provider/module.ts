@@ -11,11 +11,11 @@ import {
 import type {
     Next, Request, Response, Router,
 } from 'routup';
-import type { IdentityProvider } from '@authup/common';
+import type { IdentityProvider } from '@authup/core';
 import {
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
-} from '@authup/common';
+} from '@authup/core';
 import {
     authorizeCallbackIdentityProviderRouteHandler,
     authorizeURLIdentityProviderRouteHandler,

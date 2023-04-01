@@ -14,7 +14,7 @@ import type { Options as BodyOptions } from 'body-parser';
 import type { Continu } from 'continu';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
-import type { SmtpConfig } from '@authup/server-common';
+import type { SmtpConfig } from '@authup/server-core';
 import type { DatabaseConnectionOptions } from './utils/database';
 
 export type Options = {

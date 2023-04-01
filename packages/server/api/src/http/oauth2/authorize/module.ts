@@ -9,7 +9,7 @@ import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     hasOAuth2OpenIDScope,
-} from '@authup/common';
+} from '@authup/core';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
 import { getRequestIp } from 'routup';

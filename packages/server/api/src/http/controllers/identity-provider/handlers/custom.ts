@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildHTTPClientConfigForProxy } from '@authup/server-common';
+import { buildHTTPClientConfigForProxy } from '@authup/server-core';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import type { OAuth2TokenGrantResponse } from '@authup/common';
+import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
     CookieName,
     IdentityProviderProtocol,
     buildIdentityProviderAuthorizeCallbackPath,
-} from '@authup/common';
+} from '@authup/core';
 import type { SerializeOptions } from '@routup/cookie';
 import { setResponseCookie } from '@routup/cookie';
 import { useRequestQuery } from '@routup/query';

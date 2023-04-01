@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenIntrospectionResponse } from '@authup/common';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 import {
     AbilityManager,
     CookieName,
-} from '@authup/common';
+} from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import { useRequestCookies } from '@routup/cookie';
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';

@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { User } from '@authup/common';
+import { User } from '@authup/core';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createUserRouteHandler,

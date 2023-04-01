@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission } from '@authup/common';
-import { PermissionName } from '@authup/common';
+import type { Permission } from '@authup/core';
+import { PermissionName } from '@authup/core';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';

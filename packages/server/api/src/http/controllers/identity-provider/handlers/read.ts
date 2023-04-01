@@ -13,7 +13,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName, isUUID } from '@authup/common';
+import { PermissionName, isUUID } from '@authup/core';
 import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 

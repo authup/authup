@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { PermissionName } from '@authup/common';
+import { PermissionName } from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';

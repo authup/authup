@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_MASTER_NAME, isUUID } from '@authup/common';
+import { REALM_MASTER_NAME, isUUID } from '@authup/core';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../entity';
 

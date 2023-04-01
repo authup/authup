@@ -24,9 +24,9 @@ export function executeUICommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx @authup/ui';
-        const modulePath = findUpPackagePath('@authup/ui', process.cwd()) ||
-            findUpPackagePath('@authup/ui', getClosestNodeModulesPath());
+        let base = 'npx @authup/client-ui';
+        const modulePath = findUpPackagePath('@authup/client-ui', process.cwd()) ||
+            findUpPackagePath('@authup/client-ui', getClosestNodeModulesPath());
 
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);

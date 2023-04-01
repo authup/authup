@@ -5,7 +5,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.28.0](https://github.com/authup/authup/compare/v0.27.0...v0.28.0) (2023-04-01)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -13,7 +13,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.27.0](https://github.com/authup/authup/compare/v0.26.0...v0.27.0) (2023-04-01)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -43,7 +43,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.24.0](https://github.com/authup/authup/compare/v0.23.1...v0.24.0) (2023-03-30)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -100,7 +100,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.19.0](https://github.com/Tada5hi/authup/compare/v0.18.0...v0.19.0) (2023-03-23)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -140,7 +140,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.17.0](https://github.com/Tada5hi/authup/compare/v0.16.0...v0.17.0) (2023-03-13)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -148,7 +148,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -200,7 +200,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.13.0](https://github.com/Tada5hi/authup/compare/v0.12.1...v0.13.0) (2023-01-28)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -219,7 +219,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.12.0](https://github.com/Tada5hi/authup/compare/v0.11.1...v0.12.0) (2023-01-28)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -238,7 +238,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.11.0](https://github.com/Tada5hi/authup/compare/v0.10.1...v0.11.0) (2023-01-27)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -323,7 +323,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.6.2](https://github.com/Tada5hi/authup/compare/v0.6.1...v0.6.2) (2023-01-10)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -398,7 +398,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.2.2](https://github.com/Tada5hi/authup/compare/v0.2.1...v0.2.2) (2022-12-09)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 
@@ -406,7 +406,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.2.0](https://github.com/Tada5hi/authup/compare/v0.1.6...v0.2.0) (2022-12-09)
 
-**Note:** Version bump only for package @authup/common
+**Note:** Version bump only for package @authup/core
 
 
 

@@ -6,7 +6,7 @@
  */
 
 import type { DataSource, DataSourceOptions } from 'typeorm';
-import type { Logger } from '@authup/server-common';
+import type { Logger } from '@authup/server-core';
 
 export type CommandContext = {
     logger?: Logger,

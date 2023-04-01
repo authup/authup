@@ -7,7 +7,7 @@
 
 import type { Jwt, JwtPayload } from 'jsonwebtoken';
 import { verify } from 'jsonwebtoken';
-import { KeyType, TokenError } from '@authup/common';
+import { KeyType, TokenError } from '@authup/core';
 import { isKeyPair, useKeyPair } from '../key-pair';
 import type { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';

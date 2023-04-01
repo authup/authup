@@ -7,7 +7,7 @@
 
 import type { DecodeOptions, SignOptions, VerifyOptions } from 'jsonwebtoken';
 import type * as Buffer from 'buffer';
-import type { KeyType } from '@authup/common';
+import type { KeyType } from '@authup/core';
 import type { KeyPair, KeyPairOptions } from '../key-pair';
 
 export type TokenSignOptions = ({

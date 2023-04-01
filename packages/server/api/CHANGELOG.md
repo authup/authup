@@ -34,7 +34,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.26.0](https://github.com/authup/authup/compare/v0.25.0...v0.26.0) (2023-03-30)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -101,7 +101,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.22.0](https://github.com/Tada5hi/authup/compare/v0.21.0...v0.22.0) (2023-03-26)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -132,7 +132,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.20.0](https://github.com/Tada5hi/authup/compare/v0.19.0...v0.20.0) (2023-03-24)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -140,7 +140,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.19.0](https://github.com/Tada5hi/authup/compare/v0.18.0...v0.19.0) (2023-03-23)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -164,7 +164,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.17.2](https://github.com/Tada5hi/authup/compare/v0.17.1...v0.17.2) (2023-03-20)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -197,7 +197,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.16.0](https://github.com/Tada5hi/authup/compare/v0.15.4...v0.16.0) (2023-02-28)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -205,7 +205,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.15.4](https://github.com/Tada5hi/authup/compare/v0.15.3...v0.15.4) (2023-02-24)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -290,7 +290,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.13.0](https://github.com/Tada5hi/authup/compare/v0.12.1...v0.13.0) (2023-01-28)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -344,7 +344,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.10.1](https://github.com/Tada5hi/authup/compare/v0.10.0...v0.10.1) (2023-01-23)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -352,7 +352,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.10.0](https://github.com/Tada5hi/authup/compare/v0.9.0...v0.10.0) (2023-01-20)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -399,7 +399,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.6.3](https://github.com/Tada5hi/authup/compare/v0.6.2...v0.6.3) (2023-01-10)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -407,7 +407,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.6.2](https://github.com/Tada5hi/authup/compare/v0.6.1...v0.6.2) (2023-01-10)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -415,7 +415,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.6.1](https://github.com/Tada5hi/authup/compare/v0.6.0...v0.6.1) (2023-01-08)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -423,7 +423,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.6.0](https://github.com/Tada5hi/authup/compare/v0.5.0...v0.6.0) (2023-01-08)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -496,7 +496,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.2.1](https://github.com/Tada5hi/authup/compare/v0.2.0...v0.2.1) (2022-12-09)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 
@@ -515,7 +515,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [0.1.1](https://github.com/Tada5hi/authup/compare/v0.1.0...v0.1.1) (2022-12-08)
 
-**Note:** Version bump only for package @authup/server
+**Note:** Version bump only for package @authup/server-api
 
 
 

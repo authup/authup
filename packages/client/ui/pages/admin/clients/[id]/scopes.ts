@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/common';
+import type { Client } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, resolveComponent } from '#imports';
 

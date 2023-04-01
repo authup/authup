@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { Permission } from '@authup/common';
+import type { Permission } from '@authup/core';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createOnePermissionRouteHandler,

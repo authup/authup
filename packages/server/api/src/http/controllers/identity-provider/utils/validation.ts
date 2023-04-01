@@ -12,7 +12,7 @@ import {
     IdentityProviderProtocolConfig, isPropertySet,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
-} from '@authup/common';
+} from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { IdentityProviderEntity } from '../../../../domains';

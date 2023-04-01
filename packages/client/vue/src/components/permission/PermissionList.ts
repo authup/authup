@@ -6,7 +6,7 @@
  */
 import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
-import type { Permission } from '@authup/common';
+import type { Permission } from '@authup/core';
 import type { BuildInput } from 'rapiq';
 import { useListBuilder } from '../../composables';
 import { useHTTPClient } from '../../utils';

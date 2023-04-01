@@ -12,12 +12,12 @@ import type {
     OAuth2TokenGrantResponse,
     OpenIDConnectIdentityProvider,
     User,
-} from '@authup/common';
+} from '@authup/core';
 import {
     TokenError,
     createNanoID, hasOwnProperty, isValidUserName,
-} from '@authup/common';
-import { decodeToken } from '@authup/server-common';
+} from '@authup/core';
+import { decodeToken } from '@authup/server-core';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../user';

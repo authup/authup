@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { UserAttribute } from '@authup/common';
+import type { UserAttribute } from '@authup/core';
 import type { DatabaseRootSeederResult } from '../../../../src';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';

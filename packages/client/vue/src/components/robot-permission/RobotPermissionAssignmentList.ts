@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Permission } from '@authup/common';
+import type { Permission } from '@authup/core';
 import { SlotName } from '@vue-layout/hyperscript';
 import {
     RobotPermissionAssignmentListItemActions,

@@ -8,14 +8,14 @@
 import type {
     OAuth2AuthorizationCodeRequest,
     OAuth2TokenPayload,
-} from '@authup/common';
+} from '@authup/core';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     OAuth2TokenKind,
     ScopeName,
-} from '@authup/common';
-import { decodeToken } from '@authup/server-common';
+} from '@authup/core';
+import { decodeToken } from '@authup/server-core';
 import type { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestClientWithScope } from '../../../../utils/domains';

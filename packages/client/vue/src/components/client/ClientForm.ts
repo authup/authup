@@ -21,8 +21,8 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { Client, Realm, Robot } from '@authup/common';
-import { createNanoID } from '@authup/common';
+import type { Client, Realm, Robot } from '@authup/core';
+import { createNanoID } from '@authup/core';
 import {
     SlotName,
     buildFormInput,

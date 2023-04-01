@@ -10,7 +10,7 @@ import {
 } from '@routup/decorators';
 import type {
     Client,
-} from '@authup/common';
+} from '@authup/core';
 import {
     createClientRouteHandler,
     deleteClientRouteHandler,

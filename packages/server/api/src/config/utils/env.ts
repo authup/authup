@@ -11,7 +11,7 @@ import {
     readBoolOrStringFromProcessEnv,
     readFromProcessEnv,
     readIntFromProcessEnv,
-} from '@authup/server-common';
+} from '@authup/server-core';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
 import type { OptionsInput } from '../type';
