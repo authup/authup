@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.27.0](https://github.com/authup/authup/compare/v0.26.0...v0.27.0) (2023-04-01)
+
+
+### Bug Fixes
+
+* cleanup cli commands ([8a37cde](https://github.com/authup/authup/commit/8a37cdeb3b4eba59dc006e4336ad0f1a55133ffc))
+* **deps:** bump redis-extension from 1.2.3 to 1.3.0 ([#992](https://github.com/authup/authup/issues/992)) ([2ac9ede](https://github.com/authup/authup/commit/2ac9ede2692c9d3cd19a2c7fc201f993b5a35cce))
+* swagger look-up path for controllers ([ea75c11](https://github.com/authup/authup/commit/ea75c11363785365a03f1fba5c1015322c53b927))
+* use constants for env variable names ([3122698](https://github.com/authup/authup/commit/3122698db86acc38729e74bd0bc546c41201882f))
+
+
+### Features
+
+* extended README.md file ([aefa1ee](https://github.com/authup/authup/commit/aefa1eed4267cf1667198ac08c3a1e4036e0d2ce))
+* load config file for frontend ui if present ([7776430](https://github.com/authup/authup/commit/7776430963d6bc469887fa1261ccc8b65c49fd0a))
+* load config file from cwd and writable directory ([54f324d](https://github.com/authup/authup/commit/54f324dbf51716461c7b164a15a4f06b2a36a8d5))
+
+
+
+
+
 # [0.26.0](https://github.com/authup/authup/compare/v0.25.0...v0.26.0) (2023-03-30)
 
 

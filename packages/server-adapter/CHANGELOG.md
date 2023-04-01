@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.27.0](https://github.com/authup/authup/compare/v0.26.0...v0.27.0) (2023-04-01)
+
+
+### Bug Fixes
+
+* **deps:** bump redis-extension from 1.2.3 to 1.3.0 ([#992](https://github.com/authup/authup/issues/992)) ([2ac9ede](https://github.com/authup/authup/commit/2ac9ede2692c9d3cd19a2c7fc201f993b5a35cce))
+
+
+
+
+
 # [0.26.0](https://github.com/authup/authup/compare/v0.25.0...v0.26.0) (2023-03-30)
 
 **Note:** Version bump only for package @authup/server-adapter

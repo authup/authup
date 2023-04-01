@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.27.0](https://github.com/authup/authup/compare/v0.26.0...v0.27.0) (2023-04-01)
+
+
+### Bug Fixes
+
+* cleanup cli commands ([8a37cde](https://github.com/authup/authup/commit/8a37cdeb3b4eba59dc006e4336ad0f1a55133ffc))
+
+
+### Features
+
+* load config file for frontend ui if present ([7776430](https://github.com/authup/authup/commit/7776430963d6bc469887fa1261ccc8b65c49fd0a))
+
+
+
+
+
 # [0.26.0](https://github.com/authup/authup/compare/v0.25.0...v0.26.0) (2023-03-30)
 
 **Note:** Version bump only for package authup
