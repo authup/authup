@@ -53,7 +53,7 @@
         "@ebec/http": "^1.0.0"
     },
     "devDependencies": {
-        "@authup/common": "^0.28.0",
+        "@authup/core": "^0.28.0",
         "@hapic/oauth2": "^1.5.0",
         "@routup/cookie": "^0.8.1",
         "hapic": "^1.4.0",
@@ -61,7 +61,7 @@
         "routup": "^0.14.1"
     },
     "peerDependencies": {
-        "@authup/common": "^0.x",
+        "@authup/core": "^0.x",
         "@hapic/oauth2": "^1.5.0",
         "@routup/cookie": ">=0.6.0 <1.0.0",
         "hapic": "^1.4.0",

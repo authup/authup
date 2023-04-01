@@ -9,7 +9,9 @@
     "license": "MIT",
     "version": "1.0.0",
     "workspaces": [
-        "./packages/*"
+        "./packages/client/*",
+        "./packages/global/*",
+        "./packages/server/*"
     ],
     "keywords": [
         "auth",

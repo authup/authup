@@ -1,5 +1,5 @@
 {
-    "name": "@authup/common",
+    "name": "@authup/core",
     "version": "0.28.0",
     "description": "Package containing global constants, types & interfaces.",
     "exports": {

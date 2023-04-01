@@ -1,7 +1,7 @@
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 
 import { defineNuxtConfig } from 'nuxt/config';
-import path from 'path';
+import path from 'node:path';
 
 export default defineNuxtConfig({
     build: {
@@ -33,9 +33,9 @@ export default defineNuxtConfig({
         '@/assets/css/oauth2.css',
     ],
     alias: {
-        '@authup/common': path.join(__dirname, '..', 'common', 'src'),
-        '@authup/server-common': path.join(__dirname, '..', 'server-common', 'src'),
-        '@authup/vue': path.join(__dirname, '..', 'vue', 'src'),
+        '@authup/core': path.join(__dirname, '..', '..', 'global', 'core', 'src'),
+        '@authup/server-core': path.join(__dirname, '..', '..', 'server', 'core', 'src'),
+        '@authup/client-vue': path.join(__dirname, '..', 'vue', 'src'),
     },
     runtimeConfig: {
         public: {

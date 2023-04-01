@@ -1,7 +1,9 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "packages": [
-    "packages/*"
+    "packages/client/*",
+    "packages/global/*",
+    "packages/server/*"
   ],
   "command": {
     "version": {
@@ -14,6 +16,5 @@
       "message": "chore(release): %s"
     }
   },
-  "useWorkspaces": true,
   "version": "0.28.0"
 }
