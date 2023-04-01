@@ -46,10 +46,12 @@ export function buildStartCommand(cac: CAC) {
                         root,
                     },
                     env: {
-                        NUXT_PORT: config.ui.get('port'),
-                        NUXT_HOST: config.ui.get('host'),
-                        NUXT_PUBLIC_URL: config.ui.get('publicUrl'),
-                        NUXT_API_URL: config.api.get('publicUrl'),
+                        PORT: config.ui.get('port'),
+                        HOST: config.ui.get('host'),
+                        PUBLIC_URL: config.ui.get('publicUrl'),
+                        API_URL: config.ui.has('apiUrl') ?
+                            config.ui.get('apiUrl') :
+                            config.api.get('publicUrl'),
                     },
                 };
 

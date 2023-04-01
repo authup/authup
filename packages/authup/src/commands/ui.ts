@@ -20,19 +20,24 @@ export function buildUiCommand(cac: CAC) {
         .action(async (command: string, ctx: Record<string, any>) => {
             const config = await createConfig();
 
-            let apiUrL = ctx.apiUrl;
-            if (!apiUrL) {
-                apiUrL = config.ui.get('apiUrl');
+            let { apiUrl } = ctx;
+
+            if (!apiUrl && config.ui.has('apiUrl')) {
+                apiUrl = config.ui.get('apiUrl');
+            }
+
+            if (!apiUrl) {
+                apiUrl = config.api.get('publicUrl');
             }
 
             switch (command) {
                 case UICommand.START: {
                     await startUI({
                         env: {
-                            NUXT_PORT: ctx.port || config.ui.get('port'),
-                            NUXT_HOST: ctx.host || config.ui.get('host'),
-                            NUXT_PUBLIC_URL: config.ui.get('publicUrl'),
-                            NUXT_API_URL: apiUrL,
+                            PORT: ctx.port || config.ui.get('port'),
+                            HOST: ctx.host || config.ui.get('host'),
+                            PUBLIC_URL: config.ui.get('publicUrl'),
+                            API_URL: apiUrl,
                         },
                         envFromProcess: true,
                     });

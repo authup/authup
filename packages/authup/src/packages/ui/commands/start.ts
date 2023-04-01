@@ -14,7 +14,7 @@ import type { UIStartCommandContext } from './type';
 
 export async function startUI(ctx: UIStartCommandContext) : Promise<ChildProcess> {
     consola.info('UI: Starting...');
-    consola.info(`UI: Port ${ctx.env.NUXT_PORT}`);
+    consola.info(`UI: Port ${ctx.env.PORT}`);
 
     const childProcess = await executeUICommand(UICommand.START, ctx);
     consola.success('UI: Started');

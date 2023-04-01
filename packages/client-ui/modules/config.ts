@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { makeURLPublicAccessible } from '@authup/core';
 import {
     hasProcessEnv, readConfigFile, readFromProcessEnv, readIntFromProcessEnv,
 } from '@authup/server-core';
@@ -51,7 +52,9 @@ export default defineNuxtModule({
                 port: 3000,
                 host: '0.0.0.0',
                 apiUrl: 'http://127.0.0.1:3001/',
-                publicUrl: 'http://127.0.0.1:3000',
+            },
+            getters: {
+                publicUrl: (context) => `http://${makeURLPublicAccessible(context.get('host'))}:${context.get('port')}/`,
             },
             validators: {
                 port: (value) => zod.number().nonnegative().safeParse(value),
@@ -67,7 +70,12 @@ export default defineNuxtModule({
 
         // todo: apply host and port
 
-        nuxt.options.runtimeConfig.public.apiUrl = config.get('apiUrl');
-        nuxt.options.runtimeConfig.public.publicUrl = config.get('publicUrl');
+        if (config.has('apiUrl')) {
+            nuxt.options.runtimeConfig.public.apiUrl = config.get('apiUrl');
+        }
+
+        if (config.has('publicUrl')) {
+            nuxt.options.runtimeConfig.public.publicUrl = config.get('publicUrl');
+        }
     },
 });

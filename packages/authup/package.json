@@ -5,6 +5,7 @@
     "main": "dist/index.js",
     "scripts": {
         "cli": "node dist/index.js",
+        "cli-dev": "npm run build && npm run cli",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
     },
     "files": [

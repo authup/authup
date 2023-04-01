@@ -8,11 +8,12 @@
 import type { CommandExecutionContext } from '../../type';
 
 export type UIStartCommandContext = CommandExecutionContext<{
-    NUXT_PORT: number,
 
-    NUXT_HOST: string,
+    PORT: number,
 
-    NUXT_API_URL: string,
+    HOST: string,
 
-    NUXT_PUBLIC_URL: string
+    API_URL: string,
+
+    PUBLIC_URL: string
 }>;

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { makeURLPublicAccessible } from '@authup/core';
 import { Continu } from 'continu';
 import zod from 'zod';
 import type { UIConfig, UIOptions, UIOptionsInput } from './type';
@@ -15,7 +16,9 @@ export function createUIConfig() : UIConfig {
             port: 3000,
             host: '0.0.0.0',
             apiUrl: 'http://127.0.0.1:3001/',
-            publicUrl: 'http://127.0.0.1:3000/',
+        },
+        getters: {
+            publicUrl: (context) => `http://${makeURLPublicAccessible(context.get('host'))}:${context.get('port')}/`,
         },
         validators: {
             port: (value) => zod.number().nonnegative().safeParse(value),
