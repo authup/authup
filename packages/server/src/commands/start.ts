@@ -44,7 +44,7 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info(`Public-URL: ${config.get('publicUrl')}`);
     logger.info(`Docs-URL: ${new URL('docs', config.get('publicUrl')).href}`);
 
-    const database = config.get('database');
+    const database = config.get('db');
     logger.info(`Database: ${database.type}`);
     logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Vault: ${hasVaultConfig() ? 'enabled' : 'disabled'}`);

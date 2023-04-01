@@ -36,7 +36,7 @@ export function readConfigFromEnv() : Partial<OptionsInput> {
             databaseOptions &&
             isDatabaseConnectionConfigurationSupported(databaseOptions)
         ) {
-            options.database = databaseOptions;
+            options.db = databaseOptions;
         }
     }
 

@@ -15,7 +15,7 @@ import { DatabaseQueryResultCache } from '../cache';
 export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const config = useConfig();
 
-    const dataSourceOptions = config.get('database');
+    const dataSourceOptions = config.get('db');
     if (!isDatabaseTypeSupported(dataSourceOptions.type)) {
         throw new Error('At the moment only the database types mysql, better-sqlite3 and postgres are supported.');
     }
