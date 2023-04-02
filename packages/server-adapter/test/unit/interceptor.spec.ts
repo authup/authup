@@ -7,7 +7,7 @@
 
 import { ErrorCode } from '@authup/core';
 import { getCurrentRequestRetryState, isValidAuthenticateError } from '../../src';
-import { createResponseError } from '../utils/response-error';
+import { createResponseError } from '../utils';
 
 describe('src/interceptor/utils', () => {
     it('should be valid response error', () => {

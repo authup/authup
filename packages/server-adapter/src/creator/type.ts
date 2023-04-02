@@ -7,14 +7,14 @@
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { Client } from '@hapic/vault';
-import type { AuthenticatorVariation } from './constants';
+import type { TokenCreatorVariation } from './constants';
 
 export type TokenCreatorBaseOptions = {
     baseUrl?: string
 };
 
 export type TokenCreatorUserOptions = TokenCreatorBaseOptions & {
-    type: `${AuthenticatorVariation.USER}`,
+    type: `${TokenCreatorVariation.USER}`,
     name: string,
     password: string,
     realmId?: string,
@@ -22,13 +22,13 @@ export type TokenCreatorUserOptions = TokenCreatorBaseOptions & {
 };
 
 export type TokenCreatorRobotOptions = TokenCreatorBaseOptions & {
-    type: `${AuthenticatorVariation.ROBOT}`,
+    type: `${TokenCreatorVariation.ROBOT}`,
     id: string,
     secret: string,
 };
 
 export type TokenCreatorRobotInVaultOptions = TokenCreatorBaseOptions & {
-    type: `${AuthenticatorVariation.ROBOT_IN_VAULT}`,
+    type: `${TokenCreatorVariation.ROBOT_IN_VAULT}`,
     /**
      * default: SYSTEM
      */

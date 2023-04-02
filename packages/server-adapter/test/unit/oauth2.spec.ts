@@ -9,7 +9,7 @@ import { APIClient, ErrorCode, TokenError } from '@authup/core';
 import { TokenAPI } from '@hapic/oauth2';
 import { TokenVerifier } from '../../src';
 import { TokenPayload, introspectToken } from '../data/token';
-import { Faker } from '../utils/faker';
+import { Faker } from '../utils';
 
 describe('src/oauth2/**', () => {
     let token : string;

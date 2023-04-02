@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthenticatorVariation } from './constants';
+import { TokenCreatorVariation } from './constants';
 import {
     createTokenCreatorWithRobot,
     createTokenCreatorWithRobotInVault,
@@ -18,13 +18,13 @@ import type {
 
 export function createTokenCreator(options: TokenCreatorOptions) : TokenCreator {
     switch (options.type) {
-        case AuthenticatorVariation.USER: {
+        case TokenCreatorVariation.USER: {
             return createTokenCreatorWithUser(options);
         }
-        case AuthenticatorVariation.ROBOT: {
+        case TokenCreatorVariation.ROBOT: {
             return createTokenCreatorWithRobot(options);
         }
-        case AuthenticatorVariation.ROBOT_IN_VAULT: {
+        case TokenCreatorVariation.ROBOT_IN_VAULT: {
             return createTokenCreatorWithRobotInVault(options);
         }
     }
