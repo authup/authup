@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './creator';
+export * from './interceptor';
 export * from './middleware';
-export * from './oauth2';
+export * from './verifier';
 export * from './type';

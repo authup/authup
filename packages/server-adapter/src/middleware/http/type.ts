@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerifyContext } from '../../oauth2';
+import type { TokenVerifierOptions, TokenVerifierOutput } from '../../verifier';
 
-export type HTTPMiddlewareContext = TokenVerifyContext & {
-    cookieHandler?: (cookies: any) => string | undefined
+export type HTTPMiddlewareContext = {
+    cookieHandler?: (cookies: any) => string | undefined,
+    tokenVerifier: TokenVerifierOptions
 };
+
+export type RequestEnv = TokenVerifierOutput;

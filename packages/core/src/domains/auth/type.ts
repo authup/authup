@@ -117,16 +117,16 @@ export type OAuth2TokenIntrospectionResponse = {
 } & Partial<OAuth2TokenPayload>;
 
 export type OAuth2JsonWebKey = {
-    alg?: string,
-    kid?: string,
+    alg: string,
+    kid: string,
     crv?: string | undefined;
     d?: string | undefined;
     dp?: string | undefined;
     dq?: string | undefined;
-    e?: string | undefined;
+    e: string | undefined;
     k?: string | undefined;
-    kty?: string | undefined;
-    n?: string | undefined;
+    kty: string | undefined;
+    n: string | undefined;
     p?: string | undefined;
     q?: string | undefined;
     qi?: string | undefined;

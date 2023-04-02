@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions } from '@hapic/oauth2';
-import type { Client } from 'redis-extension';
-
 export type LeveledLogMethod = {
     (message: string, ...meta: any[]): Logger;
     (message: any): Logger;
@@ -20,11 +17,4 @@ export type Logger = {
     info: LeveledLogMethod,
     debug: LeveledLogMethod,
     [key: string]: any
-};
-
-export type VerifyContext = {
-    oauth2: string | ClientOptions,
-    redis?: Client | boolean
-    redisPrefix?: string,
-    logger?: Logger,
 };

@@ -4,52 +4,39 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
-import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 import {
     AbilityManager,
-    TokenError,
 } from '@authup/core';
 import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
-import type { TokenVerifyContext } from '../../oauth2';
-import { applyOAuth2IntrospectionResponse, useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
+import type { TokenVerifierOutput } from '../../verifier';
+import {
+    TokenVerifier,
+} from '../../verifier';
 
 export function setupSocketMiddleware(context: SocketMiddlewareContext) {
-    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
-
-    const tokenVerifyContext : TokenVerifyContext = {
-        ...context,
-        cache,
-    };
+    const tokenVerifier = new TokenVerifier(context.tokenVerifier);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
 
         if (!token) {
-            if (context.logger) {
-                context.logger.debug('No token is present.');
-            }
-
             socket.data.ability = new AbilityManager();
 
             return next();
         }
 
-        let data : OAuth2TokenIntrospectionResponse | undefined;
+        let data : TokenVerifierOutput | undefined;
 
         try {
-            data = await verifyOAuth2Token(token, tokenVerifyContext);
+            data = await tokenVerifier.verify(token);
         } catch (e) {
-            if (!(e instanceof TokenError)) {
-                context.logger.warn('Token verification was not possible', {
-                    error: e.message,
-                });
-            }
-
             return next(e);
         }
 
-        applyOAuth2IntrospectionResponse(socket.data, data);
+        const keys = Object.keys(data);
+        for (let i = 0; i < keys.length; i++) {
+            socket.data[keys[i]] = data[keys[i]];
+        }
 
         return next();
     };

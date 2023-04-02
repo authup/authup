@@ -4,11 +4,21 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type {
-    AbilityDescriptor, AbilityManager, Client, Realm, Robot, User,
-} from '@authup/core';
 
-export type RequestEnv = {
+import type {
+    APIClient,
+    AbilityManager, Client, Realm, Robot, User,
+} from '@authup/core';
+import type { TokenCreator, TokenCreatorOptions } from '../creator';
+import type { TokenVerifierCacheOptions } from './cache';
+
+export type TokenVerifierOptions = {
+    baseUrl: string,
+    creator?: TokenCreator | TokenCreatorOptions,
+    cache?: TokenVerifierCacheOptions
+};
+
+export type TokenVerifierOutput = {
     user?: Pick<User, 'id' | 'name'>,
     userName?: User['id'],
     userId?: User['id'],

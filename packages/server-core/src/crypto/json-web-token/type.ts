@@ -25,15 +25,17 @@ export type TokenSignOptions = ({
     secret: string | Buffer
 }) & Omit<SignOptions, 'algorithm'>;
 
+export type TokenVerifyRSAlgorithm = 'RS256' | 'RS384' | 'RS512' |
+'PS256' | 'PS384' | 'PS512';
+
 export type TokenVerifyOptions = ({
     type: `${KeyType.RSA}` | KeyType.RSA,
-    algorithms?: ('RS256' | 'RS384' | 'RS512' |
-    'PS256' | 'PS384' | 'PS512')[],
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    algorithms?: TokenVerifyRSAlgorithm[],
+    keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string
 } | {
     type: `${KeyType.EC}` | KeyType.EC,
     algorithms?: ('ES256' | 'ES384' | 'ES512')[],
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string
 } | {
     type: `${KeyType.OCT}` | KeyType.OCT,
     algorithms?: ('HS256' | 'HS384' | 'HS512')[],

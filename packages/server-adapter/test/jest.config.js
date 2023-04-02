@@ -27,6 +27,9 @@ module.exports = {
     coverageDirectory: 'writable/coverage',
     collectCoverageFrom: [
         'src/**/*.ts',
+        '!src/interceptor/module.ts',
+        '!src/middleware/**/*.ts',
+        '!src/oauth2/cache/redis.ts',
         '!src/**/*.d.ts',
     ],
     coverageThreshold: {

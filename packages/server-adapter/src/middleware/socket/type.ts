@@ -4,13 +4,15 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { IncomingHttpHeaders } from 'node:http';
-import type { VerifyContext } from '../../type';
-import type { RequestEnv } from '../type';
 
-export type SocketMiddlewareContext = VerifyContext;
+import type { IncomingHttpHeaders } from 'node:http';
+import type { TokenVerifierOptions, TokenVerifierOutput } from '../../verifier';
+
+export type SocketMiddlewareContext = {
+    tokenVerifier: TokenVerifierOptions
+};
 export type SocketNextFunction = (err?: Error) => void;
-export type SocketData = RequestEnv & {
+export type SocketData = TokenVerifierOutput & {
     [k: string]: any
 };
 export type Socket = {

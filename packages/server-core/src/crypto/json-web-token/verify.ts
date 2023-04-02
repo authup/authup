@@ -8,7 +8,7 @@
 import type { Jwt, JwtPayload } from 'jsonwebtoken';
 import { verify } from 'jsonwebtoken';
 import { KeyType, TokenError } from '@authup/core';
-import { isKeyPair, useKeyPair } from '../key-pair';
+import { isKeyPair, isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
 import type { TokenVerifyOptions } from './type';
 import { handleJWTError } from './utils';
 
@@ -31,7 +31,7 @@ export async function verifyToken(
             case KeyType.RSA:
             case KeyType.EC: {
                 const { type, keyPair, ...options } = context;
-                const { publicKey } = isKeyPair(keyPair) ?
+                const { publicKey } = isKeyPairWithPublicKey(keyPair) ?
                     keyPair :
                     await useKeyPair(keyPair);
 

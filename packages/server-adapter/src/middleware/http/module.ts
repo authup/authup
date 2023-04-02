@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
 import {
     AbilityManager,
     CookieName,
@@ -17,18 +16,12 @@ import type {
     Handler, Next, Request, Response,
 } from 'routup';
 import { setRequestEnv } from 'routup';
-import type { RequestEnv } from '../type';
+import type { TokenVerifierOutput } from '../../verifier';
+import { TokenVerifier } from '../../verifier';
 import type { HTTPMiddlewareContext } from './type';
-import type { TokenVerifyContext } from '../../oauth2';
-import { applyOAuth2IntrospectionResponse, useOAuth2TokenCache, verifyOAuth2Token } from '../../oauth2';
 
 export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
-    const cache = useOAuth2TokenCache(context.redis, context.redisPrefix);
-
-    const tokenVerifyContext : TokenVerifyContext = {
-        ...context,
-        cache,
-    };
+    const tokenVerifier = new TokenVerifier(context.tokenVerifier);
 
     return async (req: Request, res: Response, next: Next) => {
         let { authorization: headerValue } = req.headers;
@@ -68,23 +61,19 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
             throw new BadRequestError('Only Bearer tokens are accepted as authentication method.');
         }
 
-        let data : OAuth2TokenIntrospectionResponse | undefined;
+        let data : TokenVerifierOutput | undefined;
 
         try {
-            data = await verifyOAuth2Token(header.token, tokenVerifyContext);
+            data = await tokenVerifier.verify(header.token);
         } catch (e) {
             next(e);
 
             return;
         }
 
-        const env : Partial<RequestEnv> = {};
-
-        applyOAuth2IntrospectionResponse(env, data);
-
-        const keys = Object.keys(env);
+        const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
-            setRequestEnv(req, keys[i], env[keys[i]]);
+            setRequestEnv(req, keys[i], data[keys[i]]);
         }
 
         next();

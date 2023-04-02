@@ -7,8 +7,13 @@
 
 import type { ConfigInput } from 'hapic';
 import { Client as BaseClient } from 'hapic';
-import { Client as OAuth2Client } from '@hapic/oauth2';
+import type { ClientOptions } from '@hapic/oauth2';
+import {
+    AuthorizeAPI,
+    TokenAPI,
+} from '@hapic/oauth2';
 
+import type { OAuth2JsonWebKey } from '../../domains';
 import {
     ClientAPI,
     ClientScopeAPI,
@@ -29,7 +34,9 @@ import {
 } from '../../domains';
 
 export class APIClient extends BaseClient {
-    public readonly oauth2 : OAuth2Client;
+    public readonly token : TokenAPI;
+
+    public readonly authorize : AuthorizeAPI;
 
     public readonly client : ClientAPI;
 
@@ -65,17 +72,25 @@ export class APIClient extends BaseClient {
 
     public readonly userRole : UserRoleAPI;
 
-    constructor(config: ConfigInput) {
+    constructor(config?: ConfigInput) {
         super(config);
 
-        this.oauth2 = new OAuth2Client({
-            options: {
-                authorization_endpoint: new URL('authorize', this.driver.defaults.baseURL).href,
-                introspection_endpoint: new URL('token/introspect', this.driver.defaults.baseURL).href,
-                token_endpoint: new URL('token', this.driver.defaults.baseURL).href,
-                userinfo_endpoint: new URL('users/@me', this.driver.defaults.baseURL).href,
-            },
-        });
+        const options : ClientOptions = {
+            authorization_endpoint: 'authorize',
+            introspection_endpoint: 'token/introspect',
+            token_endpoint: 'token',
+            userinfo_endpoint: 'users/@me',
+        };
+
+        if (typeof this.config.baseURL === 'string') {
+            const keys = Object.keys(options);
+            for (let i = 0; i < keys.length; i++) {
+                options[keys[i]] = new URL(options[keys[i]], this.config.baseURL).href;
+            }
+        }
+
+        this.authorize = new AuthorizeAPI(this.driver, options);
+        this.token = new TokenAPI(this.driver, options);
 
         this.client = new ClientAPI(this.driver);
         this.clientScope = new ClientScopeAPI(this.driver);
@@ -101,5 +116,17 @@ export class APIClient extends BaseClient {
         this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);
+    }
+
+    async getJwks() : Promise<OAuth2JsonWebKey[]> {
+        const response = await this.driver.get('jwks');
+
+        return response.data;
+    }
+
+    async getJwk(id: string) : Promise<OAuth2JsonWebKey> {
+        const response = await this.driver.get(`jwks/${id}`);
+
+        return response.data;
     }
 }
