@@ -5,60 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    AbilityManager,
-    CookieName,
-} from '@authup/core';
-import { BadRequestError } from '@ebec/http';
-import { useRequestCookies } from '@routup/cookie';
-import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import type {
-    Handler, Next, Request, Response,
-} from 'routup';
-import { setRequestEnv } from 'routup';
+import { CookieName } from '@authup/core';
+import { parseAuthorizationHeader } from 'hapic';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { TokenVerifierOutput } from '../../verifier';
 import { TokenVerifier } from '../../verifier';
-import type { HTTPMiddlewareContext } from './type';
+import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';
 
-export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
+export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddleware {
     const tokenVerifier = new TokenVerifier(context.tokenVerifier);
 
-    return async (req: Request, res: Response, next: Next) => {
-        let { authorization: headerValue } = req.headers;
+    return async (req: IncomingMessage, res: ServerResponse, next: HTTPNext) => {
+        let { authorization } = req.headers;
 
-        if (!headerValue) {
-            const cookies = useRequestCookies(req);
-
-            try {
-                let value;
-                if (context.cookieHandler) {
-                    value = context.cookieHandler(cookies);
-                } else if (
-                    cookies[CookieName.ACCESS_TOKEN] &&
-                        typeof cookies[CookieName.ACCESS_TOKEN] === 'string'
-                ) {
-                    value = cookies[CookieName.ACCESS_TOKEN];
-                }
-
-                if (value) {
-                    headerValue = stringifyAuthorizationHeader({ type: 'Bearer', token: value });
-                }
-            } catch (e) {
-                // ...
-            }
+        if (!authorization && context.tokenByCookie) {
+            authorization = context.tokenByCookie(req, CookieName.ACCESS_TOKEN);
         }
 
-        if (!headerValue) {
-            setRequestEnv(req, 'ability', new AbilityManager());
-
+        if (!authorization) {
             next();
             return;
         }
 
-        const header = parseAuthorizationHeader(headerValue);
+        const header = parseAuthorizationHeader(authorization);
 
         if (header.type !== 'Bearer') {
-            throw new BadRequestError('Only Bearer tokens are accepted as authentication method.');
+            throw new Error('Only Bearer tokens are accepted as authentication method.');
         }
 
         let data : TokenVerifierOutput | undefined;
@@ -71,10 +43,7 @@ export function setupHTTPMiddleware(context: HTTPMiddlewareContext) : Handler {
             return;
         }
 
-        const keys = Object.keys(data);
-        for (let i = 0; i < keys.length; i++) {
-            setRequestEnv(req, keys[i], data[keys[i]]);
-        }
+        context.tokenVerifierHandler(data);
 
         next();
     };

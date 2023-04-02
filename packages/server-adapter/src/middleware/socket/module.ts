@@ -4,24 +4,19 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import {
-    AbilityManager,
-} from '@authup/core';
-import type { Socket, SocketMiddlewareContext, SocketNextFunction } from './type';
+import type { Socket, SocketMiddlewareOptions, SocketNextFunction } from './type';
 import type { TokenVerifierOutput } from '../../verifier';
 import {
     TokenVerifier,
 } from '../../verifier';
 
-export function setupSocketMiddleware(context: SocketMiddlewareContext) {
+export function createSocketMiddleware(context: SocketMiddlewareOptions) {
     const tokenVerifier = new TokenVerifier(context.tokenVerifier);
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;
 
         if (!token) {
-            socket.data.ability = new AbilityManager();
-
             return next();
         }
 
@@ -33,10 +28,7 @@ export function setupSocketMiddleware(context: SocketMiddlewareContext) {
             return next(e);
         }
 
-        const keys = Object.keys(data);
-        for (let i = 0; i < keys.length; i++) {
-            socket.data[keys[i]] = data[keys[i]];
-        }
+        context.tokenVerifierHandler(data);
 
         return next();
     };
