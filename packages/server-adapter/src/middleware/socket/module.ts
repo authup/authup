@@ -11,7 +11,12 @@ import {
 } from '../../verifier';
 
 export function createSocketMiddleware(context: SocketMiddlewareOptions) {
-    const tokenVerifier = new TokenVerifier(context.tokenVerifier);
+    let tokenVerifier : TokenVerifier;
+    if (context.tokenVerifier instanceof TokenVerifier) {
+        tokenVerifier = context.tokenVerifier;
+    } else {
+        tokenVerifier = new TokenVerifier(context.tokenVerifier);
+    }
 
     return async (socket: Socket, next: SocketNextFunction) => {
         const { token } = socket.handshake.auth;

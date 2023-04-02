@@ -13,7 +13,12 @@ import { TokenVerifier } from '../../verifier';
 import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';
 
 export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddleware {
-    const tokenVerifier = new TokenVerifier(context.tokenVerifier);
+    let tokenVerifier : TokenVerifier;
+    if (context.tokenVerifier instanceof TokenVerifier) {
+        tokenVerifier = context.tokenVerifier;
+    } else {
+        tokenVerifier = new TokenVerifier(context.tokenVerifier);
+    }
 
     return async (req: IncomingMessage, res: ServerResponse, next: HTTPNext) => {
         let { authorization } = req.headers;
