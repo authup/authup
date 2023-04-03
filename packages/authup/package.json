@@ -1,6 +1,6 @@
 {
     "name": "authup",
-    "version": "0.31.1",
+    "version": "0.31.2",
     "description": "This is the CLI for the authup framework.",
     "main": "dist/index.js",
     "scripts": {
@@ -31,10 +31,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-ui": "^0.31.1",
-        "@authup/core": "^0.31.1",
-        "@authup/server-api": "^0.31.1",
-        "@authup/server-core": "^0.31.1",
+        "@authup/client-ui": "^0.31.2",
+        "@authup/core": "^0.31.2",
+        "@authup/server-api": "^0.31.2",
+        "@authup/server-core": "^0.31.2",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^2.15.3",
