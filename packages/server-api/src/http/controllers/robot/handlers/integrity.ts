@@ -11,12 +11,17 @@ import {
     createNanoID,
     isUUID,
 } from '@authup/core';
-import { findRobotCredentialsInVault, hasVaultConfig, saveRobotCredentialsToVault } from '@authup/server-core';
 import { NotFoundError } from '@ebec/http';
+import { hasConfig } from '@hapic/vault';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, resolveRealm } from '../../../../domains';
+import {
+    RobotRepository,
+    findRobotCredentialsInVault,
+    resolveRealm,
+    saveRobotCredentialsToVault,
+} from '../../../../domains';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -51,7 +56,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
     }
 
     if (
-        hasVaultConfig() &&
+        hasConfig() &&
         realm &&
         realm.name === REALM_MASTER_NAME
     ) {

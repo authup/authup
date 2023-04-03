@@ -6,9 +6,10 @@
  */
 
 import { ROBOT_SYSTEM_NAME } from '@authup/core';
+import { hasConfig as hasVaultConfig } from '@hapic/vault';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
-    hasVaultConfig, saveRobotCredentialsToVault, setLogger, useLogger,
+    setLogger, useLogger,
 } from '@authup/server-core';
 import { URL } from 'url';
 import type { DataSourceOptions } from 'typeorm';
@@ -21,6 +22,7 @@ import {
 } from 'typeorm-extension';
 import { useConfig } from '../config';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
+import { saveRobotCredentialsToVault } from '../domains';
 import {
     createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner,
 } from '../http';

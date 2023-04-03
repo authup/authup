@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setVaultConfig } from '@authup/server-core';
+import { setConfig } from '@hapic/vault';
 
 export function setupVault(data: string | boolean) {
     if (
@@ -13,7 +13,7 @@ export function setupVault(data: string | boolean) {
         typeof data === 'undefined'
     ) {
         if (data) {
-            setVaultConfig({
+            setConfig({
                 extra: {
                     // todo: this should maybe the default address of the vault client
                     connectionString: 'start123@http://127.0.0.1:8090/v1/',
@@ -23,7 +23,7 @@ export function setupVault(data: string | boolean) {
     }
 
     if (typeof data === 'string') {
-        setVaultConfig({
+        setConfig({
             extra: {
                 connectionString: data,
             },

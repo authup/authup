@@ -8,12 +8,12 @@
 import {
     PermissionName,
 } from '@authup/core';
-import { saveRobotCredentialsToVault } from '@authup/server-core';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     RobotRepository,
+    saveRobotCredentialsToVault,
 } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';

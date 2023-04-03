@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeRobotCredentialsFromVault } from '@authup/server-core';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -15,7 +14,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity, resolveRealm } from '../../../../domains';
+import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
