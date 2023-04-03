@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient } from '@authup/core';
+import { APIClient } from '../../api-client';
 import type { TokenCreator, TokenCreatorRobotOptions } from '../type';
 
 export function createTokenCreatorWithRobot(
@@ -14,12 +14,8 @@ export function createTokenCreatorWithRobot(
 ): TokenCreator {
     client = client || new APIClient({ driver: { baseURL: options.baseUrl } });
 
-    return async () => {
-        const response = await client.token.createWithRobotCredentials({
-            id: options.id,
-            secret: options.secret,
-        });
-
-        return response;
-    };
+    return async () => client.token.createWithRobotCredentials({
+        id: options.id,
+        secret: options.secret,
+    });
 }

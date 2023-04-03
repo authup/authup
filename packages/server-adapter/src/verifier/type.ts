@@ -8,8 +8,9 @@
 import type {
     AbilityDescriptor,
     OAuth2TokenPayload,
+    TokenCreator,
+    TokenCreatorOptions,
 } from '@authup/core';
-import type { TokenCreator, TokenCreatorOptions } from '../creator';
 import type { TokenVerifierCacheOptions } from './cache';
 
 export type TokenVerifierOptions = {

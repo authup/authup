@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient } from '@authup/core';
-import { BaseClient, isClientDriverInstance } from '@hapic/oauth2';
-import { setTimeout } from 'node:timers';
 import type { ClientDriverInstance, TokenGrantResponse } from '@hapic/oauth2';
+import { BaseClient, isClientDriverInstance } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
-import { createTokenCreator } from '../creator';
-import type { TokenCreator } from '../creator';
+import { APIClient } from '../api-client';
+import type { TokenCreator } from '../token-creator';
+import { createTokenCreator } from '../token-creator';
 import type { TokenInterceptorOptions } from './type';
 import { getCurrentRequestRetryState, isValidAuthenticateError } from './utils';
 
@@ -31,13 +30,41 @@ async function refreshToken(baseURL: string, refreshToken: string) {
 }
 
 const tokenInterceptorSymbol = Symbol.for('ClientTokenInterceptor');
+const tokenInterceptorTimeoutSymbol = Symbol.for('ClientTokenInterceptorTimeout');
+
+export function isTokenInterceptorMountedOnClient(client: BaseClient | ClientDriverInstance) {
+    return tokenInterceptorSymbol in client;
+}
+
+export function unmountTokenInterceptorOfClient(
+    client: BaseClient | ClientDriverInstance,
+) {
+    if (!isTokenInterceptorMountedOnClient(client)) {
+        return;
+    }
+
+    const interceptorId = client[tokenInterceptorSymbol] as number;
+    if (isClientDriverInstance(client)) {
+        client.interceptors.response.eject(interceptorId);
+    } else {
+        client.unmountResponseInterceptor(interceptorId);
+    }
+
+    if (tokenInterceptorTimeoutSymbol in client) {
+        clearTimeout(client[tokenInterceptorTimeoutSymbol] as ReturnType<typeof setTimeout>);
+
+        delete client[tokenInterceptorTimeoutSymbol];
+    }
+
+    delete client[tokenInterceptorSymbol];
+}
 
 export function mountTokenInterceptorOnClient(
     client: BaseClient | ClientDriverInstance,
     options: TokenInterceptorOptions,
-) : number {
-    if (tokenInterceptorSymbol in client) {
-        return client[tokenInterceptorSymbol] as number;
+) {
+    if (isTokenInterceptorMountedOnClient(client)) {
+        return;
     }
 
     let instance : BaseClient;
@@ -74,7 +101,7 @@ export function mountTokenInterceptorOnClient(
             return;
         }
 
-        setTimeout(async () => {
+        client[tokenInterceptorTimeoutSymbol] = setTimeout(async () => {
             const tokenGrantResponse = await refreshToken(
                 baseUrl,
                 response.refresh_token,
@@ -123,12 +150,8 @@ export function mountTokenInterceptorOnClient(
             });
     };
 
-    const interceptorId = instance.mountResponseInterceptor(
+    client[tokenInterceptorSymbol] = instance.mountResponseInterceptor(
         (value) => value,
         onReject,
     );
-
-    client[tokenInterceptorSymbol] = interceptorId;
-
-    return interceptorId;
 }

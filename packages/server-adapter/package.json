@@ -58,7 +58,6 @@
         "@authup/core": "^0.31.3",
         "@authup/server-core": "^0.31.3",
         "@hapic/oauth2": "^1.6.1",
-        "@hapic/vault": "^1.6.1",
         "hapic": "^1.6.0",
         "redis-extension": "^1.3.0"
     },
@@ -66,7 +65,6 @@
         "@authup/core": ">=0.31.2 <1.0.0",
         "@authup/server-core": ">=0.31.2 <1.0.0",
         "@hapic/oauth2": "^1.6.1",
-        "@hapic/vault": "^1.6.1",
         "hapic": "^1.6.0",
         "redis-extension": "^1.2.0"
     },

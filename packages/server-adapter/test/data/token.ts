@@ -7,9 +7,9 @@
 
 import { ErrorCode, TokenError } from '@authup/core';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/core';
-import { createResponseError } from '../utils/response-error';
+import { createResponseError } from '../utils';
 
-export const TokenPayload : OAuth2TokenIntrospectionResponse = {
+export const TokenPayload : Omit<OAuth2TokenIntrospectionResponse, 'exp'> = {
     active: true,
     permissions: [],
     kind: 'access_token',
@@ -38,7 +38,7 @@ export async function introspectToken(input: string) : Promise<OAuth2TokenIntros
             throw createResponseError(TokenError.expired());
         }
         default: {
-            return TokenPayload;
+            return TokenPayload as OAuth2TokenIntrospectionResponse;
         }
     }
 }

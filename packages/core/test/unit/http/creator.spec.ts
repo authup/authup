@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RobotAPI } from '@authup/core';
 import { KeyValueAPI } from '@hapic/vault';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { TokenAPI } from '@hapic/oauth2';
-import { createTokenCreator } from '../../src';
+import { RobotAPI, createTokenCreator } from '../../../src';
 
 const tokenGrantResponse : TokenGrantResponse = {
     token_type: 'bearer',

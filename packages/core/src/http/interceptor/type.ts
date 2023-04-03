@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenCreator, TokenCreatorOptions } from '../creator';
+import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
 
 export type TokenInterceptorOptions = {
     baseUrl?: string,

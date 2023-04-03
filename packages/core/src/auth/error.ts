@@ -7,7 +7,7 @@
 
 import type { Options } from '@ebec/http';
 import { BadRequestError, mergeOptions } from '@ebec/http';
-import { ErrorCode } from '../../error';
+import { ErrorCode } from '../error';
 import type { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {

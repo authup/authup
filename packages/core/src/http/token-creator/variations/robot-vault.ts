@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient, ROBOT_SYSTEM_NAME, isObject } from '@authup/core';
 import { Client } from '@hapic/vault';
+import { isObject } from '../../../utils';
+import { ROBOT_SYSTEM_NAME } from '../../../domains';
+import { APIClient } from '../../api-client';
 import type { TokenCreator, TokenCreatorRobotInVaultOptions } from '../type';
 import { createTokenCreatorWithRobot } from './robot';
 

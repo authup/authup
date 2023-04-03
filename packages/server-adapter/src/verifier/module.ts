@@ -16,18 +16,18 @@ import {
     KeyType,
     TokenError,
     isObject,
+    mountTokenInterceptorOnClient,
 } from '@authup/core';
 import { decodeToken, verifyToken } from '@authup/server-core';
 import type { TokenVerifyRSAlgorithm } from '@authup/server-core';
 import { KeyObject } from 'node:crypto';
 import { importJWK } from 'jose';
-import { mountTokenInterceptorOnClient } from '../interceptor';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';
 import type { TokenVerificationData, TokenVerificationDataInput, TokenVerifierOptions } from './type';
 
 export class TokenVerifier {
-    protected interceptorId : number | undefined;
+    protected interceptorMounted : boolean | undefined;
 
     protected client: APIClient;
 
@@ -51,7 +51,7 @@ export class TokenVerifier {
                 context.creator.baseUrl = context.baseUrl;
             }
 
-            this.interceptorId = mountTokenInterceptorOnClient(this.client, {
+            mountTokenInterceptorOnClient(this.client, {
                 tokenCreator: context.creator,
                 baseUrl: context.baseUrl,
             });
@@ -59,7 +59,7 @@ export class TokenVerifier {
     }
 
     async verify(token: string) : Promise<TokenVerificationData> {
-        if (typeof this.interceptorId === 'number') {
+        if (this.interceptorMounted) {
             return this.verifyRemote(token);
         }
 

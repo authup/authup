@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationResponseType } from '../../authorization-code';
+import type { OAuth2AuthorizationResponseType } from '../../domains/authorization-code';
 import type { OAuth2TokenPayload } from '../type';
 
 export type OAuth2OpenIDProviderMetadata = {

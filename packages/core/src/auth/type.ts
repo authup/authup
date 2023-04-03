@@ -6,7 +6,7 @@
  */
 
 import type { JwtPayload } from 'jsonwebtoken';
-import type { AbilityDescriptor } from '../../ability-manager';
+import type { AbilityDescriptor } from '../ability-manager';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2TokenGrantResponse = {

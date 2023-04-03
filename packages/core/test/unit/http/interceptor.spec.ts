@@ -5,11 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/core';
-import { getCurrentRequestRetryState, isValidAuthenticateError } from '../../src';
-import { createResponseError } from '../utils';
+import { createResponseError } from '../../utils';
+import {
+    APIClient,
+    ErrorCode,
+    getCurrentRequestRetryState,
+    isTokenInterceptorMountedOnClient,
+    isValidAuthenticateError,
+    mountTokenInterceptorOnClient, unmountTokenInterceptorOfClient,
+} from '../../../src';
 
 describe('src/interceptor/utils', () => {
+    it('should mount and unmount interceptor', () => {
+        const client = new APIClient();
+
+        expect(isTokenInterceptorMountedOnClient(client)).toBeFalsy();
+
+        mountTokenInterceptorOnClient(client, {
+            tokenCreator: {
+                type: 'user',
+                name: 'admin',
+                password: 'start123',
+            },
+        });
+        expect(isTokenInterceptorMountedOnClient(client)).toBeTruthy();
+
+        unmountTokenInterceptorOfClient(client);
+        expect(isTokenInterceptorMountedOnClient(client)).toBeFalsy();
+    });
+
     it('should be valid response error', () => {
         let error = createResponseError({
             status: 401,
