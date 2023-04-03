@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-adapter",
-    "version": "0.31.2",
+    "version": "0.31.3",
     "description": "An adapter package to integrate into other services.",
     "exports": {
         "./package.json": "./package.json",
@@ -55,8 +55,8 @@
         "jose": "^4.13.1"
     },
     "devDependencies": {
-        "@authup/core": "^0.31.2",
-        "@authup/server-core": "^0.31.2",
+        "@authup/core": "^0.31.3",
+        "@authup/server-core": "^0.31.3",
         "@hapic/oauth2": "^1.6.1",
         "@hapic/vault": "^1.6.1",
         "hapic": "^1.6.0",
