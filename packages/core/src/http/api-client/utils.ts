@@ -8,7 +8,7 @@
 import { DomainType } from '../../domains';
 import type { APIClient } from './module';
 
-export function useHTTPClientAPI(
+export function useDomainAPI(
     client: APIClient,
     name: `${DomainType}`,
 ) {

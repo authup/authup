@@ -11,6 +11,7 @@ import type { ClientOptions } from '@hapic/oauth2';
 import {
     AuthorizeAPI,
     TokenAPI,
+    UserinfoAPI,
 } from '@hapic/oauth2';
 
 import type { OAuth2JsonWebKey } from '../../domains';
@@ -66,6 +67,8 @@ export class APIClient extends BaseClient {
 
     public readonly user : UserAPI;
 
+    public readonly userInfo : UserinfoAPI;
+
     public readonly userAttribute: UserAttributeAPI;
 
     public readonly userPermission : UserPermissionAPI;
@@ -113,6 +116,7 @@ export class APIClient extends BaseClient {
         this.scope = new ScopeAPI(this.driver);
 
         this.user = new UserAPI(this.driver);
+        this.userInfo = new UserinfoAPI(this.driver);
         this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);

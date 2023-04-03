@@ -17,9 +17,9 @@ import {
     ref,
 } from 'vue';
 import type { DomainType } from '@authup/core';
-import { useHTTPClientAPI } from '@authup/core';
+import { useDomainAPI } from '@authup/core';
 import { useAPIClient } from '../utils';
-import { useAuthIlingo } from '../language/singleton';
+import { useAuthIlingo } from '../language';
 
 enum ElementType {
     BUTTON = 'button',
@@ -72,7 +72,7 @@ export const AuthEntityDelete = defineComponent({
         const submit = async () => {
             if (busy.value) return;
 
-            const domainApi = useHTTPClientAPI(useAPIClient(), props.entityType);
+            const domainApi = useDomainAPI(useAPIClient(), props.entityType);
             if (!domainApi) {
                 return;
             }
