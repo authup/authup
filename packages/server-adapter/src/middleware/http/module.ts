@@ -8,7 +8,7 @@
 import { CookieName } from '@authup/core';
 import { parseAuthorizationHeader } from 'hapic';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { TokenVerifierOutput } from '../../verifier';
+import type { TokenVerificationData } from '../../verifier';
 import { TokenVerifier } from '../../verifier';
 import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';
 
@@ -38,7 +38,7 @@ export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddl
             throw new Error('Only Bearer tokens are accepted as authentication method.');
         }
 
-        let data : TokenVerifierOutput | undefined;
+        let data : TokenVerificationData | undefined;
 
         try {
             data = await tokenVerifier.verify(header.token);

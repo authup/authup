@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Socket, SocketMiddlewareOptions, SocketNextFunction } from './type';
-import type { TokenVerifierOutput } from '../../verifier';
+import type { TokenVerificationData } from '../../verifier';
 import {
     TokenVerifier,
 } from '../../verifier';
@@ -25,7 +25,7 @@ export function createSocketMiddleware(context: SocketMiddlewareOptions) {
             return next();
         }
 
-        let data : TokenVerifierOutput | undefined;
+        let data : TokenVerificationData | undefined;
 
         try {
             data = await tokenVerifier.verify(token);

@@ -6,17 +6,14 @@
  */
 
 import type {
-    AbilityDescriptor,
     OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
 } from '@authup/core';
 import {
     APIClient,
-    AbilityManager,
     ErrorCode,
     KeyType,
-    OAuth2SubKind,
     TokenError,
     isObject,
 } from '@authup/core';
@@ -27,7 +24,7 @@ import { importJWK } from 'jose';
 import { mountTokenInterceptorOnClient } from '../interceptor';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';
-import type { TokenVerifierOptions, TokenVerifierOutput } from './type';
+import type { TokenVerificationData, TokenVerificationDataInput, TokenVerifierOptions } from './type';
 
 export class TokenVerifier {
     protected interceptorId : number | undefined;
@@ -61,7 +58,7 @@ export class TokenVerifier {
         }
     }
 
-    async verify(token: string) : Promise<TokenVerifierOutput> {
+    async verify(token: string) : Promise<TokenVerificationData> {
         if (typeof this.interceptorId === 'number') {
             return this.verifyRemote(token);
         }
@@ -69,7 +66,7 @@ export class TokenVerifier {
         return this.verifyLocal(token);
     }
 
-    async verifyLocal(token: string) : Promise<TokenVerifierOutput> {
+    async verifyLocal(token: string) : Promise<TokenVerificationData> {
         let output = await this.cache.get(token);
         if (output) {
             return output;
@@ -129,7 +126,7 @@ export class TokenVerifier {
         return output;
     }
 
-    async verifyRemote(token: string) : Promise<TokenVerifierOutput> {
+    async verifyRemote(token: string) : Promise<TokenVerificationData> {
         let output = await this.cache.get(token);
         if (output) {
             return output;
@@ -186,43 +183,10 @@ export class TokenVerifier {
         return output;
     }
 
-    protected transform(
-        input: {
-            realm_id?: string,
-            realm_name?: string,
-            sub_kind?: string,
-            sub?: string,
-            sub_name?: string,
-            permissions?: AbilityDescriptor[]
-        },
-    ) {
-        const output : TokenVerifierOutput = {
-            realmId: input.realm_id,
-            realmName: input.realm_name,
-            ability: new AbilityManager(input.permissions || []),
+    protected transform(input: TokenVerificationDataInput) : TokenVerificationData {
+        return {
+            ...input,
+            permissions: input.permissions || [],
         };
-        switch (input.sub_kind) {
-            case OAuth2SubKind.USER: {
-                output.userId = input.sub;
-                output.userName = input.sub_name;
-                output.user = { name: output.userName, id: output.userId };
-                break;
-            }
-            /* istanbul ignore next */
-            case OAuth2SubKind.CLIENT: {
-                output.clientId = input.sub;
-                output.clientName = input.sub_name;
-                output.client = { name: output.clientName, id: output.clientId };
-                break;
-            }
-            /* istanbul ignore next */
-            case OAuth2SubKind.ROBOT: {
-                output.robotId = input.sub;
-                output.robotName = input.sub_name;
-                output.robot = { name: output.robotName, id: output.robotId };
-            }
-        }
-
-        return output;
     }
 }

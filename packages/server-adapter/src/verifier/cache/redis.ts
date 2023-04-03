@@ -7,7 +7,7 @@
 
 import type { Client } from 'redis-extension';
 import { Cache, createClient } from 'redis-extension';
-import type { TokenVerifierOutput } from '../type';
+import type { TokenVerificationData } from '../type';
 import type { TokenVerifierCache } from './type';
 
 export class TokenVerifierRedisCache implements TokenVerifierCache {
@@ -33,11 +33,11 @@ export class TokenVerifierRedisCache implements TokenVerifierCache {
         });
     }
 
-    get(token: string): Promise<TokenVerifierOutput | undefined> {
+    get(token: string): Promise<TokenVerificationData | undefined> {
         return this.instance.get(token);
     }
 
-    set(token: string, data: TokenVerifierOutput, seconds?: number): Promise<void> {
+    set(token: string, data: TokenVerificationData, seconds?: number): Promise<void> {
         return this.instance.set(
             token,
             data,

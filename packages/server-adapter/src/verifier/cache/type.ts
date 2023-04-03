@@ -6,11 +6,11 @@
  */
 
 import type { Client } from 'redis-extension';
-import type { TokenVerifierOutput } from '../type';
+import type { TokenVerificationData } from '../type';
 
 export interface TokenVerifierCache {
-    get(token: string) : Promise<TokenVerifierOutput | undefined>;
-    set(token: string, data: TokenVerifierOutput, seconds?: number) : Promise<void>;
+    get(token: string) : Promise<TokenVerificationData | undefined>;
+    set(token: string, data: TokenVerificationData, seconds?: number) : Promise<void>;
 }
 
 export type TokenVerifierRedisCacheOptions = {

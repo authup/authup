@@ -6,8 +6,8 @@
  */
 
 import type {
-    APIClient,
-    AbilityManager, Client, Realm, Robot, User,
+    AbilityDescriptor,
+    OAuth2TokenPayload,
 } from '@authup/core';
 import type { TokenCreator, TokenCreatorOptions } from '../creator';
 import type { TokenVerifierCacheOptions } from './cache';
@@ -18,24 +18,10 @@ export type TokenVerifierOptions = {
     cache?: TokenVerifierCacheOptions
 };
 
-export type TokenVerifierOutput = {
-    user?: Pick<User, 'id' | 'name'>,
-    userName?: User['id'],
-    userId?: User['id'],
+export type TokenVerificationData = OAuth2TokenPayload & {
+    permissions: AbilityDescriptor[]
+};
 
-    robot?: Pick<Robot, 'id' | 'name'>,
-    robotName?: Robot['name'],
-    robotId?: Robot['id'],
-
-    client?: Pick<Client, 'id' | 'name'>,
-    clientName?: Client['name'],
-    clientId?: Client['id']
-
-    realm?: Pick<Realm, 'id' | 'name'>,
-    realmId?: Realm['id'],
-    realmName?: Realm['name'],
-
-    token?: string,
-
-    ability: AbilityManager
+export type TokenVerificationDataInput = OAuth2TokenPayload & {
+    permissions?: AbilityDescriptor[]
 };

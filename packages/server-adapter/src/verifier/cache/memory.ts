@@ -6,13 +6,13 @@
  */
 
 import { setInterval } from 'node:timers';
-import type { TokenVerifierOutput } from '../type';
+import type { TokenVerificationData } from '../type';
 import type { TokenVerifierCache } from './type';
 
 export class TokenVerifierMemoryCache implements TokenVerifierCache {
     protected interval : ReturnType<typeof setInterval>;
 
-    protected cache: Record<string, TokenVerifierOutput>;
+    protected cache: Record<string, TokenVerificationData>;
 
     constructor(windowMs?: number) {
         this.cache = {};
@@ -27,11 +27,11 @@ export class TokenVerifierMemoryCache implements TokenVerifierCache {
         }
     }
 
-    async get(token: string): Promise<TokenVerifierOutput | undefined> {
+    async get(token: string): Promise<TokenVerificationData | undefined> {
         return this.cache[token];
     }
 
-    async set(token: string, data: TokenVerifierOutput, seconds?: number): Promise<void> {
+    async set(token: string, data: TokenVerificationData, seconds?: number): Promise<void> {
         this.cache[token] = data;
     }
 }

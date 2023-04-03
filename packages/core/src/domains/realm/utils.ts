@@ -15,7 +15,7 @@ import { REALM_MASTER_NAME } from './constants';
  * @param resourceRealmId
  */
 export function isRealmResourceWritable(
-    realm?: { id: string, name?: string},
+    realm?: { id?: string, name?: string},
     resourceRealmId?: null | string | string[],
 ) : boolean {
     if (Array.isArray(resourceRealmId)) {

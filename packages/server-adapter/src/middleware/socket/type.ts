@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerifier, TokenVerifierOptions, TokenVerifierOutput } from '../../verifier';
+import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '../../verifier';
 
 export type SocketMiddlewareOptions = {
     tokenVerifier: TokenVerifierOptions | TokenVerifier,
-    tokenVerifierHandler: (socket: Socket, data: TokenVerifierOutput) => void
+    tokenVerifierHandler: (socket: Socket, data: TokenVerificationData) => void
 };
 
 export type SocketNextFunction = (err?: Error) => void;

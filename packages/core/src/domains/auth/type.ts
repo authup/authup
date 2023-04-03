@@ -114,7 +114,7 @@ export type OAuth2TokenPayload = JwtPayload & {
 export type OAuth2TokenIntrospectionResponse = {
     active: boolean,
     permissions?: AbilityDescriptor[],
-} & Partial<OAuth2TokenPayload>;
+} & OAuth2TokenPayload;
 
 export type OAuth2JsonWebKey = {
     alg: string,

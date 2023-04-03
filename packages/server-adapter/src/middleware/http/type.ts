@@ -6,12 +6,12 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { TokenVerifier, TokenVerifierOptions, TokenVerifierOutput } from '../../verifier';
+import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '../../verifier';
 
 export type HTTPMiddlewareOptions = {
     tokenByCookie?: (req: IncomingMessage, name?: string) => string | undefined,
     tokenVerifier: TokenVerifier | TokenVerifierOptions,
-    tokenVerifierHandler: (req: IncomingMessage, data: TokenVerifierOutput) => void
+    tokenVerifierHandler: (req: IncomingMessage, data: TokenVerificationData) => void
 };
 
 export type HTTPNext = (err?: Error) => void;

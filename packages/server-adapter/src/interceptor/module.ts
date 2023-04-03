@@ -123,7 +123,7 @@ export function mountTokenInterceptorOnClient(
             });
     };
 
-    const interceptorId = instance.mountRequestInterceptor(
+    const interceptorId = instance.mountResponseInterceptor(
         (value) => value,
         onReject,
     );
