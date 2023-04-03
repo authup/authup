@@ -16,7 +16,7 @@ export class TokenVerifierRedisCache implements TokenVerifierCache {
     constructor(input?: Client | string) {
         let client: Client;
 
-        if (!client) {
+        if (!input) {
             client = createClient();
         } else if (typeof input === 'string') {
             client = createClient({
