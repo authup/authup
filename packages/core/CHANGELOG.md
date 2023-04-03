@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.31.1](https://github.com/authup/authup/compare/v0.31.0...v0.31.1) (2023-04-03)
+
+
+### Bug Fixes
+
+* define userinfo endpoint for userinfo api ([106a3f7](https://github.com/authup/authup/commit/106a3f703c6b49523418a89e816f8501e00be3db))
+
+
+
+
+
 # [0.31.0](https://github.com/authup/authup/compare/v0.30.1...v0.31.0) (2023-04-03)
 
 
