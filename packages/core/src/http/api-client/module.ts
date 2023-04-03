@@ -116,7 +116,7 @@ export class APIClient extends BaseClient {
         this.scope = new ScopeAPI(this.driver);
 
         this.user = new UserAPI(this.driver);
-        this.userInfo = new UserinfoAPI(this.driver);
+        this.userInfo = new UserinfoAPI(this.driver, options);
         this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);
