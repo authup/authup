@@ -33,7 +33,7 @@ export function createSocketMiddleware(context: SocketMiddlewareOptions) {
             return next(e);
         }
 
-        context.tokenVerifierHandler(data);
+        context.tokenVerifierHandler(socket, data);
 
         return next();
     };

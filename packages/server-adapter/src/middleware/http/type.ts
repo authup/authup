@@ -11,7 +11,7 @@ import type { TokenVerifier, TokenVerifierOptions, TokenVerifierOutput } from '.
 export type HTTPMiddlewareOptions = {
     tokenByCookie?: (req: IncomingMessage, name?: string) => string | undefined,
     tokenVerifier: TokenVerifier | TokenVerifierOptions,
-    tokenVerifierHandler: (data: TokenVerifierOutput) => void
+    tokenVerifierHandler: (req: IncomingMessage, data: TokenVerifierOutput) => void
 };
 
 export type HTTPNext = (err?: Error) => void;

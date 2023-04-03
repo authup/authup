@@ -48,7 +48,7 @@ export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddl
             return;
         }
 
-        context.tokenVerifierHandler(data);
+        context.tokenVerifierHandler(req, data);
 
         next();
     };

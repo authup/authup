@@ -9,7 +9,7 @@ import type { TokenVerifier, TokenVerifierOptions, TokenVerifierOutput } from '.
 
 export type SocketMiddlewareOptions = {
     tokenVerifier: TokenVerifierOptions | TokenVerifier,
-    tokenVerifierHandler: (data: TokenVerifierOutput) => void
+    tokenVerifierHandler: (socket: Socket, data: TokenVerifierOutput) => void
 };
 
 export type SocketNextFunction = (err?: Error) => void;
