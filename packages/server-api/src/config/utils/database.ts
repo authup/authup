@@ -1,3 +1,4 @@
+import { isObject } from '@authup/core';
 import type { DataSourceOptions, DatabaseType } from 'typeorm';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
@@ -17,4 +18,10 @@ export function isDatabaseConnectionConfigurationSupported(
     input: DataSourceOptions,
 ) : input is DatabaseConnectionOptions {
     return isDatabaseTypeSupported(input.type);
+}
+
+export function isDatabaseConnectionConfiguration(input: unknown) : input is DataSourceOptions {
+    return isObject(input) &&
+        typeof (input as DataSourceOptions).type === 'string' &&
+        typeof (input as DataSourceOptions).database === 'string';
 }

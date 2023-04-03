@@ -11,6 +11,7 @@ import path from 'node:path';
 import process from 'node:process';
 import zod from 'zod';
 import type { Config, Options, OptionsInput } from './type';
+import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';
 
 let instance : Config | undefined;
 
@@ -86,6 +87,7 @@ export function createConfig() : Config {
             rootPath: (value) => zod.string().safeParse(value),
             writableDirectoryPath: (value) => zod.string().safeParse(value),
 
+            db: (value) => isDatabaseConnectionConfiguration(value) && isDatabaseConnectionConfigurationSupported(value),
             redis: (value) => zod.lazy(() => zod.union([
                 zod.string(),
                 zod.boolean(),

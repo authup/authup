@@ -49,7 +49,7 @@ export function isRealmResourceWritable(
  * @param resourceRealmId
  */
 export function isRealmResourceReadable(
-    realm?: { id: string, name?: string },
+    realm?: { id?: string, name?: string },
     resourceRealmId?: string | string[],
 ) : boolean {
     if (Array.isArray(resourceRealmId)) {
