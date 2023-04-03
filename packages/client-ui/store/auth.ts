@@ -12,36 +12,21 @@ import type {
     User,
 } from '@authup/core';
 import {
+    APIClient,
     AbilityManager,
-    ErrorCode,
-    OAuth2TokenKind,
-    hasOwnProperty,
+    OAuth2TokenKind, isValidAuthenticateError,
 } from '@authup/core';
-import { Client } from '@hapic/oauth2';
-import { isClientError } from 'hapic';
 import { defineStore } from 'pinia';
 import { computed, ref, useRuntimeConfig } from '#imports';
-import { useRouter } from '#app';
 
 export const useAuthStore = defineStore('auth', () => {
     const config = useRuntimeConfig();
 
-    const client = new Client({
-        options: {
-            token_endpoint: new URL('token', config.public.apiUrl).href,
-            introspection_endpoint: new URL('token/introspect', config.public.apiUrl).href,
-            userinfo_endpoint: new URL('users/@me', config.public.apiUrl).href,
+    const client = new APIClient({
+        driver: {
+            baseURL: config.public.apiUrl,
         },
     });
-
-    client.mountResponseInterceptor((r) => r, ((error) => {
-        if (typeof error?.response?.data?.message === 'string') {
-            error.message = error.response.data.message;
-            return Promise.reject(error);
-        }
-
-        return Promise.reject(new Error('A network error occurred.'));
-    }));
 
     // --------------------------------------------------------------------
 
@@ -49,37 +34,6 @@ export const useAuthStore = defineStore('auth', () => {
     const accessTokenExpireDate = ref<Date | undefined>(undefined);
 
     const refreshToken = ref<string | undefined>(undefined);
-    let refreshTokenJob : undefined | ReturnType<typeof setTimeout>;
-
-    const registerRefreshTokenJob = () => {
-        if (!accessTokenExpireDate.value) {
-            return;
-        }
-
-        const callback = async () => {
-            const router = useRouter();
-
-            await router.push({
-                path: '/logout',
-                query: {
-                    redirect: router.currentRoute.value.fullPath,
-                },
-            });
-        };
-
-        if (refreshTokenJob) {
-            clearTimeout(refreshTokenJob);
-        }
-
-        const timeoutMilliSeconds = accessTokenExpireDate.value.getTime() - Date.now() - 30.000;
-
-        if (timeoutMilliSeconds < 0) {
-            Promise.resolve()
-                .then(callback);
-        }
-
-        refreshTokenJob = setTimeout(callback, timeoutMilliSeconds);
-    };
 
     const setToken = (kind: OAuth2TokenKind, token: string) => {
         switch (kind) {
@@ -108,8 +62,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     const setTokenExpireDate = (date: Date) => {
         accessTokenExpireDate.value = date;
-
-        registerRefreshTokenJob();
     };
 
     let refreshTokenPromise : Promise<OAuth2TokenGrantResponse> | undefined;
@@ -164,13 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
             const entity = await client.userInfo.get(accessToken.value) as User;
             setUser(entity);
         } catch (e) {
-            if (
-                isClientError(e) &&
-                e.response &&
-                e.response.data &&
-                hasOwnProperty(e.response.data, 'code') &&
-                e.response.data.code === ErrorCode.TOKEN_EXPIRED
-            ) {
+            if (isValidAuthenticateError(e)) {
                 await attemptRefreshToken();
                 await resolveUser(true);
 
@@ -249,13 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
             const token = await client.token.introspect(accessToken.value) as OAuth2TokenIntrospectionResponse;
             setTokenInfo(token);
         } catch (e) {
-            if (
-                isClientError(e) &&
-                e.response &&
-                e.response.data &&
-                hasOwnProperty(e.response.data, 'code') &&
-                e.response.data.code === ErrorCode.TOKEN_EXPIRED
-            ) {
+            if (isValidAuthenticateError(e)) {
                 await attemptRefreshToken();
                 await introspectToken(true);
 
@@ -318,7 +258,6 @@ export const useAuthStore = defineStore('auth', () => {
         accessToken,
         accessTokenExpireDate,
         refreshToken,
-        attemptRefreshToken,
         setToken,
         setTokenExpireDate,
         unsetToken,

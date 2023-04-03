@@ -6,7 +6,7 @@
  */
 
 import type { ConfigInput } from 'hapic';
-import { Client as BaseClient } from 'hapic';
+import { Client as BaseClient, isClientError } from 'hapic';
 import type { ClientOptions } from '@hapic/oauth2';
 import {
     AuthorizeAPI,
@@ -120,6 +120,23 @@ export class APIClient extends BaseClient {
         this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);
+
+        this.mountResponseInterceptor(
+            (r) => r,
+            ((error) => {
+                if (
+                    isClientError(error) &&
+                    error.response &&
+                    error.response.data &&
+                    typeof error.response.data.message === 'string'
+                ) {
+                    error.message = error.response.data.message;
+                    return Promise.reject(error);
+                }
+
+                return Promise.reject(error);
+            }),
+        );
     }
 
     async getJwks() : Promise<OAuth2JsonWebKey[]> {

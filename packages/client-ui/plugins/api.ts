@@ -5,9 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient, ErrorCode, hasOwnProperty } from '@authup/core';
+import {
+    APIClient,
+    mountTokenInterceptorOnClient,
+    unmountTokenInterceptorOfClient,
+} from '@authup/core';
 import type { ConfigInput } from 'hapic';
-import { isClientError } from 'hapic';
+import type { Pinia } from 'pinia';
+import { storeToRefs } from 'pinia';
 import { useRuntimeConfig } from '#imports';
 import { defineNuxtPlugin } from '#app';
 import { useAuthStore } from '../store/auth';
@@ -35,25 +40,7 @@ export default defineNuxtPlugin((ctx) => {
     };
 
     const client = new APIClient(config);
-    client.mountResponseInterceptor(
-        (data) => data,
-        (error) => {
-            if (
-                isClientError(error) &&
-                error.response &&
-                error.response.data &&
-                hasOwnProperty(error.response.data, 'message')
-            ) {
-                error.message = error.response.data.message as string;
-            }
-
-            return Promise.reject(error);
-        },
-    );
-
-    let interceptorId : undefined | number;
-
-    const store = useAuthStore(ctx.$pinia);
+    const store = useAuthStore(ctx.$pinia as Pinia);
     store.$subscribe((mutation, state) => {
         if (mutation.storeId !== 'auth') return;
 
@@ -63,35 +50,26 @@ export default defineNuxtPlugin((ctx) => {
                 token: state.accessToken,
             });
 
-            interceptorId = client.mountResponseInterceptor(
-                (data) => data,
-                (error) => {
-                    if (
-                        isClientError(error) &&
-                        error.config &&
-                        error.response &&
-                        error.response.data &&
-                        hasOwnProperty(error.response.data, 'code') &&
-                        error.response.data.code === ErrorCode.TOKEN_EXPIRED
-                    ) {
-                        return Promise.resolve()
-                            .then(() => store.attemptRefreshToken())
-                            .then(() => client.setAuthorizationHeader({
-                                type: 'Bearer',
-                                token: store.accessToken as string,
-                            }))
-                            .then(() => client.request(error.config));
+            mountTokenInterceptorOnClient(client, {
+                baseUrl: runtimeConfig.public.apiUrl,
+                tokenCreator: () => {
+                    let refreshToken : string | undefined;
+                    if (state.refreshToken) {
+                        refreshToken = state.refreshToken;
+                    }
+                    if (refreshToken) {
+                        const refs = storeToRefs(store);
+                        refreshToken = refs.refreshToken.value;
                     }
 
-                    return Promise.reject(error);
+                    return client.token.createWithRefreshToken({
+                        refresh_token: refreshToken as string,
+                    });
                 },
-            );
+            });
         } else {
             client.unsetAuthorizationHeader();
-
-            if (interceptorId) {
-                client.unmountResponseInterceptor(interceptorId);
-            }
+            unmountTokenInterceptorOfClient(client);
         }
     });
 

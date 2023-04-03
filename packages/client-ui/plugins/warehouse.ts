@@ -31,7 +31,7 @@ export default defineNuxtPlugin((ctx) => {
                 path: '/',
             },
         },
-        isServer: () => process.server,
+        isServer: () => !!process.server,
         setCookie: (key, value) => {
             const cookie = useCookie<unknown>(key);
             cookie.value = value;

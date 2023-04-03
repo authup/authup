@@ -53,7 +53,7 @@ export const UserForm = defineComponent({
         const form = reactive({
             active: true,
             name: '',
-            name_locked: true,
+            name_locked: false,
             display_name: '',
             email: '',
             realm_id: '',
@@ -88,12 +88,18 @@ export const UserForm = defineComponent({
 
         const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isRealmLocked = computed(() => !!props.realmId);
-
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function initForm() {
             if (props.realmId) {
                 form.realm_id = props.realmId;
+            }
+
+            if (
+                props.entity &&
+                typeof props.entity.name_locked !== 'undefined'
+            ) {
+                form.name_locked = props.entity.name_locked;
             }
 
             initFormAttributesFromEntity(form, props.entity);
@@ -168,6 +174,25 @@ export const UserForm = defineComponent({
             let checks : VNodeArrayChildren = [];
 
             if (props.canManage) {
+                let nameLock : VNodeArrayChildren = [];
+                if (props.entity) {
+                    nameLock = [
+                        buildFormInputCheckbox({
+                            groupClass: 'form-switch mt-3',
+                            labelContent: h('span', {
+                                class: {
+                                    'text-warning': !form.name_locked,
+                                    'text-success': form.name_locked,
+                                },
+                            }, [form.name_locked ? 'locked' : 'not locked']), // todo: add translation
+                            value: form.name_locked,
+                            onChange(input) {
+                                form.name_locked = input;
+                            },
+                        }),
+                    ];
+                }
+
                 checks = [
                     h('div', { class: 'row' }, [
                         h('div', { class: 'col' }, [
@@ -186,19 +211,7 @@ export const UserForm = defineComponent({
                             }),
                         ]),
                         h('div', { class: 'col' }, [
-                            buildFormInputCheckbox({
-                                groupClass: 'form-switch mt-3',
-                                labelContent: h('span', {
-                                    class: {
-                                        'text-warning': !form.name_locked,
-                                        'text-success': form.name_locked,
-                                    },
-                                }, [form.name_locked ? 'locked' : 'not locked']), // todo: add translation
-                                value: form.name_locked,
-                                onChange(input) {
-                                    form.name_locked = input;
-                                },
-                            }),
+                            nameLock,
                         ]),
                     ]),
 

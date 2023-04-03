@@ -22,7 +22,11 @@ export default defineComponent({
         const list = resolveComponent('RealmList');
 
         const store = useAuthStore();
-        const { realmManagement, realmManagementId } = storeToRefs(store);
+        const {
+            realm,
+            realmManagement,
+            realmManagementId,
+        } = storeToRefs(store);
 
         const handleDeleted = (e: Realm) => {
             emit('deleted', e);
@@ -40,7 +44,7 @@ export default defineComponent({
 
                 if (
                     realmManagementId.value !== props.data.id &&
-                    isRealmResourceWritable(realmManagement.value)
+                    isRealmResourceWritable(realm.value, realmManagementId.value)
                 ) {
                     buttons.push(h(
                         'button',
