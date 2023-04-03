@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.30.0](https://github.com/authup/authup/compare/v0.29.0...v0.30.0) (2023-04-03)
+
+
+### Features
+
+* add socket/req object as argument to token verifier handler ([9ebd664](https://github.com/authup/authup/commit/9ebd664f3803ee93dfdc07087b922e8236c39167))
+* allow passing token-verfiier instance beside option variant ([831e16a](https://github.com/authup/authup/commit/831e16a9f3a67fa6f13500e885e7c72565f67614))
+* complete refactor of adapter + new sub-modules craetor, interceptor & verifier ([9940741](https://github.com/authup/authup/commit/99407417372c0b73ab6bbdfe84d9af177c8785e2))
+* decouple http middleware from routup ([759529e](https://github.com/authup/authup/commit/759529ea9ddd5a20fdabf77eab5c84dbc02ef8b7))
+* support interceptor mounting on client and client driver instance ([a26dafe](https://github.com/authup/authup/commit/a26dafe8174cf9c6de0bf85c294baf8e32d6261a))
+
+
+
+
+
 # [0.29.0](https://github.com/authup/authup/compare/v0.28.0...v0.29.0) (2023-04-01)
 
 
