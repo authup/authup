@@ -9,4 +9,3 @@ export * from './creator';
 export * from './interceptor';
 export * from './middleware';
 export * from './verifier';
-export * from './type';
