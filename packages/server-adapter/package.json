@@ -57,17 +57,17 @@
     "devDependencies": {
         "@authup/core": "^0.29.0",
         "@authup/server-core": "^0.29.0",
-        "@hapic/oauth2": "^1.5.0",
-        "@hapic/vault": "^1.5.0",
-        "hapic": "^1.4.0",
+        "@hapic/oauth2": "^1.6.1",
+        "@hapic/vault": "^1.6.1",
+        "hapic": "^1.6.0",
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
         "@authup/core": "^0.29.0",
         "@authup/server-core": "^0.29.0",
-        "@hapic/oauth2": "^1.5.0",
-        "@hapic/vault": "^1.5.0",
-        "hapic": "^1.4.0",
+        "@hapic/oauth2": "^1.6.1",
+        "@hapic/vault": "^1.6.1",
+        "hapic": "^1.6.0",
         "redis-extension": "^1.2.0"
     },
     "publishConfig": {

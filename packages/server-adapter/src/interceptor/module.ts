@@ -6,8 +6,9 @@
  */
 
 import { APIClient } from '@authup/core';
+import { BaseClient, isClientDriverInstance } from '@hapic/oauth2';
 import { setTimeout } from 'node:timers';
-import type { BaseClient, TokenGrantResponse } from '@hapic/oauth2';
+import type { ClientDriverInstance, TokenGrantResponse } from '@hapic/oauth2';
 import { isClientError } from 'hapic';
 import { createTokenCreator } from '../creator';
 import type { TokenCreator } from '../creator';
@@ -31,19 +32,26 @@ async function refreshToken(baseURL: string, refreshToken: string) {
 
 const tokenInterceptorSymbol = Symbol.for('ClientTokenInterceptor');
 
-export function mountTokenInterceptorForClient(
-    client: BaseClient,
+export function mountTokenInterceptorOnClient(
+    client: BaseClient | ClientDriverInstance,
     options: TokenInterceptorOptions,
 ) : number {
     if (tokenInterceptorSymbol in client) {
         return client[tokenInterceptorSymbol] as number;
     }
 
+    let instance : BaseClient;
+    if (isClientDriverInstance(client)) {
+        instance = new BaseClient({ driver: client });
+    } else {
+        instance = client;
+    }
+
     let baseUrl : string;
     if (options.baseUrl) {
         baseUrl = options.baseUrl;
     } else {
-        baseUrl = client.config.baseURL;
+        baseUrl = instance.config.baseURL;
     }
 
     let creator : TokenCreator;
@@ -72,7 +80,7 @@ export function mountTokenInterceptorForClient(
                 response.refresh_token,
             );
 
-            client.setAuthorizationHeader({ type: 'Bearer', token: tokenGrantResponse.access_token });
+            instance.setAuthorizationHeader({ type: 'Bearer', token: tokenGrantResponse.access_token });
 
             handleTokenResponse(tokenGrantResponse);
         }, refreshInMs);
@@ -92,20 +100,20 @@ export function mountTokenInterceptorForClient(
 
         currentState.retryCount += 1;
 
-        client.unsetAuthorizationHeader();
+        instance.unsetAuthorizationHeader();
 
         return creator()
             .then((tokenGrantResponse) => {
-                client.setAuthorizationHeader({
+                instance.setAuthorizationHeader({
                     type: 'Bearer',
                     token: tokenGrantResponse.access_token,
                 });
 
                 handleTokenResponse(tokenGrantResponse);
             })
-            .then(() => client.request(config))
+            .then(() => instance.request(config))
             .catch((e) => {
-                client.unsetAuthorizationHeader();
+                instance.unsetAuthorizationHeader();
 
                 if (isClientError(e)) {
                     e.response.status = 500;
@@ -115,7 +123,7 @@ export function mountTokenInterceptorForClient(
             });
     };
 
-    const interceptorId = client.mountRequestInterceptor(
+    const interceptorId = instance.mountRequestInterceptor(
         (value) => value,
         onReject,
     );

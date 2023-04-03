@@ -24,7 +24,7 @@ import { decodeToken, verifyToken } from '@authup/server-core';
 import type { TokenVerifyRSAlgorithm } from '@authup/server-core';
 import { KeyObject } from 'node:crypto';
 import { importJWK } from 'jose';
-import { mountTokenInterceptorForClient } from '../interceptor';
+import { mountTokenInterceptorOnClient } from '../interceptor';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';
 import type { TokenVerifierOptions, TokenVerifierOutput } from './type';
@@ -54,7 +54,7 @@ export class TokenVerifier {
                 context.creator.baseUrl = context.baseUrl;
             }
 
-            this.interceptorId = mountTokenInterceptorForClient(this.client, {
+            this.interceptorId = mountTokenInterceptorOnClient(this.client, {
                 tokenCreator: context.creator,
                 baseUrl: context.baseUrl,
             });
