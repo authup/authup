@@ -29,7 +29,7 @@
         "@hapic/oauth2": "^1.6.1",
         "@nuxtjs/google-fonts": "^3.0.0",
         "@pinia/nuxt": "^0.4.7",
-        "@vue-layout/basic": "^1.0.0",
+        "@vue-layout/basic": "^1.1.0",
         "@vue-layout/core": "^1.0.0",
         "@vue-layout/hyperscript": "^1.0.0",
         "@vuelidate/core": "^2.0.2",
