@@ -8,6 +8,7 @@
 import http from 'node:http';
 import type { AgentOptions } from 'node:https';
 import https from 'node:https';
+import { merge } from 'smob';
 
 export type ProxyClientOptions = {
     user?: string,
@@ -27,7 +28,7 @@ export class ProxyClient {
 
     constructor(options: ProxyClientOptions, agentOptions?: AgentOptions) {
         this.options = options;
-        this.agentOptions = agentOptions || {};
+        this.agentOptions = merge(agentOptions || {}, { keepAlive: false });
     }
 
     /**
