@@ -14,7 +14,7 @@ import {
     UserinfoAPI,
 } from '@hapic/oauth2';
 
-import type { OAuth2JsonWebKey } from '../../domains';
+import type { OAuth2JsonWebKey } from '../../auth';
 import {
     ClientAPI,
     ClientScopeAPI,

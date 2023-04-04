@@ -14,6 +14,8 @@ import { createTokenCreator } from '../token-creator';
 import type { TokenInterceptorOptions } from './type';
 import { getCurrentRequestRetryState, isValidAuthenticateError } from './utils';
 
+type RejectFn = (err: any) => any;
+
 async function refreshToken(baseURL: string, refreshToken: string) {
     const client = new APIClient({ driver: { baseURL } });
 
@@ -113,7 +115,7 @@ export function mountTokenInterceptorOnClient(
         }, refreshInMs);
     };
 
-    const onReject : (err: any) => any = (err) => {
+    const onReject : RejectFn = async (err) : Promise<any> => {
         if (!isValidAuthenticateError(err)) {
             return Promise.reject(err);
         }
