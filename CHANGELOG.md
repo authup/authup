@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.32.1](https://github.com/authup/authup/compare/v0.32.0...v0.32.1) (2023-04-04)
+
+
+### Bug Fixes
+
+* adjusted http interceptors ([57bedf7](https://github.com/authup/authup/commit/57bedf7bb4d8d98bec8445420624dbff580f26b1))
+* **deps:** bump vue-layout to v1.1.0 ([ff7f4d1](https://github.com/authup/authup/commit/ff7f4d15d101cb9b3c33e1b67f7764a4e09df110))
+* don't keep proxy agent alive by default ([e4d57b3](https://github.com/authup/authup/commit/e4d57b33a77daf86529b794a468ac6cbe44cc191))
+* non async response interceptor should throw error ([e7f22d6](https://github.com/authup/authup/commit/e7f22d6c6dab07f7f9a916393c297c14c8ffc010))
+* remove metrics controller ([d6b82bc](https://github.com/authup/authup/commit/d6b82bc408cb89da1fed30426901b5ef21fa7de8))
+
+
+
+
+
 # [0.32.0](https://github.com/authup/authup/compare/v0.31.3...v0.32.0) (2023-04-03)
 
 

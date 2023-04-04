@@ -6,7 +6,6 @@
  */
 
 export * from './key';
-export * from '../auth';
 export * from './access-token';
 export * from './authorization-code';
 export * from './attempt-activation';

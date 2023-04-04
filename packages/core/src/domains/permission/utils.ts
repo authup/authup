@@ -7,7 +7,7 @@
 
 import type { MongoQuery } from '@ucast/mongo2js';
 import type { PermissionRelation } from './types';
-import type { AbilityDescriptor } from '../../ability-manager';
+import type { AbilityDescriptor } from '../../auth/ability-manager';
 
 export function buildPermissionMetaCondition(input: string | null): MongoQuery {
     if (typeof input === 'undefined') {

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.32.1](https://github.com/authup/authup/compare/v0.32.0...v0.32.1) (2023-04-04)
+
+
+### Bug Fixes
+
+* adjusted http interceptors ([57bedf7](https://github.com/authup/authup/commit/57bedf7bb4d8d98bec8445420624dbff580f26b1))
+* non async response interceptor should throw error ([e7f22d6](https://github.com/authup/authup/commit/e7f22d6c6dab07f7f9a916393c297c14c8ffc010))
+
+
+
+
+
 # [0.32.0](https://github.com/authup/authup/compare/v0.31.3...v0.32.0) (2023-04-03)
 
 

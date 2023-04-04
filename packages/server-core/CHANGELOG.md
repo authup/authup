@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.32.1](https://github.com/authup/authup/compare/v0.32.0...v0.32.1) (2023-04-04)
+
+
+### Bug Fixes
+
+* don't keep proxy agent alive by default ([e4d57b3](https://github.com/authup/authup/commit/e4d57b33a77daf86529b794a468ac6cbe44cc191))
+
+
+
+
+
 # [0.32.0](https://github.com/authup/authup/compare/v0.31.3...v0.32.0) (2023-04-03)
 
 **Note:** Version bump only for package @authup/server-core

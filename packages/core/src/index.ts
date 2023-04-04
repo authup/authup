@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './ability-manager';
+export * from './auth';
 export * from './http';
 export * from './domains';
 export * from './error';

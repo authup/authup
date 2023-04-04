@@ -7,7 +7,7 @@
 
 import type { Options } from '@ebec/http';
 import { BaseError, mergeOptions } from '@ebec/http';
-import { ErrorCode } from '../error';
+import { ErrorCode } from '../../error';
 
 export class AbilityError extends BaseError {
     constructor(options?: Options) {

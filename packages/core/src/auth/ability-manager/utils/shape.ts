@@ -6,7 +6,7 @@
  */
 
 import type { AbilityID } from '../type';
-import { hasOwnProperty } from '../../utils';
+import { hasOwnProperty } from '../../../utils';
 
 export function isAbilityID(input: unknown) : input is AbilityID {
     return typeof input === 'object' &&
