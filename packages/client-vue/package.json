@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-vue",
-    "version": "0.32.0",
+    "version": "0.32.1",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/core": "^0.32.0",
+        "@authup/core": "^0.32.1",
         "@types/node": "^18.15.5",
         "@vue-layout/hyperscript": "^1.1.0",
         "@vuelidate/core": "^2.0.2",
