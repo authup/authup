@@ -131,10 +131,9 @@ export class APIClient extends BaseClient {
                     typeof error.response.data.message === 'string'
                 ) {
                     error.message = error.response.data.message;
-                    return Promise.reject(error);
                 }
 
-                return Promise.reject(error);
+                throw error;
             }),
         );
     }
