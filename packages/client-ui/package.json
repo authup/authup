@@ -38,7 +38,7 @@
         "browser-storage-adapter": "^1.1.2",
         "continu": "^1.2.0",
         "hapic": "^1.6.0",
-        "ilingo": "^2.2.1",
+        "ilingo": "^2.4.0",
         "nuxt": "3.3.3",
         "pinia": "^2.0.33",
         "rapiq": "^0.8.0",
