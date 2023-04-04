@@ -31,7 +31,7 @@
         "@pinia/nuxt": "^0.4.7",
         "@vue-layout/basic": "^1.0.0",
         "@vue-layout/core": "^1.0.0",
-        "@vue-layout/hyperscript": "^1.0.0",
+        "@vue-layout/hyperscript": "^1.1.0",
         "@vuelidate/core": "^2.0.2",
         "@vuelidate/validators": "^2.0.2",
         "bootstrap": "^5.2.3",
