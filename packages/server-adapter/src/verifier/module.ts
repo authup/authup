@@ -55,6 +55,8 @@ export class TokenVerifier {
                 tokenCreator: context.creator,
                 baseUrl: context.baseUrl,
             });
+
+            this.interceptorMounted = true;
         }
     }
 
