@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.32.3](https://github.com/authup/authup/compare/v0.32.2...v0.32.3) (2023-04-05)
+
+
+### Bug Fixes
+
+* set interceptor mounted flag on existing creator ([47f8838](https://github.com/authup/authup/commit/47f8838efda4d4a8ef1f499a7dfbc0deda4bd81d))
+
+
+
+
+
 ## [0.32.2](https://github.com/authup/authup/compare/v0.32.1...v0.32.2) (2023-04-05)
 
 
