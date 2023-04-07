@@ -38,7 +38,7 @@
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^2.15.3",
-        "continu": "^1.2.0",
+        "continu": "^1.3.0",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.0.0",
         "zod": "^3.21.4"
