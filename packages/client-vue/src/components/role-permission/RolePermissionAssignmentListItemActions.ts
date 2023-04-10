@@ -8,7 +8,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { RolePermission } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
+import { renderListItemAssignmentButton } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const RolePermissionAssignmentListItemActions = defineComponent({

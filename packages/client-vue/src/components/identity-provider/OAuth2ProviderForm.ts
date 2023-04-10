@@ -24,9 +24,10 @@ import {
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import { IdentityProviderProtocol, createNanoID } from '@authup/core';
 import {
-    buildFormInput, buildFormInputCheckbox,
+    buildFormInput,
+    buildFormInputCheckbox,
     buildFormSubmit,
-} from '@vue-layout/hyperscript';
+} from '@vue-layout/form-controls';
 import {
     alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
 } from '../../utils';

@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { IdentityProvider } from '@authup/core';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import {
     useAPIClient,
 } from '../../utils';
@@ -49,17 +49,19 @@ export const IdentityProviderList = defineComponent({
         updated: (item: IdentityProvider) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<IdentityProvider>({
+        const { build } = createDomainListBuilder<IdentityProvider>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-atom',
                         textContent: 'Providers',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-atom',

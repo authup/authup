@@ -7,7 +7,7 @@
 
 import { defineComponent, h } from 'vue';
 import type { Client } from '@authup/core';
-import { SlotName } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/list-controls';
 import { ClientList } from '../client';
 import { ClientScopeAssignmentListItemActions } from '../client-scope';
 

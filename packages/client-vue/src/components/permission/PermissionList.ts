@@ -8,7 +8,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { Permission } from '@authup/core';
 import type { BuildInput } from 'rapiq';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const PermissionList = defineComponent({
@@ -46,17 +46,19 @@ export const PermissionList = defineComponent({
         updated: (item: Permission) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<Permission>({
+        const { build } = createDomainListBuilder<Permission>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().permission.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-key',
                         textContent: 'Permissions',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-key',

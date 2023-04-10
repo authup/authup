@@ -6,11 +6,14 @@
  */
 
 import {
-    SlotName,
     buildFormInput,
     buildFormInputCheckbox,
-    buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
@@ -22,8 +25,7 @@ import {
 
 import type { Realm, User } from '@authup/core';
 import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({

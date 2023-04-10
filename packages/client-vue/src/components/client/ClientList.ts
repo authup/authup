@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Client } from '@authup/core';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const ClientList = defineComponent({
@@ -47,17 +47,19 @@ export const ClientList = defineComponent({
         updated: (item: Client) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<Client>({
+        const { build } = createDomainListBuilder<Client>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().client.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-robot',
                         textContent: 'Clients',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-ghost',

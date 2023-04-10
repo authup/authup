@@ -10,7 +10,7 @@ import {
     VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
 import type { RobotRole } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../composables/list/render/assignment-button';
+import { renderListItemAssignmentButton } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export type RobotRoleListItemActionsProperties = {

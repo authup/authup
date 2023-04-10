@@ -9,7 +9,7 @@ import {
     defineComponent, h,
 } from 'vue';
 import type { Robot } from '@authup/core';
-import { SlotName } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/list-controls';
 import {
     RobotRoleAssignmentListItemActions,
 } from '../robot-role/RobotRoleAssignmentListItemActions';

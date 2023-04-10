@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { Realm } from '@authup/core';
 import type { BuildInput } from 'rapiq';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const RealmList = defineComponent({
@@ -47,17 +47,19 @@ export const RealmList = defineComponent({
         updated: (item: Realm) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<Realm>({
+        const { build } = createDomainListBuilder<Realm>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().realm.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-city',
                         textContent: 'Realms',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-city',

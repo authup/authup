@@ -25,18 +25,20 @@ import type {
     Realm, Scope,
 } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormInputCheckbox, buildFormSubmit, buildFormTextarea, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit, buildFormTextarea,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
 import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
     useAPIClient,
 } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({

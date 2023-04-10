@@ -18,7 +18,7 @@ import {
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
-} from '@vue-layout/hyperscript';
+} from '@vue-layout/form-controls';
 import {
     alphaWithUpperNumHyphenUnderScore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
 } from '../../utils';

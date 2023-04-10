@@ -7,21 +7,20 @@
 
 import type { CollectionResourceResponse } from '@authup/core';
 import type {
-    ListHeaderBuildOptionsInput,
-    ListItemsBuildOptionsInput,
-    ListNoMoreBuildOptionsInput, ListPaginationBuildOptionsInput,
-    ListSearchBuildOptionsInput,
-} from '@vue-layout/hyperscript';
+    ListItemsBuildOptionsInput, ListLoadMeta, ListNoMoreBuildOptionsInput,
+} from '@vue-layout/list-controls';
+import type { PaginationOptionsInput } from '@vue-layout/pagination';
 import type { BuildInput } from 'rapiq';
-import type { SetupContext, ToRefs } from 'vue';
-import { Slots } from 'vue';
+import type {
+    Ref, SetupContext, ToRefs, VNodeArrayChildren,
+} from 'vue';
 
 export type ListBuilderComponentOptions<T extends Record<string, any>> = {
-    header: ListHeaderBuildOptionsInput | boolean,
-    search: ListSearchBuildOptionsInput | boolean,
+    header: boolean,
+    search: boolean,
     items: ListItemsBuildOptionsInput<T> | boolean,
-    noMore: ListNoMoreBuildOptionsInput<T> | boolean,
-    pagination: ListPaginationBuildOptionsInput<T> | boolean
+    noMore: ListNoMoreBuildOptionsInput<T>,
+    pagination: PaginationOptionsInput | boolean
 };
 
 export type ListProps<T extends Record<string, any>> = {
@@ -33,9 +32,18 @@ export type ListProps<T extends Record<string, any>> = {
     loadOnSetup: boolean
 };
 
-export type ListBuilderContext<T extends Record<string, any>> = {
+export type DomainListBuilderContext<T extends Record<string, any>> = {
     setup: SetupContext<{deleted: (item: T) => true, updated: (item: T) => true}>,
     props: ToRefs<ListProps<T>>
     load: (input: BuildInput<T>) => Promise<CollectionResourceResponse<T>>,
-    components: Partial<ListBuilderComponentOptions<T>>
+    components: Partial<ListBuilderComponentOptions<T>>,
+    filterKey?: string
+};
+
+export type DomainListBuilderOutput<T> = {
+    build() : VNodeArrayChildren;
+    load(meta: ListLoadMeta) : Promise<void>,
+    data: Ref<T[]>,
+    busy: Ref<boolean>,
+    meta: Ref<ListLoadMeta>
 };

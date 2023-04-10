@@ -54,7 +54,8 @@
     "devDependencies": {
         "@authup/core": "^0.32.2",
         "@types/node": "^18.15.5",
-        "@vue-layout/hyperscript": "^1.1.0",
+        "@vue-layout/form-controls": "^2.0.0",
+        "@vue-layout/list-controls": "^2.0.0",
         "@vuelidate/core": "^2.0.2",
         "@vuelidate/validators": "^2.0.2",
         "cross-env": "^7.0.3",
@@ -67,7 +68,8 @@
     },
     "peerDependencies": {
         "@authup/core": ">=0.32.0 <1.0.0",
-        "@vue-layout/hyperscript": "^1.1.0",
+        "@vue-layout/form-controls": "^2.x",
+        "@vue-layout/list-controls": "^2.x",
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "ilingo": "^2.x",

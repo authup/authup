@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFormInput } from '@vue-layout/hyperscript';
+import { buildFormInput } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, url,

@@ -14,7 +14,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
-} from '@vue-layout/hyperscript';
+} from '@vue-layout/form-controls';
 import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { useAuthIlingo } from '../../language/singleton';
 import { buildVuelidateTranslator } from '../../language/utils';

@@ -12,10 +12,9 @@ import {
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
-import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/hyperscript';
+import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/form-controls';
 import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 
 export const PermissionForm = defineComponent({
     name: 'PermissionForm',

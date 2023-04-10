@@ -12,7 +12,7 @@ import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
-import { buildFormInput } from '@vue-layout/hyperscript';
+import { buildFormInput } from '@vue-layout/form-controls';
 import { initFormAttributesFromEntity, useAPIClient } from '../../utils';
 import { buildVuelidateTranslator } from '../../language/utils';
 

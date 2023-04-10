@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ComponentsOptions } from '@vue-layout/hyperscript';
 import type { APIClient } from '@authup/core';
 
-export type InstallOptions = {
-    httpClient?: APIClient,
-    presets?: Record<string, ComponentsOptions>
+export type Options = {
+    apiClient?: APIClient,
+
 };

@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Robot } from '@authup/core';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const RobotList = defineComponent({
@@ -47,17 +47,19 @@ export const RobotList = defineComponent({
         updated: (item: Robot) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<Robot>({
+        const { build } = createDomainListBuilder<Robot>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().robot.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-robot',
                         textContent: 'Robots',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-robot',

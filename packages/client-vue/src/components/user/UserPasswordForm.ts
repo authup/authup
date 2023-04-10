@@ -12,10 +12,9 @@ import {
 import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
-import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/hyperscript';
+import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
 import { useAPIClient } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 
 export const UserPasswordForm = defineComponent({
     name: 'UserPasswordForm',

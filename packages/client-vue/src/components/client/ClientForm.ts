@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { SlotName, buildItemActionToggle } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -24,18 +25,18 @@ import {
 import type { Client, Realm, Robot } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormInputCheckbox, buildFormSubmit, buildFormTextarea, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormInputCheckbox,
+    buildFormSubmit,
+    buildFormTextarea,
+} from '@vue-layout/form-controls';
 import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
     useAPIClient,
 } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 import { RealmList } from '../realm';
 
 export const ClientForm = defineComponent({

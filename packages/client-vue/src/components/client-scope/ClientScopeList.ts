@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { ClientScope } from '@authup/core';
-import { useListBuilder } from '../../composables';
+import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const ClientScopeList = defineComponent({
@@ -47,17 +47,19 @@ export const ClientScopeList = defineComponent({
         updated: (item: ClientScope) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<ClientScope>({
+        const { build } = createDomainListBuilder<ClientScope>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().clientScope.getMany(buildInput),
             components: {
+                /*
                 header: {
                     title: {
                         iconClass: 'fa-solid fa-meteor',
                         textContent: 'ClientScopes',
                     },
                 },
+                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-meteor',

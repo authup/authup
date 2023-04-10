@@ -24,18 +24,20 @@ import {
 import type { Realm, Robot } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
 import {
     alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
     initFormAttributesFromEntity,
     useAPIClient,
 } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
 import { RealmList } from '../realm';
 
 export const RobotForm = defineComponent({

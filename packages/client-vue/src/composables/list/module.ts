@@ -5,17 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListLoadMeta } from '@vue-layout/hyperscript';
+import type { ListLoadMeta } from '@vue-layout/list-controls';
 import {
     buildList,
-    extractValueFromOptionValueInput,
-} from '@vue-layout/hyperscript';
-import type { Ref } from 'vue';
+} from '@vue-layout/list-controls';
+import type { Ref, VNodeArrayChildren } from 'vue';
 import {
-    computed, ref, unref, watch,
+    ref, watch,
 } from 'vue';
 import { merge } from 'smob';
-import type { ListBuilderContext } from './type';
+import type { DomainListBuilderContext, DomainListBuilderOutput } from './type';
 import {
     buildListComponentOptions,
     buildListCreatedHandler,
@@ -23,31 +22,16 @@ import {
     buildListUpdatedHandler,
 } from './utils';
 
-export function useListBuilder<T extends Record<string, any>>(
-    context: ListBuilderContext<T>,
-) {
+export function createDomainListBuilder<T extends Record<string, any>>(
+    context: DomainListBuilderContext<T>,
+) : DomainListBuilderOutput<T> {
     const q = ref('');
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
-    const meta : Ref<Partial<ListLoadMeta>> = ref({
+    const meta : Ref<ListLoadMeta> = ref({
         limit: 10,
         offset: 0,
         total: 0,
-    });
-
-    const filterKey = computed(() => {
-        if (
-            context.components.items &&
-            typeof context.components.items !== 'boolean'
-        ) {
-            const item = unref(extractValueFromOptionValueInput(context.components.items.item));
-
-            if (item && item.textPropName) {
-                return unref(extractValueFromOptionValueInput(item.textPropName));
-            }
-        }
-
-        return 'name';
     });
 
     async function load(targetMeta?: Partial<ListLoadMeta>) {
@@ -62,7 +46,7 @@ export function useListBuilder<T extends Record<string, any>>(
                     offset: targetMeta.offset ?? meta.value.offset,
                 },
                 filter: {
-                    [filterKey.value]: q.value.length > 0 ? `~${q.value}` : q.value,
+                    [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
                 },
             },
             context.props.query.value,
@@ -88,36 +72,38 @@ export function useListBuilder<T extends Record<string, any>>(
     const handleDeleted = buildListDeletedHandler(data);
     const handleUpdated = buildListUpdatedHandler(data);
 
-    function build() {
-        return buildList({
-            ...buildListComponentOptions(context.props, context.components),
-            load,
-            busy,
-            data,
-            meta,
-            onChange(value) {
-                q.value = value;
-            },
-            onDeleted(value) {
-                if (context.setup.emit) {
-                    context.setup.emit('deleted', value);
-                }
+    function build() : VNodeArrayChildren {
+        return [
+            buildList({
+                ...buildListComponentOptions(context.props, context.components),
+                load,
+                busy,
+                data,
+                total: meta.value.total,
+                onChange(value: string) {
+                    q.value = value;
+                },
+                onDeleted(value: T) {
+                    if (context.setup.emit) {
+                        context.setup.emit('deleted', value);
+                    }
 
-                if (meta.value.total) {
-                    meta.value.total--;
-                }
+                    if (meta.value.total) {
+                        meta.value.total--;
+                    }
 
-                handleDeleted(value);
-            },
-            onUpdated(value) {
-                if (context.setup.emit) {
-                    context.setup.emit('updated', value);
-                }
+                    handleDeleted(value);
+                },
+                onUpdated(value) {
+                    if (context.setup.emit) {
+                        context.setup.emit('updated', value);
+                    }
 
-                handleUpdated(value);
-            },
-            slotItems: context.setup.slots || {},
-        });
+                    handleUpdated(value);
+                },
+                slotItems: context.setup.slots || {},
+            }),
+        ];
     }
 
     context.setup.expose({
@@ -133,7 +119,6 @@ export function useListBuilder<T extends Record<string, any>>(
     }
 
     return {
-        q,
         data,
         busy,
         meta,
