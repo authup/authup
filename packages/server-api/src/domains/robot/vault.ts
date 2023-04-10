@@ -6,44 +6,101 @@
  */
 
 import type { Robot } from '@authup/core';
-import { hasConfig, useClient } from '@hapic/vault';
+import {
+    hasClient,
+    hasDriverFailedWithStausCode, isDriverError,
+    useClient,
+} from '@hapic/vault';
 
-export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
-    if (!hasConfig()) {
+export async function createRobotVaultEngine() {
+    if (!hasClient()) {
         return;
     }
 
     const client = useClient();
 
-    await client.keyValue.save('robots', entity.name, {
-        id: entity.id,
-        secret: entity.secret,
+    await client.mount.create({
+        path: 'robots',
+        data: {
+            type: 'kv',
+            options: {
+                version: 1,
+            },
+        },
     });
 }
 
-export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'>) {
-    if (!hasConfig()) {
+export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
+    if (!hasClient()) {
         return;
     }
 
     const client = useClient();
 
-    await client.keyValue.delete('robots', entity.name);
+    try {
+        await client.keyValueV1.create({
+            mount: 'robots',
+            path: entity.name,
+            data: {
+                id: entity.id,
+                secret: entity.secret,
+            },
+        });
+    } catch (e) {
+        if (hasDriverFailedWithStausCode(e, 404)) {
+            await createRobotVaultEngine();
+            return;
+        }
+
+        throw e;
+    }
+}
+
+export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'>) {
+    if (!hasClient()) {
+        return;
+    }
+
+    const client = useClient();
+
+    try {
+        await client.keyValueV1.delete({
+            mount: 'robots',
+            path: entity.name,
+        });
+    } catch (e) {
+        if (hasDriverFailedWithStausCode(e, 404)) {
+            return;
+        }
+
+        throw e;
+    }
 }
 
 export async function findRobotCredentialsInVault(
     entity: Pick<Robot, 'name'>,
 ) : Promise<Pick<Robot, 'id' | 'secret'> | undefined> {
-    if (!hasConfig()) {
+    if (!hasClient()) {
         return undefined;
     }
 
     const client = useClient();
 
-    const response = await client.keyValue.find('robots', entity.name);
-    if (response && response.data) {
-        return response.data as Robot;
-    }
+    try {
+        const response = await client.keyValueV1.getOne({
+            mount: 'robots',
+            path: entity.name,
+        });
+        if (response && response.data) {
+            return response.data as Robot;
+        }
 
-    return undefined;
+        return undefined;
+    } catch (e) {
+        if (hasDriverFailedWithStausCode(e, 404)) {
+            return undefined;
+        }
+
+        throw e;
+    }
 }

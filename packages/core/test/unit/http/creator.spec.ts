@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { KeyValueAPI } from '@hapic/vault';
+import { KeyValueV1API } from '@hapic/vault';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { TokenAPI } from '@hapic/oauth2';
 import { RobotAPI, createTokenCreator } from '../../../src';
@@ -23,9 +23,9 @@ jest.spyOn(TokenAPI.prototype, 'createWithRobotCredentials')
 jest.spyOn(TokenAPI.prototype, 'createWithPasswordGrant')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-jest.spyOn(KeyValueAPI.prototype, 'find')
-    .mockImplementation((engine, name, _options) => {
-        if (name === 'SYSTEM') {
+jest.spyOn(KeyValueV1API.prototype, 'getOne')
+    .mockImplementation((context) => {
+        if (context.path === 'SYSTEM') {
             return Promise.resolve({
                 data: {
                     id: 'foo',

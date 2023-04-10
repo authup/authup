@@ -6,7 +6,7 @@
  */
 
 import http from 'node:http';
-import type { AgentOptions } from 'node:https';
+import type { Agent, AgentOptions } from 'node:https';
 import https from 'node:https';
 import { merge } from 'smob';
 
@@ -37,7 +37,7 @@ export class ProxyClient {
      * @param input
      */
     async createAgent(input: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<Agent>((resolve, reject) => {
             const headers : Record<string, any> = { };
 
             if (

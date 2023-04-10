@@ -7,16 +7,16 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import type { RobotPermission } from './types';
 import type {
     CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
 } from '../types-base';
 
 export class RobotPermissionAPI implements DomainAPISlim<RobotPermission> {
-    protected client: ClientDriverInstance;
+    protected client: Driver;
 
-    constructor(client: ClientDriverInstance) {
+    constructor(client: Driver) {
         this.client = client;
     }
 

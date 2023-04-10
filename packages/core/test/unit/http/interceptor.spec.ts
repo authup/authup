@@ -11,7 +11,7 @@ import {
     ErrorCode,
     getCurrentRequestRetryState,
     isTokenInterceptorMountedOnClient,
-    isValidAuthenticateError,
+    isValidAuthenticationError,
     mountTokenInterceptorOnClient, unmountTokenInterceptorOfClient,
 } from '../../../src';
 
@@ -38,30 +38,30 @@ describe('src/interceptor/utils', () => {
         let error = createResponseError({
             status: 401,
         });
-        expect(isValidAuthenticateError(error)).toBeTruthy();
+        expect(isValidAuthenticationError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 500,
             code: ErrorCode.TOKEN_EXPIRED,
         });
-        expect(isValidAuthenticateError(error)).toBeTruthy();
+        expect(isValidAuthenticationError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.TOKEN_INVALID,
         });
-        expect(isValidAuthenticateError(error)).toBeTruthy();
+        expect(isValidAuthenticationError(error)).toBeTruthy();
     });
 
     it('should not be valid response error', () => {
         let error = new Error('foo');
-        expect(isValidAuthenticateError(error)).toBeFalsy();
+        expect(isValidAuthenticationError(error)).toBeFalsy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.CREDENTIALS_INVALID,
         });
-        expect(isValidAuthenticateError(error)).toBeFalsy();
+        expect(isValidAuthenticationError(error)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

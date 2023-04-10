@@ -6,7 +6,6 @@
  */
 
 import { CookieName } from '@authup/core';
-import { parseAuthorizationHeader } from 'hapic';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { TokenVerificationData } from '../../verifier';
 import { TokenVerifier } from '../../verifier';
@@ -24,24 +23,38 @@ export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddl
         let { authorization } = req.headers;
 
         if (!authorization && context.tokenByCookie) {
-            authorization = context.tokenByCookie(req, CookieName.ACCESS_TOKEN);
+            const cookieToken = context.tokenByCookie(req, CookieName.ACCESS_TOKEN);
+            if (!cookieToken.startsWith('Bearer')) {
+                authorization = `Bearer ${cookieToken}`;
+            } else {
+                authorization = cookieToken;
+            }
         }
 
-        if (!authorization) {
+        if (typeof authorization !== 'string') {
             next();
             return;
         }
 
-        const header = parseAuthorizationHeader(authorization);
+        const spaceIndex = authorization.indexOf(' ');
+        if (spaceIndex === -1) {
+            throw new Error('The authorization header is malformed.');
+        }
 
-        if (header.type !== 'Bearer') {
+        const type = authorization.substring(0, spaceIndex);
+        if (type !== 'Bearer') {
             throw new Error('Only Bearer tokens are accepted as authentication method.');
+        }
+
+        const token = authorization.substring(spaceIndex + 1);
+        if (token.length === 0) {
+            throw new Error('The bearer token value is empty.');
         }
 
         let data : TokenVerificationData | undefined;
 
         try {
-            data = await tokenVerifier.verify(header.token);
+            data = await tokenVerifier.verify(token);
         } catch (e) {
             next(e);
 

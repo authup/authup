@@ -7,14 +7,14 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import type { UserRole } from './types';
 import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
 export class UserRoleAPI implements DomainAPISlim<UserRole> {
-    protected client: ClientDriverInstance;
+    protected client: Driver;
 
-    constructor(client: ClientDriverInstance) {
+    constructor(client: Driver) {
         this.client = client;
     }
 

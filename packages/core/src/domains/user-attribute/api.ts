@@ -7,7 +7,7 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { UserAttribute } from './types';
 import type {
@@ -15,9 +15,9 @@ import type {
 } from '../types-base';
 
 export class UserAttributeAPI implements DomainAPI<UserAttribute> {
-    protected client: ClientDriverInstance;
+    protected client: Driver;
 
-    constructor(client: ClientDriverInstance) {
+    constructor(client: Driver) {
         this.client = client;
     }
 

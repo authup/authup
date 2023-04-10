@@ -14,7 +14,8 @@ import type {
 import {
     APIClient,
     AbilityManager,
-    OAuth2TokenKind, isValidAuthenticateError,
+    OAuth2TokenKind,
+    isValidAuthenticationError,
 } from '@authup/core';
 import { defineStore } from 'pinia';
 import { computed, ref, useRuntimeConfig } from '#imports';
@@ -116,7 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
             const entity = await client.userInfo.get(accessToken.value) as User;
             setUser(entity);
         } catch (e) {
-            if (isValidAuthenticateError(e)) {
+            if (isValidAuthenticationError(e)) {
                 await attemptRefreshToken();
                 await resolveUser(true);
 
@@ -192,10 +193,17 @@ export const useAuthStore = defineStore('auth', () => {
         tokenResolved = true;
 
         try {
-            const token = await client.token.introspect(accessToken.value) as OAuth2TokenIntrospectionResponse;
+            const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
+                token: accessToken.value,
+            }, {
+                authorizationHeader: {
+                    type: 'Bearer',
+                    token: accessToken.value,
+                },
+            });
             setTokenInfo(token);
         } catch (e) {
-            if (isValidAuthenticateError(e)) {
+            if (isValidAuthenticationError(e)) {
                 await attemptRefreshToken();
                 await introspectToken(true);
 

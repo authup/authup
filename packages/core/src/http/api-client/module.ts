@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigInput } from 'hapic';
-import { Client as BaseClient, isClientError } from 'hapic';
-import type { ClientOptions } from '@hapic/oauth2';
+import { Client as BaseClient, isDriverError } from 'hapic';
+import type {
+    Options,
+} from '@hapic/oauth2';
 import {
     AuthorizeAPI,
     TokenAPI,
-    UserinfoAPI,
+    UserInfoAPI,
 } from '@hapic/oauth2';
 
 import type { OAuth2JsonWebKey } from '../../auth';
@@ -33,6 +34,7 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../../domains';
+import type { ClientAPIConfigInput } from './type';
 
 export class APIClient extends BaseClient {
     public readonly token : TokenAPI;
@@ -67,7 +69,7 @@ export class APIClient extends BaseClient {
 
     public readonly user : UserAPI;
 
-    public readonly userInfo : UserinfoAPI;
+    public readonly userInfo : UserInfoAPI;
 
     public readonly userAttribute: UserAttributeAPI;
 
@@ -75,25 +77,27 @@ export class APIClient extends BaseClient {
 
     public readonly userRole : UserRoleAPI;
 
-    constructor(config?: ConfigInput) {
+    constructor(config?: ClientAPIConfigInput) {
         super(config);
 
-        const options : ClientOptions = {
-            authorization_endpoint: 'authorize',
-            introspection_endpoint: 'token/introspect',
-            token_endpoint: 'token',
-            userinfo_endpoint: 'users/@me',
+        const options : Options = {
+            authorizationEndpoint: 'authorize',
+            introspectionEndpoint: 'token/introspect',
+            tokenEndpoint: 'token',
+            userinfoEndpoint: 'users/@me',
         };
 
-        if (typeof this.config.baseURL === 'string') {
+        const baseURL = this.getBaseURL();
+
+        if (typeof baseURL === 'string') {
             const keys = Object.keys(options);
             for (let i = 0; i < keys.length; i++) {
-                options[keys[i]] = new URL(options[keys[i]], this.config.baseURL).href;
+                options[keys[i]] = new URL(options[keys[i]], baseURL).href;
             }
         }
 
-        this.authorize = new AuthorizeAPI(this.driver, options);
-        this.token = new TokenAPI(this.driver, options);
+        this.authorize = new AuthorizeAPI({ driver: this.driver, options });
+        this.token = new TokenAPI({ driver: this.driver, options });
 
         this.client = new ClientAPI(this.driver);
         this.clientScope = new ClientScopeAPI(this.driver);
@@ -116,7 +120,7 @@ export class APIClient extends BaseClient {
         this.scope = new ScopeAPI(this.driver);
 
         this.user = new UserAPI(this.driver);
-        this.userInfo = new UserinfoAPI(this.driver, options);
+        this.userInfo = new UserInfoAPI({ driver: this.driver, options });
         this.userAttribute = new UserAttributeAPI(this.driver);
         this.userPermission = new UserPermissionAPI(this.driver);
         this.userRole = new UserRoleAPI(this.driver);
@@ -125,7 +129,7 @@ export class APIClient extends BaseClient {
             (r) => r,
             ((error) => {
                 if (
-                    isClientError(error) &&
+                    isDriverError(error) &&
                     error.response &&
                     error.response.data &&
                     typeof error.response.data.message === 'string'

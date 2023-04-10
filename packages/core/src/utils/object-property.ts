@@ -12,7 +12,7 @@ export function nullifyEmptyObjectProperties<T extends Record<string, any>>(data
 
     for (let i = 0; i < keys.length; i++) {
         if (data[keys[i]] === '') {
-            data[keys[i]] = null;
+            data[keys[i]] = null as T[keyof T];
         }
     }
 

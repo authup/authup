@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientDriverInstance, TokenGrantResponse } from '@hapic/oauth2';
-import { BaseClient, isClientDriverInstance } from '@hapic/oauth2';
-import { isClientError } from 'hapic';
+import type { Driver, TokenGrantResponse } from '@hapic/oauth2';
+import { BaseClient, isDriver } from '@hapic/oauth2';
+import { isDriverError } from 'hapic';
 import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenInterceptorOptions } from './type';
-import { getCurrentRequestRetryState, isValidAuthenticateError } from './utils';
+import { getCurrentRequestRetryState, isValidAuthenticationError } from './utils';
 
 type RejectFn = (err: any) => any;
 
@@ -34,19 +34,19 @@ async function refreshToken(baseURL: string, refreshToken: string) {
 const tokenInterceptorSymbol = Symbol.for('ClientTokenInterceptor');
 const tokenInterceptorTimeoutSymbol = Symbol.for('ClientTokenInterceptorTimeout');
 
-export function isTokenInterceptorMountedOnClient(client: BaseClient | ClientDriverInstance) {
+export function isTokenInterceptorMountedOnClient(client: BaseClient | Driver) {
     return tokenInterceptorSymbol in client;
 }
 
 export function unmountTokenInterceptorOfClient(
-    client: BaseClient | ClientDriverInstance,
+    client: BaseClient | Driver,
 ) {
     if (!isTokenInterceptorMountedOnClient(client)) {
         return;
     }
 
     const interceptorId = client[tokenInterceptorSymbol] as number;
-    if (isClientDriverInstance(client)) {
+    if (isDriver(client)) {
         client.interceptors.response.eject(interceptorId);
     } else {
         client.unmountResponseInterceptor(interceptorId);
@@ -62,7 +62,7 @@ export function unmountTokenInterceptorOfClient(
 }
 
 export function mountTokenInterceptorOnClient(
-    client: BaseClient | ClientDriverInstance,
+    client: BaseClient | Driver,
     options: TokenInterceptorOptions,
 ) {
     if (isTokenInterceptorMountedOnClient(client)) {
@@ -70,7 +70,7 @@ export function mountTokenInterceptorOnClient(
     }
 
     let instance : BaseClient;
-    if (isClientDriverInstance(client)) {
+    if (isDriver(client)) {
         instance = new BaseClient({ driver: client });
     } else {
         instance = client;
@@ -80,7 +80,7 @@ export function mountTokenInterceptorOnClient(
     if (options.baseUrl) {
         baseUrl = options.baseUrl;
     } else {
-        baseUrl = instance.config.baseURL;
+        baseUrl = instance.getBaseURL();
     }
 
     let creator : TokenCreator;
@@ -116,7 +116,7 @@ export function mountTokenInterceptorOnClient(
     };
 
     const onReject : RejectFn = async (err) : Promise<any> => {
-        if (!isValidAuthenticateError(err)) {
+        if (!isValidAuthenticationError(err)) {
             return Promise.reject(err);
         }
 
@@ -144,7 +144,7 @@ export function mountTokenInterceptorOnClient(
             .catch((e) => {
                 instance.unsetAuthorizationHeader();
 
-                if (isClientError(e)) {
+                if (isDriverError(e) && e.response) {
                     e.response.status = 500;
                 }
 

@@ -8,7 +8,7 @@
 import { ErrorCode } from '../../error';
 import { isObject } from '../../utils';
 
-export function isValidAuthenticateError(err: unknown) : boolean {
+export function isValidAuthenticationError(err: unknown) : boolean {
     if (!isObject(err) || !isObject(err.response)) {
         return false;
     }

@@ -5,14 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Agent } from 'https';
 import { parseProxyConnectionString } from '@authup/core';
-import type { ClientRequestConfig } from '@hapic/vault';
 import { getProxyForUrl } from 'proxy-from-env';
 import { ProxyClient } from './module';
 
+type DriverRequestConfig = {
+    httpAgent?: Agent,
+    httpsAgent?: Agent,
+    proxy?: false,
+};
+
 export async function buildHTTPClientConfigForProxy(
     url: string,
-) : Promise<ClientRequestConfig> {
+) : Promise<DriverRequestConfig> {
     const connectionString = getProxyForUrl(url);
     if (connectionString) {
         const connectionDetails = parseProxyConnectionString(connectionString);

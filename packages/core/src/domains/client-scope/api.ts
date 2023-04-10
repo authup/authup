@@ -7,36 +7,36 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import type { ClientScope } from './types';
 import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
 export class ClientScopeAPI implements DomainAPISlim<ClientScope> {
-    protected client: ClientDriverInstance;
+    protected driver: Driver;
 
-    constructor(client: ClientDriverInstance) {
-        this.client = client;
+    constructor(client: Driver) {
+        this.driver = client;
     }
 
     async getMany(data?: BuildInput<ClientScope>) : Promise<CollectionResourceResponse<ClientScope>> {
-        const response = await this.client.get(`client-scopes${buildQuery(data)}`);
+        const response = await this.driver.get(`client-scopes${buildQuery(data)}`);
         return response.data;
     }
 
     async getOne(id: ClientScope['id']) : Promise<SingleResourceResponse<ClientScope>> {
-        const response = await this.client.get(`client-scopes/${id}`);
+        const response = await this.driver.get(`client-scopes/${id}`);
 
         return response.data;
     }
 
     async delete(id: ClientScope['id']) : Promise<SingleResourceResponse<ClientScope>> {
-        const response = await this.client.delete(`client-scopes/${id}`);
+        const response = await this.driver.delete(`client-scopes/${id}`);
 
         return response.data;
     }
 
     async create(data: Partial<ClientScope>) : Promise<SingleResourceResponse<ClientScope>> {
-        const response = await this.client.post('client-scopes', data);
+        const response = await this.driver.post('client-scopes', data);
 
         return response.data;
     }

@@ -19,7 +19,7 @@ import { useRequestQuery } from '@routup/query';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { URL } from 'node:url';
-import type { ClientRequestConfig } from '@hapic/oauth2';
+import type { DriverRequestConfig } from '@hapic/oauth2';
 import { Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
@@ -57,9 +57,9 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     const oauth2Client = new Client({
         options: {
-            client_id: provider.client_id,
-            authorization_endpoint: provider.authorize_url,
-            redirect_uri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(entity.id)}`,
+            clientId: provider.client_id,
+            authorizationEndpoint: provider.authorize_url,
+            redirectUri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(entity.id)}`,
         },
     });
 
@@ -96,7 +96,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const config = await useConfig();
 
-    let driver: ClientRequestConfig;
+    let driver: DriverRequestConfig;
     try {
         driver = await buildHTTPClientConfigForProxy(provider.token_url);
     } catch (e) {
@@ -106,12 +106,12 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const oauth2Client = new Client({
         driver,
         options: {
-            client_id: provider.client_id,
-            client_secret: provider.client_secret,
+            clientId: provider.client_id,
+            clientSecret: provider.client_secret,
 
-            token_endpoint: provider.token_url,
+            tokenEndpoint: provider.token_url,
 
-            redirect_uri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
+            redirectUri: `${config.get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
         },
     });
 

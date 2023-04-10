@@ -12,9 +12,9 @@ export function createTokenCreatorWithRobot(
     options: Omit<TokenCreatorRobotOptions, 'type'>,
     client?: APIClient,
 ): TokenCreator {
-    client = client || new APIClient({ driver: { baseURL: options.baseUrl } });
+    const api = client || new APIClient({ driver: { baseURL: options.baseUrl } });
 
-    return async () => client.token.createWithRobotCredentials({
+    return async () => api.token.createWithRobotCredentials({
         id: options.id,
         secret: options.secret,
     });

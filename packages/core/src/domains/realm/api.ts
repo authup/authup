@@ -7,44 +7,44 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { Realm } from './types';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
 export class RealmAPI implements DomainAPI<Realm> {
-    protected client: ClientDriverInstance;
+    protected driver: Driver;
 
-    constructor(client: ClientDriverInstance) {
-        this.client = client;
+    constructor(client: Driver) {
+        this.driver = client;
     }
 
     async getMany(data?: BuildInput<Realm>): Promise<CollectionResourceResponse<Realm>> {
-        const response = await this.client.get(`realms${buildQuery(data)}`);
+        const response = await this.driver.get(`realms${buildQuery(data)}`);
 
         return response.data;
     }
 
     async getOne(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
-        const response = await this.client.get(`realms/${id}`);
+        const response = await this.driver.get(`realms/${id}`);
 
         return response.data;
     }
 
     async delete(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
-        const response = await this.client.delete(`realms/${id}`);
+        const response = await this.driver.delete(`realms/${id}`);
 
         return response.data;
     }
 
     async create(data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
-        const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post('realms', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
     async update(realmId: Realm['id'], data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
-        const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

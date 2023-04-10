@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { UserPermission } from './types';
@@ -13,9 +13,9 @@ import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse 
 import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class UserPermissionAPI implements DomainAPISlim<UserPermission> {
-    protected client: ClientDriverInstance;
+    protected client: Driver;
 
-    constructor(client: ClientDriverInstance) {
+    constructor(client: Driver) {
         this.client = client;
     }
 

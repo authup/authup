@@ -7,7 +7,7 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { RoleAttribute } from './types';
 import type {
@@ -15,38 +15,38 @@ import type {
 } from '../types-base';
 
 export class RoleAttributeAPI implements DomainAPI<RoleAttribute> {
-    protected client: ClientDriverInstance;
+    protected driver: Driver;
 
-    constructor(client: ClientDriverInstance) {
-        this.client = client;
+    constructor(client: Driver) {
+        this.driver = client;
     }
 
     async getMany(data?: BuildInput<RoleAttribute>): Promise<CollectionResourceResponse<RoleAttribute>> {
-        const response = await this.client.get(`role-attributes${buildQuery(data)}`);
+        const response = await this.driver.get(`role-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
     async getOne(roleId: RoleAttribute['id']): Promise<SingleResourceResponse<RoleAttribute>> {
-        const response = await this.client.get(`role-attributes/${roleId}`);
+        const response = await this.driver.get(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
     async delete(roleId: RoleAttribute['id']): Promise<SingleResourceResponse<RoleAttribute>> {
-        const response = await this.client.delete(`role-attributes/${roleId}`);
+        const response = await this.driver.delete(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
     async create(data: Partial<RoleAttribute>): Promise<SingleResourceResponse<RoleAttribute>> {
-        const response = await this.client.post('role-attributes', nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post('role-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
     async update(id: RoleAttribute['id'], data: Partial<RoleAttribute>): Promise<SingleResourceResponse<RoleAttribute>> {
-        const response = await this.client.post(`role-attributes/${id}`, nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post(`role-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

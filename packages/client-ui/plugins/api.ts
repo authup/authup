@@ -10,7 +10,7 @@ import {
     mountTokenInterceptorOnClient,
     unmountTokenInterceptorOfClient,
 } from '@authup/core';
-import type { ConfigInput } from 'hapic';
+import type { ClientAPIConfigInput } from '@authup/core';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { useRuntimeConfig } from '#imports';
@@ -32,7 +32,7 @@ declare module '@vue/runtime-core' {
 export default defineNuxtPlugin((ctx) => {
     const runtimeConfig = useRuntimeConfig();
 
-    const config : ConfigInput = {
+    const config : ClientAPIConfigInput = {
         driver: {
             baseURL: runtimeConfig.public.apiUrl,
             withCredentials: true,

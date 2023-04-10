@@ -12,7 +12,7 @@ import {
     isUUID,
 } from '@authup/core';
 import { NotFoundError } from '@ebec/http';
-import { hasConfig } from '@hapic/vault';
+import { hasClient } from '@hapic/vault';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -56,7 +56,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
     }
 
     if (
-        hasConfig() &&
+        hasClient() &&
         realm &&
         realm.name === REALM_MASTER_NAME
     ) {

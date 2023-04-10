@@ -13,10 +13,11 @@
     },
     "scripts": {
         "build": "nuxt prepare && nuxt build && node postbuild.mjs",
-        "dev": "nuxt dev",
-        "generate": "nuxt generate",
-        "preview": "nuxt preview",
-        "start": "nuxt start"
+        "dev": "nuxi dev",
+        "generate": "nuxi generate",
+        "preview": "nuxi preview",
+        "start": "nuxi start",
+        "typecheck": "nuxi typecheck"
     },
     "bin": {
         "authup-ui": ".output/server/index.mjs"
@@ -26,7 +27,7 @@
         "@authup/core": "^0.32.2",
         "@authup/server-core": "^0.32.2",
         "@fortawesome/fontawesome-free": "^6.4.0",
-        "@hapic/oauth2": "^1.6.1",
+        "@hapic/oauth2": "^2.0.0-alpha.2",
         "@nuxtjs/google-fonts": "^3.0.0",
         "@pinia/nuxt": "^0.4.8",
         "@vue-layout/basic": "^1.1.0",
@@ -37,7 +38,6 @@
         "bootstrap": "^5.2.3",
         "browser-storage-adapter": "^1.1.2",
         "continu": "^1.3.1",
-        "hapic": "^1.6.0",
         "ilingo": "^2.4.0",
         "nuxt": "3.3.3",
         "pinia": "^2.0.34",

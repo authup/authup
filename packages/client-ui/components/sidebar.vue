@@ -29,7 +29,7 @@ export default defineNuxtComponent({
         const docsUrl = computed(() => {
             const api = useAPI();
 
-            return new URL('docs/', api.config.baseURL).href;
+            return new URL('docs/', api.getBaseURL()).href;
         });
 
         return {

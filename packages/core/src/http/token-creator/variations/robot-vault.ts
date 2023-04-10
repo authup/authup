@@ -7,6 +7,7 @@
 
 import { Client } from '@hapic/vault';
 import { isObject } from '../../../utils';
+import type { Robot } from '../../../domains';
 import { ROBOT_SYSTEM_NAME } from '../../../domains';
 import { APIClient } from '../../api-client';
 import type { TokenCreator, TokenCreatorRobotInVaultOptions } from '../type';
@@ -17,7 +18,7 @@ export function createTokenCreatorWithRobotInVault(
 ) : TokenCreator {
     let client : Client;
     if (typeof options.vault === 'string') {
-        client = new Client({ extra: { connectionString: options.vault } });
+        client = new Client({ connectionString: options.vault });
     } else {
         client = options.vault;
     }
@@ -31,9 +32,12 @@ export function createTokenCreatorWithRobotInVault(
             await apiClient.robot.integrity(robotName);
         }
 
-        const response = await client.keyValue.find('robots', robotName);
+        const response = await client.keyValueV1.getOne<Partial<Robot>>({
+            mount: 'robots',
+            path: robotName,
+        });
+
         if (
-            !isObject(response) ||
             !isObject(response.data) ||
             typeof response.data.id !== 'string' ||
             typeof response.data.secret !== 'string'

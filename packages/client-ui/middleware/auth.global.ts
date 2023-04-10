@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authup/core';
-import { isClientError } from 'hapic';
+import { isDriverError } from '@hapic/oauth2';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
@@ -77,7 +77,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     } catch (e) {
         let processed : boolean | undefined;
 
-        if (isClientError(e)) {
+        if (isDriverError(e)) {
             if (
                 e.response &&
                 e.response.data &&

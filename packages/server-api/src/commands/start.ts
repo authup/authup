@@ -6,7 +6,7 @@
  */
 
 import { ROBOT_SYSTEM_NAME } from '@authup/core';
-import { hasConfig as hasVaultConfig } from '@hapic/vault';
+import { hasClient as hasVaultClient } from '@hapic/vault';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
     setLogger, useLogger,
@@ -49,7 +49,7 @@ export async function startCommand(context?: StartCommandContext) {
     const database = config.get('db');
     logger.info(`Database: ${database.type}`);
     logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
-    logger.info(`Vault: ${hasVaultConfig() ? 'enabled' : 'disabled'}`);
+    logger.info(`Vault: ${hasVaultClient() ? 'enabled' : 'disabled'}`);
     logger.info(`Robot: ${config.get('robotEnabled') ? 'enabled' : 'disabled'}`);
 
     /*

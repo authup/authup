@@ -5,28 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setConfig } from '@hapic/vault';
+import type { ConfigInput } from '@hapic/vault';
+import { Client, setClient } from '@hapic/vault';
 
 export function setupVault(data: string | boolean) {
+    let config : ConfigInput | undefined;
+
     if (
         typeof data === 'boolean' ||
         typeof data === 'undefined'
     ) {
         if (data) {
-            setConfig({
-                extra: {
-                    // todo: this should maybe the default address of the vault client
-                    connectionString: 'start123@http://127.0.0.1:8090/v1/',
-                },
-            });
+            config = {
+                // todo: this should maybe the default address of the vault client
+                connectionString: 'start123@http://127.0.0.1:8090/v1/',
+            };
         }
     }
 
     if (typeof data === 'string') {
-        setConfig({
-            extra: {
-                connectionString: data,
-            },
-        });
+        config = {
+            connectionString: data,
+        };
+    }
+
+    if (config) {
+        const client = new Client(config);
+
+        setClient(client);
     }
 }

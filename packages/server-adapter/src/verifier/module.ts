@@ -137,7 +137,9 @@ export class TokenVerifier {
         let payload : OAuth2TokenIntrospectionResponse;
 
         try {
-            payload = await this.client.token.introspect(token);
+            payload = await this.client.token.introspect({ token }, {
+                authorizationHeaderInherit: true,
+            });
         } catch (e) {
             /* istanbul ignore next */
             if (!isObject(e)) {

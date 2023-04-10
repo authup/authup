@@ -7,17 +7,17 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ClientDriverInstance } from 'hapic';
+import type { Driver } from 'hapic';
 import type { IdentityProvider } from './types';
 import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 import { buildIdentityProviderAuthorizePath } from './utils';
 
 export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {
-    protected client: ClientDriverInstance;
+    protected driver: Driver;
 
-    constructor(client: ClientDriverInstance) {
-        this.client = client;
+    constructor(client: Driver) {
+        this.driver = client;
     }
 
     getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {
@@ -25,7 +25,7 @@ export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {
     }
 
     async getMany(record?: BuildInput<IdentityProvider>): Promise<CollectionResourceResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers${buildQuery(record)}`);
+        const response = await this.driver.get(`identity-providers${buildQuery(record)}`);
 
         return response.data;
     }
@@ -34,25 +34,25 @@ export class IdentityProviderAPI implements DomainAPI<IdentityProvider> {
         id: IdentityProvider['id'],
         record?: BuildInput<IdentityProvider>,
     ): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
+        const response = await this.driver.get(`identity-providers/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
     async delete(id: IdentityProvider['id']): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.delete(`identity-providers/${id}`);
+        const response = await this.driver.delete(`identity-providers/${id}`);
 
         return response.data;
     }
 
     async create(data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post('identity-providers', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
     async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
+        const response = await this.driver.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

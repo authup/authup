@@ -16,7 +16,7 @@ export default defineComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });
 
-        const { user } = useAuthStore();
+        const { userId } = useAuthStore();
 
         const handleUpdated = () => {
             const toast = useToast();
@@ -32,7 +32,7 @@ export default defineComponent({
         return () => h('div', [
             h('h6', { class: 'title' }, ['Password']),
             h(userPasswordForm, {
-                id: user.id,
+                id: userId,
                 onUpdated: handleUpdated,
                 onFailed: handleFailed,
             }),

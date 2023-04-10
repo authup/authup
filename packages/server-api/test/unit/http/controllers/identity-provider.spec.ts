@@ -114,9 +114,9 @@ describe('src/http/controllers/identity-provider', () => {
 
         const identityClient = new Client({
             options: {
-                client_id: details.client_id,
-                authorization_endpoint: details.authorize_url,
-                redirect_uri: `${config.get('publicUrl')}/identity-providers/${details.id}/authorize-callback`,
+                clientId: details.client_id,
+                authorizationEndpoint: details.authorize_url,
+                redirectUri: `${config.get('publicUrl')}/identity-providers/${details.id}/authorize-callback`,
             },
         });
 
