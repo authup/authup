@@ -76,8 +76,6 @@ export default defineNuxtComponent({
 
         const submit = async () => {
             try {
-                console.log(form);
-
                 await store.login({
                     name: form.name,
                     password: form.password,

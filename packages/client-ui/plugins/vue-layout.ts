@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { install, setPresets } from '@authup/client-vue';
+import { install } from '@authup/client-vue';
 import type { NavigationStore } from '@vue-layout/basic';
 import { createPlugin } from '@vue-layout/basic';
 import { getBuildInPresets } from '@vue-layout/hyperscript';
