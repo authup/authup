@@ -5,40 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ToRefs } from 'vue';
-import type { ListBuilderComponentOptions, ListProps } from '../type';
+import { unref } from 'vue';
+import type { Ref, ToRefs } from 'vue';
+import type { DomainListBuilderTemplateOptions, DomainListProps } from '../type';
 
-export function buildListComponentOptions<T extends Record<string, any>>(
-    props: ToRefs<ListProps<T>>,
-    options: Partial<ListBuilderComponentOptions<T>>,
-) : ListBuilderComponentOptions<T> {
-    const output : Partial<ListBuilderComponentOptions<T>> = {
-        items: options.items ?? true,
+function merge<T>(primary: T | Ref<T>, secondary: T) : T | undefined {
+    if (typeof primary !== 'undefined') {
+        return unref(primary);
+    }
+
+    return secondary;
+}
+
+export function mergeDomainListOptions<T extends Record<string, any>>(
+    props: ToRefs<DomainListProps<T>>,
+    defaults: Partial<DomainListBuilderTemplateOptions<T>>,
+) : DomainListBuilderTemplateOptions<T> {
+    const output : Partial<DomainListBuilderTemplateOptions<T>> = {
+        items: defaults.items ?? true,
     };
 
-    if (props.withHeader.value) {
-        output.header = options.header ?? true;
-    } else {
-        output.header = false;
-    }
+    output.headerSearch = merge(props.headerSearch, defaults.headerSearch);
+    output.headerTitle = merge(props.headerTitle, defaults.headerTitle);
 
-    if (props.withNoMore.value) {
-        output.noMore = options.noMore ?? true;
-    } else {
-        output.noMore = false;
-    }
+    output.noMore = merge(defaults.noMore, defaults.noMore);
 
-    if (props.withSearch.value) {
-        output.search = options.search ?? true;
-    } else {
-        output.search = false;
-    }
+    output.footerPagination = merge(props.footerPagination, defaults.footerPagination);
 
-    if (props.withPagination.value) {
-        output.pagination = options.pagination ?? true;
-    } else {
-        output.pagination = false;
-    }
-
-    return output as ListBuilderComponentOptions<T>;
+    return output as DomainListBuilderTemplateOptions<T>;
 }

@@ -9,6 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { IdentityProvider } from '@authup/core';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
 import { createDomainListBuilder } from '../../composables';
 import {
     useAPIClient,
@@ -17,30 +18,30 @@ import {
 export const IdentityProviderList = defineComponent({
     name: 'IdentityProviderList',
     props: {
+        loadOnSetup: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<IdentityProvider>>,
             default() {
                 return {};
             },
         },
-        withNoMore: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withHeader: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
-            default: true,
-        },
-        loadOnSetup: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -53,15 +54,15 @@ export const IdentityProviderList = defineComponent({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
-            components: {
-                /*
-                header: {
-                    title: {
-                        iconClass: 'fa-solid fa-atom',
-                        textContent: 'Providers',
-                    },
+            defaults: {
+                footerPagination: true,
+
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Providers',
+                    icon: 'fa-solid fa-atom',
                 },
-                 */
+
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-atom',

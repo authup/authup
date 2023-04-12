@@ -21,7 +21,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
     },
     setup(props) {
         return () => h(RoleList, {
-            withHeader: false,
+            headerTitle: false,
         }, {
             [SlotName.ITEMS]: (slotProps: { data: Role[] }) => slotProps.data.map((item: Role) => h(
                 IdentityProviderRoleAssignmentListItem,

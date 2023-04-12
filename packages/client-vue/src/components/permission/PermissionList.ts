@@ -8,36 +8,37 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { Permission } from '@authup/core';
 import type { BuildInput } from 'rapiq';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
 import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
     props: {
+        loadOnSetup: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<Permission>>,
             default() {
                 return {};
             },
         },
-        withNoMore: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withHeader: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
-            default: true,
-        },
-        loadOnSetup: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -50,15 +51,15 @@ export const PermissionList = defineComponent({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().permission.getMany(buildInput),
-            components: {
-                /*
-                header: {
-                    title: {
-                        iconClass: 'fa-solid fa-key',
-                        textContent: 'Permissions',
-                    },
+            defaults: {
+                footerPagination: true,
+
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Permissions',
+                    icon: 'fa-solid fa-key',
                 },
-                 */
+
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-key',

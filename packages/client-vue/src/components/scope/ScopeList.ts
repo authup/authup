@@ -9,6 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Scope } from '@authup/core';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
 import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
@@ -25,20 +26,20 @@ export const ScopeList = defineComponent({
                 return {};
             },
         },
-        withHeader: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withNoMore: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -51,17 +52,15 @@ export const ScopeList = defineComponent({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().scope.getMany(buildInput),
-            components: {
-                /*
-                header: {
+            defaults: {
+                footerPagination: true,
 
-                  title: {
-                      iconClass: 'fa-solid fa-meteor',
-                      textContent: 'Scopes',
-                  },
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Scopes',
+                    icon: 'fa-solid fa-meteor',
                 },
 
-                 */
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-meteor',

@@ -6,6 +6,5 @@
  */
 
 export * from './module';
-export * from './render';
 export * from './type';
 export * from './utils';

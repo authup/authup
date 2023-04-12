@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { navigateTo, useRouter } from '#app';
+import { useRouter } from '#app';
 import { definePageMeta } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { useAuthStore } from '../store/auth';

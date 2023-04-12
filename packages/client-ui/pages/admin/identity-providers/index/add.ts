@@ -7,7 +7,7 @@
 
 import type { IdentityProvider } from '@authup/core';
 import { IdentityProviderProtocol, PermissionName } from '@authup/core';
-import { buildFormSelect } from '@vue-layout/hyperscript';
+import { buildFormSelect } from '@vue-layout/form-controls';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { navigateTo } from '#app';

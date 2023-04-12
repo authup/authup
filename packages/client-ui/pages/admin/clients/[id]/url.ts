@@ -6,10 +6,10 @@
  */
 
 import type { Client, ClientScope } from '@authup/core';
-import { Robot, Scope } from '@authup/core';
 import { buildVuelidateTranslator } from '@authup/client-vue';
-import type { ListItemSlotProps } from '@vue-layout/hyperscript';
-import { SlotName, buildFormInput, buildFormInputCheckbox } from '@vue-layout/hyperscript';
+import type { ListItemSlotProps } from '@vue-layout/list-controls';
+import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
+import { SlotName } from '@vue-layout/list-controls';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, resolveComponent } from '#imports';
 
@@ -84,8 +84,8 @@ export default defineNuxtComponent({
                 ]),
                 h('hr'),
                 h(list as string, {
-                    withHeader: false,
-                    withSearch: false,
+                    headerTitle: false,
+                    headerSearch: false,
                     query: {
                         filter: {
                             client_id: props.entity.id,

@@ -9,6 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Role } from '@authup/core';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
 import { createDomainListBuilder } from '../../composables';
 import { useAPIClient } from '../../utils';
 
@@ -25,20 +26,20 @@ export const RoleList = defineComponent({
                 return {};
             },
         },
-        withHeader: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withNoMore: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -51,15 +52,15 @@ export const RoleList = defineComponent({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().role.getMany(buildInput),
-            components: {
-                /*
-                header: {
-                    title: {
-                        iconClass: 'fa-solid fa-user-group',
-                        textContent: 'Roles',
-                    },
+            defaults: {
+                footerPagination: true,
+
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Roles',
+                    icon: 'fa-solid fa-user-group',
                 },
-                 */
+
                 items: {
                     item: {
                         iconClass: 'fa fa-solid fa-user-group',

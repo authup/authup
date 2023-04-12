@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListLoadMeta } from '@vue-layout/list-controls';
+import type {
+    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput, ListLoadMeta,
+} from '@vue-layout/list-controls';
 import {
     buildList,
 } from '@vue-layout/list-controls';
@@ -14,12 +16,15 @@ import {
     ref, watch,
 } from 'vue';
 import { merge } from 'smob';
+import { buildDomainListFooterPagination } from '../list-footer';
+import type { DomainListHeaderSearchOptions } from '../list-header';
+import { buildDomainListHeader } from '../list-header';
 import type { DomainListBuilderContext, DomainListBuilderOutput } from './type';
 import {
-    buildListComponentOptions,
     buildListCreatedHandler,
     buildListDeletedHandler,
     buildListUpdatedHandler,
+    mergeDomainListOptions,
 } from './utils';
 
 export function createDomainListBuilder<T extends Record<string, any>>(
@@ -35,28 +40,34 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     });
 
     async function load(targetMeta?: Partial<ListLoadMeta>) {
+        busy.value = true;
+
         if (typeof targetMeta === 'undefined') {
             targetMeta = {};
         }
 
-        const response = await context.load(merge(
-            {
-                page: {
-                    limit: targetMeta.limit ?? meta.value.limit,
-                    offset: targetMeta.offset ?? meta.value.offset,
+        try {
+            const response = await context.load(merge(
+                {
+                    page: {
+                        limit: targetMeta.limit ?? meta.value.limit,
+                        offset: targetMeta.offset ?? meta.value.offset,
+                    },
+                    filter: {
+                        [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
+                    },
                 },
-                filter: {
-                    [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
-                },
-            },
-            context.props.query.value,
-        ));
+                context.props.query.value,
+            ));
 
-        data.value = response.data;
+            data.value = response.data;
 
-        meta.value.offset = response.meta.offset;
-        meta.value.total = response.meta.total;
-        meta.value.limit = response.meta.limit;
+            meta.value.offset = response.meta.offset;
+            meta.value.total = response.meta.total;
+            meta.value.limit = response.meta.limit;
+        } finally {
+            busy.value = false;
+        }
     }
 
     watch(q, async (val, oldVal) => {
@@ -72,17 +83,57 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     const handleDeleted = buildListDeletedHandler(data);
     const handleUpdated = buildListUpdatedHandler(data);
 
+    const options = mergeDomainListOptions(context.props, context.defaults);
+
     function build() : VNodeArrayChildren {
+        let header : ListHeaderBuildOptionsInput | undefined;
+        if (options.headerTitle || options.headerSearch) {
+            let search : DomainListHeaderSearchOptions | undefined;
+            if (options.headerSearch) {
+                search = {
+                    load(text) {
+                        q.value = text;
+                    },
+                    busy,
+                };
+                if (typeof options.headerSearch !== 'boolean') {
+                    search = {
+                        ...search,
+                        ...options.headerSearch,
+                    };
+                }
+            }
+
+            header = {
+                content: buildDomainListHeader({
+                    title: options.headerTitle,
+                    search,
+                }),
+            };
+        }
+
+        let footer : ListFooterBuildOptionsInput | undefined;
+        if (options.footerPagination) {
+            footer = {
+                content: buildDomainListFooterPagination({
+                    load,
+                    busy,
+                    meta,
+                }),
+            };
+        }
+
         return [
             buildList({
-                ...buildListComponentOptions(context.props, context.components),
+                footer,
+                header,
+                noMore: options.noMore,
+                items: options.items,
+
                 load,
                 busy,
                 data,
                 total: meta.value.total,
-                onChange(value: string) {
-                    q.value = value;
-                },
                 onDeleted(value: T) {
                     if (context.setup.emit) {
                         context.setup.emit('deleted', value);

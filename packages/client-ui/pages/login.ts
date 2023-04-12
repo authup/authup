@@ -9,15 +9,15 @@ import type { BuildInput } from 'rapiq';
 import { useAPIClient } from '@authup/client-vue';
 import { REALM_MASTER_NAME } from '@authup/core';
 import type { IdentityProvider, Realm } from '@authup/core';
-import type { ListItemSlotProps, ListItemsSlotProps } from '@vue-layout/hyperscript';
+import type { ListItemSlotProps, ListItemsSlotProps } from '@vue-layout/list-controls';
 import {
-    PresetsBuildIn, SlotName, buildFormInput, buildFormSelect, buildFormSubmit,
-} from '@vue-layout/hyperscript';
+    buildFormInput, buildFormSubmit,
+} from '@vue-layout/form-controls';
+import { SlotName } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { VNodeArrayChildren } from 'vue';
 import { useToast } from 'vue-toastification';
-import { Link } from '#components';
 import { defineNuxtComponent, navigateTo, useRoute } from '#app';
 import { reactive, ref, resolveComponent } from '#imports';
 import Login from '../components/svg/LoginSVG';
@@ -76,8 +76,6 @@ export default defineNuxtComponent({
 
         const submit = async () => {
             try {
-                console.log(form);
-
                 await store.login({
                     name: form.name,
                     password: form.password,
@@ -134,7 +132,7 @@ export default defineNuxtComponent({
                 createButtonClass: {
                     value: 'btn btn-sm btn-dark btn-block',
                     presets: {
-                        [PresetsBuildIn.BOOTSTRAP_V5]: false,
+                        bootstrap: false,
                     },
                 },
                 createIconClass: 'fa-solid fa-right-to-bracket',
@@ -143,10 +141,7 @@ export default defineNuxtComponent({
             });
 
             const realmPicker = [
-                h(realmList as string, { withHeader: true }, {
-                    [SlotName.HEADER]: () => h('h6', [
-                        'Realms',
-                    ]),
+                h(realmList as string, { headerTitle: { content: 'Realms' } }, {
                     [SlotName.ITEM_ACTIONS]: (props: ListItemSlotProps<Realm>) => {
                         const isMaster = props.data.name === REALM_MASTER_NAME;
                         const canCheck = !(isMaster && !form.realm_id) &&

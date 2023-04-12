@@ -7,7 +7,7 @@
 
 import type { Client, Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
-import { SlotName } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/list-controls';
 import { storeToRefs } from 'pinia';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';

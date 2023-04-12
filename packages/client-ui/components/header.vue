@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { NavigationComponents } from '@vue-layout/basic';
+import { NavigationComponents } from '@vue-layout/navigation';
 import { storeToRefs } from 'pinia';
 import { ref } from '#imports';
 import { defineNuxtComponent } from '#app';

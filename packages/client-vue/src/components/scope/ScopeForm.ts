@@ -176,7 +176,7 @@ export const ScopeForm = defineComponent({
                     h('hr'),
                     h('label', { class: 'form-label' }, 'Realm'),
                     h(RealmList, {
-                        withHeader: false,
+                        headerTitle: false,
                     }, {
                         [SlotName.ITEM_ACTIONS]: (
                             props: { data: Realm, busy: boolean },

@@ -7,4 +7,5 @@
 
 export * from './form';
 export * from './api-client';
+export * from './normalize-slot';
 export * from './vuelidate';

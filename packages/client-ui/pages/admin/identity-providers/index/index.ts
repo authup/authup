@@ -8,8 +8,8 @@
 import type { IdentityProvider } from '@authup/core';
 import { DomainType, PermissionName, isRealmResourceWritable } from '@authup/core';
 import { AuthEntityDelete } from '@authup/client-vue';
-import type { ListItemSlotProps } from '@vue-layout/hyperscript';
-import { SlotName } from '@vue-layout/hyperscript';
+import type { ListItemSlotProps } from '@vue-layout/list-controls';
+import { SlotName } from '@vue-layout/list-controls';
 import { storeToRefs } from 'pinia';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
