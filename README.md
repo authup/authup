@@ -1,3 +1,5 @@
+[![Authup banner](./.github/assets/banner.png)](https://authup.org)
+
 # authup 🎴	
 
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
