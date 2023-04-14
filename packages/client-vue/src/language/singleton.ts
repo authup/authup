@@ -15,7 +15,7 @@ import { LanguageFormEnglish } from './en/form';
 
 let instance : Ilingo | undefined;
 
-export function useAuthIlingo() {
+export function useTranslator() {
     if (typeof instance !== 'undefined') {
         return instance;
     }

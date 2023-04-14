@@ -1,7 +1,8 @@
+import { applyPluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './type';
-import { setAPIClient } from './utils';
+import { setAPIClient } from './core';
 
 // install function executed by Vue.use()
 export function install(instance: App, options?: Options) : void {
@@ -11,9 +12,7 @@ export function install(instance: App, options?: Options) : void {
         setAPIClient(options.apiClient);
     }
 
-    // if (options.presets) {
-    // setPresets(options.presets);
-    // }
+    applyPluginBaseOptions(options);
 
     Object.entries(components).forEach(([componentName, component]) => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -27,6 +26,6 @@ export default {
 } satisfies Plugin<Options | undefined>;
 
 export * from './components';
-export * from './composables';
+export * from './helpers';
 export * from './language';
-export * from './utils';
+export * from './core';

@@ -9,11 +9,11 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { IdentityProvider } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
-import { createDomainListBuilder } from '../../composables';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
+import { createDomainListBuilder } from '../../helpers';
 import {
     useAPIClient,
-} from '../../utils';
+} from '../../core';
 
 export const IdentityProviderList = defineComponent({
     name: 'IdentityProviderList',

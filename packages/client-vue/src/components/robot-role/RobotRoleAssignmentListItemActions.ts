@@ -10,8 +10,8 @@ import {
     VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
 import type { RobotRole } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../composables';
-import { useAPIClient } from '../../utils';
+import { renderListItemAssignmentButton } from '../../helpers';
+import { useAPIClient } from '../../core';
 
 export type RobotRoleListItemActionsProperties = {
     items?: RobotRole[],

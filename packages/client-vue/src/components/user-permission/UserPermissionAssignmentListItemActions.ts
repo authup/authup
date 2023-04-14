@@ -8,8 +8,8 @@
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserPermission } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../composables';
-import { useAPIClient } from '../../utils';
+import { renderListItemAssignmentButton } from '../../helpers';
+import { useAPIClient } from '../../core';
 
 export const UserPermissionAssignmentListItemActions = defineComponent({
     name: 'UserPermissionAssignmentListItemActions',

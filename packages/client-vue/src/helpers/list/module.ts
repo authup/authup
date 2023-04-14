@@ -40,6 +40,8 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     });
 
     async function load(targetMeta?: Partial<ListLoadMeta>) {
+        if (busy.value) return;
+
         busy.value = true;
 
         if (typeof targetMeta === 'undefined') {
@@ -80,6 +82,7 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         await load({ offset: 0 });
     });
 
+    const handleCreated = buildListCreatedHandler(data);
     const handleDeleted = buildListDeletedHandler(data);
     const handleUpdated = buildListUpdatedHandler(data);
 
@@ -158,7 +161,7 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     }
 
     context.setup.expose({
-        handleCreated: buildListCreatedHandler(data),
+        handleCreated,
         handleDeleted,
         handleUpdated,
         load,

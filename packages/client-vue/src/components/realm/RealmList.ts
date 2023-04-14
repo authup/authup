@@ -9,9 +9,9 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { Realm } from '@authup/core';
 import type { BuildInput } from 'rapiq';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../composables';
-import { createDomainListBuilder } from '../../composables';
-import { useAPIClient } from '../../utils';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
+import { createDomainListBuilder } from '../../helpers';
+import { useAPIClient } from '../../core';
 
 export const RealmList = defineComponent({
     name: 'RealmList',

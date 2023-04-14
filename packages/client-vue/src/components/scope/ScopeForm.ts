@@ -33,12 +33,14 @@ import {
     buildItemActionToggle,
 } from '@vue-layout/list-controls';
 import {
-    alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
-    initFormAttributesFromEntity,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import {
+    alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
-} from '../../utils';
-import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({
@@ -106,7 +108,7 @@ export const ScopeForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -130,7 +132,7 @@ export const ScopeForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -145,7 +147,7 @@ export const ScopeForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -158,8 +160,8 @@ export const ScopeForm = defineComponent({
             ];
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
                 isEditing,

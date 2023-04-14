@@ -20,10 +20,13 @@ import {
     buildFormTextarea,
 } from '@vue-layout/form-controls';
 import {
-    alphaWithUpperNumHyphenUnderScore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
-} from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import {
+    useAPIClient,
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 
 export const RealmForm = defineComponent({
     name: 'RealmForm',
@@ -67,7 +70,7 @@ export const RealmForm = defineComponent({
         };
 
         function initForm() {
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
 
             if (form.name.length === 0) {
                 generateName();
@@ -94,7 +97,7 @@ export const RealmForm = defineComponent({
         const render = () => {
             const id = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -133,7 +136,7 @@ export const RealmForm = defineComponent({
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {
@@ -145,8 +148,8 @@ export const RealmForm = defineComponent({
             });
 
             const submitButton = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
                 isEditing,

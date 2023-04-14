@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { APIClient } from '@authup/core';
 
-export type Options = {
-    apiClient?: APIClient,
-
+export type Options = PluginBaseOptions & {
+    apiClient?: APIClient
 };

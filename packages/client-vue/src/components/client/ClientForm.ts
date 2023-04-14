@@ -31,12 +31,14 @@ import {
     buildFormTextarea,
 } from '@vue-layout/form-controls';
 import {
-    alphaWithUpperNumHyphenUnderScore,
     createSubmitHandler,
-    initFormAttributesFromEntity,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import {
+    alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
-} from '../../utils';
-import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const ClientForm = defineComponent({
@@ -118,7 +120,7 @@ export const ClientForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -148,7 +150,7 @@ export const ClientForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -164,7 +166,7 @@ export const ClientForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -192,7 +194,7 @@ export const ClientForm = defineComponent({
 
             const isConfidential = buildFormInputCheckbox({
                 validationResult: $v.value.is_confidential,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Is Confidential?',
                 value: form.is_confidential,
                 onChange(input) {
@@ -217,7 +219,7 @@ export const ClientForm = defineComponent({
             const secret = [
                 buildFormInput({
                     validationResult: $v.value.secret,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: [
                         'Secret',
                     ],
@@ -237,14 +239,14 @@ export const ClientForm = defineComponent({
                     }, [
                         h('i', { class: 'fa fa-wrench' }),
                         ' ',
-                        useAuthIlingo().getSync('form.generate.button', props.translatorLocale),
+                        useTranslator().getSync('form.generate.button', props.translatorLocale),
                     ]),
                 ]),
             ];
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
                 isEditing,

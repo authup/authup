@@ -18,8 +18,8 @@ import {
 } from 'vue';
 import type { DomainType } from '@authup/core';
 import { useDomainAPI } from '@authup/core';
-import { useAPIClient } from '../utils';
-import { useAuthIlingo } from '../language';
+import { useAPIClient } from '../core';
+import { useTranslator } from '../language';
 
 enum ElementType {
     BUTTON = 'button',
@@ -117,7 +117,7 @@ export const AuthEntityDelete = defineComponent({
             let text : VNodeArrayChildren = [];
             if (props.withText) {
                 text = [
-                    useAuthIlingo()
+                    useTranslator()
                         .getSync('app.delete.button', props.locale),
                 ];
             }

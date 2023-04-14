@@ -13,8 +13,8 @@ import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
 import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
-import { useAPIClient } from '../../utils';
-import { buildVuelidateTranslator, useAuthIlingo } from '../../language';
+import { useAPIClient } from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 
 export const UserPasswordForm = defineComponent({
     name: 'UserPasswordForm',
@@ -76,7 +76,7 @@ export const UserPasswordForm = defineComponent({
         const render = () => {
             const password = buildFormInput({
                 validationResult: $v.value.password,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Password',
                 value: form.password,
                 onChange(input) {
@@ -90,7 +90,7 @@ export const UserPasswordForm = defineComponent({
 
             const passwordRepeat = buildFormInput({
                 validationResult: $v.value.password_repeat,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Password repeat',
                 value: form.password_repeat,
                 onChange(input) {
@@ -115,8 +115,8 @@ export const UserPasswordForm = defineComponent({
             });
 
             const submitButton = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button'),
-                createText: useAuthIlingo().getSync('form.create.button'),
+                updateText: useTranslator().getSync('form.update.button'),
+                createText: useTranslator().getSync('form.create.button'),
                 submit,
                 isEditing: true,
             });

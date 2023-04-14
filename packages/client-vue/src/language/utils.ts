@@ -6,10 +6,10 @@
  */
 
 import type { ValidationTranslator } from '@vue-layout/form-controls';
-import { useAuthIlingo } from './singleton';
+import { useTranslator } from './singleton';
 
-export function buildVuelidateTranslator(locale?: string) : ValidationTranslator {
+export function buildValidationTranslator(locale?: string) : ValidationTranslator {
     return function translate(validator: string, parameters?: Record<string, any>) : string | undefined {
-        return useAuthIlingo().getSync(`validation.${validator}`, parameters, locale);
+        return useTranslator().getSync(`validation.${validator}`, parameters, locale);
     };
 }

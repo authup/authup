@@ -6,7 +6,7 @@
  */
 
 import type { Client, ClientScope } from '@authup/core';
-import { buildVuelidateTranslator } from '@authup/client-vue';
+import { buildValidationTranslator } from '@authup/client-vue';
 import type { ListItemSlotProps } from '@vue-layout/list-controls';
 import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
 import { SlotName } from '@vue-layout/list-controls';
