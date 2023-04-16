@@ -114,7 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
         userResolved = true;
 
         try {
-            const entity = await client.userInfo.get(accessToken.value) as User;
+            const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
             setUser(entity);
         } catch (e) {
             if (isValidAuthenticationError(e)) {

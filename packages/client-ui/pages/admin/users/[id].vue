@@ -1,23 +1,20 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
+<script lang="ts">
 import type { User } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { useToast } from 'vue-toastification';
-import { defineNuxtComponent, navigateTo, useRoute } from '#app';
-import { NuxtPage } from '#components';
+import {
+    createError, defineNuxtComponent, navigateTo, useRoute,
+} from '#app';
 import { definePageMeta, updateObjectProperties, useAPI } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
-import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
+import DomainEntityNav from '../../../components/DomainEntityNav';
 import { useAuthStore } from '../../../store/auth';
 
 export default defineNuxtComponent({
+    components: { DomainEntityNav },
     async setup() {
         definePageMeta({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
@@ -53,14 +50,16 @@ export default defineNuxtComponent({
                 .user
                 .getOne(route.params.id as string, { fields: ['+email'] });
         } catch (e) {
-            return navigateTo({ path: '/admin/users' });
+            await navigateTo({ path: '/admin/users' });
+            throw createError({});
         }
 
         const store = useAuthStore();
         const { realmManagement } = storeToRefs(store);
 
         if (!isRealmResourceWritable(realmManagement.value, entity.value.realm_id)) {
-            return navigateTo({ path: '/admin/users' });
+            await navigateTo({ path: '/admin/users' });
+            throw createError({});
         }
 
         const handleUpdated = (e: User) => {
@@ -73,26 +72,38 @@ export default defineNuxtComponent({
             toast.warning(e.message);
         };
 
-        return () => h('div', [
-            h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-user me-1' }),
-                entity.value.name,
-                h('span', { class: 'sub-title ms-1' }, [
-                    'Details',
-                ]),
-            ]),
-            h('div', { class: 'mb-2' }, [
-                buildDomainEntityNav(`/admin/users/${entity.value.id}`, items, { prevLink: true }),
-            ]),
-
-            h('div', [
-                h(NuxtPage, {
-                    onUpdated: handleUpdated,
-                    onFailed: handleFailed,
-                    entity: entity.value,
-                }),
-            ]),
-
-        ]);
+        return {
+            items,
+            entity,
+            handleUpdated,
+            handleFailed,
+        };
     },
 });
+</script>
+<template>
+    <div>
+        <h1 class="title no-border mb-3">
+            <i class="fa fa-user me-1" />
+            {{ entity.name }}
+            <span class="sub-title ms-1">
+                Details
+            </span>
+        </h1>
+        <div class="mb-2">
+            <DomainEntityNav
+                :items="items"
+                :path="`/admin/users/${entity.id}`"
+                :prev-link="true"
+            />
+        </div>
+
+        <div>
+            <NuxtPage
+                :entity="entity"
+                @updated="handleUpdated"
+                @failed="handleFailed"
+            />
+        </div>
+    </div>
+</template>

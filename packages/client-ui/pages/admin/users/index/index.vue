@@ -1,10 +1,4 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
+<script lang="ts">
 import type { User } from '@authup/core';
 import {
     DomainType, PermissionName, isRealmResourceWritable,
@@ -13,11 +7,12 @@ import { AuthEntityDelete } from '@authup/client-vue';
 import type { ListItemSlotProps } from '@vue-layout/list-controls';
 import { SlotName } from '@vue-layout/list-controls';
 import { storeToRefs } from 'pinia';
+import { defineNuxtComponent } from '#app';
 import { NuxtLink } from '#components';
 import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
-export default defineComponent({
+export default defineNuxtComponent({
     emits: ['deleted'],
     setup(props, { emit }) {
         const list = resolveComponent('UserList');
@@ -63,3 +58,4 @@ export default defineComponent({
         });
     },
 });
+</script>

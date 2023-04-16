@@ -51,6 +51,13 @@ export const LayoutSideDefaultNavigation : NavigationElement[] = [
         rootLink: true,
     },
     {
+        name: 'Home',
+        type: 'link',
+        url: '/test',
+        icon: 'fas fa-home',
+        rootLink: true,
+    },
+    {
         name: 'Other',
         type: 'separator',
     },

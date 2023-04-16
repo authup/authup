@@ -1,19 +1,17 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
+<script lang="ts">
+import { UserForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
-import { navigateTo } from '#app';
-import { definePageMeta, resolveComponent } from '#imports';
+import { defineNuxtComponent, navigateTo } from '#app';
+import { definePageMeta } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
 import { useAuthStore } from '../../../../store/auth';
 
-export default defineComponent({
+export default defineNuxtComponent({
+    components: {
+        UserForm,
+    },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
         definePageMeta({
@@ -35,12 +33,18 @@ export default defineComponent({
         const store = useAuthStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const form = resolveComponent('UserForm');
-
-        return () => h(form, {
-            onCreated: handleCreated,
-            onFailed: handleFailed,
-            realmId: realmManagementId,
-        });
+        return {
+            realmManagementId,
+            handleCreated,
+            handleFailed,
+        };
     },
 });
+</script>
+<template>
+    <UserForm
+        :realmid="realmManagementId"
+        @created="handleCreated"
+        @failed="handleFailed"
+    />
+</template>

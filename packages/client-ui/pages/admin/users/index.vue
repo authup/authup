@@ -1,18 +1,11 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
+<script lang="ts">
 import { PermissionName } from '@authup/core';
 import { useToast } from 'vue-toastification';
-import { NuxtPage } from '#components';
+import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
-import { buildDomainEntityNav } from '../../../composables/domain/enity-nav';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
-export default defineComponent({
+export default defineNuxtComponent({
     setup() {
         definePageMeta({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
@@ -47,25 +40,36 @@ export default defineComponent({
             toast.warning(e.message);
         };
 
-        return () => h('div', [
-            h('h1', { class: 'title no-border mb-3' }, [
-                h('i', { class: 'fa fa-user me-1' }),
-                'User',
-                h('span', { class: 'sub-title ms-1' }, [
-                    'Management',
-                ]),
-            ]),
-            h('div', { class: 'content-wrapper' }, [
-                h('div', { class: 'content-sidebar flex-column' }, [
-                    buildDomainEntityNav('/admin/users', items, { direction: 'vertical' }),
-                ]),
-                h('div', { class: 'content-container' }, [
-                    h(NuxtPage, {
-                        onDeleted: handleDeleted,
-                        onFailed: handleFailed,
-                    }),
-                ]),
-            ]),
-        ]);
+        return {
+            items,
+            handleFailed,
+            handleDeleted,
+        };
     },
 });
+</script>
+<template>
+    <div>
+        <h1>
+            <i class="fa fa-user me-1" /> User
+            <span class="sub-title ms-1">
+                Management
+            </span>
+        </h1>
+        <div class="content-wrapper">
+            <div class="content-sidebar flex-column">
+                <DomainEntityNav
+                    :items="items"
+                    path="/admin/users"
+                    direction="vertical"
+                />
+            </div>
+            <div class="content-container">
+                <NuxtPage
+                    @deleted="handleDeleted"
+                    @failed="handleFailed"
+                />
+            </div>
+        </div>
+    </div>
+</template>
