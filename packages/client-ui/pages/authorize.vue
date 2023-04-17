@@ -7,7 +7,9 @@ import { h, ref } from 'vue';
 import type { Ref, VNodeArrayChildren } from 'vue';
 import { useToast } from 'vue-toastification';
 import { definePageMeta } from '#imports';
-import { defineNuxtComponent, navigateTo, useRoute } from '#app';
+import {
+    createError, defineNuxtComponent, navigateTo, useRoute,
+} from '#app';
 import { useAPI } from '../composables/api';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { extractOAuth2QueryParameters } from '../domains';
@@ -25,25 +27,16 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         const { loggedIn } = storeToRefs(store);
         if (!loggedIn.value) {
-            return navigateTo({
+            await navigateTo({
                 path: '/login',
                 query: {
                     ...route.query,
                     redirect: route.path,
                 },
             });
-        }
 
-        const renderError = (message: string | VNodeArrayChildren) => h('div', { class: 'd-flex align-items-center justify-content-center h-100' }, [
-            h('div', { class: 'oauth2-wrapper panel-card p-3 flex-column' }, [
-                h('div', { class: 'text-center' }, [
-                    h('i', { class: 'fa-solid fa-exclamation fa-10x text-danger' }),
-                ]),
-                h('div', { class: 'text-center fs-6 p-3' }, [
-                    message,
-                ]),
-            ]),
-        ]);
+            throw createError({});
+        }
 
         const parameters = extractOAuth2QueryParameters(route.query);
 
@@ -56,22 +49,28 @@ export default defineNuxtComponent({
                 .client
                 .getOne(parameters.client_id as string);
         } catch (e: any) {
-            return () => renderError([
-                'The',
-                h('strong', { class: 'ps-1 pe-1' }, 'client_id'),
-                'is invalid',
-            ]);
+            await navigateTo({
+                path: '/authorize-error',
+                query: {
+                    message: 'The client_id is invalid.',
+                },
+            });
+
+            throw createError({ });
         }
 
         const redirectUriPatterns = (entity.value.redirect_uri || '')
             .split(',');
 
         if (!isGlobMatch(parameters.redirect_uri, redirectUriPatterns)) {
-            return () => renderError([
-                'The',
-                h('strong', { class: 'ps-1 pe-1' }, 'redirect_uri'),
-                'does not match.',
-            ]);
+            await navigateTo({
+                path: '/authorize-error',
+                query: {
+                    message: 'The redirect_uri does not match.',
+                },
+            });
+
+            throw createError({ });
         }
 
         let scopeNames : string[] = [];
@@ -85,18 +84,10 @@ export default defineNuxtComponent({
         const clientScopeQuery : BuildInput<ClientScope> = {
             filter: {
                 client_id: entity.value.id,
+                ...(scopeNames.length > 0 ? { scope: { name: scopeNames } } : {}),
             },
             relations: ['scope'],
         };
-
-        if (
-            clientScopeQuery.filter &&
-            scopeNames.length > 0
-        ) {
-            clientScopeQuery.filter.scope = {
-                name: scopeNames,
-            };
-        }
 
         const { data: clientScopes } = await useAPI().clientScope.getMany(clientScopeQuery);
 

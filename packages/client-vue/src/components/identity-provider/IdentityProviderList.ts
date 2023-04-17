@@ -62,12 +62,6 @@ export const IdentityProviderList = defineComponent({
                     content: 'Providers',
                     icon: 'fa-solid fa-atom',
                 },
-
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-atom',
-                    },
-                },
                 noMore: {
                     textContent: 'No more identity-providers available...',
                 },

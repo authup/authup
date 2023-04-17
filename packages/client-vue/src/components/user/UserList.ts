@@ -63,11 +63,6 @@ export const UserList = defineComponent({
                     icon: 'fa-solid fa-user',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-user',
-                    },
-                },
                 noMore: {
                     textContent: 'No more users available...',
                 },

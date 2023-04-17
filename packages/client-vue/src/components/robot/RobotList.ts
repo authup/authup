@@ -61,11 +61,6 @@ export const RobotList = defineComponent({
                     icon: 'fa fa-solid fa-robot',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-robot',
-                    },
-                },
                 noMore: {
                     textContent: 'No more robots available...',
                 },

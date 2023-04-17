@@ -19,7 +19,7 @@ export default defineNuxtComponent({
 
         const store = useAuthStore();
 
-        const { user: entity } = storeToRefs(store);
+        const { user, userId } = storeToRefs(store);
 
         const handleUpdated = () => {
             const toast = useToast();
@@ -32,7 +32,8 @@ export default defineNuxtComponent({
         };
 
         return {
-            entity,
+            user,
+            userId,
             handleUpdated,
             handleFailed,
         };
@@ -43,8 +44,8 @@ export default defineNuxtComponent({
     <div>
         <UserForm
             :can-manage="false"
-            :realm-id="entity.realm_id"
-            :entity="entity"
+            :realm-id="userId"
+            :entity="user"
             @updated="handleUpdated"
             @failed="handleFailed"
         />

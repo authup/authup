@@ -61,11 +61,6 @@ export const ScopeList = defineComponent({
                     icon: 'fa-solid fa-meteor',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-meteor',
-                    },
-                },
                 noMore: {
                     textContent: 'No more scopes available...',
                 },

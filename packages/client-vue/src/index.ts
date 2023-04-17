@@ -7,6 +7,7 @@ import { setAPIClient } from './core';
 // install function executed by Vue.use()
 export function install(instance: App, options?: Options) : void {
     options = options || {};
+    options.components ??= true;
 
     if (options.apiClient) {
         setAPIClient(options.apiClient);
@@ -14,11 +15,14 @@ export function install(instance: App, options?: Options) : void {
 
     applyPluginBaseOptions(options);
 
-    Object.entries(components).forEach(([componentName, component]) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        instance.component(componentName, component as Component);
-    });
+    if (options.components) {
+        Object.entries(components)
+            .forEach(([componentName, component]) => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                instance.component(componentName, component as Component);
+            });
+    }
 }
 
 export default {

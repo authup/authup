@@ -42,7 +42,7 @@ export const OAuth2ProviderForm = defineComponent({
     name: 'OAuth2ProviderForm',
     props: {
         entity: {
-            type: Object as PropType<OAuth2IdentityProvider>,
+            type: Object as PropType<IdentityProvider>,
             required: false,
             default: undefined,
         },

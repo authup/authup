@@ -60,12 +60,6 @@ export const PermissionList = defineComponent({
                     icon: 'fa-solid fa-key',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-key',
-                        textPropName: 'name',
-                    },
-                },
                 noMore: {
                     textContent: 'No more permissions available...',
                 },

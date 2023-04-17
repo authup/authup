@@ -48,7 +48,7 @@ export function buildDomainListHeaderTitle<T>(
 ) {
     let icon : VNodeArrayChildren = [];
     if (typeof ctx.icon === 'string') {
-        icon = [h('i', { class: icon })];
+        icon = [h('i', { class: ctx.icon })];
     } else if (typeof ctx.icon === 'boolean' && ctx.icon) {
         icon = [h('i', { class: 'fa-solid fa-list pe-1' })];
     }

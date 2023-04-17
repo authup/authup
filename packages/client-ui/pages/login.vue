@@ -3,19 +3,19 @@ import type { BuildInput } from 'rapiq';
 import { IdentityProviderList, RealmList, useAPIClient } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
-    FormInputText, FormSubmit,
+    FormInput, FormSubmit,
 } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
-    computed, nextTick, toRef, watch,
+    toRef, watch,
 } from 'vue';
 import { useToast } from 'vue-toastification';
 import {
     defineNuxtComponent, navigateTo, useNuxtApp, useRoute,
 } from '#app';
 import {
-    definePageMeta, reactive, ref, resolveComponent,
+    definePageMeta, reactive, ref,
 } from '#imports';
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
@@ -30,7 +30,7 @@ export default defineNuxtComponent({
         RealmList,
         RealmSelectAction,
         FormSubmit,
-        FormInputText,
+        FormInput,
     },
     setup() {
         definePageMeta({
@@ -43,9 +43,6 @@ export default defineNuxtComponent({
             password: '',
             realm_id: '',
         });
-
-        const realmList = resolveComponent('RealmList');
-        const identityProviderList = resolveComponent('IdentityProviderList');
 
         const vuelidate = useVuelidate({
             name: {
@@ -78,7 +75,7 @@ export default defineNuxtComponent({
 
         watch(realmId, async (val, oldVal) => {
             if (val !== oldVal) {
-                if (identityProviderRef) {
+                if (identityProviderRef.value) {
                     identityProviderQuery.filters.realm_id = realmId.value;
                     identityProviderRef.value.load();
                 }
@@ -147,7 +144,7 @@ export default defineNuxtComponent({
         <form @submit.prevent="submit">
             <div class="row">
                 <div class="col-8">
-                    <FormInputText
+                    <FormInput
                         v-model="form.name"
                         :validation-result="vuelidate.name"
                         :validation-translator="translateValidationMessage"
@@ -155,7 +152,7 @@ export default defineNuxtComponent({
                         :label-content="'Name'"
                     />
 
-                    <FormInputText
+                    <FormInput
                         v-model="form.password"
                         type="password"
                         :validation-result="vuelidate.password"

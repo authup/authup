@@ -61,11 +61,6 @@ export const RealmList = defineComponent({
                     icon: 'fa-solid fa-city',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-city',
-                    },
-                },
                 noMore: {
                     textContent: 'No more realms available...',
                 },

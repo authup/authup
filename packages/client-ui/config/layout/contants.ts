@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NavigationElement } from '@vue-layout/basic';
+import type { NavigationElement } from '@vue-layout/navigation';
 import { PermissionName } from '@authup/core';
 
 export enum LayoutKey {
@@ -51,13 +51,6 @@ export const LayoutSideDefaultNavigation : NavigationElement[] = [
         rootLink: true,
     },
     {
-        name: 'Home',
-        type: 'link',
-        url: '/test',
-        icon: 'fas fa-home',
-        rootLink: true,
-    },
-    {
         name: 'Other',
         type: 'separator',
     },
@@ -89,7 +82,7 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         name: 'Realms',
         type: 'link',
         url: '/admin/realms',
-        icon: 'fas fa-university',
+        icon: 'fas fa-building',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionName.REALM_ADD,
@@ -161,7 +154,7 @@ export const LayoutSideAdminNavigation : NavigationElement[] = [
         name: 'Roles',
         type: 'link',
         url: '/admin/roles',
-        icon: 'fa-solid fa-user-group',
+        icon: 'fa-solid fa-theater-masks',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
             PermissionName.ROLE_ADD,

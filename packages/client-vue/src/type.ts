@@ -9,5 +9,7 @@ import type { PluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { APIClient } from '@authup/core';
 
 export type Options = PluginBaseOptions & {
-    apiClient?: APIClient
+    apiClient?: APIClient,
+    // todo: string[] should also be possible, to include specific components only
+    components?: boolean,
 };

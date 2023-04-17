@@ -61,11 +61,6 @@ export const ClientList = defineComponent({
                     icon: 'fa-solid fa-robot',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-ghost',
-                    },
-                },
                 noMore: {
                     textContent: 'No more clients available...',
                 },

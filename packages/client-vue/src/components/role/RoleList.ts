@@ -61,11 +61,6 @@ export const RoleList = defineComponent({
                     icon: 'fa-solid fa-user-group',
                 },
 
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-user-group',
-                    },
-                },
                 noMore: {
                     textContent: 'No more roles available...',
                 },

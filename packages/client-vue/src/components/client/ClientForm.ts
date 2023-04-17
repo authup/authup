@@ -42,14 +42,14 @@ import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const ClientForm = defineComponent({
-    name: 'RobotForm',
+    name: 'ClientForm',
     props: {
         name: {
             type: String,
             default: undefined,
         },
         entity: {
-            type: Object as PropType<Robot>,
+            type: Object as PropType<Client>,
             default: undefined,
         },
         realmId: {

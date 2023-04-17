@@ -21,8 +21,6 @@ export default defineNuxtComponent({
     },
     emits: ['updated', 'failed'],
     async setup(props, { emit }) {
-        console.log(props.entity);
-
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });

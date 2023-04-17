@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './AuthEntityDelete';
+export * from './EntityDelete';
 export * from './client';
 export * from './client-scope';
 export * from './identity-provider';

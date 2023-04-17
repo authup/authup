@@ -6,6 +6,7 @@
  */
 
 import installAuthup from '@authup/client-vue';
+import type { APIClient } from '@authup/core';
 import type { PluginBaseOptions } from '@vue-layout/core';
 import type { NavigationStore } from '@vue-layout/navigation';
 import bootstrap from '@vue-layout/preset-bootstrap-v5';
@@ -15,6 +16,8 @@ import installCountdown from '@vue-layout/countdown';
 import installFormControl from '@vue-layout/form-controls';
 import installNavigation from '@vue-layout/navigation';
 import installPagination from '@vue-layout/pagination';
+
+import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin, useState } from '#app';
 import { buildNavigationProvider } from '~/config/layout';
@@ -52,6 +55,7 @@ export default defineNuxtPlugin((ctx) => {
 
     // preset missing ...
     ctx.vueApp.use(installAuthup, {
-        apiClient: ctx.$api,
+        apiClient: ctx.$api as APIClient,
+        components: false,
     });
 });
