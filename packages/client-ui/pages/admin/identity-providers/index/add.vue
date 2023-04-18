@@ -63,6 +63,7 @@ export default defineNuxtComponent({
             :label-content="'Protocol'"
         />
         <template v-if="protocol === 'oauth2'">
+            <hr>
             <OAuth2ProviderForm
                 :realm-id="realmManagementId"
                 @created="handleCreated"
