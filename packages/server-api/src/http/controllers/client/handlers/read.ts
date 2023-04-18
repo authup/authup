@@ -55,7 +55,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         defaultPath: 'client',
         fields: options,
         filters: {
-            allowed: ['realm_id', 'realm.name'],
+            allowed: ['name', 'realm_id', 'realm.name'],
         },
         pagination: {
             maxLimit: 50,
