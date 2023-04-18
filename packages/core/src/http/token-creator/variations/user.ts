@@ -9,7 +9,7 @@ import { APIClient } from '../../api-client';
 import type { TokenCreator, TokenCreatorUserOptions } from '../type';
 
 export function createTokenCreatorWithUser(options: Omit<TokenCreatorUserOptions, 'type'>) : TokenCreator {
-    const client : APIClient = new APIClient({ driver: { baseURL: options.baseUrl } });
+    const client : APIClient = new APIClient({ baseURL: options.baseUrl });
 
     return async () => client.token.createWithPasswordGrant({
         username: options.name,

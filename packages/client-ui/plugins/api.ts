@@ -7,8 +7,8 @@
 
 import {
     APIClient,
-    mountTokenInterceptorOnClient,
-    unmountTokenInterceptorOfClient,
+    mountClientResponseErrorTokenHook,
+    unmountClientResponseErrorTokenHook,
 } from '@authup/core';
 import type { ClientAPIConfigInput } from '@authup/core';
 import type { Pinia } from 'pinia';
@@ -33,10 +33,7 @@ export default defineNuxtPlugin((ctx) => {
     const runtimeConfig = useRuntimeConfig();
 
     const config : ClientAPIConfigInput = {
-        driver: {
-            baseURL: runtimeConfig.public.apiUrl,
-            withCredentials: true,
-        },
+        baseURL: runtimeConfig.public.apiUrl,
     };
 
     const client = new APIClient(config);
@@ -50,8 +47,8 @@ export default defineNuxtPlugin((ctx) => {
                 token: state.accessToken,
             });
 
-            mountTokenInterceptorOnClient(client, {
-                baseUrl: runtimeConfig.public.apiUrl,
+            mountClientResponseErrorTokenHook(client, {
+                baseURL: runtimeConfig.public.apiUrl,
                 tokenCreator: () => {
                     let refreshToken : string | undefined;
                     if (state.refreshToken) {
@@ -69,7 +66,7 @@ export default defineNuxtPlugin((ctx) => {
             });
         } else {
             client.unsetAuthorizationHeader();
-            unmountTokenInterceptorOfClient(client);
+            unmountClientResponseErrorTokenHook(client);
         }
     });
 

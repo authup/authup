@@ -10,58 +10,58 @@ import {
     APIClient,
     ErrorCode,
     getCurrentRequestRetryState,
-    isTokenInterceptorMountedOnClient,
-    isValidAuthenticationError,
-    mountTokenInterceptorOnClient, unmountTokenInterceptorOfClient,
+    hasClientResponseErrorTokenHook,
+    isAPIClientAuthError,
+    mountClientResponseErrorTokenHook, unmountClientResponseErrorTokenHook,
 } from '../../../src';
 
 describe('src/interceptor/utils', () => {
     it('should mount and unmount interceptor', () => {
         const client = new APIClient();
 
-        expect(isTokenInterceptorMountedOnClient(client)).toBeFalsy();
+        expect(hasClientResponseErrorTokenHook(client)).toBeFalsy();
 
-        mountTokenInterceptorOnClient(client, {
+        mountClientResponseErrorTokenHook(client, {
             tokenCreator: {
                 type: 'user',
                 name: 'admin',
                 password: 'start123',
             },
         });
-        expect(isTokenInterceptorMountedOnClient(client)).toBeTruthy();
+        expect(hasClientResponseErrorTokenHook(client)).toBeTruthy();
 
-        unmountTokenInterceptorOfClient(client);
-        expect(isTokenInterceptorMountedOnClient(client)).toBeFalsy();
+        unmountClientResponseErrorTokenHook(client);
+        expect(hasClientResponseErrorTokenHook(client)).toBeFalsy();
     });
 
     it('should be valid response error', () => {
         let error = createResponseError({
             status: 401,
         });
-        expect(isValidAuthenticationError(error)).toBeTruthy();
+        expect(isAPIClientAuthError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 500,
             code: ErrorCode.TOKEN_EXPIRED,
         });
-        expect(isValidAuthenticationError(error)).toBeTruthy();
+        expect(isAPIClientAuthError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.TOKEN_INVALID,
         });
-        expect(isValidAuthenticationError(error)).toBeTruthy();
+        expect(isAPIClientAuthError(error)).toBeTruthy();
     });
 
     it('should not be valid response error', () => {
         let error = new Error('foo');
-        expect(isValidAuthenticationError(error)).toBeFalsy();
+        expect(isAPIClientAuthError(error)).toBeFalsy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.CREDENTIALS_INVALID,
         });
-        expect(isValidAuthenticationError(error)).toBeFalsy();
+        expect(isAPIClientAuthError(error)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

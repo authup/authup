@@ -7,17 +7,11 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { Driver } from 'hapic';
+import { BaseAPI } from '../base';
 import type { UserRole } from './types';
 import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
-export class UserRoleAPI implements DomainAPISlim<UserRole> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class UserRoleAPI extends BaseAPI implements DomainAPISlim<UserRole> {
     async getMany(data: BuildInput<UserRole>): Promise<CollectionResourceResponse<UserRole>> {
         const response = await this.client.get(`user-roles${buildQuery(data)}`);
 

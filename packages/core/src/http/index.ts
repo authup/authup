@@ -6,6 +6,6 @@
  */
 
 export * from './api-client';
-export * from './interceptor';
+export * from './hook';
 export * from './cookies';
 export * from './token-creator';

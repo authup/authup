@@ -10,15 +10,13 @@ import { parseProxyConnectionString } from '@authup/core';
 import { getProxyForUrl } from 'proxy-from-env';
 import { ProxyClient } from './module';
 
-type DriverRequestConfig = {
-    httpAgent?: Agent,
-    httpsAgent?: Agent,
-    proxy?: false,
+type ClientOptions = {
+    agent?: ((url: URL) => Agent) | Agent
 };
 
 export async function buildHTTPClientConfigForProxy(
     url: string,
-) : Promise<DriverRequestConfig> {
+) : Promise<ClientOptions> {
     const connectionString = getProxyForUrl(url);
     if (connectionString) {
         const connectionDetails = parseProxyConnectionString(connectionString);
@@ -32,9 +30,7 @@ export async function buildHTTPClientConfigForProxy(
         const agent = await proxyClient.createAgent(url);
 
         return {
-            httpAgent: agent,
-            httpsAgent: agent,
-            proxy: false,
+            agent,
         };
     }
 

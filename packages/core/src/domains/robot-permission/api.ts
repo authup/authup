@@ -7,19 +7,13 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { Driver } from 'hapic';
+import { BaseAPI } from '../base';
 import type { RobotPermission } from './types';
 import type {
     CollectionResourceResponse, DomainAPISlim, SingleResourceResponse,
 } from '../types-base';
 
-export class RobotPermissionAPI implements DomainAPISlim<RobotPermission> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class RobotPermissionAPI extends BaseAPI implements DomainAPISlim<RobotPermission> {
     async getMany(data?: BuildInput<RobotPermission>) : Promise<CollectionResourceResponse<RobotPermission>> {
         const response = await this.client.get(`robot-permissions${buildQuery(data)}`);
         return response.data;

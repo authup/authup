@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigInput } from 'hapic';
+import type { RequestOptions } from 'hapic';
 
-export type ClientAPIConfigInput = ConfigInput;
+export type ClientAPIConfigInput = RequestOptions;

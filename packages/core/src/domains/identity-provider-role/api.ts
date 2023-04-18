@@ -7,18 +7,12 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
+import { BaseAPI } from '../base';
 import type { IdentityProviderRole } from './types';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
-export class IdentityProviderRoleAPI implements DomainAPI<IdentityProviderRole> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class IdentityProviderRoleAPI extends BaseAPI implements DomainAPI<IdentityProviderRole> {
     async getMany(data: BuildInput<IdentityProviderRole>): Promise<CollectionResourceResponse<IdentityProviderRole>> {
         const response = await this.client.get(`identity-provider-roles${buildQuery(data)}`);
 
