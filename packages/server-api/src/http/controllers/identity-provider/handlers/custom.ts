@@ -19,8 +19,8 @@ import { useRequestQuery } from '@routup/query';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { URL } from 'node:url';
-import type { DriverRequestConfig } from '@hapic/oauth2';
-import { Client } from '@hapic/oauth2';
+import type { RequestOptions } from '@hapic/oauth2';
+import { OAuth2Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
@@ -55,7 +55,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     const config = await useConfig();
 
-    const oauth2Client = new Client({
+    const oauth2Client = new OAuth2Client({
         options: {
             clientId: provider.client_id,
             authorizationEndpoint: provider.authorize_url,
@@ -96,15 +96,16 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const config = await useConfig();
 
-    let driver: DriverRequestConfig;
+    let request: RequestOptions;
+
     try {
-        driver = await buildHTTPClientConfigForProxy(provider.token_url);
+        request = await buildHTTPClientConfigForProxy(provider.token_url);
     } catch (e) {
         throw new BadRequestError(`The http tunnel could not be created for url: ${provider.token_url}`);
     }
 
-    const oauth2Client = new Client({
-        driver,
+    const oauth2Client = new OAuth2Client({
+        request,
         options: {
             clientId: provider.client_id,
             clientSecret: provider.client_secret,

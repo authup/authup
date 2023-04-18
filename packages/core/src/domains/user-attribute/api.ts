@@ -7,20 +7,14 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
+import { BaseAPI } from '../base';
 import type { UserAttribute } from './types';
 import type {
     CollectionResourceResponse, DomainAPI, SingleResourceResponse,
 } from '../types-base';
 
-export class UserAttributeAPI implements DomainAPI<UserAttribute> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class UserAttributeAPI extends BaseAPI implements DomainAPI<UserAttribute> {
     async getMany(data?: BuildInput<UserAttribute>): Promise<CollectionResourceResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes${buildQuery(data)}`);
 

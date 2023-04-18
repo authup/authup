@@ -6,9 +6,8 @@
  */
 
 import {
-    ErrorCode, buildNameFromAbilityID, hasOwnProperty, isValidAuthenticationError,
+    buildNameFromAbilityID, isAPIClientAuthError,
 } from '@authup/core';
-import { isDriverError } from '@hapic/oauth2';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
@@ -77,7 +76,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
         await store.resolve();
     } catch (e) {
-        if (isValidAuthenticationError(e)) {
+        if (isAPIClientAuthError(e)) {
             await store.logout();
         }
 

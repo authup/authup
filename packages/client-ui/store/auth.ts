@@ -9,7 +9,7 @@ import type {
     OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, Realm, User,
 } from '@authup/core';
 import {
-    APIClient, AbilityManager, OAuth2TokenKind, isValidAuthenticationError,
+    APIClient, AbilityManager, OAuth2TokenKind, isAPIClientAuthError,
 } from '@authup/core';
 import { defineStore } from 'pinia';
 import { computed, ref, useRuntimeConfig } from '#imports';
@@ -18,9 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
     const config = useRuntimeConfig();
 
     const client = new APIClient({
-        driver: {
-            baseURL: config.public.apiUrl,
-        },
+        baseURL: config.public.apiUrl,
     });
 
     // --------------------------------------------------------------------
@@ -113,7 +111,7 @@ export const useAuthStore = defineStore('auth', () => {
             const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
             setUser(entity);
         } catch (e) {
-            if (isValidAuthenticationError(e)) {
+            if (isAPIClientAuthError(e)) {
                 await attemptRefreshToken();
                 await resolveUser(true);
 
@@ -153,6 +151,11 @@ export const useAuthStore = defineStore('auth', () => {
         tokenResolved = true;
 
         token.value = entity;
+
+        if (entity.exp) {
+            const expireDate = new Date(entity.exp * 1000);
+            setTokenExpireDate(expireDate);
+        }
 
         if (
             entity.realm_id &&
@@ -199,7 +202,7 @@ export const useAuthStore = defineStore('auth', () => {
             });
             setTokenInfo(token);
         } catch (e) {
-            if (isValidAuthenticationError(e)) {
+            if (isAPIClientAuthError(e)) {
                 await attemptRefreshToken();
                 await introspectToken(true);
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client as BaseClient, isDriverError } from 'hapic';
+import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type {
     Options,
 } from '@hapic/oauth2';
@@ -96,60 +96,57 @@ export class APIClient extends BaseClient {
             }
         }
 
-        this.authorize = new AuthorizeAPI({ driver: this.driver, options });
-        this.token = new TokenAPI({ driver: this.driver, options });
+        this.authorize = new AuthorizeAPI({ client: this, options });
+        this.token = new TokenAPI({ client: this, options });
 
-        this.client = new ClientAPI(this.driver);
-        this.clientScope = new ClientScopeAPI(this.driver);
+        this.client = new ClientAPI({ client: this });
+        this.clientScope = new ClientScopeAPI({ client: this });
 
-        this.identityProvider = new IdentityProviderAPI(this.driver);
-        this.identityProviderRole = new IdentityProviderRoleAPI(this.driver);
+        this.identityProvider = new IdentityProviderAPI({ client: this });
+        this.identityProviderRole = new IdentityProviderRoleAPI({ client: this });
 
-        this.permission = new PermissionAPI(this.driver);
+        this.permission = new PermissionAPI({ client: this });
 
-        this.realm = new RealmAPI(this.driver);
+        this.realm = new RealmAPI({ client: this });
 
-        this.robot = new RobotAPI(this.driver);
-        this.robotPermission = new RobotPermissionAPI(this.driver);
-        this.robotRole = new RobotRoleAPI(this.driver);
+        this.robot = new RobotAPI({ client: this });
+        this.robotPermission = new RobotPermissionAPI({ client: this });
+        this.robotRole = new RobotRoleAPI({ client: this });
 
-        this.role = new RoleAPI(this.driver);
-        this.roleAttribute = new RoleAttributeAPI(this.driver);
-        this.rolePermission = new RolePermissionAPI(this.driver);
+        this.role = new RoleAPI({ client: this });
+        this.roleAttribute = new RoleAttributeAPI({ client: this });
+        this.rolePermission = new RolePermissionAPI({ client: this });
 
-        this.scope = new ScopeAPI(this.driver);
+        this.scope = new ScopeAPI({ client: this });
 
-        this.user = new UserAPI(this.driver);
-        this.userInfo = new UserInfoAPI({ driver: this.driver, options });
-        this.userAttribute = new UserAttributeAPI(this.driver);
-        this.userPermission = new UserPermissionAPI(this.driver);
-        this.userRole = new UserRoleAPI(this.driver);
+        this.user = new UserAPI({ client: this });
+        this.userInfo = new UserInfoAPI({ client: this, options });
+        this.userAttribute = new UserAttributeAPI({ client: this });
+        this.userPermission = new UserPermissionAPI({ client: this });
+        this.userRole = new UserRoleAPI({ client: this });
 
-        this.mountResponseInterceptor(
-            (r) => r,
-            ((error) => {
-                if (
-                    isDriverError(error) &&
+        this.on(HookName.RESPONSE_ERROR, ((error) => {
+            if (
+                isClientError(error) &&
                     error.response &&
                     error.response.data &&
                     typeof error.response.data.message === 'string'
-                ) {
-                    error.message = error.response.data.message;
-                }
+            ) {
+                error.message = error.response.data.message;
+            }
 
-                throw error;
-            }),
-        );
+            throw error;
+        }));
     }
 
     async getJwks() : Promise<OAuth2JsonWebKey[]> {
-        const response = await this.driver.get('jwks');
+        const response = await this.get('jwks');
 
         return response.data;
     }
 
     async getJwk(id: string) : Promise<OAuth2JsonWebKey> {
-        const response = await this.driver.get(`jwks/${id}`);
+        const response = await this.get(`jwks/${id}`);
 
         return response.data;
     }

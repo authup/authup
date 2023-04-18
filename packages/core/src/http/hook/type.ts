@@ -7,7 +7,7 @@
 
 import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
 
-export type TokenInterceptorOptions = {
-    baseUrl?: string,
+export type TokenHookOptions = {
+    baseURL?: string,
     tokenCreator: TokenCreatorOptions | TokenCreator
 };

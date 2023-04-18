@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Driver, TokenGrantResponse } from '@hapic/oauth2';
-import { BaseClient, isDriver } from '@hapic/oauth2';
-import { isDriverError } from 'hapic';
+import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { Client } from 'hapic';
+import { HookName } from 'hapic';
 import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import type { TokenInterceptorOptions } from './type';
-import { getCurrentRequestRetryState, isValidAuthenticationError } from './utils';
+import type { TokenHookOptions } from './type';
+import { getCurrentRequestRetryState, isAPIClientAuthError } from './utils';
 
 type RejectFn = (err: any) => any;
 
 async function refreshToken(baseURL: string, refreshToken: string) {
-    const client = new APIClient({ driver: { baseURL } });
+    const client = new APIClient({ baseURL });
 
     let tokenGrantResponse : TokenGrantResponse | undefined;
     try {
@@ -34,23 +34,20 @@ async function refreshToken(baseURL: string, refreshToken: string) {
 const tokenInterceptorSymbol = Symbol.for('ClientTokenInterceptor');
 const tokenInterceptorTimeoutSymbol = Symbol.for('ClientTokenInterceptorTimeout');
 
-export function isTokenInterceptorMountedOnClient(client: BaseClient | Driver) {
+export function hasClientResponseErrorTokenHook(client: Client) {
     return tokenInterceptorSymbol in client;
 }
 
-export function unmountTokenInterceptorOfClient(
-    client: BaseClient | Driver,
+export function unmountClientResponseErrorTokenHook(
+    client: Client,
 ) {
-    if (!isTokenInterceptorMountedOnClient(client)) {
+    if (!hasClientResponseErrorTokenHook(client)) {
         return;
     }
 
     const interceptorId = client[tokenInterceptorSymbol] as number;
-    if (isDriver(client)) {
-        client.interceptors.response.eject(interceptorId);
-    } else {
-        client.unmountResponseInterceptor(interceptorId);
-    }
+
+    client.off(HookName.RESPONSE_ERROR, interceptorId);
 
     if (tokenInterceptorTimeoutSymbol in client) {
         clearTimeout(client[tokenInterceptorTimeoutSymbol] as ReturnType<typeof setTimeout>);
@@ -61,26 +58,19 @@ export function unmountTokenInterceptorOfClient(
     delete client[tokenInterceptorSymbol];
 }
 
-export function mountTokenInterceptorOnClient(
-    client: BaseClient | Driver,
-    options: TokenInterceptorOptions,
+export function mountClientResponseErrorTokenHook(
+    client: Client,
+    options: TokenHookOptions,
 ) {
-    if (isTokenInterceptorMountedOnClient(client)) {
+    if (hasClientResponseErrorTokenHook(client)) {
         return;
     }
 
-    let instance : BaseClient;
-    if (isDriver(client)) {
-        instance = new BaseClient({ driver: client });
-    } else {
-        instance = client;
-    }
-
     let baseUrl : string;
-    if (options.baseUrl) {
-        baseUrl = options.baseUrl;
+    if (options.baseURL) {
+        baseUrl = options.baseURL;
     } else {
-        baseUrl = instance.getBaseURL();
+        baseUrl = client.getBaseURL();
     }
 
     let creator : TokenCreator;
@@ -109,14 +99,14 @@ export function mountTokenInterceptorOnClient(
                 response.refresh_token,
             );
 
-            instance.setAuthorizationHeader({ type: 'Bearer', token: tokenGrantResponse.access_token });
+            client.setAuthorizationHeader({ type: 'Bearer', token: tokenGrantResponse.access_token });
 
             handleTokenResponse(tokenGrantResponse);
         }, refreshInMs);
     };
 
     const onReject : RejectFn = async (err) : Promise<any> => {
-        if (!isValidAuthenticationError(err)) {
+        if (!isAPIClientAuthError(err)) {
             return Promise.reject(err);
         }
 
@@ -129,31 +119,24 @@ export function mountTokenInterceptorOnClient(
 
         currentState.retryCount += 1;
 
-        instance.unsetAuthorizationHeader();
+        client.unsetAuthorizationHeader();
 
         return creator()
             .then((tokenGrantResponse) => {
-                instance.setAuthorizationHeader({
+                client.setAuthorizationHeader({
                     type: 'Bearer',
                     token: tokenGrantResponse.access_token,
                 });
 
                 handleTokenResponse(tokenGrantResponse);
             })
-            .then(() => instance.request(config))
+            .then(() => client.request(config))
             .catch((e) => {
-                instance.unsetAuthorizationHeader();
-
-                if (isDriverError(e) && e.response) {
-                    e.response.status = 500;
-                }
+                client.unsetAuthorizationHeader();
 
                 return Promise.reject(e);
             });
     };
 
-    client[tokenInterceptorSymbol] = instance.mountResponseInterceptor(
-        (value) => value,
-        onReject,
-    );
+    client[tokenInterceptorSymbol] = client.on(HookName.RESPONSE_ERROR, onReject);
 }

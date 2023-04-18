@@ -6,7 +6,7 @@
  */
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { Client } from '@hapic/vault';
+import type { VaultClient } from '@hapic/vault';
 import type { TokenCreatorVariation } from './constants';
 
 export type TokenCreatorBaseOptions = {
@@ -37,7 +37,7 @@ export type TokenCreatorRobotInVaultOptions = TokenCreatorBaseOptions & {
     /**
      * connection string or vault client.
      */
-    vault: string | Client,
+    vault: string | VaultClient,
 };
 
 export type TokenCreatorOptions = TokenCreatorUserOptions |

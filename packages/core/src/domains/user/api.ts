@@ -7,18 +7,12 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { Driver } from 'hapic';
 import { nullifyEmptyObjectProperties } from '../../utils';
+import { BaseAPI } from '../base';
 import type { User } from './types';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
-export class UserAPI implements DomainAPI<User> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class UserAPI extends BaseAPI implements DomainAPI<User> {
     async getMany(
         options?: BuildInput<User>,
     ): Promise<CollectionResourceResponse<User>> {

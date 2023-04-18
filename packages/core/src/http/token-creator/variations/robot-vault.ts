@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client } from '@hapic/vault';
+import { VaultClient } from '@hapic/vault';
 import { isObject } from '../../../utils';
 import type { Robot } from '../../../domains';
 import { ROBOT_SYSTEM_NAME } from '../../../domains';
@@ -16,14 +16,14 @@ import { createTokenCreatorWithRobot } from './robot';
 export function createTokenCreatorWithRobotInVault(
     options: Omit<TokenCreatorRobotInVaultOptions, 'type'>,
 ) : TokenCreator {
-    let client : Client;
+    let client : VaultClient;
     if (typeof options.vault === 'string') {
-        client = new Client({ connectionString: options.vault });
+        client = new VaultClient({ connectionString: options.vault });
     } else {
         client = options.vault;
     }
 
-    const apiClient : APIClient = new APIClient({ driver: { baseURL: options.baseUrl } });
+    const apiClient : APIClient = new APIClient({ baseURL: options.baseUrl });
 
     const robotName = options.name || ROBOT_SYSTEM_NAME;
 

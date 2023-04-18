@@ -10,7 +10,7 @@ import {
     IdentityProviderProtocol,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core';
-import { Client } from '@hapic/oauth2';
+import { OAuth2Client } from '@hapic/oauth2';
 import { useConfig } from '../../../../src';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -112,7 +112,7 @@ describe('src/http/controllers/identity-provider', () => {
 
         const config = await useConfig();
 
-        const identityClient = new Client({
+        const identityClient = new OAuth2Client({
             options: {
                 clientId: details.client_id,
                 authorizationEndpoint: details.authorize_url,

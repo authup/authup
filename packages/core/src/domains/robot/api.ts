@@ -5,24 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Driver } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
+import { BaseAPI } from '../base';
 import type { Robot } from './types';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 
-export class RobotAPI implements DomainAPI<Robot> {
-    protected driver: Driver;
-
-    constructor(client: Driver) {
-        this.driver = client;
-    }
-
+export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
     async getMany(
         options?: BuildInput<Robot>,
     ): Promise<CollectionResourceResponse<Robot>> {
-        const response = await this.driver
+        const response = await this.client
             .get(`robots${buildQuery(options)}`);
 
         return response.data;
@@ -32,7 +26,7 @@ export class RobotAPI implements DomainAPI<Robot> {
         id: Robot['id'],
         options?: BuildInput<Robot>,
     ): Promise<SingleResourceResponse<Robot>> {
-        const response = await this.driver
+        const response = await this.client
             .get(`robots/${id}${buildQuery(options)}`);
 
         return response.data;
@@ -41,7 +35,7 @@ export class RobotAPI implements DomainAPI<Robot> {
     async delete(
         id: Robot['id'],
     ): Promise<SingleResourceResponse<Robot>> {
-        const response = await this.driver
+        const response = await this.client
             .delete(`robots/${id}`);
 
         return response.data;
@@ -50,7 +44,7 @@ export class RobotAPI implements DomainAPI<Robot> {
     async create(
         data: Partial<Robot>,
     ): Promise<SingleResourceResponse<Robot>> {
-        const response = await this.driver
+        const response = await this.client
             .post('robots', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -60,7 +54,7 @@ export class RobotAPI implements DomainAPI<Robot> {
         id: Robot['id'],
         data: Partial<Robot>,
     ): Promise<SingleResourceResponse<Robot>> {
-        const response = await this.driver.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
+        const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
@@ -68,7 +62,7 @@ export class RobotAPI implements DomainAPI<Robot> {
     async integrity(
         id: Robot['id'] | Robot['name'],
     ): Promise<SingleResourceResponse<Robot>> {
-        const { data: response } = await this.driver
+        const { data: response } = await this.client
             .get(`robots/${id}/integrity`);
 
         return response;

@@ -5,20 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Driver } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
+import { BaseAPI } from '../base';
 import type { UserPermission } from './types';
 import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 import { nullifyEmptyObjectProperties } from '../../utils';
 
-export class UserPermissionAPI implements DomainAPISlim<UserPermission> {
-    protected client: Driver;
-
-    constructor(client: Driver) {
-        this.client = client;
-    }
-
+export class UserPermissionAPI extends BaseAPI implements DomainAPISlim<UserPermission> {
     async getMany(data?: BuildInput<UserPermission>) : Promise<CollectionResourceResponse<UserPermission>> {
         const response = await this.client.get(`user-permissions${buildQuery(data)}`);
         return response.data;

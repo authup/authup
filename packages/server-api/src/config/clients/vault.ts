@@ -6,7 +6,7 @@
  */
 
 import type { ConfigInput } from '@hapic/vault';
-import { Client, setClient } from '@hapic/vault';
+import { VaultClient, setClient } from '@hapic/vault';
 
 export function setupVault(data: string | boolean) {
     let config : ConfigInput | undefined;
@@ -30,7 +30,7 @@ export function setupVault(data: string | boolean) {
     }
 
     if (config) {
-        const client = new Client(config);
+        const client = new VaultClient(config);
 
         setClient(client);
     }

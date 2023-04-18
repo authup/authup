@@ -57,7 +57,7 @@
     "devDependencies": {
         "@authup/core": "^0.32.2",
         "@authup/server-core": "^0.32.2",
-        "@hapic/oauth2": "^2.0.0-alpha.2",
+        "@hapic/oauth2": "^2.0.0-alpha.8",
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {

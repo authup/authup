@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, RequestOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import type { DomainEventName } from './contstants';
 
@@ -32,6 +33,10 @@ export interface DomainAPI<
 > extends DomainAPISlim<T> {
     update(id: T['id'], data: Partial<T>) : Promise<SingleResourceResponse<T>>;
 }
+
+export type BaseAPIContext = {
+    client?: Client | RequestOptions
+};
 
 export type DomainEventBaseContext = {
     event: `${DomainEventName}`,

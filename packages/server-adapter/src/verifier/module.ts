@@ -16,7 +16,7 @@ import {
     KeyType,
     TokenError,
     isObject,
-    mountTokenInterceptorOnClient,
+    mountClientResponseErrorTokenHook,
 } from '@authup/core';
 import { decodeToken, verifyToken } from '@authup/server-core';
 import type { TokenVerifyRSAlgorithm } from '@authup/server-core';
@@ -41,7 +41,7 @@ export class TokenVerifier {
             this.cache = new TokenVerifierMemoryCache();
         }
 
-        this.client = new APIClient({ driver: { baseURL: context.baseUrl } });
+        this.client = new APIClient({ baseURL: context.baseUrl });
 
         if (context.creator) {
             if (
@@ -51,9 +51,9 @@ export class TokenVerifier {
                 context.creator.baseUrl = context.baseUrl;
             }
 
-            mountTokenInterceptorOnClient(this.client, {
+            mountClientResponseErrorTokenHook(this.client, {
                 tokenCreator: context.creator,
-                baseUrl: context.baseUrl,
+                baseURL: context.baseUrl,
             });
 
             this.interceptorMounted = true;
