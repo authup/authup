@@ -24,21 +24,25 @@ import {
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import { IdentityProviderProtocol, createNanoID } from '@authup/core';
 import {
-    buildFormInput, buildFormInputCheckbox,
+    buildFormInput,
+    buildFormInputCheckbox,
     buildFormSubmit,
-} from '@vue-layout/hyperscript';
+} from '@vue-layout/form-controls';
 import {
-    alphaNumHyphenUnderscore, createSubmitHandler, initFormAttributesFromEntity, useAPIClient,
-} from '../../utils';
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import {
+    alphaNumHyphenUnderscore, useAPIClient,
+} from '../../core';
 import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildValidationTranslator, useTranslator } from '../../language';
 
 export const OAuth2ProviderForm = defineComponent({
     name: 'OAuth2ProviderForm',
     props: {
         entity: {
-            type: Object as PropType<OAuth2IdentityProvider>,
+            type: Object as PropType<IdentityProvider>,
             required: false,
             default: undefined,
         },
@@ -144,7 +148,7 @@ export const OAuth2ProviderForm = defineComponent({
 
         function initForm() {
             if (props.realmId) form.realm_id = props.realmId;
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
             if (isSlugEmpty.value) {
                 generateId();
             }
@@ -209,7 +213,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.slug,
-                        validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        validationTranslator: buildValidationTranslator(props.translatorLocale),
                         labelContent: 'Slug',
                         value: form.slug,
                         onChange(input) {
@@ -234,7 +238,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.name,
-                        validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        validationTranslator: buildValidationTranslator(props.translatorLocale),
                         labelContent: 'Name',
                         value: form.name,
                         onChange(input) {
@@ -253,7 +257,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.client_id,
-                        validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        validationTranslator: buildValidationTranslator(props.translatorLocale),
                         labelContent: 'Client ID',
                         value: form.client_id,
                         onChange(input) {
@@ -262,7 +266,7 @@ export const OAuth2ProviderForm = defineComponent({
                     }),
                     buildFormInput({
                         validationResult: $v.value.client_secret,
-                        validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                        validationTranslator: buildValidationTranslator(props.translatorLocale),
                         labelContent: 'Client Secret',
                         value: form.client_secret,
                         onChange(input) {
@@ -288,7 +292,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.token_url,
-                            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                            validationTranslator: buildValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.token_url,
                             onChange(input) {
@@ -309,7 +313,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.authorize_url,
-                            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                            validationTranslator: buildValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.authorize_url,
                             onChange(input) {
@@ -340,8 +344,8 @@ export const OAuth2ProviderForm = defineComponent({
             }
 
             const submitButton = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
                 isEditing,

@@ -9,8 +9,9 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { Robot } from '@authup/core';
-import { useListBuilder } from '../../composables';
-import { useAPIClient } from '../../utils';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
+import { createDomainListBuilder } from '../../helpers';
+import { useAPIClient } from '../../core';
 
 export const RobotList = defineComponent({
     name: 'RobotList',
@@ -25,20 +26,20 @@ export const RobotList = defineComponent({
                 return {};
             },
         },
-        withHeader: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withNoMore: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -47,22 +48,19 @@ export const RobotList = defineComponent({
         updated: (item: Robot) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<Robot>({
+        const { build } = createDomainListBuilder<Robot>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().robot.getMany(buildInput),
-            components: {
-                header: {
-                    title: {
-                        iconClass: 'fa-solid fa-robot',
-                        textContent: 'Robots',
-                    },
+            defaults: {
+                footerPagination: true,
+
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Robots',
+                    icon: 'fa fa-solid fa-robot',
                 },
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-robot',
-                    },
-                },
+
                 noMore: {
                     textContent: 'No more robots available...',
                 },

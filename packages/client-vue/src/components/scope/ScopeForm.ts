@@ -25,18 +25,22 @@ import type {
     Realm, Scope,
 } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormInputCheckbox, buildFormSubmit, buildFormTextarea, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit, buildFormTextarea,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
+import {
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createSubmitHandler,
-    initFormAttributesFromEntity,
     useAPIClient,
-} from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({
@@ -104,7 +108,7 @@ export const ScopeForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -128,7 +132,7 @@ export const ScopeForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -143,7 +147,7 @@ export const ScopeForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -156,8 +160,8 @@ export const ScopeForm = defineComponent({
             ];
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
                 isEditing,
@@ -174,7 +178,7 @@ export const ScopeForm = defineComponent({
                     h('hr'),
                     h('label', { class: 'form-label' }, 'Realm'),
                     h(RealmList, {
-                        withHeader: false,
+                        headerTitle: false,
                     }, {
                         [SlotName.ITEM_ACTIONS]: (
                             props: { data: Realm, busy: boolean },

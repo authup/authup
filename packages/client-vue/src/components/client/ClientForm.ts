@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { SlotName, buildItemActionToggle } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -24,29 +25,31 @@ import {
 import type { Client, Realm, Robot } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormInputCheckbox, buildFormSubmit, buildFormTextarea, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormInputCheckbox,
+    buildFormSubmit,
+    buildFormTextarea,
+} from '@vue-layout/form-controls';
+import {
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createSubmitHandler,
-    initFormAttributesFromEntity,
     useAPIClient,
-} from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const ClientForm = defineComponent({
-    name: 'RobotForm',
+    name: 'ClientForm',
     props: {
         name: {
             type: String,
             default: undefined,
         },
         entity: {
-            type: Object as PropType<Robot>,
+            type: Object as PropType<Client>,
             default: undefined,
         },
         realmId: {
@@ -117,7 +120,7 @@ export const ClientForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -147,7 +150,7 @@ export const ClientForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -163,7 +166,7 @@ export const ClientForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -191,7 +194,7 @@ export const ClientForm = defineComponent({
 
             const isConfidential = buildFormInputCheckbox({
                 validationResult: $v.value.is_confidential,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Is Confidential?',
                 value: form.is_confidential,
                 onChange(input) {
@@ -216,7 +219,7 @@ export const ClientForm = defineComponent({
             const secret = [
                 buildFormInput({
                     validationResult: $v.value.secret,
-                    validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                    validationTranslator: buildValidationTranslator(props.translatorLocale),
                     labelContent: [
                         'Secret',
                     ],
@@ -236,14 +239,14 @@ export const ClientForm = defineComponent({
                     }, [
                         h('i', { class: 'fa fa-wrench' }),
                         ' ',
-                        useAuthIlingo().getSync('form.generate.button', props.translatorLocale),
+                        useTranslator().getSync('form.generate.button', props.translatorLocale),
                     ]),
                 ]),
             ];
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
                 isEditing,
@@ -259,7 +262,7 @@ export const ClientForm = defineComponent({
                     h('hr'),
                     h('label', { class: 'form-label' }, 'Realm'),
                     h(RealmList, {
-                        withHeader: false,
+                        headerTitle: false,
                     }, {
                         [SlotName.ITEM_ACTIONS]: (
                             props: { data: Realm, busy: boolean },

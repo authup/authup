@@ -80,7 +80,6 @@ export default defineNuxtPlugin((ctx) => {
 
         if (typeof state.accessToken === 'undefined') {
             warehouse.remove(AuthBrowserStorageKey.ACCESS_TOKEN);
-            warehouse.remove(AuthBrowserStorageKey.ACCESS_TOKEN_EXPIRE_DATE);
         } else {
             warehouse.set(AuthBrowserStorageKey.ACCESS_TOKEN, state.accessToken);
         }

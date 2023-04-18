@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, buildNameFromAbilityID, hasOwnProperty } from '@authup/core';
+import {
+    ErrorCode, buildNameFromAbilityID, hasOwnProperty, isValidAuthenticationError,
+} from '@authup/core';
 import { isDriverError } from '@hapic/oauth2';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
@@ -75,29 +77,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
         await store.resolve();
     } catch (e) {
-        let processed : boolean | undefined;
-
-        if (isDriverError(e)) {
-            if (
-                e.response &&
-                e.response.data &&
-                hasOwnProperty(e.response.data, 'code') &&
-                typeof e.response.data.code === 'string'
-            ) {
-                const tokenErrorCodes : string[] = [
-                    ErrorCode.TOKEN_EXPIRED,
-                    ErrorCode.TOKEN_INVALID,
-                    ErrorCode.TOKEN_INACTIVE,
-                ];
-
-                if (tokenErrorCodes.indexOf(e.response.data.code) !== -1) {
-                    await store.logout();
-                    processed = true;
-                }
-            }
+        if (isValidAuthenticationError(e)) {
+            await store.logout();
         }
 
-        if (!to.fullPath.startsWith('/logout')) {
+        if (!to.fullPath.startsWith('/logout') && !to.fullPath.startsWith('/login')) {
             return navigateTo({
                 path: '/logout',
                 query: {
@@ -105,6 +89,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                 },
             });
         }
+
+        return undefined;
     }
 
     if (

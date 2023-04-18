@@ -8,12 +8,12 @@
 import type {
     NavigationElement,
     NavigationProvider,
-} from '@vue-layout/basic';
+} from '@vue-layout/navigation';
 import {
     findNavigationElementForTier,
     flattenNestedNavigationElements,
     reduceNavigationElementsByRestriction,
-} from '@vue-layout/basic';
+} from '@vue-layout/navigation';
 
 import {
     LayoutSideAdminNavigation,

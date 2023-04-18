@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFormInput } from '@vue-layout/hyperscript';
+import { buildFormInput } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, url,
@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildValidationTranslator } from '../../language/utils';
 
 export const ClientRedirectUriListItem = defineComponent({
     name: 'ClientRedirectUriListItem',
@@ -47,7 +47,7 @@ export const ClientRedirectUriListItem = defineComponent({
 
         const render = () => buildFormInput({
             validationResult: $v.value.url,
-            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+            validationTranslator: buildValidationTranslator(props.translatorLocale),
             label: false,
             value: form.url,
             onChange(input) {

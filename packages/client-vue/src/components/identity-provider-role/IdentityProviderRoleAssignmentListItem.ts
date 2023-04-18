@@ -12,9 +12,10 @@ import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
-import { buildFormInput } from '@vue-layout/hyperscript';
-import { initFormAttributesFromEntity, useAPIClient } from '../../utils';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildFormInput } from '@vue-layout/form-controls';
+import { useAPIClient } from '../../core';
+import { initFormAttributesFromSource } from '../../helpers';
+import { buildValidationTranslator } from '../../language';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',
@@ -131,7 +132,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                         // eslint-disable-next-line prefer-destructuring
                         item.value = data[0];
 
-                        initFormAttributesFromEntity(form, data[0]);
+                        initFormAttributesFromSource(form, data[0]);
                         if (!isExternalIDDefined.value) {
                             form.external_id = props.role.name;
                         }
@@ -252,7 +253,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                                 form.external_id = input;
                             },
                             validationResult: $v.value.external_id,
-                            validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                            validationTranslator: buildValidationTranslator(props.translatorLocale),
                         }),
                     ]),
                 ];

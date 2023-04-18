@@ -6,16 +6,10 @@
  */
 
 import type {
-    OAuth2TokenGrantResponse,
-    OAuth2TokenIntrospectionResponse,
-    Realm,
-    User,
+    OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, Realm, User,
 } from '@authup/core';
 import {
-    APIClient,
-    AbilityManager,
-    OAuth2TokenKind,
-    isValidAuthenticationError,
+    APIClient, AbilityManager, OAuth2TokenKind, isValidAuthenticationError,
 } from '@authup/core';
 import { defineStore } from 'pinia';
 import { computed, ref, useRuntimeConfig } from '#imports';
@@ -73,6 +67,8 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         if (!refreshTokenPromise) {
+            unsetToken(OAuth2TokenKind.ACCESS);
+
             refreshTokenPromise = client.token.createWithRefreshToken({
                 refresh_token: refreshToken.value,
             })
@@ -114,7 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
         userResolved = true;
 
         try {
-            const entity = await client.userInfo.get(accessToken.value) as User;
+            const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
             setUser(entity);
         } catch (e) {
             if (isValidAuthenticationError(e)) {

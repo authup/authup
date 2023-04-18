@@ -9,7 +9,7 @@ import {
     defineComponent, h,
 } from 'vue';
 import type { User } from '@authup/core';
-import { SlotName } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/list-controls';
 import { UserRoleAssignmentListItemActions } from '../user-role';
 import { UserList } from '../user/UserList';
 

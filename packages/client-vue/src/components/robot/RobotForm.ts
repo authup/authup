@@ -24,18 +24,22 @@ import {
 import type { Realm, Robot } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import {
-    SlotName,
     buildFormInput,
-    buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
+import {
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createSubmitHandler,
-    initFormAttributesFromEntity,
     useAPIClient,
-} from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+} from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const RobotForm = defineComponent({
@@ -101,7 +105,7 @@ export const RobotForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -134,7 +138,7 @@ export const RobotForm = defineComponent({
 
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -161,7 +165,7 @@ export const RobotForm = defineComponent({
 
             const secret = buildFormInput({
                 validationResult: $v.value.secret,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: [
                     'Secret',
                     isSecretHashed.value ? h('span', {
@@ -189,13 +193,13 @@ export const RobotForm = defineComponent({
                 }, [
                     h('i', { class: 'fa fa-wrench' }),
                     ' ',
-                    useAuthIlingo().getSync('form.generate.button', props.translatorLocale),
+                    useTranslator().getSync('form.generate.button', props.translatorLocale),
                 ]),
             ]);
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
                 isEditing,

@@ -7,7 +7,7 @@
 
 import { defineComponent, h } from 'vue';
 import type { Role } from '@authup/core';
-import { SlotName } from '@vue-layout/hyperscript';
+import { SlotName } from '@vue-layout/list-controls';
 import { IdentityProviderRoleAssignmentListItem } from './IdentityProviderRoleAssignmentListItem';
 import { RoleList } from '../role';
 
@@ -21,7 +21,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
     },
     setup(props) {
         return () => h(RoleList, {
-            withHeader: false,
+            headerTitle: false,
         }, {
             [SlotName.ITEMS]: (slotProps: { data: Role[] }) => slotProps.data.map((item: Role) => h(
                 IdentityProviderRoleAssignmentListItem,

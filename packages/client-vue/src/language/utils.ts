@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ValidationTranslator } from '@vue-layout/hyperscript';
-import { useAuthIlingo } from './singleton';
+import type { ValidationTranslator } from '@vue-layout/form-controls';
+import { useTranslator } from './singleton';
 
-export function buildVuelidateTranslator(locale?: string) : ValidationTranslator {
+export function buildValidationTranslator(locale?: string) : ValidationTranslator {
     return function translate(validator: string, parameters?: Record<string, any>) : string | undefined {
-        return useAuthIlingo().getSync(`validation.${validator}`, parameters, locale);
+        return useTranslator().getSync(`validation.${validator}`, parameters, locale);
     };
 }

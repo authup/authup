@@ -8,21 +8,23 @@
 import type { VNodeChild } from 'vue';
 import { NuxtLink } from '#components';
 
-type EntityNavItem = {
+export type DomainEntityNavItem = {
     name: string,
     icon: string,
     urlSuffix: string
 };
 
-type EntityNavOptions = {
+export type DomainEntityNavItems = DomainEntityNavItem[];
+
+export type DomainEntityNavOptions = {
     direction?: 'vertical' | 'horizontal',
     prevLink?: boolean
 };
 
 export function buildDomainEntityNav(
     path: string,
-    items: EntityNavItem[],
-    options?: EntityNavOptions,
+    items: DomainEntityNavItem[],
+    options?: DomainEntityNavOptions,
 ) {
     const lastIndex = path.lastIndexOf('/');
     const basePath = path.substring(0, lastIndex);

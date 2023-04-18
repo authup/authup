@@ -12,10 +12,13 @@ import {
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
-import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/hyperscript';
-import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/form-controls';
+import {
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import { useAPIClient } from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 
 export const PermissionForm = defineComponent({
     name: 'PermissionForm',
@@ -54,7 +57,7 @@ export const PermissionForm = defineComponent({
         const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function initForm() {
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -77,7 +80,7 @@ export const PermissionForm = defineComponent({
         const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.id,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -91,7 +94,7 @@ export const PermissionForm = defineComponent({
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {
@@ -103,8 +106,8 @@ export const PermissionForm = defineComponent({
             });
 
             const submitButton = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
                 isEditing,

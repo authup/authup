@@ -5,17 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { install } from '@authup/client-vue';
-import type { NavigationStore } from '@vue-layout/basic';
-import { createPlugin } from '@vue-layout/basic';
-import { getBuildInPresets } from '@vue-layout/hyperscript';
-import { storeToRefs } from 'pinia';
+import installAuthup from '@authup/client-vue';
+import type { APIClient } from '@authup/core';
+import type { PluginBaseOptions } from '@vue-layout/core';
+import type { NavigationStore } from '@vue-layout/navigation';
+import bootstrap from '@vue-layout/preset-bootstrap-v5';
+import fontAwesome from '@vue-layout/preset-font-awesome';
+
+import installCountdown from '@vue-layout/countdown';
+import installFormControl from '@vue-layout/form-controls';
+import installNavigation from '@vue-layout/navigation';
+import installPagination from '@vue-layout/pagination';
+
 import type { Pinia } from 'pinia';
-import { defineNuxtPlugin } from '#app';
-import { buildNavigationProvider } from '../config/layout';
+import { storeToRefs } from 'pinia';
+import { defineNuxtPlugin, useState } from '#app';
+import { buildNavigationProvider } from '~/config/layout';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtPlugin((ctx) => {
+    const baseOptions : PluginBaseOptions = {
+        presets: {
+            bootstrap,
+            fontAwesome,
+        },
+    };
+
+    ctx.vueApp.use(installCountdown, baseOptions);
+    ctx.vueApp.use(installFormControl, baseOptions);
+
     const navigationStore = useState<NavigationStore>(() => ({
         items: [],
         itemsActive: [],
@@ -24,19 +42,20 @@ export default defineNuxtPlugin((ctx) => {
     const store = useAuthStore(ctx.$pinia as Pinia);
     const { loggedIn } = storeToRefs(store);
 
-    const presets = getBuildInPresets(['bootstrapV5', 'fontAwesome']);
-
-    ctx.vueApp.use(createPlugin({
-        navigationStore,
-        navigationProvider: buildNavigationProvider({
+    ctx.vueApp.use(installNavigation, {
+        ...baseOptions,
+        store: navigationStore,
+        provider: buildNavigationProvider({
             isLoggedIn: () => loggedIn.value,
             hasPermission: (name) => store.has(name),
         }),
-        presets,
-    }));
+    });
 
-    ctx.vueApp.use(install, {
-        httpClient: ctx.$api,
-        presets,
+    ctx.vueApp.use(installPagination, baseOptions);
+
+    // preset missing ...
+    ctx.vueApp.use(installAuthup, {
+        apiClient: ctx.$api as APIClient,
+        components: false,
     });
 });

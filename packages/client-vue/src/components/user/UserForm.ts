@@ -6,11 +6,14 @@
  */
 
 import {
-    SlotName,
     buildFormInput,
     buildFormInputCheckbox,
-    buildFormSubmit, buildItemActionToggle,
-} from '@vue-layout/hyperscript';
+    buildFormSubmit,
+} from '@vue-layout/form-controls';
+import {
+    SlotName,
+    buildItemActionToggle,
+} from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
@@ -21,9 +24,12 @@ import {
 } from 'vue';
 
 import type { Realm, User } from '@authup/core';
-import { createSubmitHandler, initFormAttributesFromEntity, useAPIClient } from '../../utils';
-import { useAuthIlingo } from '../../language/singleton';
-import { buildVuelidateTranslator } from '../../language/utils';
+import {
+    createSubmitHandler,
+    initFormAttributesFromSource,
+} from '../../helpers';
+import { useAPIClient } from '../../core';
+import { buildValidationTranslator, useTranslator } from '../../language';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({
@@ -102,7 +108,7 @@ export const UserForm = defineComponent({
                 form.name_locked = props.entity.name_locked;
             }
 
-            initFormAttributesFromEntity(form, props.entity);
+            initFormAttributesFromSource(form, props.entity);
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -134,7 +140,7 @@ export const UserForm = defineComponent({
         const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -148,7 +154,7 @@ export const UserForm = defineComponent({
 
             const displayName = buildFormInput({
                 validationResult: $v.value.display_name,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Display Name',
                 value: form.display_name,
                 onChange(input) {
@@ -159,7 +165,7 @@ export const UserForm = defineComponent({
 
             const email = buildFormInput({
                 validationResult: $v.value.email,
-                validationTranslator: buildVuelidateTranslator(props.translatorLocale),
+                validationTranslator: buildValidationTranslator(props.translatorLocale),
                 labelContent: 'Email',
                 value: form.email,
                 props: {
@@ -219,8 +225,8 @@ export const UserForm = defineComponent({
             }
 
             const submitForm = buildFormSubmit({
-                updateText: useAuthIlingo().getSync('form.update.button', props.translatorLocale),
-                createText: useAuthIlingo().getSync('form.create.button', props.translatorLocale),
+                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
+                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
                 isEditing: isEditing.value,

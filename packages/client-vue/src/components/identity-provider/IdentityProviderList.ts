@@ -9,38 +9,39 @@ import type { PropType } from 'vue';
 import { defineComponent, toRefs } from 'vue';
 import type { BuildInput } from 'rapiq';
 import type { IdentityProvider } from '@authup/core';
-import { useListBuilder } from '../../composables';
+import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
+import { createDomainListBuilder } from '../../helpers';
 import {
     useAPIClient,
-} from '../../utils';
+} from '../../core';
 
 export const IdentityProviderList = defineComponent({
     name: 'IdentityProviderList',
     props: {
+        loadOnSetup: {
+            type: Boolean,
+            default: true,
+        },
         query: {
             type: Object as PropType<BuildInput<IdentityProvider>>,
             default() {
                 return {};
             },
         },
-        withNoMore: {
+        noMore: {
             type: Boolean,
             default: true,
         },
-        withHeader: {
+        footerPagination: {
             type: Boolean,
             default: true,
         },
-        withPagination: {
-            type: Boolean,
+        headerTitle: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
             default: true,
         },
-        withSearch: {
-            type: Boolean,
-            default: true,
-        },
-        loadOnSetup: {
-            type: Boolean,
+        headerSearch: {
+            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
             default: true,
         },
     },
@@ -49,21 +50,17 @@ export const IdentityProviderList = defineComponent({
         updated: (item: IdentityProvider) => true,
     },
     setup(props, ctx) {
-        const { build } = useListBuilder<IdentityProvider>({
+        const { build } = createDomainListBuilder<IdentityProvider>({
             props: toRefs(props),
             setup: ctx,
             load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
-            components: {
-                header: {
-                    title: {
-                        iconClass: 'fa-solid fa-atom',
-                        textContent: 'Providers',
-                    },
-                },
-                items: {
-                    item: {
-                        iconClass: 'fa fa-solid fa-atom',
-                    },
+            defaults: {
+                footerPagination: true,
+
+                headerSearch: true,
+                headerTitle: {
+                    content: 'Providers',
+                    icon: 'fa-solid fa-atom',
                 },
                 noMore: {
                     textContent: 'No more identity-providers available...',
