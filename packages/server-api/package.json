@@ -47,7 +47,7 @@
         "@authup/core": "^0.32.2",
         "@authup/server-core": "^0.32.2",
         "@ebec/http": "^1.0.0",
-        "@hapic/oauth2": "^2.0.0-alpha.2",
+        "@hapic/oauth2": "^2.0.0-alpha.3",
         "@hapic/vault": "^2.0.0-alpha.2",
         "@routup/body": "^0.7.3",
         "@routup/cookie": "^0.8.1",
