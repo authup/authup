@@ -5,12 +5,13 @@ import {
 } from '@authup/core';
 import { EntityDelete, UserList } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
+import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
 import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
-    components: { UserList, EntityDelete: EntityDelete },
+    components: { UserList, EntityDelete },
     emits: ['deleted'],
     setup(props, { emit }) {
         const list = resolveComponent('UserList');
@@ -22,7 +23,7 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
-        const query = {
+        const query : BuildInput<User> = {
             filter: {
                 realm_id: [realmManagementId.value, null],
             },

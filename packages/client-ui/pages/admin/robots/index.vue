@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { Robot } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { useToast } from 'vue-toastification';
 import { defineNuxtComponent } from '#app';
@@ -30,12 +31,12 @@ export default defineNuxtComponent({
             },
         ];
 
-        const handleDeleted = (e) => {
+        const handleDeleted = (e: Robot) => {
             const toast = useToast();
             toast.success(`The robot ${e.name} was successfully deleted.`);
         };
 
-        const handleFailed = (e) => {
+        const handleFailed = (e: Error) => {
             const toast = useToast();
             toast.warning(e.message);
         };

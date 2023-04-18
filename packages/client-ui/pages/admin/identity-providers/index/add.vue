@@ -33,7 +33,7 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const protocol = ref<null | `${IdentityProviderProtocol}`>(null);
+        const protocol = ref<null | string>(null);
 
         const options = [
             { id: IdentityProviderProtocol.OAUTH2, value: 'OAuth2' },

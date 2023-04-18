@@ -4,12 +4,13 @@ import { EntityDelete, PermissionList } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
+import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        EntityDelete: EntityDelete,
+        EntityDelete,
         PermissionList,
     },
     emits: ['deleted'],
@@ -21,7 +22,7 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
-        const query = {
+        const query : BuildInput<Permission> = {
             filter: {
                 realm_id: [realmManagementId.value, null],
             },
