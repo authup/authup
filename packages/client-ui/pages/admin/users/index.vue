@@ -51,7 +51,7 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <h1>
+        <h1 class="title no-border mb-3">
             <i class="fa fa-user me-1" /> User
             <span class="sub-title ms-1">
                 Management
