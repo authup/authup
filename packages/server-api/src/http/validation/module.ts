@@ -11,15 +11,29 @@ import { buildHTTPValidationErrorMessage } from './utils';
 
 export class RequestValidationError extends BadRequestError {
     constructor(validation: Result<ValidationError>) {
-        let errors : ValidationError[] = validation.array();
-        errors = [...new Map(errors.map((item) => [item.param, item])).values()]
-            .sort((a, b) => a.param.localeCompare(b.param));
+        const errors : ValidationError[] = validation.array();
 
-        let message: string;
+        const parameterNames = [];
+        for (let i = 0; i < errors.length; i++) {
+            const item = errors[i];
 
-        if (errors) {
-            const parameterNames = errors.map((error) => error.param);
+            switch (item.type) {
+                case 'field': {
+                    parameterNames.push(item.path);
+                    break;
+                }
+                case 'alternative': {
+                    parameterNames.push(item.nestedErrors.map(
+                        ((el) => el.path),
+                    ).join('|'));
+                    break;
+                }
+            }
+        }
 
+        let message : string;
+
+        if (parameterNames.length > 0) {
             message = buildHTTPValidationErrorMessage(parameterNames);
         } else {
             message = 'An unexpected validation error occurred.';
