@@ -16,7 +16,10 @@ export function registerPrometheusMiddleware(router: Router, input?: OptionsInpu
         skip(req) {
             const path = withLeadingSlash(useRequestPath(req));
 
-            return path.startsWith('/authorize') || path.startsWith('/token');
+            return path.startsWith('/authorize') ||
+                path.startsWith('/token') ||
+                path.startsWith('/metrics') ||
+                path === '/';
         },
     };
 
