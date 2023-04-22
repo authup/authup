@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isClientError } from 'hapic';
 import type { RequestOptions } from 'hapic';
 import { ErrorCode } from '../../error';
 import { isObject } from '../../utils';
 
 export function isAPIClientAuthError(err: unknown) : boolean {
-    if (!isClientError(err) || !err.response) {
+    if (!isObject(err) || !isObject(err.response)) {
         return false;
     }
 
