@@ -12,7 +12,7 @@ import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenHookOptions } from './type';
-import { getCurrentRequestRetryState, isAPIClientAuthError } from './utils';
+import { getRequestRetryState, isAPIClientAuthError } from './utils';
 
 async function refreshToken(baseURL: string, refreshToken: string) {
     const client = new APIClient({ baseURL });
@@ -110,7 +110,7 @@ export function mountClientResponseErrorTokenHook(
 
         const { request } = err;
 
-        const currentState = getCurrentRequestRetryState(request);
+        const currentState = getRequestRetryState(request);
         if (currentState.retryCount > 0) {
             return Promise.reject(err);
         }

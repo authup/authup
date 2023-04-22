@@ -9,7 +9,7 @@ import { createResponseError } from '../../utils';
 import {
     APIClient,
     ErrorCode,
-    getCurrentRequestRetryState,
+    getRequestRetryState,
     hasClientResponseErrorTokenHook,
     isAPIClientAuthError,
     mountClientResponseErrorTokenHook, unmountClientResponseErrorTokenHook,
@@ -65,10 +65,10 @@ describe('src/interceptor/utils', () => {
     });
 
     it('should get current request retry state', () => {
-        let retryState = getCurrentRequestRetryState({});
+        let retryState = getRequestRetryState({});
         expect(retryState.retryCount).toEqual(0);
 
-        retryState = getCurrentRequestRetryState({ retry: { retryCount: 2 } });
+        retryState = getRequestRetryState({ retry: { retryCount: 2 } });
         expect(retryState.retryCount).toEqual(2);
     });
 });
