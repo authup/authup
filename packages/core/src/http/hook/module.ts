@@ -6,15 +6,13 @@
  */
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { Client } from 'hapic';
+import type { Client, HookErrorFn } from 'hapic';
 import { HookName } from 'hapic';
 import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenHookOptions } from './type';
 import { getCurrentRequestRetryState, isAPIClientAuthError } from './utils';
-
-type RejectFn = (err: any) => any;
 
 async function refreshToken(baseURL: string, refreshToken: string) {
     const client = new APIClient({ baseURL });
@@ -105,14 +103,14 @@ export function mountClientResponseErrorTokenHook(
         }, refreshInMs);
     };
 
-    const onReject : RejectFn = async (err) : Promise<any> => {
+    const onReject : HookErrorFn = async (err) : Promise<any> => {
         if (!isAPIClientAuthError(err)) {
             return Promise.reject(err);
         }
 
-        const { config } = err;
+        const { request } = err;
 
-        const currentState = getCurrentRequestRetryState(config);
+        const currentState = getCurrentRequestRetryState(request);
         if (currentState.retryCount > 0) {
             return Promise.reject(err);
         }
@@ -130,7 +128,7 @@ export function mountClientResponseErrorTokenHook(
 
                 handleTokenResponse(tokenGrantResponse);
             })
-            .then(() => client.request(config))
+            .then(() => client.request(request))
             .catch((e) => {
                 client.unsetAuthorizationHeader();
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, RequestOptions } from 'hapic';
+import type { Client, RequestBaseOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
 import type { DomainEventName } from './contstants';
 
@@ -35,7 +35,7 @@ export interface DomainAPI<
 }
 
 export type BaseAPIContext = {
-    client?: Client | RequestOptions
+    client?: Client | RequestBaseOptions
 };
 
 export type DomainEventBaseContext = {

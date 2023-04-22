@@ -63,15 +63,15 @@
         "smob": "^1.0.0"
     },
     "devDependencies": {
-        "@hapic/oauth2": "^2.0.0-alpha.8",
-        "@hapic/vault": "^2.0.0-alpha.8",
-        "hapic": "^2.0.0-alpha.8",
+        "@hapic/oauth2": "^2.0.0-alpha.9",
+        "@hapic/vault": "^2.0.0-alpha.9",
+        "hapic": "^2.0.0-alpha.9",
         "rapiq": "^0.8.0"
     },
     "peerDependencies": {
-        "@hapic/oauth2": "^2.0.0-alpha.8",
-        "@hapic/vault": "^2.0.0-alpha.8",
-        "hapic": "^2.0.0-alpha.8",
+        "@hapic/oauth2": "^2.0.0-alpha.9",
+        "@hapic/vault": "^2.0.0-alpha.9",
+        "hapic": "^2.0.0-alpha.9",
         "rapiq": ">=0.8.0 <1.0.0"
     },
     "publishConfig": {

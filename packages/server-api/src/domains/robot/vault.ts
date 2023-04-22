@@ -8,7 +8,7 @@
 import type { Robot } from '@authup/core';
 import {
     hasClient,
-    hasClientFailedWithStausCode,
+    isClientErrorWithStatusCode,
     useClient,
 } from '@hapic/vault';
 
@@ -47,7 +47,7 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
             },
         });
     } catch (e) {
-        if (hasClientFailedWithStausCode(e, 404)) {
+        if (isClientErrorWithStatusCode(e, 404)) {
             await createRobotVaultEngine();
             return;
         }
@@ -69,7 +69,7 @@ export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'
             path: entity.name,
         });
     } catch (e) {
-        if (hasClientFailedWithStausCode(e, 404)) {
+        if (isClientErrorWithStatusCode(e, 404)) {
             return;
         }
 
@@ -97,7 +97,7 @@ export async function findRobotCredentialsInVault(
 
         return undefined;
     } catch (e) {
-        if (hasClientFailedWithStausCode(e, 404)) {
+        if (isClientErrorWithStatusCode(e, 404)) {
             return undefined;
         }
 

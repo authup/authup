@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isClientError } from 'hapic';
+import type { RequestOptions } from 'hapic';
 import { ErrorCode } from '../../error';
 import { isObject } from '../../utils';
 
 export function isAPIClientAuthError(err: unknown) : boolean {
-    if (!isObject(err) || !isObject(err.response)) {
+    if (!isClientError(err) || !err.response) {
         return false;
     }
 
@@ -29,7 +31,9 @@ export function isAPIClientAuthError(err: unknown) : boolean {
 type RetryState = {
     retryCount: number
 };
-export function getCurrentRequestRetryState(config: { retry?: Partial<RetryState> }) : RetryState {
+export function getCurrentRequestRetryState(
+    config: RequestOptions & { retry?: Partial<RetryState> },
+) : RetryState {
     const currentState = config.retry || {};
     currentState.retryCount = currentState.retryCount || 0;
 

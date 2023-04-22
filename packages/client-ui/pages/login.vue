@@ -1,4 +1,5 @@
 <script lang="ts">
+import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import { IdentityProviderList, RealmList, useAPIClient } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
@@ -98,7 +99,7 @@ export default defineNuxtComponent({
                     query,
                 });
             } catch (e: any) {
-                if (e instanceof Error) {
+                if (isClientError(e)) {
                     const toast = useToast();
                     toast.warning(e.message);
                 }

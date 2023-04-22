@@ -6,7 +6,7 @@
  */
 
 import { createClient, isClient } from 'hapic';
-import type { Client, RequestOptions } from 'hapic';
+import type { Client, RequestBaseOptions } from 'hapic';
 import type { BaseAPIContext } from './types-base';
 
 export class BaseAPI {
@@ -22,7 +22,7 @@ export class BaseAPI {
 
     // -----------------------------------------------------------------------------------
 
-    setClient(input?: Client | RequestOptions) {
+    setClient(input?: Client | RequestBaseOptions) {
         this.client = isClient(input) ?
             input :
             createClient(input);

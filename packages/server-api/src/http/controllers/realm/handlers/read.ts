@@ -32,6 +32,9 @@ export async function getManyRealmRouteHandler(
         pagination: {
             maxLimit: 50,
         },
+        fields: {
+            allowed: ['id', 'name', 'description', 'drop_able', 'created_at', 'updated_at'],
+        },
         sort: {
             allowed: ['id', 'name', 'created_at', 'updated_at'],
         },

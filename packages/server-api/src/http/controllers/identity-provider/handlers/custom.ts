@@ -19,7 +19,7 @@ import { useRequestQuery } from '@routup/query';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { URL } from 'node:url';
-import type { RequestOptions } from '@hapic/oauth2';
+import type { RequestBaseOptions } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOauth2ProviderAccount } from '../../../../domains';
@@ -96,7 +96,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const config = await useConfig();
 
-    let request: RequestOptions;
+    let request: RequestBaseOptions;
 
     try {
         request = await buildHTTPClientConfigForProxy(provider.token_url);

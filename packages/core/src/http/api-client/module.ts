@@ -128,8 +128,8 @@ export class APIClient extends BaseClient {
         this.on(HookName.RESPONSE_ERROR, ((error) => {
             if (
                 isClientError(error) &&
-                    error.response &&
-                    error.response.data &&
+                error.response &&
+                error.response.data &&
                     typeof error.response.data.message === 'string'
             ) {
                 error.message = error.response.data.message;
