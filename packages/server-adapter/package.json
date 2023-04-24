@@ -61,8 +61,8 @@
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
-        "@authup/core": ">=0.32.0 <1.0.0",
-        "@authup/server-core": ">=0.32.0 <1.0.0",
+        "@authup/core": ">=0.33.0 <1.0.0",
+        "@authup/server-core": ">=0.33.0 <1.0.0",
         "redis-extension": "^1.2.0"
     },
     "publishConfig": {
