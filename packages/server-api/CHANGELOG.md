@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* bump express-validator to v7 ([f88a039](https://github.com/authup/authup/commit/f88a0392625fe1aa64f5ce8454eee337c7d2dd7a))
+* **deps:** bump better-sqlite3 from 8.2.0 to 8.3.0 ([#1015](https://github.com/authup/authup/issues/1015)) ([d80cb17](https://github.com/authup/authup/commit/d80cb17ea9624db06e56ad8affe59c1c306cc3f8))
+* **deps:** bump continu from 1.2.0 to 1.3.1 ([#1010](https://github.com/authup/authup/issues/1010)) ([21730dd](https://github.com/authup/authup/commit/21730dd64284198c6111f14f5cf31a55774d89fb))
+* **deps:** bump typeorm from 0.3.12 to 0.3.13 ([#1005](https://github.com/authup/authup/issues/1005)) ([1f636d3](https://github.com/authup/authup/commit/1f636d35ed53d89fe63dcc6bd6847f189f4bd1da))
+* **deps:** bump typeorm from 0.3.13 to 0.3.14 ([#1016](https://github.com/authup/authup/issues/1016)) ([0330aec](https://github.com/authup/authup/commit/0330aec58ebf1c1001edeb94455c302e5db5ff4d))
+* don't log metrics and root path ([4d4ca5c](https://github.com/authup/authup/commit/4d4ca5c351e88370360fc630f22c17220026e977))
+* http client (error) hook implementation ([86ddd6c](https://github.com/authup/authup/commit/86ddd6c341a36ab37cf76844129552031618c926))
+
+
+### Features
+
+* bump hapic to v2.0.0-alpha.x (axios -> fetch) ([#1036](https://github.com/authup/authup/issues/1036)) ([e09c919](https://github.com/authup/authup/commit/e09c91930d65b41725e5b1c4e26c21f9a5c67342))
+* implemented hapic v2.0 alpha ([f1da95b](https://github.com/authup/authup/commit/f1da95bb3be6d1fe0cfd195a44a63c5a8d60dc6c))
+
+
+
+
+
 ## [0.32.2](https://github.com/authup/authup/compare/v0.32.1...v0.32.2) (2023-04-05)
 
 

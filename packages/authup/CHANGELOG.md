@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* **deps:** bump consola from 2.15.3 to 3.0.1 ([#1023](https://github.com/authup/authup/issues/1023)) ([0d6274d](https://github.com/authup/authup/commit/0d6274d3d4bdffa57c1774ff43268db3765e7fc3))
+* **deps:** bump consola from 3.0.1 to 3.0.2 ([#1025](https://github.com/authup/authup/issues/1025)) ([f1361ae](https://github.com/authup/authup/commit/f1361aeb2a785d2c501a3dd9b0546486d9b3dd07))
+* **deps:** bump consola from 3.0.2 to 3.1.0 ([#1037](https://github.com/authup/authup/issues/1037)) ([c44c12e](https://github.com/authup/authup/commit/c44c12ee122dd17ddb3c0148712d6c4bda1521b1))
+* **deps:** bump continu from 1.2.0 to 1.3.1 ([#1010](https://github.com/authup/authup/issues/1010)) ([21730dd](https://github.com/authup/authup/commit/21730dd64284198c6111f14f5cf31a55774d89fb))
+
+
+
+
+
 ## [0.32.2](https://github.com/authup/authup/compare/v0.32.1...v0.32.2) (2023-04-05)
 
 

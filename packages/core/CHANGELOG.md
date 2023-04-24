@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* http client (error) hook implementation ([86ddd6c](https://github.com/authup/authup/commit/86ddd6c341a36ab37cf76844129552031618c926))
+* rename retry state tracker ([a233a61](https://github.com/authup/authup/commit/a233a6155f9f0fa5d29490a9b79bea7e0c88f221))
+* typings for auth error check ([8a69037](https://github.com/authup/authup/commit/8a6903746e5c16d804df3c5d90de1360f82fcc89))
+
+
+### Features
+
+* bump hapic to v2.0.0-alpha.x (axios -> fetch) ([#1036](https://github.com/authup/authup/issues/1036)) ([e09c919](https://github.com/authup/authup/commit/e09c91930d65b41725e5b1c4e26c21f9a5c67342))
+* implemented hapic v2.0 alpha ([f1da95b](https://github.com/authup/authup/commit/f1da95bb3be6d1fe0cfd195a44a63c5a8d60dc6c))
+
+
+
+
+
 ## [0.32.2](https://github.com/authup/authup/compare/v0.32.1...v0.32.2) (2023-04-05)
 
 

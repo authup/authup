@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 4.13.1 to 4.13.2 ([#1020](https://github.com/authup/authup/issues/1020)) ([be852a3](https://github.com/authup/authup/commit/be852a3a5ae5aa3b88d16222c913569d2c01a09d))
+* **deps:** bump jose from 4.13.2 to 4.14.0 ([#1027](https://github.com/authup/authup/issues/1027)) ([5098af6](https://github.com/authup/authup/commit/5098af623f18779aaf4d078f2b59a0acb8645f0e))
+* http client (error) hook implementation ([86ddd6c](https://github.com/authup/authup/commit/86ddd6c341a36ab37cf76844129552031618c926))
+
+
+### Features
+
+* bump hapic to v2.0.0-alpha.x (axios -> fetch) ([#1036](https://github.com/authup/authup/issues/1036)) ([e09c919](https://github.com/authup/authup/commit/e09c91930d65b41725e5b1c4e26c21f9a5c67342))
+* implemented hapic v2.0 alpha ([f1da95b](https://github.com/authup/authup/commit/f1da95bb3be6d1fe0cfd195a44a63c5a8d60dc6c))
+
+
+
+
+
 ## [0.32.3](https://github.com/authup/authup/compare/v0.32.2...v0.32.3) (2023-04-05)
 
 
