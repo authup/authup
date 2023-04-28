@@ -75,7 +75,7 @@
         "typeorm": "^0.3.14",
         "typeorm-extension": "^2.7.0",
         "winston": "^3.8.2",
-        "yargs": "^17.7.1",
+        "yargs": "^17.7.2",
         "zod": "^3.21.4"
     },
     "devDependencies": {
