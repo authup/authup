@@ -49,7 +49,6 @@
         "rapiq": "^0.8.0",
         "vue": "^3.2.47",
         "vue-router": "^4.1.5",
-        "vue-toastification": "next",
         "zod": "^3.21.4"
     },
     "publishConfig": {

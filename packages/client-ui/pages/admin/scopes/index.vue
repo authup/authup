@@ -2,7 +2,7 @@
 
 import type { Scope } from '@authup/core';
 import { PermissionName } from '@authup/core';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
@@ -34,12 +34,12 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: Scope) => {
             const toast = useToast();
-            toast.success(`The client ${e.name} was successfully deleted.`);
+            toast.success({ body: `The client ${e.name} was successfully deleted.` });
         };
 
         const handleFailed = (e: Error) => {
             const toast = useToast();
-            toast.warning(e.message);
+            toast.warning({ body: e.message });
         };
 
         return {

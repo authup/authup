@@ -2,7 +2,7 @@
 
 import { UserForm } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
 import { LayoutKey } from '../../../config/layout';
@@ -23,12 +23,12 @@ export default defineNuxtComponent({
 
         const handleUpdated = () => {
             const toast = useToast();
-            toast.success('The account was successfully updated.');
+            toast.success({ body: 'The account was successfully updated.' });
         };
 
         const handleFailed = (e: Error) => {
             const toast = useToast();
-            toast.warning(e.message);
+            toast.warning({ body: e.message });
         };
 
         return {

@@ -11,7 +11,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
     toRef, watch,
 } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import {
     defineNuxtComponent, navigateTo, useNuxtApp, useRoute,
 } from '#app';
@@ -38,6 +38,8 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_OUT]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
+
+        const toast = useToast();
 
         const form = reactive({
             name: '',
@@ -100,8 +102,8 @@ export default defineNuxtComponent({
                 });
             } catch (e: any) {
                 if (isClientError(e)) {
-                    const toast = useToast();
-                    toast.warning(e.message);
+                    console.log(e);
+                    toast.warning({ body: e.message }, { pos: 'top-center' });
                 }
             }
         };

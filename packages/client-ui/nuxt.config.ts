@@ -15,7 +15,6 @@ export default defineNuxtConfig({
     css: [
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',
-        'vue-toastification/dist/index.css',
         '@/assets/css/vue-layout-navigation.css',
         '@/assets/css/vue-toastification.css',
         '@/assets/css/root.css',

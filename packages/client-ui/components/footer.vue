@@ -4,15 +4,21 @@
   - For the full copyright and license information,
   - view the LICENSE file that was distributed with this source code.
   -->
-<script>
+<script lang="ts">
 
-export default {
+import { defineComponent } from 'vue';
+import { BContainer } from 'bootstrap-vue-next';
+
+export default defineComponent({
+    components: {
+        BContainer,
+    },
     computed: {
         year() {
             return new Date().getFullYear();
         },
     },
-};
+});
 </script>
 <template>
     <div>
@@ -21,5 +27,17 @@ export default {
                 &copy; Authup {{ year }}
             </div>
         </div>
+        <BContainer
+            :toast="{root: true}"
+            fluid="sm"
+            position="position-fixed"
+            style="z-index: 9999"
+        />
     </div>
 </template>
+<style>
+.container,
+.container-fluid {
+    display: block;
+}
+</style>
