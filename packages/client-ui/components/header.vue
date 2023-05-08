@@ -75,7 +75,7 @@ export default defineNuxtComponent({
                                 href="javascript:void(0)"
                                 class="nav-link"
                             >
-                                <span>{{ user.displayName ? user.displayName : user.name }}</span>
+                                <span>{{ user.display_name ? user.display_name : user.name }}</span>
                             </a>
                         </li>
                         <li class="nav-item">

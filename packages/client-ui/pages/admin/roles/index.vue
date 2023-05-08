@@ -56,7 +56,7 @@ export default defineNuxtComponent({
 <template>
     <div>
         <h1 class="title no-border mb-3">
-            <i class="fa-solid fa-theater-masks me-1" /> Client
+            <i class="fa-solid fa-theater-masks me-1" /> Role
             <span class="sub-title ms-1">Management</span>
         </h1>
         <div class="content-wrapper">

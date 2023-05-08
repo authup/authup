@@ -49,6 +49,7 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
     } catch (e) {
         if (isClientErrorWithStatusCode(e, 404)) {
             await createRobotVaultEngine();
+            await saveRobotCredentialsToVault(entity);
             return;
         }
 

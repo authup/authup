@@ -69,19 +69,6 @@ export const ClientScopeList = defineComponent({
 
         return () => build();
     },
-    data() {
-        return {
-            busy: false,
-            items: [],
-            q: '',
-            meta: {
-                limit: 10,
-                offset: 0,
-                total: 0,
-            },
-            itemBusy: false,
-        };
-    },
 });
 
 export default ClientScopeList;

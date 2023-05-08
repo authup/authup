@@ -30,10 +30,8 @@ declare module '@vue/runtime-core' {
 }
 
 export default defineNuxtPlugin((ctx) => {
-    const runtimeConfig = useRuntimeConfig();
-
     const config : ClientAPIConfigInput = {
-        baseURL: runtimeConfig.public.apiUrl,
+        baseURL: ctx.$config.public.apiUrl,
     };
 
     const client = new APIClient(config);
@@ -48,7 +46,7 @@ export default defineNuxtPlugin((ctx) => {
             });
 
             mountClientResponseErrorTokenHook(client, {
-                baseURL: runtimeConfig.public.apiUrl,
+                baseURL: ctx.$config.public.apiUrl,
                 tokenCreator: () => {
                     let refreshToken : string | undefined;
                     if (state.refreshToken) {
