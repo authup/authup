@@ -49,7 +49,7 @@
         "@ebec/http": "^1.0.0",
         "@hapic/oauth2": "^2.0.0-alpha.9",
         "@hapic/vault": "^2.0.0-alpha.9",
-        "@routup/body": "^0.7.3",
+        "@routup/body": "^0.7.4",
         "@routup/cookie": "^0.8.1",
         "@routup/decorators": "^0.6.2",
         "@routup/prometheus": "^0.7.1",
