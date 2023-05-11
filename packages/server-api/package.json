@@ -51,7 +51,7 @@
         "@hapic/vault": "^2.0.0-alpha.9",
         "@routup/body": "^0.7.3",
         "@routup/cookie": "^0.8.1",
-        "@routup/decorators": "^0.6.2",
+        "@routup/decorators": "^0.6.3",
         "@routup/prometheus": "^0.7.1",
         "@routup/query": "^0.7.3",
         "@routup/rate-limit": "^0.6.3",
