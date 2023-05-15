@@ -11,7 +11,7 @@ import {
 } from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
@@ -27,7 +27,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const sub = getOAuth2SubByEntity(token);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: token.scope,
             sub,
             subKind,

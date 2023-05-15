@@ -13,7 +13,7 @@ import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
@@ -25,7 +25,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const client = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,

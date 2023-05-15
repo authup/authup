@@ -7,14 +7,14 @@
 
 import type { Options } from '@routup/body';
 import {
-    createRequestJsonHandler,
-    createRequestUrlEncodedHandler,
+    createJsonHandler,
+    createUrlEncodedHandler,
 } from '@routup/body';
 import type { Router } from 'routup';
 
 export function registerBodyMiddleware(router: Router, input?: Options) {
     const options = input || {};
 
-    router.use(createRequestJsonHandler(options));
-    router.use(createRequestUrlEncodedHandler({ extended: false, ...options }));
+    router.use(createJsonHandler(options));
+    router.use(createUrlEncodedHandler({ extended: false, ...options }));
 }

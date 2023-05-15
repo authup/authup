@@ -12,7 +12,7 @@ import {
 } from '@authup/core';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
 import { useRequestEnv } from '../../utils';
@@ -66,7 +66,7 @@ export async function runOAuth2Authorization(
 
     const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
         issuer: options.issuer,
-        remoteAddress: getRequestIp(req, { trustProxy: true }),
+        remoteAddress: getRequestIP(req, { trustProxy: true }),
         sub: useRequestEnv(req, 'userId'),
         subKind: OAuth2SubKind.USER,
         realmId,

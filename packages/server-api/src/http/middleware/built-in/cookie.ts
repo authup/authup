@@ -7,10 +7,10 @@
 
 import type { ParseOptions } from '@routup/cookie';
 import {
-    createRequestHandler as createRequestCookieHandler,
+    createHandler,
 } from '@routup/cookie';
 import type { Router } from 'routup';
 
 export function registerCookieMiddleware(router: Router, input?: ParseOptions) {
-    router.use(createRequestCookieHandler(input || {}));
+    router.use(createHandler(input || {}));
 }
