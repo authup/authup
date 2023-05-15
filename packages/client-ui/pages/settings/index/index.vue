@@ -1,6 +1,7 @@
 <script lang="ts">
 
 import { UserForm } from '@authup/client-vue';
+import type { User } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
@@ -17,17 +18,19 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });
 
+        const toast = useToast();
+
         const store = useAuthStore();
 
         const { user, userId } = storeToRefs(store);
 
-        const handleUpdated = () => {
-            const toast = useToast();
+        const handleUpdated = (entity: User) => {
             toast.success({ body: 'The account was successfully updated.' });
+
+            store.setUser(entity);
         };
 
         const handleFailed = (e: Error) => {
-            const toast = useToast();
             toast.warning({ body: e.message });
         };
 
