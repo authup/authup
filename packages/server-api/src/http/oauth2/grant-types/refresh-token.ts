@@ -59,7 +59,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         });
 
         if (!entity) {
-            throw TokenError.refreshTokenInvalid();
+            throw TokenError.refreshTokenInvalid(`The refresh token with id ${payload.jti} could not be found.`);
         }
 
         const expires = Date.parse(entity.expires);

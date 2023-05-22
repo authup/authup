@@ -89,9 +89,9 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static refreshTokenInvalid() {
+    static refreshTokenInvalid(message?: string) {
         return new TokenError({
-            message: 'The refresh token is invalid.',
+            message: message || 'The refresh token is invalid.',
         });
     }
 
