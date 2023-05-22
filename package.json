@@ -39,7 +39,7 @@
         "@tada5hi/commitlint-config": "^1.0.1",
         "@tada5hi/eslint-config-vue-typescript": "^1.2.9",
         "@types/jest": "^29.5.1",
-        "@types/node": "^20.2.1",
+        "@types/node": "^20.2.3",
         "cross-env": "^7.0.3",
         "eslint": "^8.41.0",
         "husky": "^8.0.3",
