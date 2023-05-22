@@ -45,6 +45,9 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
+        <h6 class="title">
+            General
+        </h6>
         <UserForm
             :can-manage="false"
             :realm-id="userId"
