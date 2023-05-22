@@ -169,11 +169,11 @@ export const RobotForm = defineComponent({
                 labelContent: [
                     'Secret',
                     isSecretHashed.value ? h('span', {
-                        class: 'text-danger font-weight-bold pl-1',
+                        class: 'text-danger font-weight-bold ps-1',
                     }, [
                         'Hashed',
                         ' ',
-                        h('i', { class: 'fa fa-exclamation-triangle pl-1' }),
+                        h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
                     ]) : '',
                 ],
                 value: form.secret,
