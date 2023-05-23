@@ -54,7 +54,7 @@
     "devDependencies": {
         "@authup/core": "^0.33.0",
         "@types/node": "^20.2.3",
-        "@vue-layout/form-controls": "^2.3.0",
+        "@vue-layout/form-controls": "^2.4.1",
         "@vue-layout/list-controls": "^2.3.0",
         "@vue-layout/pagination": "^2.3.0",
         "@vuelidate/core": "^2.0.2",
@@ -69,7 +69,7 @@
     },
     "peerDependencies": {
         "@authup/core": ">=0.33.0 <1.0.0",
-        "@vue-layout/form-controls": "^2.3.0",
+        "@vue-layout/form-controls": "^2.4.1",
         "@vue-layout/list-controls": "^2.3.0",
         "@vue-layout/pagination": "^2.3.0",
         "@vuelidate/core": "^2.x",
