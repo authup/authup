@@ -6,7 +6,7 @@
  */
 
 import {
-    buildNameFromAbilityID, isAPIClientAuthError,
+    buildNameFromAbilityID, isAPIClientTokenExpiredError, isAPIClientTokenInvalidError,
 } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
@@ -76,7 +76,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
         await store.resolve();
     } catch (e) {
-        if (isAPIClientAuthError(e)) {
+        if (isAPIClientTokenInvalidError(e) || isAPIClientTokenExpiredError(e)) {
             await store.logout();
         }
 

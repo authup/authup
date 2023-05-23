@@ -8,6 +8,7 @@
 import type { Options } from '@ebec/http';
 import { BadRequestError, mergeOptions } from '@ebec/http';
 import { ErrorCode } from '../error';
+import { OAuth2TokenKind } from './constants';
 import type { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
@@ -15,6 +16,7 @@ export class TokenError extends BadRequestError {
         super(mergeOptions((options || {}), {
             code: ErrorCode.TOKEN_INVALID,
             message: 'The Token is invalid.',
+            statusCode: 400,
         }));
     }
 
@@ -27,11 +29,10 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static expired() {
+    static expired(kind: `${OAuth2TokenKind}` = OAuth2TokenKind.ACCESS) {
         return new TokenError({
-            statusCode: 401,
             code: ErrorCode.TOKEN_EXPIRED,
-            message: 'The token has been expired.',
+            message: `The ${kind} has been expired.`,
         });
     }
 
@@ -41,9 +42,8 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static notActiveBefore(date: string) {
+    static notActiveBefore(date: string | Date) {
         return new TokenError({
-            statusCode: 401,
             code: ErrorCode.TOKEN_INACTIVE,
             message: `The token is not active before: ${date}.`,
             date,
@@ -89,9 +89,15 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static refreshTokenInvalid(message?: string) {
+    static tokenInvalid(kind: `${OAuth2TokenKind}` = OAuth2TokenKind.ACCESS) {
         return new TokenError({
-            message: message || 'The refresh token is invalid.',
+            message: `The ${kind} is invalid.`,
+        });
+    }
+
+    static tokenNotFound(kind: `${OAuth2TokenKind}` = OAuth2TokenKind.ACCESS) {
+        return new TokenError({
+            message: `The ${kind} was not found.`,
         });
     }
 

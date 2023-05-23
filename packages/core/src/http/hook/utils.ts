@@ -9,7 +9,7 @@ import type { RequestOptions } from 'hapic';
 import { ErrorCode } from '../../error';
 import { isObject } from '../../utils';
 
-export function isAPIClientAuthError(err: unknown) : boolean {
+export function isAPIClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : boolean {
     if (!isObject(err) || !isObject(err.response)) {
         return false;
     }
@@ -23,8 +23,15 @@ export function isAPIClientAuthError(err: unknown) : boolean {
         return false;
     }
 
-    return err.response.data.code === ErrorCode.TOKEN_EXPIRED ||
-        err.response.data.code === ErrorCode.TOKEN_INVALID;
+    return err.response.data.code === code;
+}
+
+export function isAPIClientTokenExpiredError(err: unknown) {
+    return isAPIClientErrorWithCode(err, ErrorCode.TOKEN_EXPIRED);
+}
+
+export function isAPIClientTokenInvalidError(err: unknown) {
+    return isAPIClientErrorWithCode(err, ErrorCode.TOKEN_INVALID);
 }
 
 type RetryState = {

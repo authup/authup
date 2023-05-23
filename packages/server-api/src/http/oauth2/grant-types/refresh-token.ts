@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
-    TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
+    OAuth2TokenKind, TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
@@ -59,19 +59,15 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         });
 
         if (!entity) {
-            throw TokenError.refreshTokenInvalid(`The refresh token with id ${payload.jti} could not be found.`);
+            throw TokenError.tokenNotFound(OAuth2TokenKind.REFRESH);
         }
 
         const expires = Date.parse(entity.expires);
         if (expires < Date.now()) {
-            throw TokenError.refreshTokenInvalid();
+            throw TokenError.expired(OAuth2TokenKind.REFRESH);
         }
 
-        if (!entity) {
-            throw TokenError.refreshTokenInvalid();
-        } else {
-            await repository.remove(entity);
-        }
+        await repository.remove(entity);
 
         return entity;
     }

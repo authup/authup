@@ -9,7 +9,7 @@ import type {
     OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, Realm, User,
 } from '@authup/core';
 import {
-    APIClient, AbilityManager, OAuth2TokenKind, isAPIClientAuthError,
+    APIClient, AbilityManager, OAuth2TokenKind, isAPIClientTokenExpiredError,
 } from '@authup/core';
 import { defineStore } from 'pinia';
 import { computed, ref, useRuntimeConfig } from '#imports';
@@ -111,7 +111,7 @@ export const useAuthStore = defineStore('auth', () => {
             const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
             setUser(entity);
         } catch (e) {
-            if (isAPIClientAuthError(e)) {
+            if (isAPIClientTokenExpiredError(e)) {
                 await attemptRefreshToken();
                 await resolveUser(true);
 
@@ -202,7 +202,7 @@ export const useAuthStore = defineStore('auth', () => {
             });
             setTokenInfo(token);
         } catch (e) {
-            if (isAPIClientAuthError(e)) {
+            if (isAPIClientTokenExpiredError(e)) {
                 await attemptRefreshToken();
                 await introspectToken(true);
 

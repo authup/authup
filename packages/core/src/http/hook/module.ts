@@ -12,7 +12,7 @@ import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenHookOptions } from './type';
-import { getRequestRetryState, isAPIClientAuthError } from './utils';
+import { getRequestRetryState, isAPIClientErrorWithCode, isAPIClientTokenExpiredError } from './utils';
 
 async function refreshToken(baseURL: string, refreshToken: string) {
     const client = new APIClient({ baseURL });
@@ -104,7 +104,7 @@ export function mountClientResponseErrorTokenHook(
     };
 
     const onReject : HookErrorFn = async (err) : Promise<any> => {
-        if (!isAPIClientAuthError(err)) {
+        if (!isAPIClientTokenExpiredError(err)) {
             return Promise.reject(err);
         }
 
