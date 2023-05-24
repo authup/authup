@@ -56,7 +56,7 @@ export function createConfig() : Config {
             middlewareRateLimit: true,
             middlewareSwagger: true,
             tokenMaxAgeAccessToken: 3600,
-            tokenMaxAgeRefreshToken: 3600,
+            tokenMaxAgeRefreshToken: 7200,
             registration: false,
             emailVerification: false,
             forgotPassword: false,
