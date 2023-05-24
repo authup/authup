@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.34.0](https://github.com/authup/authup/compare/v0.33.0...v0.34.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 4.14.0 to 4.14.1 ([#1054](https://github.com/authup/authup/issues/1054)) ([d4dbf38](https://github.com/authup/authup/commit/d4dbf3800d71fc7200a4be482a1049779bb9bd80))
+* **deps:** bump jose from 4.14.1 to 4.14.3 ([#1064](https://github.com/authup/authup/issues/1064)) ([7df18eb](https://github.com/authup/authup/commit/7df18ebd81e01d570802ac748858b5c3be6d61c0))
+* **deps:** bump jose from 4.14.3 to 4.14.4 ([#1071](https://github.com/authup/authup/issues/1071)) ([3d0a73d](https://github.com/authup/authup/commit/3d0a73d701f9dd9a91130041c780fe17a818f96e))
+* **server-adapter:** cookie middleware extraction for http middleware ([d990176](https://github.com/authup/authup/commit/d990176ff9f39ae6c288acc142a23864098250cb))
+
+
+
+
+
 # [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
 
 

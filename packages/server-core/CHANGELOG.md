@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.34.0](https://github.com/authup/authup/compare/v0.33.0...v0.34.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* better token error handling + token error verification ([e323e83](https://github.com/authup/authup/commit/e323e834b2f4f695fd9b0c8dc1629d6a4b265ebe))
+* **deps:** bump @types/jsonwebtoken from 9.0.1 to 9.0.2 ([#1061](https://github.com/authup/authup/issues/1061)) ([d00c6e3](https://github.com/authup/authup/commit/d00c6e3b62aa15a52fa59924e57d388aa0d72fdf))
+* **deps:** bump @types/nodemailer from 6.4.7 to 6.4.8 ([#1121](https://github.com/authup/authup/issues/1121)) ([cde3a49](https://github.com/authup/authup/commit/cde3a492386b32d2c63b61cae5a3605e0616a58d))
+* **deps:** bump smob from 1.0.0 to 1.1.1 ([#1122](https://github.com/authup/authup/issues/1122)) ([0dc6667](https://github.com/authup/authup/commit/0dc66679c7b65c37f2eec5793727d00b0c35c013))
+
+
+
+
+
 # [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
 
 

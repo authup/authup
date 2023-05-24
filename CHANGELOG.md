@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.34.0](https://github.com/authup/authup/compare/v0.33.0...v0.34.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* better token error handling + token error verification ([e323e83](https://github.com/authup/authup/commit/e323e834b2f4f695fd9b0c8dc1629d6a4b265ebe))
+* **deps:** bump @types/jsonwebtoken from 9.0.1 to 9.0.2 ([#1061](https://github.com/authup/authup/issues/1061)) ([d00c6e3](https://github.com/authup/authup/commit/d00c6e3b62aa15a52fa59924e57d388aa0d72fdf))
+* **deps:** bump @types/nodemailer from 6.4.7 to 6.4.8 ([#1121](https://github.com/authup/authup/issues/1121)) ([cde3a49](https://github.com/authup/authup/commit/cde3a492386b32d2c63b61cae5a3605e0616a58d))
+* **deps:** bump @vue-layout/* packages ([f7d6e4c](https://github.com/authup/authup/commit/f7d6e4c8089c693e9d6a86ed8e19725bf8c78a42))
+* **deps:** bump better-sqlite3 from 8.3.0 to 8.4.0 ([#1116](https://github.com/authup/authup/issues/1116)) ([42d832f](https://github.com/authup/authup/commit/42d832f7424a2ae870ddaa0be7881a356cb0716b))
+* **deps:** bump jose from 4.14.0 to 4.14.1 ([#1054](https://github.com/authup/authup/issues/1054)) ([d4dbf38](https://github.com/authup/authup/commit/d4dbf3800d71fc7200a4be482a1049779bb9bd80))
+* **deps:** bump jose from 4.14.1 to 4.14.3 ([#1064](https://github.com/authup/authup/issues/1064)) ([7df18eb](https://github.com/authup/authup/commit/7df18ebd81e01d570802ac748858b5c3be6d61c0))
+* **deps:** bump jose from 4.14.3 to 4.14.4 ([#1071](https://github.com/authup/authup/issues/1071)) ([3d0a73d](https://github.com/authup/authup/commit/3d0a73d701f9dd9a91130041c780fe17a818f96e))
+* **deps:** bump pg from 8.10.0 to 8.11.0 ([#1098](https://github.com/authup/authup/issues/1098)) ([f82a76c](https://github.com/authup/authup/commit/f82a76c8b47bacfc77845032fea1fa5dc237a992))
+* **deps:** bump routup to v1.0.0 ([b3e1686](https://github.com/authup/authup/commit/b3e1686041d14ea852d8f7d5c3df6e44d25bd7d4))
+* **deps:** bump routup to v1.0.0-alpha ([c6a3d11](https://github.com/authup/authup/commit/c6a3d11fae1c1af1c88b4214caa54a898772c51f))
+* **deps:** bump smob from 1.0.0 to 1.1.1 ([#1122](https://github.com/authup/authup/issues/1122)) ([0dc6667](https://github.com/authup/authup/commit/0dc66679c7b65c37f2eec5793727d00b0c35c013))
+* **deps:** bump socket.io-parser from 4.2.2 to 4.2.3 ([#1129](https://github.com/authup/authup/issues/1129)) ([3757a7a](https://github.com/authup/authup/commit/3757a7a913cc4b6822dde4c4115a0667713ed07e))
+* **deps:** bump typeorm from 0.3.15 to 0.3.16 ([#1088](https://github.com/authup/authup/issues/1088)) ([a7fc5a8](https://github.com/authup/authup/commit/a7fc5a86b615bd62fdea073ca1854695d9a568d9))
+* **deps:** bump typeorm-extension from 2.7.0 to 2.8.0 ([#1069](https://github.com/authup/authup/issues/1069)) ([715cfa6](https://github.com/authup/authup/commit/715cfa6c1b55c7165167ee3c5642ba1e130191af))
+* **deps:** bump yaml from 2.2.1 to 2.2.2 ([#1056](https://github.com/authup/authup/issues/1056)) ([61427c2](https://github.com/authup/authup/commit/61427c22a66f7023910d8d378fcfccad944a9538))
+* **deps:** bump yargs from 17.7.1 to 17.7.2 ([#1065](https://github.com/authup/authup/issues/1065)) ([78f22dd](https://github.com/authup/authup/commit/78f22dd3bfba919fd84343a169485db3e1f1fd42))
+* minor fix for css styling of robot-form ([0d379f4](https://github.com/authup/authup/commit/0d379f41e2828f22072d32f65cfb7e63d7280edb))
+* **server-adapter:** cookie middleware extraction for http middleware ([d990176](https://github.com/authup/authup/commit/d990176ff9f39ae6c288acc142a23864098250cb))
+* update current user on settings page ([91aa2df](https://github.com/authup/authup/commit/91aa2dfba1569f9d5a96c4cd14540de2542c6138))
+
+
+### Features
+
+* better error messages for refresh_token grant type ([13f3239](https://github.com/authup/authup/commit/13f32392cf234c81b3d1c787f0c586036e2c4968))
+* guarantee that refresh token max age is bigger than access token age ([2b72207](https://github.com/authup/authup/commit/2b72207e897787399009a49061621703cac563b1))
+* switch to bootstrap table view for domain lists ([2faa379](https://github.com/authup/authup/commit/2faa37910732863bb730588b6e3334c27b353c16))
+* use bootstrap toasts instead of vue-toastification ([50ee4ef](https://github.com/authup/authup/commit/50ee4efe93efa29903185ba864ce654647aed422))
+
+
+
+
+
 # [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
 
 
