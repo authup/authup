@@ -13,7 +13,6 @@ import {
 import type { ClientAPIConfigInput } from '@authup/core';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
-import { useRuntimeConfig } from '#imports';
 import { defineNuxtPlugin } from '#app';
 import { useAuthStore } from '../store/auth';
 
@@ -61,6 +60,7 @@ export default defineNuxtPlugin((ctx) => {
                         refresh_token: refreshToken as string,
                     });
                 },
+                tokenCreated: (response) => store.handleTokenGrantResponse(response),
             });
         } else {
             client.unsetAuthorizationHeader();

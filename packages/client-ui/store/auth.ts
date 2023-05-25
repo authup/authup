@@ -91,35 +91,16 @@ export const useAuthStore = defineStore('auth', () => {
 
     const user = ref<User | undefined>(undefined);
     const userId = computed<string | undefined>(() => (user.value ? user.value.id : undefined));
-    let userResolved = false;
+    const userResolved = ref(false);
 
     const setUser = (entity: User) => {
         user.value = entity;
-        userResolved = true;
+        userResolved.value = true;
     };
 
     const unsetUser = () => {
         user.value = undefined;
-        userResolved = false;
-    };
-
-    const resolveUser = async (force?: boolean) => {
-        if (!accessToken.value || (userResolved && !force)) return;
-        userResolved = true;
-
-        try {
-            const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
-            setUser(entity);
-        } catch (e) {
-            if (isAPIClientTokenExpiredError(e)) {
-                await attemptRefreshToken();
-                await resolveUser(true);
-
-                return;
-            }
-
-            throw e;
-        }
+        userResolved.value = false;
     };
 
     // --------------------------------------------------------------------
@@ -127,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
     const abilityManager = new AbilityManager();
 
     const token = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
-    let tokenResolved = false;
+    const tokenResolved = ref(false);
 
     const has = (name: string) => abilityManager.has(name);
 
@@ -148,7 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const setTokenInfo = (entity: OAuth2TokenIntrospectionResponse) => {
-        tokenResolved = true;
+        tokenResolved.value = true;
 
         token.value = entity;
 
@@ -177,7 +158,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const unsetTokenInfo = () => {
-        tokenResolved = false;
+        tokenResolved.value = false;
 
         token.value = undefined;
 
@@ -187,24 +168,47 @@ export const useAuthStore = defineStore('auth', () => {
         abilityManager.set([]);
     };
 
-    const introspectToken = async (force?: boolean) => {
-        if (!accessToken.value || (tokenResolved && !force)) return;
-        tokenResolved = true;
+    // --------------------------------------------------------------------
+
+    type ResolveContext = {
+        refresh?: boolean,
+        attempts?: number
+    };
+    const resolve = async (ctx: ResolveContext = {}) => {
+        if (
+            !accessToken.value ||
+            (ctx.attempts && ctx.attempts > 3)
+        ) return;
 
         try {
-            const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
-                token: accessToken.value,
-            }, {
-                authorizationHeader: {
-                    type: 'Bearer',
+            if (!tokenResolved.value || ctx.refresh) {
+                const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
                     token: accessToken.value,
-                },
-            });
-            setTokenInfo(token);
+                }, {
+                    authorizationHeader: {
+                        type: 'Bearer',
+                        token: accessToken.value,
+                    },
+                });
+                setTokenInfo(token);
+
+                tokenResolved.value = true;
+            }
+
+            if (!userResolved.value || ctx.refresh) {
+                const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
+                setUser(entity);
+
+                userResolved.value = true;
+            }
         } catch (e) {
             if (isAPIClientTokenExpiredError(e)) {
                 await attemptRefreshToken();
-                await introspectToken(true);
+
+                await resolve({
+                    refresh: true,
+                    attempts: ctx.attempts ? ctx.attempts++ : 1,
+                });
 
                 return;
             }
@@ -213,13 +217,14 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
-    // --------------------------------------------------------------------
+    const handleTokenGrantResponse = (response: OAuth2TokenGrantResponse) => {
+        const expireDate = new Date(Date.now() + response.expires_in * 1000);
+        setTokenExpireDate(expireDate);
 
-    const resolve = async () => {
-        if (!accessToken.value) return;
-
-        await resolveUser();
-        await introspectToken();
+        setToken(OAuth2TokenKind.ACCESS, response.access_token);
+        if (response.refresh_token) {
+            setToken(OAuth2TokenKind.REFRESH, response.refresh_token);
+        }
     };
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
@@ -231,13 +236,7 @@ export const useAuthStore = defineStore('auth', () => {
                 ...(realmId ? { realm_id: ctx.realmId } : {}),
             });
 
-            const expireDate = new Date(Date.now() + data.expires_in * 1000);
-            setTokenExpireDate(expireDate);
-
-            setToken(OAuth2TokenKind.ACCESS, data.access_token);
-            if (data.refresh_token) {
-                setToken(OAuth2TokenKind.REFRESH, data.refresh_token);
-            }
+            handleTokenGrantResponse(data);
 
             await resolve();
         } catch (e) {
@@ -270,6 +269,7 @@ export const useAuthStore = defineStore('auth', () => {
         unsetToken,
 
         token,
+        handleTokenGrantResponse,
         setTokenInfo,
         unsetTokenInfo,
 
