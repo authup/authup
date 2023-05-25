@@ -105,6 +105,10 @@ export function mountClientResponseErrorTokenHook(
             });
 
             handleTokenResponse(tokenGrantResponse);
+
+            if (options.tokenCreated) {
+                options.tokenCreated(tokenGrantResponse);
+            }
         }, refreshInMs);
     };
 
