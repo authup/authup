@@ -29,10 +29,10 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static expired(kind: `${OAuth2TokenKind}` = OAuth2TokenKind.ACCESS) {
+    static expired(kind?: `${OAuth2TokenKind}`) {
         return new TokenError({
             code: ErrorCode.TOKEN_EXPIRED,
-            message: `The ${kind} has been expired.`,
+            message: `The ${kind || 'token'} has been expired.`,
         });
     }
 
@@ -89,9 +89,9 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static tokenInvalid(kind: `${OAuth2TokenKind}` = OAuth2TokenKind.ACCESS) {
+    static tokenInvalid(kind?: `${OAuth2TokenKind}`) {
         return new TokenError({
-            message: `The ${kind} is invalid.`,
+            message: `The ${kind || 'token'} is invalid.`,
         });
     }
 

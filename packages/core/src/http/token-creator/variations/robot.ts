@@ -17,5 +17,11 @@ export function createTokenCreatorWithRobot(
     return async () => api.token.createWithRobotCredentials({
         id: options.id,
         secret: options.secret,
+    }).then((response) => {
+        if (options.onChange) {
+            options.onChange(response);
+        }
+
+        return response;
     });
 }

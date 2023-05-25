@@ -10,7 +10,8 @@ import type { VaultClient } from '@hapic/vault';
 import type { TokenCreatorVariation } from './constants';
 
 export type TokenCreatorBaseOptions = {
-    baseUrl?: string
+    baseUrl?: string,
+    onChange?: (response: TokenGrantResponse) => void
 };
 
 export type TokenCreatorUserOptions = TokenCreatorBaseOptions & {

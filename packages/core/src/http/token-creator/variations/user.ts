@@ -16,5 +16,11 @@ export function createTokenCreatorWithUser(options: Omit<TokenCreatorUserOptions
         password: options.password,
         ...(options.realmId ? { realm_id: options.realmId } : {}),
         ...(options.realmName ? { realm_name: options.realmName } : {}),
+    }).then((response) => {
+        if (options.onChange) {
+            options.onChange(response);
+        }
+
+        return response;
     });
 }

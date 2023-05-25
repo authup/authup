@@ -50,6 +50,12 @@ export function createTokenCreatorWithRobotInVault(
             secret: response.data.secret,
         }, apiClient);
 
-        return creator();
+        return creator().then((response) => {
+            if (options.onChange) {
+                options.onChange(response);
+            }
+
+            return response;
+        });
     };
 }

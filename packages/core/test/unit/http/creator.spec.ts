@@ -84,4 +84,25 @@ describe('src/creator', () => {
         const output = await creator();
         expect(output).toEqual(tokenGrantResponse);
     });
+
+    it('should create with handler on change', (done) => {
+        const creator = createTokenCreator({
+            type: 'user',
+            baseUrl: 'http://localhot:3001',
+            name: 'admin',
+            password: 'start123',
+            realmId: 'foo',
+            realmName: 'bar',
+            onChange: (response) => {
+                expect(response).toBeDefined();
+                expect(response.access_token).toBeDefined();
+
+                done();
+            },
+        });
+
+        expect(creator).toBeDefined();
+
+        creator();
+    });
 });
