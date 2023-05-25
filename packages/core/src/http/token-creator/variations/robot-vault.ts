@@ -51,8 +51,8 @@ export function createTokenCreatorWithRobotInVault(
         }, apiClient);
 
         return creator().then((response) => {
-            if (options.onChange) {
-                options.onChange(response);
+            if (options.created) {
+                options.created(response);
             }
 
             return response;

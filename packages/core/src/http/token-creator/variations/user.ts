@@ -17,8 +17,8 @@ export function createTokenCreatorWithUser(options: Omit<TokenCreatorUserOptions
         ...(options.realmId ? { realm_id: options.realmId } : {}),
         ...(options.realmName ? { realm_name: options.realmName } : {}),
     }).then((response) => {
-        if (options.onChange) {
-            options.onChange(response);
+        if (options.created) {
+            options.created(response);
         }
 
         return response;

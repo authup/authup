@@ -93,7 +93,7 @@ describe('src/creator', () => {
             password: 'start123',
             realmId: 'foo',
             realmName: 'bar',
-            onChange: (response) => {
+            created: (response) => {
                 expect(response).toBeDefined();
                 expect(response.access_token).toBeDefined();
 

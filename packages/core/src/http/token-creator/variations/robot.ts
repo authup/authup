@@ -18,8 +18,8 @@ export function createTokenCreatorWithRobot(
         id: options.id,
         secret: options.secret,
     }).then((response) => {
-        if (options.onChange) {
-            options.onChange(response);
+        if (options.created) {
+            options.created(response);
         }
 
         return response;

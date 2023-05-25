@@ -12,7 +12,7 @@ import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenHookOptions } from './type';
-import { getRequestRetryState, isAPIClientErrorWithCode, isAPIClientTokenExpiredError } from './utils';
+import { getRequestRetryState, isAPIClientTokenExpiredError } from './utils';
 
 async function refreshToken(baseURL: string, refreshToken: string) {
     const client = new APIClient({ baseURL });
@@ -64,6 +64,8 @@ export function mountClientResponseErrorTokenHook(
         return;
     }
 
+    options.timer ??= true;
+
     let baseUrl : string;
     if (options.baseURL) {
         baseUrl = options.baseURL;
@@ -82,7 +84,7 @@ export function mountClientResponseErrorTokenHook(
     }
 
     const handleTokenResponse = (response: TokenGrantResponse) => {
-        if (!response.refresh_token || !response.expires_in) {
+        if (!options.timer || !response.refresh_token || !response.expires_in) {
             return;
         }
 
@@ -97,7 +99,10 @@ export function mountClientResponseErrorTokenHook(
                 response.refresh_token,
             );
 
-            client.setAuthorizationHeader({ type: 'Bearer', token: tokenGrantResponse.access_token });
+            client.setAuthorizationHeader({
+                type: 'Bearer',
+                token: tokenGrantResponse.access_token,
+            });
 
             handleTokenResponse(tokenGrantResponse);
         }, refreshInMs);
@@ -127,6 +132,10 @@ export function mountClientResponseErrorTokenHook(
                 });
 
                 handleTokenResponse(tokenGrantResponse);
+
+                if (options.tokenCreated) {
+                    options.tokenCreated(tokenGrantResponse);
+                }
             })
             .then(() => client.request(request))
             .catch((e) => {

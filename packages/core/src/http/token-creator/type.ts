@@ -9,9 +9,11 @@ import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { VaultClient } from '@hapic/vault';
 import type { TokenCreatorVariation } from './constants';
 
+export type TokenCreatorCreatedHook = (response: TokenGrantResponse) => void;
+
 export type TokenCreatorBaseOptions = {
     baseUrl?: string,
-    onChange?: (response: TokenGrantResponse) => void
+    created?: TokenCreatorCreatedHook
 };
 
 export type TokenCreatorUserOptions = TokenCreatorBaseOptions & {
