@@ -86,7 +86,7 @@ export class ClientResponseErrorTokenHook {
 
             return this.create(this.creator)
                 .then((response) => {
-                    this.registerTimer(response);
+                    this.setTimer(response);
 
                     if (request.headers) {
                         setHeader(
@@ -114,10 +114,10 @@ export class ClientResponseErrorTokenHook {
         this.client.off(HookName.RESPONSE_ERROR, this.hookId);
         this.hookId = undefined;
 
-        this.removeTimer();
+        this.clearTimer();
     }
 
-    registerTimer(response: Pick<TokenGrantResponse, 'refresh_token' | 'expires_in'>) {
+    setTimer(response: Pick<TokenGrantResponse, 'refresh_token' | 'expires_in'>) {
         if (
             !this.hookId ||
             !this.options.timer ||
@@ -133,7 +133,7 @@ export class ClientResponseErrorTokenHook {
             return;
         }
 
-        this.removeTimer();
+        this.clearTimer();
 
         this.timer = setTimeout(async () => {
             const myCreator : TokenCreator = () => this.creatorClient.token.createWithRefreshToken({
@@ -142,14 +142,14 @@ export class ClientResponseErrorTokenHook {
 
             await this.create(myCreator)
                 .then((response) => {
-                    this.registerTimer(response);
+                    this.setTimer(response);
 
                     return response;
                 });
         }, refreshInMs);
     }
 
-    removeTimer() {
+    clearTimer() {
         if (this.timer) {
             clearTimeout(this.timer);
         }
@@ -162,7 +162,7 @@ export class ClientResponseErrorTokenHook {
 
         this.createPromise = creator();
 
-        this.removeTimer();
+        this.clearTimer();
 
         return this.createPromise
             .then((response) => {

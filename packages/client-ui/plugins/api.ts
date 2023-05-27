@@ -82,7 +82,7 @@ export default defineNuxtPlugin((ctx) => {
         ) {
             const expiresIn = Math.floor((state.accessTokenExpireDate.getTime() - Date.now()) / 1000);
 
-            tokenHook.registerTimer({
+            tokenHook.setTimer({
                 refresh_token: state.refreshToken,
                 expires_in: expiresIn,
             });
