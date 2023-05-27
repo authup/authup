@@ -39,6 +39,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         };
 
         if (hasOAuth2OpenIDScope(authorizationCode.scope)) {

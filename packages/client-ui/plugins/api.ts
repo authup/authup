@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ClientAPIConfigInput, TokenCreator } from '@authup/core';
 import {
     APIClient,
     mountClientResponseErrorTokenHook,
     unmountClientResponseErrorTokenHook,
 } from '@authup/core';
-import type { ClientAPIConfigInput } from '@authup/core';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin } from '#app';
@@ -32,8 +32,21 @@ export default defineNuxtPlugin((ctx) => {
     const config : ClientAPIConfigInput = {
         baseURL: ctx.$config.public.apiUrl,
     };
-
     const client = new APIClient(config);
+
+    const tokenCreator : TokenCreator = async () => {
+        const store = useAuthStore();
+        const { refreshToken } = storeToRefs(store);
+
+        if (!refreshToken.value) {
+            throw new Error('No refresh token available.');
+        }
+
+        return client.token.createWithRefreshToken({
+            refresh_token: refreshToken.value,
+        });
+    };
+
     const store = useAuthStore(ctx.$pinia as Pinia);
     store.$subscribe((mutation, state) => {
         if (mutation.storeId !== 'auth') return;
@@ -46,21 +59,17 @@ export default defineNuxtPlugin((ctx) => {
 
             mountClientResponseErrorTokenHook(client, {
                 baseURL: ctx.$config.public.apiUrl,
-                tokenCreator: () => {
-                    let refreshToken : string | undefined;
-                    if (state.refreshToken) {
-                        refreshToken = state.refreshToken;
-                    }
-                    if (refreshToken) {
-                        const refs = storeToRefs(store);
-                        refreshToken = refs.refreshToken.value;
-                    }
+                tokenCreator,
+                tokenCreated: (response) => {
+                    store.setAccessTokenExpireDate(undefined);
 
-                    return client.token.createWithRefreshToken({
-                        refresh_token: refreshToken as string,
-                    });
+                    setTimeout(() => {
+                        store.handleTokenGrantResponse(response);
+                    }, 0);
                 },
-                tokenCreated: (response) => store.handleTokenGrantResponse(response),
+                tokenFailed: (e) => {
+                    store.logout();
+                },
             });
         } else {
             client.unsetAuthorizationHeader();

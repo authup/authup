@@ -51,15 +51,10 @@ export abstract class AbstractGrant {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
-        let tokenMaxAge = this.config.get('tokenMaxAgeRefreshToken');
-        if (tokenMaxAge < this.config.get('tokenMaxAgeAccessToken')) {
-            tokenMaxAge = this.config.get('tokenMaxAgeAccessToken') * 2;
-        }
-
         const token = repository.create(
             transformToRefreshTokenEntity(
                 accessToken,
-                tokenMaxAge,
+                this.config.get('tokenMaxAgeRefreshToken'),
             ),
         );
 

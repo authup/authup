@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenCreator, TokenCreatorCreatedHook, TokenCreatorOptions } from '../token-creator';
+import type {
+    TokenCreator, TokenCreatorCreatedHook, TokenCreatorFailedHook, TokenCreatorOptions,
+} from '../token-creator';
 
 export type TokenHookOptions = {
     /**
@@ -27,5 +29,9 @@ export type TokenHookOptions = {
     /**
      * Called when the token creator created a new token.
      */
-    tokenCreated?: TokenCreatorCreatedHook
+    tokenCreated?: TokenCreatorCreatedHook,
+    /**
+     * Called when the token creator could not create a new token.
+     */
+    tokenFailed?: TokenCreatorFailedHook,
 };

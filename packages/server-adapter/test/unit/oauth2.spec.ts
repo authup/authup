@@ -23,7 +23,7 @@ describe('src/oauth2/**', () => {
     });
 
     it('should verify token local', async () => {
-        const tokenVerifier = new TokenVerifier({ baseUrl: 'http://localhost:3001' });
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         let output = await tokenVerifier.verify(token);
         expect(output).toBeDefined();
@@ -34,7 +34,7 @@ describe('src/oauth2/**', () => {
     });
 
     it('should not verify token local', async () => {
-        const tokenVerifier = new TokenVerifier({ baseUrl: 'http://localhost:3001' });
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         try {
             await tokenVerifier.verify(ErrorCode.TOKEN_INVALID);
@@ -46,7 +46,7 @@ describe('src/oauth2/**', () => {
 
     it('should verify token remote', async () => {
         let tokenVerifier = new TokenVerifier({
-            baseUrl: 'http://localhost:3001',
+            baseURL: 'http://localhost:3001',
             creator: () => Promise.resolve({
                 access_token: 'foo',
                 expires_in: 3600,
@@ -58,7 +58,7 @@ describe('src/oauth2/**', () => {
         expect(output).toBeDefined();
 
         tokenVerifier = new TokenVerifier({
-            baseUrl: 'http://localhost:3001',
+            baseURL: 'http://localhost:3001',
             creator: {
                 type: 'robot',
                 id: 'foo',
@@ -73,7 +73,7 @@ describe('src/oauth2/**', () => {
 
     it('should not verify token remote', async () => {
         const tokenVerifier = new TokenVerifier({
-            baseUrl: 'http://localhost:3001',
+            baseURL: 'http://localhost:3001',
             creator: () => Promise.resolve({
                 access_token: 'foo',
                 expires_in: 3600,

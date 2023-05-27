@@ -7,27 +7,14 @@
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { Client, HookErrorFn } from 'hapic';
-import { HookName } from 'hapic';
+import {
+    HeaderName, Headers, HookName, stringifyAuthorizationHeader,
+} from 'hapic';
 import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { TokenHookOptions } from './type';
 import { getRequestRetryState, isAPIClientTokenExpiredError } from './utils';
-
-async function refreshToken(baseURL: string, refreshToken: string) {
-    const client = new APIClient({ baseURL });
-
-    let tokenGrantResponse : TokenGrantResponse | undefined;
-    try {
-        tokenGrantResponse = await client.token.createWithRefreshToken({
-            refresh_token: refreshToken,
-        });
-    } catch (e) {
-        // don't do anything, wait for next time interceptor triggers.
-    }
-
-    return tokenGrantResponse;
-}
 
 const tokenInterceptorSymbol = Symbol.for('ClientTokenInterceptor');
 const tokenInterceptorTimeoutSymbol = Symbol.for('ClientTokenInterceptorTimeout');
@@ -66,11 +53,11 @@ export function mountClientResponseErrorTokenHook(
 
     options.timer ??= true;
 
-    let baseUrl : string;
+    let baseURL : string;
     if (options.baseURL) {
-        baseUrl = options.baseURL;
+        baseURL = options.baseURL;
     } else {
-        baseUrl = client.getBaseURL();
+        baseURL = client.getBaseURL();
     }
 
     let creator : TokenCreator;
@@ -79,12 +66,54 @@ export function mountClientResponseErrorTokenHook(
     } else {
         creator = createTokenCreator({
             ...options.tokenCreator,
-            baseUrl,
+            baseURL,
         });
     }
 
-    const handleTokenResponse = (response: TokenGrantResponse) => {
-        if (!options.timer || !response.refresh_token || !response.expires_in) {
+    let refreshPromise : Promise<TokenGrantResponse> | undefined;
+    const create = async (myCreator: TokenCreator) : Promise<TokenGrantResponse> => {
+        if (refreshPromise) {
+            return refreshPromise;
+        }
+
+        refreshPromise = myCreator();
+
+        if (client[tokenInterceptorTimeoutSymbol]) {
+            clearTimeout(client[tokenInterceptorTimeoutSymbol]);
+        }
+
+        return refreshPromise
+            .then((response) => {
+                client.setAuthorizationHeader({
+                    type: 'Bearer',
+                    token: response.access_token,
+                });
+
+                if (options.tokenCreated) {
+                    options.tokenCreated(response);
+                }
+
+                refreshPromise = undefined;
+
+                return response;
+            })
+            .catch((e) => {
+                client.unsetAuthorizationHeader();
+
+                if (options.tokenFailed) {
+                    options.tokenFailed(e);
+                }
+
+                refreshPromise = undefined;
+
+                return Promise.reject(e);
+            });
+    };
+
+    const creatorClient = new APIClient({ baseURL });
+
+    const registerTimer = (response: TokenGrantResponse) => {
+        if (!options.timer || !response.refresh_token || !response.expires_in || refreshPromise) {
             return;
         }
 
@@ -93,22 +122,20 @@ export function mountClientResponseErrorTokenHook(
             return;
         }
 
-        client[tokenInterceptorTimeoutSymbol] = setTimeout(async () => {
-            const tokenGrantResponse = await refreshToken(
-                baseUrl,
-                response.refresh_token,
-            );
+        if (client[tokenInterceptorTimeoutSymbol]) {
+            clearTimeout(client[tokenInterceptorTimeoutSymbol]);
+        }
 
-            client.setAuthorizationHeader({
-                type: 'Bearer',
-                token: tokenGrantResponse.access_token,
+        client[tokenInterceptorTimeoutSymbol] = setTimeout(async () => {
+            const myCreator : TokenCreator = () => creatorClient.token.createWithRefreshToken({
+                refresh_token: response.refresh_token,
             });
 
-            handleTokenResponse(tokenGrantResponse);
-
-            if (options.tokenCreated) {
-                options.tokenCreated(tokenGrantResponse);
-            }
+            await create(myCreator)
+                .then((response) => {
+                    registerTimer(response);
+                    return response;
+                });
         }, refreshInMs);
     };
 
@@ -126,26 +153,18 @@ export function mountClientResponseErrorTokenHook(
 
         currentState.retryCount += 1;
 
-        client.unsetAuthorizationHeader();
+        return create(creator)
+            .then((response) => {
+                registerTimer(response);
 
-        return creator()
-            .then((tokenGrantResponse) => {
-                client.setAuthorizationHeader({
-                    type: 'Bearer',
-                    token: tokenGrantResponse.access_token,
-                });
-
-                handleTokenResponse(tokenGrantResponse);
-
-                if (options.tokenCreated) {
-                    options.tokenCreated(tokenGrantResponse);
+                if (request.headers instanceof Headers) {
+                    request.headers.set(HeaderName.AUTHORIZATION, stringifyAuthorizationHeader({
+                        type: 'Bearer',
+                        token: response.access_token,
+                    }));
                 }
-            })
-            .then(() => client.request(request))
-            .catch((e) => {
-                client.unsetAuthorizationHeader();
 
-                return Promise.reject(e);
+                return client.request(request);
             });
     };
 

@@ -65,7 +65,6 @@ function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: st
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const store = useAuthStore();
-    const { loggedIn } = storeToRefs(store);
 
     let redirectPath = '/';
 
@@ -76,9 +75,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
         await store.resolve();
     } catch (e) {
-        if (isAPIClientTokenInvalidError(e) || isAPIClientTokenExpiredError(e)) {
-            await store.logout();
-        }
+        await store.logout();
 
         if (!to.fullPath.startsWith('/logout') && !to.fullPath.startsWith('/login')) {
             return navigateTo({
@@ -91,6 +88,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
         return undefined;
     }
+
+    const { loggedIn } = storeToRefs(store);
 
     if (
         to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])

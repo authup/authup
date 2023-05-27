@@ -23,7 +23,7 @@ export function createTokenCreatorWithRobotInVault(
         client = options.vault;
     }
 
-    const apiClient : APIClient = new APIClient({ baseURL: options.baseUrl });
+    const apiClient : APIClient = new APIClient({ baseURL: options.baseURL });
 
     const robotName = options.name || ROBOT_SYSTEM_NAME;
 

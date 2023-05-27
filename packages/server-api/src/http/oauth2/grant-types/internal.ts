@@ -36,6 +36,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         });
     }
 }

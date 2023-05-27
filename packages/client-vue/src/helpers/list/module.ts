@@ -13,9 +13,11 @@ import {
 } from '@vue-layout/list-controls';
 import type { Ref, VNodeArrayChildren } from 'vue';
 import {
+    onMounted,
     ref, watch,
 } from 'vue';
 import { merge } from 'smob';
+import { wrapFnWithBusyState } from '../../core';
 import { buildDomainListFooterPagination } from '../list-footer';
 import type { DomainListHeaderSearchOptions } from '../list-header';
 import { buildDomainListHeader } from '../list-header';
@@ -38,39 +40,29 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         offset: 0,
         total: 0,
     });
-
-    async function load(targetMeta?: Partial<ListLoadMeta>) {
-        if (busy.value) return;
-
-        busy.value = true;
-
+    const load = wrapFnWithBusyState(busy, async (targetMeta?: Partial<ListLoadMeta>) => {
         if (typeof targetMeta === 'undefined') {
             targetMeta = {};
         }
-
-        try {
-            const response = await context.load(merge(
-                {
-                    page: {
-                        limit: targetMeta.limit ?? meta.value.limit,
-                        offset: targetMeta.offset ?? meta.value.offset,
-                    },
-                    filter: {
-                        [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
-                    },
+        const response = await context.load(merge(
+            {
+                page: {
+                    limit: targetMeta.limit ?? meta.value.limit,
+                    offset: targetMeta.offset ?? meta.value.offset,
                 },
-                context.props.query.value,
-            ));
+                filter: {
+                    [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
+                },
+            },
+            context.props.query.value,
+        ));
 
-            data.value = response.data;
+        data.value = response.data;
 
-            meta.value.offset = response.meta.offset;
-            meta.value.total = response.meta.total;
-            meta.value.limit = response.meta.limit;
-        } finally {
-            busy.value = false;
-        }
-    }
+        meta.value.offset = response.meta.offset;
+        meta.value.total = response.meta.total;
+        meta.value.limit = response.meta.limit;
+    });
 
     watch(q, async (val, oldVal) => {
         if (val === oldVal) return;
@@ -167,9 +159,11 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         load,
     });
 
-    if (context.props.loadOnSetup) {
-        Promise.resolve()
-            .then(() => load());
+    if (context.props.loadOnSetup.value) {
+        onMounted(() => {
+            Promise.resolve()
+                .then(() => load());
+        });
     }
 
     return {
