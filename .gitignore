@@ -8,6 +8,7 @@ npm-debug.log*
 .nuxt
 .output
 .temp
+.swc
 authup.conf
 authup.**.conf
 !**/test/**/authup.conf
