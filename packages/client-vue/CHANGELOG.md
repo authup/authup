@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.36.0](https://github.com/authup/authup/compare/v0.35.0...v0.36.0) (2023-05-27)
+
+
+### Features
+
+* cleanup and relocate auth store + set token max age for oauth2 grant types ([13643fd](https://github.com/authup/authup/commit/13643fd76e8c471f8d90b555c386041a34bcb2ff))
+
+
+
+
+
 # [0.35.0](https://github.com/authup/authup/compare/v0.34.0...v0.35.0) (2023-05-25)
 
 **Note:** Version bump only for package @authup/client-vue

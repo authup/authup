@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.36.0](https://github.com/authup/authup/compare/v0.35.0...v0.36.0) (2023-05-27)
+
+**Note:** Version bump only for package @authup/server-core
+
+
+
+
+
 # [0.35.0](https://github.com/authup/authup/compare/v0.34.0...v0.35.0) (2023-05-25)
 
 

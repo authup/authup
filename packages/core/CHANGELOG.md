@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.36.0](https://github.com/authup/authup/compare/v0.35.0...v0.36.0) (2023-05-27)
+
+
+### Bug Fixes
+
+* add missing call for token created hook after token refresh ([ff31fe8](https://github.com/authup/authup/commit/ff31fe88804206b9ea84e6e24b9b55d5deb6af42))
+* rename register-timer to set-timer ([77793bc](https://github.com/authup/authup/commit/77793bc961e4695520dd08187182238647aee2ba))
+
+
+### Features
+
+* cleanup and relocate auth store + set token max age for oauth2 grant types ([13643fd](https://github.com/authup/authup/commit/13643fd76e8c471f8d90b555c386041a34bcb2ff))
+* refactor and optimized client response error token hook ([fae52c8](https://github.com/authup/authup/commit/fae52c8cfcc0aa563d6edd0702f3438ab76e6e5a))
+
+
+
+
+
 # [0.35.0](https://github.com/authup/authup/compare/v0.34.0...v0.35.0) (2023-05-25)
 
 
