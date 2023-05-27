@@ -7,7 +7,6 @@
 
 import { Adapter } from 'browser-storage-adapter';
 import type { Pinia } from 'pinia';
-import process from 'node:process';
 import { defineNuxtPlugin, useCookie } from '#app';
 import { AuthBrowserStorageKey } from '../config/auth';
 import { useAuthStore } from '../store/auth';
