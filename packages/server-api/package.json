@@ -50,7 +50,7 @@
         "@hapic/oauth2": "^2.0.0-alpha.10",
         "@hapic/vault": "^2.0.0-alpha.10",
         "@routup/body": "^1.0.0",
-        "@routup/cookie": "^1.0.0",
+        "@routup/cookie": "^1.0.1",
         "@routup/decorators": "^1.0.0",
         "@routup/prometheus": "^1.0.0",
         "@routup/query": "^1.0.0",
