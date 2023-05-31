@@ -55,7 +55,7 @@
         "@types/nodemailer": "^6.4.8",
         "bcrypt": "^5.1.0",
         "jsonwebtoken": "^9.0.0",
-        "locter": "^1.1.0",
+        "locter": "^1.1.2",
         "nodemailer": "^6.9.1",
         "proxy-from-env": "^1.1.0",
         "smob": "^1.4.0"
