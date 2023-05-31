@@ -36,7 +36,7 @@ import {
     alphaNumHyphenUnderscore, useAPIClient,
 } from '../../core';
 import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const OAuth2ProviderForm = defineComponent({
     name: 'OAuth2ProviderForm',
@@ -213,7 +213,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.slug,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Slug',
                         value: form.slug,
                         onChange(input) {
@@ -238,7 +238,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.name,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Name',
                         value: form.name,
                         onChange(input) {
@@ -257,7 +257,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.client_id,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Client ID',
                         value: form.client_id,
                         onChange(input) {
@@ -266,7 +266,7 @@ export const OAuth2ProviderForm = defineComponent({
                     }),
                     buildFormInput({
                         validationResult: $v.value.client_secret,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Client Secret',
                         value: form.client_secret,
                         onChange(input) {
@@ -292,7 +292,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.token_url,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.token_url,
                             onChange(input) {
@@ -313,7 +313,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.authorize_url,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.authorize_url,
                             onChange(input) {

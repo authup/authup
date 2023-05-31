@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { buildValidationTranslator } from '../../language/utils';
+import { useValidationTranslator } from '../../translator/utils';
 
 export const ClientRedirectUriListItem = defineComponent({
     name: 'ClientRedirectUriListItem',
@@ -47,7 +47,7 @@ export const ClientRedirectUriListItem = defineComponent({
 
         const render = () => buildFormInput({
             validationResult: $v.value.url,
-            validationTranslator: buildValidationTranslator(props.translatorLocale),
+            validationTranslator: useValidationTranslator(props.translatorLocale),
             label: false,
             value: form.url,
             onChange(input) {

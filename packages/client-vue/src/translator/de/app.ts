@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Lines } from 'ilingo';
+import type { LinesRecord } from 'ilingo';
 
-export const LanguageAppGerman : Lines = {
+export const LanguageAppGerman : LinesRecord = {
     delete: {
         hint: 'Sind Sie sicher, dass das Objekt gelöscht werden soll?',
         button: 'Löschen',

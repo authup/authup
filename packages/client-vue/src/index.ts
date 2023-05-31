@@ -31,5 +31,5 @@ export default {
 
 export * from './components';
 export * from './helpers';
-export * from './language';
+export * from './translator';
 export * from './core';

@@ -38,7 +38,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const ClientForm = defineComponent({
@@ -150,7 +150,7 @@ export const ClientForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -166,7 +166,7 @@ export const ClientForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -194,7 +194,7 @@ export const ClientForm = defineComponent({
 
             const isConfidential = buildFormInputCheckbox({
                 validationResult: $v.value.is_confidential,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Is Confidential?',
                 value: form.is_confidential,
                 onChange(input) {
@@ -219,7 +219,7 @@ export const ClientForm = defineComponent({
             const secret = [
                 buildFormInput({
                     validationResult: $v.value.secret,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: [
                         'Secret',
                     ],

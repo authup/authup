@@ -1,7 +1,9 @@
 <script lang="ts">
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
-import { IdentityProviderList, RealmList, useAPIClient } from '@authup/client-vue';
+import {
+    IdentityProviderList, RealmList, useAPIClient, useValidationTranslator,
+} from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
     FormInput, FormSubmit,
@@ -20,7 +22,6 @@ import {
 } from '#imports';
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
-import { translateValidationMessage } from '../composables/ilingo';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { useAuthStore } from '../store/auth';
 
@@ -123,7 +124,7 @@ export default defineNuxtComponent({
 
         return {
             vuelidate,
-            translateValidationMessage,
+            translator: useValidationTranslator(),
             form,
             submit,
             busy,
@@ -150,7 +151,7 @@ export default defineNuxtComponent({
                     <FormInput
                         v-model="form.name"
                         :validation-result="vuelidate.name"
-                        :validation-translator="translateValidationMessage"
+                        :validation-translator="translator"
                         :label="true"
                         :label-content="'Name'"
                     />
@@ -159,7 +160,7 @@ export default defineNuxtComponent({
                         v-model="form.password"
                         type="password"
                         :validation-result="vuelidate.password"
-                        :validation-translator="translateValidationMessage"
+                        :validation-translator="translator"
                         :label="true"
                         :label-content="'Password'"
                     />

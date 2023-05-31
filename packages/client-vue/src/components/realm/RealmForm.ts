@@ -26,7 +26,7 @@ import {
 import {
     useAPIClient,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RealmForm = defineComponent({
     name: 'RealmForm',
@@ -97,7 +97,7 @@ export const RealmForm = defineComponent({
         const render = () => {
             const id = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -136,7 +136,7 @@ export const RealmForm = defineComponent({
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {

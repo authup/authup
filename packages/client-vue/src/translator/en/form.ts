@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Lines } from 'ilingo';
+import type { LinesRecord } from 'ilingo';
 
-export const LanguageFormGerman : Lines = {
+export const LanguageFormEnglish : LinesRecord = {
     update: {
-        button: 'Aktualisieren',
+        button: 'Update',
     },
     create: {
-        button: 'Erstellen',
+        button: 'Create',
     },
     generate: {
-        button: 'Generieren',
+        button: 'Generate',
     },
 };

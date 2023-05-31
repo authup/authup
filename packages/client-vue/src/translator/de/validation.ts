@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Lines } from 'ilingo';
+import type { LinesRecord } from 'ilingo';
 
-export const LanguageValidationGerman : Lines = {
+export const LanguageValidationGerman : LinesRecord = {
     email: 'Die Eingabe muss eine gültige E-Mail sein.',
     maxLength: 'Die Länge der Eingabe muss kleiner als {{max}} sein.',
-    minLength: 'Die Länge der Eingabe muss größer als {{max}} sein.',
+    minLength: 'Die Länge der Eingabe muss größer als {{min}} sein.',
     required: 'Ein Eingabewert wird benötigt.',
     sameAs: 'Der Eingabewert entspricht nicht dem Wert der Eingabe von {{equalTo}}',
     url: 'Der Eingabewert muss dem URL-Format entsprechen.',

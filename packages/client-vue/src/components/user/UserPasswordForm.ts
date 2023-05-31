@@ -14,7 +14,7 @@ import {
 } from 'vue';
 import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
 import { useAPIClient } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const UserPasswordForm = defineComponent({
     name: 'UserPasswordForm',
@@ -76,7 +76,7 @@ export const UserPasswordForm = defineComponent({
         const render = () => {
             const password = buildFormInput({
                 validationResult: $v.value.password,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Password',
                 value: form.password,
                 onChange(input) {
@@ -90,7 +90,7 @@ export const UserPasswordForm = defineComponent({
 
             const passwordRepeat = buildFormInput({
                 validationResult: $v.value.password_repeat,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Password repeat',
                 value: form.password_repeat,
                 onChange(input) {

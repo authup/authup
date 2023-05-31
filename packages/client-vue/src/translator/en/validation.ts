@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Lines } from 'ilingo';
+import type { LinesRecord } from 'ilingo';
 
-export const LanguageValidationEnglish : Lines = {
+export const LanguageValidationEnglish : LinesRecord = {
     email: 'The input must be a valid email address',
     maxLength: 'The length of the input must be less than {{max}}',
     minLength: 'The length of the input must be greater than {{min}}',

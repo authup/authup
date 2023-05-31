@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Lines } from 'ilingo';
+import type { LinesRecord } from 'ilingo';
 
-export const LanguageAppEnglish : Lines = {
+export const LanguageAppEnglish : LinesRecord = {
     delete: {
         hint: 'Are you sure, that you want to delete this entity?',
         button: 'Drop',

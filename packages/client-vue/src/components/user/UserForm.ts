@@ -29,7 +29,7 @@ import {
     initFormAttributesFromSource,
 } from '../../helpers';
 import { useAPIClient } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({
@@ -140,7 +140,7 @@ export const UserForm = defineComponent({
         const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -154,7 +154,7 @@ export const UserForm = defineComponent({
 
             const displayName = buildFormInput({
                 validationResult: $v.value.display_name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Display Name',
                 value: form.display_name,
                 onChange(input) {
@@ -165,7 +165,7 @@ export const UserForm = defineComponent({
 
             const email = buildFormInput({
                 validationResult: $v.value.email,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Email',
                 value: form.email,
                 props: {

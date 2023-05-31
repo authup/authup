@@ -39,7 +39,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const RobotForm = defineComponent({
@@ -138,7 +138,7 @@ export const RobotForm = defineComponent({
 
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -165,7 +165,7 @@ export const RobotForm = defineComponent({
 
             const secret = buildFormInput({
                 validationResult: $v.value.secret,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: [
                     'Secret',
                     isSecretHashed.value ? h('span', {

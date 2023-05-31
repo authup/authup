@@ -40,7 +40,7 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({
@@ -132,7 +132,7 @@ export const ScopeForm = defineComponent({
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -147,7 +147,7 @@ export const ScopeForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {

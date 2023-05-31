@@ -13,9 +13,6 @@ import { defineNuxtComponent } from '#app';
 
 export default defineNuxtComponent({
     components: { PageHeader, PageSidebar, PageFooter },
-    computed: {
-
-    },
 });
 </script>
 

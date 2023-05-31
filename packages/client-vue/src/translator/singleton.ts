@@ -21,7 +21,7 @@ export function useTranslator() {
     }
 
     instance = new Ilingo({
-        cache: {
+        data: {
             de: {
                 app: LanguageAppGerman,
                 form: LanguageFormGerman,

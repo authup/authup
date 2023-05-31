@@ -15,7 +15,7 @@ import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
 import { useAPIClient } from '../../core';
 import { initFormAttributesFromSource } from '../../helpers';
-import { buildValidationTranslator } from '../../language';
+import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',
@@ -253,7 +253,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                                 form.external_id = input;
                             },
                             validationResult: $v.value.external_id,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                         }),
                     ]),
                 ];

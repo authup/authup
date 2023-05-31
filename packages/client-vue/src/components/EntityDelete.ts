@@ -19,7 +19,7 @@ import {
 import type { DomainType } from '@authup/core';
 import { useDomainAPI } from '@authup/core';
 import { useAPIClient } from '../core';
-import { useTranslator } from '../language';
+import { useTranslator } from '../translator';
 
 enum ElementType {
     BUTTON = 'button',
