@@ -1,6 +1,6 @@
 {
     "name": "@authup/core",
-    "version": "0.36.0",
+    "version": "0.37.0",
     "description": "Package containing global constants, types & interfaces.",
     "exports": {
         "./package.json": "./package.json",
