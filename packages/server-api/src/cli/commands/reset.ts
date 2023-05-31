@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import {
     resetCommand,

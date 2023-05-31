@@ -9,7 +9,7 @@ import { isObject } from '@authup/core';
 import { getModuleExport, load, locateMany } from 'locter';
 import path from 'node:path';
 import process from 'node:process';
-import { merge } from 'smob';
+import { assign } from 'smob';
 import type { ConfigFileReadContext } from './type';
 import { buildWorkingDirectoryPathsForConfigFile } from './utils';
 
@@ -55,20 +55,20 @@ export async function readConfigFile(context?: ConfigFileReadContext) : Promise<
         const [root, name] = locations[i].name.split('.');
         if (root && name) {
             if (context.name === name) {
-                merge(content, fileExport.value);
+                assign(content, fileExport.value);
             } else if (!context.name) {
                 content[name] = content[name] || {};
-                merge(content[name], fileExport.value);
+                assign(content[name], fileExport.value);
             }
         }
 
         if (root && !name) {
             if (context.name) {
                 if (isObject(fileExport.value[context.name])) {
-                    merge(content, fileExport.value[context.name]);
+                    assign(content, fileExport.value[context.name]);
                 }
             } else {
-                merge(content, fileExport.value);
+                assign(content, fileExport.value);
             }
         }
     }

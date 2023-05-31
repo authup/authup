@@ -21,7 +21,7 @@ export async function setupConfig(
     const envConfig = await readConfigFromEnv();
 
     const config = useConfig();
-    const rawInput = merge({}, input || {}, envConfig, fileConfig);
+    const rawInput = merge(input || {}, envConfig, fileConfig);
     config.setRaw(rawInput);
 
     if (config.has('redis')) {
