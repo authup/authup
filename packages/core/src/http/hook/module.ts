@@ -16,7 +16,7 @@ import {
 import { APIClient } from '../api-client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import type { TokenHookOptions } from './type';
+import type { ClientResponseErrorTokenHookOptions } from './type';
 import { getRequestRetryState, isAPIClientTokenExpiredError } from './utils';
 
 const hookSymbol = Symbol.for('ClientResponseErrorTokenHook');
@@ -28,7 +28,7 @@ export class ClientResponseErrorTokenHook {
 
     protected creatorClient : APIClient;
 
-    protected options : TokenHookOptions;
+    protected options : ClientResponseErrorTokenHookOptions;
 
     protected hookId?: number;
 
@@ -36,7 +36,7 @@ export class ClientResponseErrorTokenHook {
 
     protected createPromise?: Promise<TokenGrantResponse>;
 
-    constructor(client: Client, options: TokenHookOptions) {
+    constructor(client: Client, options: ClientResponseErrorTokenHookOptions) {
         this.client = client;
 
         options.timer ??= true;
@@ -212,7 +212,7 @@ export function unmountClientResponseErrorTokenHook(client: Client) {
 
 export function mountClientResponseErrorTokenHook(
     client: Client,
-    options: TokenHookOptions,
+    options: ClientResponseErrorTokenHookOptions,
 ) : ClientResponseErrorTokenHook {
     if (isClientResponseErrorTokenHook(client[hookSymbol])) {
         return client[hookSymbol];

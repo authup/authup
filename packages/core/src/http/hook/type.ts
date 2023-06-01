@@ -9,7 +9,7 @@ import type {
     TokenCreator, TokenCreatorCreatedHook, TokenCreatorFailedHook, TokenCreatorOptions,
 } from '../token-creator';
 
-export type TokenHookOptions = {
+export type ClientResponseErrorTokenHookOptions = {
     /**
      * The URL of the api service.
      *
