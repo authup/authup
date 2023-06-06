@@ -62,7 +62,7 @@
         "cors": "^2.8.5",
         "dotenv": "^16.1.4",
         "express-validator": "^7.0.1",
-        "hapic": "^2.0.0-alpha.10",
+        "hapic": "^2.0.0-alpha.11",
         "locter": "^1.1.2",
         "morgan": "^1.10.0",
         "mysql": "^2.18.1",
