@@ -2,10 +2,10 @@
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core';
-import { isGlobMatch } from '@authup/core';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { useToast } from 'bootstrap-vue-next';
+import { isGlobMatch } from '../utils';
 import { definePageMeta } from '#imports';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
