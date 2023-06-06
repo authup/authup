@@ -62,13 +62,13 @@
     },
     "devDependencies": {
         "@hapic/oauth2": "^2.0.0-alpha.11",
-        "@hapic/vault": "^2.0.0-alpha.10",
+        "@hapic/vault": "^2.0.0-alpha.11",
         "hapic": "^2.0.0-alpha.11",
         "rapiq": "^0.8.1"
     },
     "peerDependencies": {
         "@hapic/oauth2": "^2.0.0-alpha.11",
-        "@hapic/vault": "^2.0.0-alpha.10",
+        "@hapic/vault": "^2.0.0-alpha.11",
         "hapic": "^2.0.0-alpha.11",
         "rapiq": ">=0.8.0 <1.0.0"
     },
