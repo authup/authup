@@ -17,7 +17,7 @@ import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -71,13 +71,13 @@ export async function runScopeValidation(
 
     if (isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
     } else if (
         operation === RequestHandlerOperation.CREATE &&
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
-        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
     }
 
     // ----------------------------------------------

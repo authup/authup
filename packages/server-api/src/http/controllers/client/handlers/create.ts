@@ -15,7 +15,7 @@ import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { buildHTTPValidationErrorMessage } from '../../../validation';
+import { buildRequestValidationErrorMessage } from '../../../validation';
 import { runOauth2ClientValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -29,7 +29,7 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
 
     if (!isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'))) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
     }
 

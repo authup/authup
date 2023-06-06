@@ -15,7 +15,7 @@ import { useRequestEnv } from '../../../utils/env';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
@@ -60,7 +60,7 @@ export async function runRobotRoleValidation(
         result.relation.role.realm_id
     ) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
 
         result.data.role_realm_id = result.relation.role.realm_id;
@@ -73,7 +73,7 @@ export async function runRobotRoleValidation(
 
     if (result.relation.robot) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('robot_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('robot_id'));
         }
 
         result.data.robot_realm_id = result.relation.robot.realm_id;

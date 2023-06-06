@@ -5,10 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-.list,
-.c-list {
+.list {
     display: flex;
     flex-direction: column;
+}
+
+.list .list-items {
+    padding: 0;
+    margin: 0;
 }
 
 .list-header,
@@ -16,8 +20,7 @@
     margin-bottom: 0.5rem;
 }
 
-.list .list-item,
-.c-list .c-list-item {
+.list .list-item {
     background-color: #ececec;
     border: 1px solid #dedede;
 

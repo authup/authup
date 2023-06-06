@@ -14,7 +14,7 @@ import { BadRequestError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import type { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
 
-export function buildHTTPValidationErrorMessage<
+export function buildRequestValidationErrorMessage<
     T extends Record<string, any> = Record<string, any>,
     >(name: keyof T | (keyof T)[]) {
     const names = Array.isArray(name) ? name : [name];
@@ -60,7 +60,7 @@ export async function extendExpressValidationResultWithRelation<
             },
         });
         if (!entity) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage(keys.id));
+            throw new BadRequestError(buildRequestValidationErrorMessage(keys.id));
         }
 
         result.relation[keys.entity as keyof ExpressValidationResult<R>['relation']] = entity;

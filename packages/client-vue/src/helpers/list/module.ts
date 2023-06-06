@@ -11,13 +11,13 @@ import type {
 import {
     buildList,
 } from '@vue-layout/list-controls';
+import type { BuildInput } from 'rapiq';
+import type { FiltersBuildInput } from 'rapiq/dist/parameter';
 import type { Ref, VNodeArrayChildren } from 'vue';
 import {
-    onMounted,
-    ref, watch,
+    ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
-import { wrapFnWithBusyState } from '../../core';
 import { buildDomainListFooterPagination } from '../list-footer';
 import type { DomainListHeaderSearchOptions } from '../list-header';
 import { buildDomainListHeader } from '../list-header';
@@ -40,29 +40,84 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         offset: 0,
         total: 0,
     });
-    const load = wrapFnWithBusyState(busy, async (targetMeta?: Partial<ListLoadMeta>) => {
+
+    async function load(targetMeta?: Partial<ListLoadMeta>) {
+        if (busy.value) return;
+
+        busy.value = true;
+
         if (typeof targetMeta === 'undefined') {
             targetMeta = {};
         }
-        const response = await context.load(merge(
-            {
-                page: {
-                    limit: targetMeta.limit ?? meta.value.limit,
-                    offset: targetMeta.offset ?? meta.value.offset,
-                },
-                filter: {
-                    [context.filterKey || 'name']: q.value.length > 0 ? `~${q.value}` : q.value,
-                },
-            },
-            context.props.query.value,
-        ));
 
-        data.value = response.data;
+        try {
+            let filter : FiltersBuildInput<T>;
+            if (context.queryFilter) {
+                if (typeof context.queryFilter === 'function') {
+                    filter = context.queryFilter(q.value);
+                } else {
+                    filter = context.queryFilter;
+                }
+            } else {
+                filter = {
+                    ['name' as keyof T]: q.value.length > 0 ? `~${q.value}` : q.value,
+                } as FiltersBuildInput<T>;
+            }
 
-        meta.value.offset = response.meta.offset;
-        meta.value.total = response.meta.total;
-        meta.value.limit = response.meta.limit;
-    });
+            let query : BuildInput<T> | undefined;
+            if (context.query) {
+                if (typeof context.query === 'function') {
+                    query = context.query();
+                } else {
+                    query = context.query;
+                }
+            }
+
+            if (
+                context.props.query &&
+                context.props.query.value
+            ) {
+                if (query) {
+                    query = merge({}, context.props.query.value, query);
+                } else {
+                    query = context.props.query.value;
+                }
+            }
+
+            const response = await context.load(merge(
+                {
+                    page: {
+                        limit: targetMeta.limit ?? meta.value.limit,
+                        offset: targetMeta.offset ?? meta.value.offset,
+                    },
+                    filter,
+                },
+                query || {},
+            ));
+
+            if (context.loadAll) {
+                data.value.push(...response.data);
+            } else {
+                data.value = response.data;
+            }
+
+            meta.value.offset = response.meta.offset;
+            meta.value.total = response.meta.total;
+            meta.value.limit = response.meta.limit;
+        } finally {
+            busy.value = false;
+        }
+
+        if (
+            context.loadAll &&
+            meta.value.total > data.value.length
+        ) {
+            await load({
+                ...meta.value,
+                offset: meta.value.offset + meta.value.limit,
+            });
+        }
+    }
 
     watch(q, async (val, oldVal) => {
         if (val === oldVal) return;
@@ -74,8 +129,8 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         await load({ offset: 0 });
     });
 
-    const handleCreated = buildListCreatedHandler(data);
-    const handleDeleted = buildListDeletedHandler(data);
+    const handleCreated = buildListCreatedHandler(data, meta);
+    const handleDeleted = buildListDeletedHandler(data, meta);
     const handleUpdated = buildListUpdatedHandler(data);
 
     const options = mergeDomainListOptions(context.props, context.defaults);
@@ -157,19 +212,28 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         handleDeleted,
         handleUpdated,
         load,
+        data,
     });
 
-    if (context.props.loadOnSetup.value) {
-        onMounted(() => {
-            Promise.resolve()
-                .then(() => load());
-        });
+    let loadOnSetup = true;
+    const propLoadOnSetup = unref(context.props.loadOnSetup);
+    if (typeof propLoadOnSetup === 'boolean') {
+        loadOnSetup = propLoadOnSetup;
+    }
+
+    if (loadOnSetup) {
+        Promise.resolve()
+            .then(() => load());
     }
 
     return {
         data,
         busy,
         meta,
+
+        handleCreated,
+        handleUpdated,
+        handleDeleted,
 
         build,
         load,

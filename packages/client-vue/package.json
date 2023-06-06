@@ -54,9 +54,9 @@
     "devDependencies": {
         "@authup/core": "^0.37.0",
         "@types/node": "^20.2.5",
-        "@vue-layout/form-controls": "^2.4.1",
-        "@vue-layout/list-controls": "^2.3.0",
-        "@vue-layout/pagination": "^2.3.0",
+        "@vue-layout/form-controls": "^2.8.3",
+        "@vue-layout/list-controls": "^2.8.3",
+        "@vue-layout/pagination": "^2.8.3",
         "@vuelidate/core": "^2.0.2",
         "@vuelidate/validators": "^2.0.2",
         "cross-env": "^7.0.3",
@@ -68,10 +68,10 @@
         "vue-tsc": "^1.6.4"
     },
     "peerDependencies": {
-        "@authup/core": ">=0.33.0 <1.0.0",
-        "@vue-layout/form-controls": "^2.4.1",
-        "@vue-layout/list-controls": "^2.3.0",
-        "@vue-layout/pagination": "^2.3.0",
+        "@authup/core": ">=0.37.0 <1.0.0",
+        "@vue-layout/form-controls": "^2.8.1",
+        "@vue-layout/list-controls": "^2.8.1",
+        "@vue-layout/pagination": "^2.8.1",
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "ilingo": "^3.x",
