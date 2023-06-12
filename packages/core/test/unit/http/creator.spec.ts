@@ -24,8 +24,8 @@ jest.spyOn(TokenAPI.prototype, 'createWithPasswordGrant')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
 jest.spyOn(KeyValueV1API.prototype, 'getOne')
-    .mockImplementation((context) => {
-        if (context.path === 'SYSTEM') {
+    .mockImplementation((_mount, path) => {
+        if (path === 'SYSTEM') {
             return Promise.resolve({
                 data: {
                     id: 'foo',

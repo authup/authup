@@ -32,12 +32,13 @@ export function createTokenCreatorWithRobotInVault(
             await apiClient.robot.integrity(robotName);
         }
 
-        const response = await client.keyValueV1.getOne<Partial<Robot>>({
-            mount: 'robots',
-            path: robotName,
-        });
+        const response = await client.keyValueV1.getOne<Partial<Robot>>(
+            'robots',
+            robotName,
+        );
 
         if (
+            !isObject(response) ||
             !isObject(response.data) ||
             typeof response.data.id !== 'string' ||
             typeof response.data.secret !== 'string'
