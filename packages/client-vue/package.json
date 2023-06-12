@@ -53,7 +53,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
         "@authup/core": "^0.37.0",
-        "@types/node": "^20.2.5",
+        "@types/node": "^20.3.0",
         "@vue-layout/form-controls": "^2.8.3",
         "@vue-layout/list-controls": "^2.8.3",
         "@vue-layout/pagination": "^2.8.3",
