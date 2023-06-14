@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* bump hapic to v2.x ([2dd66ed](https://github.com/authup/authup/commit/2dd66ed87e89338be682a93bec4fe12ca86be712))
+* bump vue-layout dependencies + rename validation create fn ([ea0c679](https://github.com/authup/authup/commit/ea0c679207cd0d3cd6503d80779a825fdb6091d5))
+* **deps:** bump dotenv from 16.1.1 to 16.1.3 ([#1151](https://github.com/authup/authup/issues/1151)) ([a96cb80](https://github.com/authup/authup/commit/a96cb80a81abd3caf3a67131afcdabc45419dd36))
+* **deps:** bump dotenv from 16.1.3 to 16.1.4 ([#1157](https://github.com/authup/authup/issues/1157)) ([1a91140](https://github.com/authup/authup/commit/1a91140f1779555d53d74b2a412fef9e9ade9179))
+
+
+
+
+
 # [0.37.0](https://github.com/authup/authup/compare/v0.36.0...v0.37.0) (2023-05-31)
 
 

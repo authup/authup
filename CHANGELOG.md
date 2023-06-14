@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* bump hapic to v2.x ([2dd66ed](https://github.com/authup/authup/commit/2dd66ed87e89338be682a93bec4fe12ca86be712))
+* bump minimatch to v9.x ([0c63d48](https://github.com/authup/authup/commit/0c63d481d20dbae273130595bde4453b476eca37))
+* bump vue-layout dependencies + rename validation create fn ([ea0c679](https://github.com/authup/authup/commit/ea0c679207cd0d3cd6503d80779a825fdb6091d5))
+* **deps:** bump @hapic/oauth2 from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1162](https://github.com/authup/authup/issues/1162)) ([f54db63](https://github.com/authup/authup/commit/f54db63b1a4bf31ea7c7931ed96158ec62e5d2f8))
+* **deps:** bump @hapic/vault from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1166](https://github.com/authup/authup/issues/1166)) ([d17254d](https://github.com/authup/authup/commit/d17254deacdce5523993df25296e2dcfcc0ede03))
+* **deps:** bump dotenv from 16.1.1 to 16.1.3 ([#1151](https://github.com/authup/authup/issues/1151)) ([a96cb80](https://github.com/authup/authup/commit/a96cb80a81abd3caf3a67131afcdabc45419dd36))
+* **deps:** bump dotenv from 16.1.3 to 16.1.4 ([#1157](https://github.com/authup/authup/issues/1157)) ([1a91140](https://github.com/authup/authup/commit/1a91140f1779555d53d74b2a412fef9e9ade9179))
+* **deps:** bump hapic from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1164](https://github.com/authup/authup/issues/1164)) ([5d5dbe6](https://github.com/authup/authup/commit/5d5dbe6627141563d9a8c674f88313ce0e81dce4))
+* rename token-hook-options to client-response-error-token-hook-options ([103f707](https://github.com/authup/authup/commit/103f707002b38f39c05fcbcef80167cd2945da37))
+
+
+
+
+
 # [0.37.0](https://github.com/authup/authup/compare/v0.36.0...v0.37.0) (2023-05-31)
 
 
