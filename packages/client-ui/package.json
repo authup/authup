@@ -34,7 +34,7 @@
         "@vue-layout/form-controls": "^2.8.3",
         "@vue-layout/list-controls": "^2.8.3",
         "@vue-layout/navigation": "^2.8.3",
-        "@vue-layout/pagination": "^2.8.3",
+        "@vue-layout/pagination": "^3.0.2",
         "@vue-layout/preset-bootstrap-v5": "^2.6.0",
         "@vue-layout/preset-font-awesome": "^2.0.0",
         "@vuelidate/core": "^2.0.2",
