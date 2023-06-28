@@ -55,7 +55,7 @@
         "@authup/core": "^0.37.1",
         "@types/node": "^20.3.1",
         "@vue-layout/form-controls": "^2.8.3",
-        "@vue-layout/list-controls": "^2.8.3",
+        "@vue-layout/list-controls": "^3.3.1",
         "@vue-layout/pagination": "^2.8.3",
         "@vuelidate/core": "^2.0.2",
         "@vuelidate/validators": "^2.0.2",
