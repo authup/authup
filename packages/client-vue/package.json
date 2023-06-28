@@ -54,7 +54,7 @@
     "devDependencies": {
         "@authup/core": "^0.37.1",
         "@types/node": "^20.3.1",
-        "@vue-layout/form-controls": "^2.8.3",
+        "@vue-layout/form-controls": "^3.3.0",
         "@vue-layout/list-controls": "^2.8.3",
         "@vue-layout/pagination": "^2.8.3",
         "@vuelidate/core": "^2.0.2",
