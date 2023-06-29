@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump consola from 3.1.0 to 3.2.2 ([#1214](https://github.com/authup/authup/issues/1214)) ([0ff89ef](https://github.com/authup/authup/commit/0ff89ef4bcf44973131880b8b987be710845686f))
+* extended status endpoint information ([b889f68](https://github.com/authup/authup/commit/b889f688d8d9a92c950c8b167bc752ea7c807d37))
+
+
+
+
+
 ## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
 
 **Note:** Version bump only for package authup

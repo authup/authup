@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump consola from 3.1.0 to 3.2.2 ([#1214](https://github.com/authup/authup/issues/1214)) ([0ff89ef](https://github.com/authup/authup/commit/0ff89ef4bcf44973131880b8b987be710845686f))
+* **deps:** bump dotenv from 16.1.4 to 16.3.1 ([#1185](https://github.com/authup/authup/issues/1185)) ([9e79d23](https://github.com/authup/authup/commit/9e79d23c9205e9194d779fecf6b220de79d629af))
+* **deps:** bump pg from 8.11.0 to 8.11.1 ([#1218](https://github.com/authup/authup/issues/1218)) ([eaec72b](https://github.com/authup/authup/commit/eaec72b4c859b17d62b4965c8aed484dd2272785))
+* **deps:** bump typeorm from 0.3.16 to 0.3.17 ([#1188](https://github.com/authup/authup/issues/1188)) ([e645a97](https://github.com/authup/authup/commit/e645a97ec98466316ae20f873697653ab43a98ae))
+* extended status endpoint information ([b889f68](https://github.com/authup/authup/commit/b889f688d8d9a92c950c8b167bc752ea7c807d37))
+
+
+### Features
+
+* enhanced and unified slot- & prop-typing and capabilities ([6d4caa6](https://github.com/authup/authup/commit/6d4caa6202349e7ea0f431da56a7e6881b49f41c))
+
+
+
+
+
 ## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
 
 

@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-vue",
-    "version": "0.37.1",
+    "version": "0.38.0",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/core": "^0.37.1",
+        "@authup/core": "^0.38.0",
         "@types/node": "^20.3.2",
         "@vue-layout/form-controls": "^3.3.0",
         "@vue-layout/list-controls": "^3.3.0",
