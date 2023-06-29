@@ -58,7 +58,7 @@
         "@routup/swagger": "^1.0.1",
         "better-sqlite3": "^8.4.0",
         "change-case": "^4.1.2",
-        "continu": "^1.3.1",
+        "continu": "^1.3.2",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "express-validator": "^7.0.1",

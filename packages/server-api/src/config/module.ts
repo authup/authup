@@ -71,6 +71,16 @@ export function createConfig() : Config {
                 type: 'better-sqlite3',
                 database: path.join(context.get('writableDirectoryPath'), 'db.sql'),
             }),
+            tokenMaxAgeRefreshToken: (context) => {
+                if (
+                    !context.has('tokenMaxAgeRefreshToken') &&
+                    context.has('tokenMaxAgeAccessToken')
+                ) {
+                    return context.get('tokenMaxAgeAccessToken') * 2;
+                }
+
+                return context.getDefault('tokenMaxAgeRefreshToken');
+            },
             publicUrl: (context) => {
                 if (
                     !context.has('publicUrl') &&
