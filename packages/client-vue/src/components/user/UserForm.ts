@@ -27,7 +27,7 @@ import type { Realm, User } from '@authup/core';
 import {
     createSubmitHandler,
     initFormAttributesFromSource,
-} from '../../helpers';
+} from '../../core/render';
 import { useAPIClient } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';

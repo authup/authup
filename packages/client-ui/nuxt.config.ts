@@ -38,8 +38,8 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: {
-            apiUrl: 'http://localhost:3001',
-            publicUrl: 'http://localhost:3000',
+            apiUrl: process.env.API_URL || 'http://localhost:3001',
+            publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
         },
     },
     modules: [

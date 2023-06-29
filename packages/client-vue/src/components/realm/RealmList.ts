@@ -5,51 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core';
-import type { BuildInput } from 'rapiq';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
+import type { DomainListSlotsType } from '../../core/render';
+import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const RealmList = defineComponent({
     name: 'RealmList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Realm>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Realm) => true,
-        updated: (item: Realm) => true,
-    },
+    props: defineDomainListProps<Realm>(),
+    slots: Object as SlotsType<DomainListSlotsType<Realm>>,
+    emits: defineDomainListEvents<Realm>(),
     setup(props, ctx) {
         const { build } = createDomainListBuilder<Realm>({
-            props: toRefs(props),
+            props,
             setup: ctx,
             load: (buildInput) => useAPIClient().realm.getMany(buildInput),
             defaults: {
@@ -62,7 +32,7 @@ export const RealmList = defineComponent({
                 },
 
                 noMore: {
-                    textContent: 'No more realms available...',
+                    content: 'No more realms available...',
                 },
             },
         });

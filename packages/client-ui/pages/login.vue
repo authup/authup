@@ -183,7 +183,7 @@ export default defineNuxtComponent({
                         <template #header>
                             <h6>IdentityProvider</h6>
                         </template>
-                        <template #items="props">
+                        <template #body="props">
                             <div class="d-flex flex-row">
                                 <div
                                     v-for="(item, key) in props.data"
@@ -202,7 +202,7 @@ export default defineNuxtComponent({
                 </div>
                 <div class="col-4">
                     <RealmList>
-                        <template #item-actions="props">
+                        <template #itemActions="props">
                             <RealmSelectAction
                                 v-model="form.realm_id"
                                 :list-ref="identityProviderRef"

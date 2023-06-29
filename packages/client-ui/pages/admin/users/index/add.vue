@@ -43,7 +43,7 @@ export default defineNuxtComponent({
 </script>
 <template>
     <UserForm
-        :realmid="realmManagementId"
+        :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"
     />

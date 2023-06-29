@@ -5,51 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
-import type { BuildInput } from 'rapiq';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
+import type { DomainListSlotsType } from '../../core/render';
+import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const ClientScopeList = defineComponent({
     name: 'ClientScopeList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<ClientScope>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: ClientScope) => true,
-        updated: (item: ClientScope) => true,
-    },
+    props: defineDomainListProps<ClientScope>(),
+    slots: Object as SlotsType<DomainListSlotsType<ClientScope>>,
+    emits: defineDomainListEvents<ClientScope>(),
     setup(props, ctx) {
         const { build } = createDomainListBuilder<ClientScope>({
-            props: toRefs(props),
+            props,
             setup: ctx,
             load: (buildInput) => useAPIClient().clientScope.getMany(buildInput),
             defaults: {
@@ -62,7 +32,7 @@ export const ClientScopeList = defineComponent({
                 },
 
                 noMore: {
-                    textContent: 'No more client-scopes available...',
+                    content: 'No more client-scopes available...',
                 },
             },
         });

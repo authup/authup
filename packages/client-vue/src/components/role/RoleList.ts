@@ -5,51 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
-import type { BuildInput } from 'rapiq';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Role } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
+import type { DomainListSlotsType } from '../../core/render';
+import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const RoleList = defineComponent({
     name: 'RoleList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Role>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Role) => true,
-        updated: (item: Role) => true,
-    },
+    props: defineDomainListProps<Role>(),
+    slots: Object as SlotsType<DomainListSlotsType<Role>>,
+    emits: defineDomainListEvents<Role>(),
     setup(props, ctx) {
         const { build } = createDomainListBuilder<Role>({
-            props: toRefs(props),
+            props,
             setup: ctx,
             load: (buildInput) => useAPIClient().role.getMany(buildInput),
             defaults: {
@@ -62,7 +32,7 @@ export const RoleList = defineComponent({
                 },
 
                 noMore: {
-                    textContent: 'No more roles available...',
+                    content: 'No more roles available...',
                 },
             },
         });

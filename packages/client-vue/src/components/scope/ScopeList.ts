@@ -5,51 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
-import type { BuildInput } from 'rapiq';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
+import type { DomainListSlotsType } from '../../core/render';
+import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const ScopeList = defineComponent({
     name: 'ScopeList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Scope>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Scope) => true,
-        updated: (item: Scope) => true,
-    },
+    props: defineDomainListProps<Scope>(),
+    slots: Object as SlotsType<DomainListSlotsType<Scope>>,
+    emits: defineDomainListEvents<Scope>(),
     setup(props, ctx) {
         const { build } = createDomainListBuilder<Scope>({
-            props: toRefs(props),
+            props,
             setup: ctx,
             load: (buildInput) => useAPIClient().scope.getMany(buildInput),
             defaults: {
@@ -62,7 +32,7 @@ export const ScopeList = defineComponent({
                 },
 
                 noMore: {
-                    textContent: 'No more scopes available...',
+                    content: 'No more scopes available...',
                 },
             },
         });

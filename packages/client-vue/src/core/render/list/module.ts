@@ -6,13 +6,12 @@
  */
 
 import type {
-    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput, ListLoadMeta,
+    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput, ListMeta,
 } from '@vue-layout/list-controls';
 import {
     buildList,
 } from '@vue-layout/list-controls';
-import type { BuildInput } from 'rapiq';
-import type { FiltersBuildInput } from 'rapiq/dist/parameter';
+import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeArrayChildren } from 'vue';
 import {
     ref, unref, watch,
@@ -35,13 +34,13 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     const q = ref('');
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
-    const meta : Ref<ListLoadMeta> = ref({
+    const meta : Ref<ListMeta> = ref({
         limit: 10,
         offset: 0,
         total: 0,
     });
 
-    async function load(targetMeta?: Partial<ListLoadMeta>) {
+    async function load(targetMeta?: Partial<ListMeta>) {
         if (busy.value) return;
 
         busy.value = true;
@@ -73,14 +72,11 @@ export function createDomainListBuilder<T extends Record<string, any>>(
                 }
             }
 
-            if (
-                context.props.query &&
-                context.props.query.value
-            ) {
+            if (context.props.query) {
                 if (query) {
-                    query = merge({}, context.props.query.value, query);
+                    query = merge({}, context.props.query, query);
                 } else {
-                    query = context.props.query.value;
+                    query = context.props.query;
                 }
             }
 
@@ -136,41 +132,62 @@ export function createDomainListBuilder<T extends Record<string, any>>(
     const options = mergeDomainListOptions(context.props, context.defaults);
 
     function build() : VNodeArrayChildren {
-        let header : ListHeaderBuildOptionsInput | undefined;
-        if (options.headerTitle || options.headerSearch) {
-            let search : DomainListHeaderSearchOptions | undefined;
-            if (options.headerSearch) {
-                search = {
-                    load(text) {
-                        q.value = text;
-                    },
-                    busy,
-                };
-                if (typeof options.headerSearch !== 'boolean') {
-                    search = {
-                        ...search,
-                        ...options.headerSearch,
-                    };
+        let header : ListHeaderBuildOptionsInput<T> | undefined;
+        if (options.header) {
+            header = typeof options.header === 'boolean' ? {} : options.header;
+
+            if (!header.content) {
+                if (options.headerTitle || options.headerSearch) {
+                    let search: DomainListHeaderSearchOptions | undefined;
+                    if (options.headerSearch) {
+                        search = {
+                            load(text) {
+                                q.value = text;
+                            },
+                            busy,
+                        };
+                        if (typeof options.headerSearch !== 'boolean') {
+                            search = {
+                                ...search,
+                                ...options.headerSearch,
+                            };
+                        }
+                    }
+
+                    header.content = buildDomainListHeader({
+                        title: options.headerTitle,
+                        search,
+                    });
                 }
             }
-
-            header = {
-                content: buildDomainListHeader({
-                    title: options.headerTitle,
-                    search,
-                }),
-            };
         }
 
-        let footer : ListFooterBuildOptionsInput | undefined;
-        if (options.footerPagination) {
-            footer = {
-                content: buildDomainListFooterPagination({
-                    load,
-                    busy,
-                    meta,
-                }),
-            };
+        let footer : ListFooterBuildOptionsInput<T> | undefined;
+        if (options.footer) {
+            footer = typeof options.footer === 'boolean' ? {} : options.footer;
+
+            if (!footer.content) {
+                if (options.footerPagination) {
+                    footer.content = buildDomainListFooterPagination({
+                        load,
+                        busy,
+                        meta,
+                    });
+                }
+            }
+        }
+
+        if (options.item) {
+            if (
+                typeof options.body === 'undefined' ||
+                typeof options.body === 'boolean'
+            ) {
+                options.body = {
+                    item: options.item,
+                };
+            } else {
+                options.body.item = options.item;
+            }
         }
 
         return [
@@ -178,29 +195,21 @@ export function createDomainListBuilder<T extends Record<string, any>>(
                 footer,
                 header,
                 noMore: options.noMore,
-                items: options.items,
+                body: options.body,
 
                 load,
-                busy,
-                data,
-                total: meta.value.total,
+                busy: busy.value,
+                data: data.value,
+                meta: meta.value,
                 onDeleted(value: T) {
                     if (context.setup.emit) {
                         context.setup.emit('deleted', value);
                     }
-
-                    if (meta.value.total) {
-                        meta.value.total--;
-                    }
-
-                    handleDeleted(value);
                 },
-                onUpdated(value) {
+                onUpdated(value: T) {
                     if (context.setup.emit) {
                         context.setup.emit('updated', value);
                     }
-
-                    handleUpdated(value);
                 },
                 slotItems: context.setup.slots || {},
             }),

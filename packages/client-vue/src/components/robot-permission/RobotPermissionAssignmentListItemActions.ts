@@ -8,7 +8,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, h, ref } from 'vue';
 import type { RobotPermission } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../helpers';
+import { renderListItemAssignmentButton } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const RobotPermissionAssignmentListItemActions = defineComponent({

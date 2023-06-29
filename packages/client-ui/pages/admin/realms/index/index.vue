@@ -65,7 +65,7 @@ export default defineNuxtComponent({
         :header-title="{ icon: 'fa-solid fa-list pe-1', content: 'Overview' }"
         @deleted="handleDeleted"
     >
-        <template #items="props">
+        <template #body="props">
             <BTable
                 :items="props.data"
                 :fields="fields"

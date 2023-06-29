@@ -68,7 +68,7 @@ export default defineNuxtComponent({
         :query="query"
         @deleted="handleDeleted"
     >
-        <template #items="props">
+        <template #body="props">
             <BTable
                 :items="props.data"
                 :fields="fields"

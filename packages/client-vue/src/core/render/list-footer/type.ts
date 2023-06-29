@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListLoadFn, ListLoadMeta } from '@vue-layout/list-controls';
+import type { ListLoadFn, ListMeta } from '@vue-layout/list-controls';
 import type { Ref } from 'vue';
 
 export type DomainListFooterPaginationOptions = {
     busy: Ref<boolean> | boolean,
-    meta: Ref<ListLoadMeta>,
+    meta: Ref<ListMeta>,
     load: ListLoadFn
 };
 

@@ -4,51 +4,21 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core';
-import type { BuildInput } from 'rapiq';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
+import type { DomainListSlotsType } from '../../core/render';
+import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
 import { useAPIClient } from '../../core';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Permission>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Permission) => true,
-        updated: (item: Permission) => true,
-    },
+    props: defineDomainListProps<Permission>(),
+    slots: Object as SlotsType<DomainListSlotsType<Permission>>,
+    emits: defineDomainListEvents<Permission>(),
     setup(props, ctx) {
         const { build } = createDomainListBuilder<Permission>({
-            props: toRefs(props),
+            props,
             setup: ctx,
             load: (buildInput) => useAPIClient().permission.getMany(buildInput),
             defaults: {
@@ -61,7 +31,7 @@ export const PermissionList = defineComponent({
                 },
 
                 noMore: {
-                    textContent: 'No more permissions available...',
+                    content: 'No more permissions available...',
                 },
             },
         });

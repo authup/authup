@@ -7,12 +7,12 @@
 
 import type { Ref } from 'vue';
 
-type Fn = () => Promise<void>;
-type OutputFn<T extends Fn> = (...args: Parameters<T>) => ReturnType<T> | Promise<void>;
-export function wrapFnWithBusyState<T extends Fn>(
+type Fn = (...args: any[]) => Promise<void>;
+type OutputFn = () => Promise<void>;
+export function wrapFnWithBusyState(
     busy: Ref<boolean>,
-    fn: T,
-): OutputFn<T> {
+    fn: Fn,
+): OutputFn {
     return async () => {
         if (busy.value) {
             return Promise.resolve();

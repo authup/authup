@@ -8,7 +8,7 @@
 import type { PaginationMeta } from '@vue-layout/pagination';
 import { buildPagination } from '@vue-layout/pagination';
 import type { VNodeArrayChildren } from 'vue';
-import { h } from 'vue';
+import { h, unref } from 'vue';
 import type { DomainListFooterOptions, DomainListFooterPaginationOptions } from './type';
 
 export function buildDomainListFooterPagination<T>(
@@ -19,7 +19,7 @@ export function buildDomainListFooterPagination<T>(
         total: ctx.meta?.value.total || 0,
         limit: ctx.meta?.value.limit || 0,
         offset: ctx.meta?.value.offset || 0,
-        busy: ctx.busy,
+        busy: unref(ctx.busy),
     });
 }
 

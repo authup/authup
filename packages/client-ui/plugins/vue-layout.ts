@@ -29,6 +29,18 @@ export default defineNuxtPlugin((ctx) => {
             bootstrap,
             fontAwesome,
         },
+        defaults: {
+            listItems: {
+                class: 'list',
+            },
+            listItem: {
+                class: 'list-item',
+            },
+            pagination: {
+                class: 'pagination',
+                itemClass: 'page-item',
+            },
+        },
     };
 
     ctx.vueApp.use(installCountdown, baseOptions);

@@ -31,7 +31,7 @@ import {
 import {
     createSubmitHandler,
     initFormAttributesFromSource,
-} from '../../helpers';
+} from '../../core/render';
 import {
     alphaNumHyphenUnderscore, useAPIClient,
 } from '../../core';
@@ -348,7 +348,7 @@ export const OAuth2ProviderForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

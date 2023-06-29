@@ -14,7 +14,7 @@ import {
 import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
 import { useAPIClient } from '../../core';
-import { initFormAttributesFromSource } from '../../helpers';
+import { initFormAttributesFromSource } from '../../core/render';
 import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({

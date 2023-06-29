@@ -35,7 +35,7 @@ import {
 import {
     createSubmitHandler,
     initFormAttributesFromSource,
-} from '../../helpers';
+} from '../../core/render';
 import {
     alphaWithUpperNumHyphenUnderScore,
     useAPIClient,
@@ -164,7 +164,7 @@ export const ScopeForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

@@ -80,6 +80,7 @@ export default defineNuxtComponent({
             :header-title="false"
             :header-search="false"
             :query="query"
+            :item="{class: ''}"
         >
             <template #item="props">
                 <FormInputCheckbox
