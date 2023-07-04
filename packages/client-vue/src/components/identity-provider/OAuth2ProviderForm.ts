@@ -21,19 +21,21 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
-import { IdentityProviderProtocol, createNanoID } from '@authup/core';
+import type { IdentityProvider } from '@authup/core';
+import {
+    DomainType, IdentityProviderProtocol, createNanoID,
+} from '@authup/core';
 import {
     buildFormInput,
     buildFormInputCheckbox,
     buildFormSubmit,
 } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    alphaNumHyphenUnderscore,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../core/render';
-import {
-    alphaNumHyphenUnderscore, useAPIClient,
+    useAPIClient,
 } from '../../core';
 import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -124,17 +126,24 @@ export const OAuth2ProviderForm = defineComponent({
             },
         }, form);
 
+        const manager = createEntityManager<IdentityProvider>({
+            type: DomainType.IDENTITY_PROVIDER,
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const authorizeUri = computed<string>(() => {
-            if (!props.entity) {
+            if (!manager.entity.value) {
                 return '';
             }
 
-            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, props.entity.id);
+            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function generateId() {
             const isSame: boolean = form.slug === form.name ||
@@ -148,7 +157,9 @@ export const OAuth2ProviderForm = defineComponent({
 
         function initForm() {
             if (props.realmId) form.realm_id = props.realmId;
-            initFormAttributesFromSource(form, props.entity);
+
+            initFormAttributesFromSource(form, manager.entity.value);
+
             if (isSlugEmpty.value) {
                 generateId();
             }
@@ -156,20 +167,21 @@ export const OAuth2ProviderForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<IdentityProvider>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().identityProvider.create(data),
-            update: async (id, data) => useAPIClient().identityProvider.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const enabled = buildFormInputCheckbox({
@@ -329,7 +341,7 @@ export const OAuth2ProviderForm = defineComponent({
 
             let roleList : VNodeArrayChildren = [];
 
-            if (props.entity) {
+            if (manager.entity.value) {
                 roleList = [h('div', [
                     h('h6', [
                         h('i', { class: 'fa fa-users' }),
@@ -337,7 +349,7 @@ export const OAuth2ProviderForm = defineComponent({
                         'Roles',
                     ]),
                     h(IdentityProviderRoleAssignmentList, {
-                        entityId: props.entity.id,
+                        entityId: manager.entity.value.id,
                     }),
                     h('hr'),
                 ])];

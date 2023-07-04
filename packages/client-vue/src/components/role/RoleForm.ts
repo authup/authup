@@ -5,21 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref, watch,
+    defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../core/render';
-import { useAPIClient } from '../../core';
+} from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RoleForm = defineComponent({
@@ -54,29 +55,36 @@ export const RoleForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+        const manager = createEntityManager<Role>({
+            type: DomainType.ROLE,
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<Role>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().role.create(data),
-            update: async (id, data) => useAPIClient().role.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const name = buildFormInput({

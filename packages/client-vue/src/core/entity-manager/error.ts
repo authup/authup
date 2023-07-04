@@ -5,5 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './is-editing';
-export * from './updated-at';
+export class EntityManagerError extends Error {
+    static unresolvable() {
+        return new this('Entity could not be resolved.');
+    }
+}

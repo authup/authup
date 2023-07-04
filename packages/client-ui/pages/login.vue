@@ -102,8 +102,7 @@ export default defineNuxtComponent({
                     query,
                 });
             } catch (e: any) {
-                if (isClientError(e)) {
-                    console.log(e);
+                if (isClientError(e) && toast) {
                     toast.warning({ body: e.message }, { pos: 'top-center' });
                 }
             }

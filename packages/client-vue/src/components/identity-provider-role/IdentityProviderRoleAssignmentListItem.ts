@@ -13,8 +13,7 @@ import {
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
-import { useAPIClient } from '../../core';
-import { initFormAttributesFromSource } from '../../core/render';
+import { initFormAttributesFromSource, useAPIClient } from '../../core';
 import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
@@ -133,14 +132,15 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                         item.value = data[0];
 
                         initFormAttributesFromSource(form, data[0]);
-                        if (!isExternalIDDefined.value) {
-                            form.external_id = props.role.name;
-                        }
                     } else {
                         item.value = null;
                     }
                 } catch (e) {
                     // ...
+                }
+
+                if (!isExternalIDDefined.value) {
+                    form.external_id = props.role.name;
                 }
 
                 busy.value = false;
@@ -199,6 +199,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                             'btn-primary': !item.value,
                             'btn-dark': !!item.value,
                         }],
+                        disabled: !isExternalIDDefined.value,
                         onClick($event: any) {
                             $event.preventDefault();
 

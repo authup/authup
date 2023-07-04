@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
-import { ClientList, EntityDelete } from '@authup/client-vue';
+import { ClientList, EntityDelete, UserEntity } from '@authup/client-vue';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../../../../store/auth';
@@ -14,6 +14,7 @@ export default defineNuxtComponent({
         BTable,
         EntityDelete,
         ClientList,
+        UserEntity,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -40,6 +41,9 @@ export default defineNuxtComponent({
         const fields = [
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
+            },
+            {
+                key: 'user_id', label: 'User', thClass: 'text-center', tdClass: 'text-center',
             },
             {
                 key: 'created_at', label: 'Created at', thClass: 'text-center', tdClass: 'text-center',
@@ -75,6 +79,16 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(user_id)="data">
+                    <UserEntity :entity-id="data.item.user_id">
+                        <template #default="user">
+                            {{ user.entity.name }}
+                        </template>
+                        <template #error>
+                            -
+                        </template>
+                    </UserEntity>
+                </template>
                 <template #cell(options)="data">
                     <NuxtLink
                         :to="'/admin/clients/'+ data.item.id"

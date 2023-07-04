@@ -84,7 +84,6 @@ export async function runUserValidation(
 
     await check('email')
         .exists()
-        .normalizeEmail()
         .isEmail()
         .optional({ nullable: true })
         .run(req);

@@ -30,7 +30,7 @@ export default defineNuxtPlugin((ctx) => {
             fontAwesome,
         },
         defaults: {
-            listItems: {
+            listBody: {
                 class: 'list',
             },
             listItem: {

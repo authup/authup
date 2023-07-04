@@ -63,9 +63,7 @@ export default defineNuxtComponent({
                     v-if="loggedIn"
                     class="font-weight-light d-flex flex-column ms-3 me-3 mb-1 mt-auto"
                 >
-                    <small
-                        class="text-muted"
-                    >
+                    <small>
                         <Countdown
                             :time="tokenExpiresIn"
                         >

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -19,7 +20,7 @@ import {
     watch,
 } from 'vue';
 import {
-    maxLength, minLength, required, url,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type {
     Realm, Scope,
@@ -32,13 +33,11 @@ import {
     SlotName,
     buildItemActionToggle,
 } from '@vue-layout/list-controls';
-import {
-    createSubmitHandler,
-    initFormAttributesFromSource,
-} from '../../core/render';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    useAPIClient,
+    createEntityManager,
+    initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
@@ -88,16 +87,23 @@ export const ScopeForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const manager = createEntityManager<Scope>({
+            type: DomainType.SCOPE,
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const isNameFixed = computed(() => {
             if (!!props.name && props.name.length > 0) {
                 return true;
             }
 
-            return !!(props.entity && props.entity.built_in);
+            return !!(manager.entity.value && manager.entity.value.built_in);
         });
         const isRealmLocked = computed(() => !!props.realmId);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function initForm() {
             if (props.name) {
@@ -108,27 +114,27 @@ export const ScopeForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
                 initForm();
             }
         });
 
         initForm();
 
-        const render = () => {
-            const submit = createSubmitHandler<Scope>({
-                props,
-                ctx,
-                form,
-                formIsValid: () => !$v.value.$invalid,
-                create: (data) => useAPIClient().scope.create(data),
-                update: (id, data) => useAPIClient().scope.update(id, data),
-            });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
 
+            await manager.createOrUpdate(form);
+        };
+
+        const render = () => {
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,

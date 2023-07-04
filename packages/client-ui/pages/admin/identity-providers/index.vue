@@ -19,6 +19,8 @@ export default defineNuxtComponent({
             ],
         });
 
+        const toast = useToast();
+
         const items = [
             {
                 name: 'overview',
@@ -33,13 +35,15 @@ export default defineNuxtComponent({
         ];
 
         const handleDeleted = (e: IdentityProvider) => {
-            const toast = useToast();
-            toast.success({ body: `The identity-provider ${e.name} was successfully deleted.` });
+            if (toast) {
+                toast.success({ body: `The identity-provider ${e.name} was successfully deleted.` });
+            }
         };
 
         const handleFailed = (e: Error) => {
-            const toast = useToast();
-            toast.warning({ body: e.message });
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

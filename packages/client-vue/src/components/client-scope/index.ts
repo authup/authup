@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export { ClientScopeEntity } from './ClientScopeEntity';
 export { ClientScopeList } from './ClientScopeList';
 export { ClientScopeAssignmentList } from './ClientScopeAssignmentList';
 export { ClientScopeAssignmentListItemActions } from './ClientScopeAssignmentListItemActions';

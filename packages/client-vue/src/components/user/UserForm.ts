@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import {
     buildFormInput,
     buildFormInputCheckbox,
@@ -24,11 +25,11 @@ import {
 } from 'vue';
 
 import type { Realm, User } from '@authup/core';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../core/render';
-import { useAPIClient } from '../../core';
+} from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
@@ -36,7 +37,7 @@ export const UserForm = defineComponent({
     name: 'UserForm',
     props: {
         entity: {
-            type: Object as PropType<Partial<User>>,
+            type: Object as PropType<User>,
             default: undefined,
         },
         realmId: {
@@ -53,7 +54,7 @@ export const UserForm = defineComponent({
         },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
-    setup(props, ctx) {
+    async setup(props, ctx) {
         const busy = ref(false);
         const displayNameChanged = ref(false);
         const form = reactive({
@@ -92,9 +93,16 @@ export const UserForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const manager = createEntityManager<User>({
+            type: DomainType.USER,
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const isRealmLocked = computed(() => !!props.realmId);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function initForm() {
             if (props.realmId) {
@@ -102,31 +110,31 @@ export const UserForm = defineComponent({
             }
 
             if (
-                props.entity &&
-                typeof props.entity.name_locked !== 'undefined'
+                manager.entity.value &&
+                typeof manager.entity.value.name_locked !== 'undefined'
             ) {
-                form.name_locked = props.entity.name_locked;
+                form.name_locked = manager.entity.value.name_locked;
             }
 
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<User>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().user.create(data),
-            update: async (id, data) => useAPIClient().user.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const updateDisplayName = (value: string) => {
             if (!displayNameChanged.value) {

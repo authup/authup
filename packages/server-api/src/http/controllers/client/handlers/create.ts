@@ -36,6 +36,7 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
 
+    result.data.user_id = useRequestEnv(req, 'userId');
     const provider = repository.create(result.data);
 
     await repository.save(provider);

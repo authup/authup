@@ -61,13 +61,17 @@ export default defineNuxtComponent({
         }
 
         const handleUpdated = (e: Client) => {
-            toast.success({ body: 'The client was successfully updated.' });
+            if (toast) {
+                toast.success({ body: 'The client was successfully updated.' });
+            }
 
             updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {
-            toast.warning({ body: e.message });
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

@@ -13,9 +13,9 @@ import type { DomainListEventsType } from '../type';
 
 export function defineDomainListEvents<T extends Record<string, any>>() : DomainListEventsType<T> {
     return {
-        created: (item: T) => true,
-        deleted: (item: T) => true,
-        updated: (item: T) => true,
+        created: (_item: T) => true,
+        deleted: (_item: T) => true,
+        updated: (_item: T) => true,
     };
 }
 export function defineDomainListProps<T extends Record<string, any>>() {

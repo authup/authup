@@ -63,13 +63,17 @@ export default defineNuxtComponent({
         }
 
         const handleUpdated = (e: Permission) => {
-            toast.success({ body: 'The permission was successfully updated.' });
+            if (toast) {
+                toast.success({ body: 'The permission was successfully updated.' });
+            }
 
             updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {
-            toast.warning({ body: e.message });
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

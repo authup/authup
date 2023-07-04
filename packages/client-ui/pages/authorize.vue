@@ -22,6 +22,8 @@ export default defineNuxtComponent({
             layout: 'oauth2',
         });
 
+        const toast = useToast();
+
         const route = useRoute();
 
         const store = useAuthStore();
@@ -124,8 +126,7 @@ export default defineNuxtComponent({
 
                 window.location.href = url;
             } catch (e) {
-                if (e instanceof Error) {
-                    const toast = useToast();
+                if (e instanceof Error && toast) {
                     toast.warning({ body: e.message });
                 }
             }

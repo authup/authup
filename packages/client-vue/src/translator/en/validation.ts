@@ -16,4 +16,5 @@ export const LanguageValidationEnglish : LinesRecord = {
     url: 'The input value must be a valid URL',
     alphaNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-z-_]+',
     alphaWithUpperNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-zA-Z-_]+',
+    permissionNamePattern: 'The input value must match the following regex pattern: [a-zA-Z-]+_[a-zA-Z-]+',
 };
