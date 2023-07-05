@@ -8,17 +8,17 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const RobotList = defineComponent({
     name: 'RobotList',
     props: defineDomainListProps<Robot>(),
-    slots: Object as SlotsType<DomainListSlotsType<Robot>>,
+    slots: Object as SlotsType<EntityListSlotsType<Robot>>,
     emits: defineDomainListEvents<Robot>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<Robot>({
+        const { render } = createEntityList<Robot>({
             props,
             setup: ctx,
             load: (buildInput) => useAPIClient().robot.getMany(buildInput),
@@ -37,7 +37,7 @@ export const RobotList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
     data() {
         return {

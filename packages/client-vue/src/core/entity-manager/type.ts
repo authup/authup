@@ -35,7 +35,7 @@ export type EntityManager<T extends EntityManagerRecord> = {
 export type EntityManagerProps<T extends EntityManagerRecord> = {
     entity?: T,
     entityId?: T['id'],
-    filters?: FiltersBuildInput<T>,
+    where?: FiltersBuildInput<T>,
     query?: BuildInput<T>
 };
 

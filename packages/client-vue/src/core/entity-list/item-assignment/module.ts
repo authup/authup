@@ -14,7 +14,7 @@ type Context<T> = {
     item: Ref<T>,
     loaded: Ref<boolean>
 };
-export function renderListItemAssignmentButton<T>(
+export function renderEntityListItemAssignmentButton<T>(
     ctx: Context<T>,
 ) {
     let children: VNodeArrayChildren = [];

@@ -8,10 +8,10 @@
 import type { ListBodyBuildOptionsInput, ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput } from '@vue-layout/list-controls';
 import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../list-header';
-import type { DomainListEventsType } from '../type';
+import type { EntityListHeaderSearchOptionsInput, EntityListHeaderTitleOptionsInput } from '../header';
+import type { EntityListEventsType } from '../type';
 
-export function defineDomainListEvents<T extends Record<string, any>>() : DomainListEventsType<T> {
+export function defineDomainListEvents<T extends Record<string, any>>() : EntityListEventsType<T> {
     return {
         created: (_item: T) => true,
         deleted: (_item: T) => true,
@@ -47,11 +47,11 @@ export function defineDomainListProps<T extends Record<string, any>>() {
             default: true,
         },
         headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
+            type: [Boolean, Object] as PropType<boolean | EntityListHeaderTitleOptionsInput>,
             default: true,
         },
         headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
+            type: [Boolean, Object] as PropType<boolean | EntityListHeaderSearchOptionsInput>,
             default: true,
         },
         body: {

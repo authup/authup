@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import type { DomainListBuilderTemplateOptions, DomainListProps } from '../type';
+import type { EntityListBuilderTemplateOptions, EntityListProps } from '../type';
 
 function mergeOptions<T extends boolean | Record<string, any> | undefined>(
     primary: T,
@@ -30,11 +30,11 @@ function mergeOptions<T extends boolean | Record<string, any> | undefined>(
     return merge(primaryRecord, secondaryRecord) as T;
 }
 
-export function mergeDomainListOptions<T extends Record<string, any>>(
-    props: DomainListProps<T>,
-    defaults: Partial<DomainListBuilderTemplateOptions<T>>,
-) : DomainListBuilderTemplateOptions<T> {
-    const output : Partial<DomainListBuilderTemplateOptions<T>> = {
+export function mergeEntityListOptions<T extends Record<string, any>>(
+    props: EntityListProps<T>,
+    defaults: Partial<EntityListBuilderTemplateOptions<T>>,
+) : EntityListBuilderTemplateOptions<T> {
+    const output : Partial<EntityListBuilderTemplateOptions<T>> = {
         body: mergeOptions(props.body, defaults.body),
         item: mergeOptions(props.item, defaults.item),
     };
@@ -48,5 +48,5 @@ export function mergeDomainListOptions<T extends Record<string, any>>(
     output.footer = mergeOptions(props.footer, defaults.footer);
     output.footerPagination = mergeOptions(props.footerPagination, defaults.footerPagination);
 
-    return output as DomainListBuilderTemplateOptions<T>;
+    return output as EntityListBuilderTemplateOptions<T>;
 }

@@ -8,7 +8,7 @@
 import type { ListMeta } from '@vue-layout/list-controls';
 import type { Ref } from 'vue';
 
-export function buildListCreatedHandler<T extends Record<string, any>>(
+export function buildEntityListCreatedHandler<T extends Record<string, any>>(
     items: Ref<T[]>,
     meta: Ref<ListMeta>,
 ) {
@@ -30,7 +30,7 @@ export function buildListCreatedHandler<T extends Record<string, any>>(
     };
 }
 
-export function buildListUpdatedHandler<T extends Record<string, any>>(items: Ref<T[]>) {
+export function buildEntityListUpdatedHandler<T extends Record<string, any>>(items: Ref<T[]>) {
     return (item: T) => {
         const index = items.value.findIndex((el: T) => el.id === item.id);
 
@@ -43,7 +43,7 @@ export function buildListUpdatedHandler<T extends Record<string, any>>(items: Re
     };
 }
 
-export function buildListDeletedHandler<T extends Record<string, any>>(
+export function buildEntityListDeletedHandler<T extends Record<string, any>>(
     items: Ref<T[]>,
     meta: Ref<ListMeta>,
 ) {

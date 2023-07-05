@@ -8,12 +8,12 @@
 import type { ListLoadFn, ListMeta } from '@vue-layout/list-controls';
 import type { Ref } from 'vue';
 
-export type DomainListFooterPaginationOptions = {
+export type EntityListFooterPaginationOptions = {
     busy: Ref<boolean> | boolean,
     meta: Ref<ListMeta>,
     load: ListLoadFn
 };
 
-export type DomainListFooterOptions = {
-    pagination?: DomainListFooterPaginationOptions
+export type EntityListFooterOptions = {
+    pagination?: EntityListFooterPaginationOptions
 };

@@ -8,17 +8,17 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const UserList = defineComponent({
     name: 'UserList',
     props: defineDomainListProps<User>(),
-    slots: Object as SlotsType<DomainListSlotsType<User>>,
+    slots: Object as SlotsType<EntityListSlotsType<User>>,
     emits: defineDomainListEvents<User>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<User>({
+        const { render } = createEntityList<User>({
             props,
             setup: ctx,
             load: (buildInput) => useAPIClient().user.getMany(buildInput),
@@ -37,7 +37,7 @@ export const UserList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });
 

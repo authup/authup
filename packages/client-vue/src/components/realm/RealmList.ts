@@ -8,17 +8,17 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const RealmList = defineComponent({
     name: 'RealmList',
     props: defineDomainListProps<Realm>(),
-    slots: Object as SlotsType<DomainListSlotsType<Realm>>,
+    slots: Object as SlotsType<EntityListSlotsType<Realm>>,
     emits: defineDomainListEvents<Realm>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<Realm>({
+        const { render } = createEntityList<Realm>({
             props,
             setup: ctx,
             load: (buildInput) => useAPIClient().realm.getMany(buildInput),
@@ -37,6 +37,6 @@ export const RealmList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });

@@ -9,10 +9,10 @@ import type { PaginationMeta } from '@vue-layout/pagination';
 import { buildPagination } from '@vue-layout/pagination';
 import type { VNodeArrayChildren } from 'vue';
 import { h, unref } from 'vue';
-import type { DomainListFooterOptions, DomainListFooterPaginationOptions } from './type';
+import type { EntityListFooterOptions, EntityListFooterPaginationOptions } from './type';
 
-export function buildDomainListFooterPagination<T>(
-    ctx: DomainListFooterPaginationOptions,
+export function buildEntityListFooterPagination<T>(
+    ctx: EntityListFooterPaginationOptions,
 ) {
     return buildPagination({
         load: ctx.load as (meta: PaginationMeta) => any,
@@ -21,20 +21,4 @@ export function buildDomainListFooterPagination<T>(
         offset: ctx.meta?.value.offset || 0,
         busy: unref(ctx.busy),
     });
-}
-
-export function buildDomainListFooter<T>(
-    ctx: DomainListFooterOptions,
-) : VNodeArrayChildren {
-    const children : VNodeArrayChildren = [];
-
-    if (ctx.pagination) {
-        children.push(buildDomainListFooterPagination(ctx.pagination));
-    }
-
-    if (children.length > 0) {
-        return [h('div', [children])];
-    }
-
-    return [];
 }

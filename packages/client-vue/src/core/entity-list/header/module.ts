@@ -9,10 +9,10 @@ import type { FormInputBuildOptionsInput } from '@vue-layout/form-controls';
 import { buildFormInputText } from '@vue-layout/form-controls';
 import type { VNodeArrayChildren } from 'vue';
 import { h } from 'vue';
-import type { DomainListHeaderSearchOptions, DomainListHeaderTitleOptions, ListHeaderOptions } from './type';
+import type { EntityHeaderOptions, EntityListHeaderSearchOptions, EntityListHeaderTitleOptions } from './type';
 
 export function buildDomainListHeaderSearch(
-    ctx: DomainListHeaderSearchOptions,
+    ctx: EntityListHeaderSearchOptions,
 ) {
     ctx.icon = ctx.icon ?? true;
     ctx.iconPosition = ctx.iconPosition ?? 'start';
@@ -44,7 +44,7 @@ export function buildDomainListHeaderSearch(
 }
 
 export function buildDomainListHeaderTitle<T>(
-    ctx: DomainListHeaderTitleOptions,
+    ctx: EntityListHeaderTitleOptions,
 ) {
     let icon : VNodeArrayChildren = [];
     if (typeof ctx.icon === 'string') {
@@ -60,12 +60,12 @@ export function buildDomainListHeaderTitle<T>(
 }
 
 export function buildDomainListHeader<T>(
-    ctx: ListHeaderOptions,
+    ctx: EntityHeaderOptions,
 ) : VNodeArrayChildren {
     const children : VNodeArrayChildren = [];
 
     if (ctx.title) {
-        const options : DomainListHeaderTitleOptions = typeof ctx.title === 'boolean' ? {} :
+        const options : EntityListHeaderTitleOptions = typeof ctx.title === 'boolean' ? {} :
             ctx.title;
 
         children.push(buildDomainListHeaderTitle(options));

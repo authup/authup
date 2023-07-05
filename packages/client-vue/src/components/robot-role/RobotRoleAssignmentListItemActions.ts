@@ -10,7 +10,7 @@ import {
     VNodeArrayChildren, defineComponent, h, ref,
 } from 'vue';
 import type { RobotRole } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../core/render';
+import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export type RobotRoleListItemActionsProperties = {
@@ -118,7 +118,7 @@ export const RobotRoleAssignmentListItemActions = defineComponent({
             busy.value = false;
         };
 
-        return () => renderListItemAssignmentButton({
+        return () => renderEntityListItemAssignmentButton({
             add,
             drop,
             item,

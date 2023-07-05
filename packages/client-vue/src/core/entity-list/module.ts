@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -17,20 +17,20 @@ import {
     ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
-import { buildDomainListFooterPagination } from '../list-footer';
-import type { DomainListHeaderSearchOptions } from '../list-header';
-import { buildDomainListHeader } from '../list-header';
-import type { DomainListBuilderContext, DomainListBuilderOutput } from './type';
+import { buildEntityListFooterPagination } from './footer';
+import type { EntityListHeaderSearchOptions } from './header';
+import { buildDomainListHeader } from './header';
+import type { EntityListCreateContext, EntityListCreateOutput } from './type';
 import {
-    buildListCreatedHandler,
-    buildListDeletedHandler,
-    buildListUpdatedHandler,
-    mergeDomainListOptions,
+    buildEntityListCreatedHandler,
+    buildEntityListDeletedHandler,
+    buildEntityListUpdatedHandler,
+    mergeEntityListOptions,
 } from './utils';
 
-export function createDomainListBuilder<T extends Record<string, any>>(
-    context: DomainListBuilderContext<T>,
-) : DomainListBuilderOutput<T> {
+export function createEntityList<T extends Record<string, any>>(
+    context: EntityListCreateContext<T>,
+) : EntityListCreateOutput<T> {
     const q = ref('');
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
@@ -125,23 +125,23 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         await load({ offset: 0 });
     });
 
-    const handleCreated = buildListCreatedHandler(data, meta);
-    const handleDeleted = buildListDeletedHandler(data, meta);
-    const handleUpdated = buildListUpdatedHandler(data);
+    const handleCreated = buildEntityListCreatedHandler(data, meta);
+    const handleDeleted = buildEntityListDeletedHandler(data, meta);
+    const handleUpdated = buildEntityListUpdatedHandler(data);
 
-    const options = mergeDomainListOptions(context.props, context.defaults);
+    const options = mergeEntityListOptions(context.props, context.defaults);
 
-    function build() : VNodeArrayChildren {
+    function render() : VNodeArrayChildren {
         let header : ListHeaderBuildOptionsInput<T> | undefined;
         if (options.header) {
             header = typeof options.header === 'boolean' ? {} : options.header;
 
             if (!header.content) {
                 if (options.headerTitle || options.headerSearch) {
-                    let search: DomainListHeaderSearchOptions | undefined;
+                    let search: EntityListHeaderSearchOptions | undefined;
                     if (options.headerSearch) {
                         search = {
-                            load(text) {
+                            load(text: string) {
                                 q.value = text;
                             },
                             busy,
@@ -168,7 +168,7 @@ export function createDomainListBuilder<T extends Record<string, any>>(
 
             if (!footer.content) {
                 if (options.footerPagination) {
-                    footer.content = buildDomainListFooterPagination({
+                    footer.content = buildEntityListFooterPagination({
                         load,
                         busy,
                         meta,
@@ -244,7 +244,7 @@ export function createDomainListBuilder<T extends Record<string, any>>(
         handleUpdated,
         handleDeleted,
 
-        build,
+        render,
         load,
     };
 }

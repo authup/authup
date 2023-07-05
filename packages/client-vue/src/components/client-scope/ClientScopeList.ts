@@ -8,17 +8,17 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const ClientScopeList = defineComponent({
     name: 'ClientScopeList',
     props: defineDomainListProps<ClientScope>(),
-    slots: Object as SlotsType<DomainListSlotsType<ClientScope>>,
+    slots: Object as SlotsType<EntityListSlotsType<ClientScope>>,
     emits: defineDomainListEvents<ClientScope>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<ClientScope>({
+        const { render } = createEntityList<ClientScope>({
             props,
             setup: ctx,
             load: (buildInput) => useAPIClient().clientScope.getMany(buildInput),
@@ -37,7 +37,7 @@ export const ClientScopeList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });
 

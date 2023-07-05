@@ -7,24 +7,24 @@
 
 import type { Ref } from 'vue';
 
-export type DomainListHeaderTitleOptionsInput = {
+export type EntityListHeaderTitleOptionsInput = {
     icon?: boolean | string,
     tag?: string,
     content?: string
 };
-export type DomainListHeaderTitleOptions = DomainListHeaderTitleOptionsInput;
+export type EntityListHeaderTitleOptions = EntityListHeaderTitleOptionsInput;
 
-export type DomainListHeaderSearchOptionsInput = {
+export type EntityListHeaderSearchOptionsInput = {
     icon?: boolean,
     iconPosition?: 'start' | 'end'
 };
 
-export type DomainListHeaderSearchOptions = DomainListHeaderSearchOptionsInput & {
+export type EntityListHeaderSearchOptions = EntityListHeaderSearchOptionsInput & {
     busy: Ref<boolean> | boolean,
     load: (value: string) => any
 };
 
-export type ListHeaderOptions = {
-    title?: DomainListHeaderTitleOptions | boolean,
-    search?: DomainListHeaderSearchOptions
+export type EntityHeaderOptions = {
+    title?: EntityListHeaderTitleOptions | boolean,
+    search?: EntityListHeaderSearchOptions
 };

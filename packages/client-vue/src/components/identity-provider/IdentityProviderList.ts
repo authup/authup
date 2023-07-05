@@ -8,8 +8,8 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import {
     useAPIClient,
 } from '../../core';
@@ -17,10 +17,10 @@ import {
 export const IdentityProviderList = defineComponent({
     name: 'IdentityProviderList',
     props: defineDomainListProps<IdentityProvider>(),
-    slots: Object as SlotsType<DomainListSlotsType<IdentityProvider>>,
+    slots: Object as SlotsType<EntityListSlotsType<IdentityProvider>>,
     emits: defineDomainListEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<IdentityProvider>({
+        const { render } = createEntityList<IdentityProvider>({
             props,
             setup: ctx,
             load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
@@ -38,7 +38,7 @@ export const IdentityProviderList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });
 

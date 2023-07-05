@@ -12,7 +12,7 @@ import type { Ref, VNodeChild } from 'vue';
 import { ref } from 'vue';
 import { useAPIClient } from '../api-client';
 import { extendObjectProperties } from '../object';
-import { hasNormalizedSlot, normalizeSlot } from '../render';
+import { hasNormalizedSlot, normalizeSlot } from '../slot';
 import { EntityManagerError } from './error';
 import type { EntityManager, EntityManagerContext, EntityManagerRecord } from './type';
 import { buildEntityManagerSlotProps } from './utils';
@@ -62,11 +62,11 @@ export function createEntityManager<T extends EntityManagerRecord>(
             }
         }
 
-        if (typeof ctx.props.filters !== 'undefined') {
+        if (typeof ctx.props.where !== 'undefined') {
             try {
                 const response = await domainAPI.getMany({
                     ...(ctx.props.query || {}),
-                    filters: ctx.props.filters,
+                    filters: ctx.props.where,
                     pagination: {
                         limit: 1,
                     },

@@ -8,7 +8,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserRole } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../core/render';
+import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const UserRoleAssignmentListItemActions = defineComponent({
@@ -112,7 +112,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
             busy.value = false;
         };
 
-        return () => renderListItemAssignmentButton({
+        return () => renderEntityListItemAssignmentButton({
             add,
             drop,
             item,

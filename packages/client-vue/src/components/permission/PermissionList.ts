@@ -7,19 +7,19 @@
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core';
-import type { DomainListSlotsType } from '../../core/render';
-import { createDomainListBuilder, defineDomainListEvents, defineDomainListProps } from '../../core/render';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
     props: defineDomainListProps<Permission>(),
-    slots: Object as SlotsType<DomainListSlotsType<Permission>>,
+    slots: Object as SlotsType<EntityListSlotsType<Permission>>,
     emits: defineDomainListEvents<Permission>(),
-    setup(props, ctx) {
-        const { build } = createDomainListBuilder<Permission>({
+    setup(props, setup) {
+        const { render } = createEntityList<Permission>({
             props,
-            setup: ctx,
+            setup,
             load: (buildInput) => useAPIClient().permission.getMany(buildInput),
             defaults: {
                 footerPagination: true,
@@ -36,6 +36,6 @@ export const PermissionList = defineComponent({
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });

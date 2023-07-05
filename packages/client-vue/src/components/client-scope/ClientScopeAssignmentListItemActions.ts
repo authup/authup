@@ -8,7 +8,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { ClientScope } from '@authup/core';
-import { renderListItemAssignmentButton } from '../../core/render';
+import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
 import { useAPIClient } from '../../core';
 
 export const ClientScopeAssignmentListItemActions = defineComponent({
@@ -111,7 +111,7 @@ export const ClientScopeAssignmentListItemActions = defineComponent({
             busy.value = false;
         };
 
-        return () => renderListItemAssignmentButton({
+        return () => renderEntityListItemAssignmentButton({
             add,
             drop,
             item,
