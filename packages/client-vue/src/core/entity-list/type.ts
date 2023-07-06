@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CollectionResourceResponse } from '@authup/core';
 import type {
     ListBodyBuildOptionsInput,
     ListBodySlotProps,
@@ -29,6 +28,17 @@ import type {
     EntityListHeaderTitleOptionsInput,
 } from './header';
 
+export type EntityListRecord = {
+    [key: string]: any,
+    id: any
+};
+
+export type EntityListMeta = {
+    total: number,
+    limit: number,
+    offset: number
+};
+
 export type EntityListBuilderTemplateOptions<T extends Record<string, any>> = {
     header?: ListHeaderBuildOptionsInput<T> | boolean
     headerSearch?: EntityListHeaderSearchOptionsInput | boolean,
@@ -48,19 +58,18 @@ export type EntityListProps<T extends Record<string, any>> = {
 export type EntityListCreateContext<T extends Record<string, any>> = {
     setup: SetupContext<EntityListEventsType<T>>,
     props: EntityListProps<T>,
-    load: (input: BuildInput<T>) => Promise<CollectionResourceResponse<T>>,
     loadAll?: boolean,
-    defaults: Partial<EntityListBuilderTemplateOptions<T>>,
     query?: BuildInput<T> | (() => BuildInput<T>),
     queryFilter?: FiltersBuildInput<T> | ((q: string) => FiltersBuildInput<T>)
 };
 
-export type EntityListCreateOutput<T> = {
+export type EntityListCreateOutput<T extends Record<string, any>> = {
     render() : VNodeChild;
     load(meta: ListMeta) : Promise<void>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
+    setDefaults(defaults: EntityListBuilderTemplateOptions<T>) : void,
     data: Ref<T[]>,
     busy: Ref<boolean>,
     meta: Ref<ListMeta>

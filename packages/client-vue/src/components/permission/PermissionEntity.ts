@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { Permission } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core/entity-manager';
+import type { EntityManagerSlotsType } from '../../core';
 import {
     createEntityManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
-} from '../../core/entity-manager';
+} from '../../core';
 
 export const PermissionEntity = defineComponent({
     name: 'PermissionEntity',
@@ -22,10 +22,9 @@ export const PermissionEntity = defineComponent({
     emits: defineEntityManagerEvents<Permission>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Permission>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.PERMISSION,
-            props,
+        const manager = createEntityManager(`${DomainType.PERMISSION}`, {
             setup,
+            props,
         });
 
         try {

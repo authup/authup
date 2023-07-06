@@ -6,6 +6,7 @@
  */
 
 export * from './api-client';
+export * from './entity-list';
 export * from './entity-manager';
 export * from './form';
 export * from './busy';

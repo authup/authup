@@ -22,8 +22,7 @@ export const RealmEntity = defineComponent({
     emits: defineEntityManagerEvents<Realm>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Realm>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.REALM,
+        const manager = createEntityManager(`${DomainType.REALM}`, {
             props,
             setup,
         });

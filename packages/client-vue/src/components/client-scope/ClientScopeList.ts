@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
 
 export const ClientScopeList = defineComponent({
     name: 'ClientScopeList',
@@ -18,22 +18,22 @@ export const ClientScopeList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<ClientScope>>,
     emits: defineDomainListEvents<ClientScope>(),
     setup(props, ctx) {
-        const { render } = createEntityList<ClientScope>({
+        const { render, setDefaults } = createEntityList(`${DomainType.CLIENT_SCOPE}`, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().clientScope.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'ClientScopes',
-                    icon: 'fa-solid fa-meteor',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    content: 'No more client-scopes available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'ClientScopes',
+                icon: 'fa-solid fa-meteor',
+            },
+
+            noMore: {
+                content: 'No more client-scopes available...',
             },
         });
 

@@ -5,14 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import {
-    useAPIClient,
-} from '../../core';
 
 export const IdentityProviderList = defineComponent({
     name: 'IdentityProviderList',
@@ -20,21 +18,21 @@ export const IdentityProviderList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<IdentityProvider>>,
     emits: defineDomainListEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const { render } = createEntityList<IdentityProvider>({
+        const { render, setDefaults } = createEntityList(`${DomainType.IDENTITY_PROVIDER}`, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().identityProvider.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Providers',
-                    icon: 'fa-solid fa-atom',
-                },
-                noMore: {
-                    content: 'No more identity-providers available...',
-                },
+        setDefaults({
+            footerPagination: true,
+
+            headerSearch: true,
+            headerTitle: {
+                content: 'Providers',
+                icon: 'fa-solid fa-atom',
+            },
+            noMore: {
+                content: 'No more identity-providers available...',
             },
         });
 

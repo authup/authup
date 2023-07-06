@@ -22,8 +22,7 @@ export const ClientScopeEntity = defineComponent({
     emits: defineEntityManagerEvents<ClientScope>(),
     slots: Object as SlotsType<EntityManagerSlotsType<ClientScope>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.CLIENT_SCOPE,
+        const manager = createEntityManager(`${DomainType.CLIENT_SCOPE}`, {
             props,
             setup,
         });

@@ -61,8 +61,7 @@ export const RealmForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Realm>({
-            type: DomainType.REALM,
+        const manager = createEntityManager(`${DomainType.REALM}`, {
             setup: ctx,
             props,
         });

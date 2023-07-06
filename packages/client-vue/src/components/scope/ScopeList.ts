@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
 
 export const ScopeList = defineComponent({
     name: 'ScopeList',
@@ -18,22 +18,22 @@ export const ScopeList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Scope>>,
     emits: defineDomainListEvents<Scope>(),
     setup(props, ctx) {
-        const { render } = createEntityList<Scope>({
+        const { render, setDefaults } = createEntityList(DomainType.SCOPE, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().scope.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Scopes',
-                    icon: 'fa-solid fa-meteor',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    content: 'No more scopes available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Scopes',
+                icon: 'fa-solid fa-meteor',
+            },
+
+            noMore: {
+                content: 'No more scopes available...',
             },
         });
 

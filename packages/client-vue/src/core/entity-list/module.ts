@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasOwnProperty } from '@authup/core';
+import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput, ListMeta,
 } from '@vue-layout/list-controls';
@@ -17,10 +19,14 @@ import {
     ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
+import { useAPIClient } from '../api-client';
 import { buildEntityListFooterPagination } from './footer';
 import type { EntityListHeaderSearchOptions } from './header';
 import { buildDomainListHeader } from './header';
-import type { EntityListCreateContext, EntityListCreateOutput } from './type';
+import type {
+    EntityListBuilderTemplateOptions,
+    EntityListCreateContext, EntityListCreateOutput, EntityListMeta, EntityListRecord,
+} from './type';
 import {
     buildEntityListCreatedHandler,
     buildEntityListDeletedHandler,
@@ -28,20 +34,28 @@ import {
     mergeEntityListOptions,
 } from './utils';
 
-export function createEntityList<T extends Record<string, any>>(
+function create<T extends EntityListRecord>(
+    type: `${DomainType}`,
     context: EntityListCreateContext<T>,
 ) : EntityListCreateOutput<T> {
     const q = ref('');
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
-    const meta : Ref<ListMeta> = ref({
+    const meta : Ref<EntityListMeta> = ref({
         limit: 10,
         offset: 0,
         total: 0,
     });
 
+    const client = useAPIClient();
+
+    let domainAPI : DomainAPI<T> | undefined;
+    if (hasOwnProperty(client, type)) {
+        domainAPI = client[type] as DomainAPI<T>;
+    }
+
     async function load(targetMeta?: Partial<ListMeta>) {
-        if (busy.value) return;
+        if (!domainAPI || busy.value) return;
 
         busy.value = true;
 
@@ -80,7 +94,7 @@ export function createEntityList<T extends Record<string, any>>(
                 }
             }
 
-            const response = await context.load(merge(
+            const response = await domainAPI.getMany(merge(
                 {
                     page: {
                         limit: targetMeta.limit ?? meta.value.limit,
@@ -129,7 +143,10 @@ export function createEntityList<T extends Record<string, any>>(
     const handleDeleted = buildEntityListDeletedHandler(data, meta);
     const handleUpdated = buildEntityListUpdatedHandler(data);
 
-    const options = mergeEntityListOptions(context.props, context.defaults);
+    let options = context.props;
+    const setDefaults = (defaults: EntityListBuilderTemplateOptions<T>) => {
+        options = mergeEntityListOptions(context.props, defaults);
+    };
 
     function render() : VNodeArrayChildren {
         let header : ListHeaderBuildOptionsInput<T> | undefined;
@@ -246,5 +263,13 @@ export function createEntityList<T extends Record<string, any>>(
 
         render,
         load,
+        setDefaults,
     };
+}
+
+export function createEntityList<T extends `${DomainType}`>(
+    type: T,
+    context: EntityListCreateContext<DomainEntity<T>>,
+) : EntityListCreateOutput<DomainEntity<T>> {
+    return create(type, context);
 }

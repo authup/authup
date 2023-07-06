@@ -101,8 +101,7 @@ export const ClientForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Client>({
-            type: DomainType.CLIENT,
+        const manager = createEntityManager(`${DomainType.CLIENT}`, {
             setup: ctx,
             props,
         });

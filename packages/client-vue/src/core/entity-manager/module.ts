@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainAPI } from '@authup/core';
+import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
 import { hasOwnProperty } from '@authup/core';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
@@ -17,13 +17,14 @@ import { EntityManagerError } from './error';
 import type { EntityManager, EntityManagerContext, EntityManagerRecord } from './type';
 import { buildEntityManagerSlotProps } from './utils';
 
-export function createEntityManager<T extends EntityManagerRecord>(
+function create<T extends EntityManagerRecord>(
+    type: `${DomainType}`,
     ctx: EntityManagerContext<T>,
 ) : EntityManager<T> {
     const client = useAPIClient();
     let domainAPI : DomainAPI<T> | undefined;
-    if (hasOwnProperty(client, ctx.type)) {
-        domainAPI = client[ctx.type] as DomainAPI<T>;
+    if (hasOwnProperty(client, type)) {
+        domainAPI = client[type] as DomainAPI<T>;
     }
 
     const lockId = ref<T['id'] | undefined>(undefined);
@@ -276,4 +277,11 @@ export function createEntityManager<T extends EntityManagerRecord>(
     };
 
     return manager;
+}
+
+export function createEntityManager<T extends `${DomainType}`>(
+    type: T,
+    ctx: EntityManagerContext<DomainEntity<T>>,
+) : EntityManager<DomainEntity<T>> {
+    return create(type, ctx);
 }

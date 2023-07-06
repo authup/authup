@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Client } from '@authup/core';
@@ -18,22 +19,22 @@ export const ClientList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Client>>,
     emits: defineDomainListEvents<Client>(),
     setup(props, ctx) {
-        const { render } = createEntityList<Client>({
+        const { render, setDefaults } = createEntityList(`${DomainType.CLIENT}`, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().client.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Robots',
-                    icon: 'fa-solid fa-robot',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    content: 'No more clients available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Robots',
+                icon: 'fa-solid fa-robot',
+            },
+
+            noMore: {
+                content: 'No more clients available...',
             },
         });
 

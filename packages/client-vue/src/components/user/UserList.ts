@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
 
 export const UserList = defineComponent({
     name: 'UserList',
@@ -18,22 +18,22 @@ export const UserList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<User>>,
     emits: defineDomainListEvents<User>(),
     setup(props, ctx) {
-        const { render } = createEntityList<User>({
+        const { render, setDefaults } = createEntityList(`${DomainType.USER}`, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().user.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Users',
-                    icon: 'fa-solid fa-user',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    content: 'No more users available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Users',
+                icon: 'fa-solid fa-user',
+            },
+
+            noMore: {
+                content: 'No more users available...',
             },
         });
 

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
 
 export const RoleList = defineComponent({
     name: 'RoleList',
@@ -18,22 +18,22 @@ export const RoleList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Role>>,
     emits: defineDomainListEvents<Role>(),
     setup(props, ctx) {
-        const { render } = createEntityList<Role>({
+        const { render, setDefaults } = createEntityList(`${DomainType.ROLE}`, {
             props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().role.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Roles',
-                    icon: 'fa-solid fa-user-group',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    content: 'No more roles available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Roles',
+                icon: 'fa-solid fa-user-group',
+            },
+
+            noMore: {
+                content: 'No more roles available...',
             },
         });
 

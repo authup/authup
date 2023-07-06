@@ -87,8 +87,7 @@ export const ScopeForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Scope>({
-            type: DomainType.SCOPE,
+        const manager = createEntityManager(`${DomainType.SCOPE}`, {
             setup: ctx,
             props,
         });
@@ -96,13 +95,14 @@ export const ScopeForm = defineComponent({
         const isEditing = useIsEditing(manager.entity);
         const updatedAt = useUpdatedAt(props.entity);
 
-        const isNameFixed = computed(() => {
+        const isNameFixed = computed<boolean>(() => {
             if (!!props.name && props.name.length > 0) {
                 return true;
             }
 
             return !!(manager.entity.value && manager.entity.value.built_in);
         });
+
         const isRealmLocked = computed(() => !!props.realmId);
 
         function initForm() {

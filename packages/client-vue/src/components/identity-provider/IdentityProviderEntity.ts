@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { IdentityProvider } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core/entity-manager';
+import type { EntityManagerSlotsType } from '../../core';
 import {
     createEntityManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
-} from '../../core/entity-manager';
+} from '../../core';
 
 export const IdentityProviderEntity = defineComponent({
     name: 'IdentityProviderEntity',
@@ -22,8 +22,7 @@ export const IdentityProviderEntity = defineComponent({
     emits: defineEntityManagerEvents<IdentityProvider>(),
     slots: Object as SlotsType<EntityManagerSlotsType<IdentityProvider>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.IDENTITY_PROVIDER,
+        const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
             props,
             setup,
         });

@@ -84,8 +84,7 @@ export const RobotForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Robot>({
-            type: DomainType.ROBOT,
+        const manager = createEntityManager(`${DomainType.ROBOT}`, {
             setup: ctx,
             props,
         });

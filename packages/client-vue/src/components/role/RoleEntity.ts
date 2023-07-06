@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { Role } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core/entity-manager';
+import type { EntityManagerSlotsType } from '../../core';
 import {
     createEntityManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
-} from '../../core/entity-manager';
+} from '../../core';
 
 export const RoleEntity = defineComponent({
     name: 'RoleEntity',
@@ -22,8 +22,7 @@ export const RoleEntity = defineComponent({
     emits: defineEntityManagerEvents<Role>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Role>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.ROLE,
+        const manager = createEntityManager(`${DomainType.ROLE}`, {
             props,
             setup,
         });

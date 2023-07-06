@@ -57,8 +57,7 @@ export const PermissionForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Permission>({
-            type: DomainType.PERMISSION,
+        const manager = createEntityManager(`${DomainType.PERMISSION}`, {
             setup: ctx,
             props,
         });

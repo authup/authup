@@ -55,8 +55,7 @@ export const RoleForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<Role>({
-            type: DomainType.ROLE,
+        const manager = createEntityManager(`${DomainType.ROLE}`, {
             setup: ctx,
             props,
         });

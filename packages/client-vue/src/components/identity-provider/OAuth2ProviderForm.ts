@@ -126,8 +126,7 @@ export const OAuth2ProviderForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<IdentityProvider>({
-            type: DomainType.IDENTITY_PROVIDER,
+        const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
             setup: ctx,
             props,
         });

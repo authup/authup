@@ -5,16 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Realm, User } from '@authup/core';
 import { DomainType } from '@authup/core';
-import {
-    buildFormInput,
-    buildFormInputCheckbox,
-    buildFormSubmit,
-} from '@vue-layout/form-controls';
-import {
-    SlotName,
-    buildItemActionToggle,
-} from '@vue-layout/list-controls';
+import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
+import { SlotName, buildItemActionToggle } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
@@ -23,13 +17,8 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-
-import type { Realm, User } from '@authup/core';
 import { useIsEditing, useUpdatedAt } from '../../composables';
-import {
-    createEntityManager,
-    initFormAttributesFromSource,
-} from '../../core';
+import { createEntityManager, initFormAttributesFromSource } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
@@ -93,8 +82,7 @@ export const UserForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager<User>({
-            type: DomainType.USER,
+        const manager = createEntityManager(`${DomainType.USER}`, {
             setup: ctx,
             props,
         });
@@ -110,7 +98,7 @@ export const UserForm = defineComponent({
             }
 
             if (
-                manager.entity.value &&
+                !!manager.entity.value &&
                 typeof manager.entity.value.name_locked !== 'undefined'
             ) {
                 form.name_locked = manager.entity.value.name_locked;

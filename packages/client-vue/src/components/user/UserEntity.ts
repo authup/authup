@@ -22,8 +22,7 @@ export const UserEntity = defineComponent({
     emits: defineEntityManagerEvents<User>(),
     slots: Object as SlotsType<EntityManagerSlotsType<User>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
-            type: DomainType.USER,
+        const manager = createEntityManager(`${DomainType.USER}`, {
             props,
             setup,
         });

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainType } from '@authup/core';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, SetupContext, SlotsType } from 'vue';
 import type { VNodeChild } from 'vue/dist/vue';
@@ -15,7 +14,7 @@ export type EntityManagerRecord = {
     id: any
 };
 
-export type EntityManager<T extends EntityManagerRecord> = {
+export type EntityManager<T extends Record<string, any>> = {
     busy: Ref<boolean>,
     entity: Ref<T | undefined>,
     lockId: Ref<T['id'] | undefined>,
@@ -58,7 +57,6 @@ export type EntityManagerEventsType<T extends EntityManagerRecord> = {
 };
 
 export type EntityManagerContext<T extends EntityManagerRecord> = {
-    type: `${DomainType}`,
     setup?: Partial<SetupContext<EntityManagerEventsType<T>, SlotsType<EntityManagerSlotsType<T>>>>,
     props?: EntityManagerProps<T>,
     onCreated?(entity: T): any,
