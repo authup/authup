@@ -48,7 +48,7 @@
         "pinia": "^2.1.4",
         "rapiq": "^0.9.0",
         "vue": "^3.3.4",
-        "vue-router": "^4.2.1",
+        "vue-router": "^4.2.3",
         "zod": "^3.21.4"
     },
     "publishConfig": {
