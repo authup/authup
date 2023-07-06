@@ -1,4 +1,5 @@
 <script lang="ts">
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -12,6 +13,7 @@ export default defineNuxtComponent({
         BTable,
         EntityDelete,
         RealmList,
+        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -73,6 +75,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(options)="data">
                     <button
                         v-if="realmManagementId !== data.item.id"

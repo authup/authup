@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -10,7 +11,9 @@ import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
-    components: { BTable, IdentityProviderList, EntityDelete },
+    components: {
+        BTable, IdentityProviderList, EntityDelete, Timeago,
+    },
     emits: ['deleted'],
     setup(props, { emit }) {
         const handleDeleted = (e: IdentityProvider) => {
@@ -76,6 +79,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(options)="data">
                     <NuxtLink
                         :to="'/admin/identity-providers/'+ data.item.id"

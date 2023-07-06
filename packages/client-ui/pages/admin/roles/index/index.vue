@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Role } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -11,7 +12,9 @@ import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
-    components: { BTable, RoleList, EntityDelete },
+    components: {
+        BTable, RoleList, EntityDelete, Timeago,
+    },
     emits: ['deleted'],
     setup(props, { emit }) {
         const handleDeleted = (e: Role) => {
@@ -75,6 +78,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(options)="data">
                     <NuxtLink
                         :to="'/admin/roles/'+ data.item.id"

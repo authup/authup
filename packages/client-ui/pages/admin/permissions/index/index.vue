@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import { EntityDelete, PermissionList } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
@@ -14,6 +15,7 @@ export default defineNuxtComponent({
         BTable,
         EntityDelete,
         PermissionList,
+        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -38,6 +40,9 @@ export default defineNuxtComponent({
         const hasDropPermission = store.has(PermissionName.PERMISSION_DROP);
 
         const fields = [
+            {
+                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
+            },
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
@@ -75,6 +80,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(options)="data">
                     <NuxtLink
                         :to="'/admin/permissions/'+ data.item.id"

@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
@@ -15,6 +16,7 @@ export default defineNuxtComponent({
         EntityDelete,
         ClientList,
         UserEntity,
+        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -39,6 +41,9 @@ export default defineNuxtComponent({
         const hasDropPermission = store.has(PermissionName.CLIENT_DROP);
 
         const fields = [
+            {
+                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
+            },
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
@@ -79,6 +84,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(user_id)="data">
                     <UserEntity :entity-id="data.item.user_id">
                         <template #default="user">

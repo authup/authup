@@ -1,4 +1,6 @@
 <script lang="ts">
+
+import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Scope } from '@authup/core';
 import {
@@ -12,7 +14,9 @@ import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
-    components: { BTable, ScopeList, EntityDelete },
+    components: {
+        BTable, ScopeList, EntityDelete, Timeago,
+    },
     emits: ['deleted'],
     setup(props, { emit }) {
         const list = resolveComponent('ScopeList');
@@ -38,6 +42,9 @@ export default defineNuxtComponent({
         const hasDropPermission = store.has(PermissionName.SCOPE_DROP);
 
         const fields = [
+            {
+                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
+            },
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
@@ -75,6 +82,12 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(created_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
+                <template #cell(updated_at)="data">
+                    <Timeago :datetime="data.item.created_at" />
+                </template>
                 <template #cell(options)="data">
                     <NuxtLink
                         :to="'/admin/scopes/'+ data.item.id"
