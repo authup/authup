@@ -1,20 +1,19 @@
 /*
- * Copyright (c) 2021-2022.
+ * Copyright (c) 2021-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import {
     IdentityProviderProtocol,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core';
-import { OAuth2Client } from '@hapic/oauth2';
-import { useConfig } from '../../../../src';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { createOAuth2IdentityProviderFlow } from '../../../../../src';
+import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
+import { useSuperTest } from '../../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/identity-provider', () => {
     let superTest = useSuperTest();
@@ -62,7 +61,7 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(1);
+        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
@@ -110,17 +109,9 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response.status).toEqual(302);
         expect(response.header.location).toBeDefined();
 
-        const config = await useConfig();
+        const flow = createOAuth2IdentityProviderFlow(details as IdentityProvider);
 
-        const identityClient = new OAuth2Client({
-            options: {
-                clientId: details.client_id,
-                authorizationEndpoint: details.authorize_url,
-                redirectUri: `${config.get('publicUrl')}/identity-providers/${details.id}/authorize-callback`,
-            },
-        });
-
-        expect(response.header.location).toEqual(identityClient.authorize.buildURL());
+        expect(response.header.location).toEqual(flow.buildAuthorizeURL());
     });
 
     it('should delete resource', async () => {

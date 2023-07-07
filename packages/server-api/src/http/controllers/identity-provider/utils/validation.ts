@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useRequestBody } from '@routup/body';
 import { check, validationResult } from 'express-validator';
 import {
     IdentityProviderProtocol,
@@ -18,11 +17,8 @@ import type { Request } from 'routup';
 import type { IdentityProviderEntity } from '../../../../domains';
 import {
     RealmEntity,
-    extractLdapIdentityProviderProtocolAttributes,
-    extractOAuth2IdentityProviderProtocolAttributes,
-    extractOidcConnectIdentityProviderProtocolAttributes,
     validateLdapIdentityProviderProtocol,
-    validateOAuth2IdentityProviderProtocol, validateOidcIdentityProviderProtocol,
+    validateOAuth2IdentityProviderProtocol,
 } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
@@ -33,7 +29,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runOauth2ProviderValidation(
     req: Request,
@@ -101,22 +97,13 @@ export async function runOauth2ProviderValidation(
 
     try {
         switch (result.data.protocol) {
-            case IdentityProviderProtocol.OAUTH2: {
-                result.meta.attributes = validateOAuth2IdentityProviderProtocol(
-                    extractOAuth2IdentityProviderProtocolAttributes(useRequestBody(req)),
-                );
-                break;
-            }
+            case IdentityProviderProtocol.OAUTH2:
             case IdentityProviderProtocol.OIDC: {
-                result.meta.attributes = validateOidcIdentityProviderProtocol(
-                    extractOidcConnectIdentityProviderProtocolAttributes(useRequestBody(req)),
-                );
+                result.meta.attributes = validateOAuth2IdentityProviderProtocol(req, result.data.protocol_config);
                 break;
             }
             case IdentityProviderProtocol.LDAP: {
-                result.meta.attributes = validateLdapIdentityProviderProtocol(
-                    extractLdapIdentityProviderProtocolAttributes(useRequestBody(req)),
-                );
+                result.meta.attributes = validateLdapIdentityProviderProtocol(req);
                 break;
             }
         }

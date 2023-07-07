@@ -6,12 +6,12 @@
  */
 
 import type { OAuth2IdentityProvider, OAuth2IdentityProviderBase } from '@authup/core';
-import { hasOwnProperty } from '@authup/core';
+import { hasOwnProperty, isObject } from '@authup/core';
 
 export function extractOAuth2IdentityProviderProtocolAttributes(
     input: unknown,
 ) : Partial<OAuth2IdentityProviderBase> {
-    if (typeof input !== 'object' || input === null) {
+    if (!isObject(input)) {
         return {};
     }
 

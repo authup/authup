@@ -6,9 +6,10 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core';
+import type { Request } from 'routup';
 
 export function validateLdapIdentityProviderProtocol(
-    entity: Partial<LdapIdentityProvider>,
+    req: Request,
 ) : LdapIdentityProvider {
     throw new Error('Not implemented');
 }

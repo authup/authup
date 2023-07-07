@@ -7,4 +7,3 @@
 
 export * from './ldap';
 export * from './oauth2';
-export * from './oidc';
