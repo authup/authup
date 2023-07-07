@@ -1,28 +1,24 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2023-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider, User } from '@authup/core';
 import type { ConfigInput } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/query';
 import type { Request } from 'routup';
-import { merge } from 'smob';
-import { OAuth2IdentityProviderFlow } from './oauth2';
-import type { IdentityProviderFlowIdentity } from './types';
+import { OAuth2IdentityProviderFlow } from '../core';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 
-export class GoogleIdentityProviderFlow extends OAuth2IdentityProviderFlow {
-    constructor(provider: OAuth2IdentityProvider, config?: ConfigInput) {
-        super(provider, merge(config || {}, {
-            options: {
-                scope: 'openid profile email',
-                authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-                tokenEndpoint: 'https://oauth2.googleapis.com/token',
-                userinfoEndpoint: 'https://openidconnect.googleapis.com/v1/userinfo',
-            },
-        }));
+export class GoogleIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
+    constructor(options: OAuth2IdentityProviderFlowOptions, config?: ConfigInput) {
+        options.scope = 'openid profile email';
+        options.authorize_url = 'https://accounts.google.com/o/oauth2/v2/auth';
+        options.token_url = 'https://oauth2.googleapis.com/token';
+        options.user_info_url = 'https://openidconnect.googleapis.com/v1/userinfo';
+
+        super(options);
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderFlowIdentity> {

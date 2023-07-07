@@ -1,23 +1,22 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2023-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import { TokenError } from '@authup/core';
-import type { KeycloakJWTPayload, OAuth2IdentityProvider } from '@authup/core';
+import type { KeycloakJWTPayload } from '@authup/core';
 import { decodeToken } from '@authup/server-core';
-import type { ConfigInput } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/query';
 import type { Request } from 'routup';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 import { OAuth2IdentityProviderFlow } from './oauth2';
-import type { IdentityProviderFlowIdentity } from './types';
 
-export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow {
+export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     // eslint-disable-next-line no-useless-constructor,@typescript-eslint/no-useless-constructor
-    constructor(provider: OAuth2IdentityProvider, config?: ConfigInput) {
-        super(provider, config);
+    constructor(options: OAuth2IdentityProviderFlowOptions) {
+        super(options);
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderFlowIdentity> {

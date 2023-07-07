@@ -1,35 +1,40 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2023-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import { buildIdentityProviderAuthorizeCallbackPath, isObject } from '@authup/core';
-import type { OAuth2IdentityProvider } from '@authup/core';
-import type { JwtPayload, OAuth2Client } from '@hapic/oauth2';
-import type { ConfigInput } from '@hapic/vault';
+import { buildHTTPClientConfigForProxy } from '@authup/server-core';
+import type { JwtPayload, Options } from '@hapic/oauth2';
+import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';
-import { merge } from 'smob';
-import { useConfig } from '../../../config';
-import type { IdentityProviderFlowIdentity } from './types';
+import { useConfig } from '../../../../config';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 
-export abstract class OAuth2IdentityProviderFlow {
+export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     protected client : OAuth2Client;
 
-    protected provider: OAuth2IdentityProvider;
+    protected constructor(provider: OAuth2IdentityProviderFlowOptions) {
+        const clientOptions : Options = {
+            clientId: provider.client_id,
+            clientSecret: provider.client_secret,
+            redirectUri: `${useConfig().get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
+            scope: provider.scope,
+            authorizationEndpoint: provider.authorize_url,
+            tokenEndpoint: provider.token_url,
+            userinfoEndpoint: provider.user_info_url,
+        };
 
-    protected constructor(provider: OAuth2IdentityProvider, config?: ConfigInput) {
-        this.provider = provider;
-
-        const clientConfig = merge(config || {}, {
-            options: {
-                clientId: provider.client_id,
-                clientSecret: provider.client_secret,
-
-                redirectUri: `${useConfig().get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
-            },
+        this.client = new OAuth2Client({
+            options: clientOptions,
         });
+    }
+
+    async setupProxy() {
+        const endpointURL = this.client.options.tokenEndpoint || this.client.options.authorizationEndpoint;
+        this.client.defaults = await buildHTTPClientConfigForProxy(endpointURL);
     }
 
     public buildAuthorizeURL() : string {

@@ -17,6 +17,7 @@ export enum IdentityProviderProtocolConfig {
     GITLAB = 'gitlab',
     GOOGLE = 'google',
     PAYPAL = 'paypal',
+    INSTAGRAM = 'instagram',
     STACKOVERFLOW = 'stackoverflow',
     TWITTER = 'twitter',
 }

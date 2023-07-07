@@ -1,28 +1,23 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2023-2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider, User } from '@authup/core';
-import type { ConfigInput } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/query';
 import type { Request } from 'routup';
-import { merge } from 'smob';
-import { OAuth2IdentityProviderFlow } from './oauth2';
-import type { IdentityProviderFlowIdentity } from './types';
+import { OAuth2IdentityProviderFlow } from '../core';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 
-export class FacebookLoginFlow extends OAuth2IdentityProviderFlow {
-    constructor(provider: OAuth2IdentityProvider, config?: ConfigInput) {
-        super(provider, merge(config || {}, {
-            options: {
-                scope: 'email',
-                authorizationEndpoint: 'https://graph.facebook.com/oauth/authorize',
-                tokenEndpoint: 'https://graph.facebook.com/oauth/access_token',
-                userinfoEndpoint: 'https://graph.facebook.com/me?fields=id,name,email,first_name,last_name',
-            },
-        }));
+export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
+    constructor(options: OAuth2IdentityProviderFlowOptions) {
+        options.scope = 'email';
+        options.authorize_url = 'https://graph.facebook.com/oauth/authorize';
+        options.token_url = 'https://graph.facebook.com/oauth/access_token';
+        options.user_info_url = 'https://graph.facebook.com/me?fields=id,name,email,first_name,last_name';
+
+        super(options);
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderFlowIdentity> {

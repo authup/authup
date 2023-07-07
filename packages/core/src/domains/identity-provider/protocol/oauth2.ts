@@ -15,13 +15,13 @@ export interface OAuth2IdentityProviderBase {
 
     token_url: string;
 
-    token_revoke_url: string | null;
+    token_revoke_url?: string | null;
 
     authorize_url: string;
 
-    user_info_url: string | null;
+    user_info_url?: string | null;
 
-    scope: string;
+    scope?: string;
 }
 
 export interface OAuth2IdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {

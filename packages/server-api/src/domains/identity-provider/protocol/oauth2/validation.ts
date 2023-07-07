@@ -5,8 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProviderBase } from '@authup/core';
+import type { IdentityProviderProtocolConfig } from '@authup/core';
+import { useRequestBody } from '@routup/body';
+import type { Request } from 'routup';
 import zod from 'zod';
+import { extractOAuth2IdentityProviderProtocolAttributes } from './extract';
+
+const protocolSchema = zod.object({
+    client_id: zod.string().min(3).max(128),
+    client_secret: zod.string().min(3).max(128).optional()
+        .nullable(),
+});
 
 const schema = zod.object({
     scope: zod.string().min(3).max(2000).optional()
@@ -21,13 +30,25 @@ const schema = zod.object({
     user_info_url: zod.string().url().optional().nullable(),
 });
 
-export function validateOAuth2IdentityProviderProtocol<
-    T extends Partial<OAuth2IdentityProviderBase>,
->(entity: T) : T {
-    const result = schema.safeParse(entity);
-    if (result.success === false) {
-        throw result.error;
+export function validateOAuth2IdentityProviderProtocol(
+    req: Request,
+    protocolConfig: `${IdentityProviderProtocolConfig}`,
+) {
+    const body = useRequestBody(req);
+
+    const attributes = extractOAuth2IdentityProviderProtocolAttributes(body);
+
+    if (protocolConfig) {
+        const result = protocolSchema.safeParse(body);
+        if (result.success === false) {
+            throw result.error;
+        }
+    } else {
+        const result = schema.safeParse(body);
+        if (result.success === false) {
+            throw result.error;
+        }
     }
 
-    return entity;
+    return attributes;
 }

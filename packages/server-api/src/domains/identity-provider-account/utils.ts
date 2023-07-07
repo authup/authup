@@ -6,61 +6,42 @@
  */
 
 import type {
+    IdentityProvider,
     IdentityProviderAccount,
-    KeycloakJWTPayload,
-    OAuth2IdentityProvider,
-    OAuth2TokenGrantResponse,
-    OpenIDConnectIdentityProvider,
     User,
 } from '@authup/core';
 import {
-    TokenError,
     createNanoID, hasOwnProperty, isValidUserName,
 } from '@authup/core';
-import { decodeToken } from '@authup/server-core';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
+import type { IdentityProviderFlowIdentity } from '../identity-provider';
 import type { UserEntity } from '../user';
 import { UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 import { IdentityProviderRoleEntity } from '../identity-provider-role';
 
 export async function createOauth2ProviderAccount(
-    provider: OAuth2IdentityProvider | OpenIDConnectIdentityProvider,
-    tokenResponse: OAuth2TokenGrantResponse,
+    provider: IdentityProvider,
+    identity: IdentityProviderFlowIdentity,
 ) : Promise<IdentityProviderAccount> {
-    const payload = decodeToken(tokenResponse.access_token) as string | KeycloakJWTPayload;
-
-    if (typeof payload === 'string') {
-        throw TokenError.payloadInvalid();
-    }
-
     const dataSource = await useDataSource();
     const accountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
     let account = await accountRepository.findOne({
         where: {
-            provider_user_id: payload.sub,
+            provider_user_id: `${identity.id}`,
             provider_id: provider.id,
         },
         relations: ['user'],
     });
 
-    const expiresIn : number = ((payload.exp as number) - (payload.iat as number));
-    const expireDate : string = new Date(((payload.iat as number) * 1000) + (expiresIn * 1000)).toISOString();
-
-    if (account) {
-        account = accountRepository.merge(account, {
-            access_token: tokenResponse.access_token,
-            refresh_token: tokenResponse.refresh_token,
-            expires_at: expireDate,
-            expires_in: expiresIn,
-        });
-    } else {
-        const names : string[] = [
-            payload.preferred_username,
-            payload.nickname,
-            payload.sub,
-        ].filter((n) => n);
+    if (!account) {
+        let names : string[];
+        if (Array.isArray(identity.name)) {
+            names = identity.name;
+        } else {
+            names = [identity.name];
+        }
 
         const user = await createUser({
             realm_id: provider.realm_id,
@@ -68,12 +49,8 @@ export async function createOauth2ProviderAccount(
 
         account = accountRepository.create({
             provider_id: provider.id,
-            provider_user_id: payload.sub,
+            provider_user_id: `${identity.id}`,
             provider_user_name: names.shift(),
-            access_token: tokenResponse.access_token,
-            refresh_token: tokenResponse.refresh_token,
-            expires_at: expireDate,
-            expires_in: expiresIn,
             user_id: user.id,
             user,
         });
@@ -81,50 +58,13 @@ export async function createOauth2ProviderAccount(
 
     await accountRepository.save(account);
 
-    const roles : string[] = [];
-
-    if (
-        payload.roles &&
-        Array.isArray(payload.roles)
-    ) {
-        payload.roles = payload.roles
-            .filter((n) => typeof n === 'string');
-
-        if (
-            payload.roles &&
-            payload.roles.length > 0
-        ) {
-            roles.push(...payload.roles);
-        }
-    }
-
-    if (
-        payload.realm_access?.roles &&
-        Array.isArray(payload.realm_access?.roles)
-    ) {
-        payload.realm_access.roles = payload.realm_access?.roles
-            .filter((n) => typeof n === 'string');
-
-        if (
-            payload.realm_access.roles &&
-            payload.realm_access.roles.length > 0
-        ) {
-            roles.push(...payload.realm_access.roles);
-        }
-    }
-
-    // todo: maybe remove all existing roles, if user has revoked roles.
-
-    if (
-        roles &&
-        roles.length > 0
-    ) {
+    if (identity.roles && identity.roles.length > 0) {
         const providerRoleRepository = dataSource.getRepository(IdentityProviderRoleEntity);
 
         const providerRoles = await providerRoleRepository
             .createQueryBuilder('providerRole')
             .leftJoinAndSelect('providerRole.provider', 'provider')
-            .where('providerRole.external_id in (:...id)', { id: roles })
+            .where('providerRole.external_id in (:...id)', { id: identity.roles })
             .andWhere('provider.realm_id = :realmId', { realmId: provider.realm_id })
             .getMany();
 
