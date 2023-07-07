@@ -8,9 +8,9 @@
 import type { Jwt, JwtPayload } from 'jsonwebtoken';
 import { verify } from 'jsonwebtoken';
 import { KeyType, TokenError } from '@authup/core';
-import { isKeyPair, isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
+import { isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
 import type { TokenVerifyOptions } from './type';
-import { handleJWTError } from './utils';
+import { createErrorForJWTError } from './utils';
 
 /**
  * Verify JWT.
@@ -26,6 +26,8 @@ export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
 ) : Promise<JwtPayload | Jwt | string> {
+    let output : JwtPayload | Jwt | string | undefined;
+
     try {
         switch (context.type) {
             case KeyType.RSA:
@@ -41,25 +43,28 @@ export async function verifyToken(
                     options.algorithms = options.algorithms || ['ES256', 'ES384', 'ES512'];
                 }
 
-                return verify(token, publicKey, {
+                output = await verify(token, publicKey, {
                     ...options,
                 });
+                break;
             }
             case KeyType.OCT: {
                 const { type, secret, ...options } = context;
 
                 options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
 
-                return verify(token, secret, {
+                output = await verify(token, secret, {
                     ...options,
                 });
             }
         }
     } catch (e) {
-        handleJWTError(e);
-
-        throw e;
+        throw createErrorForJWTError(e);
     }
 
-    throw new TokenError({ message: 'Invalid type.' });
+    if (typeof output === 'undefined') {
+        throw new TokenError({ message: 'Invalid type.' });
+    }
+
+    return output;
 }

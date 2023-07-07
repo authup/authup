@@ -9,11 +9,16 @@ import { load } from 'locter';
 import path from 'node:path';
 import { send } from 'routup';
 import type { Request, Response } from 'routup';
+import { useConfig } from '../../../../config';
 import { resolvePackagePath, resolveRootPath } from '../../../path';
 
 export type EndpointInfo = {
     version: string,
-    timestamp: number
+    timestamp: number,
+    tokenMaxAgeAccessToken: number,
+    tokenMaxAgeRefreshToken: number,
+    redis: boolean,
+    vault: boolean
 };
 
 let info : undefined | EndpointInfo;
@@ -24,10 +29,15 @@ export async function useInfo() {
     }
 
     const pkgJson = await load(path.join(resolvePackagePath(), 'package.json'));
+    const config = useConfig();
 
     info = {
         version: pkgJson.version,
         timestamp: Date.now(),
+        tokenMaxAgeAccessToken: config.get('tokenMaxAgeAccessToken'),
+        tokenMaxAgeRefreshToken: config.get('tokenMaxAgeRefreshToken'),
+        redis: !!config.get('redis'),
+        vault: !!config.get('vault'),
     };
 
     return info;

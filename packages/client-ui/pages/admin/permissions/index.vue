@@ -2,7 +2,7 @@
 
 import type { Permission } from '@authup/core';
 import { PermissionName } from '@authup/core';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
@@ -19,6 +19,8 @@ export default defineNuxtComponent({
             ],
         });
 
+        const toast = useToast();
+
         const items = [
             {
                 name: 'overview',
@@ -33,13 +35,15 @@ export default defineNuxtComponent({
         ];
 
         const handleDeleted = (e: Permission) => {
-            const toast = useToast();
-            toast.success(`The permission ${e.name} was successfully deleted.`);
+            if (toast) {
+                toast.success({ body: `The permission ${e.name} was successfully deleted.` });
+            }
         };
 
         const handleFailed = (e: Error) => {
-            const toast = useToast();
-            toast.warning(e.message);
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

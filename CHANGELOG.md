@@ -3,6 +3,174 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump consola from 3.1.0 to 3.2.2 ([#1214](https://github.com/authup/authup/issues/1214)) ([0ff89ef](https://github.com/authup/authup/commit/0ff89ef4bcf44973131880b8b987be710845686f))
+* **deps:** bump dotenv from 16.1.4 to 16.3.1 ([#1185](https://github.com/authup/authup/issues/1185)) ([9e79d23](https://github.com/authup/authup/commit/9e79d23c9205e9194d779fecf6b220de79d629af))
+* **deps:** bump pg from 8.11.0 to 8.11.1 ([#1218](https://github.com/authup/authup/issues/1218)) ([eaec72b](https://github.com/authup/authup/commit/eaec72b4c859b17d62b4965c8aed484dd2272785))
+* **deps:** bump typeorm from 0.3.16 to 0.3.17 ([#1188](https://github.com/authup/authup/issues/1188)) ([e645a97](https://github.com/authup/authup/commit/e645a97ec98466316ae20f873697653ab43a98ae))
+* extended status endpoint information ([b889f68](https://github.com/authup/authup/commit/b889f688d8d9a92c950c8b167bc752ea7c807d37))
+
+
+### Features
+
+* enhanced and unified slot- & prop-typing and capabilities ([6d4caa6](https://github.com/authup/authup/commit/6d4caa6202349e7ea0f431da56a7e6881b49f41c))
+
+
+
+
+
+## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* bump hapic to v2.x ([2dd66ed](https://github.com/authup/authup/commit/2dd66ed87e89338be682a93bec4fe12ca86be712))
+* bump minimatch to v9.x ([0c63d48](https://github.com/authup/authup/commit/0c63d481d20dbae273130595bde4453b476eca37))
+* bump vue-layout dependencies + rename validation create fn ([ea0c679](https://github.com/authup/authup/commit/ea0c679207cd0d3cd6503d80779a825fdb6091d5))
+* **deps:** bump @hapic/oauth2 from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1162](https://github.com/authup/authup/issues/1162)) ([f54db63](https://github.com/authup/authup/commit/f54db63b1a4bf31ea7c7931ed96158ec62e5d2f8))
+* **deps:** bump @hapic/vault from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1166](https://github.com/authup/authup/issues/1166)) ([d17254d](https://github.com/authup/authup/commit/d17254deacdce5523993df25296e2dcfcc0ede03))
+* **deps:** bump dotenv from 16.1.1 to 16.1.3 ([#1151](https://github.com/authup/authup/issues/1151)) ([a96cb80](https://github.com/authup/authup/commit/a96cb80a81abd3caf3a67131afcdabc45419dd36))
+* **deps:** bump dotenv from 16.1.3 to 16.1.4 ([#1157](https://github.com/authup/authup/issues/1157)) ([1a91140](https://github.com/authup/authup/commit/1a91140f1779555d53d74b2a412fef9e9ade9179))
+* **deps:** bump hapic from 2.0.0-alpha.10 to 2.0.0-alpha.11 ([#1164](https://github.com/authup/authup/issues/1164)) ([5d5dbe6](https://github.com/authup/authup/commit/5d5dbe6627141563d9a8c674f88313ce0e81dce4))
+* rename token-hook-options to client-response-error-token-hook-options ([103f707](https://github.com/authup/authup/commit/103f707002b38f39c05fcbcef80167cd2945da37))
+
+
+
+
+
+# [0.37.0](https://github.com/authup/authup/compare/v0.36.0...v0.37.0) (2023-05-31)
+
+
+### Bug Fixes
+
+* add mising type export ([b4d5944](https://github.com/authup/authup/commit/b4d594451ab17725690c5a526391ec64e785513a))
+* **deps:** bump @ebec/http from 1.0.0 to 1.1.0 ([#1148](https://github.com/authup/authup/issues/1148)) ([9f3de59](https://github.com/authup/authup/commit/9f3de59114efc3cb8bb37d9de5de71f3b24843bd))
+* **deps:** bump dotenv from 16.0.3 to 16.1.1 ([#1142](https://github.com/authup/authup/issues/1142)) ([d68c905](https://github.com/authup/authup/commit/d68c905d95570b08699c7c53446cd09af641b704))
+* **deps:** bump locter from 1.1.0 to 1.1.2 ([#1149](https://github.com/authup/authup/issues/1149)) ([74628fe](https://github.com/authup/authup/commit/74628fe7566e9789f46ac9f2ff2959fa51ce1b55))
+* **deps:** bump nodemailer from 6.9.2 to 6.9.3 ([#1146](https://github.com/authup/authup/issues/1146)) ([b5f3e14](https://github.com/authup/authup/commit/b5f3e144b92073b6c9af6e82a2869b831d410b8d))
+* **deps:** bump routup to v1.0.1 ([17bfa57](https://github.com/authup/authup/commit/17bfa57fb4a1004238a9b28ebfd7df98876da7b8))
+* **deps:** bump smob to v1.4.0 ([8eefa83](https://github.com/authup/authup/commit/8eefa83a55271ad139dde2e0ccbacc8c937e6a4e))
+* **deps:** bump typeorm-extension from 2.8.0 to 2.8.1 ([#1143](https://github.com/authup/authup/issues/1143)) ([27c9779](https://github.com/authup/authup/commit/27c97793ad21f0251aafd3ac9795cac8873a611d))
+
+
+### Features
+
+* implemented ilingo v3 ([5b0e632](https://github.com/authup/authup/commit/5b0e6321cd8b7569e1e92262014a8ffc00098d63))
+
+
+
+
+
+# [0.36.0](https://github.com/authup/authup/compare/v0.35.0...v0.36.0) (2023-05-27)
+
+
+### Bug Fixes
+
+* add missing call for token created hook after token refresh ([ff31fe8](https://github.com/authup/authup/commit/ff31fe88804206b9ea84e6e24b9b55d5deb6af42))
+* **deps:** bump winston from 3.8.2 to 3.9.0 ([#1132](https://github.com/authup/authup/issues/1132)) ([c08fa7e](https://github.com/authup/authup/commit/c08fa7ec8c9a2e0b5655e0a51b72ec2dcf667b17))
+* dont't log requests to root api path ([164ae82](https://github.com/authup/authup/commit/164ae824cb393a0afd97ea70a6d131ced5e3729d))
+* rename register-timer to set-timer ([77793bc](https://github.com/authup/authup/commit/77793bc961e4695520dd08187182238647aee2ba))
+
+
+### Features
+
+* cleanup and relocate auth store + set token max age for oauth2 grant types ([13643fd](https://github.com/authup/authup/commit/13643fd76e8c471f8d90b555c386041a34bcb2ff))
+* refactor and optimized client response error token hook ([fae52c8](https://github.com/authup/authup/commit/fae52c8cfcc0aa563d6edd0702f3438ab76e6e5a))
+
+
+
+
+
+# [0.35.0](https://github.com/authup/authup/compare/v0.34.0...v0.35.0) (2023-05-25)
+
+
+### Bug Fixes
+
+* update auth store after token creation ([697b3d5](https://github.com/authup/authup/commit/697b3d5806c84dbe31e65470378545044d956b20))
+
+
+### Features
+
+* add callback handler for token creator ([515bdee](https://github.com/authup/authup/commit/515bdee793de15a8bbe8ad97a1f1db483984383a))
+* allow disabling token refresh timer + add token creation hook option ([d042e62](https://github.com/authup/authup/commit/d042e62829241df930ef43141aa8dc6dae46408d))
+
+
+
+
+
+# [0.34.0](https://github.com/authup/authup/compare/v0.33.0...v0.34.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* better token error handling + token error verification ([e323e83](https://github.com/authup/authup/commit/e323e834b2f4f695fd9b0c8dc1629d6a4b265ebe))
+* **deps:** bump @types/jsonwebtoken from 9.0.1 to 9.0.2 ([#1061](https://github.com/authup/authup/issues/1061)) ([d00c6e3](https://github.com/authup/authup/commit/d00c6e3b62aa15a52fa59924e57d388aa0d72fdf))
+* **deps:** bump @types/nodemailer from 6.4.7 to 6.4.8 ([#1121](https://github.com/authup/authup/issues/1121)) ([cde3a49](https://github.com/authup/authup/commit/cde3a492386b32d2c63b61cae5a3605e0616a58d))
+* **deps:** bump @vue-layout/* packages ([f7d6e4c](https://github.com/authup/authup/commit/f7d6e4c8089c693e9d6a86ed8e19725bf8c78a42))
+* **deps:** bump better-sqlite3 from 8.3.0 to 8.4.0 ([#1116](https://github.com/authup/authup/issues/1116)) ([42d832f](https://github.com/authup/authup/commit/42d832f7424a2ae870ddaa0be7881a356cb0716b))
+* **deps:** bump jose from 4.14.0 to 4.14.1 ([#1054](https://github.com/authup/authup/issues/1054)) ([d4dbf38](https://github.com/authup/authup/commit/d4dbf3800d71fc7200a4be482a1049779bb9bd80))
+* **deps:** bump jose from 4.14.1 to 4.14.3 ([#1064](https://github.com/authup/authup/issues/1064)) ([7df18eb](https://github.com/authup/authup/commit/7df18ebd81e01d570802ac748858b5c3be6d61c0))
+* **deps:** bump jose from 4.14.3 to 4.14.4 ([#1071](https://github.com/authup/authup/issues/1071)) ([3d0a73d](https://github.com/authup/authup/commit/3d0a73d701f9dd9a91130041c780fe17a818f96e))
+* **deps:** bump pg from 8.10.0 to 8.11.0 ([#1098](https://github.com/authup/authup/issues/1098)) ([f82a76c](https://github.com/authup/authup/commit/f82a76c8b47bacfc77845032fea1fa5dc237a992))
+* **deps:** bump routup to v1.0.0 ([b3e1686](https://github.com/authup/authup/commit/b3e1686041d14ea852d8f7d5c3df6e44d25bd7d4))
+* **deps:** bump routup to v1.0.0-alpha ([c6a3d11](https://github.com/authup/authup/commit/c6a3d11fae1c1af1c88b4214caa54a898772c51f))
+* **deps:** bump smob from 1.0.0 to 1.1.1 ([#1122](https://github.com/authup/authup/issues/1122)) ([0dc6667](https://github.com/authup/authup/commit/0dc66679c7b65c37f2eec5793727d00b0c35c013))
+* **deps:** bump socket.io-parser from 4.2.2 to 4.2.3 ([#1129](https://github.com/authup/authup/issues/1129)) ([3757a7a](https://github.com/authup/authup/commit/3757a7a913cc4b6822dde4c4115a0667713ed07e))
+* **deps:** bump typeorm from 0.3.15 to 0.3.16 ([#1088](https://github.com/authup/authup/issues/1088)) ([a7fc5a8](https://github.com/authup/authup/commit/a7fc5a86b615bd62fdea073ca1854695d9a568d9))
+* **deps:** bump typeorm-extension from 2.7.0 to 2.8.0 ([#1069](https://github.com/authup/authup/issues/1069)) ([715cfa6](https://github.com/authup/authup/commit/715cfa6c1b55c7165167ee3c5642ba1e130191af))
+* **deps:** bump yaml from 2.2.1 to 2.2.2 ([#1056](https://github.com/authup/authup/issues/1056)) ([61427c2](https://github.com/authup/authup/commit/61427c22a66f7023910d8d378fcfccad944a9538))
+* **deps:** bump yargs from 17.7.1 to 17.7.2 ([#1065](https://github.com/authup/authup/issues/1065)) ([78f22dd](https://github.com/authup/authup/commit/78f22dd3bfba919fd84343a169485db3e1f1fd42))
+* minor fix for css styling of robot-form ([0d379f4](https://github.com/authup/authup/commit/0d379f41e2828f22072d32f65cfb7e63d7280edb))
+* **server-adapter:** cookie middleware extraction for http middleware ([d990176](https://github.com/authup/authup/commit/d990176ff9f39ae6c288acc142a23864098250cb))
+* update current user on settings page ([91aa2df](https://github.com/authup/authup/commit/91aa2dfba1569f9d5a96c4cd14540de2542c6138))
+
+
+### Features
+
+* better error messages for refresh_token grant type ([13f3239](https://github.com/authup/authup/commit/13f32392cf234c81b3d1c787f0c586036e2c4968))
+* guarantee that refresh token max age is bigger than access token age ([2b72207](https://github.com/authup/authup/commit/2b72207e897787399009a49061621703cac563b1))
+* switch to bootstrap table view for domain lists ([2faa379](https://github.com/authup/authup/commit/2faa37910732863bb730588b6e3334c27b353c16))
+* use bootstrap toasts instead of vue-toastification ([50ee4ef](https://github.com/authup/authup/commit/50ee4efe93efa29903185ba864ce654647aed422))
+
+
+
+
+
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* bump express-validator to v7 ([f88a039](https://github.com/authup/authup/commit/f88a0392625fe1aa64f5ce8454eee337c7d2dd7a))
+* **deps:** bump better-sqlite3 from 8.2.0 to 8.3.0 ([#1015](https://github.com/authup/authup/issues/1015)) ([d80cb17](https://github.com/authup/authup/commit/d80cb17ea9624db06e56ad8affe59c1c306cc3f8))
+* **deps:** bump consola from 2.15.3 to 3.0.1 ([#1023](https://github.com/authup/authup/issues/1023)) ([0d6274d](https://github.com/authup/authup/commit/0d6274d3d4bdffa57c1774ff43268db3765e7fc3))
+* **deps:** bump consola from 3.0.1 to 3.0.2 ([#1025](https://github.com/authup/authup/issues/1025)) ([f1361ae](https://github.com/authup/authup/commit/f1361aeb2a785d2c501a3dd9b0546486d9b3dd07))
+* **deps:** bump consola from 3.0.2 to 3.1.0 ([#1037](https://github.com/authup/authup/issues/1037)) ([c44c12e](https://github.com/authup/authup/commit/c44c12ee122dd17ddb3c0148712d6c4bda1521b1))
+* **deps:** bump continu from 1.2.0 to 1.3.1 ([#1010](https://github.com/authup/authup/issues/1010)) ([21730dd](https://github.com/authup/authup/commit/21730dd64284198c6111f14f5cf31a55774d89fb))
+* **deps:** bump jose from 4.13.1 to 4.13.2 ([#1020](https://github.com/authup/authup/issues/1020)) ([be852a3](https://github.com/authup/authup/commit/be852a3a5ae5aa3b88d16222c913569d2c01a09d))
+* **deps:** bump jose from 4.13.2 to 4.14.0 ([#1027](https://github.com/authup/authup/issues/1027)) ([5098af6](https://github.com/authup/authup/commit/5098af623f18779aaf4d078f2b59a0acb8645f0e))
+* **deps:** bump typeorm from 0.3.12 to 0.3.13 ([#1005](https://github.com/authup/authup/issues/1005)) ([1f636d3](https://github.com/authup/authup/commit/1f636d35ed53d89fe63dcc6bd6847f189f4bd1da))
+* **deps:** bump typeorm from 0.3.13 to 0.3.14 ([#1016](https://github.com/authup/authup/issues/1016)) ([0330aec](https://github.com/authup/authup/commit/0330aec58ebf1c1001edeb94455c302e5db5ff4d))
+* don't log metrics and root path ([4d4ca5c](https://github.com/authup/authup/commit/4d4ca5c351e88370360fc630f22c17220026e977))
+* http client (error) hook implementation ([86ddd6c](https://github.com/authup/authup/commit/86ddd6c341a36ab37cf76844129552031618c926))
+* page component typings ([b815cb6](https://github.com/authup/authup/commit/b815cb6359472c4247d1246a8c4fb7667d4e4bce))
+* rename retry state tracker ([a233a61](https://github.com/authup/authup/commit/a233a6155f9f0fa5d29490a9b79bea7e0c88f221))
+* typings for auth error check ([8a69037](https://github.com/authup/authup/commit/8a6903746e5c16d804df3c5d90de1360f82fcc89))
+
+
+### Features
+
+* bump hapic to v2.0.0-alpha.x (axios -> fetch) ([#1036](https://github.com/authup/authup/issues/1036)) ([e09c919](https://github.com/authup/authup/commit/e09c91930d65b41725e5b1c4e26c21f9a5c67342))
+* implemented hapic v2.0 alpha ([f1da95b](https://github.com/authup/authup/commit/f1da95bb3be6d1fe0cfd195a44a63c5a8d60dc6c))
+
+
+
+
+
 ## [0.32.3](https://github.com/authup/authup/compare/v0.32.2...v0.32.3) (2023-04-05)
 
 

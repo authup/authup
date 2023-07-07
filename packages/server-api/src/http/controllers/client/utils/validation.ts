@@ -19,11 +19,11 @@ import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runOauth2ClientValidation(
     req: Request,
@@ -56,7 +56,7 @@ export async function runOauth2ClientValidation(
             for (let i = 0; i < urls.length; i++) {
                 const output = validator.safeParse(urls[i]);
                 if (!output.success) {
-                    throw new BadRequestError(buildHTTPValidationErrorMessage('redirect_uri'));
+                    throw new BadRequestError(buildRequestValidationErrorMessage('redirect_uri'));
                 }
             }
 
@@ -127,13 +127,13 @@ export async function runOauth2ClientValidation(
 
     if (isPropertySet(result.data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
     } else if (
         operation === RequestHandlerOperation.CREATE &&
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
-        throw new BadRequestError(buildHTTPValidationErrorMessage('realm_id'));
+        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
     }
 
     // ----------------------------------------------

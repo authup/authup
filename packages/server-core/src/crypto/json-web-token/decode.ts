@@ -14,7 +14,7 @@ import {
 } from 'jsonwebtoken';
 import { TokenError } from '@authup/core';
 import type { TokenDecodeOptions } from './type';
-import { handleJWTError } from './utils';
+import { createErrorForJWTError } from './utils';
 
 /**
  * Decode a JWT token with no verification.
@@ -37,7 +37,7 @@ export function decodeToken(
             ...options,
         });
     } catch (e) {
-        handleJWTError(e);
+        createErrorForJWTError(e);
 
         throw e;
     }

@@ -21,22 +21,24 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
-import { IdentityProviderProtocol, createNanoID } from '@authup/core';
+import type { IdentityProvider } from '@authup/core';
+import {
+    DomainType, IdentityProviderProtocol, createNanoID,
+} from '@authup/core';
 import {
     buildFormInput,
     buildFormInputCheckbox,
     buildFormSubmit,
 } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    alphaNumHyphenUnderscore,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../helpers';
-import {
-    alphaNumHyphenUnderscore, useAPIClient,
+    useAPIClient,
 } from '../../core';
 import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const OAuth2ProviderForm = defineComponent({
     name: 'OAuth2ProviderForm',
@@ -124,17 +126,23 @@ export const OAuth2ProviderForm = defineComponent({
             },
         }, form);
 
+        const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const authorizeUri = computed<string>(() => {
-            if (!props.entity) {
+            if (!manager.entity.value) {
                 return '';
             }
 
-            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, props.entity.id);
+            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
         const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function generateId() {
             const isSame: boolean = form.slug === form.name ||
@@ -148,7 +156,9 @@ export const OAuth2ProviderForm = defineComponent({
 
         function initForm() {
             if (props.realmId) form.realm_id = props.realmId;
-            initFormAttributesFromSource(form, props.entity);
+
+            initFormAttributesFromSource(form, manager.entity.value);
+
             if (isSlugEmpty.value) {
                 generateId();
             }
@@ -156,20 +166,21 @@ export const OAuth2ProviderForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<IdentityProvider>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().identityProvider.create(data),
-            update: async (id, data) => useAPIClient().identityProvider.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const enabled = buildFormInputCheckbox({
@@ -213,7 +224,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.slug,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Slug',
                         value: form.slug,
                         onChange(input) {
@@ -238,7 +249,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.name,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Name',
                         value: form.name,
                         onChange(input) {
@@ -257,7 +268,7 @@ export const OAuth2ProviderForm = defineComponent({
                     ]),
                     buildFormInput({
                         validationResult: $v.value.client_id,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Client ID',
                         value: form.client_id,
                         onChange(input) {
@@ -266,7 +277,7 @@ export const OAuth2ProviderForm = defineComponent({
                     }),
                     buildFormInput({
                         validationResult: $v.value.client_secret,
-                        validationTranslator: buildValidationTranslator(props.translatorLocale),
+                        validationTranslator: useValidationTranslator(props.translatorLocale),
                         labelContent: 'Client Secret',
                         value: form.client_secret,
                         onChange(input) {
@@ -292,7 +303,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.token_url,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.token_url,
                             onChange(input) {
@@ -313,7 +324,7 @@ export const OAuth2ProviderForm = defineComponent({
                         ]),
                         buildFormInput({
                             validationResult: $v.value.authorize_url,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                             labelContent: 'Endpoint',
                             value: form.authorize_url,
                             onChange(input) {
@@ -329,7 +340,7 @@ export const OAuth2ProviderForm = defineComponent({
 
             let roleList : VNodeArrayChildren = [];
 
-            if (props.entity) {
+            if (manager.entity.value) {
                 roleList = [h('div', [
                     h('h6', [
                         h('i', { class: 'fa fa-users' }),
@@ -337,7 +348,7 @@ export const OAuth2ProviderForm = defineComponent({
                         'Roles',
                     ]),
                     h(IdentityProviderRoleAssignmentList, {
-                        entityId: props.entity.id,
+                        entityId: manager.entity.value.id,
                     }),
                     h('hr'),
                 ])];
@@ -348,7 +359,7 @@ export const OAuth2ProviderForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

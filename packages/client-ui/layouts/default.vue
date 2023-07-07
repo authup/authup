@@ -1,33 +1,31 @@
 <!--
-  - Copyright (c) 2021-2022.
-  - Author Peter Placzek (tada5hi)
-  - For the full copyright and license information,
-  - view the LICENSE file that was distributed with this source code.
+  Copyright (c) 2021-2021.
+  Author Peter Placzek (tada5hi)
+  For the full copyright and license information,
+  view the LICENSE file that was distributed with this source code.
   -->
-<script>
-import pageHeader from '../components/header';
-import pageSidebar from '../components/sidebar';
-import pageFooter from '../components/footer';
+<script lang="ts">
 
-export default {
-    components: {
-        pageHeader,
-        pageFooter,
-        pageSidebar,
-    },
-};
+import PageHeader from '../components/header.vue';
+import PageSidebar from '../components/sidebar.vue';
+import PageFooter from '../components/footer.vue';
+import { defineNuxtComponent } from '#app';
+
+export default defineNuxtComponent({
+    components: { PageHeader, PageSidebar, PageFooter },
+});
 </script>
 
 <template>
     <div id="app">
-        <page-header />
+        <PageHeader />
         <div class="page-wrapper">
-            <page-sidebar />
+            <PageSidebar />
             <div class="page-content">
-                <slot />
+                <NuxtPage />
             </div>
         </div>
-        <page-footer />
+        <PageFooter />
     </div>
 </template>
 <style>

@@ -1,8 +1,9 @@
 <script lang="ts">
 
 import { UserForm } from '@authup/client-vue';
+import type { User } from '@authup/core';
 import { storeToRefs } from 'pinia';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
 import { LayoutKey } from '../../../config/layout';
@@ -17,18 +18,20 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });
 
+        const toast = useToast();
+
         const store = useAuthStore();
 
         const { user, userId } = storeToRefs(store);
 
-        const handleUpdated = () => {
-            const toast = useToast();
-            toast.success('The account was successfully updated.');
+        const handleUpdated = (entity: User) => {
+            toast.success({ body: 'The account was successfully updated.' });
+
+            store.setUser(entity);
         };
 
         const handleFailed = (e: Error) => {
-            const toast = useToast();
-            toast.warning(e.message);
+            toast.warning({ body: e.message });
         };
 
         return {
@@ -42,6 +45,9 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
+        <h6 class="title">
+            General
+        </h6>
         <UserForm
             :can-manage="false"
             :realm-id="userId"

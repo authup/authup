@@ -41,19 +41,19 @@ export class TokenVerifier {
             this.cache = new TokenVerifierMemoryCache();
         }
 
-        this.client = new APIClient({ baseURL: context.baseUrl });
+        this.client = new APIClient({ baseURL: context.baseURL });
 
         if (context.creator) {
             if (
                 typeof context.creator !== 'function' &&
-                typeof context.creator.baseUrl === 'undefined'
+                typeof context.creator.baseURL === 'undefined'
             ) {
-                context.creator.baseUrl = context.baseUrl;
+                context.creator.baseURL = context.baseURL;
             }
 
             mountClientResponseErrorTokenHook(this.client, {
                 tokenCreator: context.creator,
-                baseURL: context.baseUrl,
+                baseURL: context.baseURL,
             });
 
             this.interceptorMounted = true;

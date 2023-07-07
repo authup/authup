@@ -17,7 +17,7 @@ import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
@@ -62,7 +62,7 @@ export async function runClientScopeValidation(
         result.relation.client.realm_id
     ) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.client.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('client_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('client_id'));
         }
     }
 

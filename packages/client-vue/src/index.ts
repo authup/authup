@@ -30,6 +30,5 @@ export default {
 } satisfies Plugin<Options | undefined>;
 
 export * from './components';
-export * from './helpers';
-export * from './language';
 export * from './core';
+export * from './translator';

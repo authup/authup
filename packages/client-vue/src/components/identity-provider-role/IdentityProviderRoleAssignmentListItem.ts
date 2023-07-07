@@ -13,9 +13,8 @@ import {
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
-import { useAPIClient } from '../../core';
-import { initFormAttributesFromSource } from '../../helpers';
-import { buildValidationTranslator } from '../../language';
+import { initFormAttributesFromSource, useAPIClient } from '../../core';
+import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderRoleAssignmentListItem = defineComponent({
     name: 'OAuth2ProviderRoleAssignmentListItem',
@@ -133,14 +132,15 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                         item.value = data[0];
 
                         initFormAttributesFromSource(form, data[0]);
-                        if (!isExternalIDDefined.value) {
-                            form.external_id = props.role.name;
-                        }
                     } else {
                         item.value = null;
                     }
                 } catch (e) {
                     // ...
+                }
+
+                if (!isExternalIDDefined.value) {
+                    form.external_id = props.role.name;
                 }
 
                 busy.value = false;
@@ -199,6 +199,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                             'btn-primary': !item.value,
                             'btn-dark': !!item.value,
                         }],
+                        disabled: !isExternalIDDefined.value,
                         onClick($event: any) {
                             $event.preventDefault();
 
@@ -253,7 +254,7 @@ export const IdentityProviderRoleAssignmentListItem = defineComponent({
                                 form.external_id = input;
                             },
                             validationResult: $v.value.external_id,
-                            validationTranslator: buildValidationTranslator(props.translatorLocale),
+                            validationTranslator: useValidationTranslator(props.translatorLocale),
                         }),
                     ]),
                 ];

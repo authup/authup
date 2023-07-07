@@ -5,22 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref, watch,
+    defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core';
 import {
     buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../helpers';
-import { useAPIClient } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+} from '../../core';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RoleForm = defineComponent({
     name: 'RoleForm',
@@ -54,34 +55,40 @@ export const RoleForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+        const manager = createEntityManager(`${DomainType.ROLE}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<Role>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().role.create(data),
-            update: async (id, data) => useAPIClient().role.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -91,7 +98,7 @@ export const RoleForm = defineComponent({
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {
@@ -107,7 +114,7 @@ export const RoleForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

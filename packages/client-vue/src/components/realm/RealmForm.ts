@@ -13,20 +13,20 @@ import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import type { Realm } from '@authup/core';
-import { REALM_MASTER_NAME, createNanoID } from '@authup/core';
+import {
+    DomainType, REALM_MASTER_NAME, User, createNanoID,
+} from '@authup/core';
 import {
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../helpers';
-import {
-    useAPIClient,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RealmForm = defineComponent({
     name: 'RealmForm',
@@ -61,16 +61,21 @@ export const RealmForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed(() => !!props.entity && !!props.entity.id);
+        const manager = createEntityManager(`${DomainType.REALM}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         const generateName = () => {
             form.name = createNanoID();
         };
 
         function initForm() {
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
 
             if (form.name.length === 0) {
                 generateName();
@@ -79,38 +84,40 @@ export const RealmForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<Realm>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().realm.create(data),
-            update: async (id, data) => useAPIClient().realm.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const id = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
                     form.name = input;
                 },
                 props: {
-                    disabled: props.entity && props.entity.name === REALM_MASTER_NAME,
+                    disabled: manager.entity.value &&
+                        manager.entity.value.name === REALM_MASTER_NAME,
                 },
             });
 
             let idHint : VNodeArrayChildren = [];
 
-            if (!props.entity || !props.entity.id) {
+            if (!manager.entity.value || !manager.entity.value.id) {
                 idHint = [
                     h('div', {
                         class: 'mb-3',
@@ -136,7 +143,7 @@ export const RealmForm = defineComponent({
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {
@@ -152,7 +159,7 @@ export const RealmForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

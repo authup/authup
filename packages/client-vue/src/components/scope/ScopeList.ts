@@ -5,82 +5,39 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
-import type { BuildInput } from 'rapiq';
+import { DomainType } from '@authup/core';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
-import { useAPIClient } from '../../core';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 
 export const ScopeList = defineComponent({
     name: 'ScopeList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Scope>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Scope) => true,
-        updated: (item: Scope) => true,
-    },
+    props: defineDomainListProps<Scope>(),
+    slots: Object as SlotsType<EntityListSlotsType<Scope>>,
+    emits: defineDomainListEvents<Scope>(),
     setup(props, ctx) {
-        const { build } = createDomainListBuilder<Scope>({
-            props: toRefs(props),
+        const { render, setDefaults } = createEntityList(DomainType.SCOPE, {
+            props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().scope.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Scopes',
-                    icon: 'fa-solid fa-meteor',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    textContent: 'No more scopes available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Scopes',
+                icon: 'fa-solid fa-meteor',
+            },
+
+            noMore: {
+                content: 'No more scopes available...',
             },
         });
 
-        return () => build();
-    },
-    data() {
-        return {
-            busy: false,
-            items: [],
-            q: '',
-            meta: {
-                limit: 10,
-                offset: 0,
-                total: 0,
-            },
-            itemBusy: false,
-        };
+        return () => render();
     },
 });
 

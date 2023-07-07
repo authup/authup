@@ -4,7 +4,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
 import { ref } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
@@ -61,13 +61,17 @@ export default defineNuxtComponent({
         }
 
         const handleUpdated = (e: Client) => {
-            toast.success('The client was successfully updated.');
+            if (toast) {
+                toast.success({ body: 'The client was successfully updated.' });
+            }
 
             updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {
-            toast.warning(e.message);
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

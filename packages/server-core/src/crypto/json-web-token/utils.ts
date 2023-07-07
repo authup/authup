@@ -5,38 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError, hasOwnProperty } from '@authup/core';
+import { TokenError } from '@authup/core';
+import { isObject } from 'smob';
 
-export function handleJWTError(e: unknown) {
+export function createErrorForJWTError(e: unknown) : TokenError {
     if (
-        e &&
-        typeof e === 'object' &&
-        hasOwnProperty(e, 'name')
+        isObject(e) &&
+        typeof e.name === 'string'
     ) {
         switch (e.name) {
-            case 'TokenExpiredError':
-                throw TokenError.expired();
+            case 'TokenExpiredError': {
+                return TokenError.expired();
+            }
             case 'NotBeforeError': {
-                if (
-                    hasOwnProperty(e, 'date') &&
-                    typeof e.date === 'string'
-                ) {
-                    throw TokenError.notActiveBefore(e.date);
+                if (typeof e.date === 'string' || e.date instanceof Date) {
+                    return TokenError.notActiveBefore(e.date);
                 }
                 break;
             }
             case 'JsonWebTokenError': {
-                if (
-                    hasOwnProperty(e, 'message') &&
-                    typeof e.message === 'string'
-                ) {
-                    throw TokenError.payloadInvalid(e.message);
+                if (typeof e.message === 'string') {
+                    return TokenError.payloadInvalid(e.message);
                 }
+
+                break;
             }
         }
     }
 
-    throw new TokenError({
+    return new TokenError({
         previous: e as Error,
         decorateMessage: true,
         logMessage: true,

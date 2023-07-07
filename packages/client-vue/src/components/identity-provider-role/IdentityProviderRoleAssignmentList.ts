@@ -7,6 +7,7 @@
 
 import { defineComponent, h } from 'vue';
 import type { Role } from '@authup/core';
+import type { ListBodySlotProps } from '@vue-layout/list-controls';
 import { SlotName } from '@vue-layout/list-controls';
 import { IdentityProviderRoleAssignmentListItem } from './IdentityProviderRoleAssignmentListItem';
 import { RoleList } from '../role';
@@ -23,7 +24,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
         return () => h(RoleList, {
             headerTitle: false,
         }, {
-            [SlotName.ITEMS]: (slotProps: { data: Role[] }) => slotProps.data.map((item: Role) => h(
+            [SlotName.BODY]: (slotProps: ListBodySlotProps<Role>) => slotProps.data.map((item: Role) => h(
                 IdentityProviderRoleAssignmentListItem,
                 {
                     key: item.id,

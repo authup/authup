@@ -4,7 +4,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
@@ -63,13 +63,17 @@ export default defineNuxtComponent({
         }
 
         const handleUpdated = (e: Permission) => {
-            toast.success('The permission was successfully updated.');
+            if (toast) {
+                toast.success({ body: 'The permission was successfully updated.' });
+            }
 
             updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {
-            toast.warning(e.message);
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

@@ -16,7 +16,7 @@ import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -69,7 +69,7 @@ export async function runIdentityProviderRoleValidation(
         result.relation.role.realm_id
     ) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
 
         // todo: check if req.user has role permissions
@@ -84,7 +84,7 @@ export async function runIdentityProviderRoleValidation(
 
     if (result.relation.provider) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.provider.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('provider_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('provider_id'));
         }
 
         result.data.provider_realm_id = result.relation.provider.realm_id;

@@ -19,15 +19,15 @@ export async function createRobotVaultEngine() {
 
     const client = useClient();
 
-    await client.mount.create({
-        path: 'robots',
-        data: {
+    await client.mount.create(
+        'robots',
+        {
             type: 'kv',
             options: {
                 version: 1,
             },
         },
-    });
+    );
 }
 
 export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
@@ -38,17 +38,18 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
     const client = useClient();
 
     try {
-        await client.keyValueV1.create({
-            mount: 'robots',
-            path: entity.name,
-            data: {
+        await client.keyValueV1.create(
+            'robots',
+            entity.name,
+            {
                 id: entity.id,
                 secret: entity.secret,
             },
-        });
+        );
     } catch (e) {
         if (isClientErrorWithStatusCode(e, 404)) {
             await createRobotVaultEngine();
+            await saveRobotCredentialsToVault(entity);
             return;
         }
 
@@ -64,10 +65,10 @@ export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'
     const client = useClient();
 
     try {
-        await client.keyValueV1.delete({
-            mount: 'robots',
-            path: entity.name,
-        });
+        await client.keyValueV1.delete(
+            'robots',
+            entity.name,
+        );
     } catch (e) {
         if (isClientErrorWithStatusCode(e, 404)) {
             return;
@@ -87,10 +88,10 @@ export async function findRobotCredentialsInVault(
     const client = useClient();
 
     try {
-        const response = await client.keyValueV1.getOne({
-            mount: 'robots',
-            path: entity.name,
-        });
+        const response = await client.keyValueV1.getOne(
+            'robots',
+            entity.name,
+        );
         if (response && response.data) {
             return response.data as Robot;
         }

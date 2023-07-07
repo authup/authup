@@ -13,7 +13,7 @@ import {
 } from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import type { RobotEntity } from '../../../domains';
 import { RobotRepository } from '../../../domains';
@@ -26,7 +26,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         const entity = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
             sub: entity.id,
@@ -37,6 +37,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         });
     }
 

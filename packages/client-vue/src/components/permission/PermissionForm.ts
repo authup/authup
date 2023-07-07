@@ -5,20 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DomainType } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref, watch,
+    defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import {
+    helpers, maxLength, minLength, required,
+} from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
 import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/form-controls';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createSubmitHandler,
+    createEntityManager,
     initFormAttributesFromSource,
-} from '../../helpers';
-import { useAPIClient } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+} from '../../core';
+import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const PermissionForm = defineComponent({
     name: 'PermissionForm',
@@ -46,6 +49,7 @@ export const PermissionForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+                permissionNamePattern: helpers.regex(/^(?:[a-zA-Z-]+_[a-zA-Z-]+)+$/),
             },
             description: {
                 minLength: minLength(5),
@@ -53,34 +57,40 @@ export const PermissionForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+        const manager = createEntityManager(`${DomainType.PERMISSION}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<Permission>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().permission.create(data),
-            update: async (id, data) => useAPIClient().permission.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
             const name = buildFormInput({
-                validationResult: $v.value.id,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationResult: $v.value.name,
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -88,13 +98,14 @@ export const PermissionForm = defineComponent({
                 },
                 props: {
                     placeholder: '{object}_{action}',
-                    disabled: props.entity && props.entity.built_in,
+                    disabled: manager.entity.value &&
+                        manager.entity.value.built_in,
                 },
             });
 
             const description = buildFormTextarea({
                 validationResult: $v.value.description,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Description',
                 value: form.description,
                 onChange(input) {
@@ -110,7 +121,7 @@ export const PermissionForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
                 busy,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

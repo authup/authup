@@ -9,15 +9,16 @@ import type { MatchedDataOptions } from 'express-validator';
 import { matchedData } from 'express-validator';
 import { deleteUndefinedObjectProperties } from '@authup/core';
 import type { Request } from 'routup';
+import { distinctArray } from 'smob';
 import type { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import type { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
 
-export function buildHTTPValidationErrorMessage<
+export function buildRequestValidationErrorMessage<
     T extends Record<string, any> = Record<string, any>,
     >(name: keyof T | (keyof T)[]) {
-    const names = Array.isArray(name) ? name : [name];
+    const names = distinctArray(Array.isArray(name) ? name : [name]);
 
     if (names.length > 1) {
         return `The parameters ${names.join(', ')} is invalid.`;
@@ -60,7 +61,7 @@ export async function extendExpressValidationResultWithRelation<
             },
         });
         if (!entity) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage(keys.id));
+            throw new BadRequestError(buildRequestValidationErrorMessage(keys.id));
         }
 
         result.relation[keys.entity as keyof ExpressValidationResult<R>['relation']] = entity;

@@ -1,7 +1,9 @@
 <script lang="ts">
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
-import { IdentityProviderList, RealmList, useAPIClient } from '@authup/client-vue';
+import {
+    IdentityProviderList, RealmList, useAPIClient, useValidationTranslator,
+} from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
     FormInput, FormSubmit,
@@ -11,7 +13,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
     toRef, watch,
 } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import {
     defineNuxtComponent, navigateTo, useNuxtApp, useRoute,
 } from '#app';
@@ -20,7 +22,6 @@ import {
 } from '#imports';
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
-import { translateValidationMessage } from '../composables/ilingo';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { useAuthStore } from '../store/auth';
 
@@ -38,6 +39,8 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_OUT]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
+
+        const toast = useToast();
 
         const form = reactive({
             name: '',
@@ -99,9 +102,8 @@ export default defineNuxtComponent({
                     query,
                 });
             } catch (e: any) {
-                if (isClientError(e)) {
-                    const toast = useToast();
-                    toast.warning(e.message);
+                if (isClientError(e) && toast) {
+                    toast.warning({ body: e.message }, { pos: 'top-center' });
                 }
             }
         };
@@ -121,7 +123,7 @@ export default defineNuxtComponent({
 
         return {
             vuelidate,
-            translateValidationMessage,
+            translator: useValidationTranslator(),
             form,
             submit,
             busy,
@@ -148,7 +150,7 @@ export default defineNuxtComponent({
                     <FormInput
                         v-model="form.name"
                         :validation-result="vuelidate.name"
-                        :validation-translator="translateValidationMessage"
+                        :validation-translator="translator"
                         :label="true"
                         :label-content="'Name'"
                     />
@@ -157,7 +159,7 @@ export default defineNuxtComponent({
                         v-model="form.password"
                         type="password"
                         :validation-result="vuelidate.password"
-                        :validation-translator="translateValidationMessage"
+                        :validation-translator="translator"
                         :label="true"
                         :label-content="'Password'"
                     />
@@ -180,7 +182,7 @@ export default defineNuxtComponent({
                         <template #header>
                             <h6>IdentityProvider</h6>
                         </template>
-                        <template #items="props">
+                        <template #body="props">
                             <div class="d-flex flex-row">
                                 <div
                                     v-for="(item, key) in props.data"
@@ -199,7 +201,7 @@ export default defineNuxtComponent({
                 </div>
                 <div class="col-4">
                     <RealmList>
-                        <template #item-actions="props">
+                        <template #itemActions="props">
                             <RealmSelectAction
                                 v-model="form.realm_id"
                                 :list-ref="identityProviderRef"

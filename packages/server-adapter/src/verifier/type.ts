@@ -14,7 +14,7 @@ import type {
 import type { TokenVerifierCacheOptions } from './cache';
 
 export type TokenVerifierOptions = {
-    baseUrl: string,
+    baseURL: string,
     creator?: TokenCreator | TokenCreatorOptions,
     cache?: TokenVerifierCacheOptions
 };

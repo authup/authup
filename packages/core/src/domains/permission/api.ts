@@ -7,6 +7,7 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
+import { nullifyEmptyObjectProperties } from '../../utils';
 import { BaseAPI } from '../base';
 import type { Permission } from './types';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
@@ -30,13 +31,13 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
     }
 
     async create(data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
-        const response = await this.client.post('permissions', data);
+        const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
     async update(id: Permission['id'], data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
-        const response = await this.client.post(`permissions/${id}`, data);
+        const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

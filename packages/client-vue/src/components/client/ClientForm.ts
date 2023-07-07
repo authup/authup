@@ -17,29 +17,28 @@ import {
     h,
     reactive,
     ref,
-    resolveComponent, watch,
+    watch,
 } from 'vue';
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { Client, Realm, Robot } from '@authup/core';
-import { createNanoID } from '@authup/core';
+import type { Client, Realm } from '@authup/core';
+import { DomainType, createNanoID } from '@authup/core';
 import {
     buildFormInput,
     buildFormInputCheckbox,
     buildFormSubmit,
     buildFormTextarea,
 } from '@vue-layout/form-controls';
-import {
-    createSubmitHandler,
-    initFormAttributesFromSource,
-} from '../../helpers';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    useAPIClient,
+    createEntityManager,
+    initFormAttributesFromSource,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
+import { ClientRedirectUriList } from './ClientRedirectUriList';
 
 export const ClientForm = defineComponent({
     name: 'ClientForm',
@@ -102,10 +101,16 @@ export const ClientForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const manager = createEntityManager(`${DomainType.CLIENT}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const isRealmLocked = computed(() => !!props.realmId);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         const generateSecret = () => {
             form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
@@ -120,7 +125,7 @@ export const ClientForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -129,28 +134,27 @@ export const ClientForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const clientRedirectUriList = resolveComponent('ClientRedirectUriList');
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const render = () => {
-            const submit = createSubmitHandler<Client>({
-                props,
-                ctx,
-                form,
-                formIsValid: () => !$v.value.$invalid,
-                create: (data) => useAPIClient().client.create(data),
-                update: (id, data) => useAPIClient().client.update(id, data),
-            });
-
             const name = [
                 buildFormInput({
                     validationResult: $v.value.name,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Name',
                     value: form.name,
                     onChange(input) {
@@ -166,7 +170,7 @@ export const ClientForm = defineComponent({
             const description = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Description',
                     value: form.description,
                     onChange(input) {
@@ -183,7 +187,7 @@ export const ClientForm = defineComponent({
                 h('label', { class: 'form-label' }, [
                     'Redirect Uri(s)',
                 ]),
-                h(clientRedirectUriList, {
+                h(ClientRedirectUriList, {
                     uri: form.redirect_uri,
                     onUpdated(value: string) {
                         form.redirect_uri = value;
@@ -194,7 +198,7 @@ export const ClientForm = defineComponent({
 
             const isConfidential = buildFormInputCheckbox({
                 validationResult: $v.value.is_confidential,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Is Confidential?',
                 value: form.is_confidential,
                 onChange(input) {
@@ -204,11 +208,11 @@ export const ClientForm = defineComponent({
 
             let id : VNodeArrayChildren = [];
 
-            if (props.entity) {
+            if (manager.entity.value) {
                 id = [
                     buildFormInput({
                         labelContent: 'ID',
-                        value: props.entity.id,
+                        value: manager.entity.value.id,
                         props: {
                             disabled: true,
                         },
@@ -219,7 +223,7 @@ export const ClientForm = defineComponent({
             const secret = [
                 buildFormInput({
                     validationResult: $v.value.secret,
-                    validationTranslator: buildValidationTranslator(props.translatorLocale),
+                    validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: [
                         'Secret',
                     ],
@@ -249,15 +253,13 @@ export const ClientForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 
             let realm : VNodeArrayChildren = [];
 
-            if (
-                !isRealmLocked.value
-            ) {
+            if (!isRealmLocked.value) {
                 realm = [
                     h('hr'),
                     h('label', { class: 'form-label' }, 'Realm'),

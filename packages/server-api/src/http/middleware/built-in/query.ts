@@ -6,9 +6,9 @@
  */
 
 import type { ParseOptions } from '@routup/query';
-import { createRequestHandler } from '@routup/query';
+import { createHandler } from '@routup/query';
 import type { Router } from 'routup';
 
 export function registerQueryMiddleware(router: Router, input?: ParseOptions) {
-    router.use(createRequestHandler(input || {}));
+    router.use(createHandler(input || {}));
 }

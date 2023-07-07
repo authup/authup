@@ -24,10 +24,12 @@ export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddl
 
         if (!authorization && context.tokenByCookie) {
             const cookieToken = context.tokenByCookie(req, CookieName.ACCESS_TOKEN);
-            if (!cookieToken.startsWith('Bearer')) {
-                authorization = `Bearer ${cookieToken}`;
-            } else {
-                authorization = cookieToken;
+            if (cookieToken) {
+                if (!cookieToken.startsWith('Bearer')) {
+                    authorization = `Bearer ${cookieToken}`;
+                } else {
+                    authorization = cookieToken;
+                }
             }
         }
 

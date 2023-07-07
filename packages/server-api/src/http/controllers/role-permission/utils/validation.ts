@@ -15,7 +15,7 @@ import { isRequestSubOwner, useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildHTTPValidationErrorMessage,
+    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -92,7 +92,7 @@ export async function runRolePermissionValidation(
 
     if (result.relation.role) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
-            throw new BadRequestError(buildHTTPValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
 
         result.data.role_realm_id = result.relation.role.realm_id;

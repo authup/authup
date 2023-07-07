@@ -10,7 +10,7 @@ import {
     OAuth2SubKind, Realm, ScopeName,
 } from '@authup/core';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useRequestEnv } from '../../utils';
 import { AbstractGrant } from './abstract';
 import type {
@@ -22,7 +22,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
         const realm = useRequestEnv(request, 'realm');
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             realmId: realm.id,
             realmName: realm.name,
@@ -36,6 +36,7 @@ export class InternalGrantType extends AbstractGrant implements Grant {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         });
     }
 }

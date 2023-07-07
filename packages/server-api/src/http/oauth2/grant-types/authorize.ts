@@ -13,7 +13,7 @@ import { useRequestBody } from '@routup/body';
 import { useRequestQuery } from '@routup/query';
 import { useDataSource } from 'typeorm-extension';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { OAuth2AuthorizationCodeEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
@@ -25,7 +25,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         const authorizationCode = await this.validate(request);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
             realmId: authorizationCode.realm.id,
@@ -39,6 +39,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         };
 
         if (hasOAuth2OpenIDScope(authorizationCode.scope)) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
-import { useToast } from 'vue-toastification';
+import { useToast } from 'bootstrap-vue-next';
 import { UserPasswordForm } from '@authup/client-vue';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta } from '#imports';
@@ -16,17 +16,21 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
         });
 
+        const toast = useToast();
+
         const store = useAuthStore();
-        const { userId } = storeToRefs(store) as { userId: string };
+        const { userId } = storeToRefs(store);
 
         const handleUpdated = () => {
-            const toast = useToast();
-            toast.success('The account was successfully updated.');
+            if (toast) {
+                toast.success({ body: 'The account was successfully updated.' });
+            }
         };
 
-        const handleFailed = (e) => {
-            const toast = useToast();
-            toast.warning(e.message);
+        const handleFailed = (e: Error) => {
+            if (toast) {
+                toast.warning({ body: e.message });
+            }
         };
 
         return {

@@ -4,68 +4,38 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
+import { DomainType } from '@authup/core';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core';
-import type { BuildInput } from 'rapiq';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
-import { useAPIClient } from '../../core';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<Permission>>,
-            default() {
-                return {};
+    props: defineDomainListProps<Permission>(),
+    slots: Object as SlotsType<EntityListSlotsType<Permission>>,
+    emits: defineDomainListEvents<Permission>(),
+    setup(props, setup) {
+        const { render, setDefaults } = createEntityList(`${DomainType.PERMISSION}`, {
+            props,
+            setup,
+        });
+
+        setDefaults({
+            footerPagination: true,
+
+            headerSearch: true,
+            headerTitle: {
+                content: 'Permissions',
+                icon: 'fa-solid fa-key',
             },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: Permission) => true,
-        updated: (item: Permission) => true,
-    },
-    setup(props, ctx) {
-        const { build } = createDomainListBuilder<Permission>({
-            props: toRefs(props),
-            setup: ctx,
-            load: (buildInput) => useAPIClient().permission.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Permissions',
-                    icon: 'fa-solid fa-key',
-                },
-
-                noMore: {
-                    textContent: 'No more permissions available...',
-                },
+            noMore: {
+                content: 'No more permissions available...',
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });

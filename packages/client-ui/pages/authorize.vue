@@ -2,10 +2,10 @@
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core';
-import { isGlobMatch } from '@authup/core';
-import { h, ref } from 'vue';
-import type { Ref, VNodeArrayChildren } from 'vue';
-import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
+import type { Ref } from 'vue';
+import { useToast } from 'bootstrap-vue-next';
+import { isGlobMatch } from '../utils';
 import { definePageMeta } from '#imports';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
@@ -21,6 +21,8 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
             layout: 'oauth2',
         });
+
+        const toast = useToast();
 
         const route = useRoute();
 
@@ -124,9 +126,8 @@ export default defineNuxtComponent({
 
                 window.location.href = url;
             } catch (e) {
-                if (e instanceof Error) {
-                    const toast = useToast();
-                    toast.warning(e.message);
+                if (e instanceof Error && toast) {
+                    toast.warning({ body: e.message });
                 }
             }
         };

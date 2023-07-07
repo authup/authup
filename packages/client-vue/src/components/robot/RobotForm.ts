@@ -22,7 +22,7 @@ import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core';
-import { createNanoID } from '@authup/core';
+import { DomainType, createNanoID } from '@authup/core';
 import {
     buildFormInput,
     buildFormSubmit,
@@ -31,15 +31,13 @@ import {
     SlotName,
     buildItemActionToggle,
 } from '@vue-layout/list-controls';
-import {
-    createSubmitHandler,
-    initFormAttributesFromSource,
-} from '../../helpers';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    useAPIClient,
+    createEntityManager,
+    initFormAttributesFromSource,
 } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const RobotForm = defineComponent({
@@ -86,11 +84,19 @@ export const RobotForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const manager = createEntityManager(`${DomainType.ROBOT}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const isRealmLocked = computed(() => !!props.realmId);
-        const isSecretHashed = computed(() => props.entity && props.entity.secret === form.secret && form.secret.startsWith('$'));
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
+        const isSecretHashed = computed(
+            () => manager.entity.value && manager.entity.value.secret === form.secret && form.secret.startsWith('$'),
+        );
 
         const generateSecret = () => {
             form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
@@ -105,7 +111,7 @@ export const RobotForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -114,31 +120,29 @@ export const RobotForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
+
                 initForm();
             }
         });
 
         initForm();
 
-        const render = () => {
-            const submit = createSubmitHandler<Robot>({
-                props,
-                ctx,
-                form,
-                formIsValid: () => !$v.value.$invalid,
-                create: (data) => useAPIClient().robot.create(data),
-                update: (id, data) => {
-                    if (isSecretHashed.value) {
-                        delete data.secret;
-                    }
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
 
-                    return useAPIClient().robot.update(id, data);
-                },
+            await manager.createOrUpdate({
+                ...form,
+                secret: isSecretHashed.value ? '' : form.secret,
             });
+        };
 
+        const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -151,11 +155,11 @@ export const RobotForm = defineComponent({
 
             let id : VNodeArrayChildren = [];
 
-            if (props.entity) {
+            if (manager.entity.value) {
                 id = [
                     buildFormInput({
                         labelContent: 'ID',
-                        value: props.entity.id,
+                        value: manager.entity.value.id,
                         props: {
                             disabled: true,
                         },
@@ -165,15 +169,15 @@ export const RobotForm = defineComponent({
 
             const secret = buildFormInput({
                 validationResult: $v.value.secret,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: [
                     'Secret',
                     isSecretHashed.value ? h('span', {
-                        class: 'text-danger font-weight-bold pl-1',
+                        class: 'text-danger font-weight-bold ps-1',
                     }, [
                         'Hashed',
                         ' ',
-                        h('i', { class: 'fa fa-exclamation-triangle pl-1' }),
+                        h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
                     ]) : '',
                 ],
                 value: form.secret,
@@ -202,7 +206,7 @@ export const RobotForm = defineComponent({
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 busy,
                 submit,
-                isEditing,
+                isEditing: isEditing.value,
                 validationResult: $v.value,
             });
 

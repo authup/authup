@@ -3,6 +3,86 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
+
+**Note:** Version bump only for package @authup/server-adapter
+
+
+
+
+
+## [0.37.1](https://github.com/authup/authup/compare/v0.37.0...v0.37.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* bump hapic to v2.x ([2dd66ed](https://github.com/authup/authup/commit/2dd66ed87e89338be682a93bec4fe12ca86be712))
+
+
+
+
+
+# [0.37.0](https://github.com/authup/authup/compare/v0.36.0...v0.37.0) (2023-05-31)
+
+**Note:** Version bump only for package @authup/server-adapter
+
+
+
+
+
+# [0.36.0](https://github.com/authup/authup/compare/v0.35.0...v0.36.0) (2023-05-27)
+
+
+### Features
+
+* cleanup and relocate auth store + set token max age for oauth2 grant types ([13643fd](https://github.com/authup/authup/commit/13643fd76e8c471f8d90b555c386041a34bcb2ff))
+* refactor and optimized client response error token hook ([fae52c8](https://github.com/authup/authup/commit/fae52c8cfcc0aa563d6edd0702f3438ab76e6e5a))
+
+
+
+
+
+# [0.35.0](https://github.com/authup/authup/compare/v0.34.0...v0.35.0) (2023-05-25)
+
+**Note:** Version bump only for package @authup/server-adapter
+
+
+
+
+
+# [0.34.0](https://github.com/authup/authup/compare/v0.33.0...v0.34.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 4.14.0 to 4.14.1 ([#1054](https://github.com/authup/authup/issues/1054)) ([d4dbf38](https://github.com/authup/authup/commit/d4dbf3800d71fc7200a4be482a1049779bb9bd80))
+* **deps:** bump jose from 4.14.1 to 4.14.3 ([#1064](https://github.com/authup/authup/issues/1064)) ([7df18eb](https://github.com/authup/authup/commit/7df18ebd81e01d570802ac748858b5c3be6d61c0))
+* **deps:** bump jose from 4.14.3 to 4.14.4 ([#1071](https://github.com/authup/authup/issues/1071)) ([3d0a73d](https://github.com/authup/authup/commit/3d0a73d701f9dd9a91130041c780fe17a818f96e))
+* **server-adapter:** cookie middleware extraction for http middleware ([d990176](https://github.com/authup/authup/commit/d990176ff9f39ae6c288acc142a23864098250cb))
+
+
+
+
+
+# [0.33.0](https://github.com/authup/authup/compare/v0.32.3...v0.33.0) (2023-04-24)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 4.13.1 to 4.13.2 ([#1020](https://github.com/authup/authup/issues/1020)) ([be852a3](https://github.com/authup/authup/commit/be852a3a5ae5aa3b88d16222c913569d2c01a09d))
+* **deps:** bump jose from 4.13.2 to 4.14.0 ([#1027](https://github.com/authup/authup/issues/1027)) ([5098af6](https://github.com/authup/authup/commit/5098af623f18779aaf4d078f2b59a0acb8645f0e))
+* http client (error) hook implementation ([86ddd6c](https://github.com/authup/authup/commit/86ddd6c341a36ab37cf76844129552031618c926))
+
+
+### Features
+
+* bump hapic to v2.0.0-alpha.x (axios -> fetch) ([#1036](https://github.com/authup/authup/issues/1036)) ([e09c919](https://github.com/authup/authup/commit/e09c91930d65b41725e5b1c4e26c21f9a5c67342))
+* implemented hapic v2.0 alpha ([f1da95b](https://github.com/authup/authup/commit/f1da95bb3be6d1fe0cfd195a44a63c5a8d60dc6c))
+
+
+
+
+
 ## [0.32.3](https://github.com/authup/authup/compare/v0.32.2...v0.32.3) (2023-04-05)
 
 

@@ -23,7 +23,7 @@ export function createTokenCreatorWithRobotInVault(
         client = options.vault;
     }
 
-    const apiClient : APIClient = new APIClient({ baseURL: options.baseUrl });
+    const apiClient : APIClient = new APIClient({ baseURL: options.baseURL });
 
     const robotName = options.name || ROBOT_SYSTEM_NAME;
 
@@ -32,12 +32,13 @@ export function createTokenCreatorWithRobotInVault(
             await apiClient.robot.integrity(robotName);
         }
 
-        const response = await client.keyValueV1.getOne<Partial<Robot>>({
-            mount: 'robots',
-            path: robotName,
-        });
+        const response = await client.keyValueV1.getOne<Partial<Robot>>(
+            'robots',
+            robotName,
+        );
 
         if (
+            !isObject(response) ||
             !isObject(response.data) ||
             typeof response.data.id !== 'string' ||
             typeof response.data.secret !== 'string'
@@ -50,6 +51,12 @@ export function createTokenCreatorWithRobotInVault(
             secret: response.data.secret,
         }, apiClient);
 
-        return creator();
+        return creator().then((response) => {
+            if (options.created) {
+                options.created(response);
+            }
+
+            return response;
+        });
     };
 }

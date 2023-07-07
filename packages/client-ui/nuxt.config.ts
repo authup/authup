@@ -15,7 +15,6 @@ export default defineNuxtConfig({
     css: [
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',
-        'vue-toastification/dist/index.css',
         '@/assets/css/vue-layout-navigation.css',
         '@/assets/css/vue-toastification.css',
         '@/assets/css/root.css',
@@ -39,8 +38,8 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: {
-            apiUrl: 'http://localhost:3001',
-            publicUrl: 'http://localhost:3000',
+            apiUrl: process.env.API_URL || 'http://localhost:3001',
+            publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
         },
     },
     modules: [

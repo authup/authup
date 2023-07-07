@@ -11,7 +11,7 @@ import {
     ErrorCode,
     getRequestRetryState,
     hasClientResponseErrorTokenHook,
-    isAPIClientAuthError,
+    isAPIClientErrorWithCode, isAPIClientTokenExpiredError, isAPIClientTokenInvalidError,
     mountClientResponseErrorTokenHook, unmountClientResponseErrorTokenHook,
 } from '../../../src';
 
@@ -37,31 +37,32 @@ describe('src/interceptor/utils', () => {
     it('should be valid response error', () => {
         let error = createResponseError({
             status: 401,
+            code: ErrorCode.TOKEN_INACTIVE,
         });
-        expect(isAPIClientAuthError(error)).toBeTruthy();
+        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_INACTIVE)).toBeTruthy();
 
         error = createResponseError({
             status: 500,
             code: ErrorCode.TOKEN_EXPIRED,
         });
-        expect(isAPIClientAuthError(error)).toBeTruthy();
+        expect(isAPIClientTokenExpiredError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.TOKEN_INVALID,
         });
-        expect(isAPIClientAuthError(error)).toBeTruthy();
+        expect(isAPIClientTokenInvalidError(error)).toBeTruthy();
     });
 
     it('should not be valid response error', () => {
         let error = new Error('foo');
-        expect(isAPIClientAuthError(error)).toBeFalsy();
+        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.CREDENTIALS_INVALID,
         });
-        expect(isAPIClientAuthError(error)).toBeFalsy();
+        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

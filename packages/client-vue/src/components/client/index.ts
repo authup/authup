@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export { ClientEntity } from './ClientEntity';
 export { ClientForm } from './ClientForm';
 export { ClientList } from './ClientList';
 export { ClientRedirectUriList } from './ClientRedirectUriList';

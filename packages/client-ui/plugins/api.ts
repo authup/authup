@@ -5,15 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ClientAPIConfigInput } from '@authup/core';
 import {
     APIClient,
-    mountClientResponseErrorTokenHook,
-    unmountClientResponseErrorTokenHook,
+    ClientResponseErrorTokenHook,
 } from '@authup/core';
-import type { ClientAPIConfigInput } from '@authup/core';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
-import { useRuntimeConfig } from '#imports';
 import { defineNuxtPlugin } from '#app';
 import { useAuthStore } from '../store/auth';
 
@@ -30,14 +28,38 @@ declare module '@vue/runtime-core' {
 }
 
 export default defineNuxtPlugin((ctx) => {
-    const runtimeConfig = useRuntimeConfig();
-
     const config : ClientAPIConfigInput = {
-        baseURL: runtimeConfig.public.apiUrl,
+        baseURL: ctx.$config.public.apiUrl,
     };
-
     const client = new APIClient(config);
+
     const store = useAuthStore(ctx.$pinia as Pinia);
+
+    const tokenHook = new ClientResponseErrorTokenHook(client, {
+        baseURL: ctx.$config.public.apiUrl,
+        tokenCreator: () => {
+            const { refreshToken } = storeToRefs(store);
+
+            if (!refreshToken.value) {
+                throw new Error('No refresh token available.');
+            }
+
+            return client.token.createWithRefreshToken({
+                refresh_token: refreshToken.value,
+            });
+        },
+        tokenCreated: (response) => {
+            store.setAccessTokenExpireDate(undefined);
+
+            setTimeout(() => {
+                store.handleTokenGrantResponse(response);
+            }, 0);
+        },
+        tokenFailed: (e) => {
+            store.logout();
+        },
+    });
+
     store.$subscribe((mutation, state) => {
         if (mutation.storeId !== 'auth') return;
 
@@ -47,26 +69,23 @@ export default defineNuxtPlugin((ctx) => {
                 token: state.accessToken,
             });
 
-            mountClientResponseErrorTokenHook(client, {
-                baseURL: runtimeConfig.public.apiUrl,
-                tokenCreator: () => {
-                    let refreshToken : string | undefined;
-                    if (state.refreshToken) {
-                        refreshToken = state.refreshToken;
-                    }
-                    if (refreshToken) {
-                        const refs = storeToRefs(store);
-                        refreshToken = refs.refreshToken.value;
-                    }
-
-                    return client.token.createWithRefreshToken({
-                        refresh_token: refreshToken as string,
-                    });
-                },
-            });
+            tokenHook.mount();
         } else {
             client.unsetAuthorizationHeader();
-            unmountClientResponseErrorTokenHook(client);
+
+            tokenHook.unmount();
+        }
+
+        if (
+            state.refreshToken &&
+            state.accessTokenExpireDate
+        ) {
+            const expiresIn = Math.floor((state.accessTokenExpireDate.getTime() - Date.now()) / 1000);
+
+            tokenHook.setTimer({
+                refresh_token: state.refreshToken,
+                expires_in: expiresIn,
+            });
         }
     });
 

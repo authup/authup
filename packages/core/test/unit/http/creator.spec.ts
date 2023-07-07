@@ -24,8 +24,8 @@ jest.spyOn(TokenAPI.prototype, 'createWithPasswordGrant')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
 jest.spyOn(KeyValueV1API.prototype, 'getOne')
-    .mockImplementation((context) => {
-        if (context.path === 'SYSTEM') {
+    .mockImplementation((_mount, path) => {
+        if (path === 'SYSTEM') {
             return Promise.resolve({
                 data: {
                     id: 'foo',
@@ -44,7 +44,7 @@ describe('src/creator', () => {
     it('should create token grant response with user', async () => {
         const creator = createTokenCreator({
             type: 'user',
-            baseUrl: 'http://localhot:3001',
+            baseURL: 'http://localhot:3001',
             name: 'admin',
             password: 'start123',
             realmId: 'foo',
@@ -60,7 +60,7 @@ describe('src/creator', () => {
     it('should create token grant response with robot', async () => {
         const creator = createTokenCreator({
             type: 'robot',
-            baseUrl: 'http://localhot:3001',
+            baseURL: 'http://localhot:3001',
             id: 'SYSTEM',
             secret: 'start123',
         });
@@ -74,7 +74,7 @@ describe('src/creator', () => {
     it('should create and use robot vault authenticator', async () => {
         const creator = createTokenCreator({
             type: 'robotInVault',
-            baseUrl: 'http://localhot:3001',
+            baseURL: 'http://localhot:3001',
             name: 'SYSTEM',
             vault: 'admin:start123@http://127.0.0.1:8098/v1/',
         });
@@ -83,5 +83,26 @@ describe('src/creator', () => {
 
         const output = await creator();
         expect(output).toEqual(tokenGrantResponse);
+    });
+
+    it('should create with handler on change', (done) => {
+        const creator = createTokenCreator({
+            type: 'user',
+            baseURL: 'http://localhot:3001',
+            name: 'admin',
+            password: 'start123',
+            realmId: 'foo',
+            realmName: 'bar',
+            created: (response) => {
+                expect(response).toBeDefined();
+                expect(response.access_token).toBeDefined();
+
+                done();
+            },
+        });
+
+        expect(creator).toBeDefined();
+
+        creator();
     });
 });

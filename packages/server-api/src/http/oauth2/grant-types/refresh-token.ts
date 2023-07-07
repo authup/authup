@@ -7,11 +7,11 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
-    TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
+    OAuth2TokenKind, TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
 import { AbstractGrant } from './abstract';
@@ -27,7 +27,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const sub = getOAuth2SubByEntity(token);
 
         const accessToken = await this.issueAccessToken({
-            remoteAddress: getRequestIp(request, { trustProxy: true }),
+            remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: token.scope,
             sub,
             subKind,
@@ -41,6 +41,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
             accessToken,
             accessTokenMaxAge: this.config.get('tokenMaxAgeAccessToken'),
             refreshToken,
+            refreshTokenMaxAge: this.config.get('tokenMaxAgeRefreshToken'),
         });
     }
 
@@ -59,19 +60,15 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         });
 
         if (!entity) {
-            throw TokenError.refreshTokenInvalid();
+            throw TokenError.tokenNotFound(OAuth2TokenKind.REFRESH);
         }
 
         const expires = Date.parse(entity.expires);
         if (expires < Date.now()) {
-            throw TokenError.refreshTokenInvalid();
+            throw TokenError.expired(OAuth2TokenKind.REFRESH);
         }
 
-        if (!entity) {
-            throw TokenError.refreshTokenInvalid();
-        } else {
-            await repository.remove(entity);
-        }
+        await repository.remove(entity);
 
         return entity;
     }

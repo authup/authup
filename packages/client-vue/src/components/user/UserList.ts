@@ -5,71 +5,39 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PropType } from 'vue';
-import { defineComponent, toRefs } from 'vue';
-import type { BuildInput } from 'rapiq';
+import { DomainType } from '@authup/core';
+import type { SlotsType } from 'vue';
+import { defineComponent } from 'vue';
 import type { User } from '@authup/core';
-import type { DomainListHeaderSearchOptionsInput, DomainListHeaderTitleOptionsInput } from '../../helpers';
-import { createDomainListBuilder } from '../../helpers';
-import { useAPIClient } from '../../core';
+import type { EntityListSlotsType } from '../../core/entity-list';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
 
 export const UserList = defineComponent({
     name: 'UserList',
-    props: {
-        loadOnSetup: {
-            type: Boolean,
-            default: true,
-        },
-        query: {
-            type: Object as PropType<BuildInput<User>>,
-            default() {
-                return {};
-            },
-        },
-        noMore: {
-            type: Boolean,
-            default: true,
-        },
-        footerPagination: {
-            type: Boolean,
-            default: true,
-        },
-        headerTitle: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderTitleOptionsInput>,
-            default: true,
-        },
-        headerSearch: {
-            type: [Boolean, Object] as PropType<boolean | DomainListHeaderSearchOptionsInput>,
-            default: true,
-        },
-    },
-    emits: {
-        deleted: (item: User) => true,
-        updated: (item: User) => true,
-    },
+    props: defineDomainListProps<User>(),
+    slots: Object as SlotsType<EntityListSlotsType<User>>,
+    emits: defineDomainListEvents<User>(),
     setup(props, ctx) {
-        const propsRef = toRefs(props);
-
-        const { build } = createDomainListBuilder<User>({
-            props: propsRef,
+        const { render, setDefaults } = createEntityList(`${DomainType.USER}`, {
+            props,
             setup: ctx,
-            load: (buildInput) => useAPIClient().user.getMany(buildInput),
-            defaults: {
-                footerPagination: true,
+        });
 
-                headerSearch: true,
-                headerTitle: {
-                    content: 'Users',
-                    icon: 'fa-solid fa-user',
-                },
+        setDefaults({
+            footerPagination: true,
 
-                noMore: {
-                    textContent: 'No more users available...',
-                },
+            headerSearch: true,
+            headerTitle: {
+                content: 'Users',
+                icon: 'fa-solid fa-user',
+            },
+
+            noMore: {
+                content: 'No more users available...',
             },
         });
 
-        return () => build();
+        return () => render();
     },
 });
 

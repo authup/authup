@@ -5,15 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    buildFormInput,
-    buildFormInputCheckbox,
-    buildFormSubmit,
-} from '@vue-layout/form-controls';
-import {
-    SlotName,
-    buildItemActionToggle,
-} from '@vue-layout/list-controls';
+import type { Realm, User } from '@authup/core';
+import { DomainType } from '@authup/core';
+import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
+import { SlotName, buildItemActionToggle } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
@@ -22,21 +17,16 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-
-import type { Realm, User } from '@authup/core';
-import {
-    createSubmitHandler,
-    initFormAttributesFromSource,
-} from '../../helpers';
-import { useAPIClient } from '../../core';
-import { buildValidationTranslator, useTranslator } from '../../language';
+import { useIsEditing, useUpdatedAt } from '../../composables';
+import { createEntityManager, initFormAttributesFromSource } from '../../core';
+import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({
     name: 'UserForm',
     props: {
         entity: {
-            type: Object as PropType<Partial<User>>,
+            type: Object as PropType<User>,
             default: undefined,
         },
         realmId: {
@@ -53,7 +43,7 @@ export const UserForm = defineComponent({
         },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
-    setup(props, ctx) {
+    async setup(props, ctx) {
         const busy = ref(false);
         const displayNameChanged = ref(false);
         const form = reactive({
@@ -92,9 +82,15 @@ export const UserForm = defineComponent({
             },
         }, form);
 
-        const isEditing = computed<boolean>(() => typeof props.entity !== 'undefined' && !!props.entity.id);
+        const manager = createEntityManager(`${DomainType.USER}`, {
+            setup: ctx,
+            props,
+        });
+
+        const isEditing = useIsEditing(manager.entity);
+        const updatedAt = useUpdatedAt(props.entity);
+
         const isRealmLocked = computed(() => !!props.realmId);
-        const updatedAt = computed(() => (props.entity ? props.entity.updated_at : undefined));
 
         function initForm() {
             if (props.realmId) {
@@ -102,31 +98,31 @@ export const UserForm = defineComponent({
             }
 
             if (
-                props.entity &&
-                typeof props.entity.name_locked !== 'undefined'
+                !!manager.entity.value &&
+                typeof manager.entity.value.name_locked !== 'undefined'
             ) {
-                form.name_locked = props.entity.name_locked;
+                form.name_locked = manager.entity.value.name_locked;
             }
 
-            initFormAttributesFromSource(form, props.entity);
+            initFormAttributesFromSource(form, manager.entity.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
+                manager.entity.value = props.entity;
                 initForm();
             }
         });
 
         initForm();
 
-        const submit = createSubmitHandler<User>({
-            props,
-            ctx,
-            form,
-            formIsValid: () => !$v.value.$invalid,
-            create: async (data) => useAPIClient().user.create(data),
-            update: async (id, data) => useAPIClient().user.update(id, data),
-        });
+        const submit = async () => {
+            if ($v.value.$invalid) {
+                return;
+            }
+
+            await manager.createOrUpdate(form);
+        };
 
         const updateDisplayName = (value: string) => {
             if (!displayNameChanged.value) {
@@ -140,7 +136,7 @@ export const UserForm = defineComponent({
         const render = () => {
             const name = buildFormInput({
                 validationResult: $v.value.name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Name',
                 value: form.name,
                 onChange(input) {
@@ -154,7 +150,7 @@ export const UserForm = defineComponent({
 
             const displayName = buildFormInput({
                 validationResult: $v.value.display_name,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Display Name',
                 value: form.display_name,
                 onChange(input) {
@@ -165,7 +161,7 @@ export const UserForm = defineComponent({
 
             const email = buildFormInput({
                 validationResult: $v.value.email,
-                validationTranslator: buildValidationTranslator(props.translatorLocale),
+                validationTranslator: useValidationTranslator(props.translatorLocale),
                 labelContent: 'Email',
                 value: form.email,
                 props: {
