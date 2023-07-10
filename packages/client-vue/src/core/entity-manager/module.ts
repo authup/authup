@@ -9,7 +9,7 @@ import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
 import { hasOwnProperty } from '@authup/core';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
-import { ref } from 'vue';
+import { ref, toRef } from 'vue';
 import { useAPIClient } from '../api-client';
 import { extendObjectProperties } from '../object';
 import { hasNormalizedSlot, normalizeSlot } from '../slot';

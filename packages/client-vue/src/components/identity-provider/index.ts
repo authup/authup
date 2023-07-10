@@ -6,5 +6,6 @@
  */
 
 export { IdentityProviderEntity } from './IdentityProviderEntity';
-export { OAuth2ProviderForm } from './OAuth2ProviderForm';
+export { IdentityProviderForm } from './IdentityProviderForm';
+export { IdentityProviderOAuth2Form } from './IdentityProviderOAuth2Form';
 export { IdentityProviderList } from './IdentityProviderList';

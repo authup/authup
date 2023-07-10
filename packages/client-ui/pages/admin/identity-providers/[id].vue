@@ -30,6 +30,9 @@ export default defineNuxtComponent({
             {
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
+            {
+                name: 'Roles', icon: 'fa-solid fa-theater-masks', urlSuffix: 'roles',
+            },
         ];
 
         const toast = useToast();

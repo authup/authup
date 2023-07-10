@@ -1,16 +1,15 @@
 <script lang="ts">
 
-import { IdentityProviderOAuth2Form } from '@authup/client-vue';
+import { IdentityProviderRoleAssignmentList } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
-import { useNuxtApp } from '#app';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        OAuth2ProviderForm: IdentityProviderOAuth2Form,
+        IdentityProviderRoleAssignmentList,
     },
     props: {
         entity: {
@@ -27,31 +26,20 @@ export default defineNuxtComponent({
             ],
         });
 
-        const handleUpdated = (e: IdentityProvider) => {
-            emit('updated', e);
-        };
-
         const handleFailed = (e: Error) => {
             emit('failed', e);
         };
 
-        const app = useNuxtApp();
-
         return {
-            apiUrl: app.$config.public.apiUrl as string,
             entity: props.entity,
-            handleUpdated,
             handleFailed,
         };
     },
 });
 </script>
 <template>
-    <OAuth2ProviderForm
-        :api-url="apiUrl"
-        :entity="entity"
-        :realm-id="entity.realm_id"
-        @updated="handleUpdated"
+    <IdentityProviderRoleAssignmentList
+        :entity-id="entity.id"
         @failed="handleFailed"
     />
 </template>

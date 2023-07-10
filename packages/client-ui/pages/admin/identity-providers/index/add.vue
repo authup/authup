@@ -1,5 +1,5 @@
 <script lang="ts">
-import { OAuth2ProviderForm } from '@authup/client-vue';
+import { IdentityProviderForm } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import { IdentityProviderProtocol, PermissionName } from '@authup/core';
 import { FormSelect } from '@vue-layout/form-controls';
@@ -13,7 +13,7 @@ import { useAuthStore } from '../../../../store/auth';
 export default defineNuxtComponent({
     components: {
         FormSelect,
-        OAuth2ProviderForm,
+        IdentityProviderForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -56,19 +56,6 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <FormSelect
-            v-model="protocol"
-            :options="options"
-            :label="true"
-            :label-content="'Protocol'"
-        />
-        <template v-if="protocol === 'oauth2'">
-            <hr>
-            <OAuth2ProviderForm
-                :realm-id="realmManagementId"
-                @created="handleCreated"
-                @failed="handleFailed"
-            />
-        </template>
+        <IdentityProviderForm />
     </div>
 </template>
