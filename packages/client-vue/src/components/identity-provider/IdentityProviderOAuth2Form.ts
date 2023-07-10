@@ -8,7 +8,7 @@
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
-    VNodeArrayChildren,
+    VNodeArrayChildren, VNodeChild,
 } from 'vue';
 import {
     computed,
@@ -16,32 +16,31 @@ import {
     h,
     reactive,
     ref,
-    watch,
+    toRef,
 } from 'vue';
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { IdentityProvider } from '@authup/core';
+import type { IdentityProvider, OAuth2OpenIDProviderMetadata } from '@authup/core';
 import {
-    DomainType, IdentityProviderProtocol, createNanoID,
+    DomainType, IdentityProviderProtocol,
 } from '@authup/core';
 import {
     buildFormInput,
-    buildFormInputCheckbox,
     buildFormSubmit,
 } from '@vue-layout/form-controls';
-import { useIsEditing, useUpdatedAt } from '../../composables';
+import { onChange, useIsEditing } from '../../composables';
 import {
-    alphaNumHyphenUnderscore,
-    createEntityManager,
+    createEntityManager, extendObjectProperties,
     initFormAttributesFromSource,
     useAPIClient,
 } from '../../core';
-import { IdentityProviderRoleAssignmentList } from '../identity-provider-role';
 import { useTranslator, useValidationTranslator } from '../../translator';
+import { IdentityProviderBasicForm } from './IdentityProviderBasicForm';
+import { IdentityProviderDiscovery } from './IdentityProviderDiscovery';
 
-export const OAuth2ProviderForm = defineComponent({
-    name: 'OAuth2ProviderForm',
+export const IdentityProviderOAuth2Form = defineComponent({
+    name: 'IdentityProviderOAuth2Form',
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,
@@ -60,16 +59,26 @@ export const OAuth2ProviderForm = defineComponent({
             type: String,
             default: 'http://localhost:3001',
         },
+        protocol: {
+            type: String as PropType<string | null>,
+            default: IdentityProviderProtocol.OAUTH2,
+        },
+        preset: {
+            type: String as PropType<string | null>,
+        },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, ctx) {
+        const protocol = toRef(props, 'protocol');
+        const preset = toRef(props, 'preset');
+
         const busy = ref(false);
         const form = reactive({
+            realm_id: '',
+
             name: '',
             slug: '',
-            protocol: IdentityProviderProtocol.OAUTH2,
             enabled: true,
-            realm_id: '',
 
             token_url: '',
             authorize_url: '',
@@ -78,26 +87,11 @@ export const OAuth2ProviderForm = defineComponent({
             client_secret: '',
         });
 
+        const formBasicValid = ref(false);
+
         const $v = useVuelidate({
-            name: {
-                required,
-                minLength: minLength(5),
-                maxLength: maxLength(128),
-            },
-            slug: {
-                required,
-                alphaNumHyphenUnderscore,
-                minLength: minLength(3),
-                maxLength: maxLength(36),
-            },
-            enabled: {
-                required,
-            },
             realm_id: {
                 required,
-            },
-            protocol: {
-
             },
             token_url: {
                 required,
@@ -132,7 +126,6 @@ export const OAuth2ProviderForm = defineComponent({
         });
 
         const isEditing = useIsEditing(manager.entity);
-        const updatedAt = useUpdatedAt(props.entity);
 
         const authorizeUri = computed<string>(() => {
             if (!manager.entity.value) {
@@ -141,57 +134,49 @@ export const OAuth2ProviderForm = defineComponent({
 
             return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
-        const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
-        const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
-        function generateId() {
-            const isSame: boolean = form.slug === form.name ||
-                (isSlugEmpty.value && isNameEmpty.value);
+        onChange(preset, () => {
+            if (preset.value) {
+                form.name = preset.value;
+                form.slug = preset.value;
 
-            form.slug = createNanoID();
-            if (isSame) {
-                form.name = form.slug;
+                return;
             }
-        }
 
+            form.name = '';
+            form.slug = '';
+        });
         function initForm() {
-            if (props.realmId) form.realm_id = props.realmId;
+            if (!manager.entity.value) {
+                if (props.realmId) {
+                    form.realm_id = props.realmId;
+                }
+
+                if (preset.value) {
+                    form.name = preset.value;
+                    form.slug = preset.value;
+                }
+            }
 
             initFormAttributesFromSource(form, manager.entity.value);
-
-            if (isSlugEmpty.value) {
-                generateId();
-            }
         }
-
-        watch(updatedAt, (val, oldVal) => {
-            if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
-
-                initForm();
-            }
-        });
 
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if ($v.value.$invalid || !formBasicValid.value) {
                 return;
             }
 
-            await manager.createOrUpdate(form);
+            // todo add preset
+
+            await manager.createOrUpdate({
+                ...form,
+                protocol: (protocol.value || IdentityProviderProtocol.OAUTH2) as IdentityProviderProtocol,
+            });
         };
 
         const render = () => {
-            const enabled = buildFormInputCheckbox({
-                groupClass: 'form-switch mt-3',
-                labelContent: 'Enabled?',
-                value: form.enabled,
-                onChange(input) {
-                    form.enabled = input;
-                },
-            });
-
             let details : VNodeArrayChildren = [];
             if (isEditing.value) {
                 details = [
@@ -220,43 +205,18 @@ export const OAuth2ProviderForm = defineComponent({
                     h('h6', [
                         h('i', { class: 'fa fa-wrench' }),
                         ' ',
-                        'Configuration',
+                        'Basic',
                     ]),
-                    buildFormInput({
-                        validationResult: $v.value.slug,
-                        validationTranslator: useValidationTranslator(props.translatorLocale),
-                        labelContent: 'Slug',
-                        value: form.slug,
-                        onChange(input) {
-                            form.slug = input;
-                        },
-                    }),
-                    h('div', {
-                        class: 'mb-3',
-                    }, [
-                        h('button', {
-                            class: 'btn btn-xs btn-dark',
-                            onClick($event: any) {
-                                $event.preventDefault();
+                    h(IdentityProviderBasicForm, {
+                        slug: form.slug,
+                        name: form.name,
+                        enabled: form.enabled,
+                        onUpdated({ data, valid }) {
+                            formBasicValid.value = valid;
 
-                                generateId.call(null);
-                            },
-                        }, [
-                            h('i', { class: 'fa fa-wrench' }),
-                            ' ',
-                            'Generate',
-                        ]),
-                    ]),
-                    buildFormInput({
-                        validationResult: $v.value.name,
-                        validationTranslator: useValidationTranslator(props.translatorLocale),
-                        labelContent: 'Name',
-                        value: form.name,
-                        onChange(input) {
-                            form.name = input;
+                            extendObjectProperties(form, data);
                         },
                     }),
-                    enabled,
                 ]),
                 h('div', {
                     class: 'col',
@@ -287,71 +247,80 @@ export const OAuth2ProviderForm = defineComponent({
                 ]),
             ]);
 
-            const thirdRow = h(
-                'div',
-                {
-                    class: 'row',
-                },
-                [
-                    h('div', {
-                        class: 'col',
-                    }, [
+            let endpointsNode : VNodeChild;
+            if (!preset.value) {
+                let discoveryNode : VNodeChild;
+
+                if (protocol.value === IdentityProviderProtocol.OIDC) {
+                    discoveryNode = [
                         h('h6', [
-                            h('i', { class: 'fa-solid fa-key' }),
-                            ' ',
-                            'Token',
+                            h('i', { class: 'fas fa-binoculars pe-1' }),
+                            'Discovery',
                         ]),
-                        buildFormInput({
-                            validationResult: $v.value.token_url,
-                            validationTranslator: useValidationTranslator(props.translatorLocale),
-                            labelContent: 'Endpoint',
-                            value: form.token_url,
-                            onChange(input) {
-                                form.token_url = input;
-                            },
-                            props: {
-                                placeholder: 'https://...',
+                        h(IdentityProviderDiscovery, {
+                            onLookup(data: OAuth2OpenIDProviderMetadata) {
+                                form.authorize_url = data.authorization_endpoint;
+                                form.token_url = data.token_endpoint;
                             },
                         }),
-                    ]),
-                    h('div', {
-                        class: 'col',
-                    }, [
-                        h('h6', [
-                            h('i', { class: 'fa-solid fa-vihara' }),
-                            ' ',
-                            'Authorization',
-                        ]),
-                        buildFormInput({
-                            validationResult: $v.value.authorize_url,
-                            validationTranslator: useValidationTranslator(props.translatorLocale),
-                            labelContent: 'Endpoint',
-                            value: form.authorize_url,
-                            onChange(input) {
-                                form.authorize_url = input;
-                            },
-                            props: {
-                                placeholder: 'https://...',
-                            },
-                        }),
-                    ]),
-                ],
-            );
+                    ];
+                }
 
-            let roleList : VNodeArrayChildren = [];
+                endpointsNode = [
+                    discoveryNode,
+                    h(
+                        'div',
+                        {
+                            class: 'row',
+                        },
+                        [
+                            h('div', {
+                                class: 'col',
+                            }, [
+                                h('h6', [
+                                    h('i', { class: 'fa-solid fa-key' }),
+                                    ' ',
+                                    'Token',
+                                ]),
 
-            if (manager.entity.value) {
-                roleList = [h('div', [
-                    h('h6', [
-                        h('i', { class: 'fa fa-users' }),
-                        ' ',
-                        'Roles',
-                    ]),
-                    h(IdentityProviderRoleAssignmentList, {
-                        entityId: manager.entity.value.id,
-                    }),
+                                buildFormInput({
+                                    validationResult: $v.value.token_url,
+                                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                                    labelContent: 'Endpoint',
+                                    value: form.token_url,
+                                    onChange(input) {
+                                        form.token_url = input;
+                                    },
+                                    props: {
+                                        placeholder: 'https://...',
+                                    },
+                                }),
+                            ]),
+                            h('div', {
+                                class: 'col',
+                            }, [
+                                h('h6', [
+                                    h('i', { class: 'fa-solid fa-vihara' }),
+                                    ' ',
+                                    'Authorization',
+                                ]),
+                                buildFormInput({
+                                    validationResult: $v.value.authorize_url,
+                                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                                    labelContent: 'Endpoint',
+                                    value: form.authorize_url,
+                                    onChange(input) {
+                                        form.authorize_url = input;
+                                    },
+                                    props: {
+                                        placeholder: 'https://...',
+                                    },
+                                }),
+                            ]),
+                        ],
+                    ),
                     h('hr'),
-                ])];
+                ];
             }
 
             const submitButton = buildFormSubmit({
@@ -373,9 +342,7 @@ export const OAuth2ProviderForm = defineComponent({
                 details,
                 firstRow,
                 h('hr'),
-                thirdRow,
-                h('hr'),
-                roleList, // roleList will provide hr
+                endpointsNode,
                 submitButton,
             ]);
         };
@@ -384,4 +351,4 @@ export const OAuth2ProviderForm = defineComponent({
     },
 });
 
-export default OAuth2ProviderForm;
+export default IdentityProviderOAuth2Form;

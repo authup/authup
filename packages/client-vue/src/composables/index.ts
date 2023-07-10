@@ -6,4 +6,5 @@
  */
 
 export * from './is-editing';
+export * from './on-change';
 export * from './updated-at';
