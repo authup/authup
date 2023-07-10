@@ -8,7 +8,8 @@
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 import type { DomainEventBaseContext } from '../types-base';
-import type { IdentityProviderProtocol, IdentityProviderProtocolConfig } from './constants';
+import type { IdentityProviderProtocol } from './constants';
+import type { IdentityProviderPreset } from './preset';
 
 export interface IdentityProvider {
     id: string,
@@ -19,7 +20,7 @@ export interface IdentityProvider {
 
     protocol: `${IdentityProviderProtocol}`;
 
-    protocol_config: `${IdentityProviderProtocolConfig}` | null;
+    protocol_config: `${IdentityProviderPreset}` | null;
 
     enabled: boolean;
 

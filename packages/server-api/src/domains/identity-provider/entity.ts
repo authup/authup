@@ -14,7 +14,7 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderProtocol, IdentityProviderProtocolConfig } from '@authup/core';
+import type { IdentityProvider, IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core';
 import { Realm } from '@authup/core';
 import { RealmEntity } from '../realm';
 
@@ -34,7 +34,7 @@ export class IdentityProviderEntity implements IdentityProvider {
         protocol: `${IdentityProviderProtocol}`;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        protocol_config: `${IdentityProviderProtocolConfig}` | null;
+        protocol_config: `${IdentityProviderPreset}` | null;
 
     @Column({ type: 'boolean', default: true })
         enabled: boolean;

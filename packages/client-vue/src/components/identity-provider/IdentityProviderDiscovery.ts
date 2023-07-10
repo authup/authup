@@ -81,7 +81,7 @@ export const IdentityProviderDiscovery = defineComponent({
                     },
                     validationResult: $v.value.url,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
-                    labelContent: 'Endpoint',
+                    labelContent: 'Discovery',
                     props: {
                         placeholder: 'https://example.com/.well-known/openid-configuration',
                     },

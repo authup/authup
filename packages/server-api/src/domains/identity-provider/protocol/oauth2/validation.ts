@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderProtocolConfig } from '@authup/core';
+import type { IdentityProviderPreset } from '@authup/core';
 import { useRequestBody } from '@routup/body';
 import type { Request } from 'routup';
 import zod from 'zod';
@@ -32,7 +32,7 @@ const schema = zod.object({
 
 export function validateOAuth2IdentityProviderProtocol(
     req: Request,
-    protocolConfig: `${IdentityProviderProtocolConfig}`,
+    protocolConfig: `${IdentityProviderPreset}`,
 ) {
     const body = useRequestBody(req);
 

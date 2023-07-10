@@ -7,8 +7,8 @@
 
 import { check, validationResult } from 'express-validator';
 import {
-    IdentityProviderProtocol,
-    IdentityProviderProtocolConfig, isPropertySet,
+    IdentityProviderPreset,
+    IdentityProviderProtocol, isPropertySet,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authup/core';
@@ -68,7 +68,7 @@ export async function runOauth2ProviderValidation(
     await check('protocol_config')
         .exists()
         .notEmpty()
-        .isIn(Object.values(IdentityProviderProtocolConfig))
+        .isIn(Object.values(IdentityProviderPreset))
         .optional({ nullable: true })
         .run(req);
 

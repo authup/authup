@@ -2,7 +2,7 @@
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
-    IdentityProviderList, RealmList, useAPIClient, useValidationTranslator,
+    IdentityProviderIcon, IdentityProviderList, RealmList, useAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
@@ -29,6 +29,7 @@ export default defineNuxtComponent({
     components: {
         LoginSVG,
         IdentityProviderList,
+        IdentityProviderIcon,
         RealmList,
         RealmSelectAction,
         FormSubmit,
@@ -178,6 +179,7 @@ export default defineNuxtComponent({
                     <IdentityProviderList
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
+                        :footer-pagination="false"
                     >
                         <template #header>
                             <h6>IdentityProvider</h6>
@@ -190,9 +192,19 @@ export default defineNuxtComponent({
                                 >
                                     <a
                                         :href="buildIdentityProviderURL(item.id)"
-                                        class="btn btn-primary btn-xs"
+                                        class="btn btn-dark btn-xs p-2 me-1 identity-provider-box bg-dark"
                                     >
-                                        {{ item.name }}
+                                        <div class="d-flex flex-column">
+                                            <div class="text-center mb-1">
+                                                <IdentityProviderIcon
+                                                    class="fa-2x"
+                                                    :entity="item"
+                                                />
+                                            </div>
+                                            <div>
+                                                {{ item.name }}
+                                            </div>
+                                        </div>
                                     </a>
                                 </div>
                             </div>
@@ -214,3 +226,8 @@ export default defineNuxtComponent({
         </form>
     </div>
 </template>
+<style scoped>
+.identity-provider-box {
+    min-width: 150px;
+}
+</style>

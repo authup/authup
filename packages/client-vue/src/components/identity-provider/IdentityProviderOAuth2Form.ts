@@ -7,21 +7,23 @@
 
 import useVuelidate from '@vuelidate/core';
 import type {
-    PropType,
+    PropType, VNode,
     VNodeArrayChildren, VNodeChild,
 } from 'vue';
 import {
     computed,
     defineComponent,
-    h,
+    h, nextTick,
     reactive,
     ref,
     toRef,
 } from 'vue';
-import {
-    maxLength, minLength, required, url,
-} from '@vuelidate/validators';
-import type { IdentityProvider, OAuth2OpenIDProviderMetadata } from '@authup/core';
+import type {
+    IdentityProvider,
+    IdentityProviderPreset,
+    IdentityProviderPresetElement,
+    OAuth2IdentityProvider,
+} from '@authup/core';
 import {
     DomainType, IdentityProviderProtocol,
 } from '@authup/core';
@@ -31,16 +33,24 @@ import {
 } from '@vue-layout/form-controls';
 import { onChange, useIsEditing } from '../../composables';
 import {
-    createEntityManager, extendObjectProperties,
-    initFormAttributesFromSource,
+    createEntityManager,
+    extractVuelidateResultsFromChild,
     useAPIClient,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../translator';
-import { IdentityProviderBasicForm } from './IdentityProviderBasicForm';
-import { IdentityProviderDiscovery } from './IdentityProviderDiscovery';
+import { useTranslator } from '../../translator';
+import { IdentityProviderBasicFields } from './IdentityProviderBasicFields';
+import { IdentityProviderClientFields } from './IdentityProviderClientFields';
+import { IdentityProviderEndpointFields } from './IdentityProviderEndpointFields';
+import { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';
+import { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity';
+import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderOAuth2Form = defineComponent({
     name: 'IdentityProviderOAuth2Form',
+    components: {
+        IdentityProviderBasicFields,
+        IdentityProviderClientFields,
+    },
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,
@@ -69,61 +79,30 @@ export const IdentityProviderOAuth2Form = defineComponent({
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, ctx) {
-        const protocol = toRef(props, 'protocol');
-        const preset = toRef(props, 'preset');
-
-        const busy = ref(false);
-        const form = reactive({
-            realm_id: '',
-
-            name: '',
-            slug: '',
-            enabled: true,
-
-            token_url: '',
-            authorize_url: '',
-            scope: '',
-            client_id: '',
-            client_secret: '',
-        });
-
-        const formBasicValid = ref(false);
-
-        const $v = useVuelidate({
-            realm_id: {
-                required,
-            },
-            token_url: {
-                required,
-                url,
-                minLength: minLength(5),
-                maxLength: maxLength(2000),
-            },
-            authorize_url: {
-                required,
-                url,
-                minLength: minLength(5),
-                maxLength: maxLength(2000),
-            },
-            scope: {
-                minLength: minLength(3),
-                maxLength: maxLength(512),
-            },
-            client_id: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            client_secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-        }, form);
-
         const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
             setup: ctx,
             props,
         });
+
+        const protocol = computed(() => {
+            if (manager.entity.value) {
+                return manager.entity.value.protocol;
+            }
+
+            return props.protocol;
+        });
+
+        const preset = computed(() => {
+            if (manager.entity.value) {
+                return manager.entity.value.protocol_config;
+            }
+
+            return props.preset;
+        });
+
+        const busy = ref(false);
+
+        const $v = useVuelidate({ $stopPropagation: true });
 
         const isEditing = useIsEditing(manager.entity);
 
@@ -135,58 +114,107 @@ export const IdentityProviderOAuth2Form = defineComponent({
             return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
 
+        const basicFieldsNode = ref<null | IdentityProviderBasicFields>(null);
+
         onChange(preset, () => {
+            if (!basicFieldsNode.value) {
+                return;
+            }
+
             if (preset.value) {
-                form.name = preset.value;
-                form.slug = preset.value;
+                basicFieldsNode.value.assign({
+                    name: preset.value,
+                    slug: preset.value,
+                });
 
                 return;
             }
 
-            form.name = '';
-            form.slug = '';
+            basicFieldsNode.value.assign({
+                name: '',
+                slug: '',
+            });
         });
         function initForm() {
-            if (!manager.entity.value) {
-                if (props.realmId) {
-                    form.realm_id = props.realmId;
+            nextTick(() => {
+                if (
+                    !manager.entity.value &&
+                    preset.value &&
+                    basicFieldsNode.value
+                ) {
+                    basicFieldsNode.value.assign({
+                        name: preset.value,
+                        slug: preset.value,
+                    });
                 }
-
-                if (preset.value) {
-                    form.name = preset.value;
-                    form.slug = preset.value;
-                }
-            }
-
-            initFormAttributesFromSource(form, manager.entity.value);
+            });
         }
 
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid || !formBasicValid.value) {
+            if ($v.value.$invalid) {
                 return;
             }
 
-            // todo add preset
+            const data : Partial<OAuth2IdentityProvider> = {
+                ...extractVuelidateResultsFromChild($v, 'basic'),
+                ...extractVuelidateResultsFromChild($v, 'client'),
+                ...extractVuelidateResultsFromChild($v, 'endpoint'),
+            };
 
-            await manager.createOrUpdate({
-                ...form,
-                protocol: (protocol.value || IdentityProviderProtocol.OAUTH2) as IdentityProviderProtocol,
-            });
+            if (protocol.value) {
+                data.protocol = protocol.value as IdentityProviderProtocol;
+            }
+
+            if (preset.value) {
+                data.protocol_config = preset.value as IdentityProviderPreset;
+            }
+
+            await manager.createOrUpdate(data);
         };
 
-        const render = () => {
-            let details : VNodeArrayChildren = [];
+        return () => {
+            let headerNode : VNodeChild;
+
+            if (!manager.entity.value) {
+                if (preset.value) {
+                    headerNode = h(IdentityProviderPresetEntity, {
+                        key: preset.value,
+                        id: preset.value,
+                    }, {
+                        default: (element: IdentityProviderPresetElement) => h('div', [
+                            h('h4', { class: 'mb-3' }, [
+                                h('i', { class: [element.icon, 'pe-1'] }),
+                                element.name,
+                            ]),
+                        ]),
+                    });
+                } else {
+                    headerNode = h(IdentityProviderProtocolEntity, {
+                        key: protocol.value,
+                        id: protocol.value,
+                    }, {
+                        default: (element: IdentityProviderProtocolElement) => h('div', [
+                            h('h4', { class: 'mb-3' }, [
+                                h('i', { class: [element.icon, 'pe-1'] }),
+                                element.name,
+                            ]),
+                        ]),
+                    });
+                }
+            }
+
+            let detailsNode : VNodeArrayChildren = [];
             if (isEditing.value) {
-                details = [
+                detailsNode = [
                     h('h6', [
                         h('i', { class: 'fas fa-info-circle' }),
                         ' ',
                         'Details',
                     ]),
                     buildFormInput({
-                        labelContent: 'Authorize URL',
+                        labelContent: 'Redirect URL',
                         value: authorizeUri,
                         props: {
                             disabled: true,
@@ -196,134 +224,48 @@ export const IdentityProviderOAuth2Form = defineComponent({
                 ];
             }
 
-            const firstRow = h('div', {
-                class: 'row',
-            }, [
-                h('div', {
-                    class: 'col',
-                }, [
-                    h('h6', [
-                        h('i', { class: 'fa fa-wrench' }),
-                        ' ',
-                        'Basic',
-                    ]),
-                    h(IdentityProviderBasicForm, {
-                        slug: form.slug,
-                        name: form.name,
-                        enabled: form.enabled,
-                        onUpdated({ data, valid }) {
-                            formBasicValid.value = valid;
+            const basicNode : VNodeChild = [
+                h('h6', [
+                    h('i', { class: 'fa fa-wrench' }),
+                    ' ',
+                    'Basic',
+                ]),
+                h(IdentityProviderBasicFields, {
+                    ref: basicFieldsNode,
+                    entity: manager.entity.value,
+                }),
+            ];
 
-                            extendObjectProperties(form, data);
-                        },
-                    }),
+            const securityNode : VNodeChild = [
+                h('h6', [
+                    h('i', { class: 'fa fa-lock' }),
+                    ' ',
+                    'Security',
                 ]),
-                h('div', {
-                    class: 'col',
-                }, [
-                    h('h6', [
-                        h('i', { class: 'fa fa-lock' }),
-                        ' ',
-                        'Security',
-                    ]),
-                    buildFormInput({
-                        validationResult: $v.value.client_id,
-                        validationTranslator: useValidationTranslator(props.translatorLocale),
-                        labelContent: 'Client ID',
-                        value: form.client_id,
-                        onChange(input) {
-                            form.client_id = input;
-                        },
-                    }),
-                    buildFormInput({
-                        validationResult: $v.value.client_secret,
-                        validationTranslator: useValidationTranslator(props.translatorLocale),
-                        labelContent: 'Client Secret',
-                        value: form.client_secret,
-                        onChange(input) {
-                            form.client_secret = input;
-                        },
-                    }),
-                ]),
-            ]);
+                h(IdentityProviderClientFields, {
+                    entity: manager.entity.value,
+                }),
+            ];
 
             let endpointsNode : VNodeChild;
             if (!preset.value) {
-                let discoveryNode : VNodeChild;
-
-                if (protocol.value === IdentityProviderProtocol.OIDC) {
-                    discoveryNode = [
-                        h('h6', [
-                            h('i', { class: 'fas fa-binoculars pe-1' }),
-                            'Discovery',
-                        ]),
-                        h(IdentityProviderDiscovery, {
-                            onLookup(data: OAuth2OpenIDProviderMetadata) {
-                                form.authorize_url = data.authorization_endpoint;
-                                form.token_url = data.token_endpoint;
-                            },
-                        }),
-                    ];
-                }
-
                 endpointsNode = [
-                    discoveryNode,
+                    h('h6', [
+                        h('i', { class: 'fa-solid fa-vihara' }),
+                        ' ',
+                        'Endpoints',
+                    ]),
                     h(
-                        'div',
+                        IdentityProviderEndpointFields,
                         {
-                            class: 'row',
+                            entity: manager.entity.value,
+                            discovery: protocol.value === IdentityProviderProtocol.OIDC,
                         },
-                        [
-                            h('div', {
-                                class: 'col',
-                            }, [
-                                h('h6', [
-                                    h('i', { class: 'fa-solid fa-key' }),
-                                    ' ',
-                                    'Token',
-                                ]),
-
-                                buildFormInput({
-                                    validationResult: $v.value.token_url,
-                                    validationTranslator: useValidationTranslator(props.translatorLocale),
-                                    labelContent: 'Endpoint',
-                                    value: form.token_url,
-                                    onChange(input) {
-                                        form.token_url = input;
-                                    },
-                                    props: {
-                                        placeholder: 'https://...',
-                                    },
-                                }),
-                            ]),
-                            h('div', {
-                                class: 'col',
-                            }, [
-                                h('h6', [
-                                    h('i', { class: 'fa-solid fa-vihara' }),
-                                    ' ',
-                                    'Authorization',
-                                ]),
-                                buildFormInput({
-                                    validationResult: $v.value.authorize_url,
-                                    validationTranslator: useValidationTranslator(props.translatorLocale),
-                                    labelContent: 'Endpoint',
-                                    value: form.authorize_url,
-                                    onChange(input) {
-                                        form.authorize_url = input;
-                                    },
-                                    props: {
-                                        placeholder: 'https://...',
-                                    },
-                                }),
-                            ]),
-                        ],
                     ),
-                    h('hr'),
                 ];
             }
 
-            const submitButton = buildFormSubmit({
+            const submitNode = buildFormSubmit({
                 updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
                 createText: useTranslator().getSync('form.create.button', props.translatorLocale),
                 submit,
@@ -339,15 +281,27 @@ export const IdentityProviderOAuth2Form = defineComponent({
                     return submit.call(null);
                 },
             }, [
-                details,
-                firstRow,
+                headerNode,
+                detailsNode,
+                h('div', {
+                    class: 'row',
+                }, [
+                    h('div', {
+                        class: 'col',
+                    }, [
+                        basicNode,
+                    ]),
+                    h('div', {
+                        class: 'col',
+                    }, [
+                        securityNode,
+                    ]),
+                ]),
                 h('hr'),
                 endpointsNode,
-                submitButton,
+                submitNode,
             ]);
         };
-
-        return () => render();
     },
 });
 
