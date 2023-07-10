@@ -33,20 +33,10 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const protocol = ref<null | string>(null);
-
-        const options = [
-            { id: IdentityProviderProtocol.OAUTH2, value: 'OAuth2' },
-            { id: IdentityProviderProtocol.OIDC, value: 'OIDC' },
-            { id: IdentityProviderProtocol.LDAP, value: 'LDAP' },
-        ];
-
         const store = useAuthStore();
         const { realmManagementId } = storeToRefs(store);
 
         return {
-            options,
-            protocol,
             realmManagementId,
             handleCreated,
             handleFailed,

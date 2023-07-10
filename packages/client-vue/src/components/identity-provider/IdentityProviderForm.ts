@@ -9,7 +9,7 @@ import {
     defineComponent, h, ref, toRef,
 } from 'vue';
 import { IdentityProviderProtocol } from '@authup/core';
-import type { IdentityProvider, IdentityProviderProtocolConfig } from '@authup/core';
+import type { IdentityProvider, IdentityProviderPreset } from '@authup/core';
 import type { PropType, VNodeChild } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { IdentityProviderPicker } from './IdentityProviderPicker';
@@ -57,7 +57,7 @@ export const IdentityProviderForm = defineComponent({
         onChange(updatedAt, () => set());
 
         const renderPicker = () => h(IdentityProviderPicker, {
-            onPick(value: { protocol?: `${IdentityProviderProtocol}`, preset?: `${IdentityProviderProtocolConfig}` }) {
+            onPick(value: { protocol?: `${IdentityProviderProtocol}`, preset?: `${IdentityProviderPreset}` }) {
                 if (value.protocol) {
                     protocol.value = value.protocol;
                 } else {
@@ -73,7 +73,7 @@ export const IdentityProviderForm = defineComponent({
         });
 
         const render = (node: VNodeChild) => {
-            if (!props.entity) {
+            if (!entity.value) {
                 return [
                     renderPicker(),
                     h('hr'),
@@ -101,9 +101,13 @@ export const IdentityProviderForm = defineComponent({
                             preset: preset.value,
                             apiUrl: props.apiUrl,
                             onCreated(el: IdentityProvider) {
+                                entity.value = el;
+
                                 setup.emit('created', el);
                             },
                             onUpdated(el: IdentityProvider) {
+                                entity.value = el;
+
                                 setup.emit('updated', el);
                             },
                         }));

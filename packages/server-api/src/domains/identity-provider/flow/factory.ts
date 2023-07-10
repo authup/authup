@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocolConfig } from '@authup/core';
+import { IdentityProviderPreset } from '@authup/core';
 import { OpenIDIdentityProviderFlow } from './core';
 import {
     FacebookIdentityProviderFlow,
@@ -19,23 +19,23 @@ import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } f
 export function createOAuth2IdentityProviderFlow(
     provider: OAuth2IdentityProviderFlowOptions,
 ) : IOAuth2IdentityProviderFlow {
-    if (provider.protocol_config === IdentityProviderProtocolConfig.FACEBOOK) {
+    if (provider.protocol_config === IdentityProviderPreset.FACEBOOK) {
         return new FacebookIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderProtocolConfig.GITHUB) {
+    if (provider.protocol_config === IdentityProviderPreset.GITHUB) {
         return new GithubIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderProtocolConfig.GOOGLE) {
+    if (provider.protocol_config === IdentityProviderPreset.GOOGLE) {
         return new GoogleIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderProtocolConfig.INSTAGRAM) {
+    if (provider.protocol_config === IdentityProviderPreset.INSTAGRAM) {
         return new InstagramIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderProtocolConfig.PAYPAL) {
+    if (provider.protocol_config === IdentityProviderPreset.PAYPAL) {
         return new PaypalIdentityProviderFlow(provider);
     }
 

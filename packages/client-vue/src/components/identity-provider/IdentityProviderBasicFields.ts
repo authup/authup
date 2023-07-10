@@ -5,30 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2IdentityProvider } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
-    maxLength, minLength, required, url,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
+import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive, toRefs,
+    computed, defineComponent, h, reactive,
 } from 'vue';
-import { onChange } from '../../composables';
-import { alphaNumHyphenUnderscore } from '../../core';
+import { onChange, useUpdatedAt } from '../../composables';
+import { alphaNumHyphenUnderscore, extendObjectProperties } from '../../core';
 import { useValidationTranslator } from '../../translator';
 
-export const IdentityProviderBasicForm = defineComponent({
-    name: 'IdentityProviderBasicForm',
+export const IdentityProviderBasicFields = defineComponent({
+    name: 'IdentityProviderBasicFields',
     props: {
-        name: {
-            type: String,
-        },
-        slug: {
-            type: String,
-        },
-        enabled: {
-            type: Boolean,
+        entity: {
+            type: Object as PropType<Partial<OAuth2IdentityProvider>>,
         },
         translatorLocale: {
             type: String,
@@ -36,8 +32,6 @@ export const IdentityProviderBasicForm = defineComponent({
     },
     emits: ['updated'],
     setup(props, setup) {
-        const refs = toRefs(props);
-
         const form = reactive({
             name: '',
             slug: '',
@@ -59,7 +53,9 @@ export const IdentityProviderBasicForm = defineComponent({
             enabled: {
                 required,
             },
-        }, form);
+        }, form, {
+            $registerAs: 'basic',
+        });
 
         const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
@@ -81,29 +77,22 @@ export const IdentityProviderBasicForm = defineComponent({
             });
         };
 
-        function updateForm() {
-            if (typeof refs.name.value !== 'undefined') {
-                form.name = refs.name.value;
-            }
-
-            if (typeof refs.slug.value !== 'undefined') {
-                form.slug = refs.slug.value;
-            }
-
-            if (typeof refs.enabled.value !== 'undefined') {
-                form.enabled = refs.enabled.value;
-            }
+        function assign(data?: Partial<OAuth2IdentityProvider>) {
+            extendObjectProperties(form, data);
 
             if (isSlugEmpty.value) {
                 generateId();
             }
         }
 
-        onChange(refs.name, () => updateForm());
-        onChange(refs.slug, () => updateForm());
-        onChange(refs.enabled, () => updateForm());
+        setup.expose({
+            assign,
+        });
 
-        updateForm();
+        const updatedAt = useUpdatedAt(props.entity);
+        onChange(updatedAt, () => assign(props.entity));
+
+        assign(props.entity);
 
         return () => {
             const name = buildFormInput({

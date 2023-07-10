@@ -9,3 +9,6 @@ export { IdentityProviderEntity } from './IdentityProviderEntity';
 export { IdentityProviderForm } from './IdentityProviderForm';
 export { IdentityProviderOAuth2Form } from './IdentityProviderOAuth2Form';
 export { IdentityProviderList } from './IdentityProviderList';
+export { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';
+export { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity';
+export { IdentityProviderIcon } from './IdentityProviderIcon';

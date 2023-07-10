@@ -5,10 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol, IdentityProviderProtocolConfig } from '@authup/core';
+import { IdentityProviderPreset, IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core';
 import { buildList } from '@vue-layout/list-controls';
-import * as stream from 'stream';
 import { defineComponent, h } from 'vue';
+import type { IdentityProviderPresetElement } from './preset';
+import { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';
+import { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity';
+import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderPicker = defineComponent({
     name: 'IdentityProviderPicker',
@@ -22,37 +25,14 @@ export const IdentityProviderPicker = defineComponent({
     },
     emits: ['pick'],
     setup(props, setup) {
-        const protocols = [
-            { id: IdentityProviderProtocol.OIDC, name: 'OpenID Connect' },
-            { id: IdentityProviderProtocol.OAUTH2, name: 'OAuth2' },
-        ];
+        const protocols : Record<string, any>[] = [];
+        const presets : Record<string, any>[] = [];
 
-        const protocolConfigurations = [
-            {
-                id: IdentityProviderProtocolConfig.FACEBOOK, protocol: IdentityProviderProtocol.OIDC, name: 'Facebook', icon: 'fab fa-facebook',
-            },
-            {
-                id: IdentityProviderProtocolConfig.GITHUB, protocol: IdentityProviderProtocol.OIDC, name: 'GitHub', icon: 'fab fa-github',
-            },
-            {
-                id: IdentityProviderProtocolConfig.GITLAB, protocol: IdentityProviderProtocol.OIDC, name: 'GitLab', icon: 'fab fa-gitlab',
-            },
-            {
-                id: IdentityProviderProtocolConfig.GOOGLE, protocol: IdentityProviderProtocol.OIDC, name: 'Google', icon: 'fab fa-google',
-            },
-            {
-                id: IdentityProviderProtocolConfig.PAYPAL, protocol: IdentityProviderProtocol.OIDC, name: 'Paypal', icon: 'fab fa-paypal',
-            },
-            {
-                id: IdentityProviderProtocolConfig.INSTAGRAM, protocol: IdentityProviderProtocol.OIDC, name: 'Instagram', icon: 'fab fa-instagram',
-            },
-            {
-                id: IdentityProviderProtocolConfig.STACKOVERFLOW, protocol: IdentityProviderProtocol.OIDC, name: 'StackOverflow', icon: 'fa fa-code',
-            },
-            {
-                id: IdentityProviderProtocolConfig.TWITTER, protocol: IdentityProviderProtocol.OIDC, name: 'Twitter', icon: 'fab fa-twitter',
-            },
-        ];
+        Object.values(IdentityProviderProtocol)
+            .map((id) => { protocols.push({ id }); return id; });
+
+        Object.values(IdentityProviderPreset)
+            .map((id) => { presets.push({ id }); return id; });
 
         const pick = (ctx: {protocol?: string, preset?: string}) => {
             setup.emit('pick', ctx);
@@ -71,25 +51,30 @@ export const IdentityProviderPicker = defineComponent({
                             'me-1 list-item',
                         ],
                         icon: false,
-                        content: (item) => [
-                            item.name,
-                            h('button', {
-                                class: 'btn btn-xs btn-dark ms-1',
-                                onClick($event: any) {
-                                    $event.preventDefault();
+                        content: (item) => h(IdentityProviderProtocolEntity, {
+                            id: item.id,
+                        }, {
+                            default: (element: IdentityProviderProtocolElement) => [
+                                h('i', { class: [element.icon, 'pe-1'] }),
+                                element.name,
+                                h('button', {
+                                    class: 'btn btn-xs btn-dark ms-1',
+                                    onClick($event: any) {
+                                        $event.preventDefault();
 
-                                    pick({ protocol: item.id });
-                                },
-                            }, [
-                                h('i', { class: 'fa fa-plus' }),
-                            ]),
-                        ],
+                                        pick({ protocol: item.id });
+                                    },
+                                }, [
+                                    h('i', { class: 'fa fa-plus' }),
+                                ]),
+                            ],
+                        }),
                     },
                 },
             });
 
             const protocolNodeConfigurationNode = buildList({
-                data: protocolConfigurations,
+                data: presets,
                 header: {
                     content: h('h6', 'Presets'),
                 },
@@ -98,27 +83,33 @@ export const IdentityProviderPicker = defineComponent({
                     item: {
                         class: 'me-1 list-item',
                         icon: false,
-                        content: (item) => h('div', [
-                            h('i', { class: [item.icon, 'pe-1'] }),
-                            item.name,
-                            h('button', {
-                                class: 'btn btn-xs btn-dark ms-1',
-                                onClick($event: any) {
-                                    $event.preventDefault();
+                        content: (preset) => h(IdentityProviderPresetEntity, {
+                            id: preset.id,
+                        }, {
+                            default: (item: IdentityProviderPresetElement) => h('div', [
+                                h('i', { class: [item.icon, 'pe-1'] }),
+                                item.name,
+                                h('button', {
+                                    class: 'btn btn-xs btn-dark ms-1',
+                                    onClick($event: any) {
+                                        $event.preventDefault();
 
-                                    pick({ preset: item.id, protocol: item.protocol });
-                                },
-                            }, [
-                                h('i', { class: 'fa fa-plus' }),
+                                        pick({
+                                            preset: preset.id,
+                                            protocol: getIdentityProviderProtocolForPreset(preset.id),
+                                        });
+                                    },
+                                }, [
+                                    h('i', { class: 'fa fa-plus' }),
+                                ]),
                             ]),
-                        ]),
+                        }),
                     },
                 },
             });
 
             return [
                 protocolNode,
-                h('hr'),
                 protocolNodeConfigurationNode,
             ];
         };

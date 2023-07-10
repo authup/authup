@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2IdentityProvider } from '@authup/core';
-import { IdentityProviderProtocol, IdentityProviderProtocolConfig } from '@authup/core';
+import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core';
 import { createOAuth2IdentityProviderFlow } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { useSuperTest } from '../../../../utils/supertest';
@@ -30,7 +30,7 @@ describe('src/http/controllers/identity-provider', () => {
             name: 'google',
             enabled: true,
             protocol: IdentityProviderProtocol.OAUTH2,
-            protocol_config: IdentityProviderProtocolConfig.GOOGLE,
+            protocol_config: IdentityProviderPreset.GOOGLE,
             client_id: 'client',
             client_secret: 'start123',
         };
