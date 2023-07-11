@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IdentityProviderPreset } from '@authup/core';
 import { defineComponent } from 'vue';
 import { getIdentityProviderPresetElement } from './preset';
 import { hasNormalizedSlot, normalizeSlot } from '../../core';
@@ -18,7 +19,7 @@ export const IdentityProviderPresetEntity = defineComponent({
         },
     },
     setup(props, setup) {
-        const preset = getIdentityProviderPresetElement(props.id);
+        const preset = getIdentityProviderPresetElement(props.id as IdentityProviderPreset);
         if (preset) {
             if (hasNormalizedSlot('default', setup.slots)) {
                 return () => normalizeSlot('default', preset, setup.slots);

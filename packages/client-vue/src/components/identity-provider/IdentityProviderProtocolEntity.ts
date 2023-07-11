@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IdentityProviderProtocol } from '@authup/core';
 import { defineComponent } from 'vue';
 import { hasNormalizedSlot, normalizeSlot } from '../../core';
 import { getIdentityProviderProtocolElement } from './protocol';
@@ -18,7 +19,7 @@ export const IdentityProviderProtocolEntity = defineComponent({
         },
     },
     setup(props, setup) {
-        const preset = getIdentityProviderProtocolElement(props.id);
+        const preset = getIdentityProviderProtocolElement(props.id as IdentityProviderProtocol);
         if (preset) {
             if (hasNormalizedSlot('default', setup.slots)) {
                 return () => normalizeSlot('default', preset, setup.slots);

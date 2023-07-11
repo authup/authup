@@ -24,7 +24,9 @@ export function extractVuelidateResultsFromChild(vuelidate: Ref<Validation>, chi
 
     const result : Record<string, any> = {};
     for (let i = 0; i < childKeys.length; i++) {
-        result[childKeys[i]] = childResults[childKeys[i]].$model;
+        if (hasOwnProperty(childResults, childKeys[i])) {
+            result[childKeys[i]] = (childResults[childKeys[i]] as { $model: Record<string, any> }).$model;
+        }
     }
 
     return result;

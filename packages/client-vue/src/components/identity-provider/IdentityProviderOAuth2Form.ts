@@ -7,22 +7,18 @@
 
 import useVuelidate from '@vuelidate/core';
 import type {
-    PropType, VNode,
+    PropType,
     VNodeArrayChildren, VNodeChild,
 } from 'vue';
 import {
     computed,
     defineComponent,
     h, nextTick,
-    reactive,
     ref,
-    toRef,
 } from 'vue';
 import type {
     IdentityProvider,
     IdentityProviderPreset,
-    IdentityProviderPresetElement,
-    OAuth2IdentityProvider,
 } from '@authup/core';
 import {
     DomainType, IdentityProviderProtocol,
@@ -43,6 +39,7 @@ import { IdentityProviderClientFields } from './IdentityProviderClientFields';
 import { IdentityProviderEndpointFields } from './IdentityProviderEndpointFields';
 import { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';
 import { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity';
+import type { IdentityProviderPresetElement } from './preset';
 import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderOAuth2Form = defineComponent({
@@ -114,7 +111,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
             return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
 
-        const basicFieldsNode = ref<null | IdentityProviderBasicFields>(null);
+        const basicFieldsNode = ref<null | typeof IdentityProviderBasicFields>(null);
 
         onChange(preset, () => {
             if (!basicFieldsNode.value) {
@@ -157,7 +154,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
                 return;
             }
 
-            const data : Partial<OAuth2IdentityProvider> = {
+            const data : Partial<IdentityProvider> = {
                 ...extractVuelidateResultsFromChild($v, 'basic'),
                 ...extractVuelidateResultsFromChild($v, 'client'),
                 ...extractVuelidateResultsFromChild($v, 'endpoint'),

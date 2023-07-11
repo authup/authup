@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
@@ -89,7 +89,7 @@ export const IdentityProviderBasicFields = defineComponent({
             assign,
         });
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
