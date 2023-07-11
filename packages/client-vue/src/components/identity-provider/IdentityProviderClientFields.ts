@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core';
+import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive, toRefs,
+    defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { extendObjectProperties } from '../../core';
@@ -50,18 +50,11 @@ export const IdentityProviderClientFields = defineComponent({
             $registerAs: 'client',
         });
 
-        const update = () => {
-            setup.emit('updated', {
-                data: form,
-                valid: !$v.value.$invalid,
-            });
-        };
-
         function assign() {
             extendObjectProperties(form, props.entity);
         }
 
-        const updatedAt = useUpdatedAt(props.entity);
+        const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
         onChange(updatedAt, () => assign());
 
         assign();

@@ -6,6 +6,7 @@
  */
 
 import { IdentityProviderPreset } from '@authup/core';
+import type { IdentityProviderPresetElement } from './type';
 
 const elements = {
     [IdentityProviderPreset.FACEBOOK]: {

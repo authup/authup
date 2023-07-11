@@ -11,7 +11,7 @@ import { computed, isRef } from 'vue';
 type ObjectLiteral = {
     updated_at: string | Date | undefined
 };
-export function useUpdatedAt<T extends ObjectLiteral>(input: MaybeRef<T | undefined>) : ComputedRef<string | Date | undefined> {
+export function useUpdatedAt<T extends ObjectLiteral>(input?: MaybeRef<T | undefined>) : ComputedRef<string | Date | undefined> {
     return computed(() => {
         if (isRef(input)) {
             return input.value ? input.value.updated_at : undefined;

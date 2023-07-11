@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider, OAuth2OpenIDProviderMetadata } from '@authup/core';
+import type { IdentityProvider, OAuth2IdentityProvider, OAuth2OpenIDProviderMetadata } from '@authup/core';
 import { buildFormInput } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -62,7 +62,7 @@ export const IdentityProviderEndpointFields = defineComponent({
             extendObjectProperties(form, props.entity);
         }
 
-        const updated = useUpdatedAt(props.entity);
+        const updated = useUpdatedAt(props.entity as IdentityProvider);
         onChange(updated, () => init());
 
         init();
