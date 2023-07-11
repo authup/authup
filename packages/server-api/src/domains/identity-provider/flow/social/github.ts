@@ -16,13 +16,12 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
         options.scope = 'user:email';
         options.authorize_url = 'https://github.com/login/oauth/authorize';
         options.token_url = 'https://github.com/login/oauth/access_token';
-        options.user_info_url = 'https://github.com/user';
+        options.user_info_url = 'https://api.github.com/user';
 
         super(options);
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderFlowIdentity> {
-        const config = useConfig();
         const { code, state } = useRequestQuery(request);
 
         const token = await this.client.token.createWithAuthorizeGrant({
@@ -37,7 +36,10 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
 
         return {
             id: userInfo.id,
-            name: userInfo.login,
+            name: [
+                userInfo.login,
+                userInfo.name,
+            ],
             email: userInfo.email,
         };
     }

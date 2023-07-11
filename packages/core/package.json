@@ -61,15 +61,15 @@
         "nanoid": "^3.3.4"
     },
     "devDependencies": {
-        "@hapic/oauth2": "^2.0.0",
-        "@hapic/vault": "^2.0.0",
-        "hapic": "^2.0.0",
+        "@hapic/oauth2": "^2.2.0",
+        "@hapic/vault": "^2.2.0",
+        "hapic": "^2.2.0",
         "rapiq": "^0.9.0"
     },
     "peerDependencies": {
-        "@hapic/oauth2": "^2.0.0",
-        "@hapic/vault": "^2.0.0",
-        "hapic": "^2.0.0",
+        "@hapic/oauth2": "^2.2.0",
+        "@hapic/vault": "^2.2.0",
+        "hapic": "^2.2.0",
         "rapiq": ">=0.8.0 <1.0.0"
     },
     "publishConfig": {
