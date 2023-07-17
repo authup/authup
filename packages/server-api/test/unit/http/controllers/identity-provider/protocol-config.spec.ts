@@ -29,7 +29,7 @@ describe('src/http/controllers/identity-provider', () => {
             slug: 'google',
             name: 'google',
             enabled: true,
-            protocol_config: IdentityProviderPreset.GOOGLE,
+            preset: IdentityProviderPreset.GOOGLE,
             client_id: 'client',
             client_secret: 'start123',
         };

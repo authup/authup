@@ -19,23 +19,23 @@ import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } f
 export function createOAuth2IdentityProviderFlow(
     provider: OAuth2IdentityProviderFlowOptions,
 ) : IOAuth2IdentityProviderFlow {
-    if (provider.protocol_config === IdentityProviderPreset.FACEBOOK) {
+    if (provider.preset === IdentityProviderPreset.FACEBOOK) {
         return new FacebookIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderPreset.GITHUB) {
+    if (provider.preset === IdentityProviderPreset.GITHUB) {
         return new GithubIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderPreset.GOOGLE) {
+    if (provider.preset === IdentityProviderPreset.GOOGLE) {
         return new GoogleIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderPreset.INSTAGRAM) {
+    if (provider.preset === IdentityProviderPreset.INSTAGRAM) {
         return new InstagramIdentityProviderFlow(provider);
     }
 
-    if (provider.protocol_config === IdentityProviderPreset.PAYPAL) {
+    if (provider.preset === IdentityProviderPreset.PAYPAL) {
         return new PaypalIdentityProviderFlow(provider);
     }
 

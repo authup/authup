@@ -18,9 +18,9 @@ export interface IdentityProvider {
 
     slug: string;
 
-    protocol: `${IdentityProviderProtocol}`;
+    protocol: `${IdentityProviderProtocol}` | null;
 
-    protocol_config: `${IdentityProviderPreset}` | null;
+    preset: `${IdentityProviderPreset}` | null;
 
     enabled: boolean;
 

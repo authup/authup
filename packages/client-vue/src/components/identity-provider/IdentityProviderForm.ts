@@ -42,8 +42,8 @@ export const IdentityProviderForm = defineComponent({
 
         const set = () => {
             if (entity.value) {
-                if (entity.value.protocol_config) {
-                    preset.value = entity.value.protocol_config;
+                if (entity.value.preset) {
+                    preset.value = entity.value.preset;
                 }
 
                 if (entity.value.protocol) {

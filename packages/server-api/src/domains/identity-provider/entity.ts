@@ -11,7 +11,8 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, Unique,
+    PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import type { IdentityProvider, IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core';
@@ -30,11 +31,11 @@ export class IdentityProviderEntity implements IdentityProvider {
     @Column({ type: 'varchar', length: 128 })
         name: string;
 
-    @Column({ type: 'varchar', length: 64 })
-        protocol: `${IdentityProviderProtocol}`;
+    @Column({ type: 'varchar', length: 64, nullable: true })
+        protocol: `${IdentityProviderProtocol}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        protocol_config: `${IdentityProviderPreset}` | null;
+        preset: `${IdentityProviderPreset}` | null;
 
     @Column({ type: 'boolean', default: true })
         enabled: boolean;

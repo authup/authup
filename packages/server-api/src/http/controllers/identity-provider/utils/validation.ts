@@ -95,9 +95,8 @@ export async function runOauth2ProviderValidation(
     // ----------------------------------------------
 
     let protocol : `${IdentityProviderProtocol}` | undefined;
-    if (result.data.protocol_config) {
-        protocol = getIdentityProviderProtocolForPreset(result.data.protocol_config);
-        result.data.protocol = protocol;
+    if (result.data.preset) {
+        protocol = getIdentityProviderProtocolForPreset(result.data.preset);
     } else {
         protocol = result.data.protocol;
     }
@@ -110,7 +109,7 @@ export async function runOauth2ProviderValidation(
         switch (protocol) {
             case IdentityProviderProtocol.OAUTH2:
             case IdentityProviderProtocol.OIDC: {
-                result.meta.attributes = validateOAuth2IdentityProviderProtocol(req, result.data.protocol_config);
+                result.meta.attributes = validateOAuth2IdentityProviderProtocol(req, result.data.preset);
                 break;
             }
             case IdentityProviderProtocol.LDAP: {

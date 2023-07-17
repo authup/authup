@@ -22,9 +22,9 @@ export const IdentityProviderIcon = defineComponent({
         },
     },
     setup(props, setup) {
-        if (props.entity.protocol_config) {
+        if (props.entity.preset) {
             return () => h(IdentityProviderPresetEntity, {
-                id: props.entity.protocol_config,
+                id: props.entity.preset,
             }, {
                 default: (item: IdentityProviderPresetElement) => h('i', { class: [item.icon, setup.attrs.class] }),
             });

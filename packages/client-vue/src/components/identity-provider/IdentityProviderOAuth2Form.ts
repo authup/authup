@@ -91,7 +91,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
 
         const preset = computed(() => {
             if (manager.entity.value) {
-                return manager.entity.value.protocol_config;
+                return manager.entity.value.preset;
             }
 
             return props.preset;
@@ -165,7 +165,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
             }
 
             if (preset.value) {
-                data.protocol_config = preset.value as IdentityProviderPreset;
+                data.preset = preset.value as IdentityProviderPreset;
             }
 
             await manager.createOrUpdate(data);
