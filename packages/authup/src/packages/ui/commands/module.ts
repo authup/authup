@@ -17,9 +17,8 @@ import type { UICommand } from '../constants';
 
 export function executeUICommand(
     command: `${UICommand}`,
-    ctx?: CommandExecutionContext,
+    ctx: CommandExecutionContext = {},
 ) : Promise<ChildProcess> {
-    ctx = ctx || {};
     ctx.env = ctx.env || {};
     ctx.args = ctx.args || {};
 
@@ -37,12 +36,15 @@ export function executeUICommand(
         const env = {
             PATH: process.env.PATH,
             ...(ctx.envFromProcess ? process.env : {}),
-            ...ctx.env,
         } as Record<string, any>;
 
         const keys = Object.keys(ctx.env);
         for (let i = 0; i < keys.length; i++) {
-            env[`NUXT_${keys[i]}`] = ctx.env[keys[i]];
+            env[keys[i]] = ctx.env[keys[i]];
+
+            if (!keys[i].match(/^(?:NUXT|NITRO)_.*$/)) {
+                env[`NUXT_PUBLIC_${keys[i]}`] = ctx.env[keys[i]];
+            }
         }
 
         const childProcess = exec(`${base} ${stringifyObjectArgs(ctx.args)}`, {

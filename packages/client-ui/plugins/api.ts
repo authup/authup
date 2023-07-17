@@ -12,7 +12,7 @@ import {
 } from '@authup/core';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
-import { defineNuxtPlugin } from '#app';
+import { defineNuxtPlugin, useRuntimeConfig } from '#app';
 import { useAuthStore } from '../store/auth';
 
 declare module '#app' {
@@ -28,15 +28,19 @@ declare module '@vue/runtime-core' {
 }
 
 export default defineNuxtPlugin((ctx) => {
+    const runtimeConfig = useRuntimeConfig();
+
+    const { apiUrl: baseURL } = runtimeConfig.public;
+
     const config : ClientAPIConfigInput = {
-        baseURL: ctx.$config.public.apiUrl,
+        baseURL,
     };
     const client = new APIClient(config);
 
     const store = useAuthStore(ctx.$pinia as Pinia);
 
     const tokenHook = new ClientResponseErrorTokenHook(client, {
-        baseURL: ctx.$config.public.apiUrl,
+        baseURL,
         tokenCreator: () => {
             const { refreshToken } = storeToRefs(store);
 

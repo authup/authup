@@ -15,7 +15,7 @@ import {
 } from 'vue';
 import { useToast } from 'bootstrap-vue-next';
 import {
-    defineNuxtComponent, navigateTo, useNuxtApp, useRoute,
+    defineNuxtComponent, navigateTo, useRoute, useRuntimeConfig,
 } from '#app';
 import {
     definePageMeta, reactive, ref,
@@ -66,6 +66,7 @@ export default defineNuxtComponent({
         }, form);
 
         const store = useAuthStore();
+        const runtimeConfig = useRuntimeConfig();
 
         const busy = ref(false);
 
@@ -113,11 +114,9 @@ export default defineNuxtComponent({
             .then(store.logout);
 
         const buildIdentityProviderURL = (id: string) => {
-            const app = useNuxtApp();
-
             const apiClient = useAPIClient();
             return apiClient.identityProvider.getAuthorizeUri(
-                app.$config.public.apiUrl,
+                runtimeConfig.public.apiUrl,
                 id,
             );
         };

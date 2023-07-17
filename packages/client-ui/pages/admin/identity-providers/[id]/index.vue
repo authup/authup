@@ -4,7 +4,7 @@ import { IdentityProviderOAuth2Form } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
-import { useNuxtApp } from '#app';
+import { useRuntimeConfig } from '#app';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
@@ -35,10 +35,10 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const app = useNuxtApp();
+        const runtimeConfig = useRuntimeConfig();
 
         return {
-            apiUrl: app.$config.public.apiUrl as string,
+            apiUrl: runtimeConfig.public.apiUrl as string,
             entity: props.entity,
             handleUpdated,
             handleFailed,

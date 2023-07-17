@@ -21,20 +21,47 @@ type Options = {
 };
 
 function extendConfigWithEnv(config: Continu<Options>) {
-    if (hasProcessEnv(['UI_PORT', 'NUXT_UI_PORT', 'PORT', 'NUXT_PORT'])) {
-        config.setRaw('port', readIntFromProcessEnv(['UI_PORT', 'NUXT_UI_PORT', 'PORT', 'NUXT_PORT']));
+    let keys = [
+        'UI_PORT',
+        'NITRO_UI_PORT',
+        'NUXT_UI_PORT',
+        'NUXT_PUBLIC_UI_PORT',
+        'PORT',
+        'NITRO_PORT',
+        'NUXT_PORT',
+        'NUXT_PUBLIC_PORT',
+    ];
+    if (hasProcessEnv(keys)) {
+        config.setRaw('port', readIntFromProcessEnv(keys));
     }
 
-    if (hasProcessEnv(['HOST', 'NUXT_HOST'])) {
-        config.setRaw('host', readFromProcessEnv(['HOST', 'NUXT_HOST']));
+    keys = [
+        'HOST',
+        'NITRO_HOST',
+        'NUXT_HOST',
+    ];
+
+    if (hasProcessEnv(keys)) {
+        config.setRaw('host', readFromProcessEnv(keys));
     }
 
-    if (hasProcessEnv(['API_URL', 'NUXT_API_URL'])) {
-        config.setRaw('apiUrl', readFromProcessEnv(['API_URL', 'NUXT_API_URL']));
+    keys = [
+        'API_URL',
+        'NUXT_API_URL',
+        'NUXT_PUBLIC_API_URL',
+    ];
+
+    if (hasProcessEnv(keys)) {
+        config.setRaw('apiUrl', readFromProcessEnv(keys));
     }
 
-    if (hasProcessEnv(['PUBLIC_URL', 'NUXT_PUBLIC_URL'])) {
-        config.setRaw('publicUrl', readFromProcessEnv(['PUBLIC_URL', 'NUXT_PUBLIC_URL']));
+    keys = [
+        'PUBLIC_URL',
+        'NUXT_PUBLIC_URL',
+        'NUXT_PUBLIC_PUBLIC_URL',
+    ];
+    if (hasProcessEnv([])) {
+        config.setRaw('publicUrl', readFromProcessEnv(keys));
     }
 }
 
@@ -67,8 +94,6 @@ export default defineNuxtModule({
         config.setRaw(fileConfig);
 
         extendConfigWithEnv(config);
-
-        // todo: apply host and port
 
         if (config.has('apiUrl')) {
             nuxt.options.runtimeConfig.public.apiUrl = config.get('apiUrl');
