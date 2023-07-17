@@ -29,7 +29,6 @@ describe('src/http/controllers/identity-provider', () => {
             slug: 'google',
             name: 'google',
             enabled: true,
-            protocol: IdentityProviderProtocol.OAUTH2,
             protocol_config: IdentityProviderPreset.GOOGLE,
             client_id: 'client',
             client_secret: 'start123',

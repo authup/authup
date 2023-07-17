@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
+import { check, oneOf, validationResult } from 'express-validator';
 import {
     IdentityProviderPreset,
-    IdentityProviderProtocol, isPropertySet,
+    IdentityProviderProtocol,
+    getIdentityProviderProtocolForPreset, isPropertySet,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authup/core';
@@ -59,18 +60,16 @@ export async function runOauth2ProviderValidation(
         .isLength({ min: 5, max: 128 })
         .run(req);
 
-    await check('protocol')
-        .exists()
-        .notEmpty()
-        .isIn(Object.values(IdentityProviderProtocol))
-        .run(req);
-
-    await check('protocol_config')
-        .exists()
-        .notEmpty()
-        .isIn(Object.values(IdentityProviderPreset))
-        .optional({ nullable: true })
-        .run(req);
+    await oneOf([
+        check('protocol')
+            .exists()
+            .notEmpty()
+            .isIn(Object.values(IdentityProviderProtocol)),
+        check('protocol_config')
+            .exists()
+            .notEmpty()
+            .isIn(Object.values(IdentityProviderPreset)),
+    ]).run(req);
 
     await check('enabled')
         .exists()
@@ -95,8 +94,20 @@ export async function runOauth2ProviderValidation(
 
     // ----------------------------------------------
 
+    let protocol : `${IdentityProviderProtocol}` | undefined;
+    if (result.data.protocol_config) {
+        protocol = getIdentityProviderProtocolForPreset(result.data.protocol_config);
+        result.data.protocol = protocol;
+    } else {
+        protocol = result.data.protocol;
+    }
+
+    if (!protocol) {
+        throw new BadRequestError('A protocol could not be determined.');
+    }
+
     try {
-        switch (result.data.protocol) {
+        switch (protocol) {
             case IdentityProviderProtocol.OAUTH2:
             case IdentityProviderProtocol.OIDC: {
                 result.meta.attributes = validateOAuth2IdentityProviderProtocol(req, result.data.protocol_config);
