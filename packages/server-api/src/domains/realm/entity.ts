@@ -26,7 +26,7 @@ export class RealmEntity implements Realm {
         description: string | null;
 
     @Column({ default: true })
-        drop_able: boolean;
+        built_in: boolean;
 
     @CreateDateColumn()
         created_at: string;

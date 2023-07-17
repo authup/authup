@@ -31,7 +31,7 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    if (!entity.drop_able) {
+    if (!entity.built_in) {
         throw new BadRequestError('The realm can not be deleted in general.');
     }
 

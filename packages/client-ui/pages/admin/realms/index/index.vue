@@ -101,7 +101,7 @@ export default defineNuxtComponent({
                         :entity-id="data.item.id"
                         entity-type="realm"
                         :with-text="false"
-                        :disabled="!data.item.drop_able || !hasDropPermission"
+                        :disabled="!data.item.built_in || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>

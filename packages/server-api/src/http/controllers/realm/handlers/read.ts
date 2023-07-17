@@ -27,13 +27,13 @@ export async function getManyRealmRouteHandler(
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'realm',
         filters: {
-            allowed: ['id', 'name', 'drop_able'],
+            allowed: ['id', 'name', 'built_in'],
         },
         pagination: {
             maxLimit: 50,
         },
         fields: {
-            allowed: ['id', 'name', 'description', 'drop_able', 'created_at', 'updated_at'],
+            allowed: ['id', 'name', 'description', 'built_in', 'created_at', 'updated_at'],
         },
         sort: {
             allowed: ['id', 'name', 'created_at', 'updated_at'],

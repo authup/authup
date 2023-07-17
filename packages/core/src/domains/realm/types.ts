@@ -15,7 +15,7 @@ export interface Realm {
 
     description: string | null;
 
-    drop_able: boolean;
+    built_in: boolean;
 
     created_at: string;
 

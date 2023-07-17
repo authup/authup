@@ -79,7 +79,7 @@ export class DatabaseSeeder implements Seeder {
         if (!realm) {
             realm = realmRepository.create({
                 name: REALM_MASTER_NAME,
-                drop_able: false,
+                built_in: false,
             });
         }
 
