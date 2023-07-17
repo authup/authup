@@ -53,7 +53,7 @@ export class MigrationGenerateCommand implements CommandModule {
 
             Object.assign(dataSourceOptions, {
                 migrations: [
-                    path.join(directoryPath, '*{.ts,.js}'),
+                    `src/database/migrations/${dataSourceOptions.type}/*.{ts,js}`,
                 ],
             } satisfies Partial<DataSourceOptions>);
 

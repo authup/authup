@@ -65,7 +65,7 @@ export async function runOauth2ProviderValidation(
             .exists()
             .notEmpty()
             .isIn(Object.values(IdentityProviderProtocol)),
-        check('protocol_config')
+        check('preset')
             .exists()
             .notEmpty()
             .isIn(Object.values(IdentityProviderPreset)),
