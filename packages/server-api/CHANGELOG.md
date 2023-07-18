@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.39.0](https://github.com/authup/authup/compare/v0.38.0...v0.39.0) (2023-07-18)
+
+
+### Bug Fixes
+
+* **deps:** bump winston from 3.9.0 to 3.10.0 ([#1252](https://github.com/authup/authup/issues/1252)) ([865d44d](https://github.com/authup/authup/commit/865d44deaebb66f9357f4f5ca1b3dca247bba1dd))
+* oauth2 github identity-provider workflow ([f6843e2](https://github.com/authup/authup/commit/f6843e2957224f87ff8cd2dc44a94623afc84016))
+* only require identity-provider protocol or protocol-config ([5caacf4](https://github.com/authup/authup/commit/5caacf4abcefe701805bf22f5b36d5488fe5c9ce))
+* rename identity-provider protocol_config column to preset ([bf4020e](https://github.com/authup/authup/commit/bf4020e7033de7584fb3f27a4b58452afd8a6eeb))
+* rename realm column drop_able to built_in ([dd93239](https://github.com/authup/authup/commit/dd932393ba7391b9b0196dc3bbb63718a1f89ec0))
+
+
+### Features
+
+* implemented (social)login flow for identity provider authorization & redirect ([8db22c9](https://github.com/authup/authup/commit/8db22c9ef7adb29487c3bb6068ed34c53a7670b9))
+* implemented entity-manager + created domain entity components ([391969d](https://github.com/authup/authup/commit/391969d4c4ba0abd325a2fbc032da4eef0eab66c))
+* initial social login provider configuration ([5a17ebf](https://github.com/authup/authup/commit/5a17ebf24e6fb4339f8ba96f95924ab3a4e944ab))
+* split identity-provider form fields + additional utitlity components ([a50a695](https://github.com/authup/authup/commit/a50a695614f8261083776e1d0d34418dba2ceeec))
+* updated migration files for mysql,postgres & sqlite3 ([af6fa0f](https://github.com/authup/authup/commit/af6fa0f54e4e4c1271fd4b30bc522d349786dbbc))
+
+
+
+
+
 # [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
 
 

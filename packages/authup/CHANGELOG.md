@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.39.0](https://github.com/authup/authup/compare/v0.38.0...v0.39.0) (2023-07-18)
+
+
+### Bug Fixes
+
+* **deps:** bump consola from 3.2.2 to 3.2.3 ([#1242](https://github.com/authup/authup/issues/1242)) ([ca7dc53](https://github.com/authup/authup/commit/ca7dc53d41416e25db9aaee671653b026a011951))
+* env parse and apply for client-ui via cli service ([135f85c](https://github.com/authup/authup/commit/135f85c7abbad39d67ee0eb600503bb90d32becf))
+
+
+
+
+
 # [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
 
 

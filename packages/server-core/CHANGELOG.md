@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.39.0](https://github.com/authup/authup/compare/v0.38.0...v0.39.0) (2023-07-18)
+
+
+### Bug Fixes
+
+* **deps:** bump jsonwebtoken from 9.0.0 to 9.0.1 ([#1251](https://github.com/authup/authup/issues/1251)) ([5774121](https://github.com/authup/authup/commit/5774121066c4b41b1362f2fdbdea87c2161192e2))
+
+
+
+
+
 # [0.38.0](https://github.com/authup/authup/compare/v0.37.1...v0.38.0) (2023-06-29)
 
 **Note:** Version bump only for package @authup/server-core
