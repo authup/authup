@@ -70,7 +70,7 @@
         "pg": "^8.11.1",
         "redis-extension": "^1.3.0",
         "reflect-metadata": "^0.1.13",
-        "routup": "^1.0.1",
+        "routup": "^1.0.2",
         "smob": "^1.4.0",
         "typeorm": "^0.3.17",
         "typeorm-extension": "^2.8.1",
