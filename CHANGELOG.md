@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.39.1](https://github.com/authup/authup/compare/v0.39.0...v0.39.1) (2023-07-22)
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 8.4.0 to 8.5.0 ([#1275](https://github.com/authup/authup/issues/1275)) ([f7ea369](https://github.com/authup/authup/commit/f7ea36936dd4058a2761cffa024d182c07f4e7ce))
+* **deps:** bump locter from 1.1.2 to 1.2.0 ([#1274](https://github.com/authup/authup/issues/1274)) ([e17da05](https://github.com/authup/authup/commit/e17da057d7c612654ddc7c333f0a8daec0a2d488))
+* **deps:** bump nodemailer from 6.9.3 to 6.9.4 ([#1276](https://github.com/authup/authup/issues/1276)) ([3d9c686](https://github.com/authup/authup/commit/3d9c6864c88ccb5c01801fb7a2d9680c6103d218))
+* **deps:** bump routup from 1.0.1 to 1.0.2 ([#1270](https://github.com/authup/authup/issues/1270)) ([ddc541b](https://github.com/authup/authup/commit/ddc541b8196719cfb39fb3c60d99f185569d22e6))
+* **deps:** bump typeorm-extension to v3.0.0-alpha.8 ([f77c239](https://github.com/authup/authup/commit/f77c239424ce41193c0099d9733aec32480273bb))
+* migration location for non lazy execution ([4663b58](https://github.com/authup/authup/commit/4663b584c682daf38606b350a8970d86cabe8cb1))
+
+
+
+
+
 # [0.39.0](https://github.com/authup/authup/compare/v0.38.0...v0.39.0) (2023-07-18)
 
 
