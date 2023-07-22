@@ -4,9 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import path from 'node:path';
 import type { DataSourceOptions } from 'typeorm';
 import { hasClient, hasConfig } from 'redis-extension';
+import { adjustFilePath } from 'typeorm-extension';
 import { isDatabaseTypeSupported, useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
@@ -20,17 +20,19 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         throw new Error('At the moment only the database types mysql, better-sqlite3 and postgres are supported.');
     }
 
-    if (process.env.NODE_ENV === 'test') {
-        Object.assign(dataSourceOptions, {
-            migrations: [],
-        } as DataSourceOptions);
-    } else {
-        Object.assign(dataSourceOptions, {
-            migrations: [
-                path.join(__dirname, '..', 'migrations', dataSourceOptions.type, '*{.ts,.js}'),
-            ],
-        } as DataSourceOptions);
+    const migrations : string[] = [];
+    if (process.env.NODE_ENV !== 'test') {
+        const migration = await adjustFilePath(
+            `src/migrations/${dataSourceOptions.type}/*.{ts,js}`,
+            config.get('rootPath'),
+        );
+
+        migrations.push(migration);
     }
+
+    Object.assign(dataSourceOptions, {
+        migrations,
+    } as DataSourceOptions);
 
     return extendDataSourceOptions(dataSourceOptions);
 }

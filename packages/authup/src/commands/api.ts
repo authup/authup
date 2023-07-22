@@ -9,6 +9,7 @@ import type { CAC } from 'cac';
 import consola from 'consola';
 import chalk from 'chalk';
 import process from 'node:process';
+import { createConfig } from '../config';
 import {
     ServerCommand, resetServer, startServer,
 } from '../packages';
@@ -17,12 +18,17 @@ export function buildServerCommand(cac: CAC) {
     cac.command('api <cmd>', 'Run a specific command.')
         .action(async (command :string) => {
             const root = process.cwd();
+            const config = await createConfig();
 
             switch (command) {
                 case ServerCommand.START: {
                     await startServer({
                         args: {
                             root,
+                        },
+                        env: {
+                            PORT: config.api.get('port'),
+                            WRITABLE_DIRECTORY_PATH: config.api.get('writableDirectoryPath'),
                         },
                         envFromProcess: true,
                     });
