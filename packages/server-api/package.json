@@ -63,7 +63,7 @@
         "dotenv": "^16.3.1",
         "express-validator": "^7.0.1",
         "hapic": "^2.2.0",
-        "locter": "^1.2.0",
+        "locter": "^1.2.1",
         "morgan": "^1.10.0",
         "mysql": "^2.18.1",
         "node-cron": "^3.0.2",
