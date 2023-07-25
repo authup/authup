@@ -18,7 +18,7 @@ import {
     checkDatabase,
     createDatabase,
     setDataSource,
-    setupDatabaseSchema,
+    synchronizeDatabaseSchema,
 } from 'typeorm-extension';
 import { useConfig } from '../config';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
@@ -31,7 +31,7 @@ import type { StartCommandContext } from './type';
 export async function startCommand(context?: StartCommandContext) {
     context = context || {};
 
-    const config = await useConfig();
+    const config = useConfig();
 
     if (context.logger) {
         setLogger(context.logger);
@@ -91,7 +91,7 @@ export async function startCommand(context?: StartCommandContext) {
     if (!check.schema) {
         logger.info('Applying database schema...');
 
-        await setupDatabaseSchema(dataSource);
+        await synchronizeDatabaseSchema(dataSource);
 
         logger.info('Applied database schema.');
     }

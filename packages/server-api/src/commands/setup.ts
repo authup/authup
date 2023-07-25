@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createDatabase, setupDatabaseSchema } from 'typeorm-extension';
+import { createDatabase, synchronizeDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { useConfig } from '../config';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
@@ -70,7 +70,7 @@ export async function setupCommand(context?: SetupCommandContext) {
                     context.logger.info('Execute schema setup.');
                 }
 
-                await setupDatabaseSchema(dataSource);
+                await synchronizeDatabaseSchema(dataSource);
 
                 if (context.logger) {
                     context.logger.info('Executed schema setup.');
