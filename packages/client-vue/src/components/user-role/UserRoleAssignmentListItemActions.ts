@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserRole } from '@authup/core';
 import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
+import { injectAPIClient } from '../../core';
 
 export const UserRoleAssignmentListItemActions = defineComponent({
     name: 'UserRoleAssignmentListItemActions',
@@ -40,7 +40,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
 
         const init = async () => {
             try {
-                const response = await useAPIClient().userRole.getMany({
+                const response = await injectAPIClient().userRole.getMany({
                     filters: {
                         user_id: props.userId,
                         role_id: props.roleId,
@@ -75,7 +75,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().userRole.create({
+                const data = await injectAPIClient().userRole.create({
                     user_id: props.userId,
                     role_id: props.roleId,
                 });
@@ -98,7 +98,7 @@ export const UserRoleAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().userRole.delete(item.value.id);
+                const data = await injectAPIClient().userRole.delete(item.value.id);
 
                 item.value = null;
 

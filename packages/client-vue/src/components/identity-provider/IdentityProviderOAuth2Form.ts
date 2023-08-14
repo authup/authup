@@ -31,7 +31,7 @@ import { onChange, useIsEditing } from '../../composables';
 import {
     createEntityManager,
     extractVuelidateResultsFromChild,
-    useAPIClient,
+    injectAPIClient,
 } from '../../core';
 import { useTranslator } from '../../translator';
 import { IdentityProviderBasicFields } from './IdentityProviderBasicFields';
@@ -108,7 +108,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
                 return '';
             }
 
-            return useAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
+            return injectAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
         });
 
         const basicFieldsNode = ref<null | typeof IdentityProviderBasicFields>(null);

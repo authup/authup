@@ -10,7 +10,7 @@ import { hasOwnProperty } from '@authup/core';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import { ref, toRef } from 'vue';
-import { useAPIClient } from '../api-client';
+import { injectAPIClient } from '../api-client';
 import { extendObjectProperties } from '../object';
 import { hasNormalizedSlot, normalizeSlot } from '../slot';
 import { EntityManagerError } from './error';
@@ -21,7 +21,7 @@ function create<T extends EntityManagerRecord>(
     type: `${DomainType}`,
     ctx: EntityManagerContext<T>,
 ) : EntityManager<T> {
-    const client = useAPIClient();
+    const client = injectAPIClient();
     let domainAPI : DomainAPI<T> | undefined;
     if (hasOwnProperty(client, type)) {
         domainAPI = client[type] as DomainAPI<T>;

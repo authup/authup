@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { UserPermission } from '@authup/core';
 import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
+import { injectAPIClient } from '../../core';
 
 export const UserPermissionAssignmentListItemActions = defineComponent({
     name: 'UserPermissionAssignmentListItemActions',
@@ -39,7 +39,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useAPIClient().userPermission.getMany({
+                const response = await injectAPIClient().userPermission.getMany({
                     filters: {
                         user_id: props.userId,
                         permission_id: props.permissionId,
@@ -74,7 +74,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().userPermission.create({
+                const data = await injectAPIClient().userPermission.create({
                     user_id: props.userId,
                     permission_id: props.permissionId,
                 });
@@ -97,7 +97,7 @@ export const UserPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().userPermission.delete(item.value.id);
+                const data = await injectAPIClient().userPermission.delete(item.value.id);
 
                 item.value = null;
 

@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import type { Client } from '@authup/core';
 import type { EntityListSlotsType } from '../../core/entity-list';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
+import { injectAPIClient } from '../../core';
 
 export const ClientList = defineComponent({
     name: 'ClientList',

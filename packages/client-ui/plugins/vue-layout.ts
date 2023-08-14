@@ -49,7 +49,7 @@ export default defineNuxtPlugin((ctx) => {
 
     ctx.vueApp.use(installCountdown, baseOptions);
     ctx.vueApp.use(installFormControl, baseOptions);
-    ctx.vueApp.use(installTimeago, baseOptions);
+    ctx.vueApp.use(installTimeago);
 
     const navigationStore = useState<NavigationStore>(() => ({
         items: [],
@@ -73,6 +73,7 @@ export default defineNuxtPlugin((ctx) => {
     // preset missing ...
     ctx.vueApp.use(installAuthup, {
         apiClient: ctx.$api as APIClient,
+        store,
         components: false,
         ...baseOptions,
     });

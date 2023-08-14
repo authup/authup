@@ -18,7 +18,7 @@ import {
 } from 'vue';
 import type { DomainType } from '@authup/core';
 import { useDomainAPI } from '@authup/core';
-import { useAPIClient } from '../core';
+import { injectAPIClient } from '../core';
 import { useTranslator } from '../translator';
 
 enum ElementType {
@@ -72,7 +72,7 @@ export const EntityDelete = defineComponent({
         const submit = async () => {
             if (busy.value) return;
 
-            const domainApi = useDomainAPI(useAPIClient(), props.entityType);
+            const domainApi = useDomainAPI(injectAPIClient(), props.entityType);
             if (!domainApi) {
                 return;
             }

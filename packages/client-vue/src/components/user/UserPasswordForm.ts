@@ -13,7 +13,7 @@ import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
 import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
-import { useAPIClient } from '../../core';
+import { injectAPIClient } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const UserPasswordForm = defineComponent({
@@ -58,7 +58,7 @@ export const UserPasswordForm = defineComponent({
             busy.value = true;
 
             try {
-                const user = await useAPIClient().user.update(props.id, {
+                const user = await injectAPIClient().user.update(props.id, {
                     password: form.password,
                     password_repeat: form.password_repeat,
                 });

@@ -19,7 +19,7 @@ import {
     ref, unref, watch,
 } from 'vue';
 import { merge } from 'smob';
-import { useAPIClient } from '../api-client';
+import { injectAPIClient } from '../api-client';
 import { buildEntityListFooterPagination } from './footer';
 import type { EntityListHeaderSearchOptions } from './header';
 import { buildDomainListHeader } from './header';
@@ -47,7 +47,7 @@ function create<T extends EntityListRecord>(
         total: 0,
     });
 
-    const client = useAPIClient();
+    const client = injectAPIClient();
 
     let domainAPI : DomainAPI<T> | undefined;
     if (hasOwnProperty(client, type)) {

@@ -9,7 +9,7 @@ import type { PropType } from 'vue';
 import { defineComponent, h, ref } from 'vue';
 import type { RobotPermission } from '@authup/core';
 import { renderEntityListItemAssignmentButton } from '../../core/entity-list';
-import { useAPIClient } from '../../core';
+import { injectAPIClient } from '../../core';
 
 export const RobotPermissionAssignmentListItemActions = defineComponent({
     name: 'RobotPermissionAssignmentListItemActions',
@@ -39,7 +39,7 @@ export const RobotPermissionAssignmentListItemActions = defineComponent({
         };
         const init = async () => {
             try {
-                const response = await useAPIClient().robotPermission.getMany({
+                const response = await injectAPIClient().robotPermission.getMany({
                     filters: {
                         robot_id: props.robotId,
                         permission_id: props.permissionId,
@@ -74,7 +74,7 @@ export const RobotPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().robotPermission.create({
+                const data = await injectAPIClient().robotPermission.create({
                     robot_id: props.robotId,
                     permission_id: props.permissionId,
                 });
@@ -97,7 +97,7 @@ export const RobotPermissionAssignmentListItemActions = defineComponent({
             busy.value = true;
 
             try {
-                const data = await useAPIClient().robotPermission.delete(item.value.id);
+                const data = await injectAPIClient().robotPermission.delete(item.value.id);
 
                 item.value = null;
 

@@ -2,7 +2,7 @@
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
-    IdentityProviderIcon, IdentityProviderList, RealmList, useAPIClient, useValidationTranslator,
+    IdentityProviderIcon, IdentityProviderList, RealmList, injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
