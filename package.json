@@ -34,7 +34,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.3",
-    "@swc/core": "^1.3.73",
+    "@swc/core": "^1.3.76",
     "@swc/jest": "^0.2.27",
     "@tada5hi/commitlint-config": "^1.1.0",
     "@tada5hi/eslint-config-vue-typescript": "^1.3.2",
