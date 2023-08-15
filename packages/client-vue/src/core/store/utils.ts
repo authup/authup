@@ -23,9 +23,9 @@ _ExtractGettersFromSetupStore<StoreData>,
 _ExtractActionsFromSetupStore<StoreData>
 >;
 
-const symbol = Symbol.for('AStore');
+export const StoreSymbol = Symbol.for('AuthupStore');
 export function injectStore() : Store {
-    const instance = inject(symbol);
+    const instance = inject(StoreSymbol);
     if (!instance) {
         throw new Error('The Store is not set.');
     }
@@ -35,9 +35,9 @@ export function injectStore() : Store {
 
 export function provideStore(store: Store, instance?: App) {
     if (instance) {
-        instance.provide(symbol, store);
+        instance.provide(StoreSymbol, store);
         return;
     }
 
-    provide(symbol, store);
+    provide(StoreSymbol, store);
 }

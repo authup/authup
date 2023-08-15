@@ -2,14 +2,17 @@ import { applyPluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './type';
-import { provideAPIClient, provideStore } from './core';
+import { provideAPIClient, provideSocketManager, provideStore } from './core';
 
-// install function executed by Vue.use()
 export function install(instance: App, options?: Options) : void {
     options = options || {};
 
     if (options.apiClient) {
         provideAPIClient(options.apiClient, instance);
+    }
+
+    if (options.socketManager) {
+        provideSocketManager(options.socketManager, instance);
     }
 
     if (options.store) {

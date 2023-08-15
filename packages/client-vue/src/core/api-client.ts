@@ -9,19 +9,19 @@ import type { APIClient } from '@authup/core';
 import type { App } from 'vue';
 import { inject, provide } from 'vue';
 
-const symbol = Symbol.for('AAPIClient');
+export const APIClientSymbol = Symbol.for('AuthupAPIClient');
 
 export function provideAPIClient(client: APIClient, instance?: App) {
     if (instance) {
-        instance.provide(symbol, client);
+        instance.provide(APIClientSymbol, client);
         return;
     }
 
-    provide(symbol, client);
+    provide(APIClientSymbol, client);
 }
 
 export function injectAPIClient() {
-    const instance = inject(symbol);
+    const instance = inject(APIClientSymbol);
     if (!instance) {
         throw new Error('The APIClient is not set.');
     }

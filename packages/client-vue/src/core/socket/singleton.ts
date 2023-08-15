@@ -9,23 +9,23 @@ import type { App } from 'vue';
 import { inject, provide } from 'vue';
 import type { SocketManager } from './module';
 
-const SocketSymbol = Symbol.for('Socket');
+export const SocketManagerSymbol = Symbol.for('AuthupSocketManager');
 
 export function provideSocketManager(manager: SocketManager, instance?: App) {
     if (instance) {
-        instance.provide(SocketSymbol, manager);
+        instance.provide(SocketManagerSymbol, manager);
         return;
     }
-    provide(SocketSymbol, manager);
+    provide(SocketManagerSymbol, manager);
 }
 
 export function hasSocketManager() {
-    const manager = inject(SocketSymbol);
+    const manager = inject(SocketManagerSymbol);
     return !!manager;
 }
 
 export function injectSocketManager() : SocketManager {
-    const manager = inject(SocketSymbol);
+    const manager = inject(SocketManagerSymbol);
     if (!manager) {
         throw new Error('The Socket Manager is not provided.');
     }

@@ -6,8 +6,7 @@
  */
 
 import { DomainType } from '@authup/core';
-import type { PropType } from 'vue';
-import { defineComponent, h, ref } from 'vue';
+import { defineComponent } from 'vue';
 import type { RobotPermission } from '@authup/core';
 import {
     createEntityManager,
@@ -17,10 +16,6 @@ import {
 
 export const RobotPermissionAssignAction = defineComponent({
     props: {
-        items: {
-            type: Array as PropType<RobotPermission[]>,
-            default: () => [],
-        },
         robotId: String,
         permissionId: String,
     },
