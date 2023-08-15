@@ -3,7 +3,8 @@
         "@tada5hi/eslint-config-vue-typescript"
     ],
     "parserOptions": {
-        "project": "./tsconfig.json"
+        "project": "./tsconfig.json",
+        "extraFileExtensions": [".vue"]
     },
     "ignorePatterns": ["**/dist/*"],
     "globals": {
