@@ -9,11 +9,10 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core';
-import type { EntityListSlotsType } from '../../core/entity-list';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
+import type { EntityListSlotsType } from '../../core';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const IdentityProviderList = defineComponent({
-    name: 'IdentityProviderList',
     props: defineDomainListProps<IdentityProvider>(),
     slots: Object as SlotsType<EntityListSlotsType<IdentityProvider>>,
     emits: defineDomainListEvents<IdentityProvider>(),

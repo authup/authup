@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const RoleEntity = defineComponent({
-    name: 'RoleEntity',
     props: defineEntityManagerProps<Role>(),
     emits: defineEntityManagerEvents<Role>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Role>>,

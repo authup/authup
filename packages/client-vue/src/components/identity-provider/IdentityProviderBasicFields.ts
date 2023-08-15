@@ -21,7 +21,6 @@ import { alphaNumHyphenUnderscore, extendObjectProperties } from '../../core';
 import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderBasicFields = defineComponent({
-    name: 'IdentityProviderBasicFields',
     props: {
         entity: {
             type: Object as PropType<Partial<IdentityProvider>>,

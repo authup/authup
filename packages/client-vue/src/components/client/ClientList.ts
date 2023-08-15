@@ -9,12 +9,10 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Client } from '@authup/core';
-import type { EntityListSlotsType } from '../../core/entity-list';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
-import { injectAPIClient } from '../../core';
+import type { EntityListSlotsType } from '../../core';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const ClientList = defineComponent({
-    name: 'ClientList',
     props: defineDomainListProps<Client>(),
     slots: Object as SlotsType<EntityListSlotsType<Client>>,
     emits: defineDomainListEvents<Client>(),

@@ -17,7 +17,6 @@ import {
 } from '../../core/entity-manager';
 
 export const RealmEntity = defineComponent({
-    name: 'RealmEntity',
     props: defineEntityManagerProps<Realm>(),
     emits: defineEntityManagerEvents<Realm>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Realm>>,
@@ -33,7 +32,7 @@ export const RealmEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

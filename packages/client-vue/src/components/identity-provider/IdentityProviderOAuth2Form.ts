@@ -43,7 +43,6 @@ import type { IdentityProviderPresetElement } from './preset';
 import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderOAuth2Form = defineComponent({
-    name: 'IdentityProviderOAuth2Form',
     components: {
         IdentityProviderBasicFields,
         IdentityProviderClientFields,

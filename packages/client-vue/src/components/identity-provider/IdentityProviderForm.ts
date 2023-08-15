@@ -16,7 +16,6 @@ import { IdentityProviderPicker } from './IdentityProviderPicker';
 import { IdentityProviderOAuth2Form } from './IdentityProviderOAuth2Form';
 
 export const IdentityProviderForm = defineComponent({
-    name: 'IdentityProviderForm',
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,

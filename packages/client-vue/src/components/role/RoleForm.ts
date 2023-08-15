@@ -24,7 +24,6 @@ import {
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RoleForm = defineComponent({
-    name: 'RoleForm',
     props: {
         entity: {
             type: Object as PropType<Role>,

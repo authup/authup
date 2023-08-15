@@ -14,7 +14,6 @@ import { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity
 import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderPicker = defineComponent({
-    name: 'IdentityProviderPicker',
     props: {
         protocol: {
             type: String,

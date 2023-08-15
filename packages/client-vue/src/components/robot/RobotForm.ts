@@ -41,7 +41,6 @@ import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const RobotForm = defineComponent({
-    name: 'RobotForm',
     props: {
         name: {
             type: String,

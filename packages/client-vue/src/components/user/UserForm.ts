@@ -23,7 +23,6 @@ import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({
-    name: 'UserForm',
     props: {
         entity: {
             type: Object as PropType<User>,

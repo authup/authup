@@ -16,7 +16,6 @@ import {
 } from './ClientScopeAssignAction';
 
 export const ClientScopeAssignmentList = defineComponent({
-    name: 'ClientScopeAssignmentList',
     props: {
         entityId: {
             type: String,

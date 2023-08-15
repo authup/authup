@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const RobotEntity = defineComponent({
-    name: 'RobotEntity',
     props: defineEntityManagerProps<Robot>(),
     emits: defineEntityManagerEvents<Robot>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Robot>>,
@@ -33,7 +32,7 @@ export const RobotEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

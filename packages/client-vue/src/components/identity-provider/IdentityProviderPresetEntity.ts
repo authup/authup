@@ -11,7 +11,6 @@ import { getIdentityProviderPresetElement } from './preset';
 import { hasNormalizedSlot, normalizeSlot } from '../../core';
 
 export const IdentityProviderPresetEntity = defineComponent({
-    name: 'IdentityProviderPresetEntity',
     props: {
         id: {
             type: String,

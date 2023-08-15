@@ -21,7 +21,6 @@ import { useValidationTranslator } from '../../translator';
 import { IdentityProviderDiscovery } from './IdentityProviderDiscovery';
 
 export const IdentityProviderEndpointFields = defineComponent({
-    name: 'IdentityProviderEndpointFields',
     props: {
         entity: {
             type: Object as PropType<Partial<OAuth2IdentityProvider>>,

@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const IdentityProviderEntity = defineComponent({
-    name: 'IdentityProviderEntity',
     props: defineEntityManagerProps<IdentityProvider>(),
     emits: defineEntityManagerEvents<IdentityProvider>(),
     slots: Object as SlotsType<EntityManagerSlotsType<IdentityProvider>>,
@@ -33,7 +32,7 @@ export const IdentityProviderEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

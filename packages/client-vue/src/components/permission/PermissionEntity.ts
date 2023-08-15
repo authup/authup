@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const PermissionEntity = defineComponent({
-    name: 'PermissionEntity',
     props: defineEntityManagerProps<Permission>(),
     emits: defineEntityManagerEvents<Permission>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Permission>>,

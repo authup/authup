@@ -14,7 +14,6 @@ import type { IdentityProviderPresetElement } from './preset';
 import type { IdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderIcon = defineComponent({
-    name: 'IdentityProviderIcon',
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,

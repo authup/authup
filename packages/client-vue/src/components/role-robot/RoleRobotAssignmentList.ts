@@ -16,7 +16,6 @@ import {
 import { RobotList } from '../robot';
 
 export const RoleRobotAssignmentList = defineComponent({
-    name: 'RoleRobotAssignmentList',
     props: {
         entityId: String,
     },

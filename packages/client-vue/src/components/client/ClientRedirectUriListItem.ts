@@ -16,7 +16,6 @@ import {
 import { useValidationTranslator } from '../../translator/utils';
 
 export const ClientRedirectUriListItem = defineComponent({
-    name: 'ClientRedirectUriListItem',
     props: {
         uri: {
             type: String,

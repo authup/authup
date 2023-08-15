@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const ClientEntity = defineComponent({
-    name: 'ClientEntity',
     props: defineEntityManagerProps<Client>(),
     emits: defineEntityManagerEvents<Client>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Client>>,

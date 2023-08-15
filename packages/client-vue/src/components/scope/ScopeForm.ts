@@ -43,7 +43,6 @@ import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({
-    name: 'ScopeForm',
     props: {
         name: {
             type: String,

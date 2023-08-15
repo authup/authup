@@ -13,7 +13,6 @@ import type { EntityListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const RobotList = defineComponent({
-    name: 'RobotList',
     props: defineDomainListProps<Robot>(),
     slots: Object as SlotsType<EntityListSlotsType<Robot>>,
     emits: defineDomainListEvents<Robot>(),

@@ -29,7 +29,6 @@ import {
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const RealmForm = defineComponent({
-    name: 'RealmForm',
     props: {
         entity: {
             type: Object as PropType<Realm>,

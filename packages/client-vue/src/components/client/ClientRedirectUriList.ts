@@ -12,7 +12,6 @@ import {
 import { ClientRedirectUriListItem } from './ClientRedirectUriListItem';
 
 export const ClientRedirectUriList = defineComponent({
-    name: 'ClientRedirectUriList',
     props: {
         uri: {
             type: String,

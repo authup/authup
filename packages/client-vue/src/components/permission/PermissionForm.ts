@@ -24,7 +24,6 @@ import {
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const PermissionForm = defineComponent({
-    name: 'PermissionForm',
     props: {
         entity: {
             type: Object as PropType<Permission>,

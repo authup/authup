@@ -11,7 +11,6 @@ import { hasNormalizedSlot, normalizeSlot } from '../../core';
 import { getIdentityProviderProtocolElement } from './protocol';
 
 export const IdentityProviderProtocolEntity = defineComponent({
-    name: 'IdentityProviderProtocolEntity',
     props: {
         id: {
             type: String,

@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const ScopeEntity = defineComponent({
-    name: 'ScopeEntity',
     props: defineEntityManagerProps<Scope>(),
     emits: defineEntityManagerEvents<Scope>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Scope>>,

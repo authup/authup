@@ -12,7 +12,6 @@ import type { EntityListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const PermissionList = defineComponent({
-    name: 'PermissionList',
     props: defineDomainListProps<Permission>(),
     slots: Object as SlotsType<EntityListSlotsType<Permission>>,
     emits: defineDomainListEvents<Permission>(),

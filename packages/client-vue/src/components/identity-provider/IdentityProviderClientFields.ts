@@ -20,7 +20,6 @@ import { extendObjectProperties } from '../../core';
 import { useValidationTranslator } from '../../translator';
 
 export const IdentityProviderClientFields = defineComponent({
-    name: 'IdentityProviderClientForm',
     props: {
         entity: {
             type: Object as PropType<Partial<OAuth2IdentityProvider>>,

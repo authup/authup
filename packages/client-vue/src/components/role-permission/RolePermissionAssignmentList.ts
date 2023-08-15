@@ -16,7 +16,6 @@ import {
 import { PermissionList } from '../permission';
 
 export const RolePermissionAssignmentList = defineComponent({
-    name: 'RolePermissionAssignmentList',
     props: {
         entityId: {
             type: String,

@@ -17,7 +17,6 @@ import {
 } from '../../core';
 
 export const UserEntity = defineComponent({
-    name: 'UserEntity',
     props: defineEntityManagerProps<User>(),
     emits: defineEntityManagerEvents<User>(),
     slots: Object as SlotsType<EntityManagerSlotsType<User>>,

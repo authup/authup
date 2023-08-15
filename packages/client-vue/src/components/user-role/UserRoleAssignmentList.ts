@@ -14,7 +14,6 @@ import { RoleList } from '../role';
 import { UserRoleAssignAction } from './UserRoleAssignAction';
 
 export const UserRoleAssignmentList = defineComponent({
-    name: 'UserRoleAssignmentList',
     props: {
         entityId: String,
     },

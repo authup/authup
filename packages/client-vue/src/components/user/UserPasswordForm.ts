@@ -17,7 +17,6 @@ import { injectAPIClient } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 
 export const UserPasswordForm = defineComponent({
-    name: 'UserPasswordForm',
     props: {
         id: {
             type: String,

@@ -12,7 +12,6 @@ import { UserPermissionAssignAction } from '../user-permission';
 import { UserList } from '../user';
 
 export const PermissionUserAssignmentList = defineComponent({
-    name: 'PermissionUserAssignmentList',
     props: {
         entityId: {
             type: String,
