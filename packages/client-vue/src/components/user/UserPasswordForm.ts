@@ -30,6 +30,7 @@ export const UserPasswordForm = defineComponent({
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, ctx) {
+        const apiClient = injectAPIClient();
         const busy = ref(false);
         const form = reactive({
             password: '',
@@ -58,7 +59,7 @@ export const UserPasswordForm = defineComponent({
             busy.value = true;
 
             try {
-                const user = await injectAPIClient().user.update(props.id, {
+                const user = await apiClient.user.update(props.id, {
                     password: form.password,
                     password_repeat: form.password_repeat,
                 });

@@ -22,7 +22,8 @@ export const RobotEntity = defineComponent({
     emits: defineEntityManagerEvents<Robot>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Robot>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.ROBOT}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.ROBOT}`,
             props,
             setup,
         });

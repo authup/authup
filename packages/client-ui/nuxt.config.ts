@@ -1,7 +1,7 @@
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 
-import { defineNuxtConfig } from 'nuxt/config';
 import path from 'node:path';
+import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
     build: {

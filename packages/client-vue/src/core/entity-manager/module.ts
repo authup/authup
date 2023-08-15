@@ -5,95 +5,79 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
+import type {
+    DomainAPI, DomainEntity, DomainEntityID, DomainType,
+} from '@authup/core';
 import { hasOwnProperty } from '@authup/core';
+import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
-import { ref, toRef } from 'vue';
+import {
+    computed, isRef, ref, toRef, watch,
+} from 'vue';
 import { injectAPIClient } from '../api-client';
+import type { EntitySocket, EntitySocketContext } from '../entity-socket';
+import { createEntitySocket } from '../entity-socket';
 import { extendObjectProperties } from '../object';
 import { hasNormalizedSlot, normalizeSlot } from '../slot';
 import { EntityManagerError } from './error';
-import type { EntityManager, EntityManagerContext, EntityManagerRecord } from './type';
+import type {
+    EntityManager,
+    EntityManagerContext,
+    EntityManagerRenderFn,
+    EntityManagerResolveContext,
+} from './type';
 import { buildEntityManagerSlotProps } from './utils';
 
-function create<T extends EntityManagerRecord>(
-    type: `${DomainType}`,
-    ctx: EntityManagerContext<T>,
+type DomainTypeInfer<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
+export function createEntityManager<
+    A extends DomainTypeInfer<DomainEntity<any>>,
+    T = DomainEntity<A>,
+>(
+    ctx: EntityManagerContext<A, T>,
 ) : EntityManager<T> {
     const client = injectAPIClient();
     let domainAPI : DomainAPI<T> | undefined;
-    if (hasOwnProperty(client, type)) {
-        domainAPI = client[type] as DomainAPI<T>;
+    if (hasOwnProperty(client, ctx.type)) {
+        domainAPI = client[ctx.type] as any;
     }
 
-    const lockId = ref<T['id'] | undefined>(undefined);
     const entity : Ref<T | undefined> = ref(undefined);
+    const entityId = computed<DomainEntityID<T> | undefined>(
+        () => (
+            entity.value ? (entity.value as any).id : undefined),
+    );
+
+    const realmId = computed<string | undefined>(
+        () => {
+            let realmId : string | undefined;
+
+            if (ctx.realmId) {
+                if (typeof ctx.realmId === 'function') {
+                    return ctx.realmId(entity.value);
+                }
+
+                realmId = isRef(ctx.realmId) ? ctx.realmId.value : ctx.realmId;
+            }
+
+            if (!realmId && entity.value) {
+                if (
+                    hasOwnProperty(entity.value, 'realm_id') &&
+                    typeof entity.value.realm_id === 'string'
+                ) {
+                    return entity.value.realm_id;
+                }
+            }
+
+            return realmId;
+        },
+    );
+
+    const lockId = ref<DomainEntityID<T> | undefined>(undefined);
 
     if (ctx.props && ctx.props.entity) {
         entity.value = ctx.props.entity;
     }
-
-    let error : Error | undefined;
-
-    const resolve = async () => {
-        if (!ctx.props) {
-            return;
-        }
-
-        if (typeof ctx.props.entity !== 'undefined') {
-            entity.value = ctx.props.entity;
-
-            return;
-        }
-
-        if (!domainAPI) {
-            return;
-        }
-
-        if (ctx.props.entityId) {
-            try {
-                entity.value = await domainAPI.getOne(ctx.props.entityId, ctx.props.query || {});
-
-                return;
-            } catch (e) {
-                if (e instanceof Error) {
-                    error = e;
-                }
-            }
-        }
-
-        if (typeof ctx.props.where !== 'undefined') {
-            try {
-                const response = await domainAPI.getMany({
-                    ...(ctx.props.query || {}),
-                    filters: ctx.props.where,
-                    pagination: {
-                        limit: 1,
-                    },
-                });
-                if (response.data.length === 1) {
-                    [entity.value] = response.data;
-                }
-            } catch (e) {
-                if (e instanceof Error) {
-                    error = e;
-                }
-            }
-        }
-    };
-
-    const resolveOrFail = async () => {
-        await resolve();
-
-        if (typeof entity.value === 'undefined') {
-            if (!error) {
-                error = EntityManagerError.unresolvable();
-            }
-
-            throw error;
-        }
-    };
 
     const created = (value: T) => {
         if (ctx.setup && ctx.setup.emit) {
@@ -107,11 +91,11 @@ function create<T extends EntityManagerRecord>(
 
     const deleted = (value: T) => {
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('deleted', value || entity.value);
+            ctx.setup.emit('deleted', (value || entity.value) as T);
         }
 
         if (ctx.onDeleted) {
-            ctx.onDeleted(value || entity.value);
+            ctx.onDeleted((value || entity.value) as T);
         }
     };
 
@@ -121,11 +105,21 @@ function create<T extends EntityManagerRecord>(
         }
 
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('updated', entity.value || value);
+            ctx.setup.emit('updated', (entity.value || value) as T);
         }
 
         if (ctx.onUpdated) {
             ctx.onUpdated(entity.value || value);
+        }
+    };
+
+    const resolved = (value?: T) => {
+        if (ctx.setup && ctx.setup.emit) {
+            ctx.setup.emit('resolved', value);
+        }
+
+        if (ctx.onResolved) {
+            ctx.onResolved(value);
         }
     };
 
@@ -142,16 +136,16 @@ function create<T extends EntityManagerRecord>(
     const busy = ref(false);
 
     const update = async (data: Partial<T>) => {
-        if (!domainAPI || busy.value || !entity.value) {
+        if (!domainAPI || busy.value || !entityId.value) {
             return;
         }
 
         busy.value = true;
-        lockId.value = entity.value.id;
+        lockId.value = entityId.value;
 
         try {
             const response = await domainAPI.update(
-                entity.value.id,
+                entityId.value,
                 data,
             );
 
@@ -169,16 +163,16 @@ function create<T extends EntityManagerRecord>(
     };
 
     const remove = async () : Promise<void> => {
-        if (!domainAPI || busy.value || !entity.value) {
+        if (!domainAPI || busy.value || !entityId.value) {
             return;
         }
 
         busy.value = true;
-        lockId.value = entity.value.id;
+        lockId.value = entityId.value;
 
         try {
             const response = await domainAPI.delete(
-                entity.value.id,
+                entityId.value,
             );
 
             entity.value = undefined;
@@ -221,9 +215,189 @@ function create<T extends EntityManagerRecord>(
 
     const createOrUpdate = async (data: Partial<T>) : Promise<void> => {
         if (entity.value) {
-            await manager.update(data);
+            await update(data);
         } else {
-            await manager.create(data);
+            await create(data);
+        }
+    };
+
+    let socket : EntitySocket | undefined;
+
+    if (
+        typeof ctx.socket !== 'boolean' ||
+        typeof ctx.socket === 'undefined' ||
+        typeof ctx.socket === 'function' ||
+        ctx.socket
+    ) {
+        let socketContext : EntitySocketContext<A, T> = {
+            type: ctx.type,
+        };
+
+        if (isObject(ctx.socket)) {
+            socketContext = {
+                ...socketContext,
+                ...ctx.socket,
+            };
+        }
+
+        socketContext.onCreated = created;
+        socketContext.onUpdated = updated;
+        socketContext.lockId = lockId;
+        socketContext.realmId = realmId;
+        socketContext.target = true;
+        socketContext.targetId = entityId;
+
+        socket = createEntitySocket(socketContext);
+    }
+
+    const error = ref<Error | undefined>(undefined);
+
+    const resolveByProps = () : boolean => {
+        if (!ctx.props) {
+            return false;
+        }
+
+        if (ctx.props.entity) {
+            entity.value = ctx.props.entity;
+
+            if (socket) {
+                socket.mount();
+            }
+
+            resolved(entity.value);
+
+            return true;
+        }
+
+        return false;
+    };
+
+    if (ctx.props) {
+        const propEntityRef = toRef(ctx.props, 'entity');
+        const propsEntityId = computed(() => (propEntityRef.value ? propEntityRef.value.id : undefined));
+        watch(propsEntityId, (val) => {
+            entity.value = propEntityRef.value;
+
+            if (val) {
+                if (socket) {
+                    socket.mount();
+                }
+            } else if (socket) {
+                socket.unmount();
+            }
+        });
+    }
+
+    resolveByProps();
+
+    const resolve = async (rctx: EntityManagerResolveContext<T> = {}) => {
+        if (entity.value) {
+            return;
+        }
+
+        let query : (T extends Record<string, any> ? BuildInput<T> : never) | undefined;
+        if (rctx.query) {
+            query = rctx.query;
+        }
+
+        let { id } = rctx;
+
+        if (ctx.props) {
+            if (resolveByProps()) {
+                return;
+            }
+
+            if (ctx.props.entity) {
+                entity.value = ctx.props.entity;
+
+                if (socket) {
+                    socket.mount();
+                }
+
+                resolved(entity.value);
+
+                return;
+            }
+
+            if (ctx.props.query || ctx.props.queryFilters) {
+                query = {
+                    ...(ctx.props.query ? { filters: ctx.props.query } : {}),
+                    ...(ctx.props.queryFilters ? { filters: ctx.props.queryFilters } : {}),
+                } as any;
+
+                if (
+                    query &&
+                    ctx.props.queryFields
+                ) {
+                    query.fields = ctx.props.queryFields;
+                }
+            }
+
+            if (ctx.props.entityId) {
+                id = ctx.props.entityId;
+            }
+        }
+
+        if (!domainAPI) {
+            resolved();
+
+            return;
+        }
+
+        if (id) {
+            try {
+                entity.value = await domainAPI.getOne(id, query as BuildInput<any>);
+
+                if (socket) {
+                    socket.mount();
+                }
+
+                resolved(entity.value);
+
+                return;
+            } catch (e) {
+                if (e instanceof Error) {
+                    error.value = e;
+                }
+            }
+        }
+
+        if (query) {
+            try {
+                const response = await domainAPI.getMany({
+                    ...query,
+                    pagination: {
+                        limit: 1,
+                    },
+                } as any);
+
+                if (response.data.length === 1) {
+                    [entity.value] = response.data;
+
+                    if (socket) {
+                        socket.mount();
+                    }
+                }
+
+                resolved(entity.value);
+            } catch (e) {
+                if (e instanceof Error) {
+                    error.value = e;
+                }
+            }
+        }
+    };
+
+    const resolveOrFail = async (resolveContext: EntityManagerResolveContext<T> = {}) => {
+        await resolve(resolveContext);
+
+        if (typeof entity.value === 'undefined') {
+            if (!error.value) {
+                throw EntityManagerError.unresolvable();
+            }
+
+            // eslint-disable-next-line no-throw-literal
+            throw error.value as Error;
         }
     };
 
@@ -232,7 +406,8 @@ function create<T extends EntityManagerRecord>(
         resolveOrFail,
         lockId,
         busy,
-        entity,
+        data: entity,
+        error,
 
         create,
         createOrUpdate,
@@ -247,22 +422,14 @@ function create<T extends EntityManagerRecord>(
         failed,
 
         render: () => undefined,
+        renderError: () => undefined,
     };
 
-    manager.render = (error?: unknown): VNodeChild => {
+    manager.render = (content?: VNodeChild | EntityManagerRenderFn): VNodeChild => {
         if (!ctx.setup || !ctx.setup.slots) {
-            return undefined;
-        }
-
-        if (error) {
-            if (
-                isObject(error) &&
-                hasNormalizedSlot('error', ctx.setup.slots)
-            ) {
-                return normalizeSlot('error', error, ctx.setup.slots);
-            }
-
-            return undefined;
+            return typeof content === 'function' ?
+                content() :
+                content;
         }
 
         if (hasNormalizedSlot('default', ctx.setup.slots)) {
@@ -273,15 +440,25 @@ function create<T extends EntityManagerRecord>(
             );
         }
 
+        return typeof content === 'function' ?
+            content() :
+            content;
+    };
+
+    manager.renderError = (error: unknown) : VNodeChild => {
+        if (!ctx.setup || !ctx.setup.slots) {
+            return undefined;
+        }
+
+        if (
+            isObject(error) &&
+            hasNormalizedSlot('error', ctx.setup.slots)
+        ) {
+            return normalizeSlot('error', error, ctx.setup.slots);
+        }
+
         return undefined;
     };
 
     return manager;
-}
-
-export function createEntityManager<T extends `${DomainType}`>(
-    type: T,
-    ctx: EntityManagerContext<DomainEntity<T>>,
-) : EntityManager<DomainEntity<T>> {
-    return create(type, ctx);
 }

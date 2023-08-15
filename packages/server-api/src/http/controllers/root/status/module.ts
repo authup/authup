@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { load } from 'locter';
 import path from 'node:path';
+import { load } from 'locter';
 import { send } from 'routup';
 import type { Request, Response } from 'routup';
 import { useConfig } from '../../../../config';

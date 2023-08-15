@@ -6,4 +6,4 @@
  */
 
 export { UserPermissionAssignmentList } from './UserPermissionAssignmentList';
-export { UserPermissionAssignmentListItemActions } from './UserPermissionAssignmentListItemActions';
+export { UserPermissionAssignAction } from './UserPermissionAssignAction';

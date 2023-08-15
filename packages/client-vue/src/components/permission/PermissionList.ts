@@ -8,8 +8,8 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core';
-import type { EntityListSlotsType } from '../../core/entity-list';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
+import type { EntityListSlotsType } from '../../core';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const PermissionList = defineComponent({
     name: 'PermissionList',
@@ -17,7 +17,8 @@ export const PermissionList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Permission>>,
     emits: defineDomainListEvents<Permission>(),
     setup(props, setup) {
-        const { render, setDefaults } = createEntityList(`${DomainType.PERMISSION}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.PERMISSION}`,
             props,
             setup,
         });

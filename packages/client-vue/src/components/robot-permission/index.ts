@@ -6,4 +6,4 @@
  */
 
 export { RobotPermissionAssignmentList } from './RobotPermissionAssignmentList';
-export { RobotPermissionAssignmentListItemActions } from './RobotPermissionAssignmentListItemActions';
+export { RobotPermissionAssignAction } from './RobotPermissionAssignAction';

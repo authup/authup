@@ -3,7 +3,9 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "lib": [
-            "ESNext"
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
         ],
         "strict": true,
         "paths": {

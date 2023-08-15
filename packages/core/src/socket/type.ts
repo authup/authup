@@ -5,10 +5,41 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type SocketEventContext<T extends Record<string, any>> = {
+import type {
+    DomainEventBaseContext,
+    DomainEventContext,
+    DomainEventFullName,
+    DomainEventSubscriptionFullName,
+    DomainType,
+} from '../domains';
+
+export type SocketServerToClientEventContext<T extends DomainEventBaseContext> = T & {
     meta: {
-        roomName: string,
+        roomName?: string,
         roomId?: string | number
+    }
+};
+
+export type SocketServerToClientEvents = {
+    [K in `${DomainType}` as DomainEventFullName<K>]: (
+        data: SocketServerToClientEventContext<DomainEventContext<K>>
+    ) => void
+};
+
+const foo : SocketServerToClientEvents = {
+    clientDeleted: (data) => {
+
     },
-    data: T
+};
+// ------------------------------------------------------------------------------------
+
+export type SocketClientToServerEventTarget = string | number | undefined;
+export type SocketClientToServerEventCallback = () => void;
+export type SocketClientToServerEventErrorCallback = (error?: Error) => void;
+
+export type SocketClientToServerEvents = {
+    [K in DomainEventSubscriptionFullName]: (
+        target?: SocketClientToServerEventTarget,
+        cb?: SocketClientToServerEventCallback | SocketClientToServerEventErrorCallback
+    ) => void
 };

@@ -11,8 +11,8 @@ import {
 import type { Permission } from '@authup/core';
 import { SlotName } from '@vue-layout/list-controls';
 import {
-    UserPermissionAssignmentListItemActions,
-} from './UserPermissionAssignmentListItemActions';
+    UserPermissionAssignAction,
+} from './UserPermissionAssignAction';
 import { PermissionList } from '../permission';
 
 export const UserPermissionAssignmentList = defineComponent({
@@ -26,7 +26,7 @@ export const UserPermissionAssignmentList = defineComponent({
     setup(props) {
         return () => h(PermissionList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
-                UserPermissionAssignmentListItemActions,
+                UserPermissionAssignAction,
                 {
                     userId: props.entityId,
                     permissionId: slotProps.data.id,

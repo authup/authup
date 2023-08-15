@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
 import { useLogger } from '@authup/server-core';
 import type { UIOptions } from '@routup/swagger';
 import { createUIHandler } from '@routup/swagger';
 import { buildFilePath, loadSync, locateSync } from 'locter';
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
 import type { Router } from 'routup';
 
 type SwaggerMiddlewareOptions = {

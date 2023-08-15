@@ -9,11 +9,10 @@ import { defineComponent, h } from 'vue';
 import type { Role } from '@authup/core';
 import type { ListBodySlotProps } from '@vue-layout/list-controls';
 import { SlotName } from '@vue-layout/list-controls';
-import { IdentityProviderRoleAssignmentListItem } from './IdentityProviderRoleAssignmentListItem';
+import { IdentityProviderRoleAssignAction } from './IdentityProviderRoleAssignAction';
 import { RoleList } from '../role';
 
 export const IdentityProviderRoleAssignmentList = defineComponent({
-    name: 'OAuth2ProviderRoleAssignmentList',
     props: {
         entityId: {
             type: String,
@@ -25,7 +24,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
             headerTitle: false,
         }, {
             [SlotName.BODY]: (slotProps: ListBodySlotProps<Role>) => slotProps.data.map((item: Role) => h(
-                IdentityProviderRoleAssignmentListItem,
+                IdentityProviderRoleAssignAction,
                 {
                     key: item.id,
                     entityId: props.entityId,

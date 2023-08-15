@@ -8,4 +8,4 @@
 export { ClientScopeEntity } from './ClientScopeEntity';
 export { ClientScopeList } from './ClientScopeList';
 export { ClientScopeAssignmentList } from './ClientScopeAssignmentList';
-export { ClientScopeAssignmentListItemActions } from './ClientScopeAssignmentListItemActions';
+export { ClientScopeAssignAction } from './ClientScopeAssignAction';

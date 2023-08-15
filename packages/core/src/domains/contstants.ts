@@ -32,3 +32,8 @@ export enum DomainEventName {
     DELETED = 'deleted',
     UPDATED = 'updated',
 }
+
+export enum DomainEventSubscriptionName {
+    SUBSCRIBE = 'subscribe',
+    UNSUBSCRIBE = 'unsubscribe',
+}

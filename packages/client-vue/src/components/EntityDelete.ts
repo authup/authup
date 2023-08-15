@@ -6,15 +6,16 @@
  */
 
 import type {
+    Component,
     PropType,
     VNodeArrayChildren,
     VNodeProps,
 } from 'vue';
 import {
-    defineComponent,
+    defineComponent, getCurrentInstance,
     h,
     mergeProps,
-    ref,
+    ref, resolveDynamicComponent,
 } from 'vue';
 import type { DomainType } from '@authup/core';
 import { useDomainAPI } from '@authup/core';
@@ -27,7 +28,7 @@ enum ElementType {
     DROP_DOWN_ITEM = 'dropDownItem',
 }
 
-export const EntityDelete = defineComponent({
+export default defineComponent({
     name: 'EntityDelete',
     props: {
         elementIcon: {
@@ -60,19 +61,16 @@ export const EntityDelete = defineComponent({
             type: String,
             default: undefined,
         },
-        options: {
-            type: Object as PropType<VNodeProps>,
-            default: () => ({}),
-        },
     },
-    emits: ['canceled', 'deleted', 'failed'],
     setup(props, ctx) {
+        const apiClient = injectAPIClient();
+        const instance = getCurrentInstance();
         const busy = ref(false);
 
         const submit = async () => {
             if (busy.value) return;
 
-            const domainApi = useDomainAPI(injectAPIClient(), props.entityType);
+            const domainApi = useDomainAPI(apiClient, props.entityType);
             if (!domainApi) {
                 return;
             }
@@ -80,9 +78,11 @@ export const EntityDelete = defineComponent({
             busy.value = true;
 
             try {
-                const response = await domainApi.delete(props.entityId);
-                response.id = props.entityId;
-                ctx.emit('deleted', response);
+                if ('delete' in domainApi) {
+                    const response = await domainApi.delete(props.entityId);
+                    response.id = props.entityId;
+                    ctx.emit('deleted', response);
+                }
             } catch (e) {
                 ctx.emit('failed', e);
             }
@@ -91,7 +91,7 @@ export const EntityDelete = defineComponent({
         };
 
         const render = () => {
-            let tag = 'button';
+            let tag : Component | string = 'button';
             const data : VNodeProps = {};
 
             switch (props.elementType) {
@@ -99,7 +99,12 @@ export const EntityDelete = defineComponent({
                     tag = 'a';
                     break;
                 case ElementType.DROP_DOWN_ITEM:
-                    tag = 'b-dropdown-item';
+                    if (
+                        instance &&
+                        typeof instance.appContext.app.component('BDropdownItem') !== 'undefined'
+                    ) {
+                        tag = resolveDynamicComponent('BDropdownItem') as Component;
+                    }
                     break;
             }
 
@@ -108,7 +113,7 @@ export const EntityDelete = defineComponent({
                 icon = [
                     h('i', {
                         class: [props.elementIcon, {
-                            'pr-1': props.withText,
+                            'pe-1': props.withText,
                         }],
                     }),
                 ];
@@ -123,7 +128,7 @@ export const EntityDelete = defineComponent({
             }
 
             return h(
-                tag,
+                tag as string,
                 mergeProps({
                     disabled: busy.value,
                     onClick($event: any) {
@@ -142,5 +147,3 @@ export const EntityDelete = defineComponent({
         return () => render();
     },
 });
-
-export default EntityDelete;

@@ -6,4 +6,4 @@
  */
 
 export { IdentityProviderRoleAssignmentList } from './IdentityProviderRoleAssignmentList';
-export { IdentityProviderRoleAssignmentListItem } from './IdentityProviderRoleAssignmentListItem';
+export { IdentityProviderRoleAssignAction } from './IdentityProviderRoleAssignAction';

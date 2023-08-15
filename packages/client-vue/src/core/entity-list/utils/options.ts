@@ -30,7 +30,7 @@ function mergeOptions<T extends boolean | Record<string, any> | undefined>(
     return merge(primaryRecord, secondaryRecord) as T;
 }
 
-export function mergeEntityListOptions<T extends Record<string, any>>(
+export function mergeEntityListOptions<T>(
     props: EntityListProps<T>,
     defaults: Partial<EntityListBuilderTemplateOptions<T>>,
 ) : EntityListBuilderTemplateOptions<T> {

@@ -6,7 +6,6 @@
  */
 
 export * from './header';
-export * from './item-assignment';
 export * from './utils';
 export * from './module';
 export * from './type';

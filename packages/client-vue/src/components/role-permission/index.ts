@@ -6,4 +6,4 @@
  */
 
 export { RolePermissionAssignmentList } from './RolePermissionAssignmentList';
-export { RolePermissionAssignmentListItemActions } from './RolePermissionAssignmentListItemActions';
+export { RolePermissionAssignAction } from './RolePermissionAssignAction';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty } from '@authup/core';
 import process from 'node:process';
+import { hasOwnProperty } from '@authup/core';
 
 export function hasProcessEnv(key: string | string[]) : boolean {
     const keys = Array.isArray(key) ? key : [key];

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { KeyObject } from 'node:crypto';
 import type {
     OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
@@ -20,7 +21,6 @@ import {
 } from '@authup/core';
 import { decodeToken, verifyToken } from '@authup/server-core';
 import type { TokenVerifyRSAlgorithm } from '@authup/server-core';
-import { KeyObject } from 'node:crypto';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';

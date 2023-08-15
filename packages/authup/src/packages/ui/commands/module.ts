@@ -7,9 +7,9 @@
 
 import type { ChildProcess } from 'node:child_process';
 import { exec } from 'node:child_process';
-import consola from 'consola';
 import path from 'node:path';
 import process from 'node:process';
+import consola from 'consola';
 import findUpPackagePath from 'resolve-package-path';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import type { CommandExecutionContext } from '../../type';

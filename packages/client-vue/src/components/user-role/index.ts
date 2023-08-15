@@ -6,4 +6,4 @@
  */
 
 export { UserRoleAssignmentList } from './UserRoleAssignmentList';
-export { UserRoleAssignmentListItemActions } from './UserRoleAssignmentListItemActions';
+export { UserRoleAssignAction } from './UserRoleAssignAction';

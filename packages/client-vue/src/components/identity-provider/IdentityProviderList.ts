@@ -18,7 +18,8 @@ export const IdentityProviderList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<IdentityProvider>>,
     emits: defineDomainListEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(`${DomainType.IDENTITY_PROVIDER}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,
         });

@@ -6,4 +6,4 @@
  */
 
 export { RobotRoleAssignmentList } from './RobotRoleAssignmentList';
-export { RobotRoleAssignmentListItemActions } from './RobotRoleAssignmentListItemActions';
+export { RobotRoleAssignAction } from './RobotRoleAssignAction';

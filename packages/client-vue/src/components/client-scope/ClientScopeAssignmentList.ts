@@ -12,8 +12,8 @@ import type { Scope } from '@authup/core';
 import { SlotName } from '@vue-layout/list-controls';
 import { ScopeList } from '../scope';
 import {
-    ClientScopeAssignmentListItemActions,
-} from './ClientScopeAssignmentListItemActions';
+    ClientScopeAssignAction,
+} from './ClientScopeAssignAction';
 
 export const ClientScopeAssignmentList = defineComponent({
     name: 'ClientScopeAssignmentList',
@@ -26,7 +26,7 @@ export const ClientScopeAssignmentList = defineComponent({
     setup(props) {
         return () => h(ScopeList, { }, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Scope }) => h(
-                ClientScopeAssignmentListItemActions,
+                ClientScopeAssignAction,
                 {
                     clientId: props.entityId,
                     scopeId: slotProps.data.id,

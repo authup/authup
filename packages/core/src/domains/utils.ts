@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEventName, DomainType } from './contstants';
-import type { DomainEventFullName } from './types';
+import type { DomainEventName, DomainEventSubscriptionName, DomainType } from './contstants';
+import type { DomainEventFullName, DomainEventSubscriptionFullName } from './types';
 
-export function buildDomainEventFullName<T extends `${DomainType}`>(
+export function buildDomainEventFullName<T extends `${DomainType}` | DomainType>(
     type: T,
     event: `${DomainEventName}`,
 ) : DomainEventFullName<T> {
@@ -17,7 +17,21 @@ export function buildDomainEventFullName<T extends `${DomainType}`>(
     return type + eventCapitalized as DomainEventFullName<T>;
 }
 
-export function buildDomainChannelName(type: string, id?: string | number) {
+export function buildDomainEventSubscriptionFullName<
+    T extends `${DomainType}` | DomainType,
+>(
+    type: T,
+    event: `${DomainEventSubscriptionName}` | DomainEventSubscriptionName,
+) : DomainEventSubscriptionFullName<T> {
+    const eventCapitalized = event.substring(0, 1).toUpperCase() + event.substring(1);
+
+    return type + eventCapitalized as DomainEventSubscriptionFullName<T>;
+}
+
+export function buildDomainChannelName(
+    type: `${DomainType}` | DomainType,
+    id?: string | number,
+) {
     return `${type}${id ? `:${id}` : ''}`;
 }
 

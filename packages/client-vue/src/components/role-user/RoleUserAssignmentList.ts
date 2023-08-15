@@ -10,7 +10,7 @@ import {
 } from 'vue';
 import type { User } from '@authup/core';
 import { SlotName } from '@vue-layout/list-controls';
-import { UserRoleAssignmentListItemActions } from '../user-role';
+import { UserRoleAssignAction } from '../user-role';
 import { UserList } from '../user/UserList';
 
 export const RoleUserAssignmentList = defineComponent({
@@ -21,7 +21,7 @@ export const RoleUserAssignmentList = defineComponent({
     setup(props) {
         return () => h(UserList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: User }) => h(
-                UserRoleAssignmentListItemActions,
+                UserRoleAssignAction,
                 {
                     roleId: props.entityId,
                     userId: slotProps.data.id,

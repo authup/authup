@@ -18,7 +18,7 @@ import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { useIsEditing, useUpdatedAt } from '../../composables';
-import { createEntityManager, initFormAttributesFromSource } from '../../core';
+import { createEntityManager, defineEntityManagerEvents, initFormAttributesFromSource } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
 
@@ -42,7 +42,7 @@ export const UserForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<User>(),
     async setup(props, ctx) {
         const busy = ref(false);
         const displayNameChanged = ref(false);
@@ -82,12 +82,13 @@ export const UserForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.USER}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.USER}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
         const isRealmLocked = computed(() => !!props.realmId);
@@ -98,18 +99,18 @@ export const UserForm = defineComponent({
             }
 
             if (
-                !!manager.entity.value &&
-                typeof manager.entity.value.name_locked !== 'undefined'
+                !!manager.data.value &&
+                typeof manager.data.value.name_locked !== 'undefined'
             ) {
-                form.name_locked = manager.entity.value.name_locked;
+                form.name_locked = manager.data.value.name_locked;
             }
 
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
                 initForm();
             }
         });

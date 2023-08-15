@@ -9,20 +9,20 @@ import { DomainType } from '@authup/core';
 import type { ClientScope } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core/entity-manager';
+import type { EntityManagerSlotsType } from '../../core';
 import {
     createEntityManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
-} from '../../core/entity-manager';
+} from '../../core';
 
 export const ClientScopeEntity = defineComponent({
-    name: 'ClientScopeEntity',
     props: defineEntityManagerProps<ClientScope>(),
     emits: defineEntityManagerEvents<ClientScope>(),
     slots: Object as SlotsType<EntityManagerSlotsType<ClientScope>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.CLIENT_SCOPE}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.CLIENT_SCOPE}`,
             props,
             setup,
         });
@@ -32,7 +32,7 @@ export const ClientScopeEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

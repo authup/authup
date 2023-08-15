@@ -18,7 +18,8 @@ export const RoleList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Role>>,
     emits: defineDomainListEvents<Role>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(`${DomainType.ROLE}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.ROLE}`,
             props,
             setup: ctx,
         });

@@ -7,7 +7,7 @@
 
 import type { Client, ClientEventContext } from './client';
 import type { ClientScope, ClientScopeEventContext } from './client-scope';
-import type { DomainEventName, DomainType } from './contstants';
+import type { DomainEventName, DomainEventSubscriptionName, DomainType } from './contstants';
 import type { IdentityProvider, IdentityProviderEventContext } from './identity-provider';
 import type { IdentityProviderAccount, IdentityProviderAccountEventContext } from './identity-provider-account';
 import type { IdentityProviderAttribute, IdentityProviderAttributeEventContext } from './identity-provider-attribute';
@@ -26,7 +26,7 @@ import type { UserAttribute, UserAttributeEventContext } from './user-attribute'
 import type { UserPermission, UserPermissionEventContext } from './user-permission';
 import type { UserRole, UserRoleEventContext } from './user-role';
 
-export type DomainEventContext = ClientEventContext |
+export type DomainEventsContext = ClientEventContext |
 ClientScopeEventContext |
 IdentityProviderEventContext |
 IdentityProviderAccountEventContext |
@@ -45,6 +45,46 @@ UserEventContext |
 UserAttributeEventContext |
 UserPermissionEventContext |
 UserRoleEventContext;
+
+export type DomainEventContext<T extends `${DomainType}`> = T extends `${DomainType.CLIENT}` ?
+    ClientEventContext :
+    T extends `${DomainType.CLIENT_SCOPE}` ?
+        ClientScopeEventContext :
+        T extends `${DomainType.IDENTITY_PROVIDER}` ?
+            IdentityProviderEventContext :
+            T extends `${DomainType.IDENTITY_PROVIDER_ACCOUNT}` ?
+                IdentityProviderAccountEventContext :
+                T extends `${DomainType.IDENTITY_PROVIDER_ATTRIBUTE}` ?
+                    IdentityProviderAttributeEventContext :
+                    T extends `${DomainType.IDENTITY_PROVIDER_ROLE}` ?
+                        IdentityProviderRoleEventContext :
+                        T extends `${DomainType.PERMISSION}` ?
+                            PermissionEventContext :
+                            T extends `${DomainType.REALM}` ?
+                                RealmEventContext :
+                                T extends `${DomainType.ROBOT}` ?
+                                    RobotEventContext :
+                                    T extends `${DomainType.ROBOT_PERMISSION}` ?
+                                        RobotPermissionEventContext :
+                                        T extends `${DomainType.ROBOT_ROLE}` ?
+                                            RobotRoleEventContext :
+                                            T extends `${DomainType.ROLE}` ?
+                                                RoleEventContext :
+                                                T extends `${DomainType.ROLE_ATTRIBUTE}` ?
+                                                    RoleAttributeEventContext :
+                                                    T extends `${DomainType.ROLE_PERMISSION}` ?
+                                                        RolePermissionEventContext :
+                                                        T extends `${DomainType.SCOPE}` ?
+                                                            ScopeEventContext :
+                                                            T extends `${DomainType.USER}` ?
+                                                                UserEventContext :
+                                                                T extends `${DomainType.USER_ATTRIBUTE}` ?
+                                                                    UserAttributeEventContext :
+                                                                    T extends `${DomainType.USER_PERMISSION}` ?
+                                                                        UserPermissionEventContext :
+                                                                        T extends `${DomainType.USER_ROLE}` ?
+                                                                            UserRoleEventContext :
+                                                                            never;
 
 export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CLIENT}` ?
     Client :
@@ -86,4 +126,10 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                                                                             UserRole :
                                                                             never;
 
-export type DomainEventFullName<T extends `${DomainType}` = `${DomainType}`> = `${T}${Capitalize<`${DomainEventName}`>}`;
+export type DomainEventFullName<
+    T extends `${DomainType}` | DomainType = `${DomainType}` | DomainType,
+> = `${T}${Capitalize<`${DomainEventName}`>}`;
+
+export type DomainEventSubscriptionFullName<
+    T extends `${DomainType}` | DomainType = `${DomainType}` | DomainType,
+> = `${T}${Capitalize<`${DomainEventSubscriptionName}`>}`;

@@ -9,7 +9,7 @@ import { defineComponent, h } from 'vue';
 import type { Role } from '@authup/core';
 import { SlotName } from '@vue-layout/list-controls';
 import { RoleList } from '../role';
-import { RobotRoleAssignmentListItemActions } from './RobotRoleAssignmentListItemActions';
+import { RobotRoleAssignAction } from './RobotRoleAssignAction';
 
 export const RobotRoleAssignmentList = defineComponent({
     name: 'RobotRoleList',
@@ -19,7 +19,7 @@ export const RobotRoleAssignmentList = defineComponent({
     setup(props) {
         return () => h(RoleList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
-                RobotRoleAssignmentListItemActions,
+                RobotRoleAssignAction,
                 {
                     robotId: props.entityId,
                     roleId: slotProps.data.id,

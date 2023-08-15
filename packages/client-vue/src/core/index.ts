@@ -6,11 +6,14 @@
  */
 
 export * from './api-client';
+export * from './entity-assign-action';
 export * from './entity-list';
 export * from './entity-manager';
 export * from './form';
+export * from './query';
 export * from './busy';
 export * from './object';
+export * from './socket';
 export * from './store';
 export * from './slot';
 export * from './vuelidate';

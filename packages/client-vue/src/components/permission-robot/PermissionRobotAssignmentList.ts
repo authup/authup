@@ -9,8 +9,8 @@ import { defineComponent, h } from 'vue';
 import type { Robot } from '@authup/core';
 import { SlotName } from '@vue-layout/list-controls';
 import {
-    RobotPermissionAssignmentListItemActions,
-} from '../robot-permission/RobotPermissionAssignmentListItemActions';
+    RobotPermissionAssignAction,
+} from '../robot-permission/RobotPermissionAssignAction';
 import { RobotList } from '../robot';
 
 export const PermissionRobotAssignmentList = defineComponent({
@@ -24,7 +24,7 @@ export const PermissionRobotAssignmentList = defineComponent({
     setup(props) {
         return () => h(RobotList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Robot }) => h(
-                RobotPermissionAssignmentListItemActions,
+                RobotPermissionAssignAction,
                 {
                     permissionId: props.entityId,
                     robotId: slotProps.data.id,

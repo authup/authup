@@ -22,7 +22,8 @@ export const UserEntity = defineComponent({
     emits: defineEntityManagerEvents<User>(),
     slots: Object as SlotsType<EntityManagerSlotsType<User>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.USER}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.USER}`,
             props,
             setup,
         });
@@ -32,7 +33,7 @@ export const UserEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

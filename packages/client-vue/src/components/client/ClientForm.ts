@@ -33,7 +33,7 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -41,7 +41,6 @@ import { RealmList } from '../realm';
 import { ClientRedirectUriList } from './ClientRedirectUriList';
 
 export const ClientForm = defineComponent({
-    name: 'ClientForm',
     props: {
         name: {
             type: String,
@@ -60,7 +59,7 @@ export const ClientForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<Client>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -101,12 +100,13 @@ export const ClientForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.CLIENT}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.CLIENT}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
@@ -125,7 +125,7 @@ export const ClientForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -134,7 +134,7 @@ export const ClientForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
 
                 initForm();
             }
@@ -208,11 +208,11 @@ export const ClientForm = defineComponent({
 
             let id : VNodeArrayChildren = [];
 
-            if (manager.entity.value) {
+            if (manager.data.value) {
                 id = [
                     buildFormInput({
                         labelContent: 'ID',
-                        value: manager.entity.value.id,
+                        value: manager.data.value.id,
                         props: {
                             disabled: true,
                         },

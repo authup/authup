@@ -18,7 +18,8 @@ export const ScopeList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Scope>>,
     emits: defineDomainListEvents<Scope>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(DomainType.SCOPE, {
+        const { render, setDefaults } = createEntityList({
+            type: DomainType.SCOPE,
             props,
             setup: ctx,
         });

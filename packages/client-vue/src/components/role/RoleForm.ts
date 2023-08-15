@@ -18,7 +18,7 @@ import {
 } from '@vue-layout/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -35,7 +35,7 @@ export const RoleForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<Role>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -55,21 +55,22 @@ export const RoleForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.ROLE}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.ROLE}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
 
                 initForm();
             }

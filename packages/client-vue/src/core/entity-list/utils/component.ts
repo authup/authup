@@ -11,21 +11,28 @@ import type { PropType } from 'vue';
 import type { EntityListHeaderSearchOptionsInput, EntityListHeaderTitleOptionsInput } from '../header';
 import type { EntityListEventsType } from '../type';
 
-export function defineDomainListEvents<T extends Record<string, any>>() : EntityListEventsType<T> {
+export function defineDomainListEvents<T>() : EntityListEventsType<T> {
     return {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deleted: (_item: T) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         updated: (_item: T) => true,
     };
 }
-export function defineDomainListProps<T extends Record<string, any>>() {
+export function defineDomainListProps<T>() {
     return {
+        realmId: {
+            type: String,
+            default: undefined,
+        },
         loadOnSetup: {
             type: Boolean,
             default: true,
         },
         query: {
-            type: Object as PropType<BuildInput<T>>,
+            type: Object as PropType<BuildInput<T extends Record<string, any> ? T : never>>,
             default() {
                 return {};
             },

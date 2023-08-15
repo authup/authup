@@ -5,37 +5,43 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { FiltersBuildInput } from 'rapiq';
+import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
 import { unref } from 'vue';
 import type { PropType } from 'vue/dist/vue';
 import type {
     EntityManager,
     EntityManagerEventsType,
-    EntityManagerRecord,
     EntityManagerSlotProps,
 } from './type';
 
-export function buildEntityManagerSlotProps<T extends EntityManagerRecord>(
+export function buildEntityManagerSlotProps<T>(
     input: EntityManager<T>,
 ) : EntityManagerSlotProps<T> {
     return {
         ...input,
+        error: unref(input.error),
         busy: unref(input.busy),
-        entity: unref(input.entity),
+        data: unref(input.data),
         lockId: unref(input.lockId),
     };
 }
 
-export function defineEntityManagerEvents<T extends EntityManagerRecord>(): EntityManagerEventsType<T> {
+export function defineEntityManagerEvents<T>(): EntityManagerEventsType<T> {
     return {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         failed: (_item: Error) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deleted: (_item: T) => true,
-        updated: (_item: Partial<T>) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        updated: (_item: T) => true,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        resolved: (_item?: T) => true,
     };
 }
 
-export function defineEntityManagerProps<T extends EntityManagerRecord>() {
+export function defineEntityManagerProps<T>() {
     return {
         entity: {
             type: Object as PropType<T>,
@@ -43,8 +49,14 @@ export function defineEntityManagerProps<T extends EntityManagerRecord>() {
         entityId: {
             type: String,
         },
-        filters: {
-            type: Object as PropType<FiltersBuildInput<T>>,
+        queryFilters: {
+            type: Object as PropType<FiltersBuildInput<T extends Record<string, any> ? T : never>>,
+        },
+        queryFields: {
+            type: Object as PropType<FieldsBuildInput<T extends Record<string, any> ? T : never>>,
+        },
+        query: {
+            type: Object as PropType<T extends Record<string, any> ? BuildInput<T> : never>,
         },
     };
 }
