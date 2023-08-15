@@ -70,7 +70,7 @@
         "vue-tsc": "^1.8.8"
     },
     "peerDependencies": {
-        "@authup/core": ">=0.39.0 <1.0.0",
+        "@authup/core": ">=0.40.0 <1.0.0",
         "@vue-layout/form-controls": "^3.4.0",
         "@vue-layout/list-controls": "^3.4.0",
         "@vue-layout/pagination": "^3.4.0",
