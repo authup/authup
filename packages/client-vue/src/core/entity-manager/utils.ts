@@ -7,7 +7,7 @@
 
 import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
 import { unref } from 'vue';
-import type { PropType } from 'vue/dist/vue';
+import type { PropType } from 'vue';
 import type {
     EntityManager,
     EntityManagerEventsType,
