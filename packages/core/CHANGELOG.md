@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.40.0](https://github.com/authup/authup/compare/v0.39.1...v0.40.0) (2023-08-15)
+
+
+### Features
+
+* implemmented socket manager + refactored entiy-{list,manager} ([b6ddb51](https://github.com/authup/authup/commit/b6ddb513a89d495e7a86dc9e5a41eabc23db44a8))
+* simplified entity assign actions ([c22ab45](https://github.com/authup/authup/commit/c22ab4528b1df0e81500bfdc59ab6bcf08517a08))
+
+
+
+
+
 # [0.39.0](https://github.com/authup/authup/compare/v0.38.0...v0.39.0) (2023-07-18)
 
 

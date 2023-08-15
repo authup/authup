@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.40.0](https://github.com/authup/authup/compare/v0.39.1...v0.40.0) (2023-08-15)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.2.0 to 1.2.1 ([#1283](https://github.com/authup/authup/issues/1283)) ([c490e3e](https://github.com/authup/authup/commit/c490e3e7bc3292dfaf88a39508ef5a3dc21654ce))
+* **deps:** bump typeorm-extension to v3 ([8bf3d9a](https://github.com/authup/authup/commit/8bf3d9a6ba9fc79c5e9cffca08b336603d82dc73))
+
+
+### Features
+
+* simplified entity assign actions ([c22ab45](https://github.com/authup/authup/commit/c22ab4528b1df0e81500bfdc59ab6bcf08517a08))
+
+
+
+
+
 ## [0.39.1](https://github.com/authup/authup/compare/v0.39.0...v0.39.1) (2023-07-22)
 
 

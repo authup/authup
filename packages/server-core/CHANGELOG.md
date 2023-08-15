@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.40.0](https://github.com/authup/authup/compare/v0.39.1...v0.40.0) (2023-08-15)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/nodemailer from 6.4.8 to 6.4.9 ([#1284](https://github.com/authup/authup/issues/1284)) ([29c2a2d](https://github.com/authup/authup/commit/29c2a2dfc209ddcf9718572b77caed7f69c3c747))
+* **deps:** bump locter from 1.2.0 to 1.2.1 ([#1283](https://github.com/authup/authup/issues/1283)) ([c490e3e](https://github.com/authup/authup/commit/c490e3e7bc3292dfaf88a39508ef5a3dc21654ce))
+
+
+### Features
+
+* implemmented socket manager + refactored entiy-{list,manager} ([b6ddb51](https://github.com/authup/authup/commit/b6ddb513a89d495e7a86dc9e5a41eabc23db44a8))
+* simplified entity assign actions ([c22ab45](https://github.com/authup/authup/commit/c22ab4528b1df0e81500bfdc59ab6bcf08517a08))
+
+
+
+
+
 ## [0.39.1](https://github.com/authup/authup/compare/v0.39.0...v0.39.1) (2023-07-22)
 
 
