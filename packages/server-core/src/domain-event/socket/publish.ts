@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEventsContext } from '@authup/core';
+import type { DomainsEventContext } from '@authup/core';
 import { DomainEventName, buildDomainEventFullName } from '@authup/core';
 import { hasClient, hasConfig } from 'redis-extension';
 import type { DomainEventDestinations } from '../type';
@@ -13,7 +13,7 @@ import { buildDomainEventChannelName, transformDomainEventData } from '../utils'
 import { useSocketEmitter } from './singleton';
 
 export function publishDomainSocketEvent(
-    context: DomainEventsContext,
+    context: DomainsEventContext,
     destinations: DomainEventDestinations,
 ) {
     if (!hasClient() && !hasConfig()) {
@@ -34,8 +34,10 @@ export function publishDomainSocketEvent(
 
         emitter
             .in(roomName)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             .emit(fullEventName, {
-                data: context,
+                ...context,
                 meta: {
                     roomName,
                 },
@@ -48,8 +50,10 @@ export function publishDomainSocketEvent(
             roomName = buildDomainEventChannelName(destinations[i].channel, context.data.id);
             emitter
                 .in(roomName)
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 .emit(fullEventName, {
-                    data: context,
+                    ...context,
                     meta: {
                         roomName,
                         roomId: context.data.id,

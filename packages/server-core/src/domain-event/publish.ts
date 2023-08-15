@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEventsContext } from '@authup/core';
+import type { DomainsEventContext } from '@authup/core';
 import { publishDomainRedisEvent } from './redis';
 import { publishDomainSocketEvent } from './socket';
 import type { DomainEventDestinations } from './type';
 
 export async function publishDomainEvent(
-    context: DomainEventsContext,
+    context: DomainsEventContext,
     destinations: DomainEventDestinations,
 ) {
     await publishDomainRedisEvent(context, destinations);

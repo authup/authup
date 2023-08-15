@@ -6,13 +6,13 @@
  */
 
 import { DomainEventName } from '@authup/core';
-import type { DomainEventsContext } from '@authup/core';
+import type { DomainsEventContext } from '@authup/core';
 import { hasClient, hasConfig, useClient } from 'redis-extension';
 import type { DomainEventDestinations } from '../type';
 import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
 
 export async function publishDomainRedisEvent(
-    context: DomainEventsContext,
+    context: DomainsEventContext,
     destinations: DomainEventDestinations,
 ) : Promise<any> {
     if (!hasClient() && !hasConfig()) {

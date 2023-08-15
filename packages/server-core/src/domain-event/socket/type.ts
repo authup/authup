@@ -5,8 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEventFullName, DomainEventsContext, SocketEventContext } from '@authup/core';
+import type {
+    DomainEventFullName,
+    DomainsEventContext,
+    SocketServerToClientEventContext,
+} from '@authup/core';
 
 export type SocketServerToClientEvents = {
-    [K in DomainEventFullName]: (data: SocketEventContext<DomainEventsContext>) => void
+    [K in DomainEventFullName]: (data: SocketServerToClientEventContext<DomainsEventContext>) => void
 };

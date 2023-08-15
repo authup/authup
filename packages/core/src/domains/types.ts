@@ -26,7 +26,7 @@ import type { UserAttribute, UserAttributeEventContext } from './user-attribute'
 import type { UserPermission, UserPermissionEventContext } from './user-permission';
 import type { UserRole, UserRoleEventContext } from './user-role';
 
-export type DomainEventsContext = ClientEventContext |
+export type DomainsEventContext = ClientEventContext |
 ClientScopeEventContext |
 IdentityProviderEventContext |
 IdentityProviderAccountEventContext |

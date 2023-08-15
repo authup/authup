@@ -26,11 +26,6 @@ export type SocketServerToClientEvents = {
     ) => void
 };
 
-const foo : SocketServerToClientEvents = {
-    clientDeleted: (data) => {
-
-    },
-};
 // ------------------------------------------------------------------------------------
 
 export type SocketClientToServerEventTarget = string | number | undefined;
