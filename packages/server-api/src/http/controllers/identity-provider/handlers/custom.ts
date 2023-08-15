@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { URL } from 'node:url';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     CookieName,
@@ -14,7 +15,6 @@ import type { SerializeOptions } from '@routup/cookie';
 import { setResponseCookie } from '@routup/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
-import { URL } from 'node:url';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOAuth2IdentityProviderFlow, createOauth2ProviderAccount } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';

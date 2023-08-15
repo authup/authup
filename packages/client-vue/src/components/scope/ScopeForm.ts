@@ -36,7 +36,7 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -62,7 +62,7 @@ export const ScopeForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<Scope>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -87,12 +87,13 @@ export const ScopeForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.SCOPE}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.SCOPE}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed<boolean>(() => {
@@ -100,7 +101,7 @@ export const ScopeForm = defineComponent({
                 return true;
             }
 
-            return !!(manager.entity.value && manager.entity.value.built_in);
+            return !!(manager.data.value && manager.data.value.built_in);
         });
 
         const isRealmLocked = computed(() => !!props.realmId);
@@ -114,12 +115,12 @@ export const ScopeForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
                 initForm();
             }
         });

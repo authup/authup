@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CookieName } from '@authup/core';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { CookieName } from '@authup/core';
 import type { TokenVerificationData } from '../../verifier';
 import { TokenVerifier } from '../../verifier';
 import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';

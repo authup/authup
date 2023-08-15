@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { URL } from 'url';
 import { ROBOT_SYSTEM_NAME } from '@authup/core';
 import { hasClient as hasVaultClient } from '@hapic/vault';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
     setLogger, useLogger,
 } from '@authup/server-core';
-import { URL } from 'url';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
 import {

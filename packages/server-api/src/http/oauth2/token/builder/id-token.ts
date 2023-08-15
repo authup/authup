@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { OAuth2OpenIdTokenPayload } from '@authup/core';
 import { OAuth2TokenKind } from '@authup/core';
-import { randomUUID } from 'node:crypto';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
 import type { OAuth2OpenIdTokenBuildContext } from './type';

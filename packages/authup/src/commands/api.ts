@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import process from 'node:process';
 import type { CAC } from 'cac';
 import consola from 'consola';
 import chalk from 'chalk';
-import process from 'node:process';
 import { createConfig } from '../config';
 import {
     ServerCommand, resetServer, startServer,

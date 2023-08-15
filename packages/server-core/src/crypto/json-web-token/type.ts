@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type Buffer from 'node:buffer';
 import type {
     DecodeOptions, Jwt, SignOptions, VerifyOptions,
 } from 'jsonwebtoken';
-import type Buffer from 'node:buffer';
 import type { KeyType } from '@authup/core';
 import type { KeyPair, KeyPairOptions } from '../key-pair';
 

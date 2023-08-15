@@ -5,19 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { BuildInput, FiltersBuildInput } from 'rapiq';
-import type { Ref, SetupContext, SlotsType } from 'vue';
+import type { DomainEntity, DomainType } from '@authup/core';
+import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
+import type {
+    MaybeRef, Ref, SetupContext, SlotsType,
+} from 'vue';
 import type { VNodeChild } from 'vue/dist/vue';
+import type { EntitySocketContext } from '../entity-socket';
 
-export type EntityManagerRecord = {
+type EntityWithID = {
     [key: string]: any,
     id: any
 };
 
-export type EntityManager<T extends Record<string, any>> = {
+type EntityID<T> = T extends EntityWithID ?
+    T['id'] :
+    never;
+
+export type EntityManagerRenderFn = () => VNodeChild;
+
+export type EntityManagerResolveContext<T> = {
+    id?: EntityID<T>,
+    query?: T extends Record<string, any> ? BuildInput<T> : never
+};
+
+export type EntityManager<T> = {
     busy: Ref<boolean>,
-    entity: Ref<T | undefined>,
-    lockId: Ref<T['id'] | undefined>,
+    data: Ref<T | undefined>,
+    error: Ref<Error | undefined>,
+    lockId: Ref<EntityID<T> | undefined>,
     create(entity: Partial<T>): Promise<void>,
     createOrUpdate(entity: Partial<T>) : Promise<void>,
     created(entity: T) : void,
@@ -26,41 +42,52 @@ export type EntityManager<T extends Record<string, any>> = {
     delete() : Promise<void>,
     deleted(entity?: T) : void;
     failed(e: Error) : void;
-    resolve() : Promise<void>;
-    resolveOrFail() : Promise<void>;
-    render(error?: unknown) : VNodeChild;
+    resolve(ctx?: EntityManagerResolveContext<T>) : Promise<void>;
+    resolveOrFail(ctx?: EntityManagerResolveContext<T>) : Promise<void>;
+    render(content?: VNodeChild | EntityManagerRenderFn) : VNodeChild;
+    renderError(error: unknown) : VNodeChild;
 };
 
-export type EntityManagerProps<T extends EntityManagerRecord> = {
+export type EntityManagerProps<T> = {
     entity?: T,
-    entityId?: T['id'],
-    where?: FiltersBuildInput<T>,
-    query?: BuildInput<T>
+    entityId?: EntityID<T>,
+    queryFilters?: T extends Record<string, any> ? FiltersBuildInput<T> : never,
+    queryFields?: T extends Record<string, any> ? FieldsBuildInput<T> : never,
+    query?: T extends Record<string, any> ? BuildInput<T> : never
 };
 
-export type EntityManagerSlotProps<T extends EntityManagerRecord> = {
+export type EntityManagerSlotProps<T> = {
     [K in keyof EntityManager<T>]: EntityManager<T>[K] extends Ref<infer U> ?
         U :
         EntityManager<T>[K]
 };
 
-export type EntityManagerSlotsType<T extends EntityManagerRecord> = {
+export type EntityManagerSlotsType<T> = {
     default?: EntityManagerSlotProps<T>,
     error?: Error
 };
 
-export type EntityManagerEventsType<T extends EntityManagerRecord> = {
+export type EntityManagerEventsType<T> = {
     failed: (item: Error) => true,
     created: (item: T) => true,
     deleted: (item: T) => true,
-    updated: (item: Partial<T>) => true
+    updated: (item: T) => true,
+    resolved: (_item?: T) => true
 };
 
-export type EntityManagerContext<T extends EntityManagerRecord> = {
+type SocketContext<A extends `${DomainType}`, T> = Omit<EntitySocketContext<A, T>, 'type'>;
+export type EntityManagerContext<
+    A extends `${DomainType}`,
+    T = DomainEntity<A>,
+> = {
+    type: A,
     setup?: Partial<SetupContext<EntityManagerEventsType<T>, SlotsType<EntityManagerSlotsType<T>>>>,
     props?: EntityManagerProps<T>,
+    realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
+    onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,
     onUpdated?(entity: Partial<T>): any,
     onDeleted?(entity: T): any,
-    onFailed?(e: Error): any
+    onFailed?(e: Error): any,
+    socket?: SocketContext<A, T> | boolean;
 };

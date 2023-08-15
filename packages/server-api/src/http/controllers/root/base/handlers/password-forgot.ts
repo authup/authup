@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError, ServerError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
 import type { User } from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { randomBytes } from 'node:crypto';
 import { useDataSource } from 'typeorm-extension';
 import { hasSmtpConfig, useSMTPClient } from '@authup/server-core';
 import { UserRepository, resolveRealm } from '../../../../../domains';

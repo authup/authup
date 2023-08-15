@@ -23,7 +23,7 @@ import {
 } from '@vue-layout/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -41,7 +41,7 @@ export const RealmForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<Realm>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -61,12 +61,13 @@ export const RealmForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.REALM}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.REALM}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
@@ -75,7 +76,7 @@ export const RealmForm = defineComponent({
         };
 
         function initForm() {
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
 
             if (form.name.length === 0) {
                 generateName();
@@ -84,7 +85,7 @@ export const RealmForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
 
                 initForm();
             }
@@ -110,14 +111,14 @@ export const RealmForm = defineComponent({
                     form.name = input;
                 },
                 props: {
-                    disabled: manager.entity.value &&
-                        manager.entity.value.name === REALM_MASTER_NAME,
+                    disabled: manager.data.value &&
+                        manager.data.value.name === REALM_MASTER_NAME,
                 },
             });
 
             let idHint : VNodeArrayChildren = [];
 
-            if (!manager.entity.value || !manager.entity.value.id) {
+            if (!manager.data.value || !manager.data.value.id) {
                 idHint = [
                     h('div', {
                         class: 'mb-3',

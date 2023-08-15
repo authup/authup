@@ -19,7 +19,8 @@ export const ClientList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Client>>,
     emits: defineDomainListEvents<Client>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(`${DomainType.CLIENT}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.CLIENT}`,
             props,
             setup: ctx,
         });

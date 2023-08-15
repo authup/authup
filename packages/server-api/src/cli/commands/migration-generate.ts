@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'node:path';
 import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extension';
 import type { CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
-import path from 'node:path';
 import { setupConfig } from '../../config';
 import { extendDataSourceOptions } from '../../database';
 

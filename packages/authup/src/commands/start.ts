@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CAC } from 'cac';
 import process from 'node:process';
+import type { CAC } from 'cac';
 import { createConfig } from '../config';
 import type { ApiStartCommandContext, UIStartCommandContext } from '../packages';
 import {

@@ -7,13 +7,23 @@
 
 import type { FormInputBuildOptionsInput } from '@vue-layout/form-controls';
 import { buildFormInputText } from '@vue-layout/form-controls';
-import type { VNodeArrayChildren } from 'vue';
+import type { VNodeArrayChildren, VNodeChild } from 'vue';
 import { h } from 'vue';
+import { boolableToObject } from '../../../utils';
+import { hasNormalizedSlot, normalizeSlot } from '../../slot';
+import { EntityListSlotName } from '../constants';
 import type { EntityHeaderOptions, EntityListHeaderSearchOptions, EntityListHeaderTitleOptions } from './type';
 
 export function buildDomainListHeaderSearch(
     ctx: EntityListHeaderSearchOptions,
 ) {
+    if (hasNormalizedSlot(EntityListSlotName.HEADER_SEARCH, ctx.slots)) {
+        return normalizeSlot(EntityListSlotName.HEADER_SEARCH, {
+            load: ctx.load,
+            busy: ctx.busy,
+        }, ctx.slots);
+    }
+
     ctx.icon = ctx.icon ?? true;
     ctx.iconPosition = ctx.iconPosition ?? 'start';
 
@@ -43,36 +53,61 @@ export function buildDomainListHeaderSearch(
     });
 }
 
-export function buildDomainListHeaderTitle<T>(
+export function buildDomainListHeaderTitle(
     ctx: EntityListHeaderTitleOptions,
 ) {
-    let icon : VNodeArrayChildren = [];
+    let iconClassName: string | undefined;
     if (typeof ctx.icon === 'string') {
-        icon = [h('i', { class: ctx.icon })];
+        iconClassName = ctx.icon;
     } else if (typeof ctx.icon === 'boolean' && ctx.icon) {
-        icon = [h('i', { class: 'fa-solid fa-list pe-1' })];
+        iconClassName = 'fa-solid fa-list';
+    }
+
+    if (hasNormalizedSlot(EntityListSlotName.HEADER_TITLE, ctx.slots)) {
+        return normalizeSlot(EntityListSlotName.HEADER_TITLE, {
+            icon: iconClassName,
+        }, ctx.slots);
+    }
+
+    let icon : VNodeArrayChildren = [];
+
+    if (iconClassName) {
+        icon = [
+            h(
+                'i',
+                { class: [ctx.icon, 'pe-1'] },
+            ),
+        ];
+    }
+
+    let content : VNodeChild | undefined;
+    if (typeof ctx.content === 'function') {
+        content = ctx.content();
+    } else {
+        content = ctx.content;
     }
 
     return h(ctx.tag || 'h6', [
         icon,
-        ctx.content || 'Overview',
+        content || 'Overview',
     ]);
 }
 
-export function buildDomainListHeader<T>(
+export function buildDomainListHeader(
     ctx: EntityHeaderOptions,
 ) : VNodeArrayChildren {
     const children : VNodeArrayChildren = [];
 
     if (ctx.title) {
-        const options : EntityListHeaderTitleOptions = typeof ctx.title === 'boolean' ? {} :
-            ctx.title;
-
+        const options = boolableToObject(ctx.title);
+        options.slots = ctx.slots;
         children.push(buildDomainListHeaderTitle(options));
     }
 
     if (ctx.search) {
-        children.push(buildDomainListHeaderSearch(ctx.search));
+        const options = ctx.search;
+        options.slots = ctx.slots;
+        children.push(buildDomainListHeaderSearch(options));
     }
 
     if (children.length > 0) {

@@ -18,7 +18,7 @@ import {
 } from 'vue';
 import type {
     IdentityProvider,
-    IdentityProviderPreset,
+    IdentityProviderPreset, OAuth2IdentityProvider,
 } from '@authup/core';
 import {
     DomainType, IdentityProviderProtocol,
@@ -29,7 +29,7 @@ import {
 } from '@vue-layout/form-controls';
 import { onChange, useIsEditing } from '../../composables';
 import {
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
     injectAPIClient,
 } from '../../core';
@@ -74,24 +74,25 @@ export const IdentityProviderOAuth2Form = defineComponent({
             type: String as PropType<string | null>,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,
         });
 
         const protocol = computed(() => {
-            if (manager.entity.value) {
-                return manager.entity.value.protocol;
+            if (manager.data.value) {
+                return manager.data.value.protocol;
             }
 
             return props.protocol;
         });
 
         const preset = computed(() => {
-            if (manager.entity.value) {
-                return manager.entity.value.preset;
+            if (manager.data.value) {
+                return manager.data.value.preset;
             }
 
             return props.preset;
@@ -101,14 +102,14 @@ export const IdentityProviderOAuth2Form = defineComponent({
 
         const $v = useVuelidate({ $stopPropagation: true });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
 
         const authorizeUri = computed<string>(() => {
-            if (!manager.entity.value) {
+            if (!manager.data.value) {
                 return '';
             }
 
-            return injectAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.entity.value.id);
+            return injectAPIClient().identityProvider.getAuthorizeUri(props.apiUrl, manager.data.value.id);
         });
 
         const basicFieldsNode = ref<null | typeof IdentityProviderBasicFields>(null);
@@ -135,7 +136,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
         function initForm() {
             nextTick(() => {
                 if (
-                    !manager.entity.value &&
+                    !manager.data.value &&
                     preset.value &&
                     basicFieldsNode.value
                 ) {
@@ -174,7 +175,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
         return () => {
             let headerNode : VNodeChild;
 
-            if (!manager.entity.value) {
+            if (!manager.data.value) {
                 if (preset.value) {
                     headerNode = h(IdentityProviderPresetEntity, {
                         key: preset.value,
@@ -229,7 +230,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
                 ]),
                 h(IdentityProviderBasicFields, {
                     ref: basicFieldsNode,
-                    entity: manager.entity.value,
+                    entity: manager.data.value,
                 }),
             ];
 
@@ -240,7 +241,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
                     'Security',
                 ]),
                 h(IdentityProviderClientFields, {
-                    entity: manager.entity.value,
+                    entity: manager.data.value as OAuth2IdentityProvider,
                 }),
             ];
 
@@ -255,7 +256,7 @@ export const IdentityProviderOAuth2Form = defineComponent({
                     h(
                         IdentityProviderEndpointFields,
                         {
-                            entity: manager.entity.value,
+                            entity: manager.data.value as OAuth2IdentityProvider,
                             discovery: protocol.value === IdentityProviderProtocol.OIDC,
                         },
                     ),

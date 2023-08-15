@@ -22,7 +22,8 @@ export const PermissionEntity = defineComponent({
     emits: defineEntityManagerEvents<Permission>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Permission>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.PERMISSION}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.PERMISSION}`,
             setup,
             props,
         });
@@ -32,7 +33,7 @@ export const PermissionEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

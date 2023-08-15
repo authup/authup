@@ -5,17 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListMeta } from '@vue-layout/list-controls';
+import { isObject } from 'smob';
 import type { Ref } from 'vue';
+import type { EntityListMeta } from '../type';
 
-export function buildEntityListCreatedHandler<T extends Record<string, any>>(
+export function buildEntityListCreatedHandler<T>(
     items: Ref<T[]>,
-    meta: Ref<ListMeta>,
+    meta: Ref<EntityListMeta>,
+    cb?: (entity: T, meta: EntityListMeta) => void | Promise<void>,
 ) {
     return (item: T, options?: { unshift?: boolean}) => {
         options = options || {};
 
-        const index = items.value.findIndex((el: T) => el.id === item.id);
+        let index : number;
+        if (isObject(item)) {
+            index = items.value.findIndex(
+                (el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id,
+            );
+        } else {
+            index = -1;
+        }
+
         if (index === -1) {
             if (typeof meta.value.total !== 'undefined') {
                 meta.value.total++;
@@ -26,13 +36,21 @@ export function buildEntityListCreatedHandler<T extends Record<string, any>>(
             } else {
                 items.value.push(item);
             }
+
+            if (cb) {
+                cb(item, meta.value);
+            }
         }
     };
 }
 
-export function buildEntityListUpdatedHandler<T extends Record<string, any>>(items: Ref<T[]>) {
+export function buildEntityListUpdatedHandler<T>(items: Ref<T[]>) {
     return (item: T) => {
-        const index = items.value.findIndex((el: T) => el.id === item.id);
+        if (!isObject(item)) {
+            return;
+        }
+
+        const index = items.value.findIndex((el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id);
 
         if (index !== -1) {
             const keys = Object.keys(item) as (keyof T)[];
@@ -43,12 +61,16 @@ export function buildEntityListUpdatedHandler<T extends Record<string, any>>(ite
     };
 }
 
-export function buildEntityListDeletedHandler<T extends Record<string, any>>(
+export function buildEntityListDeletedHandler<T>(
     items: Ref<T[]>,
-    meta: Ref<ListMeta>,
+    meta: Ref<EntityListMeta>,
 ) {
     return (item: T) : T | undefined => {
-        const index = items.value.findIndex((el: T) => el.id === item.id);
+        if (!isObject(item)) {
+            return undefined;
+        }
+
+        const index = items.value.findIndex((el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id);
         if (index !== -1) {
             if (typeof meta.value.total !== 'undefined') {
                 meta.value.total--;

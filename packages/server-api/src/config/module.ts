@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { makeURLPublicAccessible } from '@authup/core';
-import { Continu } from 'continu';
 import path from 'node:path';
 import process from 'node:process';
+import { makeURLPublicAccessible } from '@authup/core';
+import { Continu } from 'continu';
 import zod from 'zod';
 import type { Config, Options, OptionsInput } from './type';
 import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';

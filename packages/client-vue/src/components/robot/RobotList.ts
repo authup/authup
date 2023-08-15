@@ -9,8 +9,8 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core';
-import type { EntityListSlotsType } from '../../core/entity-list';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core/entity-list';
+import type { EntityListSlotsType } from '../../core';
+import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const RobotList = defineComponent({
     name: 'RobotList',
@@ -18,7 +18,8 @@ export const RobotList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Robot>>,
     emits: defineDomainListEvents<Robot>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(`${DomainType.ROBOT}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.ROBOT}`,
             props,
             setup: ctx,
         });

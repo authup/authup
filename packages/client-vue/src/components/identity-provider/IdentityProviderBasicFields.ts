@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
+import type { IdentityProvider } from '@authup/core';
 import { createNanoID } from '@authup/core';
 import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
@@ -24,7 +24,7 @@ export const IdentityProviderBasicFields = defineComponent({
     name: 'IdentityProviderBasicFields',
     props: {
         entity: {
-            type: Object as PropType<Partial<OAuth2IdentityProvider>>,
+            type: Object as PropType<Partial<IdentityProvider>>,
         },
         translatorLocale: {
             type: String,
@@ -77,7 +77,7 @@ export const IdentityProviderBasicFields = defineComponent({
             });
         };
 
-        function assign(data?: Partial<OAuth2IdentityProvider>) {
+        function assign(data?: Partial<IdentityProvider>) {
             extendObjectProperties(form, data);
 
             if (isSlugEmpty.value) {

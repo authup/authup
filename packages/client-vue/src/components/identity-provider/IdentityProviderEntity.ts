@@ -22,7 +22,8 @@ export const IdentityProviderEntity = defineComponent({
     emits: defineEntityManagerEvents<IdentityProvider>(),
     slots: Object as SlotsType<EntityManagerSlotsType<IdentityProvider>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.IDENTITY_PROVIDER}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.IDENTITY_PROVIDER}`,
             props,
             setup,
         });

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createPublicKey } from 'node:crypto';
 import type { OAuth2JsonWebKey } from '@authup/core';
 import type { KeyPair } from '@authup/server-core';
 import { createKeyPair, signToken, useKeyPair } from '@authup/server-core';
-import { createPublicKey } from 'node:crypto';
 
 export class Faker {
     protected keyPair: KeyPair;

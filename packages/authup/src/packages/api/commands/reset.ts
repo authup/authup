@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import consola from 'consola';
 import type { ChildProcess } from 'node:child_process';
+import consola from 'consola';
 import type { CommandExecutionContext } from '../../type';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';

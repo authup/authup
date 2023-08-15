@@ -22,7 +22,8 @@ export const ScopeEntity = defineComponent({
     emits: defineEntityManagerEvents<Scope>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Scope>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.SCOPE}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.SCOPE}`,
             props,
             setup,
         });
@@ -32,7 +33,7 @@ export const ScopeEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

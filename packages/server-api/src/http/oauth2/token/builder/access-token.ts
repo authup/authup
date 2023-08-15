@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { OAuth2TokenPayload } from '@authup/core';
 import { OAuth2TokenKind } from '@authup/core';
-import { randomUUID } from 'node:crypto';
 import type { OAuth2AccessTokenBuildContext } from './type';
 
 export function buildOAuth2AccessTokenPayload(

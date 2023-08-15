@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEventContext } from '@authup/core';
+import type { DomainEventsContext } from '@authup/core';
 import { DomainEventName, buildDomainEventFullName } from '@authup/core';
 import { hasClient, hasConfig } from 'redis-extension';
 import type { DomainEventDestinations } from '../type';
@@ -13,7 +13,7 @@ import { buildDomainEventChannelName, transformDomainEventData } from '../utils'
 import { useSocketEmitter } from './singleton';
 
 export function publishDomainSocketEvent(
-    context: DomainEventContext,
+    context: DomainEventsContext,
     destinations: DomainEventDestinations,
 ) {
     if (!hasClient() && !hasConfig()) {

@@ -22,7 +22,8 @@ export const RoleEntity = defineComponent({
     emits: defineEntityManagerEvents<Role>(),
     slots: Object as SlotsType<EntityManagerSlotsType<Role>>,
     async setup(props, setup) {
-        const manager = createEntityManager(`${DomainType.ROLE}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.ROLE}`,
             props,
             setup,
         });
@@ -32,7 +33,7 @@ export const RoleEntity = defineComponent({
 
             return () => manager.render();
         } catch (e) {
-            return () => manager.render(e);
+            return () => manager.renderError(e);
         }
     },
 });

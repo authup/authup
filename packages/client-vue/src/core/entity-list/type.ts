@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DomainEntity, DomainType } from '@authup/core';
 import type {
     ListBodyBuildOptionsInput,
     ListBodySlotProps,
@@ -16,22 +17,21 @@ import type {
     ListItemSlotProps,
     ListMeta,
     ListNoMoreBuildOptionsInput,
-    SlotName,
 } from '@vue-layout/list-controls';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type {
+    MaybeRef,
     Ref, SetupContext, VNodeChild,
 } from 'vue';
+import type { EntitySocketContext } from '../entity-socket';
+import type { EntityListSlotName } from './constants';
 import type { EntityListFooterPaginationOptions } from './footer';
 import type {
     EntityListHeaderSearchOptionsInput,
     EntityListHeaderTitleOptionsInput,
 } from './header';
 
-export type EntityListRecord = {
-    [key: string]: any,
-    id: any
-};
+type Entity<T> = T extends Record<string, any> ? T : never;
 
 export type EntityListMeta = {
     total: number,
@@ -39,7 +39,7 @@ export type EntityListMeta = {
     offset: number
 };
 
-export type EntityListBuilderTemplateOptions<T extends Record<string, any>> = {
+export type EntityListBuilderTemplateOptions<T> = {
     header?: ListHeaderBuildOptionsInput<T> | boolean
     headerSearch?: EntityListHeaderSearchOptionsInput | boolean,
     headerTitle?: EntityListHeaderTitleOptionsInput | boolean,
@@ -50,20 +50,13 @@ export type EntityListBuilderTemplateOptions<T extends Record<string, any>> = {
     footerPagination?: EntityListFooterPaginationOptions | boolean
 };
 
-export type EntityListProps<T extends Record<string, any>> = {
-    query?: BuildInput<T>,
+export type EntityListProps<T> = {
+    realmId?: string,
+    query?: BuildInput<Entity<T>>,
     loadOnSetup?: boolean,
 } & EntityListBuilderTemplateOptions<T>;
 
-export type EntityListCreateContext<T extends Record<string, any>> = {
-    setup: SetupContext<EntityListEventsType<T>>,
-    props: EntityListProps<T>,
-    loadAll?: boolean,
-    query?: BuildInput<T> | (() => BuildInput<T>),
-    queryFilter?: FiltersBuildInput<T> | ((q: string) => FiltersBuildInput<T>)
-};
-
-export type EntityListCreateOutput<T extends Record<string, any>> = {
+export type EntityList<T> = {
     render() : VNodeChild;
     load(meta: ListMeta) : Promise<void>,
     handleCreated(item: T) : void;
@@ -75,17 +68,39 @@ export type EntityListCreateOutput<T extends Record<string, any>> = {
     meta: Ref<ListMeta>
 };
 
-export type EntityListSlotsType<T extends Record<string, any>> = {
-    [SlotName.BODY]?: ListBodySlotProps<T>,
-    [SlotName.ITEM]?: ListItemSlotProps<T>,
-    [SlotName.ITEM_ACTIONS]?: ListItemSlotProps<T>,
-    [SlotName.ITEM_ACTIONS_EXTRA]?: ListItemSlotProps<T>,
-    [SlotName.HEADER]?: ListHeaderSlotProps<T>,
-    [SlotName.FOOTER]?: ListFooterSlotProps<T>
+export type EntityListHeaderTitleSlotProps = {
+    load: (value: string) => any,
+    busy: boolean
 };
 
-export type EntityListEventsType<T extends Record<string, any>> = {
+export type EntityListSlotsType<T> = {
+    [EntityListSlotName.BODY]: ListBodySlotProps<T>,
+    [EntityListSlotName.ITEM]: ListItemSlotProps<T>,
+    [EntityListSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>,
+    [EntityListSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>,
+    [EntityListSlotName.HEADER]: ListHeaderSlotProps<T>,
+    [EntityListSlotName.HEADER_TITLE]: EntityListHeaderTitleSlotProps,
+    [EntityListSlotName.HEADER_SEARCH]: undefined,
+    [EntityListSlotName.FOOTER]: ListFooterSlotProps<T>
+};
+
+export type EntityListEventsType<T> = {
     created: (item: T) => true,
     deleted: (item: T) => true,
     updated: (item: T) => true
+};
+
+export type EntityListCreateContext<
+    A extends `${DomainType}`,
+    T = DomainEntity<A>,
+> = {
+    type: A,
+    realmId?: MaybeRef<string>,
+    setup: SetupContext<EntityListEventsType<T>>,
+    props: EntityListProps<T>,
+    loadAll?: boolean,
+    query?: BuildInput<Entity<T>> | (() => BuildInput<Entity<T>>),
+    queryFilters?: FiltersBuildInput<Entity<T>> | ((q: string) => FiltersBuildInput<Entity<T>>),
+    onCreated?: (entity: T, meta: EntityListMeta) => void | Promise<void>,
+    socket?: boolean | Omit<EntitySocketContext<A, T>, 'type'>
 };

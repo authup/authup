@@ -18,7 +18,8 @@ export const RealmList = defineComponent({
     slots: Object as SlotsType<EntityListSlotsType<Realm>>,
     emits: defineDomainListEvents<Realm>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList(`${DomainType.REALM}`, {
+        const { render, setDefaults } = createEntityList({
+            type: `${DomainType.REALM}`,
             props,
             setup: ctx,
         });

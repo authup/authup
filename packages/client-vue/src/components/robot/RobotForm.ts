@@ -34,7 +34,7 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createEntityManager,
+    createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
@@ -60,7 +60,7 @@ export const RobotForm = defineComponent({
             default: undefined,
         },
     },
-    emits: ['created', 'deleted', 'updated', 'failed'],
+    emits: defineEntityManagerEvents<Robot>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -84,18 +84,19 @@ export const RobotForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager(`${DomainType.ROBOT}`, {
+        const manager = createEntityManager({
+            type: `${DomainType.ROBOT}`,
             setup: ctx,
             props,
         });
 
-        const isEditing = useIsEditing(manager.entity);
+        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
         const isRealmLocked = computed(() => !!props.realmId);
         const isSecretHashed = computed(
-            () => manager.entity.value && manager.entity.value.secret === form.secret && form.secret.startsWith('$'),
+            () => manager.data.value && manager.data.value.secret === form.secret && form.secret.startsWith('$'),
         );
 
         const generateSecret = () => {
@@ -111,7 +112,7 @@ export const RobotForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, manager.entity.value);
+            initFormAttributesFromSource(form, manager.data.value);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -120,7 +121,7 @@ export const RobotForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.entity.value = props.entity;
+                manager.data.value = props.entity;
 
                 initForm();
             }
@@ -155,11 +156,11 @@ export const RobotForm = defineComponent({
 
             let id : VNodeArrayChildren = [];
 
-            if (manager.entity.value) {
+            if (manager.data.value) {
                 id = [
                     buildFormInput({
                         labelContent: 'ID',
-                        value: manager.entity.value.id,
+                        value: manager.data.value.id,
                         props: {
                             disabled: true,
                         },
