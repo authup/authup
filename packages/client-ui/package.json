@@ -50,7 +50,7 @@
         "rapiq": "^0.9.0",
         "vue": "^3.3.4",
         "vue-router": "^4.2.4",
-        "zod": "^3.21.4"
+        "zod": "^3.22.1"
     },
     "publishConfig": {
         "access": "public"
