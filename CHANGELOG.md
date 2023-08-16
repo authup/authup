@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.40.1](https://github.com/authup/authup/compare/v0.40.0...v0.40.1) (2023-08-16)
+
+
+### Bug Fixes
+
+* **deps:** bump bcrypt from 5.1.0 to 5.1.1 ([#1314](https://github.com/authup/authup/issues/1314)) ([d0f6068](https://github.com/authup/authup/commit/d0f6068f7599d788e5ec1ede924ffe0d9089bbb0))
+* **deps:** bump pg from 8.11.1 to 8.11.2 ([#1315](https://github.com/authup/authup/issues/1315)) ([7120c9c](https://github.com/authup/authup/commit/7120c9c3ed3157ce5466ab1e24aa4ecb101baa53))
+* **deps:** bump typeorm-extension from 3.0.0 to 3.0.1 ([#1309](https://github.com/authup/authup/issues/1309)) ([f188501](https://github.com/authup/authup/commit/f188501116f6312e60dbb96167cb6f257461b54f))
+* **deps:** bump zod from 3.21.4 to 3.22.1 ([#1312](https://github.com/authup/authup/issues/1312)) ([976bdf5](https://github.com/authup/authup/commit/976bdf54059da4d47d10eab2402ac5abced77f84))
+* remove explicit dependency to pinia ([0e26dd7](https://github.com/authup/authup/commit/0e26dd7fa6a97caee1428ebd9b82ecc363030641))
+* vue type imports ([93d8ada](https://github.com/authup/authup/commit/93d8ada1b85659bc9de3ec621fb69fb7c60ebb24))
+
+
+
+
+
 # [0.40.0](https://github.com/authup/authup/compare/v0.39.1...v0.40.0) (2023-08-15)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.40.1](https://github.com/authup/authup/compare/v0.40.0...v0.40.1) (2023-08-16)
+
+
+### Bug Fixes
+
+* **deps:** bump bcrypt from 5.1.0 to 5.1.1 ([#1314](https://github.com/authup/authup/issues/1314)) ([d0f6068](https://github.com/authup/authup/commit/d0f6068f7599d788e5ec1ede924ffe0d9089bbb0))
+
+
+
+
+
 # [0.40.0](https://github.com/authup/authup/compare/v0.39.1...v0.40.0) (2023-08-15)
 
 
