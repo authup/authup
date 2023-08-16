@@ -23,8 +23,7 @@ import type { Socket } from 'socket.io-client';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
-import { storeToRefs } from 'pinia';
-import { injectStore } from '../store';
+import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
 import { hasSocketManager, injectSocketManager } from '../socket';
 

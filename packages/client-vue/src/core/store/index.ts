@@ -7,4 +7,5 @@
 
 export * from './module';
 export * from './type';
+export * from './singleton';
 export * from './utils';

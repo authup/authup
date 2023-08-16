@@ -5,39 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Store as BaseStore,
-    _ExtractActionsFromSetupStore,
-    _ExtractGettersFromSetupStore,
-    _ExtractStateFromSetupStore,
-} from 'pinia';
-import type { App } from 'vue';
-import { inject, provide } from 'vue';
-import type { createStore } from './module';
+import type { StoreGeneric, storeToRefs as _storeToRefs } from 'pinia';
+import {
+    isReactive, isRef, toRaw, toRef,
+} from 'vue';
 
-type StoreData = ReturnType<typeof createStore>;
-export type Store = BaseStore<
-string,
-_ExtractStateFromSetupStore<StoreData>,
-_ExtractGettersFromSetupStore<StoreData>,
-_ExtractActionsFromSetupStore<StoreData>
->;
+type StoreToRefs<T extends StoreGeneric> = ReturnType<typeof _storeToRefs<T>>;
 
-export const StoreSymbol = Symbol.for('AuthupStore');
-export function injectStore() : Store {
-    const instance = inject(StoreSymbol);
-    if (!instance) {
-        throw new Error('The Store is not set.');
+export function storeToRefs<SS extends StoreGeneric>(
+    store: SS,
+): StoreToRefs<SS> {
+    store = toRaw(store);
+
+    const refs = {} as StoreToRefs<SS>;
+    const keys = Object.keys(store);
+    for (let i = 0; i < keys.length; i++) {
+        const value = store[keys[i]];
+        if (isRef(value) || isReactive(value)) {
+            refs[keys[i] as (keyof StoreToRefs<SS>)] = toRef(store, keys[i]) as any;
+        }
     }
 
-    return instance as Store;
-}
-
-export function provideStore(store: Store, instance?: App) {
-    if (instance) {
-        instance.provide(StoreSymbol, store);
-        return;
-    }
-
-    provide(StoreSymbol, store);
+    return refs;
 }
