@@ -204,11 +204,16 @@ export function createEntityList<
             noMore: options.noMore,
             body: options.body,
             loading: options.loading,
-            total: total.value,
+            total,
             load,
             busy: busy.value,
             data: data.value as Entity<T>[],
             meta: meta.value,
+            onCreated(value: T) {
+                if (context.setup.emit) {
+                    context.setup.emit('created', value);
+                }
+            },
             onDeleted(value: T) {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);

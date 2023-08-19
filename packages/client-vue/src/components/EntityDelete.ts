@@ -62,6 +62,7 @@ export default defineComponent({
             default: undefined,
         },
     },
+    emits: ['deleted', 'failed'],
     setup(props, ctx) {
         const apiClient = injectAPIClient();
         const instance = getCurrentInstance();

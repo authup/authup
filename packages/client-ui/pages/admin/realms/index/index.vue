@@ -3,16 +3,18 @@ import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
-import { EntityDelete, ListPagination, ListSearch, ListTitle, RealmList } from '@authup/client-vue';
+import {
+    EntityDelete, ListPagination, ListSearch, ListTitle, RealmList,
+} from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-      ListTitle,
-      ListPagination,
-      ListSearch,
+        ListTitle,
+        ListPagination,
+        ListSearch,
         BTable,
         EntityDelete,
         RealmList,
@@ -69,21 +71,21 @@ export default defineNuxtComponent({
     <RealmList
         @deleted="handleDeleted"
     >
-      <template #header="props">
-        <ListTitle />
-        <ListSearch
-            :load="props.load"
-            :busy="props.busy"
-        />
-      </template>
-      <template #footer="props">
-        <ListPagination
-            :busy="props.busy"
-            :meta="props.meta"
-            :load="props.load"
-            :total="props.total"
-        />
-      </template>
+        <template #header="props">
+            <ListTitle />
+            <ListSearch
+                :load="props.load"
+                :busy="props.busy"
+            />
+        </template>
+        <template #footer="props">
+            <ListPagination
+                :busy="props.busy"
+                :meta="props.meta"
+                :load="props.load"
+                :total="props.total"
+            />
+        </template>
         <template #body="props">
             <BTable
                 :items="props.data"
