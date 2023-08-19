@@ -31,13 +31,12 @@ import {
 } from '@vue-layout/form-controls';
 import {
     SlotName,
-    buildItemActionToggle,
 } from '@vue-layout/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
     createEntityManager, defineEntityManagerEvents,
-    initFormAttributesFromSource,
+    initFormAttributesFromSource, renderEntityAssignAction,
 } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../translator';
 import { RealmList } from '../realm';
@@ -188,12 +187,14 @@ export const ScopeForm = defineComponent({
                     }, {
                         [SlotName.ITEM_ACTIONS]: (
                             props: { data: Realm, busy: boolean },
-                        ) => buildItemActionToggle({
-                            currentValue: form.realm_id,
-                            value: props.data.id,
+                        ) => renderEntityAssignAction({
+                            item: form.realm_id === props.data.id,
                             busy: props.busy,
-                            onChange(value) {
-                                form.realm_id = value as string;
+                            add() {
+                                form.realm_id = props.data.id;
+                            },
+                            drop() {
+                                form.realm_id = '';
                             },
                         }),
                     }),

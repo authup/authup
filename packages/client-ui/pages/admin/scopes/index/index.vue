@@ -6,7 +6,7 @@ import type { Scope } from '@authup/core';
 import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core';
-import { EntityDelete, ScopeList } from '@authup/client-vue';
+import { EntityDelete, ListPagination, ListSearch, ListTitle, ScopeList } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
@@ -15,6 +15,9 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
+      ListTitle,
+      ListPagination,
+      ListSearch,
         BTable, ScopeList, EntityDelete, Timeago,
     },
     emits: ['deleted'],
@@ -70,10 +73,24 @@ export default defineNuxtComponent({
 </script>
 <template>
     <ScopeList
-        :header-title="{ icon: 'fa-solid fa-list pe-1', content: 'Overview' }"
         :query="query"
         @deleted="handleDeleted"
     >
+      <template #header="props">
+        <ListTitle />
+        <ListSearch
+            :load="props.load"
+            :busy="props.busy"
+        />
+      </template>
+      <template #footer="props">
+        <ListPagination
+            :busy="props.busy"
+            :meta="props.meta"
+            :load="props.load"
+            :total="props.total"
+        />
+      </template>
         <template #body="props">
             <BTable
                 :items="props.data"

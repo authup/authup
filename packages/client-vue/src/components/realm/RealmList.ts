@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const RealmList = defineComponent({
     props: defineDomainListProps<Realm>(),
-    slots: Object as SlotsType<EntityListSlotsType<Realm>>,
+    slots: Object as SlotsType<ListSlotsType<Realm>>,
     emits: defineDomainListEvents<Realm>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,14 +24,6 @@ export const RealmList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Realms',
-                icon: 'fa-solid fa-city',
-            },
-
             noMore: {
                 content: 'No more realms available...',
             },

@@ -12,30 +12,30 @@ import type {
 import {
     buildSocketRealmNamespaceName,
 } from '@authup/core';
-import type { ManagerOptions, Socket } from 'socket.io-client';
+import type { ManagerOptions, Socket as _Socket } from 'socket.io-client';
 import { Manager } from 'socket.io-client';
 import type { Store } from '../store';
 import { injectStore } from '../store';
 
-type SocketModuleManagerConfiguration = {
+type SocketClientOptions = {
     url: string,
     options?: Partial<ManagerOptions>,
     store?: Store
 };
 
-export type SocketClient = Socket<SocketServerToClientEvents, SocketClientToServerEvents>;
+export type Socket = _Socket<SocketServerToClientEvents, SocketClientToServerEvents>;
 
-export class SocketManager {
+export class SocketClient {
     protected manager : Manager;
 
-    protected sockets : Record<string, SocketClient>;
+    protected sockets : Record<string, Socket>;
 
     protected store : Store | undefined;
 
     //--------------------------------------------------------------------
 
     constructor(
-        managerConfiguration : SocketModuleManagerConfiguration,
+        managerConfiguration : SocketClientOptions,
     ) {
         this.sockets = {};
 
@@ -50,7 +50,7 @@ export class SocketManager {
 
     //--------------------------------------------------------------------
 
-    public forRealm(realmId?: string | null) : SocketClient {
+    public forRealm(realmId?: string | null) : Socket {
         if (!realmId && this.store) {
             realmId = this.store.realmId;
         }
@@ -62,7 +62,7 @@ export class SocketManager {
         return this.use(buildSocketRealmNamespaceName(realmId));
     }
 
-    use(namespace = '/') : SocketClient {
+    use(namespace = '/') : Socket {
         if (typeof this.manager === 'undefined') {
             throw new Error('Manager not initialized...');
         }
@@ -83,7 +83,7 @@ export class SocketManager {
 
         getToken.bind(this);
 
-        const socket : SocketClient = this.manager.socket(namespace, {
+        const socket : Socket = this.manager.socket(namespace, {
             auth: getToken,
         });
 

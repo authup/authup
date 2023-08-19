@@ -8,12 +8,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const PermissionList = defineComponent({
     props: defineDomainListProps<Permission>(),
-    slots: Object as SlotsType<EntityListSlotsType<Permission>>,
+    slots: Object as SlotsType<ListSlotsType<Permission>>,
     emits: defineDomainListEvents<Permission>(),
     setup(props, setup) {
         const { render, setDefaults } = createEntityList({
@@ -23,14 +23,6 @@ export const PermissionList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Permissions',
-                icon: 'fa-solid fa-key',
-            },
-
             noMore: {
                 content: 'No more permissions available...',
             },

@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const UserList = defineComponent({
     props: defineDomainListProps<User>(),
-    slots: Object as SlotsType<EntityListSlotsType<User>>,
+    slots: Object as SlotsType<ListSlotsType<User>>,
     emits: defineDomainListEvents<User>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,14 +24,6 @@ export const UserList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Users',
-                icon: 'fa-solid fa-user',
-            },
-
             noMore: {
                 content: 'No more users available...',
             },

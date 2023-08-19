@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import type { EntityListBuilderTemplateOptions, EntityListProps } from '../type';
+import type { ListProps, ListRenderOptions } from '../type';
 
 function mergeOptions<T extends boolean | Record<string, any> | undefined>(
     primary: T,
@@ -31,22 +31,18 @@ function mergeOptions<T extends boolean | Record<string, any> | undefined>(
 }
 
 export function mergeEntityListOptions<T>(
-    props: EntityListProps<T>,
-    defaults: Partial<EntityListBuilderTemplateOptions<T>>,
-) : EntityListBuilderTemplateOptions<T> {
-    const output : Partial<EntityListBuilderTemplateOptions<T>> = {
-        body: mergeOptions(props.body, defaults.body),
-        item: mergeOptions(props.item, defaults.item),
+    props: ListProps<T>,
+    defaults: Partial<ListRenderOptions<T>>,
+) : ListRenderOptions<T> {
+    const output : Partial<ListRenderOptions<T>> = {
+        body: defaults.body,
+        item: defaults.item,
     };
 
     output.header = mergeOptions(props.header, defaults.header);
-    output.headerSearch = mergeOptions(props.headerSearch, defaults.headerSearch);
-    output.headerTitle = mergeOptions(props.headerTitle, defaults.headerTitle);
-
     output.noMore = mergeOptions(props.noMore, defaults.noMore);
-
     output.footer = mergeOptions(props.footer, defaults.footer);
-    output.footerPagination = mergeOptions(props.footerPagination, defaults.footerPagination);
+    output.loading = mergeOptions(props.loading, defaults.loading);
 
-    return output as EntityListBuilderTemplateOptions<T>;
+    return output as ListRenderOptions<T>;
 }

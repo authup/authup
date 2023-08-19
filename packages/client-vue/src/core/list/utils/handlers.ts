@@ -7,12 +7,10 @@
 
 import { isObject } from 'smob';
 import type { Ref } from 'vue';
-import type { EntityListMeta } from '../type';
 
 export function buildEntityListCreatedHandler<T>(
     items: Ref<T[]>,
-    meta: Ref<EntityListMeta>,
-    cb?: (entity: T, meta: EntityListMeta) => void | Promise<void>,
+    cb?: (entity: T) => void | Promise<void>,
 ) {
     return (item: T, options?: { unshift?: boolean}) => {
         options = options || {};
@@ -27,10 +25,6 @@ export function buildEntityListCreatedHandler<T>(
         }
 
         if (index === -1) {
-            if (typeof meta.value.total !== 'undefined') {
-                meta.value.total++;
-            }
-
             if (options.unshift) {
                 items.value.unshift(item);
             } else {
@@ -38,13 +32,16 @@ export function buildEntityListCreatedHandler<T>(
             }
 
             if (cb) {
-                cb(item, meta.value);
+                cb(item);
             }
         }
     };
 }
 
-export function buildEntityListUpdatedHandler<T>(items: Ref<T[]>) {
+export function buildEntityListUpdatedHandler<T>(
+    items: Ref<T[]>,
+    cb?: (entity: T) => void | Promise<void>,
+) {
     return (item: T) => {
         if (!isObject(item)) {
             return;
@@ -63,7 +60,7 @@ export function buildEntityListUpdatedHandler<T>(items: Ref<T[]>) {
 
 export function buildEntityListDeletedHandler<T>(
     items: Ref<T[]>,
-    meta: Ref<EntityListMeta>,
+    cb?: (entity: T) => void | Promise<void>,
 ) {
     return (item: T) : T | undefined => {
         if (!isObject(item)) {
@@ -72,8 +69,8 @@ export function buildEntityListDeletedHandler<T>(
 
         const index = items.value.findIndex((el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id);
         if (index !== -1) {
-            if (typeof meta.value.total !== 'undefined') {
-                meta.value.total--;
+            if (cb) {
+                cb(items.value[index]);
             }
 
             return items.value.splice(index, 1).pop();

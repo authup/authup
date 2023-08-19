@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const IdentityProviderList = defineComponent({
     props: defineDomainListProps<IdentityProvider>(),
-    slots: Object as SlotsType<EntityListSlotsType<IdentityProvider>>,
+    slots: Object as SlotsType<ListSlotsType<IdentityProvider>>,
     emits: defineDomainListEvents<IdentityProvider>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,13 +24,6 @@ export const IdentityProviderList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Providers',
-                icon: 'fa-solid fa-atom',
-            },
             noMore: {
                 content: 'No more identity-providers available...',
             },

@@ -11,7 +11,7 @@ import type { Slot, Slots, VNode } from 'vue';
 /**
  * Returns true if either scoped or unscoped named slot exists
  *
- * @returns {Array|undefined} VNodes
+ * @returns boolean
  *
  * @param name
  * @param $slots

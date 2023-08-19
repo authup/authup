@@ -11,8 +11,8 @@ export function install(instance: App, options?: Options) : void {
         provideAPIClient(options.apiClient, instance);
     }
 
-    if (options.socketManager) {
-        provideSocketManager(options.socketManager, instance);
+    if (options.socketClient) {
+        provideSocketManager(options.socketClient, instance);
     }
 
     if (options.store) {

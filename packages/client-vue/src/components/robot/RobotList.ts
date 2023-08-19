@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const RobotList = defineComponent({
     props: defineDomainListProps<Robot>(),
-    slots: Object as SlotsType<EntityListSlotsType<Robot>>,
+    slots: Object as SlotsType<ListSlotsType<Robot>>,
     emits: defineDomainListEvents<Robot>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,14 +24,6 @@ export const RobotList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Robots',
-                icon: 'fa fa-solid fa-robot',
-            },
-
             noMore: {
                 content: 'No more robots available...',
             },

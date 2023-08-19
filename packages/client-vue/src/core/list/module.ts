@@ -8,16 +8,16 @@
 import { hasOwnProperty } from '@authup/core';
 import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
 import type {
-    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput, ListMeta,
+    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
 } from '@vue-layout/list-controls';
 import {
     buildList,
 } from '@vue-layout/list-controls';
-import type { BuildInput, FiltersBuildInput } from 'rapiq';
-import type { Ref, VNodeArrayChildren } from 'vue';
+import type { BuildInput, FiltersBuildInput, PaginationBuildInput } from 'rapiq';
+import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef,
-    ref, unref, watch,
+    ref, unref,
 } from 'vue';
 import { isObject, merge } from 'smob';
 import { boolableToObject } from '../../utils';
@@ -25,14 +25,11 @@ import { injectAPIClient } from '../api-client';
 import { createEntitySocket } from '../entity-socket';
 import type { EntitySocketContext } from '../entity-socket';
 import { isQuerySortedDescByDate } from '../query';
-import { buildEntityListFooterPagination } from './footer';
-import type { EntityListHeaderSearchOptions } from './header';
-import { buildDomainListHeader } from './header';
 import type {
-    EntityList,
-    EntityListBuilderTemplateOptions,
-    EntityListCreateContext,
-    EntityListMeta,
+    List,
+    ListCreateContext,
+    ListQuery,
+    ListRenderOptions,
 } from './type';
 import {
     buildEntityListCreatedHandler,
@@ -48,16 +45,29 @@ export function createEntityList<
     A extends DomainTypeInfer<DomainEntity<any>>,
     T = DomainEntity<A>,
 >(
-    context: EntityListCreateContext<A, T>,
-) : EntityList<T> {
-    const q = ref('');
+    context: ListCreateContext<A, T>,
+) : List<T> {
     const data : Ref<T[]> = ref([]);
     const busy = ref(false);
-    const meta : Ref<EntityListMeta> = ref({
-        limit: 10,
-        offset: 0,
-        total: 0,
-    });
+    const total = ref(0);
+    const meta = ref({
+        pagination: {
+            limit: 10,
+        },
+    }) as Ref<ListQuery<T>>;
+
+    const setMetaPaginationProperty = <P extends keyof PaginationBuildInput>(
+        prop: P,
+        value: PaginationBuildInput[P],
+    ) => {
+        if (meta.value.pagination) {
+            meta.value.pagination[prop] = value;
+        } else {
+            meta.value.pagination = {
+                [prop]: value,
+            };
+        }
+    };
 
     const realmId = computed<string | undefined>(
         () => {
@@ -82,27 +92,20 @@ export function createEntityList<
 
     let query : BuildInput<Entity<T>> | undefined;
 
-    async function load(targetMeta?: Partial<ListMeta>) {
+    async function load(targetMeta: ListQuery<T> = {}) {
         if (!domainAPI || busy.value) return;
 
         busy.value = true;
 
-        if (typeof targetMeta === 'undefined') {
-            targetMeta = {};
-        }
-
         try {
-            let filters : FiltersBuildInput<Entity<T>>;
-            if (context.queryFilters) {
-                if (typeof context.queryFilters === 'function') {
-                    filters = context.queryFilters(q.value) as FiltersBuildInput<Entity<T>>;
-                } else {
-                    filters = context.queryFilters as FiltersBuildInput<Entity<T>>;
-                }
-            } else {
-                filters = {
-                    ['name' as keyof T]: q.value.length > 0 ? `~${q.value}` : q.value,
-                } as FiltersBuildInput<Entity<T>>;
+            let filters : FiltersBuildInput<Entity<T>> | undefined;
+            if (
+                context.queryFilters &&
+                targetMeta.filters &&
+                hasOwnProperty(targetMeta.filters, 'name') &&
+                typeof targetMeta.filters.name === 'string'
+            ) {
+                filters = context.queryFilters(targetMeta.filters.name) as FiltersBuildInput<Entity<T>>;
             }
 
             query = undefined;
@@ -123,12 +126,13 @@ export function createEntityList<
             }
 
             const response = await domainAPI.getMany(merge(
+                (filters ? { filters } : {}),
+                targetMeta || {},
                 {
-                    page: {
-                        limit: targetMeta.limit ?? meta.value.limit,
-                        offset: targetMeta.offset ?? meta.value.offset,
+                    pagination: {
+                        limit: meta.value.pagination?.limit,
+                        offset: meta.value.pagination?.offset,
                     },
-                    filters,
                 },
                 query || {},
             ));
@@ -139,119 +143,84 @@ export function createEntityList<
                 data.value = response.data as T[];
             }
 
-            meta.value.offset = response.meta.offset;
-            meta.value.total = response.meta.total;
-            meta.value.limit = response.meta.limit;
+            total.value = response.meta.total;
+
+            setMetaPaginationProperty('limit', response.meta.limit);
+            setMetaPaginationProperty('offset', response.meta.offset);
         } finally {
             busy.value = false;
         }
 
         if (
             context.loadAll &&
-            meta.value.total > data.value.length
+            total.value > data.value.length
         ) {
             await load({
                 ...meta.value,
-                offset: meta.value.offset + meta.value.limit,
+                pagination: {
+                    ...meta.value.pagination,
+                    offset: (meta.value.pagination?.offset ?? 0) + (meta.value.pagination?.limit ?? 0),
+                },
             });
         }
     }
 
-    watch(q, async (val, oldVal) => {
-        if (val === oldVal) return;
+    const handleCreated = buildEntityListCreatedHandler(data, (cbEntity) => {
+        total.value--;
 
-        if (val.length === 1 && val.length > oldVal.length) {
-            return;
+        if (context.onCreated) {
+            context.onCreated(cbEntity, meta.value);
         }
-
-        await load({ offset: 0 });
     });
-
-    const handleCreated = buildEntityListCreatedHandler(data, meta, context.onCreated);
-    const handleDeleted = buildEntityListDeletedHandler(data, meta);
+    const handleDeleted = buildEntityListDeletedHandler(data, () => {
+        total.value--;
+    });
     const handleUpdated = buildEntityListUpdatedHandler(data);
 
-    let options = context.props;
+    let options : ListRenderOptions<T> = context.props;
 
-    const setDefaults = (defaults: EntityListBuilderTemplateOptions<T>) => {
+    const setDefaults = (defaults: ListRenderOptions<T>) => {
         options = mergeEntityListOptions(context.props, defaults);
     };
 
-    function render() : VNodeArrayChildren {
-        let header : ListHeaderBuildOptionsInput<T> | undefined;
-        if (options.header) {
-            header = typeof options.header === 'boolean' ? {} : options.header;
-
-            let search: EntityListHeaderSearchOptions | undefined;
-            if (options.headerSearch) {
-                search = {
-                    load(text: string) {
-                        q.value = text;
-                    },
-                    busy: busy.value,
-                    ...boolableToObject(options.headerSearch),
-                };
-            }
-
-            header.content = buildDomainListHeader({
-                title: options.headerTitle,
-                search,
-                slots: context.setup.slots || {},
-            });
-        }
-
-        let footer : ListFooterBuildOptionsInput<T> | undefined;
-        if (options.footer) {
-            footer = typeof options.footer === 'boolean' ? {} : options.footer;
-
-            if (!footer.content) {
-                if (options.footerPagination) {
-                    footer.content = buildEntityListFooterPagination({
-                        load,
-                        busy,
-                        meta,
-                    });
-                }
-            }
-        }
+    function render() : VNodeChild {
+        const header : ListHeaderBuildOptionsInput<T> = boolableToObject(options.header || {});
+        const footer : ListFooterBuildOptionsInput<T> = boolableToObject(options.footer || {});
 
         if (options.item) {
             if (
                 typeof options.body === 'undefined' ||
                 typeof options.body === 'boolean'
             ) {
-                options.body = {
-                    item: options.item,
-                };
+                options.body = { item: options.item };
             } else {
                 options.body.item = options.item;
             }
         }
 
-        return [
-            buildList({
-                footer,
-                header,
-                noMore: options.noMore,
-                body: options.body,
-
-                load,
-                busy: busy.value,
-                data: data.value as Entity<T>[],
-                meta: meta.value,
-                onDeleted(value: T) {
-                    if (context.setup.emit) {
-                        context.setup.emit('deleted', value);
-                    }
-                },
-                onUpdated(value: T) {
-                    if (context.setup.emit) {
-                        context.setup.emit('updated', value);
-                    }
-                },
-                slotItems: context.setup.slots || {},
-            }),
-        ];
+        return buildList<T, ListQuery<T>>({
+            footer,
+            header,
+            noMore: options.noMore,
+            body: options.body,
+            loading: options.loading,
+            total: total.value,
+            load,
+            busy: busy.value,
+            data: data.value as Entity<T>[],
+            meta: meta.value,
+            onDeleted(value: T) {
+                if (context.setup.emit) {
+                    context.setup.emit('deleted', value);
+                }
+            },
+            onUpdated(value: T) {
+                if (context.setup.emit) {
+                    context.setup.emit('updated', value);
+                }
+            },
+            slotItems: context.setup.slots || {},
+        });
     }
 
     context.setup.expose({
@@ -287,9 +256,9 @@ export function createEntityList<
             const isSorted = query &&
                 query.sort &&
                 isQuerySortedDescByDate(query.sort) &&
-                meta.value.offset === 0;
+                meta.value?.pagination?.offset === 0;
 
-            if (isSorted || meta.value.total < meta.value.limit) {
+            if (isSorted || total.value < (meta.value?.pagination?.limit ?? 0)) {
                 handleCreated(entity);
             }
         };
@@ -308,6 +277,7 @@ export function createEntityList<
         data,
         busy,
         meta,
+        total,
 
         handleCreated,
         handleUpdated,

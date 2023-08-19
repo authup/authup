@@ -6,16 +6,23 @@ import type { User } from '@authup/core';
 import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core';
-import { EntityDelete, UserList } from '@authup/client-vue';
+import {
+    EntityDelete, ListPagination, ListSearch, ListTitle, UserList,
+} from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
-import { resolveComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        BTable, UserList, EntityDelete, Timeago,
+        ListTitle,
+        ListPagination,
+        ListSearch,
+        BTable,
+        UserList,
+        EntityDelete,
+        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -68,12 +75,26 @@ export default defineNuxtComponent({
 </script>
 <template>
     <UserList
-        :header-title="{ icon: 'fa-solid fa-list pe-1', content: 'Overview' }"
         :query="query"
         :body="{tag: 'div'}"
         :footer="true"
         @deleted="handleDeleted"
     >
+        <template #header="props">
+            <ListTitle />
+            <ListSearch
+                :load="props.load"
+                :busy="props.busy"
+            />
+        </template>
+        <template #footer="props">
+            <ListPagination
+                :busy="props.busy"
+                :meta="props.meta"
+                :load="props.load"
+                :total="props.total"
+            />
+        </template>
         <template #body="props">
             <BTable
                 :items="props.data"

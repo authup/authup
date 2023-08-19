@@ -7,11 +7,11 @@
 
 import type { PluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { APIClient } from '@authup/core';
-import type { SocketManager, Store } from './core';
+import type { SocketClient, Store } from './core';
 
 export type Options = PluginBaseOptions & {
+    components?: boolean | string[],
     apiClient?: APIClient,
+    socketClient?: SocketClient,
     store?: Store,
-    socketManager?: SocketManager,
-    components?: boolean | string[]
 };

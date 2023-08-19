@@ -77,8 +77,7 @@ export default defineNuxtComponent({
         <hr>
 
         <ClientScopeList
-            :header-title="false"
-            :header-search="false"
+            :header="false"
             :query="query"
             :item="{class: ''}"
         >

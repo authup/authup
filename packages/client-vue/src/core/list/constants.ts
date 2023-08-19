@@ -8,12 +8,17 @@
 import { SlotName } from '@vue-layout/list-controls';
 
 export enum EntityListSlotName {
+    DEFAULT = SlotName.DEFAULT,
     BODY = SlotName.BODY,
     ITEM = SlotName.ITEM,
     ITEM_ACTIONS = SlotName.ITEM_ACTIONS,
     ITEM_ACTIONS_EXTRA = SlotName.ITEM_ACTIONS_EXTRA,
     HEADER = SlotName.HEADER,
-    HEADER_TITLE = 'headerTitle',
     HEADER_SEARCH = 'headerSearch',
+    HEADER_SEARCH_ICON = 'headerSearchIcon',
+    HEADER_TITLE = 'headerTitle',
+    HEADER_TITLE_ICON = 'headerTitleIcon',
     FOOTER = SlotName.FOOTER,
+    NO_MORE = SlotName.NO_MORE,
+    LOADING = SlotName.LOADING,
 }

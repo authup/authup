@@ -2,7 +2,13 @@
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
-    IdentityProviderIcon, IdentityProviderList, RealmList, injectAPIClient, useValidationTranslator,
+    IdentityProviderIcon,
+    IdentityProviderList,
+    ListPagination,
+    ListSearch,
+    ListTitle,
+    RealmList,
+    injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import {
@@ -27,6 +33,9 @@ import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     components: {
+        ListPagination,
+        ListSearch,
+        ListTitle,
         LoginSVG,
         IdentityProviderList,
         IdentityProviderIcon,
@@ -41,6 +50,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
+        const apiClient = injectAPIClient();
         const toast = useToast();
 
         const form = reactive({
@@ -113,13 +123,10 @@ export default defineNuxtComponent({
         Promise.resolve()
             .then(store.logout);
 
-        const buildIdentityProviderURL = (id: string) => {
-            const apiClient = useAPIClient();
-            return apiClient.identityProvider.getAuthorizeUri(
-                runtimeConfig.public.apiUrl,
-                id,
-            );
-        };
+        const buildIdentityProviderURL = (id: string) => apiClient.identityProvider.getAuthorizeUri(
+            runtimeConfig.public.apiUrl,
+            id,
+        );
 
         return {
             vuelidate,
@@ -178,10 +185,15 @@ export default defineNuxtComponent({
                     <IdentityProviderList
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
-                        :footer-pagination="false"
+                        :footer="false"
                     >
-                        <template #header>
-                            <h6>IdentityProvider</h6>
+                        <template #footer="props">
+                            <ListPagination
+                                :busy="props.busy"
+                                :meta="props.meta"
+                                :load="props.load"
+                                :total="props.total"
+                            />
                         </template>
                         <template #body="props">
                             <div class="d-flex flex-row">
@@ -212,6 +224,21 @@ export default defineNuxtComponent({
                 </div>
                 <div class="col-4">
                     <RealmList>
+                        <template #header="props">
+                            <ListTitle />
+                            <ListSearch
+                                :load="props.load"
+                                :busy="props.busy"
+                            />
+                        </template>
+                        <template #footer="props">
+                            <ListPagination
+                                :busy="props.busy"
+                                :meta="props.meta"
+                                :load="props.load"
+                                :total="props.total"
+                            />
+                        </template>
                         <template #itemActions="props">
                             <RealmSelectAction
                                 v-model="form.realm_id"

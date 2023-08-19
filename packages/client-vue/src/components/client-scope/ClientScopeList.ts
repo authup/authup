@@ -7,31 +7,28 @@
 
 import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
-import { defineComponent } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { ClientScope } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
+import type { ListSlotsType } from '../../core';
+import {
+    createEntityList, defineDomainListEvents, defineDomainListProps,
+} from '../../core';
 
 export const ClientScopeList = defineComponent({
     props: defineDomainListProps<ClientScope>(),
-    slots: Object as SlotsType<EntityListSlotsType<ClientScope>>,
+    slots: Object as SlotsType<ListSlotsType<ClientScope>>,
     emits: defineDomainListEvents<ClientScope>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList({
+        const {
+            render,
+            setDefaults,
+        } = createEntityList({
             type: `${DomainType.CLIENT_SCOPE}`,
             props,
             setup: ctx,
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'ClientScopes',
-                icon: 'fa-solid fa-meteor',
-            },
-
             noMore: {
                 content: 'No more client-scopes available...',
             },

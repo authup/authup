@@ -5,13 +5,18 @@ import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
-import { ClientList, EntityDelete, UserEntity } from '@authup/client-vue';
+import {
+    ClientList, EntityDelete, ListPagination, ListSearch, ListTitle, UserEntity,
+} from '@authup/client-vue';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
+        ListPagination,
+        ListSearch,
+        ListTitle,
         BTable,
         EntityDelete,
         ClientList,
@@ -72,10 +77,24 @@ export default defineNuxtComponent({
 </script>
 <template>
     <ClientList
-        :header-title="{ icon: 'fa-solid fa-list pe-1', content: 'Overview' }"
         :query="query"
         @deleted="handleDeleted"
     >
+        <template #header="props">
+            <ListTitle />
+            <ListSearch
+                :load="props.load"
+                :busy="props.busy"
+            />
+        </template>
+        <template #footer="props">
+            <ListPagination
+                :busy="props.busy"
+                :meta="props.meta"
+                :load="props.load"
+                :total="props.total"
+            />
+        </template>
         <template #body="props">
             <BTable
                 :items="props.data"
@@ -93,7 +112,7 @@ export default defineNuxtComponent({
                 <template #cell(user_id)="data">
                     <UserEntity :entity-id="data.item.user_id">
                         <template #default="user">
-                            {{ user.entity.name }}
+                            {{ user.data.name }}
                         </template>
                         <template #error>
                             -

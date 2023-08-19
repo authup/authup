@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const ScopeList = defineComponent({
     props: defineDomainListProps<Scope>(),
-    slots: Object as SlotsType<EntityListSlotsType<Scope>>,
+    slots: Object as SlotsType<ListSlotsType<Scope>>,
     emits: defineDomainListEvents<Scope>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,14 +24,6 @@ export const ScopeList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Scopes',
-                icon: 'fa-solid fa-meteor',
-            },
-
             noMore: {
                 content: 'No more scopes available...',
             },

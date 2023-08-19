@@ -4,6 +4,7 @@
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
+        "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
         "cli-dev": "ts-node src/cli/index.ts",
         "build": "rm -rf ./dist && tsc -p tsconfig.build.json",

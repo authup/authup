@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core';
-import type { EntityListSlotsType } from '../../core';
+import type { ListSlotsType } from '../../core';
 import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
 
 export const RoleList = defineComponent({
     props: defineDomainListProps<Role>(),
-    slots: Object as SlotsType<EntityListSlotsType<Role>>,
+    slots: Object as SlotsType<ListSlotsType<Role>>,
     emits: defineDomainListEvents<Role>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
@@ -24,14 +24,6 @@ export const RoleList = defineComponent({
         });
 
         setDefaults({
-            footerPagination: true,
-
-            headerSearch: true,
-            headerTitle: {
-                content: 'Roles',
-                icon: 'fa-solid fa-user-group',
-            },
-
             noMore: {
                 content: 'No more roles available...',
             },

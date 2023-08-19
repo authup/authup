@@ -4,7 +4,9 @@ import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
-import { EntityDelete, IdentityProviderList } from '@authup/client-vue';
+import {
+    EntityDelete, IdentityProviderList, ListPagination, ListSearch, ListTitle,
+} from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';
@@ -12,7 +14,13 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        BTable, IdentityProviderList, EntityDelete, Timeago,
+        ListTitle,
+        ListPagination,
+        ListSearch,
+        BTable,
+        IdentityProviderList,
+        EntityDelete,
+        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -67,10 +75,24 @@ export default defineNuxtComponent({
 </script>
 <template>
     <IdentityProviderList
-        :header-title="{ icon: 'fa-solid fa-list pe-1', content: 'Overview' }"
         :query="query"
         @deleted="handleDeleted"
     >
+        <template #header="props">
+            <ListTitle />
+            <ListSearch
+                :load="props.load"
+                :busy="props.busy"
+            />
+        </template>
+        <template #footer="props">
+            <ListPagination
+                :busy="props.busy"
+                :meta="props.meta"
+                :load="props.load"
+                :total="props.total"
+            />
+        </template>
         <template #body="props">
             <BTable
                 :items="props.data"
