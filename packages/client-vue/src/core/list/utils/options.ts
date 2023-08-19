@@ -8,7 +8,7 @@
 import { merge } from 'smob';
 import type { ListProps, ListRenderOptions } from '../type';
 
-function mergeOptions<T extends boolean | Record<string, any> | undefined>(
+function mergeListOption<T extends boolean | Record<string, any> | undefined>(
     primary: T,
     secondary: T,
 ) : T {
@@ -30,7 +30,7 @@ function mergeOptions<T extends boolean | Record<string, any> | undefined>(
     return merge(primaryRecord, secondaryRecord) as T;
 }
 
-export function mergeEntityListOptions<T>(
+export function mergeListOptions<T>(
     props: ListProps<T>,
     defaults: Partial<ListRenderOptions<T>>,
 ) : ListRenderOptions<T> {
@@ -39,10 +39,10 @@ export function mergeEntityListOptions<T>(
         item: defaults.item,
     };
 
-    output.header = mergeOptions(props.header, defaults.header);
-    output.noMore = mergeOptions(props.noMore, defaults.noMore);
-    output.footer = mergeOptions(props.footer, defaults.footer);
-    output.loading = mergeOptions(props.loading, defaults.loading);
+    output.header = mergeListOption(props.header, defaults.header);
+    output.noMore = mergeListOption(props.noMore, defaults.noMore);
+    output.footer = mergeListOption(props.footer, defaults.footer);
+    output.loading = mergeListOption(props.loading, defaults.loading);
 
     return output as ListRenderOptions<T>;
 }

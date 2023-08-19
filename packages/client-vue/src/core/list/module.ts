@@ -32,10 +32,10 @@ import type {
     ListRenderOptions,
 } from './type';
 import {
-    buildEntityListCreatedHandler,
-    buildEntityListDeletedHandler,
-    buildEntityListUpdatedHandler,
-    mergeEntityListOptions,
+    buildListCreatedHandler,
+    buildListDeletedHandler,
+    buildListUpdatedHandler,
+    mergeListOptions,
 } from './utils';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
@@ -165,22 +165,22 @@ export function createEntityList<
         }
     }
 
-    const handleCreated = buildEntityListCreatedHandler(data, (cbEntity) => {
+    const handleCreated = buildListCreatedHandler(data, (cbEntity) => {
         total.value--;
 
         if (context.onCreated) {
             context.onCreated(cbEntity, meta.value);
         }
     });
-    const handleDeleted = buildEntityListDeletedHandler(data, () => {
+    const handleDeleted = buildListDeletedHandler(data, () => {
         total.value--;
     });
-    const handleUpdated = buildEntityListUpdatedHandler(data);
+    const handleUpdated = buildListUpdatedHandler(data);
 
     let options : ListRenderOptions<T> = context.props;
 
     const setDefaults = (defaults: ListRenderOptions<T>) => {
-        options = mergeEntityListOptions(context.props, defaults);
+        options = mergeListOptions(context.props, defaults);
     };
 
     function render() : VNodeChild {

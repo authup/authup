@@ -8,7 +8,7 @@
 import { isObject } from 'smob';
 import type { Ref } from 'vue';
 
-export function buildEntityListCreatedHandler<T>(
+export function buildListCreatedHandler<T>(
     items: Ref<T[]>,
     cb?: (entity: T) => void | Promise<void>,
 ) {
@@ -38,7 +38,7 @@ export function buildEntityListCreatedHandler<T>(
     };
 }
 
-export function buildEntityListUpdatedHandler<T>(
+export function buildListUpdatedHandler<T>(
     items: Ref<T[]>,
     cb?: (entity: T) => void | Promise<void>,
 ) {
@@ -58,7 +58,7 @@ export function buildEntityListUpdatedHandler<T>(
     };
 }
 
-export function buildEntityListDeletedHandler<T>(
+export function buildListDeletedHandler<T>(
     items: Ref<T[]>,
     cb?: (entity: T) => void | Promise<void>,
 ) {

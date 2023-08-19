@@ -11,13 +11,13 @@ import { defineComponent, h } from 'vue';
 import type { ClientScope } from '@authup/core';
 import type { ListSlotsType } from '../../core';
 import {
-    createEntityList, defineDomainListEvents, defineDomainListProps,
+    createEntityList, defineListEvents, defineListProps,
 } from '../../core';
 
 export const ClientScopeList = defineComponent({
-    props: defineDomainListProps<ClientScope>(),
+    props: defineListProps<ClientScope>(),
     slots: Object as SlotsType<ListSlotsType<ClientScope>>,
-    emits: defineDomainListEvents<ClientScope>(),
+    emits: defineListEvents<ClientScope>(),
     setup(props, ctx) {
         const {
             render,

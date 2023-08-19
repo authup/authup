@@ -12,7 +12,7 @@ import type {
     ListEventsType, ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions,
 } from '../type';
 
-export function defineDomainListEvents<T>() : ListEventsType<T> {
+export function defineListEvents<T>() : ListEventsType<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,
@@ -22,7 +22,7 @@ export function defineDomainListEvents<T>() : ListEventsType<T> {
         updated: (_item: T) => true,
     };
 }
-export function defineDomainListProps<T>() {
+export function defineListProps<T>() {
     return {
         query: {
             type: Object as PropType<BuildInput<T extends Record<string, any> ? T : never>>,

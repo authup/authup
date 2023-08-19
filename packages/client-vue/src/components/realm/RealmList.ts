@@ -10,12 +10,12 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core';
 import type { ListSlotsType } from '../../core';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
+import { createEntityList, defineListEvents, defineListProps } from '../../core';
 
 export const RealmList = defineComponent({
-    props: defineDomainListProps<Realm>(),
+    props: defineListProps<Realm>(),
     slots: Object as SlotsType<ListSlotsType<Realm>>,
-    emits: defineDomainListEvents<Realm>(),
+    emits: defineListEvents<Realm>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
             type: `${DomainType.REALM}`,

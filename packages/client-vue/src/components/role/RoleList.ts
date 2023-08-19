@@ -10,12 +10,12 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core';
 import type { ListSlotsType } from '../../core';
-import { createEntityList, defineDomainListEvents, defineDomainListProps } from '../../core';
+import { createEntityList, defineListEvents, defineListProps } from '../../core';
 
 export const RoleList = defineComponent({
-    props: defineDomainListProps<Role>(),
+    props: defineListProps<Role>(),
     slots: Object as SlotsType<ListSlotsType<Role>>,
-    emits: defineDomainListEvents<Role>(),
+    emits: defineListEvents<Role>(),
     setup(props, ctx) {
         const { render, setDefaults } = createEntityList({
             type: `${DomainType.ROLE}`,
