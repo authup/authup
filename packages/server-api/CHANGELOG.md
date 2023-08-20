@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.40.2](https://github.com/authup/authup/compare/v0.40.1...v0.40.2) (2023-08-20)
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 8.5.0 to 8.5.1 ([#1318](https://github.com/authup/authup/issues/1318)) ([f70d222](https://github.com/authup/authup/commit/f70d22243a405c6417cc0f6b0f6808b9e852a2c7))
+* **deps:** bump pg from 8.11.2 to 8.11.3 ([#1321](https://github.com/authup/authup/issues/1321)) ([8907b24](https://github.com/authup/authup/commit/8907b24609478fa5bdc063f78bbc3bff5dd050ea))
+
+
+
+
+
 ## [0.40.1](https://github.com/authup/authup/compare/v0.40.0...v0.40.1) (2023-08-16)
 
 

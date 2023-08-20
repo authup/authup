@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-vue",
-    "version": "0.40.1",
+    "version": "0.40.2",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",

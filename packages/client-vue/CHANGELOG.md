@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.40.2](https://github.com/authup/authup/compare/v0.40.1...v0.40.2) (2023-08-20)
+
+
+### Bug Fixes
+
+* cleanup list sub-module ([132bcbf](https://github.com/authup/authup/commit/132bcbff2387b6eefe7afd729be4cc90358067db))
+* list total entries incr/decr ([fbf0a17](https://github.com/authup/authup/commit/fbf0a17a5c2eb931e501eb58d7d38a317a0c8706))
+* module exports + simplified applying pagination meta ([7f233e5](https://github.com/authup/authup/commit/7f233e50029ca74be5c4dd804ac5b99067ed4f76))
+* remove unnecessary watcher ([2f6beef](https://github.com/authup/authup/commit/2f6beef89d4dc4ab40a6afd47cfc0d241cf36b07))
+* renamed list-query to list-meta + restructured meta type ([6abb3fd](https://github.com/authup/authup/commit/6abb3fd9122244de0e84afb9094d04e1f35bf0fd))
+
+
+
+
+
 ## [0.40.1](https://github.com/authup/authup/compare/v0.40.0...v0.40.1) (2023-08-16)
 
 
