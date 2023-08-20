@@ -8,11 +8,12 @@
 import type { ListLoadFn } from '@vue-layout/list-controls';
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent, h } from 'vue';
-import type { ListQuery, ListSearchSlotProps } from '../../core';
+import type { ListMeta, ListSearchSlotProps } from '../../core';
 import { buildListSearch } from '../../core';
 
 export const ListSearch = defineComponent({
     props: {
+        // todo: add entity-key prop
         icon: {
             type: Boolean,
         },
@@ -26,7 +27,7 @@ export const ListSearch = defineComponent({
             type: Boolean,
         },
         load: {
-            type: Function as PropType<ListLoadFn<ListQuery<any>>>,
+            type: Function as PropType<ListLoadFn<ListMeta<any>>>,
         },
     },
     slots: Object as SlotsType<{

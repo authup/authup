@@ -32,7 +32,7 @@ export default defineNuxtComponent({
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Permission> = {
-            filter: {
+            filters: {
                 realm_id: [realmManagementId.value, null],
             },
         };
@@ -88,7 +88,6 @@ export default defineNuxtComponent({
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
-                :total="props.total"
             />
         </template>
         <template #body="props">

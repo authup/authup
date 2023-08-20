@@ -13,13 +13,13 @@ import type {
 import {
     buildList,
 } from '@vue-layout/list-controls';
-import type { BuildInput, FiltersBuildInput, PaginationBuildInput } from 'rapiq';
+import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef,
-    ref, unref,
+    ref, unref, watch,
 } from 'vue';
-import { isObject, merge } from 'smob';
+import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../utils';
 import { injectAPIClient } from '../api-client';
 import { createEntitySocket } from '../entity-socket';
@@ -28,7 +28,8 @@ import { isQuerySortedDescByDate } from '../query';
 import type {
     List,
     ListCreateContext,
-    ListQuery,
+    ListMeta,
+    ListPagination,
     ListRenderOptions,
 } from './type';
 import {
@@ -40,6 +41,12 @@ import {
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 type DomainTypeInfer<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
+
+const merger = createMerger({
+    array: false,
+    inPlace: false,
+    priority: 'left',
+});
 
 export function createEntityList<
     A extends DomainTypeInfer<DomainEntity<any>>,
@@ -54,11 +61,11 @@ export function createEntityList<
         pagination: {
             limit: 10,
         },
-    }) as Ref<ListQuery<T>>;
+    }) as Ref<ListMeta<T>>;
 
-    const setMetaPaginationProperty = <P extends keyof PaginationBuildInput>(
+    const setMetaPaginationProperty = <P extends keyof ListPagination>(
         prop: P,
-        value: PaginationBuildInput[P],
+        value: ListPagination[P],
     ) => {
         if (meta.value.pagination) {
             meta.value.pagination[prop] = value;
@@ -90,9 +97,13 @@ export function createEntityList<
         domainAPI = client[context.type] as any;
     }
 
+    watch(total, (value) => {
+        meta.value.total = value;
+    });
+
     let query : BuildInput<Entity<T>> | undefined;
 
-    async function load(targetMeta: ListQuery<T> = {}) {
+    async function load(input: ListMeta<T> = {}) {
         if (!domainAPI || busy.value) return;
 
         busy.value = true;
@@ -101,11 +112,12 @@ export function createEntityList<
             let filters : FiltersBuildInput<Entity<T>> | undefined;
             if (
                 context.queryFilters &&
-                targetMeta.filters &&
-                hasOwnProperty(targetMeta.filters, 'name') &&
-                typeof targetMeta.filters.name === 'string'
+                input.filters &&
+                hasOwnProperty(input.filters, 'name') &&
+                typeof input.filters.name === 'string'
             ) {
-                filters = context.queryFilters(targetMeta.filters.name) as FiltersBuildInput<Entity<T>>;
+                // todo: queryFilters should customize full filters object!
+                filters = context.queryFilters(input.filters.name) as FiltersBuildInput<Entity<T>>;
             }
 
             query = undefined;
@@ -119,15 +131,15 @@ export function createEntityList<
 
             if (context.props.query) {
                 if (query) {
-                    query = merge({}, context.props.query, query);
+                    query = merger({}, context.props.query, query);
                 } else {
                     query = context.props.query;
                 }
             }
 
-            const response = await domainAPI.getMany(merge(
+            const nextQuery : ListMeta<T> = merger(
                 (filters ? { filters } : {}),
-                targetMeta || {},
+                input || {},
                 {
                     pagination: {
                         limit: meta.value.pagination?.limit,
@@ -135,7 +147,13 @@ export function createEntityList<
                     },
                 },
                 query || {},
-            ));
+            );
+
+            const response = await domainAPI.getMany(
+                nextQuery as BuildInput<Entity<T>>,
+            );
+
+            meta.value = nextQuery;
 
             if (context.loadAll) {
                 data.value.push(...response.data as T[]);
@@ -144,6 +162,7 @@ export function createEntityList<
             }
 
             total.value = response.meta.total;
+            meta.value.total = response.meta.total;
 
             setMetaPaginationProperty('limit', response.meta.limit);
             setMetaPaginationProperty('offset', response.meta.offset);
@@ -198,7 +217,7 @@ export function createEntityList<
             }
         }
 
-        return buildList<T, ListQuery<T>>({
+        return buildList<T, ListMeta<T>>({
             footer,
             header,
             noMore: options.noMore,

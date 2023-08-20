@@ -6,11 +6,11 @@
  */
 
 import type { ListLoadFn } from '@vue-layout/list-controls';
-import type { ListQuery } from '../list';
+import type { ListMeta } from '../list';
 
 export type ListPaginationOptions<T> = {
     busy: boolean,
-    meta: ListQuery<T>,
-    load: ListLoadFn<ListQuery<T>>,
-    total: number
+    meta: ListMeta<T>,
+    load: ListLoadFn<ListMeta<T>>,
+    total?: number
 };

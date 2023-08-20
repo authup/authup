@@ -8,10 +8,20 @@ import type { FormInputBuildOptionsInput } from '@vue-layout/form-controls';
 import { buildFormInputText } from '@vue-layout/form-controls';
 import type { VNodeChild } from 'vue';
 import { h } from 'vue';
-import type { ListQuery } from '../list';
+import type { ListMeta } from '../list';
 import { hasNormalizedSlot, normalizeSlot } from '../slot';
 import { ListSearchSlotName } from './constants';
 import type { ListSearchOptionsInput } from './type';
+
+type Fn = (...args: any[]) => Promise<any> | any;
+function debounce<T extends Fn>(func: T, timeout = 200) {
+    let timer : ReturnType<typeof setTimeout> | undefined;
+
+    return (...args: Parameters<T>) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func(...args); }, timeout);
+    };
+}
 
 export function buildListSearch<T>(
     ctx: ListSearchOptionsInput<T>,
@@ -59,22 +69,24 @@ export function buildListSearch<T>(
         }
     }
 
+    const handle = debounce((text: string) => {
+        if (!ctx.load) {
+            return Promise.resolve();
+        }
+
+        return ctx.load({
+            filters: {
+                name: text.length > 0 ? `~${text}` : text as any,
+            },
+            pagination: {
+                offset: 0,
+            },
+        } as ListMeta<T>);
+    });
+
     return buildFormInputText({
         type: 'text',
-        onChange: (text: string) => {
-            if (!ctx.load) {
-                return;
-            }
-
-            ctx.load({
-                filters: {
-                    name: text.length > 0 ? `~${text}` : text as any,
-                },
-                pagination: {
-                    offset: 0,
-                },
-            } as ListQuery<T>);
-        },
+        onChange: (text: string) => handle(text),
         props: {
             placeholder: '...',
         },

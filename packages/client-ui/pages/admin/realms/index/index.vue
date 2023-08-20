@@ -83,7 +83,6 @@ export default defineNuxtComponent({
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
-                :total="props.total"
             />
         </template>
         <template #body="props">

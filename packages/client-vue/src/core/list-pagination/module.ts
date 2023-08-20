@@ -19,9 +19,9 @@ export function buildListPagination<T>(
                 offset: pagination.offset,
             },
         }),
-        total: ctx.total || 0,
-        limit: ctx.meta?.pagination?.limit || 0,
-        offset: ctx.meta?.pagination?.offset || 0,
+        total: ctx.meta?.total ?? ctx.total ?? 0,
+        limit: ctx.meta?.pagination?.limit ?? 0,
+        offset: ctx.meta?.pagination?.offset ?? 0,
         busy: ctx.busy,
     });
 }

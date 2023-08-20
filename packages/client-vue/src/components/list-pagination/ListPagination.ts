@@ -8,7 +8,7 @@
 import type { ListLoadFn } from '@vue-layout/list-controls';
 import type { PropType } from 'vue';
 import { defineComponent, h } from 'vue';
-import type { ListQuery } from '../../core';
+import type { ListMeta } from '../../core';
 import { buildListPagination } from '../../core';
 
 export const ListPagination = defineComponent({
@@ -17,13 +17,13 @@ export const ListPagination = defineComponent({
             type: Number,
         },
         meta: {
-            type: Object as PropType<ListQuery<any>>,
+            type: Object as PropType<ListMeta<any>>,
         },
         busy: {
             type: Boolean,
         },
         load: {
-            type: Function as PropType<ListLoadFn<ListQuery<any>>>,
+            type: Function as PropType<ListLoadFn<ListMeta<any>>>,
         },
     },
     setup(props) {

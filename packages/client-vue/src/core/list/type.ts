@@ -9,13 +9,12 @@ import type { DomainEntity, DomainType } from '@authup/core';
 import type {
     ListBodyBuildOptionsInput,
     ListBodySlotProps,
-    ListFooterBuildOptionsInput,
     ListFooterSlotProps,
     ListHeaderBuildOptionsInput,
     ListHeaderSlotProps,
     ListItemBuildOptionsInput,
     ListItemSlotProps,
-    ListLoadFn, ListLoadingBuildOptionsInput, ListNoMoreBuildOptionsInput,
+    ListLoadFn,
     ListSlotProps,
 } from '@vue-layout/list-controls';
 import type {
@@ -36,8 +35,10 @@ import type { EntityListSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
-export type ListQuery<T> = {
-    [Parameter.PAGINATION]?: PaginationBuildInput,
+export type ListPagination = PaginationBuildInput;
+export type ListMeta<T> = {
+    total?: number,
+    [Parameter.PAGINATION]?: ListPagination,
     [Parameter.FILTERS]?: FiltersBuildInput<T extends ObjectLiteral ? T : never>,
     [Parameter.SORT]?: SortBuildInput<T extends ObjectLiteral ? T : never>,
     [Parameter.FIELDS]?: FieldsBuildInput<T extends ObjectLiteral ? T : never>,
@@ -79,25 +80,25 @@ export type ListProps<T> = {
 
 export type List<T> = {
     render() : VNodeChild;
-    load: ListLoadFn<ListQuery<T>>,
+    load: ListLoadFn<ListMeta<T>>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
     setDefaults(defaults: ListRenderOptions<T>) : void,
     data: Ref<T[]>,
     busy: Ref<boolean>,
-    meta: Ref<ListQuery<T>>,
+    meta: Ref<ListMeta<T>>,
     total: Ref<number>,
 };
 
 export type ListSlotsType<T> = {
-    [EntityListSlotName.BODY]: ListBodySlotProps<T, ListQuery<T>>,
-    [EntityListSlotName.DEFAULT]: ListSlotProps<T, ListQuery<T>>,
+    [EntityListSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
+    [EntityListSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
     [EntityListSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
     [EntityListSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>, // todo: add generic
     [EntityListSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>, // todo: add generic
-    [EntityListSlotName.HEADER]: ListHeaderSlotProps<T, ListQuery<T>>,
-    [EntityListSlotName.FOOTER]: ListFooterSlotProps<T, ListQuery<T>>,
+    [EntityListSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
+    [EntityListSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
     [EntityListSlotName.NO_MORE]: undefined,
     [EntityListSlotName.LOADING]: undefined
 };
@@ -119,6 +120,6 @@ export type ListCreateContext<
     loadAll?: boolean,
     query?: BuildInput<Entity<T>> | (() => BuildInput<Entity<T>>),
     queryFilters?: ((q: string) => FiltersBuildInput<Entity<T>>),
-    onCreated?: (entity: T, meta: ListQuery<T>) => void | Promise<void>,
+    onCreated?: (entity: T, meta: ListMeta<T>) => void | Promise<void>,
     socket?: boolean | Omit<EntitySocketContext<A, T>, 'type'>
 };
