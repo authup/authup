@@ -9,25 +9,25 @@ import type { App } from 'vue';
 import { inject, provide } from 'vue';
 import type { SocketClient } from './module';
 
-export const SocketManagerSymbol = Symbol.for('AuthupSocketManager');
+export const SocketClientSymbol = Symbol.for('AuthupSocketClient');
 
-export function provideSocketManager(manager: SocketClient, instance?: App) {
+export function provideSocketClient(manager: SocketClient, instance?: App) {
     if (instance) {
-        instance.provide(SocketManagerSymbol, manager);
+        instance.provide(SocketClientSymbol, manager);
         return;
     }
-    provide(SocketManagerSymbol, manager);
+    provide(SocketClientSymbol, manager);
 }
 
-export function hasSocketManager() {
-    const manager = inject(SocketManagerSymbol);
+export function hasSocketClient() {
+    const manager = inject(SocketClientSymbol);
     return !!manager;
 }
 
-export function injectSocketManager() : SocketClient {
-    const manager = inject(SocketManagerSymbol);
+export function injectSocketClient() : SocketClient {
+    const manager = inject(SocketClientSymbol);
     if (!manager) {
-        throw new Error('The Socket Manager is not provided.');
+        throw new Error('The Socket Client is not provided.');
     }
 
     return manager as SocketClient;

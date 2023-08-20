@@ -2,7 +2,7 @@ import { applyPluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './type';
-import { provideAPIClient, provideSocketManager, provideStore } from './core';
+import { provideAPIClient, provideSocketClient, provideStore } from './core';
 
 export function install(instance: App, options?: Options) : void {
     options = options || {};
@@ -12,7 +12,7 @@ export function install(instance: App, options?: Options) : void {
     }
 
     if (options.socketClient) {
-        provideSocketManager(options.socketClient, instance);
+        provideSocketClient(options.socketClient, instance);
     }
 
     if (options.store) {

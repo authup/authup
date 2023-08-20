@@ -25,7 +25,7 @@ import {
 } from 'vue';
 import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
-import { hasSocketManager, injectSocketManager } from '../socket-client';
+import { hasSocketClient, injectSocketClient } from '../socket-client';
 
 type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 
@@ -35,7 +35,7 @@ export function createEntitySocket<
 >(
     ctx: EntitySocketContext<A, T>,
 ) : EntitySocket {
-    if (!hasSocketManager()) {
+    if (!hasSocketClient()) {
         return {
             mount() {
 
@@ -121,7 +121,7 @@ export function createEntitySocket<
         }
     };
 
-    const socketManager = injectSocketManager();
+    const socketManager = injectSocketClient();
     const useSocket = () : Socket => socketManager.forRealm(realmId.value);
     let mounted = false;
     const mount = () => {
