@@ -35,10 +35,9 @@ import type { EntityListSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
-export type ListPagination = PaginationBuildInput;
 export type ListMeta<T> = {
     total?: number,
-    [Parameter.PAGINATION]?: ListPagination,
+    [Parameter.PAGINATION]?: PaginationBuildInput,
     [Parameter.FILTERS]?: FiltersBuildInput<T extends ObjectLiteral ? T : never>,
     [Parameter.SORT]?: SortBuildInput<T extends ObjectLiteral ? T : never>,
     [Parameter.FIELDS]?: FieldsBuildInput<T extends ObjectLiteral ? T : never>,

@@ -29,7 +29,6 @@ import type {
     List,
     ListCreateContext,
     ListMeta,
-    ListPagination,
     ListRenderOptions,
 } from './type';
 import {
@@ -62,19 +61,6 @@ export function createEntityList<
             limit: 10,
         },
     }) as Ref<ListMeta<T>>;
-
-    const setMetaPaginationProperty = <P extends keyof ListPagination>(
-        prop: P,
-        value: ListPagination[P],
-    ) => {
-        if (meta.value.pagination) {
-            meta.value.pagination[prop] = value;
-        } else {
-            meta.value.pagination = {
-                [prop]: value,
-            };
-        }
-    };
 
     const realmId = computed<string | undefined>(
         () => {
@@ -162,10 +148,12 @@ export function createEntityList<
             }
 
             total.value = response.meta.total;
-            meta.value.total = response.meta.total;
 
-            setMetaPaginationProperty('limit', response.meta.limit);
-            setMetaPaginationProperty('offset', response.meta.offset);
+            meta.value.total = response.meta.total;
+            meta.value.pagination = {
+                limit: response.meta.limit,
+                offset: response.meta.offset,
+            };
         } finally {
             busy.value = false;
         }
