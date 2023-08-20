@@ -17,7 +17,7 @@ import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef,
-    ref, unref, watch,
+    ref, unref,
 } from 'vue';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../utils';
@@ -82,10 +82,6 @@ export function createEntityList<
     if (hasOwnProperty(client, context.type)) {
         domainAPI = client[context.type] as any;
     }
-
-    watch(total, (value) => {
-        meta.value.total = value;
-    });
 
     let query : BuildInput<Entity<T>> | undefined;
 
