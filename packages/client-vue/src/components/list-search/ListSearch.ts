@@ -29,6 +29,9 @@ export const ListSearch = defineComponent({
         load: {
             type: Function as PropType<ListLoadFn<ListMeta<any>>>,
         },
+        meta: {
+            type: Object as PropType<ListMeta<any>>,
+        },
     },
     slots: Object as SlotsType<{
         default: ListSearchSlotProps<any>
@@ -46,6 +49,7 @@ export const ListSearch = defineComponent({
             iconPosition: props.iconPosition,
             busy: props.busy,
             load: props.load,
+            meta: props.meta,
         });
     },
 });

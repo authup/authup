@@ -10,14 +10,14 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core';
 import type { ListSlotsType } from '../../core';
-import { createEntityList, defineListEvents, defineListProps } from '../../core';
+import { createList, defineListEvents, defineListProps } from '../../core';
 
 export const ScopeList = defineComponent({
     props: defineListProps<Scope>(),
     slots: Object as SlotsType<ListSlotsType<Scope>>,
     emits: defineListEvents<Scope>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createEntityList({
+        const { render, setDefaults } = createList({
             type: DomainType.SCOPE,
             props,
             setup: ctx,

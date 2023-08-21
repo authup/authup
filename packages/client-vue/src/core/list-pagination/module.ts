@@ -22,6 +22,6 @@ export function buildListPagination<T>(
         total: ctx.meta?.total ?? ctx.total ?? 0,
         limit: ctx.meta?.pagination?.limit ?? 0,
         offset: ctx.meta?.pagination?.offset ?? 0,
-        busy: ctx.busy,
+        busy: ctx.meta?.busy ?? ctx.busy,
     });
 }

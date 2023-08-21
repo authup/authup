@@ -16,6 +16,7 @@ export type ListSearchOptionsInput<T> = {
     iconClass?: string,
     load?: ListLoadFn<ListMeta<T>>,
     busy?: boolean,
+    meta?: ListMeta<T>
 };
 
 export type ListSearchSlotProps<T> = Omit<ListSearchOptionsInput<T>, 'slots'>;

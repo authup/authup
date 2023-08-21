@@ -37,6 +37,7 @@ type Entity<T> = T extends Record<string, any> ? T : never;
 
 export type ListMeta<T> = {
     total?: number,
+    busy?: boolean,
     [Parameter.PAGINATION]?: PaginationBuildInput,
     [Parameter.FILTERS]?: FiltersBuildInput<T extends ObjectLiteral ? T : never>,
     [Parameter.SORT]?: SortBuildInput<T extends ObjectLiteral ? T : never>,

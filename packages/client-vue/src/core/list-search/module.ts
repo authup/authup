@@ -70,7 +70,7 @@ export function buildListSearch<T>(
     }
 
     const handle = debounce((text: string) => {
-        if (!ctx.load) {
+        if (!ctx.load || ctx.meta?.busy || ctx.busy) {
             return Promise.resolve();
         }
 

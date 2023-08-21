@@ -47,7 +47,7 @@ const merger = createMerger({
     priority: 'left',
 });
 
-export function createEntityList<
+export function createList<
     A extends DomainTypeInfer<DomainEntity<any>>,
     T = DomainEntity<A>,
 >(
@@ -89,6 +89,7 @@ export function createEntityList<
         if (!domainAPI || busy.value) return;
 
         busy.value = true;
+        meta.value.busy = true;
 
         try {
             let filters : FiltersBuildInput<Entity<T>> | undefined;
@@ -152,6 +153,7 @@ export function createEntityList<
             };
         } finally {
             busy.value = false;
+            meta.value.busy = false;
         }
 
         if (

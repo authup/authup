@@ -11,7 +11,7 @@ import { defineComponent, h } from 'vue';
 import type { ClientScope } from '@authup/core';
 import type { ListSlotsType } from '../../core';
 import {
-    createEntityList, defineListEvents, defineListProps,
+    createList, defineListEvents, defineListProps,
 } from '../../core';
 
 export const ClientScopeList = defineComponent({
@@ -22,7 +22,7 @@ export const ClientScopeList = defineComponent({
         const {
             render,
             setDefaults,
-        } = createEntityList({
+        } = createList({
             type: `${DomainType.CLIENT_SCOPE}`,
             props,
             setup: ctx,
