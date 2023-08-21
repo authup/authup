@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.40.3](https://github.com/authup/authup/compare/v0.40.2...v0.40.3) (2023-08-21)
+
+
+### Bug Fixes
+
+* renamed socket-manager utility functions ([cce9584](https://github.com/authup/authup/commit/cce95848120cfa7b35d7829c9cda69c1157d48d5))
+* set busy as list-meta property ([69af5f1](https://github.com/authup/authup/commit/69af5f14bc5a8a931f7c7fab9c5a8e235d0e9602))
+
+
+
+
+
 ## [0.40.2](https://github.com/authup/authup/compare/v0.40.1...v0.40.2) (2023-08-20)
 
 
