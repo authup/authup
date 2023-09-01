@@ -39,7 +39,7 @@
         "@vue-layout/preset-font-awesome": "^3.0.0",
         "@vue-layout/timeago": "^3.0.0",
         "@vuelidate/core": "^2.0.3",
-        "@vuelidate/validators": "^2.0.3",
+        "@vuelidate/validators": "^2.0.4",
         "bootstrap": "^5.3.1",
         "bootstrap-vue-next": "^0.11.0",
         "browser-storage-adapter": "^1.1.2",
