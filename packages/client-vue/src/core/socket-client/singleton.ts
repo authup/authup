@@ -6,12 +6,30 @@
  */
 
 import type { App } from 'vue';
-import { hasInjectionContext, inject } from 'vue';
+import { hasInjectionContext, inject, provide } from 'vue';
 import type { SocketClient } from './module';
 
 export const SocketClientSymbol = Symbol.for('AuthupSocketClient');
 
-export function provideSocketClient(app: App, manager: SocketClient) {
+export function isSocketClientInjected() {
+    if (!hasInjectionContext()) {
+        return false;
+    }
+
+    const instance = inject(SocketClientSymbol);
+    return !!instance;
+}
+
+export function provideSocketClient(manager: SocketClient, app?: App) {
+    if (typeof app === 'undefined') {
+        if (isSocketClientInjected()) {
+            return;
+        }
+
+        provide(SocketClientSymbol, manager);
+        return;
+    }
+
     if (
         app._context &&
         app._context.provides &&
@@ -21,15 +39,6 @@ export function provideSocketClient(app: App, manager: SocketClient) {
     }
 
     app.provide(SocketClientSymbol, manager);
-}
-
-export function hasSocketClient() {
-    if (!hasInjectionContext()) {
-        return false;
-    }
-
-    const manager = inject(SocketClientSymbol);
-    return !!manager;
 }
 
 export function injectSocketClient() : SocketClient {

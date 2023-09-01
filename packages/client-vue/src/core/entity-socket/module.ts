@@ -25,7 +25,7 @@ import {
 } from 'vue';
 import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
-import { hasSocketClient, injectSocketClient } from '../socket-client';
+import { injectSocketClient, isSocketClientInjected } from '../socket-client';
 
 type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 
@@ -35,7 +35,7 @@ export function createEntitySocket<
 >(
     ctx: EntitySocketContext<A, T>,
 ) : EntitySocket {
-    if (!hasSocketClient()) {
+    if (!isSocketClientInjected()) {
         return {
             mount() {
 

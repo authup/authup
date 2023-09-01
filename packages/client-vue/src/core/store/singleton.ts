@@ -12,7 +12,7 @@ import type {
     _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { App } from 'vue';
-import { inject } from 'vue';
+import { hasInjectionContext, inject, provide } from 'vue';
 import type { createStore } from './module';
 
 type StoreData = ReturnType<typeof createStore>;
@@ -24,6 +24,15 @@ _ExtractActionsFromSetupStore<StoreData>
 >;
 
 export const StoreSymbol = Symbol.for('AuthupStore');
+
+export function isStoreInjected() {
+    if (!hasInjectionContext()) {
+        return false;
+    }
+
+    const instance = inject(StoreSymbol);
+    return !!instance;
+}
 export function injectStore() : Store {
     const instance = inject(StoreSymbol);
     if (!instance) {
@@ -33,7 +42,15 @@ export function injectStore() : Store {
     return instance as Store;
 }
 
-export function provideStore(app: App, store: Store) {
+export function provideStore(store: Store, app?: App) {
+    if (typeof app === 'undefined') {
+        if (isStoreInjected()) {
+            return;
+        }
+
+        provide(StoreSymbol, store);
+        return;
+    }
     if (
         app._context &&
         app._context.provides &&

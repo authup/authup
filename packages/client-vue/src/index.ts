@@ -8,15 +8,15 @@ export function install(app: App, options?: Options) : void {
     options = options || {};
 
     if (options.apiClient) {
-        provideAPIClient(app, options.apiClient);
+        provideAPIClient(options.apiClient, app);
     }
 
     if (options.socketClient) {
-        provideSocketClient(app, options.socketClient);
+        provideSocketClient(options.socketClient, app);
     }
 
     if (options.store) {
-        provideStore(app, options.store);
+        provideStore(options.store, app);
     }
 
     applyPluginBaseOptions(options);

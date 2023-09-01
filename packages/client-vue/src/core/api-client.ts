@@ -7,11 +7,29 @@
 
 import type { APIClient } from '@authup/core';
 import type { App } from 'vue';
-import { inject } from 'vue';
+import { hasInjectionContext, inject, provide } from 'vue';
 
 export const APIClientSymbol = Symbol.for('AuthupAPIClient');
 
-export function provideAPIClient(app: App, client: APIClient) {
+export function isAPIClientInjected() {
+    if (!hasInjectionContext()) {
+        return false;
+    }
+
+    const instance = inject(APIClientSymbol);
+    return !!instance;
+}
+
+export function provideAPIClient(client: APIClient, app?: App) {
+    if (typeof app === 'undefined') {
+        if (isAPIClientInjected()) {
+            return;
+        }
+
+        provide(APIClientSymbol, client);
+        return;
+    }
+
     if (
         app._context &&
         app._context.provides &&
