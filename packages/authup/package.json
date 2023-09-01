@@ -41,7 +41,7 @@
         "continu": "^1.3.2",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.4.0",
-        "zod": "^3.22.1"
+        "zod": "^3.22.2"
     },
     "publishConfig": {
         "access": "public"
