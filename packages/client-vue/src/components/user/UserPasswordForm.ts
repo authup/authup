@@ -14,7 +14,7 @@ import {
 } from 'vue';
 import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
 import { injectAPIClient } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../translator';
+import { useTranslator, useValidationTranslator } from '../../core/translator';
 
 export const UserPasswordForm = defineComponent({
     props: {

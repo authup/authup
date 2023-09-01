@@ -6,20 +6,27 @@
  */
 
 import type { ValidationTranslator } from '@vue-layout/form-controls';
-import type { Ref } from 'vue';
+import type { App, Ref } from 'vue';
 import {
     inject, isRef, provide, ref,
 } from 'vue';
 import { useTranslator } from './singleton';
 
-const translatorLocaleSymbol = Symbol.for('TranslatorLocale');
+const TranslatorLocaleSymbol = Symbol.for('TranslatorLocale');
 
-export function setTranslatorLocale(locale: string | Ref<string>) {
-    provide(translatorLocaleSymbol, isRef(locale) ? locale : ref(locale));
+export function provideTranslatorLocale(locale: string | Ref<string>, app: App) {
+    const value = isRef(locale) ? locale : ref(locale);
+
+    if (typeof app === 'undefined') {
+        provide(TranslatorLocaleSymbol, value);
+        return;
+    }
+
+    app.provide(TranslatorLocaleSymbol, value);
 }
 
-export function useTranslatorLocale() : Ref<string> {
-    const locale = inject<string | Ref<string>>(translatorLocaleSymbol);
+export function injectTranslatorLocale() : Ref<string> {
+    const locale = inject<string | Ref<string>>(TranslatorLocaleSymbol);
     if (!locale) {
         return ref('en');
     }
@@ -29,7 +36,7 @@ export function useTranslatorLocale() : Ref<string> {
 
 export function useValidationTranslator(locale?: string) : ValidationTranslator {
     if (!locale) {
-        const refLocale = useTranslatorLocale();
+        const refLocale = injectTranslatorLocale();
 
         locale = refLocale.value;
     }

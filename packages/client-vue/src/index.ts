@@ -2,7 +2,9 @@ import { applyPluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './type';
-import { provideAPIClient, provideSocketClient, provideStore } from './core';
+import {
+    provideAPIClient, provideSocketClient, provideStore, provideTranslatorLocale,
+} from './core';
 
 export function install(app: App, options?: Options) : void {
     options = options || {};
@@ -18,6 +20,9 @@ export function install(app: App, options?: Options) : void {
     if (options.store) {
         provideStore(options.store, app);
     }
+
+    const translatorLocale = options.translatorLocale || 'en';
+    provideTranslatorLocale(translatorLocale, app);
 
     applyPluginBaseOptions(options);
 
@@ -47,4 +52,3 @@ export default {
 
 export * from './components';
 export * from './core';
-export * from './translator';

@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { useValidationTranslator } from '../../translator/utils';
+import { useValidationTranslator } from '../../core/translator/utils';
 
 export const ClientRedirectUriListItem = defineComponent({
     props: {

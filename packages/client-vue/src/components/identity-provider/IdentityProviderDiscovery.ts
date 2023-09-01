@@ -15,7 +15,7 @@ import type { VNodeChild } from 'vue';
 import {
     defineComponent, h, reactive, ref,
 } from 'vue';
-import { useValidationTranslator } from '../../translator';
+import { useValidationTranslator } from '../../core/translator';
 
 export const IdentityProviderDiscovery = defineComponent({
     props: {

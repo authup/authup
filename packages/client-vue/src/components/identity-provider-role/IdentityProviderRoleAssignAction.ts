@@ -19,7 +19,7 @@ import {
     defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
-import { useValidationTranslator } from '../../translator';
+import { useValidationTranslator } from '../../core/translator';
 
 export const IdentityProviderRoleAssignAction = defineComponent({
     props: {

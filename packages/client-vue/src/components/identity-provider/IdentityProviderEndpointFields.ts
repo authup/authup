@@ -17,7 +17,7 @@ import {
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { extendObjectProperties } from '../../core';
-import { useValidationTranslator } from '../../translator';
+import { useValidationTranslator } from '../../core/translator';
 import { IdentityProviderDiscovery } from './IdentityProviderDiscovery';
 
 export const IdentityProviderEndpointFields = defineComponent({

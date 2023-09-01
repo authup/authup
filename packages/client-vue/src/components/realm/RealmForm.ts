@@ -26,7 +26,7 @@ import {
     createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../translator';
+import { useTranslator, useValidationTranslator } from '../../core/translator';
 
 export const RealmForm = defineComponent({
     props: {

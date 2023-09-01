@@ -24,7 +24,7 @@ import {
     initFormAttributesFromSource,
     renderEntityAssignAction,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../translator';
+import { useTranslator, useValidationTranslator } from '../../core/translator';
 import { RealmList } from '../realm';
 
 export const UserForm = defineComponent({

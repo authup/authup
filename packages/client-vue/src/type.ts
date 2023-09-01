@@ -7,6 +7,7 @@
 
 import type { PluginBaseOptions } from '@vue-layout/list-controls/core';
 import type { APIClient } from '@authup/core';
+import type { MaybeRef } from 'vue';
 import type { SocketClient, Store } from './core';
 
 export type Options = PluginBaseOptions & {
@@ -14,4 +15,8 @@ export type Options = PluginBaseOptions & {
     apiClient?: APIClient,
     socketClient?: SocketClient,
     store?: Store,
+    /**
+     * Default: en
+     */
+    translatorLocale?: MaybeRef<string>
 };

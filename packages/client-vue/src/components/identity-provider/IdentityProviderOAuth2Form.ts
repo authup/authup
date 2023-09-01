@@ -33,7 +33,7 @@ import {
     extractVuelidateResultsFromChild,
     injectAPIClient,
 } from '../../core';
-import { useTranslator } from '../../translator';
+import { useTranslator } from '../../core/translator';
 import { IdentityProviderBasicFields } from './IdentityProviderBasicFields';
 import { IdentityProviderClientFields } from './IdentityProviderClientFields';
 import { IdentityProviderEndpointFields } from './IdentityProviderEndpointFields';

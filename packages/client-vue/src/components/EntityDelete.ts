@@ -20,7 +20,7 @@ import {
 import type { DomainType } from '@authup/core';
 import { useDomainAPI } from '@authup/core';
 import { injectAPIClient } from '../core';
-import { useTranslator } from '../translator';
+import { useTranslator } from '../core/translator';
 
 enum ElementType {
     BUTTON = 'button',
