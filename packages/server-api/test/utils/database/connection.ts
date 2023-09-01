@@ -18,9 +18,13 @@ import {
 import type { DatabaseRootSeederResult } from '../../../src';
 
 export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
-    const options = extendDataSourceOptions({
+    const options = await extendDataSourceOptions({
         type: 'better-sqlite3',
         database: ':memory:',
+    });
+
+    Object.assign(options, {
+        migrations: [],
     });
 
     await createDatabase({ options });

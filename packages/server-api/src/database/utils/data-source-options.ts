@@ -20,26 +20,20 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
         throw new Error('At the moment only the database types mysql, better-sqlite3 and postgres are supported.');
     }
 
-    const migrations : string[] = [];
-    if (process.env.NODE_ENV !== 'test') {
-        const migration = await adjustFilePath(
-            `src/database/migrations/${dataSourceOptions.type}/*.{ts,js}`,
-            config.get('rootPath'),
-        );
-
-        migrations.push(migration);
-    }
-
-    Object.assign(dataSourceOptions, {
-        migrations,
-    } as DataSourceOptions);
-
     return extendDataSourceOptions(dataSourceOptions);
 }
 
-export function extendDataSourceOptions(options: DataSourceOptions) {
+export async function extendDataSourceOptions(options: DataSourceOptions) {
+    const migrations : string[] = [];
+    const migration = await adjustFilePath(
+        `src/database/migrations/${options.type}/*.{ts,js}`,
+    );
+
+    migrations.push(migration);
+
     Object.assign(options, {
         logging: ['error'],
+        migrations,
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);
 

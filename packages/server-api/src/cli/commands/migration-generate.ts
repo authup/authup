@@ -51,12 +51,6 @@ export class MigrationGenerateCommand implements CommandModule {
             const dataSourceOptions = await extendDataSourceOptions(connections[i]);
             const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
-            Object.assign(dataSourceOptions, {
-                migrations: [
-                    `src/database/migrations/${dataSourceOptions.type}/*.{ts,js}`,
-                ],
-            } satisfies Partial<DataSourceOptions>);
-
             await dropDatabase({ options: dataSourceOptions });
             await createDatabase({ options: dataSourceOptions, synchronize: false });
 
