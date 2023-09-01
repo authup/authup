@@ -7,17 +7,20 @@
 
 import type { APIClient } from '@authup/core';
 import type { App } from 'vue';
-import { inject, provide } from 'vue';
+import { inject } from 'vue';
 
 export const APIClientSymbol = Symbol.for('AuthupAPIClient');
 
-export function provideAPIClient(client: APIClient, instance?: App) {
-    if (instance) {
-        instance.provide(APIClientSymbol, client);
+export function provideAPIClient(app: App, client: APIClient) {
+    if (
+        app._context &&
+        app._context.provides &&
+        app._context.provides[APIClientSymbol]
+    ) {
         return;
     }
 
-    provide(APIClientSymbol, client);
+    app.provide(APIClientSymbol, client);
 }
 
 export function injectAPIClient() {

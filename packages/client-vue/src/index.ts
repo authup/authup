@@ -4,19 +4,19 @@ import * as components from './components';
 import type { Options } from './type';
 import { provideAPIClient, provideSocketClient, provideStore } from './core';
 
-export function install(instance: App, options?: Options) : void {
+export function install(app: App, options?: Options) : void {
     options = options || {};
 
     if (options.apiClient) {
-        provideAPIClient(options.apiClient, instance);
+        provideAPIClient(app, options.apiClient);
     }
 
     if (options.socketClient) {
-        provideSocketClient(options.socketClient, instance);
+        provideSocketClient(app, options.socketClient);
     }
 
     if (options.store) {
-        provideStore(options.store, instance);
+        provideStore(app, options.store);
     }
 
     applyPluginBaseOptions(options);
@@ -35,7 +35,7 @@ export function install(instance: App, options?: Options) : void {
                 ) {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    instance.component(componentName, component as Component);
+                    app.component(componentName, component as Component);
                 }
             });
     }

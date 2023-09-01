@@ -12,7 +12,7 @@ import type {
     _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { App } from 'vue';
-import { inject, provide } from 'vue';
+import { inject } from 'vue';
 import type { createStore } from './module';
 
 type StoreData = ReturnType<typeof createStore>;
@@ -33,11 +33,14 @@ export function injectStore() : Store {
     return instance as Store;
 }
 
-export function provideStore(store: Store, instance?: App) {
-    if (instance) {
-        instance.provide(StoreSymbol, store);
+export function provideStore(app: App, store: Store) {
+    if (
+        app._context &&
+        app._context.provides &&
+        app._context.provides[StoreSymbol]
+    ) {
         return;
     }
 
-    provide(StoreSymbol, store);
+    app.provide(StoreSymbol, store);
 }
