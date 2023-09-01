@@ -23,7 +23,7 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
     const migrations : string[] = [];
     if (process.env.NODE_ENV !== 'test') {
         const migration = await adjustFilePath(
-            `src/migrations/${dataSourceOptions.type}/*.{ts,js}`,
+            `src/database/migrations/${dataSourceOptions.type}/*.{ts,js}`,
             config.get('rootPath'),
         );
 
