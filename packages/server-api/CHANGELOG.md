@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.41.0](https://github.com/authup/authup/compare/v0.40.3...v0.41.0) (2023-09-01)
+
+
+### Bug Fixes
+
+* allways set migrations folder for datasource options ([e49199c](https://github.com/authup/authup/commit/e49199c9f996bfb8e72a73809837d2e8eb23cf17))
+* data-source options migration path ([582f8c6](https://github.com/authup/authup/commit/582f8c62e379b7ce0097ab4a857722c012746c85))
+* **deps:** bump @ebec/http from 1.1.0 to 1.1.1 ([#1343](https://github.com/authup/authup/issues/1343)) ([2e92c03](https://github.com/authup/authup/commit/2e92c03836b087e3a4499951f5e6f1032f5bb113))
+* **deps:** bump better-sqlite3 from 8.5.1 to 8.5.2 ([#1352](https://github.com/authup/authup/issues/1352)) ([1216567](https://github.com/authup/authup/commit/121656768c349141466e78066048bc55d10124cc))
+* **deps:** bump hapic to v2.3.0 ([23d59bd](https://github.com/authup/authup/commit/23d59bd02f09ffbdfbae7534914b7004894b1b52))
+* **deps:** bump zod from 3.22.1 to 3.22.2 ([#1346](https://github.com/authup/authup/issues/1346)) ([584e804](https://github.com/authup/authup/commit/584e804fb2f6ac4288297ccf2814abff82dce328))
+
+
+
+
+
 ## [0.40.2](https://github.com/authup/authup/compare/v0.40.1...v0.40.2) (2023-08-20)
 
 

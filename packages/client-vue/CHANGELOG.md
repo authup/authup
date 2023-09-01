@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.41.0](https://github.com/authup/authup/compare/v0.40.3...v0.41.0) (2023-09-01)
+
+
+### Bug Fixes
+
+* keep original argument order of provide pattern ([13b6f05](https://github.com/authup/authup/commit/13b6f05e18bb87d2ef15424e640321002c308a99))
+* move translator sub module ([93f0b37](https://github.com/authup/authup/commit/93f0b37519b7a9508334a0abe7805e4b61081865))
+
+
+### Features
+
+* ensure singleton instance is not injected yet ([31d0e31](https://github.com/authup/authup/commit/31d0e3115d0feedc3a0cc4f097835cd52b2f44a8))
+
+
+
+
+
 ## [0.40.3](https://github.com/authup/authup/compare/v0.40.2...v0.40.3) (2023-08-21)
 
 
