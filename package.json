@@ -48,7 +48,7 @@
     "lint-staged": "^14.0.1",
     "nx": "^16.7.4",
     "rimraf": "^5.0.1",
-    "rollup": "^3.28.0",
+    "rollup": "^3.28.1",
     "typescript": "5.2.2"
   },
   "scripts": {
