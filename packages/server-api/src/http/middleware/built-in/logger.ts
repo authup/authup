@@ -10,7 +10,7 @@ import morgan from 'morgan';
 import type {
     Next, Request, Response, Router,
 } from 'routup';
-import { getRequestIP, useRequestPath, withLeadingSlash } from 'routup';
+import { getRequestIP, useRequestPath } from 'routup';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {
@@ -56,7 +56,10 @@ export function registerLoggerMiddleware(router: Router) {
                     },
                 },
                 skip(req: Request, res: Response): boolean {
-                    const path = withLeadingSlash(useRequestPath(req));
+                    let path = useRequestPath(req);
+                    if (!path.startsWith('/')) {
+                        path = `/${path}`;
+                    }
                     return path === '/';
                 },
             },

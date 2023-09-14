@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createNodeDispatcher } from 'routup';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
@@ -18,5 +19,5 @@ export function useSuperTest() : SuperTest<Test> {
 
     const router = createRouter();
 
-    return supertest(router.createListener());
+    return supertest(createNodeDispatcher(router));
 }

@@ -6,8 +6,9 @@
  */
 
 import http from 'node:http';
+import { createNodeDispatcher } from 'routup';
 import type { HttpServerContext, HttpServerInterface } from './type';
 
 export function createHttpServer({ router } : HttpServerContext) : HttpServerInterface {
-    return new http.Server(router.createListener());
+    return new http.Server(createNodeDispatcher(router));
 }

@@ -8,13 +8,16 @@
 import type { OptionsInput } from '@routup/prometheus';
 import { createHandler, registerMetrics } from '@routup/prometheus';
 import type { Router } from 'routup';
-import { useRequestPath, withLeadingSlash } from 'routup';
+import { useRequestPath } from 'routup';
 import { merge } from 'smob';
 
 export function registerPrometheusMiddleware(router: Router, input?: OptionsInput) {
     let options : OptionsInput = {
         skip(req) {
-            const path = withLeadingSlash(useRequestPath(req));
+            let path = useRequestPath(req);
+            if (!path.startsWith('/')) {
+                path = `/${path}`;
+            }
 
             return path.startsWith('/authorize') ||
                 path.startsWith('/token') ||
