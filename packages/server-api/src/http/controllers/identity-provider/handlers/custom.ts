@@ -11,8 +11,8 @@ import {
     CookieName,
     IdentityProviderProtocol,
 } from '@authup/core';
-import type { SerializeOptions } from '@routup/cookie';
-import { setResponseCookie } from '@routup/cookie';
+import type { SerializeOptions } from '@routup/basic/cookie';
+import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';

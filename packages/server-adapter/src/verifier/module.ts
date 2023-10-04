@@ -170,7 +170,7 @@ export class TokenVerifier {
             /* istanbul ignore next */
             throw new TokenError({
                 message: e.message || 'An unexpected error occurred.',
-                previous: e as Error,
+                cause: e as Error,
             });
         }
 

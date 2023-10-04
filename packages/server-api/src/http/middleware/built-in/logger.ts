@@ -10,11 +10,11 @@ import morgan from 'morgan';
 import type {
     Next, Request, Response, Router,
 } from 'routup';
-import { getRequestIP, useRequestPath } from 'routup';
+import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {
-    router.use((
+    router.use(coreHandler((
         request: Request,
         response: Response,
         next: Next,
@@ -64,5 +64,5 @@ export function registerLoggerMiddleware(router: Router) {
                 },
             },
         )(request, response, next);
-    });
+    }));
 }

@@ -34,8 +34,7 @@ export function createErrorForJWTError(e: unknown) : TokenError {
     }
 
     return new TokenError({
-        previous: e as Error,
-        decorateMessage: true,
+        cause: e as Error,
         logMessage: true,
         message: 'The JWT error could not be determined.',
     });

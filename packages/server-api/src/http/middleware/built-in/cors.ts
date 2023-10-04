@@ -7,6 +7,7 @@
 
 import type { CorsOptions } from 'cors';
 import cors from 'cors';
+import { coreHandler } from 'routup';
 import type { Router } from 'routup';
 import { merge } from 'smob';
 
@@ -18,5 +19,5 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
         credentials: true,
     });
 
-    router.use(cors(options));
+    router.use(coreHandler((req, res, next) => cors(options)(req, res, next)));
 }

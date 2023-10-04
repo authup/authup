@@ -5,10 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ParseOptions } from '@routup/query';
-import { createHandler } from '@routup/query';
+import type { Options } from '@routup/basic';
+import {
+    basic,
+} from '@routup/basic';
 import type { Router } from 'routup';
 
-export function registerQueryMiddleware(router: Router, input?: ParseOptions) {
-    router.use(createHandler(input || {}));
+export function registerBodyMiddleware(router: Router, input?: Options) {
+    const options = input || {};
+
+    router.use(basic());
 }

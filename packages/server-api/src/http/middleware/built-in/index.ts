@@ -6,13 +6,11 @@
  */
 
 export * from './auth';
-export * from './body';
-export * from './cookie';
+export * from './basic';
 export * from './cors';
 export * from './error';
 export * from './logger';
 export * from './loggedin';
 export * from './prometheus';
-export * from './query';
 export * from './rate-limit';
 export * from './swagger';

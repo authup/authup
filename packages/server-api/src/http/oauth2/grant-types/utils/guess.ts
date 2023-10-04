@@ -6,8 +6,8 @@
  */
 
 import { OAuth2TokenGrant } from '@authup/core';
-import { useRequestBody } from '@routup/body';
-import { useRequestQuery } from '@routup/query';
+import { useRequestBody } from '@routup/basic/body';
+import { useRequestQuery } from '@routup/basic/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 

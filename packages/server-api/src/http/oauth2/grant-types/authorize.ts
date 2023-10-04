@@ -9,8 +9,8 @@ import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
     OAuth2SubKind, TokenError, hasOAuth2OpenIDScope,
 } from '@authup/core';
-import { useRequestBody } from '@routup/body';
-import { useRequestQuery } from '@routup/query';
+import { useRequestBody } from '@routup/basic/body';
+import { useRequestQuery } from '@routup/basic/query';
 import { useDataSource } from 'typeorm-extension';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';

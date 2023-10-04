@@ -6,10 +6,9 @@
  */
 
 import type { OptionsInput } from '@routup/prometheus';
-import { createHandler, registerMetrics } from '@routup/prometheus';
+import { prometheus } from '@routup/prometheus';
 import type { Router } from 'routup';
 import { useRequestPath } from 'routup';
-import { merge } from 'smob';
 
 export function registerPrometheusMiddleware(router: Router, input?: OptionsInput) {
     let options : OptionsInput = {
@@ -27,10 +26,11 @@ export function registerPrometheusMiddleware(router: Router, input?: OptionsInpu
     };
 
     if (input) {
-        options = merge(options, input || {});
+        options = {
+            ...options,
+            ...input,
+        };
     }
 
-    registerMetrics(router, options);
-
-    router.get('/metrics', createHandler(options.registry));
+    router.use(prometheus(options));
 }

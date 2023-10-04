@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Options } from '@ebec/http';
-import { BaseError, mergeOptions } from '@ebec/http';
+import type { Input } from '@ebec/http';
+import { BaseError } from '@ebec/http/core';
 import { ErrorCode } from '../../error';
 
 export class AbilityError extends BaseError {
-    constructor(options?: Options) {
-        super(mergeOptions({
+    constructor(...input: Input[]) {
+        super({
             code: ErrorCode.ABILITY_INVALID,
-        }, (options || {})));
+        }, ...input);
     }
 
     static buildMeta() {

@@ -6,7 +6,7 @@
  */
 
 import { isUUID } from '@authup/core';
-import { useRequestQuery } from '@routup/query';
+import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import {

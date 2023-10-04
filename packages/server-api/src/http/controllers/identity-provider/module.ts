@@ -8,8 +8,9 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
+import { coreHandler } from 'routup';
 import type {
-    Next, Request, Response, Router,
+    Router,
 } from 'routup';
 import type { IdentityProvider } from '@authup/core';
 import {
@@ -77,19 +78,25 @@ export class IdentityProviderController {
 }
 
 export function registerIdentityProviderController(router: Router) {
-    router.get(buildIdentityProviderAuthorizePath(':id'), async (req: Request, res: Response, next: Next) => {
-        try {
-            await authorizeURLIdentityProviderRouteHandler(req, res);
-        } catch (e) {
-            next(e);
-        }
-    });
+    router.get(
+        buildIdentityProviderAuthorizePath(':id'),
+        coreHandler((async (req, res, next) => {
+            try {
+                await authorizeURLIdentityProviderRouteHandler(req, res);
+            } catch (e) {
+                next(e);
+            }
+        })),
+    );
 
-    router.get(buildIdentityProviderAuthorizeCallbackPath(':id'), async (req: Request, res: Response, next: Next) => {
-        try {
-            await authorizeCallbackIdentityProviderRouteHandler(req, res);
-        } catch (e) {
-            next(e);
-        }
-    });
+    router.get(
+        buildIdentityProviderAuthorizeCallbackPath(':id'),
+        coreHandler(async (req, res, next) => {
+            try {
+                await authorizeCallbackIdentityProviderRouteHandler(req, res);
+            } catch (e) {
+                next(e);
+            }
+        }),
+    );
 }

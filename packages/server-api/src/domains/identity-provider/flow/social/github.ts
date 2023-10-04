@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useRequestQuery } from '@routup/query';
+import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { useConfig } from '../../../../config';
 import { OAuth2IdentityProviderFlow } from '../core';

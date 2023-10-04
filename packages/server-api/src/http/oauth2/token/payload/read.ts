@@ -9,7 +9,7 @@ import type { OAuth2TokenPayload } from '@authup/core';
 import { ErrorCode, TokenError } from '@authup/core';
 import type { Jwt } from '@authup/server-core';
 import { decodeToken } from '@authup/server-core';
-import { BaseError } from '@ebec/http';
+import { isHTTPError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';
@@ -54,8 +54,8 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
             try {
                 return await verifyOAuth2TokenWithKey(token, entity);
             } catch (e) {
-                if (e instanceof BaseError) {
-                    if (e.getOption('code') === ErrorCode.TOKEN_EXPIRED) {
+                if (isHTTPError(e)) {
+                    if (e.code === ErrorCode.TOKEN_EXPIRED) {
                         throw TokenError.expired((jwt.payload as OAuth2TokenPayload).kind);
                     }
                 }

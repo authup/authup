@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Options } from '@ebec/http';
-import { BadRequestError, mergeOptions } from '@ebec/http';
+import type { Input } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { ErrorCode } from '../error';
 import { OAuth2TokenKind } from './constants';
 import type { OAuth2SubKind } from './constants';
 
 export class TokenError extends BadRequestError {
-    constructor(options?: Options) {
-        super(mergeOptions((options || {}), {
+    constructor(...input: Input[]) {
+        super({
             code: ErrorCode.TOKEN_INVALID,
             message: 'The Token is invalid.',
             statusCode: 400,
-        }));
+        }, ...input);
     }
 
     // -------------------------------------------------
@@ -46,7 +46,9 @@ export class TokenError extends BadRequestError {
         return new TokenError({
             code: ErrorCode.TOKEN_INACTIVE,
             message: `The token is not active before: ${date}.`,
-            date,
+            data: {
+                date,
+            },
         });
     }
 
@@ -85,7 +87,9 @@ export class TokenError extends BadRequestError {
         return new TokenError({
             message: 'The authorization grant type is not supported by the authorization server.',
             code: ErrorCode.TOKEN_GRANT_TYPE_UNSUPPORTED,
-            hint: 'Check that all required parameters have been provided',
+            data: {
+                hint: 'Check that all required parameters have been provided',
+            },
         });
     }
 
@@ -105,7 +109,9 @@ export class TokenError extends BadRequestError {
         return new TokenError({
             message: message || 'The request is missing a required parameter, includes an unsupported parameter value, ' +
                 'repeats a parameter, or is otherwise malformed.',
-            hint: 'Check that all parameters have been provided correctly',
+            data: {
+                hint: 'Check that all parameters have been provided correctly',
+            },
         });
     }
 

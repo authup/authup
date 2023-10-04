@@ -11,7 +11,7 @@ import {
     UserError,
     extractObjectProperty,
 } from '@authup/core';
-import { useRequestBody } from '@routup/body';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';

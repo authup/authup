@@ -6,7 +6,7 @@
  */
 
 import type { ConfigInput } from '@hapic/oauth2';
-import { useRequestQuery } from '@routup/query';
+import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { OAuth2IdentityProviderFlow } from '../core';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';

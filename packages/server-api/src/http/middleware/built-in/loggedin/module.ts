@@ -18,22 +18,14 @@ export function isRequestAuthenticated(req: Request) {
         typeof useRequestEnv(req, 'clientId') !== 'undefined';
 }
 
-export function forceLoggedInMiddleware(
-    req: Request,
-    res: Response,
-    next: Next,
-) {
-    if (isRequestAuthenticated(req)) {
-        next();
-        return;
-    }
-
-    throw new UnauthorizedError();
-}
-
 export class ForceLoggedInMiddleware implements HandlerInterface {
     // eslint-disable-next-line class-methods-use-this
     public run(request: Request, response: Response, next: Next) {
-        return forceLoggedInMiddleware(request, response, next);
+        if (isRequestAuthenticated(request)) {
+            next();
+            return;
+        }
+
+        throw new UnauthorizedError();
     }
 }

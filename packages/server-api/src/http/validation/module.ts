@@ -41,7 +41,9 @@ export class RequestValidationError extends BadRequestError {
 
         super({
             message,
-            extra: errors,
+            data: {
+                errors,
+            },
         });
     }
 }

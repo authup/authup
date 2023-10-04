@@ -23,13 +23,14 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 
 ## Features
 
+- 🌐 **Integration** - Easy integration into existing systems and only use the components you need
 - 🛡️ **Identity- & Access-Management** - Manage user identities and control access to resources
-- 🏭 **Clustering** - Cluster and scale authup for high availability and performance
-- 🚀 **Fast & Reliable** - Fast and reliable system due to microservice architecture
+- 🏭 **Clustering** - Cluster and scale authup for high availability and performance with Docker/Kubernetes
+- ⚡  **Blazing Fast** - Fast and reliable system due to microservice architecture
 - ️‍️🕵️‍♀️ **Logging & Monitoring** - Logs and monitors activities and transactions to detect potential security issues
 - 👤 **Single-Sign On** - Login once to multiple applications
 - 📜 **Standard Protocols** - [OAuth2.0](https://tools.ietf.org/html/rfc6749) & [OpenID Connect](https://openid.net/connect/)
-- 👍 **Social Login** - Easy enable social login
+- 👍 **Social Login** - Easy enable social login (GitHub, Google, Facebook, ...)
 - 🤝 **Identity Brokering** - OpenID Connect
 - 🔓 **Simple claim based** and fully featured **subject and attribute based** authorization
 - 🧩 **Isomorphic** & **declarative** permission management. Serialize and share permissions between UI, API & microservices
@@ -81,6 +82,20 @@ This will lunch the following application with default settings:
 Before starting to work on a pull request, it is important to review the guidelines for
 [contributing](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md).
 These guidelines will help to ensure that contributions are made effectively and are accepted.
+
+## Comparison
+
+|                                                 | Authup | Keycloak | Authentic | Authelia |
+|:------------------------------------------------|:------:|:--------:|:---------:|:--------:|
+| Realm Resources (User, Roles, Permissions, ...) |   ✓    |    ✓     |     ✗     |    ✗     |
+| Global Resources (Roles, Permissions, ...)      |   ✓    |    ✗     |     ✓     |    ✓     |
+| Modular System                                  |   ✓    |    ✗     |     ✓     |    ✗     |
+| Client Library                                  |   ✓    |    ✓     |     ✓     |    ✗     |
+| Vue.JS Library                                  |   ✓    |    ✗     |     ✗     |    ✗     |
+| OAuth2 Protocol                                 |   ✓    |    ✓     |     ✓     |    ✓     |
+| OpenID Connect Protocol                         |   ✓    |    ✓     |     ✓     |    ✓     |
+| LDAP Protocol                                   |   ✗    |    ✗     |     ✓     |    ✓     |
+
 
 
 ## License

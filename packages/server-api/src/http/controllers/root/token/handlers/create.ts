@@ -8,10 +8,15 @@
 /* istanbul ignore next */
 import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
+    CookieName,
     OAuth2TokenGrant, TokenError,
 } from '@authup/core';
+import type { SerializeOptions } from '@routup/basic/cookie';
+import { setResponseCookie } from '@routup/basic/cookie';
+import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
+import { useConfig } from '../../../../../config';
 import type { Grant } from '../../../../oauth2';
 import {
     AuthorizeGrantType,
@@ -63,7 +68,25 @@ export async function createTokenRouteHandler(
         }
     }
 
+    const config = useConfig();
+
     const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
+
+    const cookieOptions : SerializeOptions = {
+        ...(process.env.NODE_ENV === 'production' ? {
+            domain: new URL(config.get('publicUrl')).hostname,
+        } : {}),
+    };
+
+    setResponseCookie(res, CookieName.ACCESS_TOKEN, tokenResponse.access_token, {
+        ...cookieOptions,
+        maxAge: config.get('tokenMaxAgeAccessToken') * 1000,
+    });
+
+    setResponseCookie(res, CookieName.REFRESH_TOKEN, tokenResponse.refresh_token, {
+        ...cookieOptions,
+        maxAge: config.get('tokenMaxAgeRefreshToken') * 1000,
+    });
 
     return send(res, tokenResponse);
 }

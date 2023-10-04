@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProviderPreset } from '@authup/core';
-import { useRequestBody } from '@routup/body';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import zod from 'zod';
 import { extractOAuth2IdentityProviderProtocolAttributes } from './extract';

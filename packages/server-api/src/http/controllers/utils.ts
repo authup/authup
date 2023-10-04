@@ -6,7 +6,17 @@
  */
 
 import type { Router } from 'routup';
-import { mountControllers } from '@routup/decorators';
+import { decorators } from '@routup/decorators';
+import {
+    useRequestBody,
+} from '@routup/basic/body';
+import {
+    useRequestCookie,
+    useRequestCookies,
+} from '@routup/basic/cookie';
+import {
+    useRequestQuery,
+} from '@routup/basic/query';
 import { ClientScopeController } from './client-scope';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
@@ -31,25 +41,50 @@ export function registerControllers(
 ) {
     registerIdentityProviderController(router);
 
-    mountControllers(router, [
-        RootController,
-        AuthTokenController,
-        ClientController,
-        ClientScopeController,
-        OAuth2ProviderRoleController,
-        IdentityProviderController,
-        PermissionController,
-        RobotController,
-        RobotPermissionController,
-        RobotRoleController,
-        RealmController,
-        RoleController,
-        RoleAttributeController,
-        RolePermissionController,
-        ScopeController,
-        UserController,
-        UserAttributeController,
-        UserPermissionController,
-        UserRoleController,
-    ]);
+    router.use(decorators({
+        controllers: [
+            RootController,
+            AuthTokenController,
+            ClientController,
+            ClientScopeController,
+            OAuth2ProviderRoleController,
+            IdentityProviderController,
+            PermissionController,
+            RobotController,
+            RobotPermissionController,
+            RobotRoleController,
+            RealmController,
+            RoleController,
+            RoleAttributeController,
+            RolePermissionController,
+            ScopeController,
+            UserController,
+            UserAttributeController,
+            UserPermissionController,
+            UserRoleController,
+        ],
+        parameter: {
+            body: (context, name) => {
+                if (name) {
+                    return useRequestBody(context.request, name);
+                }
+
+                return useRequestBody(context.request);
+            },
+            cookie: (context, name) => {
+                if (name) {
+                    return useRequestCookie(context.request, name);
+                }
+
+                return useRequestCookies(context.request);
+            },
+            query: (context, name) => {
+                if (name) {
+                    return useRequestQuery(context.request, name);
+                }
+
+                return useRequestQuery(context.request);
+            },
+        },
+    }));
 }

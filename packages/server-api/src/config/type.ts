@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ParseOptions as CookieOptions } from '@routup/cookie';
+import type { ParseOptions as CookieOptions } from '@routup/basic/cookie';
 import type { OptionsInput as PrometheusOptions } from '@routup/prometheus';
-import type { ParseOptions as QueryOptions } from '@routup/query';
+import type { ParseOptions as QueryOptions } from '@routup/basic/query';
 import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
-import type { Options as BodyOptions } from 'body-parser';
+import type { Options as BodyOptions } from '@routup/basic/body';
 import type { Continu } from 'continu';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
 import type { SmtpConfig } from '@authup/server-core';
-import type { DatabaseConnectionOptions } from './utils/database';
+import type { DatabaseConnectionOptions } from './utils';
 
 export type Options = {
     /**

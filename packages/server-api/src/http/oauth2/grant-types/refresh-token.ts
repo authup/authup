@@ -9,7 +9,7 @@ import type { OAuth2TokenGrantResponse } from '@authup/core';
 import {
     OAuth2TokenKind, TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
 } from '@authup/core';
-import { useRequestBody } from '@routup/body';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';

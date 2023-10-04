@@ -5,16 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Options } from '@ebec/http';
-import { BadRequestError, mergeOptions } from '@ebec/http';
+import type { Input } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import type { AuthorizationHeaderType } from 'hapic';
 import { ErrorCode } from '../constants';
 
 export class HeaderError extends BadRequestError {
-    constructor(options?: Options) {
-        super(mergeOptions({
-            code: ErrorCode.HEADER_INVALID,
-        }, options));
+    constructor(...input: Input[]) {
+        super({ code: ErrorCode.HEADER_INVALID }, ...input);
     }
 
     static unsupportedHeaderType(type: `${AuthorizationHeaderType}`) {

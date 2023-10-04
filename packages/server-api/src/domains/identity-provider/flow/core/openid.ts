@@ -8,7 +8,7 @@
 import { TokenError } from '@authup/core';
 import type { KeycloakJWTPayload } from '@authup/core';
 import { decodeToken } from '@authup/server-core';
-import { useRequestQuery } from '@routup/query';
+import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 import { OAuth2IdentityProviderFlow } from './oauth2';

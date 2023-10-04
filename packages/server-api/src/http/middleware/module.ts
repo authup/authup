@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { basic } from '@routup/basic';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { useConfig } from '../../config';
 import {
     registerAuthMiddleware,
-    registerBodyMiddleware,
-    registerCookieMiddleware,
     registerCorsMiddleware,
     registerLoggerMiddleware,
     registerPrometheusMiddleware,
-    registerQueryMiddleware,
     registerRateLimitMiddleware,
     registerSwaggerMiddleware,
 } from './built-in';
@@ -34,24 +32,11 @@ export function registerMiddlewares(router: Router) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
-    const body = config.get('middlewareBody');
-    if (isBuiltInMiddlewareEnabled(body)) {
-        registerBodyMiddleware(router, transformBoolToEmptyObject(body));
-    }
-
-    const cookie = config.get('middlewareCookie');
-    if (isBuiltInMiddlewareEnabled(cookie)) {
-        registerCookieMiddleware(router, transformBoolToEmptyObject(cookie));
-    }
+    router.use(basic());
 
     const prometheus = config.get('middlewarePrometheus');
     if (isBuiltInMiddlewareEnabled(prometheus)) {
         registerPrometheusMiddleware(router, transformBoolToEmptyObject(prometheus));
-    }
-
-    const query = config.get('middlewareQuery');
-    if (isBuiltInMiddlewareEnabled(query)) {
-        registerQueryMiddleware(router, transformBoolToEmptyObject(query));
     }
 
     const rateLimit = config.get('middlewareRateLimit');

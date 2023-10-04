@@ -6,39 +6,27 @@
  */
 
 import type {
-    Next, Request, Response, Router,
+    ErrorProxy, Next, Request, Response,
+    Router,
 } from 'routup';
-import { send } from 'routup';
-
-import {
-    extendsBaseError,
-} from '@ebec/http';
+import { errorHandler, send } from 'routup';
 import { useLogger } from '@authup/server-core';
 import { buildResponseErrorPayloadFromError } from '../../response';
 
 export function registerErrorMiddleware(router: Router) {
-    router.use((
-        error: Error,
+    router.use(errorHandler((
+        error: ErrorProxy,
         request: Request,
         response: Response,
         _next: Next,
     ) => {
-        if (extendsBaseError(error)) {
-            response.statusCode = error.getOption('statusCode') || 500;
-
-            const logMessage = error.getOption('logMessage');
-            if (logMessage) {
-                useLogger().error(`${error.message}`);
-            }
-        } else {
-            useLogger().warn('Unknown error occurred.', {
-                error,
-            });
+        if (error.logMessage) {
+            useLogger().error(`${error.message}`);
         }
 
         const data = buildResponseErrorPayloadFromError(error);
-        response.statusCode = data.statusCode || 500;
+        response.statusCode = data.statusCode;
 
-        send(response, data);
-    });
+        return send(response, data);
+    }));
 }

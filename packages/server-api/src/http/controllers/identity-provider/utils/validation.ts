@@ -120,7 +120,7 @@ export async function runOauth2ProviderValidation(
     } catch (e) {
         if (e instanceof Error) {
             throw new BadRequestError(e.message, {
-                previous: e,
+                cause: e,
             });
         }
 

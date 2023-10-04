@@ -26,7 +26,7 @@ export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
 ) : Promise<JwtPayload | Jwt | string> {
-    let output : JwtPayload | Jwt | string | undefined;
+    let promise : Promise<JwtPayload | Jwt | string | undefined>;
 
     try {
         switch (context.type) {
@@ -43,8 +43,15 @@ export async function verifyToken(
                     options.algorithms = options.algorithms || ['ES256', 'ES384', 'ES512'];
                 }
 
-                output = await verify(token, publicKey, {
-                    ...options,
+                promise = new Promise<Jwt | JwtPayload | string>((resolve, reject) => {
+                    verify(token, publicKey, options, (err, decoded) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        resolve(decoded);
+                    });
                 });
                 break;
             }
@@ -53,14 +60,23 @@ export async function verifyToken(
 
                 options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
 
-                output = await verify(token, secret, {
-                    ...options,
+                promise = new Promise<Jwt | JwtPayload | string>((resolve, reject) => {
+                    verify(token, secret, options, (err, decoded) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        resolve(decoded);
+                    });
                 });
             }
         }
     } catch (e) {
         throw createErrorForJWTError(e);
     }
+
+    const output = await promise;
 
     if (typeof output === 'undefined') {
         throw new TokenError({ message: 'Invalid type.' });
