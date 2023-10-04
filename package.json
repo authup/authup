@@ -37,7 +37,7 @@
     "@swc/core": "^1.3.91",
     "@swc/jest": "^0.2.29",
     "@tada5hi/commitlint-config": "^1.1.1",
-    "@tada5hi/eslint-config-vue-typescript": "^1.3.3",
+    "@tada5hi/eslint-config-vue-typescript": "^1.3.5",
     "@types/jest": "^29.5.4",
     "@types/node": "^20.8.2",
     "cross-env": "^7.0.3",
