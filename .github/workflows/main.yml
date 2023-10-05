@@ -13,6 +13,12 @@ env:
     NODE_VERSION: 18
     NODE_REGISTRY: 'https://registry.npmjs.org'
 
+permissions:
+    packages: write
+    contents: write
+    issues: write
+    pull-requests: write
+
 defaults:
     run:
         shell: bash
@@ -110,6 +116,8 @@ jobs:
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
 
             -   name: Install
                 uses: ./.github/actions/install
