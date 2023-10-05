@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.43.0](https://github.com/authup/authup/compare/v0.42.0...v0.43.0) (2023-10-05)
+
+
+### Features
+
+* enhance removing duplicte slashes ([ee3302b](https://github.com/authup/authup/commit/ee3302b019c4c87e21fc9fb377e08d0ef8020a55))
+
+
+
+
+
 # [0.42.0](https://github.com/authup/authup/compare/v0.41.0...v0.42.0) (2023-10-05)
 
 
