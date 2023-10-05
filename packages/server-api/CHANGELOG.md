@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.42.0](https://github.com/authup/authup/compare/v0.41.0...v0.42.0) (2023-10-05)
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 8.6.0 to 8.7.0 ([#1403](https://github.com/authup/authup/issues/1403)) ([477802e](https://github.com/authup/authup/commit/477802e7a1463ffee0b5183ccae390e30d446f3e))
+* **deps:** bump routup to v2.0 ([aff4988](https://github.com/authup/authup/commit/aff49883ff3ee0c728a34f5ecf9fc6b7d1cbef64))
+* **deps:** bump typeorm-extension from 3.0.1 to 3.0.2 ([#1367](https://github.com/authup/authup/issues/1367)) ([02f8743](https://github.com/authup/authup/commit/02f8743ebde1b6db07150fb7b2ca56c55540aaa4))
+* **deps:** bump zod from 3.22.2 to 3.22.3 ([#1386](https://github.com/authup/authup/issues/1386)) ([1663dc8](https://github.com/authup/authup/commit/1663dc845aa8235db9f73aaa9c5dd1324da87f03))
+* **deps:** bump zod from 3.22.3 to 3.22.4 ([#1404](https://github.com/authup/authup/issues/1404)) ([abcedb9](https://github.com/authup/authup/commit/abcedb929cff68c3c6105b023563fd30d7c4119d))
+
+
+### Features
+
+* bump routup to v3.0 ([f46f066](https://github.com/authup/authup/commit/f46f0661923a64b392fd62a845a5bab9a2f0891c))
+
+
+
+
+
 # [0.41.0](https://github.com/authup/authup/compare/v0.40.3...v0.41.0) (2023-09-01)
 
 

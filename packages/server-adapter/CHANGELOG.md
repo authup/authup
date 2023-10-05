@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.42.0](https://github.com/authup/authup/compare/v0.41.0...v0.42.0) (2023-10-05)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 4.14.6 to 4.15.2 ([#1399](https://github.com/authup/authup/issues/1399)) ([1c34f29](https://github.com/authup/authup/commit/1c34f29d2ce942a57b1902483ffed976a029d436))
+
+
+### Features
+
+* bump routup to v3.0 ([f46f066](https://github.com/authup/authup/commit/f46f0661923a64b392fd62a845a5bab9a2f0891c))
+
+
+
+
+
 # [0.41.0](https://github.com/authup/authup/compare/v0.40.3...v0.41.0) (2023-09-01)
 
 
