@@ -4,21 +4,24 @@ inputs:
     node-version:
         description: 'The node version to setup'
         required: true
-    registry-url:
+    node-registry:
         description: 'Define registry-url'
         required: false
 
 runs:
     using: 'composite'
     steps:
+        -   name: echo github.ref
+            shell: bash
+            run: echo ${{ github.ref }}
+
         -   name: Use Node.js ${{ inputs.node-version }}
             uses: actions/setup-node@v3
             with:
                 node-version: ${{ inputs.node-version }}
-                registry-url: ${{ inputs.registry-url }}
+                registry-url: ${{ inputs.node-registry }}
 
         -   name: Use cache
-            id: install-cache
             uses: actions/cache@v3
             with:
                 path: |
@@ -28,7 +31,7 @@ runs:
                 restore-keys: |
                     ${{ runner.os }}-install-
 
-        - name: Install
-          shell: bash
-          run: |
-              npm ci
+        -   name: Install
+            shell: bash
+            run: |
+                npm ci

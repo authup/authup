@@ -5,13 +5,13 @@ name: CI
 
 on:
     push:
-        branches:
-            - '**'
+        branches: [develop, master, next, beta, alpha]
     pull_request:
         types: [ opened, synchronize ]
 
 env:
-    PRIMARY_NODE_VERSION: 18
+    NODE_VERSION: 18
+    NODE_REGISTRY: 'https://registry.npmjs.org'
 
 defaults:
     run:
@@ -27,7 +27,8 @@ jobs:
             - name: Install
               uses: ./.github/actions/install
               with:
-                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
+                  node-version: ${{ env.NODE_VERSION }}
+                  node-registry: ${{ env.NODE_REGISTRY }}
 
     build:
         name: Build Packages
@@ -40,7 +41,8 @@ jobs:
             - name: Install
               uses: ./.github/actions/install
               with:
-                  node-version: ${{ env.PRIMARY_NODE_VERSION }}
+                  node-version: ${{ env.NODE_VERSION }}
+                  node-registry: ${{ env.NODE_REGISTRY }}
 
             - name: Build
               uses: ./.github/actions/build
@@ -56,7 +58,8 @@ jobs:
             -   name: Install
                 uses: ./.github/actions/install
                 with:
-                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
 
             -   name: Build
                 uses: ./.github/actions/build
@@ -86,7 +89,8 @@ jobs:
             -   name: Install
                 uses: ./.github/actions/install
                 with:
-                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
 
             -   name: Build
                 uses: ./.github/actions/build
@@ -94,3 +98,34 @@ jobs:
             -   name: Run tests
                 run: |
                     npm run test --workspace=packages/${{matrix.package}} --if-present
+
+    release:
+        name: Release
+        if: ${{ github.event_name == 'push' && github.ref_name != 'develop' }}
+        needs: [build, tests]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            -   name: Publish
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                run: |
+                    git config user.name "${{ github.actor }}"
+                    git config user.email "${{ github.actor}}@users.noreply.github.com"
+
+                    if [ ${{ github.ref_name }} = master ]; then
+                      npx lerna version --conventional-commits --conventional-graduate --yes
+                    else
+                      npx lerna version --conventional-commits --conventional-prerelease --preid ${{ github.ref_name }} --yes
+                    fi
+
+                    npx lerna publish from-git --yes
