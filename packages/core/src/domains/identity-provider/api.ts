@@ -9,13 +9,13 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import { BaseAPI } from '../base';
 import type { IdentityProvider } from './types';
-import { nullifyEmptyObjectProperties, removeDuplicateForwardSlashesFromURL } from '../../utils';
+import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 import { buildIdentityProviderAuthorizePath } from './utils';
 
 export class IdentityProviderAPI extends BaseAPI implements DomainAPI<IdentityProvider> {
     getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {
-        return removeDuplicateForwardSlashesFromURL(`${baseUrl}/${buildIdentityProviderAuthorizePath(id)}`);
+        return cleanDoubleSlashes(`${baseUrl}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
     async getMany(record?: BuildInput<IdentityProvider>): Promise<CollectionResourceResponse<IdentityProvider>> {

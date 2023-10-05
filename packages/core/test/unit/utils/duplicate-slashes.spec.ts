@@ -5,22 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeDuplicateForwardSlashesFromURL } from '../../../src';
+import { cleanDoubleSlashes } from '../../../src';
 
 describe('src/utils/duplicate-slashes.ts', () => {
     it('should build safe url', () => {
-        let url = removeDuplicateForwardSlashesFromURL('https://example.com//path/123');
+        let url = cleanDoubleSlashes('https://example.com//path/123');
         expect(url).toEqual('https://example.com/path/123');
 
         // multiple slashes with http
-        url = removeDuplicateForwardSlashesFromURL('http://example.com//path//123');
+        url = cleanDoubleSlashes('http://example.com//path//123');
         expect(url).toEqual('http://example.com/path/123');
 
         // ensure tailing slash
-        url = removeDuplicateForwardSlashesFromURL('https://example.com');
+        url = cleanDoubleSlashes('https://example.com');
         expect(url).toEqual('https://example.com');
 
-        url = removeDuplicateForwardSlashesFromURL('https://example.com/?id=1');
+        url = cleanDoubleSlashes('https://example.com/?id=1');
         expect(url).toEqual('https://example.com/?id=1');
     });
 });
