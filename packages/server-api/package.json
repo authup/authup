@@ -82,7 +82,7 @@
         "@types/cors": "^2.8.14",
         "@types/morgan": "^1.9.6",
         "@types/node-cron": "^3.0.9",
-        "@types/supertest": "^2.0.12",
+        "@types/supertest": "^2.0.14",
         "@types/yargs": "^17.0.26",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^6.3.3",
