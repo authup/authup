@@ -11,7 +11,8 @@ updates:
       directory: "/"
       schedule:
           interval: "daily"
-      versioning-strategy: increase
+      versioning-strategy: "increase"
+      open-pull-requests-limit: 10
       commit-message:
           prefix: "fix"
           prefix-development: "build"
