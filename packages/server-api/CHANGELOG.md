@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.44.0](https://github.com/authup/authup/compare/v0.42.0...v0.44.0) (2023-10-07)
+
+
+### Bug Fixes
+
+* error status code comparision range ([9013350](https://github.com/authup/authup/commit/9013350e8dd04d6bb9ce57c1a5ca96d42f317059))
+* exposing client errors via API ([00098fb](https://github.com/authup/authup/commit/00098fb0971247f2748b928942d0aa169190e7b9))
+
+
+
+
+
 # [0.43.0](https://github.com/authup/authup/compare/v0.42.0...v0.43.0) (2023-10-05)
 
 **Note:** Version bump only for package @authup/server-api

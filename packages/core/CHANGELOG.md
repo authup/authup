@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.44.0](https://github.com/authup/authup/compare/v0.42.0...v0.44.0) (2023-10-07)
+
+
+### Bug Fixes
+
+* exposing client errors via API ([00098fb](https://github.com/authup/authup/commit/00098fb0971247f2748b928942d0aa169190e7b9))
+
+
+### Features
+
+* enhance removing duplicte slashes ([9dd17b2](https://github.com/authup/authup/commit/9dd17b26ebf0ab9e7a776dedc6736069e4221fd7))
+
+
+
+
+
 # [0.43.0](https://github.com/authup/authup/compare/v0.42.0...v0.43.0) (2023-10-05)
 
 
