@@ -26,7 +26,7 @@ export function buildResponseErrorPayloadFromError(error: ErrorProxy) {
     }
 
     const isServerError = (typeof error.expose !== 'undefined' && !error.expose) ||
-        (error.statusCode > 500 && error.statusCode < 600);
+        (error.statusCode >= 500 && error.statusCode < 600);
 
     if (isServerError) {
         error.message = 'An internal server error occurred.';
