@@ -143,3 +143,4 @@ jobs:
                     fi
 
                     npx lerna publish from-git --yes
+                    exit 0
