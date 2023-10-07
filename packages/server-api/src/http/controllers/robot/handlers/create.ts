@@ -52,5 +52,5 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
 
     // ----------------------------------------------
 
-    sendCreated(res, entity);
+    return sendCreated(res, entity);
 }

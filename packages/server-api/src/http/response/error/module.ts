@@ -6,7 +6,6 @@
  */
 
 import { isObject } from '@authup/core';
-import { isClientError } from '@ebec/http';
 import type { ErrorProxy } from 'routup';
 
 export function buildResponseErrorPayloadFromError(error: ErrorProxy) {
@@ -26,14 +25,17 @@ export function buildResponseErrorPayloadFromError(error: ErrorProxy) {
             break;
     }
 
-    if (!error.expose) {
-        error.message = 'An error occurred.';
+    const isServerError = (typeof error.expose !== 'undefined' && !error.expose) ||
+        (error.statusCode > 500 && error.statusCode < 600);
+
+    if (isServerError) {
+        error.message = 'An internal server error occurred.';
     }
 
     return {
         statusCode: error.statusCode,
         code: `${error.code}`,
         message: error.message,
-        ...(isObject(error.data) && isClientError(error) ? error.data : {}),
+        ...(isObject(error.data) && !isServerError ? error.data : {}),
     };
 }
