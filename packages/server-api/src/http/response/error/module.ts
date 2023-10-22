@@ -6,9 +6,9 @@
  */
 
 import { isObject } from '@authup/core';
-import type { ErrorProxy } from 'routup';
+import type { RoutupError } from 'routup';
 
-export function buildResponseErrorPayloadFromError(error: ErrorProxy) {
+export function buildResponseErrorPayloadFromError(error: RoutupError) {
     // catch and decorate some db errors :)
     switch (error.code) {
         case 'ER_DUP_ENTRY':

@@ -6,7 +6,6 @@
  */
 
 import type {
-    ErrorProxy, Next, Request, Response,
     Router,
 } from 'routup';
 import { errorHandler, send } from 'routup';
@@ -15,10 +14,10 @@ import { buildResponseErrorPayloadFromError } from '../../response';
 
 export function registerErrorMiddleware(router: Router) {
     router.use(errorHandler((
-        error: ErrorProxy,
-        request: Request,
-        response: Response,
-        _next: Next,
+        error,
+        request,
+        response,
+        _next,
     ) => {
         if (error.logMessage) {
             useLogger().error(`${error.message}`);
