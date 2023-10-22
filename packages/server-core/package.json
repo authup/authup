@@ -52,11 +52,11 @@
     "dependencies": {
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/jsonwebtoken": "^9.0.3",
-        "@types/nodemailer": "^6.4.11",
+        "@types/nodemailer": "^6.4.13",
         "bcrypt": "^5.1.1",
         "jsonwebtoken": "^9.0.2",
         "locter": "^1.2.1",
-        "nodemailer": "^6.9.6",
+        "nodemailer": "^6.9.7",
         "proxy-from-env": "^1.1.0",
         "smob": "^1.4.0"
     },
