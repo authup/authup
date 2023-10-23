@@ -4,7 +4,8 @@
     "description": "This is a standalone application.",
     "main": ".output/server/index.mjs",
     "files": [
-        ".output/"
+        ".nuxt",
+        ".output"
     ],
     "repository": {
         "type": "git",

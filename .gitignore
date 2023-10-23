@@ -14,3 +14,4 @@ authup.**.conf
 !**/test/**/authup.conf
 !**/test/**/authup.*.conf
 .vitepress/cache
+.nx
