@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.45.1](https://github.com/authup/authup/compare/v0.45.0...v0.45.1) (2023-10-23)
+
+
+### Bug Fixes
+
+* include .nuxt directory for publishing ([adc8101](https://github.com/authup/authup/commit/adc8101f91da1a12aceb22a8964df7241fda086b))
+
+
+
+
+
 # [0.45.0](https://github.com/authup/authup/compare/v0.44.0...v0.45.0) (2023-10-23)
 
 **Note:** Version bump only for package @authup/client-ui
