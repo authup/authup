@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.45.0](https://github.com/authup/authup/compare/v0.44.0...v0.45.0) (2023-10-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/jsonwebtoken from 9.0.3 to 9.0.4 ([#1444](https://github.com/authup/authup/issues/1444)) ([185bee1](https://github.com/authup/authup/commit/185bee120615e5c51a9d643b9af03d73c35e56d0))
+* **deps:** bump nodemailer and @types/nodemailer ([#1448](https://github.com/authup/authup/issues/1448)) ([026830c](https://github.com/authup/authup/commit/026830c71255d400ba24584b390012cc79cd136a))
+* **deps:** bump nodemailer from 6.9.5 to 6.9.6 ([#1418](https://github.com/authup/authup/issues/1418)) ([bf4eb3d](https://github.com/authup/authup/commit/bf4eb3de649e89b1585bdced3af5a81bdd3eb365))
+
+
+
+
+
 # [0.44.0](https://github.com/authup/authup/compare/v0.42.0...v0.44.0) (2023-10-07)
 
 **Note:** Version bump only for package @authup/server-core

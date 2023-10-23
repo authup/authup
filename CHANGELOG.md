@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.45.0](https://github.com/authup/authup/compare/v0.44.0...v0.45.0) (2023-10-23)
+
+
+### Bug Fixes
+
+* **deps:** bump @types/jsonwebtoken from 9.0.3 to 9.0.4 ([#1444](https://github.com/authup/authup/issues/1444)) ([185bee1](https://github.com/authup/authup/commit/185bee120615e5c51a9d643b9af03d73c35e56d0))
+* **deps:** bump better-sqlite3 from 8.7.0 to 9.0.0 ([#1422](https://github.com/authup/authup/issues/1422)) ([ad64135](https://github.com/authup/authup/commit/ad64135aadfb4c08166de5aac75dfd4f34a5fc6f))
+* **deps:** bump jose from 4.15.2 to 4.15.4 ([#1431](https://github.com/authup/authup/issues/1431)) ([26d5835](https://github.com/authup/authup/commit/26d58351c10e0c795f1aaca700ea193cdcbc1e72))
+* **deps:** bump nodemailer and @types/nodemailer ([#1448](https://github.com/authup/authup/issues/1448)) ([026830c](https://github.com/authup/authup/commit/026830c71255d400ba24584b390012cc79cd136a))
+* **deps:** bump nodemailer from 6.9.5 to 6.9.6 ([#1418](https://github.com/authup/authup/issues/1418)) ([bf4eb3d](https://github.com/authup/authup/commit/bf4eb3de649e89b1585bdced3af5a81bdd3eb365))
+* **deps:** bump typeorm-extension from 3.0.2 to 3.1.0 ([#1447](https://github.com/authup/authup/issues/1447)) ([1325522](https://github.com/authup/authup/commit/13255222e9859362977e31f7abc29ec25df7acc2))
+* **deps:** bump winston from 3.10.0 to 3.11.0 ([#1420](https://github.com/authup/authup/issues/1420)) ([834e4f1](https://github.com/authup/authup/commit/834e4f19601ea5aa918378aeb8371c5f54e1f556))
+
+
+### Features
+
+* bump routup and plugins ([d44c33e](https://github.com/authup/authup/commit/d44c33e8cebd6bed0f5414774aa02e632a327e73))
+
+
+
+
+
 # [0.44.0](https://github.com/authup/authup/compare/v0.42.0...v0.44.0) (2023-10-07)
 
 
