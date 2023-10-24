@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.45.3
+
+### Patch Changes
+
+- [`05849783`](https://github.com/authup/authup/commit/058497834a176c5efa4412408fda5de144a3bc61) Thanks [@tada5hi](https://github.com/tada5hi)! - trigger release workflow
+
+- Updated dependencies [[`05849783`](https://github.com/authup/authup/commit/058497834a176c5efa4412408fda5de144a3bc61)]:
+  - @authup/client-ui@0.45.3
+  - @authup/core@0.45.3
+  - @authup/server-api@0.45.3
+  - @authup/server-core@0.45.3
+
 ## 0.45.2
 
 ### Patch Changes

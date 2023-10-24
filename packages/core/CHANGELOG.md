@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.45.3
+
+### Patch Changes
+
+- [`05849783`](https://github.com/authup/authup/commit/058497834a176c5efa4412408fda5de144a3bc61) Thanks [@tada5hi](https://github.com/tada5hi)! - trigger release workflow
+
 ## 0.45.2
 
 ### Patch Changes
