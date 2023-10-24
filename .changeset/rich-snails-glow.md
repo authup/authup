@@ -1,11 +1,11 @@
 ---
-"authup": minor
-"@authup/client-ui": minor
-"@authup/client-vue": minor
-"@authup/core": minor
-"@authup/server-adapter": minor
-"@authup/server-api": minor
-"@authup/server-core": minor
+"authup": patch
+"@authup/client-ui": patch
+"@authup/client-vue": patch
+"@authup/core": patch
+"@authup/server-adapter": patch
+"@authup/server-api": patch
+"@authup/server-core": patch
 ---
 
-bump to next minor version
+bump to next patch version
