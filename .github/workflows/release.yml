@@ -29,7 +29,7 @@ jobs:
       -   name: Build
           uses: ./.github/actions/build
 
-      -   name: Create Release Pull Request or Publish to npm
+      -   name: Commit & Publish
           id: changesets
           uses: changesets/action@v1
           with:
@@ -37,5 +37,26 @@ jobs:
             commit: "chore(release): publish"
             title: "chore(release): publish"
           env:
-            GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      -   uses: tada5hi/action-docker-image-publish@master
+          if: steps.changesets.outputs.published == 'true'
+          with:
+            cache: true
+            registryRepository: authup
+            registryTag:
+              latest
+              ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+
+      -   uses: tada5hi/action-docker-image-publish@master
+          if: steps.changesets.outputs.published == 'true'
+          with:
+            registryHost: docker.io
+            registryProject: authup
+            registryRepository: authup
+            registryUser: authup
+            registryTag:
+              latest
+              ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+            registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
