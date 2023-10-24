@@ -7,7 +7,7 @@
 
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { setupLogger } from '../../utils';
+import { createLogger } from '../../core';
 import { setupCommand } from '../../commands';
 import {
     setupConfig,
@@ -66,7 +66,10 @@ export class SetupCommand implements CommandModule {
         const config = await setupConfig();
 
         const dataSourceOptions = await buildDataSourceOptions();
-        const logger = setupLogger(config.get('writableDirectoryPath'));
+        const logger = createLogger({
+            directory: config.get('writableDirectoryPath'),
+            env: config.get('env'),
+        });
 
         try {
             await setupCommand({
