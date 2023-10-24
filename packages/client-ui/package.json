@@ -4,7 +4,6 @@
     "description": "This is a standalone application.",
     "main": ".output/server/index.mjs",
     "files": [
-        ".nuxt",
         ".output"
     ],
     "repository": {
@@ -18,7 +17,8 @@
         "generate": "nuxi generate",
         "preview": "nuxi preview",
         "start": "nuxi start",
-        "typecheck": "nuxi typecheck"
+        "typecheck": "nuxi typecheck",
+        "prepublishOnly": "npm run build"
     },
     "bin": {
         "authup-ui": ".output/server/index.mjs"
