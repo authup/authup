@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "authup/authup" }],
+  "commit": false,
+  "fixed": [[
+    "authup",
+    "@authup/client-ui",
+    "@authup/client-vue",
+    "@authup/core",
+    "@authup/server-adapter",
+    "@authup/server-api",
+    "@authup/server-core"
+  ]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "master",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}
