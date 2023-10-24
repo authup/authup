@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.45.4
+
+### Patch Changes
+
+- [`622729b0`](https://github.com/authup/authup/commit/622729b086d0a833b4e18bcb0ce9c046ebe0d1d8) Thanks [@tada5hi](https://github.com/tada5hi)! - force docker release
+
+- Updated dependencies [[`622729b0`](https://github.com/authup/authup/commit/622729b086d0a833b4e18bcb0ce9c046ebe0d1d8)]:
+  - @authup/core@0.45.4
+  - @authup/server-core@0.45.4
+
 ## 0.45.3
 
 ### Patch Changes
