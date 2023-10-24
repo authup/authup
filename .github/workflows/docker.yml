@@ -1,0 +1,31 @@
+name: docker
+
+on:
+  push:
+    tags:
+      - authup*
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      -   uses: actions/checkout@v4
+
+      -   uses: tada5hi/action-docker-image-publish@master
+          with:
+            cache: true
+            registryRepository: authup
+            registryTag: latest
+
+      -   uses: tada5hi/action-docker-image-publish@master
+          with:
+            registryHost: docker.io
+            registryProject: authup
+            registryRepository: authup
+            registryUser: authup
+            registryTag: latest
+            registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
