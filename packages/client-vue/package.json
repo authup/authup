@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-vue",
-    "version": "0.45.3",
+    "version": "0.45.4",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/core": "^0.45.3",
+        "@authup/core": "^0.45.4",
         "@types/node": "^20.8.8",
         "@vitejs/plugin-vue": "^4.4.0",
         "@vue-layout/form-controls": "^3.4.0",
@@ -70,7 +70,7 @@
         "vue-tsc": "^1.8.20"
     },
     "peerDependencies": {
-        "@authup/core": ">=0.45.3",
+        "@authup/core": ">=0.45.4",
         "@vue-layout/form-controls": "^3.4.0",
         "@vue-layout/list-controls": "^3.4.0",
         "@vue-layout/pagination": "^3.4.0",
