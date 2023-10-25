@@ -43,7 +43,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      -   uses: tada5hi/action-docker-image-publish@v1.8.0
+      -   uses: tada5hi/action-docker-image-publish@v2.0.0
           if: steps.changesets.outputs.published == 'true'
           with:
             cache: true
@@ -52,7 +52,7 @@ jobs:
               latest
               ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
 
-      -   uses: tada5hi/action-docker-image-publish@v1.8.0
+      -   uses: tada5hi/action-docker-image-publish@v2.0.0
           if: steps.changesets.outputs.published == 'true'
           with:
             registryHost: docker.io
