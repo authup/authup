@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.45.6
+
+### Patch Changes
+
+- [`9b94d2be`](https://github.com/authup/authup/commit/9b94d2be82498faa4e28d63450d8e8c1beda5d37) Thanks [@tada5hi](https://github.com/tada5hi)! - force docker publish to docker.io
+
 ## 0.45.5
 
 ### Patch Changes
