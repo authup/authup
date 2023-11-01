@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-adapter",
-    "version": "0.45.6",
+    "version": "0.45.7",
     "description": "An adapter package to integrate into other services.",
     "exports": {
         "./package.json": "./package.json",
@@ -55,14 +55,14 @@
         "jose": "^5.0.1"
     },
     "devDependencies": {
-        "@authup/core": "^0.45.6",
-        "@authup/server-core": "^0.45.6",
+        "@authup/core": "^0.45.7",
+        "@authup/server-core": "^0.45.7",
         "@hapic/oauth2": "^2.3.0",
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
-        "@authup/core": ">=0.45.6",
-        "@authup/server-core": ">=0.45.6",
+        "@authup/core": ">=0.45.7",
+        "@authup/server-core": ">=0.45.7",
         "redis-extension": "^1.2.0"
     },
     "publishConfig": {

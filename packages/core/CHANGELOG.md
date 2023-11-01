@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.45.7
+
+### Patch Changes
+
+- [`7faa3d10`](https://github.com/authup/authup/commit/7faa3d10dc0a048a84792d6d0d7a2dc717f13e1b) Thanks [@tada5hi](https://github.com/tada5hi)! - next patch release
+
 ## 0.45.6
 
 ### Patch Changes
