@@ -16,7 +16,7 @@ jobs:
 
             -   uses: tada5hi/action-docker-image-publish@v3
                 with:
-                    cache: true
+                    cleanup: false
                     registryRepository: authup/authup
                     registryTag: next
 
