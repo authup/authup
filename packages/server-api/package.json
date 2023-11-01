@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-api",
-    "version": "0.45.6",
+    "version": "0.45.7",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -45,8 +45,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core": "^0.45.6",
-        "@authup/server-core": "^0.45.6",
+        "@authup/core": "^0.45.7",
+        "@authup/server-core": "^0.45.7",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.0",
         "@hapic/vault": "^2.3.0",

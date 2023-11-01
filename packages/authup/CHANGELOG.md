@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.45.7
+
+### Patch Changes
+
+- [`7faa3d10`](https://github.com/authup/authup/commit/7faa3d10dc0a048a84792d6d0d7a2dc717f13e1b) Thanks [@tada5hi](https://github.com/tada5hi)! - next patch release
+
+- Updated dependencies [[`7faa3d10`](https://github.com/authup/authup/commit/7faa3d10dc0a048a84792d6d0d7a2dc717f13e1b)]:
+  - @authup/client-ui@0.45.7
+  - @authup/core@0.45.7
+  - @authup/server-api@0.45.7
+  - @authup/server-core@0.45.7
+
 ## 0.45.6
 
 ### Patch Changes
