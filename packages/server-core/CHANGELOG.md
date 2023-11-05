@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.45.8
+
+### Patch Changes
+
+- [`63b4414e`](https://github.com/authup/authup/commit/63b4414eed4442a40dd25aab7c0dd69d0bd46f26) Thanks [@tada5hi](https://github.com/tada5hi)! - fix docker build
+
+- Updated dependencies [[`63b4414e`](https://github.com/authup/authup/commit/63b4414eed4442a40dd25aab7c0dd69d0bd46f26)]:
+  - @authup/core@0.45.8
+
 ## 0.45.7
 
 ### Patch Changes
