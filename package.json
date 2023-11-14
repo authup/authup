@@ -50,7 +50,7 @@
     "lint-staged": "^15.0.2",
     "nx": "^17.0.3",
     "rimraf": "^5.0.5",
-    "rollup": "^4.3.0",
+    "rollup": "^4.4.1",
     "typescript": "5.2.2"
   },
   "scripts": {
