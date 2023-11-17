@@ -9,7 +9,7 @@ import { SlotName } from '@vue-layout/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
-    VNodeArrayChildren,
+    VNodeArrayChildren, VNodeChild,
 } from 'vue';
 import {
     computed,
@@ -35,8 +35,8 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource, renderEntityAssignAction,
+    useTranslator, useValidationTranslator,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 import { RealmList } from '../realm';
 import { ClientRedirectUriList } from './ClientRedirectUriList';
 
@@ -151,7 +151,7 @@ export const ClientForm = defineComponent({
         };
 
         const render = () => {
-            const name = [
+            const name : VNodeChild = [
                 buildFormInput({
                     validationResult: $v.value.name,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
@@ -167,7 +167,7 @@ export const ClientForm = defineComponent({
                 h('small', 'Something users will recognize and trust.'),
             ];
 
-            const description = [
+            const description : VNodeChild = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
@@ -220,7 +220,7 @@ export const ClientForm = defineComponent({
                 ];
             }
 
-            const secret = [
+            const secret : VNodeArrayChildren = [
                 buildFormInput({
                     validationResult: $v.value.secret,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
@@ -257,7 +257,7 @@ export const ClientForm = defineComponent({
                 validationResult: $v.value,
             });
 
-            let realm : VNodeArrayChildren = [];
+            let realm : VNodeChild = [];
 
             if (!isRealmLocked.value) {
                 realm = [

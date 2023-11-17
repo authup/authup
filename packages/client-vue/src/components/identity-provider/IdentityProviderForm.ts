@@ -55,7 +55,7 @@ export const IdentityProviderForm = defineComponent({
 
         onChange(updatedAt, () => set());
 
-        const renderPicker = () => h(IdentityProviderPicker, {
+        const renderPicker = () : VNodeChild => h(IdentityProviderPicker, {
             onPick(value: { protocol?: `${IdentityProviderProtocol}`, preset?: `${IdentityProviderPreset}` }) {
                 if (value.protocol) {
                     protocol.value = value.protocol;
@@ -71,7 +71,7 @@ export const IdentityProviderForm = defineComponent({
             },
         });
 
-        const render = (node: VNodeChild) => {
+        const render = (node: VNodeChild) : VNodeChild => {
             if (!entity.value) {
                 return [
                     renderPicker(),

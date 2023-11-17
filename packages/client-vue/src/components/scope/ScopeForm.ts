@@ -9,7 +9,7 @@ import { DomainType } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
-    VNodeArrayChildren,
+    VNodeArrayChildren, VNodeChild,
 } from 'vue';
 import {
     computed,
@@ -37,8 +37,8 @@ import {
     alphaWithUpperNumHyphenUnderScore,
     createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource, renderEntityAssignAction,
+    useTranslator, useValidationTranslator,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 import { RealmList } from '../realm';
 
 export const ScopeForm = defineComponent({
@@ -134,7 +134,7 @@ export const ScopeForm = defineComponent({
         };
 
         const render = () => {
-            const name = [
+            const name: VNodeChild = [
                 buildFormInput({
                     validationResult: $v.value.name,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
@@ -149,7 +149,7 @@ export const ScopeForm = defineComponent({
                 }),
             ];
 
-            const description = [
+            const description :VNodeChild = [
                 buildFormTextarea({
                     validationResult: $v.value.description,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
