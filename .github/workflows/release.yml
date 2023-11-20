@@ -1,64 +1,68 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - master
+    push:
+        branches:
+            - master
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+env:
+    NODE_VERSION: 18
+    NODE_REGISTRY: 'https://registry.npmjs.org'
+
 permissions:
-  packages: write
-  contents: write
-  pull-requests: write
+    packages: write
+    contents: write
+    pull-requests: write
 
 jobs:
-  release:
-    name: Release
-    runs-on: ubuntu-latest
+    release:
+        name: Release
+        runs-on: ubuntu-latest
 
-    steps:
-      -   name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
 
-      -   name: Install
-          uses: ./.github/actions/install
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-            node-registry: ${{ env.NODE_REGISTRY }}
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
 
-      -   name: Build
-          uses: ./.github/actions/build
+            -   name: Build
+                uses: ./.github/actions/build
 
-      -   name: Commit & Publish
-          id: changesets
-          uses: changesets/action@v1
-          with:
-            publish: npm run release
-            commit: "chore(release): publish"
-            title: "chore(release): publish"
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+            -   name: Commit & Publish
+                id: changesets
+                uses: changesets/action@v1
+                with:
+                    publish: npm run release
+                    commit: "chore(release): publish"
+                    title: "chore(release): publish"
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      -   uses: tada5hi/action-docker-image-publish@v3
-          if: steps.changesets.outputs.published == 'true'
-          with:
-            cleanup: false
-            registryRepository: authup/authup
-            registryTag: |
-              latest
-              ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+            -   uses: tada5hi/action-docker-image-publish@v3
+                if: steps.changesets.outputs.published == 'true'
+                with:
+                    cleanup: false
+                    registryRepository: authup/authup
+                    registryTag: |
+                        latest
+                        ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
 
-      -   uses: tada5hi/action-docker-image-publish@v3
-          if: steps.changesets.outputs.published == 'true'
-          with:
-            registryHost: docker.io
-            registryRepository: authup/authup
-            registryUser: authup
-            registryTag: |
-              latest
-              ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
-            registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
+            -   uses: tada5hi/action-docker-image-publish@v3
+                if: steps.changesets.outputs.published == 'true'
+                with:
+                    registryHost: docker.io
+                    registryRepository: authup/authup
+                    registryUser: authup
+                    registryTag: |
+                        latest
+                        ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+                    registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
