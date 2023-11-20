@@ -31,7 +31,7 @@
         "@hapic/oauth2": "^2.3.0",
         "@nuxtjs/google-fonts": "^3.0.2",
         "@pinia/nuxt": "^0.5.1",
-        "@vue-layout/countdown": "^3.0.0",
+        "@vue-layout/countdown": "^5.0.0",
         "@vue-layout/form-controls": "^3.4.0",
         "@vue-layout/list-controls": "^3.6.1",
         "@vue-layout/navigation": "^3.4.0",
