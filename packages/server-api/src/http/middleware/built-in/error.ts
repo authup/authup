@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/core';
 import type {
     Router,
 } from 'routup';
 import { errorHandler, send } from 'routup';
 import { useLogger } from '@authup/server-core';
-import { buildResponseErrorPayloadFromError } from '../../response';
 
 export function registerErrorMiddleware(router: Router) {
     router.use(errorHandler((
@@ -19,11 +19,44 @@ export function registerErrorMiddleware(router: Router) {
         response,
         _next,
     ) => {
-        if (error.logMessage) {
-            useLogger().error(`${error.message}`);
+        // catch and decorate some db errors :)
+        switch (error.code) {
+            case 'ER_DUP_ENTRY':
+            case 'SQLITE_CONSTRAINT_UNIQUE': {
+                error.statusCode = 409;
+                error.message = 'An entry with some unique attributes already exist.';
+                error.expose = true;
+                break;
+            }
+            case 'ER_DISK_FULL':
+                error.statusCode = 507;
+                error.message = 'No database operation possible, due the leak of free disk space.';
+                error.expose = true;
+                break;
         }
 
-        const data = buildResponseErrorPayloadFromError(error);
+        const isServerError = (typeof error.expose !== 'undefined' && !error.expose) ||
+            (error.statusCode >= 500 && error.statusCode < 600);
+
+        if (isServerError || error.logMessage) {
+            useLogger().error(error);
+
+            if (error.cause) {
+                useLogger().error(error.cause);
+            }
+        }
+
+        if (isServerError) {
+            error.message = 'An internal server error occurred.';
+        }
+
+        const data = {
+            statusCode: error.statusCode,
+            code: `${error.code}`,
+            message: error.message,
+            ...(isObject(error.data) && !isServerError ? error.data : {}),
+        };
+
         response.statusCode = data.statusCode;
 
         return send(response, data);
