@@ -54,7 +54,7 @@
     "devDependencies": {
         "@authup/core": "^0.45.8",
         "@types/node": "^20.8.10",
-        "@vitejs/plugin-vue": "^4.4.0",
+        "@vitejs/plugin-vue": "^4.5.0",
         "@vue-layout/form-controls": "^3.4.0",
         "@vue-layout/list-controls": "^3.6.1",
         "@vue-layout/pagination": "^3.4.0",
