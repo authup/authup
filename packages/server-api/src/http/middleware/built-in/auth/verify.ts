@@ -23,8 +23,7 @@ import {
 } from 'hapic';
 import { buildKeyPath } from 'redis-extension';
 import type { Request } from 'routup';
-import { NotFoundError } from '@ebec/http';
-import { useDataSource } from 'typeorm-extension';
+import { EnvironmentName, useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { CachePrefix } from '../../../../database';
 import type {
@@ -104,39 +103,26 @@ async function verifyBasicAuthorizationHeader(
 ) {
     let permissions : AbilityDescriptor[] = [];
 
-    const config = await useConfig();
+    const config = useConfig();
     const dataSource = await useDataSource();
 
-    if (
-        config.get('env') === 'test' &&
-        header.username === config.get('adminUsername') &&
-        header.password === config.get('adminPassword')
-    ) {
-        const userRepository = new UserRepository(dataSource);
-        const entity = await userRepository.findOne({
-            where: {
-                name: 'admin',
-            },
-            relations: {
-                realm: true,
-            },
-            cache: true,
-        });
+    const userRepository = new UserRepository(dataSource);
+    const user = await userRepository.verifyCredentials(header.username, header.password);
 
-        if (!entity) {
-            throw new NotFoundError();
+    if (user) {
+        await userRepository.appendAttributes(user);
+
+        // allow authentication but not authorization with basic auth in production!
+        if (config.get('env') !== EnvironmentName.PRODUCTION) {
+            permissions = await userRepository.getOwnedPermissions(user.id);
         }
-
-        await userRepository.appendAttributes(entity);
-
-        permissions = await userRepository.getOwnedPermissions(entity.id);
 
         setRequestEnv(request, 'ability', new AbilityManager(permissions));
         setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
-        setRequestEnv(request, 'user', entity);
-        setRequestEnv(request, 'userId', entity.id);
-        setRequestEnv(request, 'realm', entity.realm);
+        setRequestEnv(request, 'user', user);
+        setRequestEnv(request, 'userId', user.id);
+        setRequestEnv(request, 'realm', user.realm);
 
         return;
     }
@@ -144,8 +130,12 @@ async function verifyBasicAuthorizationHeader(
     const robotRepository = new RobotRepository(dataSource);
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
-        // allow authentication but not authorization with basic auth for robots!
-        setRequestEnv(request, 'ability', new AbilityManager());
+        // allow authentication but not authorization with basic auth in production!
+        if (config.get('env') !== EnvironmentName.PRODUCTION) {
+            permissions = await robotRepository.getOwnedPermissions(robot.id);
+        }
+
+        setRequestEnv(request, 'ability', new AbilityManager(permissions));
         setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
         setRequestEnv(request, 'robot', robot);
@@ -156,7 +146,6 @@ async function verifyBasicAuthorizationHeader(
     const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
     const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
     if (oauth2Client) {
-        // allow authentication but not authorization with basic auth for robots!
         setRequestEnv(request, 'ability', new AbilityManager());
         setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
