@@ -16,6 +16,7 @@ import { setResponseCookie } from '@routup/basic/cookie';
 import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
+import { EnvironmentName } from 'typeorm-extension';
 import { useConfig } from '../../../../../config';
 import type { Grant } from '../../../../oauth2';
 import {
@@ -72,11 +73,10 @@ export async function createTokenRouteHandler(
 
     const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
 
-    const cookieOptions : SerializeOptions = {
-        ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(config.get('publicUrl')).hostname,
-        } : {}),
-    };
+    const cookieOptions : SerializeOptions = {};
+    if (config.get('env') === EnvironmentName.PRODUCTION) {
+        cookieOptions.domain = new URL(config.get('publicUrl')).hostname;
+    }
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, tokenResponse.access_token, {
         ...cookieOptions,

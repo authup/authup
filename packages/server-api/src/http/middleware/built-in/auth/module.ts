@@ -6,12 +6,16 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
+import { URL } from 'node:url';
 import { coreHandler } from 'routup';
 import type {
     Request, Response, Router,
 } from 'routup';
+import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { AbilityManager, CookieName } from '@authup/core';
+import { EnvironmentName, useEnv } from 'typeorm-extension';
+import { useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../utils';
 import { verifyAuthorizationHeader } from './verify';
 
@@ -20,9 +24,16 @@ function parseRequestAccessTokenCookie(request: Request): string | undefined {
 }
 
 function unsetCookies(res: Response) {
-    unsetResponseCookie(res, CookieName.ACCESS_TOKEN);
-    unsetResponseCookie(res, CookieName.REFRESH_TOKEN);
-    unsetResponseCookie(res, CookieName.ACCESS_TOKEN_EXPIRE_DATE);
+    const config = useConfig();
+    const cookieOptions : SerializeOptions = {};
+
+    if (config.get('env') === EnvironmentName.PRODUCTION) {
+        cookieOptions.domain = new URL(config.get('publicUrl')).hostname;
+    }
+
+    unsetResponseCookie(res, CookieName.ACCESS_TOKEN, cookieOptions);
+    unsetResponseCookie(res, CookieName.REFRESH_TOKEN, cookieOptions);
+    unsetResponseCookie(res, CookieName.ACCESS_TOKEN_EXPIRE_DATE, cookieOptions);
 }
 
 export function registerAuthMiddleware(router: Router) {

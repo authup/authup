@@ -15,7 +15,7 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { EnvironmentName, useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createOAuth2IdentityProviderFlow, createOauth2ProviderAccount } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
@@ -84,11 +84,10 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const token = await grant.run(req);
     const config = useConfig();
 
-    const cookieOptions : SerializeOptions = {
-        ...(process.env.NODE_ENV === 'production' ? {
-            domain: new URL(config.get('publicUrl')).hostname,
-        } : {}),
-    };
+    const cookieOptions : SerializeOptions = {};
+    if (config.get('env') === EnvironmentName.PRODUCTION) {
+        cookieOptions.domain = new URL(config.get('publicUrl')).hostname;
+    }
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
