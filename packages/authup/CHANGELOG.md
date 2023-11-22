@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.45.9
+
+### Patch Changes
+
+- [`f0b015a0`](https://github.com/authup/authup/commit/f0b015a07c960610031412368f83fc07ba4dde40) Thanks [@tada5hi](https://github.com/tada5hi)! - patch ecosystem
+
+- Updated dependencies [[`f0b015a0`](https://github.com/authup/authup/commit/f0b015a07c960610031412368f83fc07ba4dde40)]:
+  - @authup/client-ui@0.45.9
+  - @authup/core@0.45.9
+  - @authup/server-api@0.45.9
+  - @authup/server-core@0.45.9
+
 ## 0.45.8
 
 ### Patch Changes
