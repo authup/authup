@@ -16,7 +16,6 @@
         "dev": "nuxi dev",
         "generate": "nuxi generate",
         "preview": "nuxi preview",
-        "prepare": "nuxi prepare",
         "start": "nuxi start",
         "typecheck": "nuxi typecheck",
         "prepublishOnly": "npm run build"
