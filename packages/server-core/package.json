@@ -62,7 +62,7 @@
     },
     "devDependencies": {
         "@authup/core": "^0.45.8",
-        "@types/bcrypt": "^5.0.1",
+        "@types/bcrypt": "^5.0.2",
         "@types/proxy-from-env": "^1.0.4",
         "redis-extension": "^1.3.0"
     },
