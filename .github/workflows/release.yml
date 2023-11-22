@@ -9,7 +9,6 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 env:
     NODE_VERSION: 18
-    NODE_REGISTRY: 'https://registry.npmjs.org'
 
 permissions:
     packages: write
