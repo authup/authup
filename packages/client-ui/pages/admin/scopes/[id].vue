@@ -6,13 +6,13 @@ import {
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { useToast } from 'bootstrap-vue-next';
+import {
+    definePageMeta,
+    updateObjectProperties, useAPI, useToast,
+} from '#imports';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
-import {
-    definePageMeta, updateObjectProperties, useAPI,
-} from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { useAuthStore } from '../../../store/auth';
 
@@ -60,14 +60,14 @@ export default defineNuxtComponent({
 
         const handleUpdated = (e: Scope) => {
             if (toast) {
-                toast.success({ body: 'The scope was successfully updated.' });
+                toast.show({ variant: 'success', body: 'The scope was successfully updated.' });
             }
             updateObjectProperties(entity, e);
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.warning({ body: e.message });
+                toast.show({ variant: 'warning', body: e.message });
             }
         };
 

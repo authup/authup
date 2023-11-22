@@ -1,9 +1,8 @@
 <script lang="ts">
 import type { Role } from '@authup/core';
 import { PermissionName } from '@authup/core';
-import { useToast } from 'bootstrap-vue-next';
+import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
-import { definePageMeta } from '#imports';
 import DomainEntityNav from '../../../components/DomainEntityNav';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
@@ -39,13 +38,13 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: Role) => {
             if (toast) {
-                toast.success({ body: `The role ${e.name} was successfully deleted.` });
+                toast.show({ variant: 'success', body: `The role ${e.name} was successfully deleted.` });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.warning({ body: e.message });
+                toast.show({ variant: 'warning', body: e.message });
             }
         };
 

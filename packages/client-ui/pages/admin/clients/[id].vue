@@ -4,12 +4,14 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
 import { ref } from 'vue';
-import { useToast } from 'bootstrap-vue-next';
 import {
-    createError, defineNuxtComponent, navigateTo, useRoute,
-} from '#app';
-import {
-    definePageMeta, useAPI,
+    createError,
+    defineNuxtComponent,
+    definePageMeta,
+    navigateTo,
+    useAPI,
+    useRoute,
+    useToast,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 import { useAuthStore } from '../../../store/auth';
@@ -62,7 +64,7 @@ export default defineNuxtComponent({
 
         const handleUpdated = (e: Client) => {
             if (toast) {
-                toast.success({ body: 'The client was successfully updated.' });
+                toast.show({ variant: 'success', body: 'The client was successfully updated.' });
             }
 
             updateObjectProperties(entity, e);
@@ -70,7 +72,7 @@ export default defineNuxtComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.warning({ body: e.message });
+                toast.show({ variant: 'success', body: e.message });
             }
         };
 

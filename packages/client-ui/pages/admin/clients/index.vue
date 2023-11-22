@@ -2,9 +2,8 @@
 
 import type { Client } from '@authup/core';
 import { PermissionName } from '@authup/core';
-import { useToast } from 'bootstrap-vue-next';
 import { defineNuxtComponent } from '#app';
-import { definePageMeta } from '#imports';
+import { definePageMeta, useToast } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
 export default defineNuxtComponent({
@@ -36,13 +35,13 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: Client) => {
             if (toast) {
-                toast.success({ body: `The client ${e.name} was successfully deleted.` });
+                toast.show({ variant: 'success', body: `The client ${e.name} was successfully deleted.` });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.warning({ body: e.message });
+                toast.show({ variant: 'warning', body: e.message });
             }
         };
 

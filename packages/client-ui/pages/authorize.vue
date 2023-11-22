@@ -4,9 +4,8 @@ import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { useToast } from 'bootstrap-vue-next';
+import { definePageMeta, useToast } from '#imports';
 import { isGlobMatch } from '../utils';
-import { definePageMeta } from '#imports';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
@@ -127,7 +126,7 @@ export default defineNuxtComponent({
                 window.location.href = url;
             } catch (e) {
                 if (e instanceof Error && toast) {
-                    toast.warning({ body: e.message });
+                    toast.show({ variant: 'warning', body: e.message });
                 }
             }
         };

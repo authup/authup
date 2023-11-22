@@ -19,13 +19,13 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
     toRef, watch,
 } from 'vue';
-import { useToast } from 'bootstrap-vue-next';
+import {
+    definePageMeta,
+    reactive, ref, useToast,
+} from '#imports';
 import {
     defineNuxtComponent, navigateTo, useRoute, useRuntimeConfig,
 } from '#app';
-import {
-    definePageMeta, reactive, ref,
-} from '#imports';
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
@@ -115,7 +115,7 @@ export default defineNuxtComponent({
                 });
             } catch (e: any) {
                 if (isClientError(e) && toast) {
-                    toast.warning({ body: e.message }, { pos: 'top-center' });
+                    toast.show({ variant: 'warning', body: e.message });
                 }
             }
         };

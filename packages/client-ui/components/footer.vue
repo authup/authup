@@ -7,11 +7,11 @@
 <script lang="ts">
 
 import { defineComponent } from 'vue';
-import { BContainer } from 'bootstrap-vue-next';
+import { BToaster } from 'bootstrap-vue-next';
 
 export default defineComponent({
     components: {
-        BContainer,
+        BToaster,
     },
     computed: {
         year() {
@@ -27,12 +27,7 @@ export default defineComponent({
                 &copy; Authup {{ year }}
             </div>
         </div>
-        <BContainer
-            :toast="{root: true}"
-            fluid="sm"
-            position="position-fixed"
-            style="z-index: 9999"
-        />
+        <BToaster />
     </div>
 </template>
 <style>

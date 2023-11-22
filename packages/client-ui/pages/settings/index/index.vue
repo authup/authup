@@ -3,9 +3,8 @@
 import { UserForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import { storeToRefs } from 'pinia';
-import { useToast } from 'bootstrap-vue-next';
+import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
-import { definePageMeta } from '#imports';
 import { LayoutKey } from '../../../config/layout';
 import { useAuthStore } from '../../../store/auth';
 
@@ -25,13 +24,13 @@ export default defineNuxtComponent({
         const { user, userId } = storeToRefs(store);
 
         const handleUpdated = (entity: User) => {
-            toast.success({ body: 'The account was successfully updated.' });
+            toast.show({ variant: 'success', body: 'The account was successfully updated.' });
 
             store.setUser(entity);
         };
 
         const handleFailed = (e: Error) => {
-            toast.warning({ body: e.message });
+            toast.show({ variant: 'warning', body: e.message });
         };
 
         return {

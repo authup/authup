@@ -2,9 +2,8 @@
 
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName } from '@authup/core';
-import { useToast } from 'bootstrap-vue-next';
+import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
-import { definePageMeta } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
 export default defineNuxtComponent({
@@ -36,13 +35,13 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: IdentityProvider) => {
             if (toast) {
-                toast.success({ body: `The identity-provider ${e.name} was successfully deleted.` });
+                toast.show({ variant: 'success', body: `The identity-provider ${e.name} was successfully deleted.` });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.warning({ body: e.message });
+                toast.show({ variant: 'warning', body: e.message });
             }
         };
 

@@ -16,6 +16,7 @@
         "dev": "nuxi dev",
         "generate": "nuxi generate",
         "preview": "nuxi preview",
+        "prepare": "nuxi prepare",
         "start": "nuxi start",
         "typecheck": "nuxi typecheck",
         "prepublishOnly": "npm run build"
@@ -42,7 +43,7 @@
         "@vuelidate/core": "^2.0.3",
         "@vuelidate/validators": "^2.0.4",
         "bootstrap": "^5.3.2",
-        "bootstrap-vue-next": "^0.11.0",
+        "bootstrap-vue-next": "^0.15.1",
         "browser-storage-adapter": "^1.1.2",
         "continu": "^1.3.1",
         "minimatch": "^9.0.3",
