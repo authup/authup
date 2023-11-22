@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.45.9
+
+### Patch Changes
+
+- [`f0b015a0`](https://github.com/authup/authup/commit/f0b015a07c960610031412368f83fc07ba4dde40) Thanks [@tada5hi](https://github.com/tada5hi)! - patch ecosystem
+
 ## 0.45.8
 
 ### Patch Changes
