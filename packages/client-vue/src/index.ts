@@ -24,7 +24,7 @@ export function install(app: App, options?: Options) : void {
     const translatorLocale = options.translatorLocale || 'en';
     provideTranslatorLocale(translatorLocale, app);
 
-    applyPluginBaseOptions(options);
+    applyPluginBaseOptions(app, options);
 
     if (options.components) {
         let componentsSelected : undefined | string[];
