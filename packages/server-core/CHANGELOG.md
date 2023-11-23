@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.45.10
+
+### Patch Changes
+
+- [`ecf8797f`](https://github.com/authup/authup/commit/ecf8797fcacff6a560564fb9d01561c04b56cc63) Thanks [@tada5hi](https://github.com/tada5hi)! - fix throwing error
+
+- Updated dependencies [[`ecf8797f`](https://github.com/authup/authup/commit/ecf8797fcacff6a560564fb9d01561c04b56cc63)]:
+  - @authup/core@0.45.10
+
 ## 0.45.9
 
 ### Patch Changes
