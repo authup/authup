@@ -28,6 +28,8 @@ export async function verifyToken(
 ) : Promise<JwtPayload | Jwt | string> {
     let promise : Promise<JwtPayload | Jwt | string | undefined>;
 
+    let output : Jwt | JwtPayload | string | undefined;
+
     try {
         switch (context.type) {
             case KeyType.RSA:
@@ -72,11 +74,11 @@ export async function verifyToken(
                 });
             }
         }
+
+        output = await promise;
     } catch (e) {
         throw createErrorForJWTError(e);
     }
-
-    const output = await promise;
 
     if (typeof output === 'undefined') {
         throw new TokenError({ message: 'Invalid type.' });
