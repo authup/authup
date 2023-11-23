@@ -6,14 +6,8 @@
  */
 
 import { isObject } from '@authup/core';
-import type { ColorVariant, ContainerPosition } from 'bootstrap-vue-next';
+import type { Toast } from 'bootstrap-vue-next';
 import { useToast as _useToast } from 'bootstrap-vue-next';
-
-type ToastOptions = {
-    pos?: ContainerPosition,
-    body: string,
-    variant?: ColorVariant
-};
 
 export function useToast() {
     const toast = _useToast();
@@ -23,8 +17,8 @@ export function useToast() {
             toast.hide(el);
         },
         show(
-            el: string | ToastOptions,
-            options?: Omit<ToastOptions, 'body'>,
+            el: string | Toast,
+            options?: Omit<Toast, 'body'>,
         ) {
             if (isObject(el)) {
                 el.pos = el.pos || 'top-center';
