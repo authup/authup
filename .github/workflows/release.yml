@@ -21,47 +21,50 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            -   uses: google-github-actions/release-please-action@v4
+                id: release
+                with:
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
             -   name: Checkout
+                if: ${{ steps.release.outputs.releases_created }}
                 uses: actions/checkout@v4
                 with:
                     fetch-depth: 0
 
             -   name: Install
+                if: ${{ steps.release.outputs.releases_created }}
                 uses: ./.github/actions/install
                 with:
                     node-version: ${{ env.NODE_VERSION }}
                     node-registry: ${{ env.NODE_REGISTRY }}
 
             -   name: Build
+                if: ${{ steps.release.outputs.releases_created }}
                 uses: ./.github/actions/build
 
-            -   name: Commit & Publish
-                id: changesets
-                uses: changesets/action@v1
-                with:
-                    publish: npm run release
-                    commit: "chore(release): publish"
-                    title: "chore(release): publish"
+            -   name: Publish
+                if: ${{ steps.release.outputs.releases_created }}
+                run: npx lerna publish from-package --yes
                 env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: steps.changesets.outputs.published == 'true'
+                if: ${{ steps.release.outputs.releases_created }}
                 with:
                     cleanup: false
                     registryRepository: authup/authup
                     registryTag: |
                         latest
-                        ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+                        ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: steps.changesets.outputs.published == 'true'
+                if: ${{ steps.release.outputs.releases_created }}
                 with:
                     registryHost: docker.io
                     registryRepository: authup/authup
                     registryUser: authup
                     registryTag: |
                         latest
-                        ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}
+                        ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}

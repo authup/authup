@@ -1,0 +1,9 @@
+{
+    "packages/authup": "0.45.10",
+    "packages/client-ui": "0.45.10",
+    "packages/client-vue": "0.45.10",
+    "packages/core": "0.45.10",
+    "packages/server-adapter": "0.45.10",
+    "packages/server-api": "0.45.10",
+    "packages/server-core": "0.45.10"
+}
