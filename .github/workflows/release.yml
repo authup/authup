@@ -37,7 +37,6 @@ jobs:
                 uses: ./.github/actions/install
                 with:
                     node-version: ${{ env.NODE_VERSION }}
-                    node-registry: ${{ env.NODE_REGISTRY }}
 
             -   name: Build
                 if: ${{ steps.release.outputs.releases_created }}
