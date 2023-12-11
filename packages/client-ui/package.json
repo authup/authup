@@ -33,7 +33,7 @@
         "@pinia/nuxt": "^0.5.1",
         "@vue-layout/countdown": "^3.0.0",
         "@vue-layout/form-controls": "^3.4.0",
-        "@vue-layout/list-controls": "^3.6.1",
+        "@vue-layout/list-controls": "^5.0.1",
         "@vue-layout/navigation": "^3.4.0",
         "@vue-layout/pagination": "^3.4.0",
         "@vue-layout/preset-bootstrap-v5": "^3.2.0",
