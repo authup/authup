@@ -15,6 +15,10 @@ permissions:
     contents: write
     pull-requests: write
 
+defaults:
+    run:
+        shell: bash
+
 jobs:
     release:
         name: Release
@@ -25,11 +29,6 @@ jobs:
                 id: release
                 with:
                     token: ${{ secrets.GITHUB_TOKEN }}
-
-            -   name: Info
-                run: |
-                    echo "Releases created: ${{ steps.release.outputs.releases_created }}"
-                    echo "Release created: ${{ steps.release.outputs.release_created }}
 
             -   name: Checkout
                 if: ${{ steps.release.outputs.releases_created }}
