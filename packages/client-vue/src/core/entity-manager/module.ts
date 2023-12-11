@@ -73,7 +73,7 @@ export function createEntityManager<
         },
     );
 
-    const lockId = ref<DomainEntityID<T> | undefined>(undefined);
+    const lockId = ref(undefined) as Ref<DomainEntityID<T> | undefined>;
 
     if (ctx.props && ctx.props.entity) {
         entity.value = ctx.props.entity;
