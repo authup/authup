@@ -31,29 +31,29 @@ jobs:
                     token: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Checkout
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 uses: actions/checkout@v4
                 with:
                     fetch-depth: 0
 
             -   name: Install
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 uses: ./.github/actions/install
                 with:
                     node-version: ${{ env.NODE_VERSION }}
 
             -   name: Build
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 uses: ./.github/actions/build
 
             -   name: Publish
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 run: npx lerna publish from-package --yes
                 env:
                     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 with:
                     cleanup: false
                     registryRepository: authup/authup
@@ -62,7 +62,7 @@ jobs:
                         ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: ${{ steps.release.outputs.releases_created }}
+                if: steps.release.outputs.releases_created
                 with:
                     registryHost: docker.io
                     registryRepository: authup/authup
