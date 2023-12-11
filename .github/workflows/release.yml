@@ -26,6 +26,11 @@ jobs:
                 with:
                     token: ${{ secrets.GITHUB_TOKEN }}
 
+            -   name: Info
+                run: |
+                    echo "Releases created: ${{ steps.release.outputs.releases_created }}"
+                    echo "Release created: ${{ steps.release.outputs.release_created }}
+
             -   name: Checkout
                 if: ${{ steps.release.outputs.releases_created }}
                 uses: actions/checkout@v4
