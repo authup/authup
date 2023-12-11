@@ -24,21 +24,27 @@ import { createErrorForJWTError } from './utils';
  *
  * @throws TokenError
  */
-export function decodeToken(token: string, options: TokenDecodeOptions & { complete: true }): null | Jwt;
-export function decodeToken(token: string, options?: TokenDecodeOptions): JwtPayload | string | null;
+export function decodeToken(token: string, options: TokenDecodeOptions & { complete: true }): Jwt;
+export function decodeToken(token: string, options?: TokenDecodeOptions): JwtPayload | string;
 export function decodeToken(
     token: string,
     options?: TokenDecodeOptions,
-): JwtPayload | string | null {
+): JwtPayload | string {
     options ??= {};
 
+    let output : string | JwtPayload | null;
+
     try {
-        return decode(token, {
+        output = decode(token, {
             ...options,
         });
     } catch (e) {
-        createErrorForJWTError(e);
-
-        throw e;
+        throw createErrorForJWTError(e);
     }
+
+    if (output === null) {
+        throw TokenError.payloadInvalid('The token could not be decoded.');
+    }
+
+    return output;
 }

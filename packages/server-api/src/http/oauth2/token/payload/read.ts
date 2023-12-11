@@ -7,7 +7,6 @@
 
 import type { OAuth2TokenPayload } from '@authup/core';
 import { ErrorCode, TokenError } from '@authup/core';
-import type { Jwt } from '@authup/server-core';
 import { decodeToken } from '@authup/server-core';
 import { isHTTPError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
@@ -19,13 +18,7 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
         throw TokenError.requestInvalid('The token is not defined.');
     }
 
-    let jwt : Jwt;
-
-    try {
-        jwt = decodeToken(token, { complete: true });
-    } catch (e) {
-        throw TokenError.payloadInvalid('The token could not be decoded.');
-    }
+    const jwt = decodeToken(token, { complete: true });
 
     if (jwt.header.kid) {
         const dataSource = await useDataSource();
