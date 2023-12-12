@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.45.11](https://github.com/authup/authup/compare/server-core-v0.45.10...server-core-v0.45.11) (2023-12-12)
+
+
+### Bug Fixes
+
+* throwing error on token decoding issue ([1617abe](https://github.com/authup/authup/commit/1617abe754d0dec9ad93867ffa0271a33f7c05dd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+  * peerDependencies
+    * @authup/core bumped from >=0.45.10 to >0.45.11
+
 ## 0.45.10
 
 ### Patch Changes

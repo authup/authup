@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.45.11](https://github.com/authup/authup/compare/authup@0.45.10...authup-v0.45.11) (2023-12-12)
+
+
+### Miscellaneous Chores
+
+* **authup:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-ui bumped from ^0.45.10 to ^0.45.11
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-api bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-core bumped from ^0.45.10 to ^0.45.11
+
 ## 0.45.10
 
 ### Patch Changes

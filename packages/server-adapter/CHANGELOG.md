@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.45.11](https://github.com/authup/authup/compare/server-adapter-v0.45.10...server-adapter-v0.45.11) (2023-12-12)
+
+
+### Bug Fixes
+
+* **deps:** bump @hapic/oauth2 from 2.3.0 to 2.4.0 ([#1568](https://github.com/authup/authup/issues/1568)) ([f1eb65b](https://github.com/authup/authup/commit/f1eb65b093689767889e06dafc1f734c9f58d96d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-core bumped from ^0.45.10 to ^0.45.11
+  * peerDependencies
+    * @authup/core bumped from >=0.45.10 to >0.45.11
+    * @authup/server-core bumped from >=0.45.10 to >0.45.11
+
 ## 0.45.10
 
 ### Patch Changes
