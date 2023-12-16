@@ -1,8 +1,0 @@
-{
-    "extends": "../../tsconfig.json",
-    "compilerOptions": {
-        "paths": {
-            "@authup/core": ["./packages/core/src"]
-        }
-    }
-}

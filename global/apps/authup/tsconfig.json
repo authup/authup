@@ -1,0 +1,11 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@authup/core": ["./global/packages/core/src"],
+            "@authup/server-api": ["./server/apps/core/src"],
+            "@authup/server-core": ["./server/packages/core/src"]
+        }
+    }
+}
+

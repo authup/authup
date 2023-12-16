@@ -34,17 +34,17 @@ case "${PACKAGE}" in
     api)
         export HOST=0.0.0.0
         export PORT=3000
-        exec npm run cli --workspace=packages/server-api -- "$@"
+        exec npm run cli --workspace=server/apps/core -- "$@"
         ;;
     ui)
         export NUXT_HOST=0.0.0.0
         export NUXT_PORT=3000
-        exec npm run start --workspace=packages/client-ui
+        exec npm run start --workspace=client/apps/web
         ;;
     cli)
         export UI_PORT=3000
         export API_PORT=3001
-        exec npm run cli --workspace=packages/authup -- "$@"
+        exec npm run cli --workspace=global/apps/authup -- "$@"
         ;;
 esac
 

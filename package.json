@@ -1,65 +1,70 @@
 {
-  "name": "@authup/root",
-  "private": true,
-  "author": {
-    "name": "Peter Placzek",
-    "email": "contact@tada5hi.net",
-    "url": "https://github.com/tada5hi"
-  },
-  "license": "MIT",
-  "version": "1.0.0",
-  "workspaces": [
-    "packages/*"
-  ],
-  "keywords": [
-    "auth",
-    "module",
-    "typescript",
-    "template",
-    "auth-template",
-    "oauth2",
-    "oauth2-client"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/authup/authup.git"
-  },
-  "bugs": {
-    "url": "https://github.com/authup/authup/issues"
-  },
-  "homepage": "https://github.com/authup/authup#readme",
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@swc/core": "^1.3.99",
-    "@swc/jest": "^0.2.29",
-    "@tada5hi/commitlint-config": "^1.1.3",
-    "@tada5hi/eslint-config-vue-typescript": "^1.3.6",
-    "@types/jest": "^29.5.10",
-    "@types/node": "^20.9.4",
-    "cross-env": "^7.0.3",
-    "eslint": "^8.54.0",
-    "husky": "^8.0.3",
-    "jest": "^29.6.4",
-    "lerna": "^8.0.0",
-    "lint-staged": "^15.1.0",
-    "nx": "^17.1.3",
-    "rimraf": "^5.0.5",
-    "rollup": "^4.5.1",
-    "typescript": "5.3.2"
-  },
-  "scripts": {
-    "build": "npx nx run-many -t build",
-    "test": "npx nx run-many -t test",
-    "lint": "eslint --ext .ts ./packages/",
-    "lint:fix": "npm run lint -- --fix",
-    "prepare": "husky install",
-    "release": "npx changeset publish"
-  },
-  "lint-staged": {
-    "*.ts": "eslint --fix"
-  }
+    "name": "@authup/root",
+    "private": true,
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "version": "1.0.0",
+    "workspaces": [
+        "client/apps/*",
+        "client/packages/*",
+        "global/apps/*",
+        "global/packages/*",
+        "server/apps/*",
+        "server/packages/*"
+    ],
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-terser": "^0.4.4",
+        "@swc/core": "^1.3.99",
+        "@swc/jest": "^0.2.29",
+        "@tada5hi/commitlint-config": "^1.1.3",
+        "@tada5hi/eslint-config-vue-typescript": "^1.3.6",
+        "@types/jest": "^29.5.10",
+        "@types/node": "^20.9.4",
+        "cross-env": "^7.0.3",
+        "eslint": "^8.54.0",
+        "husky": "^8.0.3",
+        "jest": "^29.6.4",
+        "lerna": "^8.0.0",
+        "lint-staged": "^15.1.0",
+        "nx": "^17.1.3",
+        "rimraf": "^5.0.5",
+        "rollup": "^4.5.1",
+        "typescript": "5.3.2"
+    },
+    "scripts": {
+        "build": "npx nx run-many -t build",
+        "test": "npx nx run-many -t test",
+        "lint": "eslint --ext .ts ./client/ ./global ./server",
+        "lint:fix": "npm run lint -- --fix",
+        "prepare": "husky install",
+        "release": "npx changeset publish"
+    },
+    "lint-staged": {
+        "*.ts": "eslint --fix"
+    }
 }
