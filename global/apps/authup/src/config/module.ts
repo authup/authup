@@ -6,7 +6,7 @@
  */
 
 import { makeURLPublicAccessible } from '@authup/core';
-import { createConfig as createApiConfig } from '@authup/server-api';
+import { createConfig as createApiConfig } from '@authup/server-core-app';
 import { readConfigFile } from '@authup/server-core';
 import { createUIConfig, extendServerConfigWithEnv, extendUIConfigWithEnv } from '../packages';
 import type { Config } from './type';

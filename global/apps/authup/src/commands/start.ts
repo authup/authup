@@ -8,9 +8,9 @@
 import process from 'node:process';
 import type { CAC } from 'cac';
 import { createConfig } from '../config';
+import { AppID } from '../constants';
 import type { ApiStartCommandContext, UIStartCommandContext } from '../packages';
 import {
-    ServiceName,
     startServer,
     startUI,
 } from '../packages';
@@ -20,13 +20,13 @@ export function buildStartCommand(cac: CAC) {
         .command('start [...services]', 'Start one or many services.')
         .action(async (services: string[]) => {
             if (services.length === 0) {
-                services = Object.values(ServiceName);
+                services = Object.values(AppID);
             }
 
             const root = process.cwd();
             const config = await createConfig();
 
-            if (services.indexOf(ServiceName.API) !== -1) {
+            if (services.indexOf(AppID.SERVER_CORE) !== -1) {
                 const ctx : ApiStartCommandContext = {
                     args: {
                         root,
@@ -40,7 +40,7 @@ export function buildStartCommand(cac: CAC) {
                 await startServer(ctx);
             }
 
-            if (services.indexOf(ServiceName.UI) !== -1) {
+            if (services.indexOf(AppID.CLIENT_WEB) !== -1) {
                 const ctx : UIStartCommandContext = {
                     args: {
                         root,

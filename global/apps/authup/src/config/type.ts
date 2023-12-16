@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Config as APiConfig } from '@authup/server-api';
+import type { Config as APiConfig } from '@authup/server-core-app';
 import type { UIConfig } from '../packages';
 
 export type Config = {

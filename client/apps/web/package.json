@@ -1,7 +1,7 @@
 {
-    "name": "@authup/client-ui",
+    "name": "@authup/client-web-app",
     "version": "0.45.10",
-    "description": "This is a standalone application.",
+    "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
     "files": [
         ".output"
@@ -9,7 +9,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/client-ui"
+        "directory": "client/apps/web"
     },
     "scripts": {
         "build": "nuxt prepare && nuxt build && node postbuild.mjs",

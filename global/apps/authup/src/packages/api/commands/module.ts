@@ -11,6 +11,7 @@ import path from 'node:path';
 import process from 'node:process';
 import consola from 'consola';
 import findUpPackagePath from 'resolve-package-path';
+import { AppPackageName } from '../../../constants';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import type { CommandExecutionContext } from '../../type';
 import type { ServerCommand } from '../constants';
@@ -24,9 +25,9 @@ export async function executeServerCommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx @authup/server-api';
-        const modulePath = findUpPackagePath('@authup/server-api', process.cwd()) ||
-            findUpPackagePath('@authup/server-api', getClosestNodeModulesPath());
+        let base = `npx ${AppPackageName.SERVER_CORE}`;
+        const modulePath = findUpPackagePath(AppPackageName.SERVER_CORE, process.cwd()) ||
+            findUpPackagePath(AppPackageName.SERVER_CORE, getClosestNodeModulesPath());
 
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);

@@ -11,6 +11,7 @@ import path from 'node:path';
 import process from 'node:process';
 import consola from 'consola';
 import findUpPackagePath from 'resolve-package-path';
+import { AppPackageName } from '../../../constants';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
 import type { CommandExecutionContext } from '../../type';
 import type { UICommand } from '../constants';
@@ -23,9 +24,9 @@ export function executeUICommand(
     ctx.args = ctx.args || {};
 
     return new Promise<ChildProcess>((resolve, reject) => {
-        let base = 'npx @authup/client-ui';
-        const modulePath = findUpPackagePath('@authup/client-ui', process.cwd()) ||
-            findUpPackagePath('@authup/client-ui', getClosestNodeModulesPath());
+        let base = `npx ${AppPackageName.CLIENT_WEB}`;
+        const modulePath = findUpPackagePath(AppPackageName.CLIENT_WEB, process.cwd()) ||
+            findUpPackagePath(AppPackageName.CLIENT_WEB, getClosestNodeModulesPath());
 
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);

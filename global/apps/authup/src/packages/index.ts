@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
 export * from './ui';
 export * from './api';
 export * from './type';

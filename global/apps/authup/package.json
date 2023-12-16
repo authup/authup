@@ -24,16 +24,16 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/authup"
+        "directory": "global/apps/authup"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-ui": "^0.45.10",
+        "@authup/client-web-app": "^0.45.10",
         "@authup/core": "^0.45.10",
-        "@authup/server-api": "^0.45.10",
+        "@authup/server-core-app": "^0.45.10",
         "@authup/server-core": "^0.45.10",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
