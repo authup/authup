@@ -81,10 +81,10 @@ jobs:
         strategy:
             matrix:
                 package: [
-                    'server-adapter',
-                    'server-core',
-                    'server-api',
-                    'core'
+                    'server/packages/adapter',
+                    'server/packages/core',
+                    'server/apps/core',
+                    'global/packages/core'
                 ]
         steps:
             -   name: Checkout
@@ -103,4 +103,4 @@ jobs:
 
             -   name: Run tests
                 run: |
-                    npm run test --workspace=packages/${{matrix.package}} --if-present
+                    npm run test --workspace=${{matrix.package}} --if-present
