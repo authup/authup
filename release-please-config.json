@@ -5,42 +5,43 @@
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
     "packages": {
-        "packages/authup": {
-            "component": "authup"
+        "client/apps/web": {
+            "component": "client-web-app"
         },
-        "packages/client-ui": {
-            "component": "client-ui"
-        },
-        "packages/client-vue": {
+        "client/packages/vue": {
             "component": "client-vue"
         },
-        "packages/core": {
-            "component": "core"
+        "global/apps/authup": {
+            "component": "global-authup-app"
         },
-        "packages/server-adapter": {
+        "global/packages/core": {
+            "component": "global-core"
+        },
+        "server/packages/adapter": {
             "component": "server-adapter"
         },
-        "packages/server-api": {
-            "component": "server-api"
+        "server/apps/core": {
+            "component": "server-core-app"
         },
-        "packages/server-core": {
+        "server/packages/core": {
             "component": "server-core"
         }
     },
     "plugins": [
         {
-            "type": "node-workspace"
+            "type": "node-workspace",
+            "updatePeerDependencies": true
         },
         {
             "type": "linked-versions",
             "groupName": "main",
             "components": [
-                "authup",
-                "client-ui",
                 "client-vue",
-                "core",
+                "client-web-app",
+                "global-authup-app",
+                "global-core",
                 "server-adapter",
-                "server-api",
+                "server-core-app",
                 "server-core"
             ]
         }
