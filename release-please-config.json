@@ -29,7 +29,8 @@
     },
     "plugins": [
         {
-            "type": "node-workspace"
+            "type": "node-workspace",
+            "updatePeerDependencies": true
         },
         {
             "type": "linked-versions",
