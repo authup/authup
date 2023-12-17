@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.45.11](https://github.com/authup/authup/compare/global-authup-app-v0.45.10...global-authup-app-v0.45.11) (2023-12-17)
+
+
+### Miscellaneous Chores
+
+* **global-authup-app:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-app bumped from ^0.45.10 to ^0.45.11
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-core-app bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-core bumped from ^0.45.10 to ^0.45.11
+
 ## 0.45.10
 
 ### Patch Changes

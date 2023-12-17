@@ -1,5 +1,20 @@
 # Change Log
 
+## 0.45.11 (2023-12-17)
+
+
+### Miscellaneous Chores
+
+* **server-core-app:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+    * @authup/server-core bumped from ^0.45.10 to ^0.45.11
+
 ## 0.45.10
 
 ### Patch Changes

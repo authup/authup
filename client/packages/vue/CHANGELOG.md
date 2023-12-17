@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.45.11](https://github.com/authup/authup/compare/client-vue-v0.45.10...client-vue-v0.45.11) (2023-12-17)
+
+
+### Bug Fixes
+
+* relational resource componentns slot rendering ([b28de46](https://github.com/authup/authup/commit/b28de468f87a73b5402ee113f5a3caa11283bf5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^0.45.11
+  * peerDependencies
+    * @authup/core bumped from >=0.45.10 to >0.45.11
+
 ## 0.45.10
 
 ### Patch Changes
