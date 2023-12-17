@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0](https://github.com/authup/authup/compare/global-core-v0.45.10...global-core-v1.0.0) (2023-12-17)
+
+
+### Miscellaneous Chores
+
+* **global-core:** Synchronize main versions
+
 ## 0.45.10
 
 ### Patch Changes
