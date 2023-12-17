@@ -18,7 +18,7 @@ export const ScopeClientAssignmentList = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         return () => h(ClientList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Client }) => h(
                 ClientScopeAssignAction,
@@ -27,6 +27,7 @@ export const ScopeClientAssignmentList = defineComponent({
                     clientId: slotProps.data.id,
                 },
             ),
+            ...slots,
         });
     },
 });

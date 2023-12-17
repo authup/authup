@@ -20,7 +20,7 @@ export const PermissionRobotAssignmentList = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         return () => h(RobotList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Robot }) => h(
                 RobotPermissionAssignAction,
@@ -29,6 +29,7 @@ export const PermissionRobotAssignmentList = defineComponent({
                     robotId: slotProps.data.id,
                 },
             ),
+            ...slots,
         });
     },
 });

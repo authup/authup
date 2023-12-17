@@ -1,5 +1,5 @@
 <script lang="ts">
-import { UserPermissionAssignmentList } from '@authup/client-vue';
+import { ListPagination, UserPermissionAssignmentList } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
@@ -7,6 +7,7 @@ import { resolveComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
+        ListPagination,
         UserPermissionAssignmentList,
     },
     props: {
@@ -23,5 +24,13 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <UserPermissionAssignmentList :entity-id="entity.id" />
+    <UserPermissionAssignmentList :entity-id="entity.id">
+        <template #footer="props">
+            <ListPagination
+                :busy="props.busy"
+                :meta="props.meta"
+                :load="props.load"
+            />
+        </template>
+    </UserPermissionAssignmentList>
 </template>

@@ -18,7 +18,7 @@ export const PermissionUserAssignmentList = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         return () => h(UserList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: User }) => h(
                 UserPermissionAssignAction,
@@ -27,7 +27,7 @@ export const PermissionUserAssignmentList = defineComponent({
                     userId: slotProps.data.id,
                 },
             ),
-
+            ...slots,
         });
     },
 });

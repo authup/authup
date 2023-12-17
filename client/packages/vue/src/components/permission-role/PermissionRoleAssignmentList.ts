@@ -18,7 +18,7 @@ export const PermissionRoleAssignmentList = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         return () => h(RoleList, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 RolePermissionAssignAction,
@@ -27,6 +27,7 @@ export const PermissionRoleAssignmentList = defineComponent({
                     roleId: slotProps.data.id,
                 },
             ),
+            ...slots,
         });
     },
 });

@@ -19,7 +19,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    setup(props, { slots }) {
         return () => h(RoleList, {
             headerTitle: false,
         }, {
@@ -31,6 +31,7 @@ export const IdentityProviderRoleAssignmentList = defineComponent({
                     role: item,
                 },
             )),
+            ...slots,
         });
     },
 });
