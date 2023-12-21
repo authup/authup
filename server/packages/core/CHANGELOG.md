@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0](https://github.com/authup/authup/compare/server-core-v0.45.10...server-core-v1.0.0) (2023-12-21)
+
+
+### Miscellaneous Chores
+
+* **server-core:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0
+  * peerDependencies
+    * @authup/core bumped from >=0.45.10 to >1.0.0
+
 ## 0.45.10
 
 ### Patch Changes

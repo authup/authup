@@ -1,5 +1,21 @@
 # Change Log
 
+## 1.0.0 (2023-12-21)
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/swagger from 2.3.0 to 2.3.1 ([#1581](https://github.com/authup/authup/issues/1581)) ([67416c6](https://github.com/authup/authup/commit/67416c69fe0c8839a855dbed3965c6e9aed6d200))
+* **deps:** bump reflect-metadata from 0.1.14 to 0.2.1 ([#1575](https://github.com/authup/authup/issues/1575)) ([96e97de](https://github.com/authup/authup/commit/96e97de2382323658b231ce4e5051e14762ed796))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0
+    * @authup/server-core bumped from ^0.45.10 to ^1.0.0
+
 ## 0.45.10
 
 ### Patch Changes
