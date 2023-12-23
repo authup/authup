@@ -12,6 +12,7 @@ import type {
 import {
     flattenNestedNavigationItems,
 } from '@vuecs/navigation';
+import type { RouteLocationNormalized } from 'vue-router';
 
 import {
     LayoutKey,
@@ -44,7 +45,7 @@ export class Navigation implements NavigationProvider {
         this.context = context;
     }
 
-    async getItems(tier: number, items: NavigationItem[]): Promise<NavigationItem[]> {
+    async getItems(tier: number, items: NavigationItem[]): Promise<NavigationItem[] | undefined> {
         if (tier > 1) {
             return undefined;
         }
@@ -69,7 +70,7 @@ export class Navigation implements NavigationProvider {
         });
     }
 
-    async getItemsActiveByRoute(route): Promise<NavigationItem[]> {
+    async getItemsActiveByRoute(route: RouteLocationNormalized): Promise<NavigationItem[]> {
         const {
             [LayoutKey.NAVIGATION_ID]: topId,
             [LayoutKey.NAVIGATION_SIDE_ID]: sideId,
