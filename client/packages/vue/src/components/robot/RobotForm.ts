@@ -24,12 +24,13 @@ import {
 import type { Realm, Robot } from '@authup/core';
 import { DomainType, createNanoID } from '@authup/core';
 import {
+    buildFormGroup,
     buildFormInput,
     buildFormSubmit,
-} from '@vue-layout/form-controls';
+} from '@vuecs/form-controls';
 import {
     SlotName,
-} from '@vue-layout/list-controls';
+} from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
@@ -139,36 +140,43 @@ export const RobotForm = defineComponent({
         };
 
         const render = () => {
-            const name = buildFormInput({
+            const name = buildFormGroup({
                 validationResult: $v.value.name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                },
-                props: {
-                    disabled: isNameFixed.value,
-                },
+                content: buildFormInput({
+                    value: form.name,
+                    onChange(input) {
+                        form.name = input;
+                    },
+                    props: {
+                        disabled: isNameFixed.value,
+                    },
+                }),
             });
 
             let id : VNodeArrayChildren = [];
 
             if (manager.data.value) {
                 id = [
-                    buildFormInput({
+                    buildFormGroup({
+                        label: true,
                         labelContent: 'ID',
-                        value: manager.data.value.id,
-                        props: {
-                            disabled: true,
-                        },
+                        content: buildFormInput({
+                            value: manager.data.value.id,
+                            props: {
+                                disabled: true,
+                            },
+                        }),
                     }),
                 ];
             }
 
-            const secret = buildFormInput({
+            const secret = buildFormGroup({
                 validationResult: $v.value.secret,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: [
                     'Secret',
                     isSecretHashed.value ? h('span', {
@@ -179,10 +187,12 @@ export const RobotForm = defineComponent({
                         h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
                     ]) : '',
                 ],
-                value: form.secret,
-                onChange(input) {
-                    form.secret = input;
-                },
+                content: buildFormInput({
+                    value: form.secret,
+                    onChange(input) {
+                        form.secret = input;
+                    },
+                }),
             });
 
             const secretInfo = h('div', [

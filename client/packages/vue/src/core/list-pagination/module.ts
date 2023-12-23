@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPagination } from '@vue-layout/pagination';
+import { buildPagination } from '@vuecs/pagination';
 import type { ListPaginationOptions } from './type';
 
 export function buildListPagination<T>(

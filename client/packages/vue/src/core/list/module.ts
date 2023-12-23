@@ -9,10 +9,10 @@ import { hasOwnProperty } from '@authup/core';
 import type { DomainAPI, DomainEntity, DomainType } from '@authup/core';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
-} from '@vue-layout/list-controls';
+} from '@vuecs/list-controls';
 import {
     buildList,
-} from '@vue-layout/list-controls';
+} from '@vuecs/list-controls';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {

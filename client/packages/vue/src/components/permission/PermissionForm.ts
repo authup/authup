@@ -15,13 +15,15 @@ import {
     helpers, maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
-import { buildFormInput, buildFormSubmit, buildFormTextarea } from '@vue-layout/form-controls';
+import {
+    buildFormGroup, buildFormInput, buildFormSubmit, buildFormTextarea,
+} from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
+    useTranslator, useValidationTranslator,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 
 export const PermissionForm = defineComponent({
     props: {
@@ -88,32 +90,39 @@ export const PermissionForm = defineComponent({
         };
 
         const render = () => {
-            const name = buildFormInput({
+            const name = buildFormGroup({
                 validationResult: $v.value.name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                },
-                props: {
-                    placeholder: '{object}_{action}',
-                    disabled: manager.data.value &&
-                        manager.data.value.built_in,
-                },
+                content: buildFormInput({
+                    value: form.name,
+                    onChange(input) {
+                        form.name = input;
+                    },
+                    props: {
+                        placeholder: '{object}_{action}',
+                        disabled: manager.data.value &&
+                            manager.data.value.built_in,
+                    },
+                }),
             });
 
-            const description = buildFormTextarea({
+            const description = buildFormGroup({
                 validationResult: $v.value.description,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Description',
-                value: form.description,
-                onChange(input) {
-                    form.description = input;
-                },
-                props: {
-                    rows: 4,
-                },
+                content: buildFormTextarea({
+
+                    value: form.description,
+                    onChange(input) {
+                        form.description = input;
+                    },
+                    props: {
+                        rows: 4,
+                    },
+                }),
             });
 
             const submitButton = buildFormSubmit({

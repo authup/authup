@@ -7,7 +7,7 @@
 
 import { defineComponent, h } from 'vue';
 import type { User } from '@authup/core';
-import { SlotName } from '@vue-layout/list-controls';
+import { SlotName } from '@vuecs/list-controls';
 import { UserPermissionAssignAction } from '../user-permission';
 import { UserList } from '../user';
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ValidationTranslator } from '@vue-layout/form-controls';
+import type { ValidationTranslator } from '@vuecs/form-controls';
 import type { App, Ref } from 'vue';
 import {
     inject, isRef, provide, ref,

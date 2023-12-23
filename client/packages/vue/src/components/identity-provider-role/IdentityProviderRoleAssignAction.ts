@@ -13,13 +13,13 @@ import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
 import type { IdentityProviderRole, Role } from '@authup/core';
-import { buildFormInput } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import {
     createEntityManager,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
+    useValidationTranslator,
 } from '../../core';
-import { useValidationTranslator } from '../../core/translator';
 
 export const IdentityProviderRoleAssignAction = defineComponent({
     props: {
@@ -181,14 +181,17 @@ export const IdentityProviderRoleAssignAction = defineComponent({
                     h('div', {
                         class: 'mt-2',
                     }, [
-                        buildFormInput({
+                        buildFormGroup({
+                            label: true,
                             labelContent: 'External ID',
-                            value: form.external_id,
-                            onChange(input) {
-                                form.external_id = input;
-                            },
                             validationResult: $v.value.external_id,
                             validationTranslator: useValidationTranslator(props.translatorLocale),
+                            content: buildFormInput({
+                                value: form.external_id,
+                                onChange(input) {
+                                    form.external_id = input;
+                                },
+                            }),
                         }),
                     ]),
                 ];

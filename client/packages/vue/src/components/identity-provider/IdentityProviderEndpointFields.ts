@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, OAuth2IdentityProvider, OAuth2OpenIDProviderMetadata } from '@authup/core';
-import { buildFormInput } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     required, url,
@@ -16,8 +16,7 @@ import {
     defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties } from '../../core';
-import { useValidationTranslator } from '../../core/translator';
+import { extendObjectProperties, useValidationTranslator } from '../../core';
 import { IdentityProviderDiscovery } from './IdentityProviderDiscovery';
 
 export const IdentityProviderEndpointFields = defineComponent({
@@ -58,6 +57,8 @@ export const IdentityProviderEndpointFields = defineComponent({
         });
 
         function init() {
+            if (!props.entity) return;
+
             extendObjectProperties(form, props.entity);
         }
 
@@ -82,41 +83,50 @@ export const IdentityProviderEndpointFields = defineComponent({
 
             return [
                 discoveryNode,
-                buildFormInput({
+                buildFormGroup({
                     validationResult: $v.value.token_url,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Token',
-                    value: form.token_url,
-                    onChange(input) {
-                        form.token_url = input;
-                    },
-                    props: {
-                        placeholder: 'https://...',
-                    },
+                    content: buildFormInput({
+                        value: form.token_url,
+                        onChange(input) {
+                            form.token_url = input;
+                        },
+                        props: {
+                            placeholder: 'https://...',
+                        },
+                    }),
                 }),
-                buildFormInput({
+                buildFormGroup({
                     validationResult: $v.value.authorize_url,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Authorize',
-                    value: form.authorize_url,
-                    onChange(input) {
-                        form.authorize_url = input;
-                    },
-                    props: {
-                        placeholder: 'https://...',
-                    },
+                    content: buildFormInput({
+                        value: form.authorize_url,
+                        onChange(input) {
+                            form.authorize_url = input;
+                        },
+                        props: {
+                            placeholder: 'https://...',
+                        },
+                    }),
                 }),
-                buildFormInput({
+                buildFormGroup({
                     validationResult: $v.value.user_info_url,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'UserInfo',
-                    value: form.user_info_url,
-                    onChange(input) {
-                        form.user_info_url = input;
-                    },
-                    props: {
-                        placeholder: 'https://...',
-                    },
+                    content: buildFormInput({
+                        value: form.user_info_url,
+                        onChange(input) {
+                            form.user_info_url = input;
+                        },
+                        props: {
+                            placeholder: 'https://...',
+                        },
+                    }),
                 }),
             ];
         };

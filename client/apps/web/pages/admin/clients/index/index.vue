@@ -1,6 +1,5 @@
 <script lang="ts">
 
-import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
@@ -9,7 +8,7 @@ import {
     ClientList, EntityDelete, ListPagination, ListSearch, ListTitle, UserEntity,
 } from '@authup/client-vue';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent } from '#app';
+import { defineNuxtComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
@@ -21,7 +20,6 @@ export default defineNuxtComponent({
         EntityDelete,
         ClientList,
         UserEntity,
-        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -103,10 +101,10 @@ export default defineNuxtComponent({
                 outlined
             >
                 <template #cell(created_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(updated_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(user_id)="data">
                     <UserEntity :entity-id="data.item.user_id">

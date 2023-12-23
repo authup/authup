@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { Timeago } from '@vue-layout/timeago';
+import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
     EntityDelete, ListPagination, ListSearch, ListTitle, PermissionList,
@@ -20,7 +20,7 @@ export default defineNuxtComponent({
         BTable,
         EntityDelete,
         PermissionList,
-        Timeago,
+        VCTimeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -99,10 +99,10 @@ export default defineNuxtComponent({
                 outlined
             >
                 <template #cell(created_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(updated_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(options)="data">
                     <NuxtLink

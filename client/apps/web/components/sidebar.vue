@@ -6,15 +6,11 @@
   -->
 <script lang="ts">
 
-import { Countdown } from '@vue-layout/countdown';
-import { NavigationComponents } from '@vue-layout/navigation';
 import { storeToRefs } from 'pinia';
-import { defineNuxtComponent } from '#app';
-import { computed, useAPI } from '#imports';
+import { computed, defineNuxtComponent, useAPI } from '#imports';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
-    components: { Countdown, NavigationComponents },
     setup() {
         const store = useAuthStore();
         const { loggedIn, accessTokenExpireDate: tokenExpireDate, realmManagement } = storeToRefs(store);
@@ -54,7 +50,7 @@ export default defineNuxtComponent({
                 </div>
             </div>
 
-            <navigation-components
+            <VCNavItems
                 class="sidebar-menu navbar-nav"
                 :tier="1"
             />
@@ -65,12 +61,12 @@ export default defineNuxtComponent({
                     class="font-weight-light d-flex flex-column ms-3 me-3 mb-1 mt-auto"
                 >
                     <small>
-                        <Countdown :time="tokenExpiresIn">
+                        <VCCountdown :time="tokenExpiresIn">
                             <template #default="props">
                                 <i class="fa fa-clock pr-1" /> The session expires in
                                 <span class="text-success">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
                             </template>
-                        </Countdown>
+                        </VCCountdown>
                     </small>
                 </div>
 

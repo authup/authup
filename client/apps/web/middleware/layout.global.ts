@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildNavigation } from '@vue-layout/navigation';
+import { buildNavigation } from '@vuecs/navigation';
+import { defineNuxtRouteMiddleware } from '#imports';
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
-    await buildNavigation({ url: to.fullPath });
+export default defineNuxtRouteMiddleware(async (route) => {
+    await buildNavigation({ route });
 });

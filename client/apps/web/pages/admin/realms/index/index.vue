@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Timeago } from '@vue-layout/timeago';
+import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -7,7 +7,7 @@ import {
     EntityDelete, ListPagination, ListSearch, ListTitle, RealmList,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
-import { defineNuxtComponent } from '#app';
+import { defineNuxtComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
@@ -18,7 +18,7 @@ export default defineNuxtComponent({
         BTable,
         EntityDelete,
         RealmList,
-        Timeago,
+        VCTimeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -94,10 +94,10 @@ export default defineNuxtComponent({
                 outlined
             >
                 <template #cell(created_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(updated_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(options)="data">
                     <button

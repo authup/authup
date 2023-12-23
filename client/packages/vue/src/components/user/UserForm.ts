@@ -7,8 +7,10 @@
 
 import type { Realm, User } from '@authup/core';
 import { DomainType } from '@authup/core';
-import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
-import { SlotName } from '@vue-layout/list-controls';
+import {
+    buildFormGroup, buildFormInput, buildFormInputCheckbox, buildFormSubmit,
+} from '@vuecs/form-controls';
+import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     email, maxLength, minLength, required,
@@ -139,43 +141,52 @@ export const UserForm = defineComponent({
             displayNameChanged.value = value.length !== 0;
         };
         const render = () => {
-            const name = buildFormInput({
+            const name = buildFormGroup({
                 validationResult: $v.value.name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                    updateDisplayName.call(null, input);
-                },
-                props: {
-                    disabled: form.name_locked,
-                },
+                content: buildFormInput({
+                    value: form.name,
+                    onChange(input) {
+                        form.name = input;
+                        updateDisplayName.call(null, input);
+                    },
+                    props: {
+                        disabled: form.name_locked,
+                    },
+                }),
             });
 
-            const displayName = buildFormInput({
+            const displayName = buildFormGroup({
                 validationResult: $v.value.display_name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Display Name',
-                value: form.display_name,
-                onChange(input) {
-                    form.display_name = input;
-                    handleDisplayNameChanged.call(null, input);
-                },
+                content: buildFormInput({
+                    value: form.display_name,
+                    onChange(input) {
+                        form.display_name = input;
+                        handleDisplayNameChanged.call(null, input);
+                    },
+                }),
             });
 
-            const email = buildFormInput({
+            const email = buildFormGroup({
                 validationResult: $v.value.email,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Email',
-                value: form.email,
-                props: {
-                    type: 'email',
-                    placeholder: '...@...',
-                },
-                onChange(value) {
-                    form.email = value;
-                },
+                content: buildFormInput({
+                    value: form.email,
+                    props: {
+                        type: 'email',
+                        placeholder: '...@...',
+                    },
+                    onChange(value) {
+                        form.email = value;
+                    },
+                }),
             });
 
             let checks : VNodeArrayChildren = [];

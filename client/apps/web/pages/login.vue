@@ -11,9 +11,6 @@ import {
     injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
-import {
-    FormInput, FormSubmit,
-} from '@vue-layout/form-controls';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
@@ -41,8 +38,6 @@ export default defineNuxtComponent({
         IdentityProviderIcon,
         RealmList,
         RealmSelectAction,
-        FormSubmit,
-        FormInput,
     },
     setup() {
         definePageMeta({
@@ -154,24 +149,36 @@ export default defineNuxtComponent({
         <form @submit.prevent="submit">
             <div class="row">
                 <div class="col-8">
-                    <FormInput
-                        v-model="form.name"
+                    <VCFormGroup
                         :validation-result="vuelidate.name"
                         :validation-translator="translator"
-                        :label="true"
-                        :label-content="'Name'"
-                    />
+                    >
+                        <template #label>
+                            Name
+                        </template>
+                        <template #default>
+                            <VCFormInput
+                                v-model="form.name"
+                            />
+                        </template>
+                    </VCFormGroup>
 
-                    <FormInput
-                        v-model="form.password"
-                        type="password"
+                    <VCFormGroup
                         :validation-result="vuelidate.password"
                         :validation-translator="translator"
-                        :label="true"
-                        :label-content="'Password'"
-                    />
+                    >
+                        <template #label>
+                            Password
+                        </template>
+                        <template #default>
+                            <VCFormInput
+                                v-model="form.password"
+                                type="password"
+                            />
+                        </template>
+                    </VCFormGroup>
 
-                    <FormSubmit
+                    <VCFormSubmit
                         v-model="busy"
                         :validation-result="vuelidate"
                         :create-text="'Login'"

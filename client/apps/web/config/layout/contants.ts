@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { NavigationElement } from '@vue-layout/navigation';
+import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core';
 
 export enum LayoutKey {
-    NAVIGATION_ID = 'navigationId',
+    // todo: renmae to NAVIGATION_TOP_ID
+    NAVIGATION_ID = 'navigationTopId',
+    NAVIGATION_SIDE_ID = 'navigationSideId',
+
     REQUIRED_LOGGED_IN = 'requireLoggedIn',
     REQUIRED_LOGGED_OUT = 'requireLoggedOut',
 
@@ -21,7 +24,7 @@ export enum LayoutNavigationID {
     DEFAULT = 'default',
 }
 
-export const LayoutTopNavigation : NavigationElement[] = [
+export const LayoutTopNavigation : NavigationItem[] = [
     {
         id: LayoutNavigationID.DEFAULT,
         name: 'General',
@@ -38,7 +41,7 @@ export const LayoutTopNavigation : NavigationElement[] = [
     },
 ];
 
-export const LayoutSideDefaultNavigation : NavigationElement[] = [
+export const LayoutSideDefaultNavigation : NavigationItem[] = [
     {
         name: 'General',
         type: 'separator',
@@ -77,7 +80,7 @@ export const LayoutSideDefaultNavigation : NavigationElement[] = [
     },
 ];
 
-export const LayoutSideAdminNavigation : NavigationElement[] = [
+export const LayoutSideAdminNavigation : NavigationItem[] = [
     {
         name: 'Realms',
         type: 'link',

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFormInput } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, url,
@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { useValidationTranslator } from '../../core/translator/utils';
+import { useValidationTranslator } from '../../core';
 
 export const ClientRedirectUriListItem = defineComponent({
     props: {
@@ -44,37 +44,39 @@ export const ClientRedirectUriListItem = defineComponent({
             },
         }, form);
 
-        const render = () => buildFormInput({
+        const render = () => buildFormGroup({
             validationResult: $v.value.url,
             validationTranslator: useValidationTranslator(props.translatorLocale),
             label: false,
-            value: form.url,
-            onChange(input) {
-                form.url = input;
+            content: buildFormInput({
+                value: form.url,
+                onChange(input) {
+                    form.url = input;
 
-                nextTick(() => {
-                    ctx.emit('updated', input);
-                });
-            },
-            groupAppend: true,
-            groupAppendContent: h(
-                'button',
-                {
-                    type: 'button',
-                    class: 'btn btn-xs btn-danger',
-                    onClick($event: any) {
-                        $event.preventDefault();
-
-                        ctx.emit('deleted');
-                    },
-                    disabled: props.disabled,
+                    nextTick(() => {
+                        ctx.emit('updated', input);
+                    });
                 },
-                [
-                    h('i', {
-                        class: 'fa fa-minus',
-                    }),
-                ],
-            ),
+                groupAppend: true,
+                groupAppendContent: h(
+                    'button',
+                    {
+                        type: 'button',
+                        class: 'btn btn-xs btn-danger',
+                        onClick($event: any) {
+                            $event.preventDefault();
+
+                            ctx.emit('deleted');
+                        },
+                        disabled: props.disabled,
+                    },
+                    [
+                        h('i', {
+                            class: 'fa fa-minus',
+                        }),
+                    ],
+                ),
+            }),
         });
 
         return () => render();

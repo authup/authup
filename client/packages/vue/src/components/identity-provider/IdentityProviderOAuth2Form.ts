@@ -24,9 +24,10 @@ import {
     DomainType, IdentityProviderProtocol,
 } from '@authup/core';
 import {
+    buildFormGroup,
     buildFormInput,
     buildFormSubmit,
-} from '@vue-layout/form-controls';
+} from '@vuecs/form-controls';
 import { onChange, useIsEditing } from '../../composables';
 import {
     createEntityManager, defineEntityManagerEvents,
@@ -211,12 +212,15 @@ export const IdentityProviderOAuth2Form = defineComponent({
                         ' ',
                         'Details',
                     ]),
-                    buildFormInput({
+                    buildFormGroup({
+                        label: true,
                         labelContent: 'Redirect URL',
-                        value: authorizeUri,
-                        props: {
-                            disabled: true,
-                        },
+                        content: buildFormInput({
+                            value: authorizeUri,
+                            props: {
+                                disabled: true,
+                            },
+                        }),
                     }),
                     h('hr'),
                 ];

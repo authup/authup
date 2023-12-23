@@ -7,7 +7,7 @@
 
 import { defineComponent, h } from 'vue';
 import type { Permission } from '@authup/core';
-import { SlotName } from '@vue-layout/list-controls';
+import { SlotName } from '@vuecs/list-controls';
 import {
     RobotPermissionAssignAction,
 } from './RobotPermissionAssignAction';

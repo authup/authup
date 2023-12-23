@@ -3,8 +3,8 @@
 import { ClientScopeList } from '@authup/client-vue';
 import type { Client, ClientScope } from '@authup/core';
 import {
-    FormInput, FormInputCheckbox,
-} from '@vue-layout/form-controls';
+    VCFormInput, VCFormInputCheckbox,
+} from '@vuecs/form-controls';
 import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
@@ -12,7 +12,7 @@ import { useRuntimeConfig } from '#app';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
-    components: { FormInput, FormInputCheckbox, ClientScopeList },
+    components: { VCFormInput, VCFormInputCheckbox, ClientScopeList },
     props: {
         entity: {
             type: Object as PropType<Client>,
@@ -82,32 +82,46 @@ export default defineNuxtComponent({
             :item="{class: ''}"
         >
             <template #item="props">
-                <FormInputCheckbox
-                    :validation-translator="(props.translatorLocale)"
-                    :model-value="scopes.indexOf(props.data.scope.name) !== -1"
-                    :label="true"
-                    :label-content="props.data.scope.name"
-                    @update:model-value="toggleScope(props.data.scope.name)"
-                />
+                <VCFormGroup :validation-translator="(props.translatorLocale)">
+                    <template #label>
+                        {{ props.data.scope.name }}
+                    </template>
+
+                    <template #default>
+                        <VCFormInputCheckbox
+                            :model-value="scopes.indexOf(props.data.scope.name) !== -1"
+                            @update:model-value="toggleScope(props.data.scope.name)"
+                        />
+                    </template>
+                </VCFormGroup>
             </template>
         </ClientScopeList>
 
         <hr>
 
-        <FormInput
-            v-model="redirectUri"
-            :label-content="'Redirect URL'"
-            :label="true"
-            placeholder="..."
-        />
+        <VCFormGroup>
+            <template #label>
+                Redirect URL
+            </template>
+            <template #default>
+                <VCFormInput
+                    v-model="redirectUri"
+                    placeholder="..."
+                />
+            </template>
+        </VCFormGroup>
 
         <hr>
-
-        <FormInput
-            v-model="generatedUrl"
-            :label-content="'Generated URL'"
-            :label="true"
-            :disabled="true"
-        />
+        <VCFormGroup>
+            <template #label>
+                Generated URL
+            </template>
+            <template #default>
+                <VCFormInput
+                    v-model="generatedUrl"
+                    :disabled="true"
+                />
+            </template>
+        </VCFormGroup>
     </div>
 </template>

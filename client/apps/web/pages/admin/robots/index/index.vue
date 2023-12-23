@@ -1,6 +1,5 @@
 <script lang="ts">
 
-import { Timeago } from '@vue-layout/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Robot } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -21,7 +20,6 @@ export default defineNuxtComponent({
         BTable,
         RobotList,
         EntityDelete,
-        Timeago,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -102,10 +100,10 @@ export default defineNuxtComponent({
                 outlined
             >
                 <template #cell(created_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(updated_at)="data">
-                    <Timeago :datetime="data.item.created_at" />
+                    <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(options)="data">
                     <NuxtLink

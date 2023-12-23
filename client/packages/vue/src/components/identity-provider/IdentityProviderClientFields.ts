@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
-import { buildFormInput } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, url,
@@ -16,8 +16,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties } from '../../core';
-import { useValidationTranslator } from '../../core/translator';
+import { extendObjectProperties, useValidationTranslator } from '../../core';
 
 export const IdentityProviderClientFields = defineComponent({
     props: {
@@ -59,23 +58,29 @@ export const IdentityProviderClientFields = defineComponent({
         assign();
 
         return () => [
-            buildFormInput({
+            buildFormGroup({
                 validationResult: $v.value.client_id,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Client ID',
-                value: form.client_id,
-                onChange(input) {
-                    form.client_id = input;
-                },
+                content: buildFormInput({
+                    value: form.client_id,
+                    onChange(input) {
+                        form.client_id = input;
+                    },
+                }),
             }),
-            buildFormInput({
+            buildFormGroup({
                 validationResult: $v.value.client_secret,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Client Secret',
-                value: form.client_secret,
-                onChange(input) {
-                    form.client_secret = input;
-                },
+                content: buildFormInput({
+                    value: form.client_secret,
+                    onChange(input) {
+                        form.client_secret = input;
+                    },
+                }),
             }),
         ];
     },

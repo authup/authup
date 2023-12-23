@@ -17,16 +17,17 @@ import {
     DomainType, REALM_MASTER_NAME, User, createNanoID,
 } from '@authup/core';
 import {
+    buildFormGroup,
     buildFormInput,
     buildFormSubmit,
     buildFormTextarea,
-} from '@vue-layout/form-controls';
+} from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     createEntityManager, defineEntityManagerEvents,
     initFormAttributesFromSource,
+    useTranslator, useValidationTranslator,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 
 export const RealmForm = defineComponent({
     props: {
@@ -101,18 +102,21 @@ export const RealmForm = defineComponent({
         };
 
         const render = () => {
-            const id = buildFormInput({
+            const id = buildFormGroup({
                 validationResult: $v.value.name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                },
-                props: {
-                    disabled: manager.data.value &&
-                        manager.data.value.name === REALM_MASTER_NAME,
-                },
+                content: buildFormInput({
+                    value: form.name,
+                    onChange(input) {
+                        form.name = input;
+                    },
+                    props: {
+                        disabled: manager.data.value &&
+                            manager.data.value.name === REALM_MASTER_NAME,
+                    },
+                }),
             });
 
             let idHint : VNodeArrayChildren = [];
@@ -141,17 +145,20 @@ export const RealmForm = defineComponent({
                 ];
             }
 
-            const description = buildFormTextarea({
+            const description = buildFormGroup({
                 validationResult: $v.value.description,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Description',
-                value: form.description,
-                onChange(input) {
-                    form.description = input;
-                },
-                props: {
-                    rows: 4,
-                },
+                content: buildFormTextarea({
+                    value: form.description,
+                    onChange(input) {
+                        form.description = input;
+                    },
+                    props: {
+                        rows: 4,
+                    },
+                }),
             });
 
             const submitButton = buildFormSubmit({

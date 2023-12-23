@@ -6,7 +6,7 @@
  */
 
 import { APIClient, isOAuth2OpenIDProviderMetadata } from '@authup/core';
-import { buildFormInput } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     url,
@@ -15,7 +15,7 @@ import type { VNodeChild } from 'vue';
 import {
     defineComponent, h, reactive, ref,
 } from 'vue';
-import { useValidationTranslator } from '../../core/translator';
+import { useValidationTranslator } from '../../core';
 
 export const IdentityProviderDiscovery = defineComponent({
     props: {
@@ -75,20 +75,22 @@ export const IdentityProviderDiscovery = defineComponent({
             }
 
             return [
-                buildFormInput({
-                    class: {
-                        'is-valid': lookupValid.value,
-                    },
+                buildFormGroup({
                     validationResult: $v.value.url,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
                     labelContent: 'Discovery',
-                    props: {
-                        placeholder: 'https://example.com/.well-known/openid-configuration',
-                    },
-                    value: form.url,
-                    onChange(input) {
-                        form.url = input;
-                    },
+                    content: buildFormInput({
+                        class: {
+                            'is-valid': lookupValid.value,
+                        },
+                        props: {
+                            placeholder: 'https://example.com/.well-known/openid-configuration',
+                        },
+                        value: form.url,
+                        onChange(input) {
+                            form.url = input;
+                        },
+                    }),
                 }),
                 messageNode,
                 h('button', {

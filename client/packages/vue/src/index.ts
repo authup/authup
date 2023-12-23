@@ -1,4 +1,4 @@
-import { applyPluginBaseOptions } from '@vue-layout/list-controls/core';
+import { applyStoreManagerOptions, installStoreManager } from '@vuecs/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './type';
@@ -24,7 +24,10 @@ export function install(app: App, options?: Options) : void {
     const translatorLocale = options.translatorLocale || 'en';
     provideTranslatorLocale(translatorLocale, app);
 
-    applyPluginBaseOptions(app, options);
+    const storeManager = installStoreManager(app, 'authup');
+    if (options.storeManager) {
+        applyStoreManagerOptions(storeManager, options.storeManager);
+    }
 
     if (options.components) {
         let componentsSelected : undefined | string[];

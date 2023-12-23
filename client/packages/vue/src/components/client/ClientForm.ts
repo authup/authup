@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SlotName } from '@vue-layout/list-controls';
+import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -25,11 +25,12 @@ import {
 import type { Client, Realm } from '@authup/core';
 import { DomainType, createNanoID } from '@authup/core';
 import {
+    buildFormGroup,
     buildFormInput,
     buildFormInputCheckbox,
     buildFormSubmit,
     buildFormTextarea,
-} from '@vue-layout/form-controls';
+} from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
@@ -152,33 +153,39 @@ export const ClientForm = defineComponent({
 
         const render = () => {
             const name : VNodeChild = [
-                buildFormInput({
+                buildFormGroup({
                     validationResult: $v.value.name,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Name',
-                    value: form.name,
-                    onChange(input) {
-                        form.name = input;
-                    },
-                    props: {
-                        disabled: isNameFixed.value,
-                    },
+                    content: buildFormInput({
+                        value: form.name,
+                        onChange(input) {
+                            form.name = input;
+                        },
+                        props: {
+                            disabled: isNameFixed.value,
+                        },
+                    }),
                 }),
                 h('small', 'Something users will recognize and trust.'),
             ];
 
             const description : VNodeChild = [
-                buildFormTextarea({
+                buildFormGroup({
                     validationResult: $v.value.description,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Description',
-                    value: form.description,
-                    onChange(input) {
-                        form.description = input;
-                    },
-                    props: {
-                        rows: 7,
-                    },
+                    content: buildFormTextarea({
+                        value: form.description,
+                        onChange(input) {
+                            form.description = input;
+                        },
+                        props: {
+                            rows: 7,
+                        },
+                    }),
                 }),
                 h('small', 'This is displayed to all users of this application.'),
             ];
@@ -196,41 +203,51 @@ export const ClientForm = defineComponent({
                 h('small', 'URI pattern a browser can redirect to after a successful login.'),
             ];
 
-            const isConfidential = buildFormInputCheckbox({
+            const isConfidential = buildFormGroup({
                 validationResult: $v.value.is_confidential,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Is Confidential?',
-                value: form.is_confidential,
-                onChange(input) {
-                    form.is_confidential = input;
-                },
+                content: buildFormInputCheckbox({
+                    value: form.is_confidential,
+                    onChange(input) {
+                        form.is_confidential = input;
+                    },
+                }),
             });
 
             let id : VNodeArrayChildren = [];
 
             if (manager.data.value) {
                 id = [
-                    buildFormInput({
+                    buildFormGroup({
+                        label: true,
                         labelContent: 'ID',
-                        value: manager.data.value.id,
-                        props: {
-                            disabled: true,
-                        },
+                        content: buildFormInput({
+                            value: manager.data.value.id,
+                            props: {
+                                disabled: true,
+                            },
+                        }),
                     }),
                 ];
             }
 
             const secret : VNodeArrayChildren = [
-                buildFormInput({
+                buildFormGroup({
+
                     validationResult: $v.value.secret,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: [
                         'Secret',
                     ],
-                    value: form.secret,
-                    onChange(input) {
-                        form.secret = input;
-                    },
+                    content: buildFormInput({
+                        value: form.secret,
+                        onChange(input) {
+                            form.secret = input;
+                        },
+                    }),
                 }),
                 h('div', { class: 'mb-2' }, [
                     h('button', {

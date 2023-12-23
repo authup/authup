@@ -7,7 +7,7 @@
 
 import type { IdentityProvider } from '@authup/core';
 import { createNanoID } from '@authup/core';
-import { buildFormInput, buildFormInputCheckbox } from '@vue-layout/form-controls';
+import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required,
@@ -94,25 +94,31 @@ export const IdentityProviderBasicFields = defineComponent({
         assign(props.entity);
 
         return () => {
-            const name = buildFormInput({
+            const name = buildFormGroup({
                 validationResult: $v.value.name,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Name',
-                value: form.name,
-                onChange(input) {
-                    form.name = input;
-                },
+                content: buildFormInput({
+                    value: form.name,
+                    onChange(input) {
+                        form.name = input;
+                    },
+                }),
             });
 
-            const slug = buildFormInput({
+            const slug = buildFormGroup({
                 validationResult: $v.value.slug,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Slug',
-                value: form.slug,
-                onChange(input) {
-                    form.slug = input;
-                    update();
-                },
+                content: buildFormInput({
+                    value: form.slug,
+                    onChange(input) {
+                        form.slug = input;
+                        update();
+                    },
+                }),
             });
 
             const slugGenerator = h('div', {

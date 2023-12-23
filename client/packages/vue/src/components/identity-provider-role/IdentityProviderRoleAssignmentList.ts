@@ -7,8 +7,8 @@
 
 import { defineComponent, h } from 'vue';
 import type { Role } from '@authup/core';
-import type { ListBodySlotProps } from '@vue-layout/list-controls';
-import { SlotName } from '@vue-layout/list-controls';
+import type { ListBodySlotProps } from '@vuecs/list-controls';
+import { SlotName } from '@vuecs/list-controls';
 import { IdentityProviderRoleAssignAction } from './IdentityProviderRoleAssignAction';
 import { RoleList } from '../role';
 

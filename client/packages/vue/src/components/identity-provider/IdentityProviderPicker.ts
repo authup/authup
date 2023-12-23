@@ -6,7 +6,7 @@
  */
 
 import { IdentityProviderPreset, IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core';
-import { buildList } from '@vue-layout/list-controls';
+import { buildList } from '@vuecs/list-controls';
 import { defineComponent, h } from 'vue';
 import type { IdentityProviderPresetElement } from './preset';
 import { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';

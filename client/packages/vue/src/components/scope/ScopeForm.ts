@@ -26,12 +26,13 @@ import type {
     Realm, Scope,
 } from '@authup/core';
 import {
+    buildFormGroup,
     buildFormInput,
     buildFormSubmit, buildFormTextarea,
-} from '@vue-layout/form-controls';
+} from '@vuecs/form-controls';
 import {
     SlotName,
-} from '@vue-layout/list-controls';
+} from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
@@ -135,32 +136,38 @@ export const ScopeForm = defineComponent({
 
         const render = () => {
             const name: VNodeChild = [
-                buildFormInput({
+                buildFormGroup({
                     validationResult: $v.value.name,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Name',
-                    value: form.name,
-                    onChange(input) {
-                        form.name = input;
-                    },
-                    props: {
-                        disabled: isNameFixed.value,
-                    },
+                    content: buildFormInput({
+                        value: form.name,
+                        onChange(input) {
+                            form.name = input;
+                        },
+                        props: {
+                            disabled: isNameFixed.value,
+                        },
+                    }),
                 }),
             ];
 
             const description :VNodeChild = [
-                buildFormTextarea({
+                buildFormGroup({
                     validationResult: $v.value.description,
                     validationTranslator: useValidationTranslator(props.translatorLocale),
+                    label: true,
                     labelContent: 'Description',
-                    value: form.description,
-                    onChange(input) {
-                        form.description = input;
-                    },
-                    props: {
-                        rows: 7,
-                    },
+                    content: buildFormTextarea({
+                        value: form.description,
+                        onChange(input) {
+                            form.description = input;
+                        },
+                        props: {
+                            rows: 7,
+                        },
+                    }),
                 }),
             ];
 

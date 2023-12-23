@@ -4,8 +4,8 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { FormInputBuildOptionsInput } from '@vue-layout/form-controls';
-import { buildFormInputText } from '@vue-layout/form-controls';
+import type { FormInputBuildOptionsInput } from '@vuecs/form-controls';
+import { buildFormInputText } from '@vuecs/form-controls';
 import type { VNodeChild } from 'vue';
 import { h } from 'vue';
 import type { ListMeta } from '../list';
@@ -90,7 +90,6 @@ export function buildListSearch<T>(
         props: {
             placeholder: '...',
         },
-        label: false,
         ...options,
     });
 }

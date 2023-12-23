@@ -16,7 +16,7 @@ import type {
     ListItemSlotProps,
     ListLoadFn,
     ListSlotProps,
-} from '@vue-layout/list-controls';
+} from '@vuecs/list-controls';
 import type {
     BuildInput,
     FieldsBuildInput,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ListLoadFn } from '@vue-layout/list-controls';
+import type { ListLoadFn } from '@vuecs/list-controls';
 import type { Slots } from 'vue/dist/vue';
 import type { ListMeta } from '../list';
 

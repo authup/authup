@@ -5,16 +5,11 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { NavigationComponents } from '@vue-layout/navigation';
 import { storeToRefs } from 'pinia';
-import { ref } from '#imports';
-import { defineNuxtComponent } from '#app';
+import { defineNuxtComponent, ref } from '#imports';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
-    components: {
-        NavigationComponents,
-    },
     setup() {
         const store = useAuthStore();
         const { loggedIn, user } = storeToRefs(store);
@@ -61,7 +56,7 @@ export default defineNuxtComponent({
                     class="navbar-content navbar-collapse collapse"
                     :class="{'show': displayNav}"
                 >
-                    <navigation-components
+                    <VCNavItems
                         class="navbar-nav"
                         :tier="0"
                     />
@@ -79,20 +74,20 @@ export default defineNuxtComponent({
                             </a>
                         </li>
                         <li class="nav-item">
-                            <nuxt-link
+                            <NuxtLink
                                 :to="'/settings'"
                                 class="nav-link"
                             >
                                 <i class="fa fa-cog" />
-                            </nuxt-link>
+                            </NuxtLink>
                         </li>
                         <li class="nav-item">
-                            <nuxt-link
+                            <NuxtLink
                                 :to="'/logout'"
                                 class="nav-link"
                             >
                                 <i class="fa fa-power-off" />
-                            </nuxt-link>
+                            </NuxtLink>
                         </li>
                     </ul>
                 </div>

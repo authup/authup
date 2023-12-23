@@ -12,7 +12,9 @@ import {
 import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
-import { buildFormInput, buildFormInputCheckbox, buildFormSubmit } from '@vue-layout/form-controls';
+import {
+    buildFormGroup, buildFormInput, buildFormInputCheckbox, buildFormSubmit,
+} from '@vuecs/form-controls';
 import { injectAPIClient } from '../../core';
 import { useTranslator, useValidationTranslator } from '../../core/translator';
 
@@ -74,32 +76,38 @@ export const UserPasswordForm = defineComponent({
         };
 
         const render = () => {
-            const password = buildFormInput({
+            const password = buildFormGroup({
                 validationResult: $v.value.password,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Password',
-                value: form.password,
-                onChange(input) {
-                    form.password = input;
-                },
-                props: {
-                    type: passwordShow.value ? 'text' : 'password',
-                    autocomplete: 'new-password',
-                },
+                content: buildFormInput({
+                    value: form.password,
+                    onChange(input) {
+                        form.password = input;
+                    },
+                    props: {
+                        type: passwordShow.value ? 'text' : 'password',
+                        autocomplete: 'new-password',
+                    },
+                }),
             });
 
-            const passwordRepeat = buildFormInput({
+            const passwordRepeat = buildFormGroup({
                 validationResult: $v.value.password_repeat,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
                 labelContent: 'Password repeat',
-                value: form.password_repeat,
-                onChange(input) {
-                    form.password_repeat = input;
-                },
-                props: {
-                    type: passwordShow.value ? 'text' : 'password',
-                    autocomplete: 'new-password',
-                },
+                content: buildFormInput({
+                    value: form.password_repeat,
+                    onChange(input) {
+                        form.password_repeat = input;
+                    },
+                    props: {
+                        type: passwordShow.value ? 'text' : 'password',
+                        autocomplete: 'new-password',
+                    },
+                }),
             });
 
             const showPassword = buildFormInputCheckbox({
