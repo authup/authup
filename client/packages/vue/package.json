@@ -54,7 +54,7 @@
     "devDependencies": {
         "@authup/core": "^0.45.10",
         "@types/node": "^20.10.5",
-        "@vitejs/plugin-vue": "^4.5.0",
+        "@vitejs/plugin-vue": "^5.0.0",
         "@vuecs/form-controls": "^1.2.0",
         "@vuecs/list-controls": "^1.1.1",
         "@vuecs/pagination": "^1.1.1",
