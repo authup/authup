@@ -8,6 +8,7 @@
 export * from './constants';
 export * from './clients';
 export * from './module';
+export * from './parse';
 export * from './type';
 export * from './setup';
 export * from './utils';

@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { makeURLPublicAccessible } from '@authup/core';
+import { defineGetter, dycraft } from 'dycraft';
 import path from 'node:path';
 import process from 'node:process';
-import { makeURLPublicAccessible } from '@authup/core';
-import { Continu } from 'continu';
-import zod from 'zod';
-import type { Config, Options, OptionsInput } from './type';
-import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';
+import type { Config, ConfigInput } from './type';
+import type { DatabaseConnectionOptions } from './utils';
 
 let instance : Config | undefined;
 
@@ -33,8 +32,9 @@ export function unsetConfig() {
     instance = undefined;
 }
 
-export function createConfig() : Config {
-    return new Continu<Options, OptionsInput>({
+export function createConfig(data: ConfigInput = {}) : Config {
+    return dycraft({
+        data,
         defaults: {
             env: process.env.NODE_ENV || 'development',
             rootPath: process.cwd(),
@@ -67,11 +67,11 @@ export function createConfig() : Config {
             permissions: [],
         },
         getters: {
-            db: (context) => ({
+            db: defineGetter((context) : DatabaseConnectionOptions => ({
                 type: 'better-sqlite3',
                 database: path.join(context.get('writableDirectoryPath'), 'db.sql'),
-            }),
-            tokenMaxAgeRefreshToken: (context) => {
+            })),
+            tokenMaxAgeRefreshToken: defineGetter((context) => {
                 if (
                     !context.has('tokenMaxAgeRefreshToken') &&
                     context.has('tokenMaxAgeAccessToken')
@@ -79,9 +79,9 @@ export function createConfig() : Config {
                     return context.get('tokenMaxAgeAccessToken') * 2;
                 }
 
-                return context.getDefault('tokenMaxAgeRefreshToken');
-            },
-            publicUrl: (context) => {
+                return context.get('tokenMaxAgeRefreshToken');
+            }),
+            publicUrl: defineGetter((context) => {
                 if (
                     !context.has('publicUrl') &&
                     (context.has('host') || context.has('port'))
@@ -89,65 +89,8 @@ export function createConfig() : Config {
                     return makeURLPublicAccessible(`http://${context.get('host')}:${context.get('port')}`);
                 }
 
-                return context.getDefault('publicUrl');
-            },
-        },
-        validators: {
-            env: (value) => zod.string().safeParse(value),
-            rootPath: (value) => zod.string().safeParse(value),
-            writableDirectoryPath: (value) => zod.string().safeParse(value),
-
-            db: (value) => isDatabaseConnectionConfiguration(value) && isDatabaseConnectionConfigurationSupported(value),
-            redis: (value) => zod.lazy(() => zod.union([
-                zod.string(),
-                zod.boolean(),
-                zod.any(),
-            ])).safeParse(value),
-            smtp: (value) => zod.lazy(() => zod.union([
-                zod.string(),
-                zod.boolean(),
-                zod.any(),
-            ])).safeParse(value),
-            vault: (value) => zod.lazy(() => zod.union([
-                zod.string(),
-                zod.boolean(),
-                zod.any(),
-            ])).safeParse(value),
-
-            port: (value) => zod.number().nonnegative().safeParse(value),
-            host: (value) => zod.string().safeParse(value),
-            publicUrl: (value) => zod.string().url().safeParse(value),
-            authorizeRedirectUrl: (value) => zod.string().url().safeParse(value),
-            middlewareBody: (value) => zod.boolean().or(zod.record(zod.any())).safeParse(value),
-            middlewareCors: (value) => zod.boolean().or(zod.record(zod.any())).safeParse(value),
-            middlewareCookie: (value) => zod.boolean().or(zod.record(zod.any())).safeParse(value),
-            middlewareQuery: (value) => zod.boolean().or(zod.record(zod.any())).safeParse(value),
-            middlewareSwagger: (value) => zod.boolean().safeParse(value),
-            tokenMaxAgeAccessToken: (value) => zod.number().nonnegative().safeParse(value),
-            tokenMaxAgeRefreshToken: (value) => zod.number().nonnegative().safeParse(value),
-            registration: (value) => zod.boolean().safeParse(value),
-            emailVerification: (value) => zod.boolean().safeParse(value),
-            forgotPassword: (value) => zod.boolean().safeParse(value),
-
-            adminUsername: (value) => zod.string().min(3).max(128).safeParse(value),
-            adminPassword: (value) => zod.string().min(3).max(256).safeParse(value),
-            adminPasswordReset: (value) => zod.boolean().safeParse(value),
-            robotEnabled: (value) => zod.boolean().safeParse(value),
-            robotSecret: (value) => zod.string().min(3).max(256).safeParse(value),
-            robotSecretReset: (value) => zod.boolean().safeParse(value),
-        },
-        transformers: {
-            permissions: (value) => {
-                if (Array.isArray(value)) {
-                    return value;
-                }
-
-                if (typeof value === 'string') {
-                    return value.split(',');
-                }
-
-                return [];
-            },
+                return context.get('publicUrl');
+            }),
         },
     });
 }

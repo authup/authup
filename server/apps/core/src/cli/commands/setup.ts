@@ -67,8 +67,8 @@ export class SetupCommand implements CommandModule {
 
         const dataSourceOptions = await buildDataSourceOptions();
         const logger = createLogger({
-            directory: config.get('writableDirectoryPath'),
-            env: config.get('env'),
+            directory: config.writableDirectoryPath,
+            env: config.env,
         });
 
         try {

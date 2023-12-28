@@ -10,14 +10,14 @@ import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authu
 
 export function extendServerConfigWithEnv(config: Config) {
     if (hasProcessEnv('PORT')) {
-        config.set('port', readIntFromProcessEnv('PORT'));
+        config.port = readIntFromProcessEnv('PORT');
     }
 
     if (hasProcessEnv('API_PORT')) {
-        config.set('port', readIntFromProcessEnv('API_PORT'));
+        config.port = readIntFromProcessEnv('API_PORT');
     }
 
     if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
-        config.set('writableDirectoryPath', readFromProcessEnv('WRITABLE_DIRECTORY_PATH'));
+        config.writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
     }
 }

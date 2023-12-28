@@ -27,8 +27,8 @@ function unsetCookies(res: Response) {
     const config = useConfig();
     const cookieOptions : SerializeOptions = {};
 
-    if (config.get('env') === EnvironmentName.PRODUCTION) {
-        cookieOptions.domain = new URL(config.get('publicUrl')).hostname;
+    if (config.env === EnvironmentName.PRODUCTION) {
+        cookieOptions.domain = new URL(config.publicUrl).hostname;
     }
 
     unsetResponseCookie(res, CookieName.ACCESS_TOKEN, cookieOptions);

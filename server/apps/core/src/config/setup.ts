@@ -9,31 +9,35 @@ import { readConfigFile } from '@authup/server-core';
 import { merge } from 'smob';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { useConfig } from './module';
-import type { OptionsInput } from './type';
+import { parseConfig } from './parse';
+import type { ConfigInput } from './type';
 import { readConfigFromEnv } from './utils';
 
 export async function setupConfig(
-    input?: OptionsInput,
+    input?: ConfigInput,
 ) {
     const fileConfig = await readConfigFile({
         name: 'api',
     });
-    const envConfig = await readConfigFromEnv();
+    const envConfig = readConfigFromEnv();
 
     const config = useConfig();
-    const rawInput = merge(input || {}, envConfig, fileConfig);
-    config.setRaw(rawInput);
-
-    if (config.has('redis')) {
-        setupRedis(config.get('redis'));
+    const raw = parseConfig(merge(input || {}, envConfig, fileConfig));
+    const keys = Object.keys(raw);
+    for (let i = 0; i < keys.length; i++) {
+        config[keys[i]] = raw[keys[i]];
     }
 
-    if (config.has('smtp')) {
-        setupSmtp(config.get('smtp'));
+    if (config.redis) {
+        setupRedis(config.redis);
     }
 
-    if (config.has('vault')) {
-        setupVault(config.get('vault'));
+    if (config.smtp) {
+        setupSmtp(config.smtp);
+    }
+
+    if (config.vault) {
+        setupVault(config.vault);
     }
 
     return config;

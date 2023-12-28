@@ -113,7 +113,7 @@ async function verifyBasicAuthorizationHeader(
         await userRepository.appendAttributes(user);
 
         // allow authentication but not authorization with basic auth in production!
-        if (config.get('env') !== EnvironmentName.PRODUCTION) {
+        if (config.env !== EnvironmentName.PRODUCTION) {
             permissions = await userRepository.getOwnedPermissions(user.id);
         }
 
@@ -131,7 +131,7 @@ async function verifyBasicAuthorizationHeader(
     const robot = await robotRepository.verifyCredentials(header.username, header.password);
     if (robot) {
         // allow authentication but not authorization with basic auth in production!
-        if (config.get('env') !== EnvironmentName.PRODUCTION) {
+        if (config.env !== EnvironmentName.PRODUCTION) {
             permissions = await robotRepository.getOwnedPermissions(robot.id);
         }
 

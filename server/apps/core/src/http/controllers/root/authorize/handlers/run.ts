@@ -17,8 +17,8 @@ export async function runAuthorizationRouteHandler(
 ) : Promise<any> {
     const config = useConfig();
     const result = await runOAuth2Authorization(req, {
-        issuer: config.get('publicUrl'),
-        accessTokenMaxAge: config.get('tokenMaxAgeAccessToken'),
+        issuer: config.publicUrl,
+        accessTokenMaxAge: config.tokenMaxAgeAccessToken,
     });
 
     // ---------------------------------------------------------

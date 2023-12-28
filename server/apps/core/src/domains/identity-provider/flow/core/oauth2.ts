@@ -20,7 +20,7 @@ export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProvi
         const clientOptions : Options = {
             clientId: provider.client_id,
             clientSecret: provider.client_secret,
-            redirectUri: `${useConfig().get('publicUrl')}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
+            redirectUri: `${useConfig().publicUrl}${buildIdentityProviderAuthorizeCallbackPath(provider.id)}`,
             scope: provider.scope,
             authorizationEndpoint: provider.authorize_url,
             tokenEndpoint: provider.token_url,

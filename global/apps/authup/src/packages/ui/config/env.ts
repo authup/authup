@@ -6,9 +6,9 @@
  */
 
 import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-core';
-import type { UIConfig } from './type';
+import type { UIOptions } from './type';
 
-export function extendUIConfigWithEnv(config: UIConfig) {
+export function extendUIConfigWithEnv(config: UIOptions) {
     let keys = [
         'UI_PORT',
         'NITRO_UI_PORT',
@@ -20,7 +20,7 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_PUBLIC_PORT',
     ];
     if (hasProcessEnv(keys)) {
-        config.setRaw('port', readIntFromProcessEnv(keys));
+        config.port = readIntFromProcessEnv(keys);
     }
 
     keys = [
@@ -30,7 +30,7 @@ export function extendUIConfigWithEnv(config: UIConfig) {
     ];
 
     if (hasProcessEnv(keys)) {
-        config.setRaw('host', readFromProcessEnv(keys));
+        config.host = readFromProcessEnv(keys);
     }
 
     keys = [
@@ -40,7 +40,7 @@ export function extendUIConfigWithEnv(config: UIConfig) {
     ];
 
     if (hasProcessEnv(keys)) {
-        config.setRaw('apiUrl', readFromProcessEnv(keys));
+        config.apiUrl = readFromProcessEnv(keys);
     }
 
     keys = [
@@ -48,7 +48,7 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_PUBLIC_URL',
         'NUXT_PUBLIC_PUBLIC_URL',
     ];
-    if (hasProcessEnv([])) {
-        config.setRaw('publicUrl', readFromProcessEnv(keys));
+    if (hasProcessEnv(keys)) {
+        config.publicUrl = readFromProcessEnv(keys);
     }
 }

@@ -32,8 +32,8 @@ export function buildStartCommand(cac: CAC) {
                         root,
                     },
                     env: {
-                        PORT: config.api.get('port'),
-                        WRITABLE_DIRECTORY_PATH: config.api.get('writableDirectoryPath'),
+                        PORT: config.api.port,
+                        WRITABLE_DIRECTORY_PATH: config.api.writableDirectoryPath,
                     },
                 };
 
@@ -46,12 +46,12 @@ export function buildStartCommand(cac: CAC) {
                         root,
                     },
                     env: {
-                        PORT: config.ui.get('port'),
-                        HOST: config.ui.get('host'),
-                        PUBLIC_URL: config.ui.get('publicUrl'),
-                        API_URL: config.ui.has('apiUrl') ?
-                            config.ui.get('apiUrl') :
-                            config.api.get('publicUrl'),
+                        PORT: config.ui.port,
+                        HOST: config.ui.host,
+                        PUBLIC_URL: config.ui.publicUrl,
+                        API_URL: config.ui.apiUrl ?
+                            config.ui.apiUrl :
+                            config.api.publicUrl,
                     },
                 };
 

@@ -27,8 +27,8 @@ export function buildServerCommand(cac: CAC) {
                             root,
                         },
                         env: {
-                            PORT: config.api.get('port'),
-                            WRITABLE_DIRECTORY_PATH: config.api.get('writableDirectoryPath'),
+                            PORT: config.api.port,
+                            WRITABLE_DIRECTORY_PATH: config.api.writableDirectoryPath,
                         },
                         envFromProcess: true,
                     });

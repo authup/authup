@@ -6,30 +6,65 @@
  */
 
 import { makeURLPublicAccessible } from '@authup/core';
-import { createConfig as createApiConfig } from '@authup/server-core-app';
+import type { ConfigInput } from '@authup/server-core-app';
+import { createConfig as createApiConfig, parseConfig } from '@authup/server-core-app';
 import { readConfigFile } from '@authup/server-core';
-import { createUIConfig, extendServerConfigWithEnv, extendUIConfigWithEnv } from '../packages';
+import type { UIOptionsInput } from '../packages';
+import {
+    createUIConfig,
+    extendServerConfigWithEnv,
+    extendUIConfigWithEnv,
+    parseUIConfig,
+} from '../packages';
 import type { Config } from './type';
 
 export async function createConfig() : Promise<Config> {
     const global = await readConfigFile();
 
-    const api = createApiConfig();
-    const ui = createUIConfig();
-
-    api.setRaw(global.api || {});
-    ui.setRaw(global.ui || {});
-
-    if (!ui.has('apiUrl') && api.has('publicUrl')) {
-        ui.setRaw('apiUrl', makeURLPublicAccessible(api.get('publicUrl')));
+    const apiInput : ConfigInput = {};
+    if (global.api) {
+        const uiParsed = parseConfig(global.api);
+        const keys = Object.keys(uiParsed);
+        for (let i = 0; i < keys.length; i++) {
+            apiInput[keys[i]] = uiParsed[keys[i]];
+        }
     }
 
-    if (!ui.has('publicUrl') && api.has('authorizeRedirectUrl')) {
-        ui.set('publicUrl', api.get('authorizeRedirectUrl'));
-    }
-
+    const api = createApiConfig(apiInput);
     extendServerConfigWithEnv(api);
+
+    const uiInput: UIOptionsInput = {};
+
+    if (global.ui) {
+        const uiParsed = parseUIConfig(global.ui);
+        const keys = Object.keys(uiParsed);
+        for (let i = 0; i < keys.length; i++) {
+            uiInput[keys[i]] = uiParsed[keys[i]];
+        }
+    }
+
+    const ui = createUIConfig(uiInput);
     extendUIConfigWithEnv(ui);
+
+    ui.$gettersHas = false;
+    ui.$defaultsHas = false;
+
+    if (
+        !Object.prototype.hasOwnProperty.call(ui, 'apiUrl') &&
+        api.publicUrl
+    ) {
+        ui.apiUrl = makeURLPublicAccessible(api.publicUrl);
+    }
+
+    if (
+        !Object.prototype.hasOwnProperty.call(ui, 'publicUrl') &&
+        api.authorizeRedirectUrl
+    ) {
+        ui.publicUrl = api.authorizeRedirectUrl;
+    }
+
+    ui.$gettersHas = true;
+    ui.$defaultsHas = true;
 
     return {
         api,

@@ -6,9 +6,9 @@
  */
 
 import type { Config as APiConfig } from '@authup/server-core-app';
-import type { UIConfig } from '../packages';
+import type { UIOptions } from '../packages';
 
 export type Config = {
     api: APiConfig,
-    ui: UIConfig
+    ui: UIOptions
 };

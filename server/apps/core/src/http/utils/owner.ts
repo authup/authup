@@ -21,7 +21,7 @@ export function isRequestSubOwner(req: Request) : boolean {
     const user = useRequestEnv(req, 'user');
     if (
         user &&
-        user.name === config.get('adminUsername')
+        user.name === config.adminUsername
     ) {
         return true;
     }

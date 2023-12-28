@@ -35,7 +35,7 @@ export class HealthCheckCommand implements CommandModule {
             {
                 path: '/metrics',
                 host: '0.0.0.0',
-                port: config.get('port'),
+                port: config.port,
                 timeout: 2000,
             },
             (res) => {

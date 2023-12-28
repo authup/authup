@@ -5,26 +5,39 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import process from 'node:process';
 import { hasOwnProperty } from '@authup/core';
 
+const useEnv = () => globalThis.process?.env ||
+    (import.meta as Record<string, any>)?.env ||
+    globalThis.Deno?.env.toObject() ||
+    globalThis.__env__ ||
+    globalThis;
+
 export function hasProcessEnv(key: string | string[]) : boolean {
+    const env = useEnv();
     const keys = Array.isArray(key) ? key : [key];
     for (let i = 0; i < keys.length; i++) {
-        if (hasOwnProperty(process.env, keys[i])) {
+        if (hasOwnProperty(env, keys[i])) {
             return true;
         }
     }
     return false;
 }
 
+export function readFromProcessEnv() : string[];
 export function readFromProcessEnv(key: string | string[]) : string | undefined;
 export function readFromProcessEnv<T>(key: string | string[], alt: T) : T | string;
-export function readFromProcessEnv<T>(key: string | string[], alt?: T): any {
+export function readFromProcessEnv<T>(key?: string | string[], alt?: T): any {
+    const env = useEnv();
+    if (typeof key === 'undefined') {
+        return env;
+    }
+
     const keys = Array.isArray(key) ? key : [key];
+
     for (let i = 0; i < keys.length; i++) {
-        if (hasOwnProperty(process.env, keys[i])) {
-            return process.env[keys[i]];
+        if (hasOwnProperty(env, keys[i])) {
+            return env[keys[i]];
         }
     }
 

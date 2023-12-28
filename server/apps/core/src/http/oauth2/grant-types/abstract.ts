@@ -6,10 +6,9 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/core';
-import type { Continu } from 'continu';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
-import type { Options, OptionsInput } from '../../../config';
+import type { Config } from '../../../config';
 import { useConfig } from '../../../config';
 import {
     buildOAuth2AccessTokenPayload,
@@ -20,7 +19,7 @@ import { OAuth2RefreshTokenCache } from '../cache';
 import type { AccessTokenIssueContext } from './type';
 
 export abstract class AbstractGrant {
-    protected config : Continu<Options, OptionsInput>;
+    protected config : Config;
 
     protected refreshTokenCache : OAuth2RefreshTokenCache;
 
@@ -36,7 +35,7 @@ export abstract class AbstractGrant {
 
     protected async issueAccessToken(context: AccessTokenIssueContext) : Promise<Partial<OAuth2TokenPayload>> {
         return buildOAuth2AccessTokenPayload({
-            issuer: this.config.get('publicUrl'),
+            issuer: this.config.publicUrl,
             realmId: context.realmId,
             realmName: context.realmName,
             sub: context.sub,
@@ -54,7 +53,7 @@ export abstract class AbstractGrant {
         const token = repository.create(
             transformToRefreshTokenEntity(
                 accessToken,
-                this.config.get('tokenMaxAgeRefreshToken'),
+                this.config.tokenMaxAgeRefreshToken,
             ),
         );
 

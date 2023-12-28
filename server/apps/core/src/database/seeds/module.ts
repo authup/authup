@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Continu } from 'continu';
 import type { DataSource, FindOptionsWhere } from 'typeorm';
 import { In } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
@@ -33,7 +32,7 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../domains';
-import type { Options, OptionsInput } from '../../config';
+import type { Config, ConfigInput } from '../../config';
 import { useConfig } from '../../config';
 import type { DatabaseRootSeederResult } from './type';
 
@@ -45,24 +44,24 @@ function getPermissions(permissions?: string[]) {
 }
 
 export class DatabaseSeeder implements Seeder {
-    protected config: Continu<Options, OptionsInput>;
+    protected config: Config;
 
-    protected options: Partial<Options>;
+    protected options: Partial<Config>;
 
-    constructor(options?: Partial<Options>) {
+    constructor(options?: Partial<Config>) {
         this.config = useConfig();
         this.options = options || {};
     }
 
-    private getOption<K extends keyof Options>(key: K) : Options[K] {
+    private getOption<K extends keyof Config>(key: K) : Config[K] {
         if (
             hasOwnProperty(this.options, key) &&
             typeof this.options[key] !== 'undefined'
         ) {
-            return this.options[key] as Options[K];
+            return this.options[key] as Config[K];
         }
 
-        return this.config.get(key);
+        return this.config[key];
     }
 
     public async run(dataSource: DataSource) : Promise<any> {
@@ -188,7 +187,14 @@ export class DatabaseSeeder implements Seeder {
         /**
          * Create all permissions
          */
-        const permissionNames : string[] = getPermissions(this.getOption('permissions'));
+        let permissionNames : string[];
+        const permissionNamesRaw = this.getOption('permissions');
+        if (Array.isArray(permissionNamesRaw)) {
+            permissionNames = getPermissions(permissionNamesRaw);
+        } else if (typeof permissionNamesRaw === 'string') {
+            permissionNames = getPermissions([permissionNamesRaw]);
+        }
+
         const permissionIds : string[] = [];
 
         const permissionRepository = dataSource.getRepository(PermissionEntity);

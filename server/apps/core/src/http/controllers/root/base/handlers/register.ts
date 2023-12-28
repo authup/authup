@@ -23,13 +23,13 @@ import {
 export async function createAuthRegisterRouteHandler(req: Request, res: Response) : Promise<any> {
     const config = useConfig();
 
-    if (!config.get('registration')) {
+    if (!config.registration) {
         throw new BadRequestError('User registration is not enabled.');
     }
 
     if (
-        config.get('emailVerification') &&
-        config.get('env') !== 'test' &&
+        config.emailVerification &&
+        config.env !== 'test' &&
         !hasSmtpConfig()
     ) {
         throw new BadRequestError('SMTP options are not defined.');
@@ -75,7 +75,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     data.name ??= data.email;
 
-    if (config.get('emailVerification')) {
+    if (config.emailVerification) {
         data.active = false;
         data.activate_hash = randomBytes(32).toString('hex'); // todo: create random bytes to hex
     }
@@ -90,7 +90,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     await repository.save(entity);
 
-    if (config.get('emailVerification')) {
+    if (config.emailVerification) {
         const smtpClient = await useSMTPClient();
 
         const info = await smtpClient.sendMail({

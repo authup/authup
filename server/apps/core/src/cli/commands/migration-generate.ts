@@ -40,7 +40,7 @@ export class MigrationGenerateCommand implements CommandModule {
             },
             {
                 type: 'better-sqlite3',
-                database: path.join(config.get('writableDirectoryPath'), 'migrations.sql'),
+                database: path.join(config.writableDirectoryPath, 'migrations.sql'),
             },
         ];
 

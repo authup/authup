@@ -22,21 +22,21 @@ export function buildUiCommand(cac: CAC) {
 
             let { apiUrl } = ctx;
 
-            if (!apiUrl && config.ui.has('apiUrl')) {
-                apiUrl = config.ui.get('apiUrl');
+            if (!apiUrl && config.ui.apiUrl) {
+                apiUrl = config.ui.apiUrl;
             }
 
             if (!apiUrl) {
-                apiUrl = config.api.get('publicUrl');
+                apiUrl = config.api.publicUrl;
             }
 
             switch (command) {
                 case UICommand.START: {
                     await startUI({
                         env: {
-                            PORT: ctx.port || config.ui.get('port'),
-                            HOST: ctx.host || config.ui.get('host'),
-                            PUBLIC_URL: config.ui.get('publicUrl'),
+                            PORT: ctx.port || config.ui.port,
+                            HOST: ctx.host || config.ui.host,
+                            PUBLIC_URL: config.ui.publicUrl,
                             API_URL: apiUrl,
                         },
                         envFromProcess: true,

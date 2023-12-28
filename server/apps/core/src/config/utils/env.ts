@@ -14,11 +14,11 @@ import {
 } from '@authup/server-core';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
-import type { OptionsInput } from '../type';
-import { isDatabaseConnectionConfigurationSupported, isDatabaseTypeSupported } from './database';
+import type { ConfigInput } from '../type';
+import { isDatabaseConnectionConfigurationSupported } from './database';
 
-export function readConfigFromEnv() : Partial<OptionsInput> {
-    const options : OptionsInput = {};
+export function readConfigFromEnv() : ConfigInput {
+    const options : ConfigInput = {};
 
     if (hasProcessEnv(EnvironmentVariableName.NODE_ENV)) {
         options.env = readFromProcessEnv(EnvironmentVariableName.NODE_ENV);
