@@ -182,3 +182,12 @@ export type Config = {
 };
 
 export type ConfigInput = Partial<Config>;
+
+export type ConfigBuildContext = {
+    data?: ConfigInput,
+    env?: boolean
+};
+
+export type ConfigSetupContext = {
+    filePath?: string | string[]
+};

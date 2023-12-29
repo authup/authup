@@ -5,14 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { makeURLPublicAccessible } from '@authup/core';
+import { extendObject, makeURLPublicAccessible } from '@authup/core';
 import { defineGetter, dycraft } from 'dycraft';
-import { extractConfigFromEnv } from './env';
-import type { Config, ConfigBuildContext } from './type';
+import { assign, merge } from 'smob';
+import { readConfigFromEnv } from './env';
+import { parseConfig } from './parse';
+import type { Config, ConfigBuildContext, ConfigInput } from './type';
 
 export function buildConfig(context: ConfigBuildContext = {}) : Config {
     const config = dycraft({
-        data: context.data,
         defaults: {
             port: 3000,
             host: '0.0.0.0',
@@ -23,11 +24,14 @@ export function buildConfig(context: ConfigBuildContext = {}) : Config {
                 context,
             ) => `http://${makeURLPublicAccessible(context.get('host'))}:${context.get('port')}/`),
         },
-    });
+    }) as Config;
 
+    let raw : ConfigInput;
     if (context.env) {
-        extractConfigFromEnv(config);
+        raw = merge(readConfigFromEnv(), context.data || {});
+    } else {
+        raw = context.data || {};
     }
 
-    return config;
+    return extendObject(config, parseConfig(raw));
 }

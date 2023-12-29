@@ -69,6 +69,20 @@ export async function readFromPath(filePath: string) : Promise<ConfigRaw> {
 
     return content;
 }
+
+export async function readFromFilePaths(filePaths: string[]) : Promise<ConfigRaw> {
+    const content : ConfigRaw = {
+        client: {},
+        server: {},
+    };
+
+    for (let i = 0; i < filePaths.length; i++) {
+        const config = await readFromPath(filePaths[i]);
+        assign(content, config);
+    }
+
+    return content;
+}
 /**
  * Read config file(s) as global config object.
  *
@@ -81,17 +95,7 @@ export async function read(context: ReadContext = {}) : Promise<ConfigRaw> {
         ...(context.directory ? [context.directory] : []),
     ]);
 
-    const content : ConfigRaw = {
-        client: {},
-        server: {},
-    };
-
-    for (let i = 0; i < filePaths.length; i++) {
-        const config = await readFromPath(filePaths[i]);
-        assign(content, config);
-    }
-
-    return content;
+    return readFromFilePaths(filePaths);
 }
 
 export function extractFor(

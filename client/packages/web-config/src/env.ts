@@ -6,9 +6,11 @@
  */
 
 import { getEnv, getEnvInt, hasEnv } from '@authup/core';
-import type { Config } from './type';
+import type { ConfigInput } from './type';
 
-export function extractConfigFromEnv(config: Config) {
+export function readConfigFromEnv() {
+    const config : ConfigInput = {};
+
     let keys = [
         'UI_PORT',
         'NITRO_UI_PORT',
@@ -51,4 +53,6 @@ export function extractConfigFromEnv(config: Config) {
     if (hasEnv(keys)) {
         config.publicUrl = getEnv(keys, 'http://localhost:3000');
     }
+
+    return config;
 }

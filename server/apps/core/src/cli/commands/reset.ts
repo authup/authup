@@ -13,7 +13,7 @@ import { setupConfig } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
 interface ResetArguments extends Arguments {
-    root: string;
+    config: string | undefined;
 }
 
 export class ResetCommand implements CommandModule {
@@ -23,15 +23,16 @@ export class ResetCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
             });
     }
 
     async handler(args: ResetArguments) {
-        await setupConfig();
+        await setupConfig({
+            filePath: args.config,
+        });
 
         const dataSourceOptions = await buildDataSourceOptions();
 

@@ -1,31 +1,36 @@
 /*
- * Copyright (c) 2023-2023.
+ * Copyright (c) 2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readFor } from '@authup/config';
-import { merge } from 'smob';
+import { readFor, readFromFilePaths } from '@authup/config';
+import { buildConfig } from './build';
 import { setupRedis, setupSmtp, setupVault } from './clients';
-import { useConfig } from './module';
-import { parseConfig } from './parse';
-import type { ConfigInput } from './type';
-import { readConfigFromEnv } from './utils';
+import { setConfig } from './module';
+import type { Config, ConfigSetupContext } from './type';
 
-export async function setupConfig(
-    input?: ConfigInput,
-) {
-    const fileConfig = await readFor('server', 'core');
-    const envConfig = readConfigFromEnv();
+export async function setupConfig(context: ConfigSetupContext = {}): Promise<Config> {
+    // todo: filePaths should be extracted from env
 
-    const config = useConfig();
-    const raw = parseConfig(merge(input || {}, envConfig, fileConfig || {}));
-    const keys = Object.keys(raw);
-    for (let i = 0; i < keys.length; i++) {
-        config[keys[i]] = raw[keys[i]];
+    let raw : Record<string, any>;
+    if (context.filePath) {
+        const filePaths = Array.isArray(context.filePath) ?
+            context.filePath :
+            [context.filePath];
+
+        raw = await readFromFilePaths(filePaths);
+    } else {
+        raw = await readFor('server', 'core');
     }
 
+    const config = buildConfig({
+        data: raw,
+        env: true,
+    });
+
+    // todo: this should be part of a boot fn
     if (config.redis) {
         setupRedis(config.redis);
     }
@@ -37,6 +42,8 @@ export async function setupConfig(
     if (config.vault) {
         setupVault(config.vault);
     }
+
+    setConfig(config);
 
     return config;
 }

@@ -18,10 +18,8 @@ export default defineNuxtModule({
             directory: nuxt.options.rootDir,
         });
 
-        const data = parseConfig(raw?.client?.web || {});
-
         const config = buildConfig({
-            data,
+            data: raw?.client?.web,
             env: true,
         });
 

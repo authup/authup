@@ -6,12 +6,12 @@
  */
 
 import http from 'node:http';
-import * as process from 'node:process';
+import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { setupConfig } from '../../config';
 
 interface HealthCheckArguments extends Arguments {
-    root: string;
+    config: string | undefined;
 }
 
 export class HealthCheckCommand implements CommandModule {
@@ -21,15 +21,16 @@ export class HealthCheckCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
             });
     }
 
     async handler(args: HealthCheckArguments) {
-        const config = await setupConfig();
+        const config = await setupConfig({
+            filePath: args.config,
+        });
 
         const healthCheck = http.request(
             {

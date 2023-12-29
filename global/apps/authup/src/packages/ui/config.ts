@@ -8,7 +8,7 @@
 import type { ConfigRaw } from '@authup/config';
 import { read } from '@authup/config';
 import type { Config } from '@authup/client-web-config';
-import { buildConfig, parseConfig } from '@authup/client-web-config';
+import { buildConfig } from '@authup/client-web-config';
 import { makeURLPublicAccessible } from '@authup/core';
 
 export async function buildClientWebConfig(input?: ConfigRaw): Promise<Config> {
@@ -19,7 +19,7 @@ export async function buildClientWebConfig(input?: ConfigRaw): Promise<Config> {
         raw = await read();
     }
 
-    const data = parseConfig(raw.client.web || {});
+    const data = raw.client.web || {};
 
     // todo: check raw.server.core existence ...
     if (

@@ -8,7 +8,7 @@
 import type { ConfigRaw } from '@authup/config';
 import { read } from '@authup/config';
 import type { Config } from '@authup/server-core-app';
-import { createConfig, parseConfig } from '@authup/server-core-app';
+import { buildConfig, parseConfig } from '@authup/server-core-app';
 
 export async function buildServerCoreConfig(input?: ConfigRaw): Promise<Config> {
     let raw : ConfigRaw;
@@ -19,6 +19,8 @@ export async function buildServerCoreConfig(input?: ConfigRaw): Promise<Config> 
     }
 
     const data = parseConfig(raw.server.core || {});
-    // todo: createConfig -> buildConfig + env context option
-    return createConfig(data);
+    return buildConfig({
+        data,
+        env: true,
+    });
 }

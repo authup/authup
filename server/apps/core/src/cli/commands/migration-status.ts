@@ -5,19 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
 import { setupConfig } from '../../config';
 
 import { buildDataSourceOptions } from '../../database';
+
+interface MigrationStatusArguments extends Arguments {
+    config: string | undefined;
+}
 
 export class MigrationStatusCommand implements CommandModule {
     command = 'migration:status';
 
     describe = 'Status of database migrations.';
 
-    async handler(args: any) {
-        await setupConfig();
+    builder(args: Argv) {
+        return args
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
+            });
+    }
+
+    async handler(args: MigrationStatusArguments) {
+        await setupConfig({
+            filePath: args.config,
+        });
 
         const options = await buildDataSourceOptions();
 
