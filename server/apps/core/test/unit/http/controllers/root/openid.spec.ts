@@ -35,16 +35,16 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
 
         const data = response.body as OAuth2OpenIDProviderMetadata;
 
-        expect(data.issuer).toEqual(config.get('publicUrl'));
-        expect(data.authorization_endpoint).toEqual(new URL('authorize', config.get('publicUrl')).href);
-        expect(data.jwks_uri).toEqual(new URL('jwks', config.get('publicUrl')).href);
+        expect(data.issuer).toEqual(config.publicUrl);
+        expect(data.authorization_endpoint).toEqual(new URL('authorize', config.publicUrl).href);
+        expect(data.jwks_uri).toEqual(new URL('jwks', config.publicUrl).href);
         expect(data.response_type_supported).toEqual([
             OAuth2AuthorizationResponseType.CODE,
             OAuth2AuthorizationResponseType.TOKEN,
             OAuth2AuthorizationResponseType.NONE,
         ]);
-        expect(data.token_endpoint).toEqual(new URL('token', config.get('publicUrl')).href);
-        expect(data.introspection_endpoint).toEqual(new URL('token/introspect', config.get('publicUrl')).href);
-        expect(data.userinfo_endpoint).toEqual(new URL('users/@me', config.get('publicUrl')).href);
+        expect(data.token_endpoint).toEqual(new URL('token', config.publicUrl).href);
+        expect(data.introspection_endpoint).toEqual(new URL('token/introspect', config.publicUrl).href);
+        expect(data.userinfo_endpoint).toEqual(new URL('users/@me', config.publicUrl).href);
     });
 });

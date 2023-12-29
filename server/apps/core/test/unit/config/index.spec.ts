@@ -11,17 +11,15 @@ import {
 
 describe('src/config/*.ts', () => {
     it('should set & use config', async () => {
-        const config = await useConfig();
+        const config = useConfig();
 
         expect(config).toBeDefined();
-        expect(config.get('middlewareBody')).toBeTruthy();
+        expect(config.middlewareBody).toBeTruthy();
 
-        config.set({
-            middlewareBody: false,
-        });
+        config.middlewareBody = false;
 
         expect(config).toBeDefined();
-        expect(config.get('middlewareBody')).toBeFalsy();
+        expect(config.middlewareBody).toBeFalsy();
 
         unsetConfig();
     });

@@ -13,9 +13,9 @@ import { createRouter, useConfig } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
     const config = useConfig();
-    config.set('middlewareRateLimit', false);
-    config.set('middlewarePrometheus', false);
-    config.set('middlewareSwagger', false);
+    config.middlewareRateLimit = false;
+    config.middlewarePrometheus = false;
+    config.middlewareSwagger = false;
 
     const router = createRouter();
 
