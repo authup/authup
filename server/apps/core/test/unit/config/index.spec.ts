@@ -6,12 +6,13 @@
  */
 
 import {
-    unsetConfig, useConfig,
+    buildConfig,
+    unsetConfig,
 } from '../../../src';
 
 describe('src/config/*.ts', () => {
     it('should set & use config', async () => {
-        const config = useConfig();
+        const config = buildConfig();
 
         expect(config).toBeDefined();
         expect(config.middlewareBody).toBeTruthy();

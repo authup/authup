@@ -13,7 +13,6 @@ import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
-    const config = useConfig();
     const superTest = useSuperTest();
 
     let seederResponse : DatabaseRootSeederResult | undefined;
@@ -27,6 +26,8 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
     });
 
     it('should return openid configuration', async () => {
+        const config = useConfig();
+
         const response = await superTest
             .get('/.well-known/openid-configuration');
 

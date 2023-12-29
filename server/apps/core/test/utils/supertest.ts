@@ -9,13 +9,17 @@ import { createNodeDispatcher } from 'routup';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
-import { createRouter, useConfig } from '../../src';
+import {
+    buildConfig, createRouter, setConfig,
+} from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const config = useConfig();
+    const config = buildConfig();
     config.middlewareRateLimit = false;
     config.middlewarePrometheus = false;
     config.middlewareSwagger = false;
+
+    setConfig(config);
 
     const router = createRouter();
 
