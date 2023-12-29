@@ -6,18 +6,18 @@
  */
 
 import type { Config } from '@authup/server-core-app';
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/core';
+import { getEnv, getEnvInt, hasEnv } from '@authup/core';
 
 export function extendServerConfigWithEnv(config: Config) {
-    if (hasProcessEnv('PORT')) {
-        config.port = readIntFromProcessEnv('PORT');
+    if (hasEnv('PORT')) {
+        config.port = getEnvInt('PORT');
     }
 
-    if (hasProcessEnv('API_PORT')) {
-        config.port = readIntFromProcessEnv('API_PORT');
+    if (hasEnv('API_PORT')) {
+        config.port = getEnvInt('API_PORT');
     }
 
-    if (hasProcessEnv('WRITABLE_DIRECTORY_PATH')) {
-        config.writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
+    if (hasEnv('WRITABLE_DIRECTORY_PATH')) {
+        config.writableDirectoryPath = getEnv('WRITABLE_DIRECTORY_PATH');
     }
 }

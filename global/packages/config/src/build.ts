@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readFromProcessEnv } from '@authup/core';
+import { getEnv } from '@authup/core';
 import { normalize } from 'pathe';
 
 export function buildLookupDirectories(): string[] {
@@ -13,14 +13,14 @@ export function buildLookupDirectories(): string[] {
         '.',
     ];
 
-    const writableDirectoryPath = readFromProcessEnv('WRITABLE_DIRECTORY_PATH');
+    const writableDirectoryPath = getEnv('WRITABLE_DIRECTORY_PATH');
     if (writableDirectoryPath) {
         directories.push(normalize(writableDirectoryPath));
     } else {
         directories.push('writable');
     }
 
-    const configDirectory = readFromProcessEnv('CONFIG_DIRECTORY');
+    const configDirectory = getEnv('CONFIG_DIRECTORY');
     if (configDirectory) {
         directories.push(normalize(configDirectory));
     }

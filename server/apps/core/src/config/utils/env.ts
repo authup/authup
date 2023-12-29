@@ -6,11 +6,11 @@
  */
 
 import {
-    hasProcessEnv,
-    readBoolFromProcessEnv,
-    readBoolOrStringFromProcessEnv,
-    readFromProcessEnv,
-    readIntFromProcessEnv,
+    getEnv,
+    getEnvBool,
+    getEnvBoolOrString,
+    getEnvInt,
+    hasEnv,
 } from '@authup/core';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
@@ -20,12 +20,12 @@ import { isDatabaseConnectionConfigurationSupported } from './database';
 export function readConfigFromEnv() : ConfigInput {
     const options : ConfigInput = {};
 
-    if (hasProcessEnv(EnvironmentVariableName.NODE_ENV)) {
-        options.env = readFromProcessEnv(EnvironmentVariableName.NODE_ENV);
+    if (hasEnv(EnvironmentVariableName.NODE_ENV)) {
+        options.env = getEnv(EnvironmentVariableName.NODE_ENV);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH)) {
-        options.writableDirectoryPath = readFromProcessEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH);
+    if (hasEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH)) {
+        options.writableDirectoryPath = getEnv(EnvironmentVariableName.WRITABLE_DIRECTORY_PATH);
     }
 
     // -------------------------------------------------------------
@@ -40,76 +40,76 @@ export function readConfigFromEnv() : ConfigInput {
         }
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.REDIS)) {
-        options.redis = readBoolOrStringFromProcessEnv(EnvironmentVariableName.REDIS);
+    if (hasEnv(EnvironmentVariableName.REDIS)) {
+        options.redis = getEnvBoolOrString(EnvironmentVariableName.REDIS);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.SMTP)) {
-        options.smtp = readBoolOrStringFromProcessEnv(EnvironmentVariableName.SMTP);
+    if (hasEnv(EnvironmentVariableName.SMTP)) {
+        options.smtp = getEnvBoolOrString(EnvironmentVariableName.SMTP);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.VAULT)) {
-        options.vault = readBoolOrStringFromProcessEnv(EnvironmentVariableName.VAULT);
+    if (hasEnv(EnvironmentVariableName.VAULT)) {
+        options.vault = getEnvBoolOrString(EnvironmentVariableName.VAULT);
     }
 
     // -------------------------------------------------------------
 
-    if (hasProcessEnv(EnvironmentVariableName.HOST)) {
-        options.host = readFromProcessEnv(EnvironmentVariableName.HOST);
+    if (hasEnv(EnvironmentVariableName.HOST)) {
+        options.host = getEnv(EnvironmentVariableName.HOST);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.PORT)) {
-        options.port = readIntFromProcessEnv(EnvironmentVariableName.PORT);
+    if (hasEnv(EnvironmentVariableName.PORT)) {
+        options.port = getEnvInt(EnvironmentVariableName.PORT);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.PUBLIC_URL)) {
-        options.publicUrl = readFromProcessEnv(EnvironmentVariableName.PUBLIC_URL);
+    if (hasEnv(EnvironmentVariableName.PUBLIC_URL)) {
+        options.publicUrl = getEnv(EnvironmentVariableName.PUBLIC_URL);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL)) {
-        options.authorizeRedirectUrl = readFromProcessEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);
+    if (hasEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL)) {
+        options.authorizeRedirectUrl = getEnv(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE)) {
-        options.tokenMaxAgeAccessToken = readIntFromProcessEnv(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
+    if (hasEnv(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE)) {
+        options.tokenMaxAgeAccessToken = getEnvInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE)) {
-        options.tokenMaxAgeRefreshToken = readIntFromProcessEnv(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
+    if (hasEnv(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE)) {
+        options.tokenMaxAgeRefreshToken = getEnvInt(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.REGISTRATION)) {
-        options.registration = readBoolFromProcessEnv(EnvironmentVariableName.REGISTRATION);
+    if (hasEnv(EnvironmentVariableName.REGISTRATION)) {
+        options.registration = getEnvBool(EnvironmentVariableName.REGISTRATION);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.EMAIL_VERIFICATION)) {
-        options.emailVerification = readBoolFromProcessEnv(EnvironmentVariableName.EMAIL_VERIFICATION);
+    if (hasEnv(EnvironmentVariableName.EMAIL_VERIFICATION)) {
+        options.emailVerification = getEnvBool(EnvironmentVariableName.EMAIL_VERIFICATION);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.FORGOT_PASSWORD)) {
-        options.forgotPassword = readBoolFromProcessEnv(EnvironmentVariableName.FORGOT_PASSWORD);
+    if (hasEnv(EnvironmentVariableName.FORGOT_PASSWORD)) {
+        options.forgotPassword = getEnvBool(EnvironmentVariableName.FORGOT_PASSWORD);
     }
 
     // ---------------------------------------------------------------
 
-    if (hasProcessEnv(EnvironmentVariableName.ADMIN_USERNAME)) {
-        options.adminUsername = readFromProcessEnv(EnvironmentVariableName.ADMIN_USERNAME);
+    if (hasEnv(EnvironmentVariableName.ADMIN_USERNAME)) {
+        options.adminUsername = getEnv(EnvironmentVariableName.ADMIN_USERNAME);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.ADMIN_PASSWORD)) {
-        options.adminPassword = readFromProcessEnv(EnvironmentVariableName.ADMIN_PASSWORD);
+    if (hasEnv(EnvironmentVariableName.ADMIN_PASSWORD)) {
+        options.adminPassword = getEnv(EnvironmentVariableName.ADMIN_PASSWORD);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.ROBOT_ENABLED)) {
-        options.robotEnabled = readBoolFromProcessEnv(EnvironmentVariableName.ROBOT_ENABLED);
+    if (hasEnv(EnvironmentVariableName.ROBOT_ENABLED)) {
+        options.robotEnabled = getEnvBool(EnvironmentVariableName.ROBOT_ENABLED);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.ROBOT_SECRET)) {
-        options.robotSecret = readFromProcessEnv(EnvironmentVariableName.ROBOT_SECRET);
+    if (hasEnv(EnvironmentVariableName.ROBOT_SECRET)) {
+        options.robotSecret = getEnv(EnvironmentVariableName.ROBOT_SECRET);
     }
 
-    if (hasProcessEnv(EnvironmentVariableName.PERMISSIONS)) {
-        options.permissions = readFromProcessEnv(EnvironmentVariableName.PERMISSIONS);
+    if (hasEnv(EnvironmentVariableName.PERMISSIONS)) {
+        options.permissions = getEnv(EnvironmentVariableName.PERMISSIONS);
     }
 
     return options;

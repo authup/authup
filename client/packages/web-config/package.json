@@ -1,5 +1,5 @@
 {
-    "name": "@authup/web-config",
+    "name": "@authup/client-web-config",
     "version": "0.0.0",
     "description": "This package contains the web config module.",
     "main": "dist/index.cjs",

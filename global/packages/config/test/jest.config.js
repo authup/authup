@@ -24,7 +24,7 @@ module.exports = {
         'dist',
         '/unit/mock-util.ts',
     ],
-    coverageDirectory: 'writable/coverage',
+    coverageDirectory: 'coverage',
     collectCoverageFrom: [
         'src/**/*.ts',
         '!src/**/*.d.ts',

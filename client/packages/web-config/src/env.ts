@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/core';
+import { getEnv, getEnvInt, hasEnv } from '@authup/core';
 import type { Config } from './type';
 
 export function extractConfigFromEnv(config: Config) {
@@ -19,8 +19,8 @@ export function extractConfigFromEnv(config: Config) {
         'NUXT_PORT',
         'NUXT_PUBLIC_PORT',
     ];
-    if (hasProcessEnv(keys)) {
-        config.port = readIntFromProcessEnv(keys, 3000);
+    if (hasEnv(keys)) {
+        config.port = getEnvInt(keys, 3000);
     }
 
     keys = [
@@ -29,8 +29,8 @@ export function extractConfigFromEnv(config: Config) {
         'NUXT_HOST',
     ];
 
-    if (hasProcessEnv(keys)) {
-        config.host = readFromProcessEnv(keys, '0.0.0.0');
+    if (hasEnv(keys)) {
+        config.host = getEnv(keys, '0.0.0.0');
     }
 
     keys = [
@@ -39,8 +39,8 @@ export function extractConfigFromEnv(config: Config) {
         'NUXT_PUBLIC_API_URL',
     ];
 
-    if (hasProcessEnv(keys)) {
-        config.apiUrl = readFromProcessEnv(keys, 'http://localhost:3010');
+    if (hasEnv(keys)) {
+        config.apiUrl = getEnv(keys, 'http://localhost:3010');
     }
 
     keys = [
@@ -48,7 +48,7 @@ export function extractConfigFromEnv(config: Config) {
         'NUXT_PUBLIC_URL',
         'NUXT_PUBLIC_PUBLIC_URL',
     ];
-    if (hasProcessEnv(keys)) {
-        config.publicUrl = readFromProcessEnv(keys, 'http://localhost:3000');
+    if (hasEnv(keys)) {
+        config.publicUrl = getEnv(keys, 'http://localhost:3000');
     }
 }

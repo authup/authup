@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readFromProcessEnv } from '@authup/core';
+import { getEnv } from '@authup/core';
 import type { Logger, LoggerOptions } from 'winston';
 import path from 'node:path';
 import { createLogger as create, format, transports } from 'winston';
 import type { LoggerSetupContext } from './types';
 
 export function createLogger(context: LoggerSetupContext) : Logger {
-    const env = context.env || readFromProcessEnv('NODE_ENV');
+    const env = context.env || getEnv('NODE_ENV');
 
     let items : LoggerOptions['transports'];
 
