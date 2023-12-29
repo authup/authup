@@ -1,0 +1,53 @@
+{
+    "name": "@authup/config",
+    "version": "0.0.0",
+    "description": "This package contains the config helper module.",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build:types": "vue-tsc --declaration --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "cross-env NODE_ENV=production rollup -c",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "build:watch": "npm run build -- --watch",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "npm run test -- --coverage"
+    },
+    "keywords": [],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "global/packages/config"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@authup/core": "^0.45.10",
+        "locter": "^1.2.3",
+        "pathe": "^1.1.1",
+        "smob": "^1.4.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "ed48328bdd01d844915c26c6fcfb7fdcc1f33396"
+}

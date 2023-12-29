@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readFromProcessEnv } from '@authup/server-core';
+import { readFromProcessEnv } from '@authup/core';
 import type { Logger, LoggerOptions } from 'winston';
 import path from 'node:path';
 import { createLogger as create, format, transports } from 'winston';

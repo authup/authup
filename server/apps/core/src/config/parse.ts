@@ -10,7 +10,7 @@ import type { ConfigInput } from './type';
 import type { DatabaseConnectionOptions } from './utils';
 import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';
 
-export function parseConfig(input: unknown): ConfigInput {
+export function parseConfig(input: unknown = {}): ConfigInput {
     const schema = zod.object({
         env: zod.string().optional(),
         rootPath: zod.string().optional(),

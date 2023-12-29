@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readConfigFile } from '@authup/server-core';
+import { readFor } from '@authup/config';
 import { merge } from 'smob';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { useConfig } from './module';
@@ -16,13 +16,11 @@ import { readConfigFromEnv } from './utils';
 export async function setupConfig(
     input?: ConfigInput,
 ) {
-    const fileConfig = await readConfigFile({
-        name: 'api',
-    });
+    const fileConfig = await readFor('server', 'core');
     const envConfig = readConfigFromEnv();
 
     const config = useConfig();
-    const raw = parseConfig(merge(input || {}, envConfig, fileConfig));
+    const raw = parseConfig(merge(input || {}, envConfig, fileConfig || {}));
     const keys = Object.keys(raw);
     for (let i = 0; i < keys.length; i++) {
         config[keys[i]] = raw[keys[i]];

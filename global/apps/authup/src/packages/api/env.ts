@@ -6,7 +6,7 @@
  */
 
 import type { Config } from '@authup/server-core-app';
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-core';
+import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/core';
 
 export function extendServerConfigWithEnv(config: Config) {
     if (hasProcessEnv('PORT')) {
