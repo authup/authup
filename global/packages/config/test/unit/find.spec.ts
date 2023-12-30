@@ -11,7 +11,7 @@ describe('src/find', () => {
     it('should find config file paths', async () => {
         const config = await findFilePaths('test/data');
 
-        expect(config.length).toEqual(3);
+        expect(config.length).toEqual(4);
     });
 
     it('should not find config file paths', async () => {
@@ -23,7 +23,7 @@ describe('src/find', () => {
     it('should find config directory paths', async () => {
         const config = await findDirectoryPaths('test/data');
 
-        expect(config.length).toEqual(3);
+        expect(config.length).toEqual(4);
     });
 
     it('should not find config directory paths', async () => {

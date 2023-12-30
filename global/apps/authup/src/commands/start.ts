@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { read } from '@authup/config';
+import { Container } from '@authup/config';
 import process from 'node:process';
 import type { CAC } from 'cac';
 import { AppID } from '../constants';
@@ -26,10 +26,11 @@ export function buildStartCommand(cac: CAC) {
             }
 
             const root = process.cwd();
-            const raw = await read();
+            const container = new Container();
+            await container.load();
 
             if (services.indexOf(AppID.SERVER_CORE) !== -1) {
-                const serverCore = await buildServerCoreConfig(raw);
+                const serverCore = await buildServerCoreConfig(container);
                 const ctx : ApiStartCommandContext = {
                     args: {
                         root,
@@ -44,7 +45,7 @@ export function buildStartCommand(cac: CAC) {
             }
 
             if (services.indexOf(AppID.CLIENT_WEB) !== -1) {
-                const clientWeb = await buildClientWebConfig(raw);
+                const clientWeb = await buildClientWebConfig(container);
                 const ctx : UIStartCommandContext = {
                     args: {
                         root,
@@ -53,9 +54,7 @@ export function buildStartCommand(cac: CAC) {
                         PORT: clientWeb.port,
                         HOST: clientWeb.host,
                         PUBLIC_URL: clientWeb.publicUrl,
-                        API_URL: clientWeb.apiUrl ?
-                            clientWeb.apiUrl :
-                            raw.server.core.publicUrl,
+                        API_URL: clientWeb.apiUrl,
                     },
                 };
 

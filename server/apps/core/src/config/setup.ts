@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { readFor, readFromFilePaths } from '@authup/config';
+import { Container } from '@authup/config';
 import { buildConfig } from './build';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { setConfig } from './module';
@@ -14,19 +14,22 @@ import type { Config, ConfigSetupContext } from './type';
 export async function setupConfig(context: ConfigSetupContext = {}): Promise<Config> {
     // todo: filePaths should be extracted from env
 
-    let raw : Record<string, any>;
+    const container = new Container();
     if (context.filePath) {
         const filePaths = Array.isArray(context.filePath) ?
             context.filePath :
             [context.filePath];
 
-        raw = await readFromFilePaths(filePaths);
+        await container.loadFromFilePath(filePaths);
     } else {
-        raw = await readFor('server', 'core');
+        await container.load();
     }
 
     const config = buildConfig({
-        data: raw,
+        data: container.get({
+            id: 'core',
+            group: 'server',
+        }),
         env: true,
     });
 

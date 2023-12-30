@@ -5,40 +5,49 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigRaw } from '@authup/config';
-import { read } from '@authup/config';
+import { Container } from '@authup/config';
 import type { Config } from '@authup/client-web-config';
 import { buildConfig } from '@authup/client-web-config';
 import { makeURLPublicAccessible } from '@authup/core';
 
-export async function buildClientWebConfig(input?: ConfigRaw): Promise<Config> {
-    let raw : ConfigRaw;
+export async function buildClientWebConfig(input?: Container): Promise<Config> {
+    let container : Container;
     if (input) {
-        raw = input;
+        container = input;
     } else {
-        raw = await read();
+        container = new Container();
+        await container.load();
     }
 
-    const data = raw.client.web || {};
+    const client = container.get({
+        group: 'client',
+        id: 'web',
+    });
 
-    // todo: check raw.server.core existence ...
-    if (
-        !data.apiUrl &&
-        raw.server.core?.publicUrl
-    ) {
-        data.apiUrl = makeURLPublicAccessible(raw.server.core.publicUrl);
-    }
+    const server = container.get({
+        group: 'server',
+        id: 'core',
+    });
 
-    // todo: check raw.server.core existence ...
-    if (
-        !data.publicUrl &&
-        raw.server.core?.authorizeRedirectUrl
-    ) {
-        data.apiUrl = makeURLPublicAccessible(raw.server.core.authorizeRedirectUrl);
+    if (server) {
+        if (
+            !client.apiUrl &&
+            typeof server.publicUrl === 'string'
+        ) {
+            client.apiUrl = makeURLPublicAccessible(server.publicUrl);
+        }
+
+        // todo: check raw.server.core existence ...
+        if (
+            !client.publicUrl &&
+            typeof server.authorizeRedirectUrl === 'string'
+        ) {
+            client.apiUrl = makeURLPublicAccessible(server.authorizeRedirectUrl);
+        }
     }
 
     return buildConfig({
-        data,
+        data: client,
         env: true,
     });
 }

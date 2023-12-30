@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { read } from '@authup/config';
+import { Container } from '@authup/config';
 import type { CAC } from 'cac';
 import consola from 'consola';
 import { buildClientWebConfig, buildServerCoreConfig } from '../packages';
@@ -13,9 +13,11 @@ import { buildClientWebConfig, buildServerCoreConfig } from '../packages';
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
         .action(async () => {
-            const raw = await read();
-            const serverCore = await buildServerCoreConfig(raw);
-            const clientWeb = await buildClientWebConfig(raw);
+            const container = new Container();
+            await container.load();
+
+            const serverCore = await buildServerCoreConfig(container);
+            const clientWeb = await buildClientWebConfig(container);
 
             consola.info(`Environment: ${serverCore.env}`);
             consola.info(`RootPath: ${serverCore.rootPath}`);

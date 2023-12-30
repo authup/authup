@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { read } from '@authup/config';
+import { Container } from '@authup/config';
 import type { CAC } from 'cac';
 import chalk from 'chalk';
 import consola from 'consola';
@@ -18,8 +18,10 @@ export function buildUiCommand(cac: CAC) {
         .option('-h, --host [host]', 'Specify the host for starting a specific application.')
         .option('-d, --apiUrl [apiUrl]', 'Specify the apiUrl of the backend application.')
         .action(async (command: string, ctx: Record<string, any>) => {
-            const raw = await read();
-            const config = await buildClientWebConfig(raw);
+            const container = new Container();
+            await container.load();
+
+            const config = await buildClientWebConfig(container);
 
             let { apiUrl } = ctx;
 

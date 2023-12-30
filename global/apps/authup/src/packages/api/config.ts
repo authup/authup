@@ -5,20 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ConfigRaw } from '@authup/config';
-import { read } from '@authup/config';
+import { Container } from '@authup/config';
 import type { Config } from '@authup/server-core-app';
 import { buildConfig, parseConfig } from '@authup/server-core-app';
 
-export async function buildServerCoreConfig(input?: ConfigRaw): Promise<Config> {
-    let raw : ConfigRaw;
+export async function buildServerCoreConfig(input?: Container): Promise<Config> {
+    let container : Container;
     if (input) {
-        raw = input;
+        container = input;
     } else {
-        raw = await read();
+        container = new Container();
+        await container.load();
     }
 
-    const data = parseConfig(raw.server.core || {});
+    const data = parseConfig(container.get({
+        group: 'server',
+        id: 'core',
+    }));
+
     return buildConfig({
         data,
         env: true,

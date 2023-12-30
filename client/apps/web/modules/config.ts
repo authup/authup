@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildConfig, parseConfig } from '@authup/client-web-config';
-import { read } from '@authup/config';
+import { buildConfig } from '@authup/client-web-config';
+import { Container } from '@authup/config';
 import { defineNuxtModule } from 'nuxt/kit';
 
 export default defineNuxtModule({
@@ -14,12 +14,14 @@ export default defineNuxtModule({
         name: 'config',
     },
     setup: async (_options, nuxt) => {
-        const raw = await read({
-            directory: nuxt.options.rootDir,
-        });
+        const container = new Container();
+        await container.loadFromPath(nuxt.options.rootDir);
 
         const config = buildConfig({
-            data: raw?.client?.web,
+            data: container.get({
+                group: 'client',
+                id: 'web',
+            }),
             env: true,
         });
 
