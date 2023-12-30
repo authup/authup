@@ -39,18 +39,18 @@ export async function startCommand(context?: StartCommandContext) {
 
     const logger = useLogger();
 
-    logger.info(`Environment: ${config.get('env')}`);
-    logger.info(`WritableDirectoryPath: ${config.get('writableDirectoryPath')}`);
-    logger.info(`Port: ${config.get('port')}`);
-    logger.info(`Host: ${config.get('host')}`);
-    logger.info(`Public-URL: ${config.get('publicUrl')}`);
-    logger.info(`Docs-URL: ${new URL('docs', config.get('publicUrl')).href}`);
+    logger.info(`Environment: ${config.env}`);
+    logger.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
+    logger.info(`Port: ${config.port}`);
+    logger.info(`Host: ${config.host}`);
+    logger.info(`Public-URL: ${config.publicUrl}`);
+    logger.info(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
 
-    const database = config.get('db');
+    const database = config.db;
     logger.info(`Database: ${database.type}`);
     logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Vault: ${hasVaultClient() ? 'enabled' : 'disabled'}`);
-    logger.info(`Robot: ${config.get('robotEnabled') ? 'enabled' : 'disabled'}`);
+    logger.info(`Robot: ${config.robotEnabled ? 'enabled' : 'disabled'}`);
 
     /*
     HTTP Server & Express App
@@ -59,9 +59,9 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info('Generating documentation...');
 
     await generateSwaggerDocumentation({
-        rootPath: config.get('rootPath'),
-        writableDirectoryPath: config.get('writableDirectoryPath'),
-        baseUrl: config.get('publicUrl'),
+        rootPath: config.rootPath,
+        writableDirectoryPath: config.writableDirectoryPath,
+        baseUrl: config.publicUrl,
     });
 
     logger.info('Generated documentation.');
@@ -118,7 +118,7 @@ export async function startCommand(context?: StartCommandContext) {
             useLogger().warn(`The ${ROBOT_SYSTEM_NAME} robot credentials could not saved to vault.`);
         }
 
-        await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+        await saveSeedResult(config.writableDirectoryPath, seederData);
     }
 
     logger.info('Starting oauth2 cleaner...');
@@ -132,7 +132,7 @@ export async function startCommand(context?: StartCommandContext) {
 
     const router = createRouter();
     const httpServer = createHttpServer({ router });
-    httpServer.listen(config.get('port'), config.get('host'), () => {
+    httpServer.listen(config.port, config.host, () => {
         logger.info('Started http server.');
     });
 }

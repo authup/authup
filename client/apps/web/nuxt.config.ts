@@ -33,8 +33,9 @@ export default defineNuxtConfig({
     ],
     alias: {
         '@authup/core': path.join(__dirname, '..', '..', '..', 'global', 'packages', 'core', 'src'),
-        '@authup/server-core': path.join(__dirname, '..', '..', '..', 'server', 'packages', 'server-core', 'src'),
+        '@authup/config': path.join(__dirname, '..', '..', '..', 'global', 'packages', 'config', 'src'),
         '@authup/client-vue': path.join(__dirname, '..', '..', 'packages', 'vue', 'src'),
+        '@authup/client-web-config': path.join(__dirname, '..', '..', 'packages', 'web-config', 'src'),
     },
     runtimeConfig: {
         public: {
@@ -53,5 +54,6 @@ export default defineNuxtConfig({
             },
         ],
         '@pinia/nuxt',
+        './modules/config',
     ],
 });

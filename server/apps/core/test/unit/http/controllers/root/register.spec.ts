@@ -29,9 +29,8 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
     it('should register a new user', async () => {
         let response;
 
-        useConfig().setRaw({
-            registration: false,
-        });
+        const config = useConfig();
+        config.registration = false;
 
         response = await superTest
             .post('/register')
@@ -43,10 +42,8 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
 
         expect(response.status).toEqual(400);
 
-        useConfig().setRaw({
-            registration: true,
-            emailVerification: true,
-        });
+        config.registration = true;
+        config.emailVerification = true;
 
         response = await superTest
             .post('/register')

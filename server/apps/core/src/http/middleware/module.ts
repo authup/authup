@@ -27,29 +27,29 @@ export function registerMiddlewares(router: Router) {
 
     registerLoggerMiddleware(router);
 
-    const cors = config.get('middlewareCors');
+    const cors = config.middlewareCors;
     if (isBuiltInMiddlewareEnabled(cors)) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
     router.use(basic());
 
-    const prometheus = config.get('middlewarePrometheus');
+    const prometheus = config.middlewarePrometheus;
     if (isBuiltInMiddlewareEnabled(prometheus)) {
         registerPrometheusMiddleware(router, transformBoolToEmptyObject(prometheus));
     }
 
-    const rateLimit = config.get('middlewareRateLimit');
+    const rateLimit = config.middlewareRateLimit;
     if (isBuiltInMiddlewareEnabled(rateLimit)) {
         registerRateLimitMiddleware(router, transformBoolToEmptyObject(rateLimit));
     }
 
-    const swagger = config.get('middlewareSwagger');
+    const swagger = config.middlewareSwagger;
     if (isBuiltInMiddlewareEnabled(swagger)) {
         registerSwaggerMiddleware(router, {
-            documentPath: path.join(config.get('writableDirectoryPath'), 'swagger.json'),
+            documentPath: path.join(config.writableDirectoryPath, 'swagger.json'),
             options: {
-                baseUrl: config.get('publicUrl'),
+                baseUrl: config.publicUrl,
                 ...transformBoolToEmptyObject(swagger),
             },
         });

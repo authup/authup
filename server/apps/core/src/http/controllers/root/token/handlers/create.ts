@@ -74,18 +74,18 @@ export async function createTokenRouteHandler(
     const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
 
     const cookieOptions : SerializeOptions = {};
-    if (config.get('env') === EnvironmentName.PRODUCTION) {
-        cookieOptions.domain = new URL(config.get('publicUrl')).hostname;
+    if (config.env === EnvironmentName.PRODUCTION) {
+        cookieOptions.domain = new URL(config.publicUrl).hostname;
     }
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, tokenResponse.access_token, {
         ...cookieOptions,
-        maxAge: config.get('tokenMaxAgeAccessToken') * 1000,
+        maxAge: config.tokenMaxAgeAccessToken * 1000,
     });
 
     setResponseCookie(res, CookieName.REFRESH_TOKEN, tokenResponse.refresh_token, {
         ...cookieOptions,
-        maxAge: config.get('tokenMaxAgeRefreshToken') * 1000,
+        maxAge: config.tokenMaxAgeRefreshToken * 1000,
     });
 
     return send(res, tokenResponse);

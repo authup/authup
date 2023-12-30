@@ -5,17 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Continu } from 'continu';
+import type { OutputOptions } from 'dycraft';
 
-export type UIOptions = {
+export type Config = {
     port: number,
 
     host: string,
 
-    apiUrl?: string,
+    apiUrl: string,
 
     publicUrl?: string
-};
-export type UIOptionsInput = Partial<UIOptions>;
+} & Partial<OutputOptions>;
 
-export type UIConfig = Continu<UIOptions, UIOptionsInput>;
+export type ConfigInput = Partial<Config>;
+
+export type ConfigBuildContext = {
+    data?: ConfigInput,
+    env?: boolean
+};

@@ -15,7 +15,7 @@ import {
 import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
-    root: string;
+    config: string | undefined;
     database: boolean;
     databaseSchema: boolean;
     databaseSeed: boolean;
@@ -30,10 +30,9 @@ export class SetupCommand implements CommandModule {
     // eslint-disable-next-line class-methods-use-this
     builder(args: Argv) {
         return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
             })
 
             .option('database', {
@@ -63,12 +62,14 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = await setupConfig();
+        const config = await setupConfig({
+            filePath: args.config,
+        });
 
         const dataSourceOptions = await buildDataSourceOptions();
         const logger = createLogger({
-            directory: config.get('writableDirectoryPath'),
-            env: config.get('env'),
+            directory: config.writableDirectoryPath,
+            env: config.env,
         });
 
         try {

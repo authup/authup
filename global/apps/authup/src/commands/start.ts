@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Container } from '@authup/config';
 import process from 'node:process';
 import type { CAC } from 'cac';
-import { createConfig } from '../config';
 import { AppID } from '../constants';
 import type { ApiStartCommandContext, UIStartCommandContext } from '../packages';
 import {
+    buildClientWebConfig,
+    buildServerCoreConfig,
     startServer,
     startUI,
 } from '../packages';
@@ -24,16 +26,18 @@ export function buildStartCommand(cac: CAC) {
             }
 
             const root = process.cwd();
-            const config = await createConfig();
+            const container = new Container();
+            await container.load();
 
             if (services.indexOf(AppID.SERVER_CORE) !== -1) {
+                const serverCore = await buildServerCoreConfig(container);
                 const ctx : ApiStartCommandContext = {
                     args: {
                         root,
                     },
                     env: {
-                        PORT: config.api.get('port'),
-                        WRITABLE_DIRECTORY_PATH: config.api.get('writableDirectoryPath'),
+                        PORT: serverCore.port,
+                        WRITABLE_DIRECTORY_PATH: serverCore.writableDirectoryPath,
                     },
                 };
 
@@ -41,17 +45,16 @@ export function buildStartCommand(cac: CAC) {
             }
 
             if (services.indexOf(AppID.CLIENT_WEB) !== -1) {
+                const clientWeb = await buildClientWebConfig(container);
                 const ctx : UIStartCommandContext = {
                     args: {
                         root,
                     },
                     env: {
-                        PORT: config.ui.get('port'),
-                        HOST: config.ui.get('host'),
-                        PUBLIC_URL: config.ui.get('publicUrl'),
-                        API_URL: config.ui.has('apiUrl') ?
-                            config.ui.get('apiUrl') :
-                            config.api.get('publicUrl'),
+                        PORT: clientWeb.port,
+                        HOST: clientWeb.host,
+                        PUBLIC_URL: clientWeb.publicUrl,
+                        API_URL: clientWeb.apiUrl,
                     },
                 };
 

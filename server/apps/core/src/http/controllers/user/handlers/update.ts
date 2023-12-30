@@ -14,7 +14,7 @@ import { useConfig } from '../../../../config';
 import { UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runUserValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -67,7 +67,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
 
         const config = useConfig();
 
-        if (entity.name === config.get('adminUsername')) {
+        if (entity.name === config.adminUsername) {
             throw new BadRequestError('The default user name can not be changed.');
         }
     }

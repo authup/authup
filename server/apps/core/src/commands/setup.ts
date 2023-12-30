@@ -33,9 +33,9 @@ export async function setupCommand(context?: SetupCommandContext) {
         }
 
         await generateSwaggerDocumentation({
-            rootPath: config.get('rootPath'),
-            writableDirectoryPath: config.get('writableDirectoryPath'),
-            baseUrl: config.get('publicUrl'),
+            rootPath: config.rootPath,
+            writableDirectoryPath: config.writableDirectoryPath,
+            baseUrl: config.publicUrl,
         });
 
         if (context.logger) {
@@ -102,7 +102,7 @@ export async function setupCommand(context?: SetupCommandContext) {
                 }
 
                 if (seederData.robot) {
-                    await saveSeedResult(config.get('writableDirectoryPath'), seederData);
+                    await saveSeedResult(config.writableDirectoryPath, seederData);
                 }
             }
         } catch (e) {

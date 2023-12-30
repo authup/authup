@@ -12,7 +12,7 @@ import { setupConfig } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
 interface StartArguments extends Arguments {
-    root: string;
+    config: string | undefined;
 }
 
 export class StartCommand implements CommandModule {
@@ -22,20 +22,21 @@ export class StartCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('root', {
-                alias: 'r',
-                default: process.cwd(),
-                describe: 'Path to the project root directory.',
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
             });
     }
 
     async handler(args: StartArguments) {
-        const config = await setupConfig();
+        const config = await setupConfig({
+            filePath: args.config,
+        });
 
         const dataSourceOptions = await buildDataSourceOptions();
         const logger = createLogger({
-            directory: config.get('writableDirectoryPath'),
-            env: config.get('env'),
+            directory: config.writableDirectoryPath,
+            env: config.env,
         });
 
         try {

@@ -10,7 +10,7 @@ import { load } from 'locter';
 import { send } from 'routup';
 import type { Request, Response } from 'routup';
 import { useConfig } from '../../../../config';
-import { resolvePackagePath, resolveRootPath } from '../../../path';
+import { resolvePackagePath } from '../../../path';
 
 export type EndpointInfo = {
     version: string,
@@ -34,10 +34,10 @@ export async function useInfo() {
     info = {
         version: pkgJson.version,
         timestamp: Date.now(),
-        tokenMaxAgeAccessToken: config.get('tokenMaxAgeAccessToken'),
-        tokenMaxAgeRefreshToken: config.get('tokenMaxAgeRefreshToken'),
-        redis: !!config.get('redis'),
-        vault: !!config.get('vault'),
+        tokenMaxAgeAccessToken: config.tokenMaxAgeAccessToken,
+        tokenMaxAgeRefreshToken: config.tokenMaxAgeRefreshToken,
+        redis: !!config.redis,
+        vault: !!config.vault,
     };
 
     return info;
@@ -46,5 +46,5 @@ export async function useStatusRouteHandler(req: Request, res: Response) : Promi
     const status = await useInfo();
     status.timestamp = Date.now();
 
-    send(res, status);
+    return send(res, status);
 }

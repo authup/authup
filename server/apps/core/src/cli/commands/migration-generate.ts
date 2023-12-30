@@ -6,20 +6,35 @@
  */
 
 import path from 'node:path';
+import process from 'node:process';
 import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extension';
-import type { CommandModule } from 'yargs';
+import type { Arguments, Argv, CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
 import { setupConfig } from '../../config';
 import { extendDataSourceOptions } from '../../database';
+
+interface MigrationGenerateArguments extends Arguments {
+    config: string | undefined;
+}
 
 export class MigrationGenerateCommand implements CommandModule {
     command = 'migration:generate';
 
     describe = 'Generate database migrations.';
 
-    async handler(args: any) {
-        const config = await setupConfig();
+    builder(args: Argv) {
+        return args
+            .option('config', {
+                alias: 'c',
+                describe: 'Path to one ore more configuration files.',
+            });
+    }
+
+    async handler(args: MigrationGenerateArguments) {
+        const config = await setupConfig({
+            filePath: args.config,
+        });
 
         const connections : DataSourceOptions[] = [
             {
@@ -40,7 +55,7 @@ export class MigrationGenerateCommand implements CommandModule {
             },
             {
                 type: 'better-sqlite3',
-                database: path.join(config.get('writableDirectoryPath'), 'migrations.sql'),
+                database: path.join(config.writableDirectoryPath, 'migrations.sql'),
             },
         ];
 

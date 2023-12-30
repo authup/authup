@@ -8,11 +8,17 @@
         "client/apps/web": {
             "component": "client-web-app"
         },
+        "client/packages/web-config": {
+            "component": "client-web-config"
+        },
         "client/packages/vue": {
             "component": "client-vue"
         },
         "global/apps/authup": {
             "component": "global-authup-app"
+        },
+        "global/packages/config": {
+            "component": "global-config"
         },
         "global/packages/core": {
             "component": "global-core"
@@ -37,8 +43,10 @@
             "groupName": "main",
             "components": [
                 "client-vue",
+                "client-web-config",
                 "client-web-app",
                 "global-authup-app",
+                "global-config",
                 "global-core",
                 "server-adapter",
                 "server-core-app",

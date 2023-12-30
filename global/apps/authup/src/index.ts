@@ -26,4 +26,3 @@ buildUiCommand(cli);
 cli.help();
 
 cli.parse();
-export { AppID } from './constants';

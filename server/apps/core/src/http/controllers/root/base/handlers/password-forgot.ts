@@ -6,7 +6,7 @@
  */
 
 import { randomBytes } from 'node:crypto';
-import { BadRequestError, NotFoundError, ServerError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
 import type { User } from '@authup/core';
 import type { Request, Response } from 'routup';
@@ -21,17 +21,17 @@ import {
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 
 export async function createAuthPasswordForgotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const config = await useConfig();
+    const config = useConfig();
 
-    if (!config.get('registration')) {
+    if (!config.registration) {
         throw new BadRequestError('User registration is not enabled.');
     }
 
-    if (!config.get('emailVerification')) {
+    if (!config.emailVerification) {
         throw new BadRequestError('Email verification is not enabled, but required to reset a password.');
     }
 
-    if (!hasSmtpConfig() && config.get('env') !== 'test') {
+    if (!hasSmtpConfig() && config.env !== 'test') {
         throw new BadRequestError('SMTP modul is not configured.');
     }
 

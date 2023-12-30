@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasProcessEnv, readFromProcessEnv, readIntFromProcessEnv } from '@authup/server-core';
-import type { UIConfig } from './type';
+import { getEnv, getEnvInt, hasEnv } from '@authup/core';
+import type { ConfigInput } from './type';
 
-export function extendUIConfigWithEnv(config: UIConfig) {
+export function readConfigFromEnv() {
+    const config : ConfigInput = {};
+
     let keys = [
         'UI_PORT',
         'NITRO_UI_PORT',
@@ -19,8 +21,8 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_PORT',
         'NUXT_PUBLIC_PORT',
     ];
-    if (hasProcessEnv(keys)) {
-        config.setRaw('port', readIntFromProcessEnv(keys));
+    if (hasEnv(keys)) {
+        config.port = getEnvInt(keys, 3000);
     }
 
     keys = [
@@ -29,8 +31,8 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_HOST',
     ];
 
-    if (hasProcessEnv(keys)) {
-        config.setRaw('host', readFromProcessEnv(keys));
+    if (hasEnv(keys)) {
+        config.host = getEnv(keys, '0.0.0.0');
     }
 
     keys = [
@@ -39,8 +41,8 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_PUBLIC_API_URL',
     ];
 
-    if (hasProcessEnv(keys)) {
-        config.setRaw('apiUrl', readFromProcessEnv(keys));
+    if (hasEnv(keys)) {
+        config.apiUrl = getEnv(keys, 'http://localhost:3010');
     }
 
     keys = [
@@ -48,7 +50,9 @@ export function extendUIConfigWithEnv(config: UIConfig) {
         'NUXT_PUBLIC_URL',
         'NUXT_PUBLIC_PUBLIC_URL',
     ];
-    if (hasProcessEnv([])) {
-        config.setRaw('publicUrl', readFromProcessEnv(keys));
+    if (hasEnv(keys)) {
+        config.publicUrl = getEnv(keys, 'http://localhost:3000');
     }
+
+    return config;
 }

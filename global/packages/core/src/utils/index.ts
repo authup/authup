@@ -6,6 +6,7 @@
  */
 
 export * from './duplicate-slashes';
+export * from './env';
 export * from './has-own-property';
 export * from './nanoid';
 export * from './object';

@@ -5,36 +5,50 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import process from 'node:process';
-import { hasOwnProperty } from '@authup/core';
+import { env } from 'std-env';
+import { hasOwnProperty } from './has-own-property';
 
-export function hasProcessEnv(key: string | string[]) : boolean {
+export function hasEnv(key: string | string[]) : boolean {
     const keys = Array.isArray(key) ? key : [key];
     for (let i = 0; i < keys.length; i++) {
-        if (hasOwnProperty(process.env, keys[i])) {
+        if (hasOwnProperty(env, keys[i])) {
+            return true;
+        }
+
+        if (hasOwnProperty(globalThis.process?.env, keys[i])) {
             return true;
         }
     }
     return false;
 }
 
-export function readFromProcessEnv(key: string | string[]) : string | undefined;
-export function readFromProcessEnv<T>(key: string | string[], alt: T) : T | string;
-export function readFromProcessEnv<T>(key: string | string[], alt?: T): any {
+export function getEnv() : Record<string, string | undefined>;
+export function getEnv(key: string | string[]) : string | undefined;
+export function getEnv<T>(key: string | string[], alt: T) : T | string;
+export function getEnv<T>(key?: string | string[], alt?: T): any {
+    if (typeof key === 'undefined') {
+        return env;
+    }
+
     const keys = Array.isArray(key) ? key : [key];
+
     for (let i = 0; i < keys.length; i++) {
-        if (hasOwnProperty(process.env, keys[i])) {
-            return process.env[keys[i]];
+        if (hasOwnProperty(env, keys[i])) {
+            return env[keys[i]];
+        }
+
+        if (hasOwnProperty(globalThis.process?.env, keys[i])) {
+            return globalThis.process?.env[keys[i]];
         }
     }
 
     return alt;
 }
 
-export function readBoolFromProcessEnv(key: string | string[], alt?: boolean): boolean | undefined {
+export function getEnvBool(key: string | string[], alt?: boolean): boolean | undefined {
     const keys = Array.isArray(key) ? key : [key];
     for (let i = 0; i < keys.length; i++) {
-        const value = readFromProcessEnv(keys[i], alt);
+        const value = getEnv(keys[i], alt);
 
         switch (value) {
             case true:
@@ -53,14 +67,14 @@ export function readBoolFromProcessEnv(key: string | string[], alt?: boolean): b
     return alt;
 }
 
-export function readBoolOrStringFromProcessEnv(
+export function getEnvBoolOrString(
     key: string,
     alt?: boolean | string,
 ) : boolean | string | undefined {
-    if (hasProcessEnv(key)) {
-        const value = readBoolFromProcessEnv(key, undefined);
+    if (hasEnv(key)) {
+        const value = getEnvBool(key, undefined);
         if (typeof value === 'undefined') {
-            return readFromProcessEnv(key, alt);
+            return getEnv(key, alt);
         }
 
         return value;
@@ -69,14 +83,24 @@ export function readBoolOrStringFromProcessEnv(
     return alt;
 }
 
-export function readIntFromProcessEnv(
+export function getEnvInt(
+    key: string | string[],
+    alt: number
+) : number;
+
+export function getEnvInt(
+    key: string | string[],
+    alt?: number,
+): number | undefined;
+
+export function getEnvInt(
     key: string | string[],
     alt?: number,
 ): number | undefined {
     const keys = Array.isArray(key) ? key : [key];
 
     for (let i = 0; i < keys.length; i++) {
-        const value = readFromProcessEnv(keys[i], alt);
+        const value = getEnv(keys[i], alt);
         const intValue = parseInt(`${value}`, 10);
 
         if (!Number.isNaN(intValue)) {

@@ -11,13 +11,12 @@ import type { ParseOptions as QueryOptions } from '@routup/basic/query';
 import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { Options as BodyOptions } from '@routup/basic/body';
-import type { Continu } from 'continu';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
 import type { SmtpConfig } from '@authup/server-core';
 import type { DatabaseConnectionOptions } from './utils';
 
-export type Options = {
+export type Config = {
     /**
      * default: 'development'
      */
@@ -176,17 +175,19 @@ export type Options = {
     /**
      * default: []
      */
-    permissions: string[],
+    permissions: string | string[],
 
     // ----------------------------------------------------
 
 };
 
-export type OptionsInput = Omit<Partial<Options>, 'permissions'> & {
-    /**
-     * default: []
-     */
-    permissions?: string[] | string
+export type ConfigInput = Partial<Config>;
+
+export type ConfigBuildContext = {
+    data?: ConfigInput,
+    env?: boolean
 };
 
-export type Config = Continu<Options, OptionsInput>;
+export type ConfigSetupContext = {
+    filePath?: string | string[]
+};
