@@ -11,16 +11,29 @@ import path from 'node:path';
 import process from 'node:process';
 import consola from 'consola';
 import findUpPackagePath from 'resolve-package-path';
+import type { CommandExecutionContext } from '../../../command';
 import { AppPackageName } from '../../../constants';
 import { getClosestNodeModulesPath, stringifyObjectArgs } from '../../../utils';
-import type { CommandExecutionContext } from '../../type';
 import type { ServerCommand } from '../constants';
+
+export function createServerCommand(cmd: string) {
+    let base = `npx ${AppPackageName.SERVER_CORE}`;
+    const modulePath = findUpPackagePath(AppPackageName.SERVER_CORE, process.cwd()) ||
+        findUpPackagePath(AppPackageName.SERVER_CORE, getClosestNodeModulesPath());
+
+    if (typeof modulePath === 'string') {
+        const directory = path.dirname(modulePath);
+        const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
+        base = `node ${outputPath}`;
+    }
+
+    return `${base} ${modulePath} ${cmd}`;
+}
 
 export async function executeServerCommand(
     command: `${ServerCommand}`,
     ctx?: CommandExecutionContext,
 ) : Promise<ChildProcess> {
-    ctx = ctx || {};
     ctx.env = ctx.env || {};
     ctx.args = ctx.args || {};
 

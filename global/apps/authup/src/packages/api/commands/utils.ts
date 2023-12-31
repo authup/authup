@@ -9,7 +9,7 @@ import type { ChildProcess } from 'node:child_process';
 import consola from 'consola';
 import { parseProcessOutputData } from '../../../utils';
 
-export function handleServerCommandOutput(childProcess: ChildProcess) {
+export function logChildProcessOutput(childProcess: ChildProcess) {
     childProcess.stdout.on('data', (data) => {
         if (typeof data !== 'string' || data.length === 0) {
             return;

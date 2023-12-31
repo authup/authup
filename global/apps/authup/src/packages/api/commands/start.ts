@@ -9,7 +9,7 @@ import consola from 'consola';
 import { ServerCommand } from '../constants';
 import { executeServerCommand } from './module';
 import type { ApiStartCommandContext } from './type';
-import { handleServerCommandOutput } from './utils';
+import { logChildProcessOutput } from './utils';
 
 export async function startServer(ctx: ApiStartCommandContext) {
     consola.info('Server: Starting...');
@@ -18,5 +18,5 @@ export async function startServer(ctx: ApiStartCommandContext) {
     const childProcess = await executeServerCommand(ServerCommand.START, ctx);
     consola.success('Server: Started');
 
-    handleServerCommandOutput(childProcess);
+    logChildProcessOutput(childProcess);
 }

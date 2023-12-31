@@ -11,17 +11,15 @@ import cac from 'cac';
 
 import {
     buildInfoCommand,
-    buildServerCommand,
+    buildResetCommand,
     buildStartCommand,
-    buildUiCommand,
 } from './commands';
 
 const cli = cac();
 
 buildInfoCommand(cli);
 buildStartCommand(cli);
-buildServerCommand(cli);
-buildUiCommand(cli);
+buildResetCommand(cli);
 
 cli.help();
 

@@ -11,13 +11,11 @@ import consola from 'consola';
 import process from 'node:process';
 import type { CAC } from 'cac';
 import { executeCommand } from '../command';
-import {
-    ServerCommand, createServerCommand, createWebAppStartCommand, logChildProcessOutput,
-} from '../packages';
+import { ServerCommand, createServerCommand, logChildProcessOutput } from '../packages';
 
-export function buildStartCommand(cac: CAC) {
+export function buildResetCommand(cac: CAC) {
     cac
-        .command('start <service>', 'Start a service.')
+        .command('reset <service>', 'Reset a service.')
         .option('-c, --config [config]', 'Specify a configuration file')
         .action(async (service: string, ctx: Record<string, any>) => {
             const root = process.cwd();
@@ -30,23 +28,16 @@ export function buildStartCommand(cac: CAC) {
 
             let command : string | undefined;
 
-            const [, type, id] = service.match(/([^:/]+)[:/]([^:/]+)/);
+            const [, type, id] = service.match(/([^:/]+)[:/]([^:d/]+)/);
             if (
                 type === 'server' &&
                 id === 'core'
             ) {
-                command = createServerCommand(ServerCommand.START);
-            }
-
-            if (
-                type === 'client' &&
-                id === 'web'
-            ) {
-                command = createWebAppStartCommand();
+                command = createServerCommand(ServerCommand.RESET);
             }
 
             if (typeof command === 'undefined') {
-                consola.error(`The app ${chalk.red(id)} of group ${chalk.red(type)} can not be started.`);
+                consola.error(`The app ${chalk.red(id)} of group ${chalk.red(type)} can not be reseted.`);
                 return;
             }
 
