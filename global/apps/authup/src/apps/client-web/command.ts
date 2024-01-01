@@ -8,8 +8,8 @@
 import path from 'node:path';
 import process from 'node:process';
 import findUpPackagePath from 'resolve-package-path';
-import { AppPackageName } from '../../../constants';
-import { getClosestNodeModulesPath } from '../../../utils';
+import { AppPackageName } from '../constants';
+import { getClosestNodeModulesPath } from '../../utils';
 
 export function createWebAppStartCommand() {
     let base = `npx ${AppPackageName.CLIENT_WEB}`;

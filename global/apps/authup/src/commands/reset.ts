@@ -6,19 +6,19 @@
  */
 
 import { Container } from '@authup/config';
+import { parseAppID } from '@authup/core';
 import chalk from 'chalk';
 import consola from 'consola';
 import process from 'node:process';
 import type { CAC } from 'cac';
-import { executeCommand } from '../command';
-import { ServerCommand, createServerCommand, logChildProcessOutput } from '../packages';
+import { execute } from '../utils';
+import { ServerCommand, createServerCommand } from '../apps';
 
 export function buildResetCommand(cac: CAC) {
     cac
         .command('reset <service>', 'Reset a service.')
         .option('-c, --config [config]', 'Specify a configuration file')
         .action(async (service: string, ctx: Record<string, any>) => {
-            const root = process.cwd();
             const container = new Container();
             if (ctx.config) {
                 await container.loadFromFilePath(ctx.config);
@@ -28,29 +28,32 @@ export function buildResetCommand(cac: CAC) {
 
             let command : string | undefined;
 
-            const [, type, id] = service.match(/([^:/]+)[:/]([^:d/]+)/);
-            if (
-                type === 'server' &&
-                id === 'core'
-            ) {
+            const app = parseAppID(service);
+            if (!app) {
+                consola.error('Could not parse app name');
+                process.exit(1);
+            }
+
+            if (app.group === 'server' && app.name === 'core') {
                 command = createServerCommand(ServerCommand.RESET);
             }
 
             if (typeof command === 'undefined') {
-                consola.error(`The app ${chalk.red(id)} of group ${chalk.red(type)} can not be reseted.`);
+                consola.error(`The app ${chalk.red(`${app.group}/${app.name}`)} can not be cleaned up.`);
                 return;
             }
 
-            const childProcess = await executeCommand({
+            await execute({
                 command,
-                args: {
-                    root,
-                },
                 env: {
                     CONFIG_FILE: ctx.config, // todo
                 },
+                logDataStream(line) {
+                    consola.info(line);
+                },
+                logErrorStream(line) {
+                    consola.warn(line);
+                },
             });
-
-            logChildProcessOutput(childProcess);
         });
 }

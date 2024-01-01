@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './start';
-export * from './type';
+export enum ClientWebCommand {
+    START = 'start',
+}

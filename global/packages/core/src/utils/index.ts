@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './app-id';
 export * from './duplicate-slashes';
 export * from './env';
 export * from './has-own-property';

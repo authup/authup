@@ -8,7 +8,7 @@
 import { Container } from '@authup/config';
 import type { CAC } from 'cac';
 import consola from 'consola';
-import { buildClientWebConfig, buildServerCoreConfig } from '../packages';
+import { buildClientWebConfig, buildServerCoreConfig } from '../apps';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')

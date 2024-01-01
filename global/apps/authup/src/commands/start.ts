@@ -6,14 +6,15 @@
  */
 
 import { Container } from '@authup/config';
+import { parseAppID } from '@authup/core';
 import chalk from 'chalk';
 import consola from 'consola';
 import process from 'node:process';
 import type { CAC } from 'cac';
-import { executeCommand } from '../command';
+import { execute } from '../utils';
 import {
-    ServerCommand, createServerCommand, createWebAppStartCommand, logChildProcessOutput,
-} from '../packages';
+    ServerCommand, createServerCommand, createWebAppStartCommand,
+} from '../apps';
 
 export function buildStartCommand(cac: CAC) {
     cac
@@ -30,36 +31,36 @@ export function buildStartCommand(cac: CAC) {
 
             let command : string | undefined;
 
-            const [, type, id] = service.match(/([^:/]+)[:/]([^:/]+)/);
-            if (
-                type === 'server' &&
-                id === 'core'
-            ) {
+            const app = parseAppID(service);
+            if (!app) {
+                consola.error('Could not parse app name');
+                process.exit(1);
+            }
+
+            if (app.group === 'server' && app.name === 'core') {
                 command = createServerCommand(ServerCommand.START);
             }
 
-            if (
-                type === 'client' &&
-                id === 'web'
-            ) {
+            if (app.group === 'client' && app.name === 'web') {
                 command = createWebAppStartCommand();
             }
 
             if (typeof command === 'undefined') {
-                consola.error(`The app ${chalk.red(id)} of group ${chalk.red(type)} can not be started.`);
+                consola.error(`The app ${chalk.red(`${app.group}/${app.name}`)} can not be started.`);
                 return;
             }
 
-            const childProcess = await executeCommand({
+            await execute({
                 command,
-                args: {
-                    root,
-                },
                 env: {
                     CONFIG_FILE: ctx.config, // todo
                 },
+                logDataStream(line) {
+                    consola.info(line);
+                },
+                logErrorStream(line) {
+                    consola.warn(line);
+                },
             });
-
-            logChildProcessOutput(childProcess);
         });
 }
