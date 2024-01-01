@@ -11,7 +11,7 @@ import process from 'node:process';
 import { parseProcessOutputData } from './process-output';
 import { stringifyObjectArgs } from './stringify-object-args';
 
-export type ExecuteContext<
+export type ExecutionContext<
     ENV extends Record<string, any> = Record<string, any>,
     ARGS extends Record<string, any> = Record<string, any>,
 > = {
@@ -24,7 +24,7 @@ export type ExecuteContext<
 };
 
 export async function execute(
-    ctx: ExecuteContext,
+    ctx: ExecutionContext,
 ) {
     ctx.env = ctx.env || {};
     ctx.args = ctx.args || {};

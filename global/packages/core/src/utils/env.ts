@@ -45,6 +45,15 @@ export function getEnv<T>(key?: string | string[], alt?: T): any {
     return alt;
 }
 
+export function getEnvArray(key: string | string[], alt?: string[]): string[] | undefined {
+    const data = getEnv(key);
+    if (data) {
+        return data.split(',');
+    }
+
+    return alt;
+}
+
 export function getEnvBool(key: string | string[], alt?: boolean): boolean | undefined {
     const keys = Array.isArray(key) ? key : [key];
     for (let i = 0; i < keys.length; i++) {

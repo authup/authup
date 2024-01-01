@@ -12,9 +12,20 @@ import { buildClientWebConfig, buildServerCoreConfig } from '../apps';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
-        .action(async () => {
-            const container = new Container();
-            await container.load();
+        .option('-c, --config [config]', 'Specify a configuration file')
+        .action(async (ctx: Record<string, any>) => {
+            const container = new Container({
+                prefix: 'authup',
+                keys: [
+                    'client/web',
+                    'server/core',
+                ],
+            });
+            if (ctx.config) {
+                await container.loadFromFilePath(ctx.config);
+            } else {
+                await container.load();
+            }
 
             const clientWeb = await buildClientWebConfig(container);
             consola.info(`Host: ${clientWeb.host}`);

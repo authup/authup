@@ -9,3 +9,8 @@ export enum AppPackageName {
     CLIENT_WEB = '@authup/client-web-app',
     SERVER_CORE = '@authup/server-core-app',
 }
+
+export enum AppCommand {
+    START = 'start',
+    RESET = 'reset',
+}

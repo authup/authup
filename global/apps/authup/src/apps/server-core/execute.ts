@@ -9,9 +9,12 @@ import path from 'node:path';
 import process from 'node:process';
 import findUpPackagePath from 'resolve-package-path';
 import { AppPackageName } from '../constants';
+import type { ExecutionContext } from '../../utils';
 import { getClosestNodeModulesPath } from '../../utils';
 
-export function createServerCommand(cmd: string) {
+export function buildServerCoreExecutionContext(
+    ctx: ExecutionContext,
+) : ExecutionContext {
     let base = `npx ${AppPackageName.SERVER_CORE}`;
     const modulePath = findUpPackagePath(AppPackageName.SERVER_CORE, process.cwd()) ||
         findUpPackagePath(AppPackageName.SERVER_CORE, getClosestNodeModulesPath());
@@ -22,5 +25,8 @@ export function createServerCommand(cmd: string) {
         base = `node ${outputPath}`;
     }
 
-    return `${base} ${cmd}`;
+    return {
+        ...ctx,
+        command: `${base} ${ctx.command}`,
+    };
 }

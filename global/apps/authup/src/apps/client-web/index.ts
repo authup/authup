@@ -6,5 +6,4 @@
  */
 
 export * from './config';
-export * from './command';
-export * from './constants';
+export * from './execute';

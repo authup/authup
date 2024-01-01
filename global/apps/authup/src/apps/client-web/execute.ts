@@ -8,10 +8,13 @@
 import path from 'node:path';
 import process from 'node:process';
 import findUpPackagePath from 'resolve-package-path';
-import { AppPackageName } from '../constants';
+import { AppCommand, AppPackageName } from '../constants';
+import type { ExecutionContext } from '../../utils';
 import { getClosestNodeModulesPath } from '../../utils';
 
-export function createWebAppStartCommand() {
+export function buildWebAppExecutionContext(
+    ctx: ExecutionContext,
+) : ExecutionContext {
     let base = `npx ${AppPackageName.CLIENT_WEB}`;
     const modulePath = findUpPackagePath(AppPackageName.CLIENT_WEB, process.cwd()) ||
         findUpPackagePath(AppPackageName.CLIENT_WEB, getClosestNodeModulesPath());
@@ -22,7 +25,14 @@ export function createWebAppStartCommand() {
         base = `node ${outputPath}`;
     }
 
-    return base;
+    if (ctx.command !== AppCommand.START) {
+        throw new Error(`The command ${ctx.command} is not supported`);
+    }
+
+    return {
+        ...ctx,
+        env: extendWebAppEnv(ctx.env || {}),
+    };
 }
 
 export function extendWebAppEnv(input: Record<string, any>) {

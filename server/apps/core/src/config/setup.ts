@@ -12,9 +12,11 @@ import { setConfig } from './module';
 import type { Config, ConfigSetupContext } from './type';
 
 export async function setupConfig(context: ConfigSetupContext = {}): Promise<Config> {
-    // todo: filePaths should be extracted from env
+    const container = new Container({
+        prefix: 'authup',
+        keys: ['server/core'],
+    });
 
-    const container = new Container();
     if (context.filePath) {
         const filePaths = Array.isArray(context.filePath) ?
             context.filePath :
@@ -26,10 +28,7 @@ export async function setupConfig(context: ConfigSetupContext = {}): Promise<Con
     }
 
     const config = buildConfig({
-        data: container.get({
-            id: 'core',
-            group: 'server',
-        }),
+        data: container.getData('server/core'),
         env: true,
     });
 

@@ -5,62 +5,46 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Container } from '@authup/config';
-import { parseAppID } from '@authup/core';
-import chalk from 'chalk';
+import { Container, deserializeKey } from '@authup/config';
 import consola from 'consola';
 import process from 'node:process';
 import type { CAC } from 'cac';
-import { execute } from '../utils';
+import { executeAppCommand } from '../apps/execute';
 import {
-    ServerCommand, createServerCommand, createWebAppStartCommand,
+    AppCommand,
 } from '../apps';
 
 export function buildStartCommand(cac: CAC) {
     cac
         .command('start <service>', 'Start a service.')
         .option('-c, --config [config]', 'Specify a configuration file')
-        .action(async (service: string, ctx: Record<string, any>) => {
-            const root = process.cwd();
-            const container = new Container();
+        .action(async (input: string, ctx: Record<string, any>) => {
+            const keys = [
+                'client/web',
+                'server/core',
+            ];
+            const container = new Container({
+                prefix: 'authup',
+                keys,
+            });
+
+            const service = deserializeKey(input);
+            if (keys.indexOf(`${service.group}/${service.name}`) === -1) {
+                consola.error('The service is not supported for the start command.');
+                process.exit(1);
+            }
+
             if (ctx.config) {
                 await container.loadFromFilePath(ctx.config);
             } else {
                 await container.load();
             }
 
-            let command : string | undefined;
-
-            const app = parseAppID(service);
-            if (!app) {
-                consola.error('Could not parse app name');
-                process.exit(1);
-            }
-
-            if (app.group === 'server' && app.name === 'core') {
-                command = createServerCommand(ServerCommand.START);
-            }
-
-            if (app.group === 'client' && app.name === 'web') {
-                command = createWebAppStartCommand();
-            }
-
-            if (typeof command === 'undefined') {
-                consola.error(`The app ${chalk.red(`${app.group}/${app.name}`)} can not be started.`);
-                return;
-            }
-
-            await execute({
-                command,
-                env: {
-                    CONFIG_FILE: ctx.config, // todo
-                },
-                logDataStream(line) {
-                    consola.info(line);
-                },
-                logErrorStream(line) {
-                    consola.warn(line);
-                },
+            await executeAppCommand({
+                command: AppCommand.START,
+                group: service.group,
+                name: service.name,
+                container,
             });
         });
 }
