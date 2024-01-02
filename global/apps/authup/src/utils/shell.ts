@@ -11,20 +11,17 @@ import process from 'node:process';
 import { parseProcessOutputData } from './process-output';
 import { stringifyObjectArgs } from './stringify-object-args';
 
-export type ExecutionContext<
-    ENV extends Record<string, any> = Record<string, any>,
-    ARGS extends Record<string, any> = Record<string, any>,
-> = {
+export type ShellCommandExecContext = {
     command: string,
-    env?: ENV,
+    env?: Record<string, string | undefined>,
     envFromProcess?: boolean,
-    args?: ARGS,
+    args?: Record<string, any>,
     logErrorStream?: (content: string) => void,
     logDataStream?: (content: string) => void
 };
 
-export async function execute(
-    ctx: ExecutionContext,
+export async function execShellCommand(
+    ctx: ShellCommandExecContext,
 ) {
     ctx.env = ctx.env || {};
     ctx.args = ctx.args || {};

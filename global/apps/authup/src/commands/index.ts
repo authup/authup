@@ -6,5 +6,5 @@
  */
 
 export * from './info';
-export * from './reset';
+export * from './cleanup';
 export * from './start';

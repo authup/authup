@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum AppPackageName {
+export enum ServicePackageName {
     CLIENT_WEB = '@authup/client-web-app',
     SERVER_CORE = '@authup/server-core-app',
 }
 
-export enum AppCommand {
+export enum ServiceCommand {
     START = 'start',
-    RESET = 'reset',
+    CLEANUP = 'cleanup',
 }

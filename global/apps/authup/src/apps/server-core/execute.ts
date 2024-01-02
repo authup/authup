@@ -8,25 +8,39 @@
 import path from 'node:path';
 import process from 'node:process';
 import findUpPackagePath from 'resolve-package-path';
-import { AppPackageName } from '../constants';
-import type { ExecutionContext } from '../../utils';
+import { ServiceCommand, ServicePackageName } from '../constants';
+import type { ShellCommandExecContext } from '../../utils';
 import { getClosestNodeModulesPath } from '../../utils';
 
 export function buildServerCoreExecutionContext(
-    ctx: ExecutionContext,
-) : ExecutionContext {
-    let base = `npx ${AppPackageName.SERVER_CORE}`;
-    const modulePath = findUpPackagePath(AppPackageName.SERVER_CORE, process.cwd()) ||
-        findUpPackagePath(AppPackageName.SERVER_CORE, getClosestNodeModulesPath());
+    ctx: ShellCommandExecContext,
+) : ShellCommandExecContext {
+    let command = `npx ${ServicePackageName.SERVER_CORE}`;
+    const modulePath = findUpPackagePath(ServicePackageName.SERVER_CORE, process.cwd()) ||
+        findUpPackagePath(ServicePackageName.SERVER_CORE, getClosestNodeModulesPath());
 
     if (typeof modulePath === 'string') {
         const directory = path.dirname(modulePath);
         const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
-        base = `node ${outputPath}`;
+        command = `node ${outputPath}`;
+    }
+
+    switch (ctx.command) {
+        case ServiceCommand.START: {
+            command += ' start';
+            break;
+        }
+        case ServiceCommand.CLEANUP: {
+            command += ' reset';
+            break;
+        }
+        default: {
+            throw new Error(`The command ${ctx.command} is not supported.`);
+        }
     }
 
     return {
         ...ctx,
-        command: `${base} ${ctx.command}`,
+        command,
     };
 }

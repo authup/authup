@@ -7,19 +7,14 @@
 
 import type { CAC } from 'cac';
 import { executeServicesCommand } from '../apps/execute';
-import {
-    ServiceCommand,
-} from '../apps';
+import { ServiceCommand } from '../apps';
 
-export function buildStartCommand(cac: CAC) {
+export function buildCleanupCommand(cac: CAC) {
     cac
-        .command('start [...services]', 'Start a service')
+        .command('cleanup [...services]', 'Cleanup a service')
         .option('-c, --config [config]', 'Specify a configuration file')
         .action(async (keysInput: string[], ctx: Record<string, any>) => {
-            const servicesAllowed = [
-                'client/web',
-                'server/core',
-            ];
+            const servicesAllowed = ['server/core'];
 
             if (!keysInput || keysInput.length === 0) {
                 keysInput = servicesAllowed;
@@ -27,7 +22,7 @@ export function buildStartCommand(cac: CAC) {
 
             await executeServicesCommand({
                 config: ctx.config,
-                command: ServiceCommand.START,
+                command: ServiceCommand.CLEANUP,
                 services: keysInput,
                 servicesAllowed,
             });
