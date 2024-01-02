@@ -6,6 +6,5 @@
  */
 
 export * from './info';
-export * from './api';
+export * from './cleanup';
 export * from './start';
-export * from './ui';

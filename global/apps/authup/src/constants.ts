@@ -1,16 +1,10 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum AppPackageName {
-    CLIENT_WEB = '@authup/client-web-app',
-    SERVER_CORE = '@authup/server-core-app',
-}
+import path from 'node:path';
 
-export enum AppID {
-    SERVER_CORE = 'api',
-    CLIENT_WEB = 'ui',
-}
+export const PACKAGE_DIRECTORY = path.join(__dirname, '..');

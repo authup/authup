@@ -9,26 +9,26 @@ import { Container } from '../../src';
 
 describe('src/read', () => {
     it('should read config from file path', async () => {
-        const container = new Container();
+        const container = new Container({
+            prefix: 'authup',
+            keys: ['client/web', 'server/core'],
+        });
         await container.loadFromFilePath('test/data/authup.server.conf');
 
-        const core = container.get({
-            group: 'server',
-            id: 'core',
-        });
+        const core = container.getData('server/core');
 
         expect(core.port).toEqual(4010);
         expect(core.host).toBeUndefined();
     });
 
     it('should read config for server core app', async () => {
-        const container = new Container();
-        await container.load('test/data');
-
-        const core = container.get({
-            group: 'server',
-            id: 'core',
+        const container = new Container({
+            prefix: 'authup',
+            keys: ['client/web', 'server/core'],
         });
+        await container.loadFromPath('test/data');
+
+        const core = container.getData('server/core');
 
         expect(core).toBeDefined();
         expect(core.host).toEqual('1.1.1.1');
@@ -36,13 +36,13 @@ describe('src/read', () => {
     });
 
     it('should read config for client web app', async () => {
-        const container = new Container();
-        await container.load('test/data');
-
-        const core = container.get({
-            group: 'client',
-            id: 'web',
+        const container = new Container({
+            prefix: 'authup',
+            keys: ['client/web', 'server/core'],
         });
+        await container.loadFromPath('test/data');
+
+        const core = container.getData('client/web');
 
         expect(core).toBeDefined();
         expect(core.host).toEqual('1.1.1.2');

@@ -5,25 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { GroupKey } from './constants';
-
-export type ReadContext = {
-    directory?: string
+export type Key = {
+    name: string,
+    group?: string
 };
 
-export type ConfigRaw = {
-    client: Record<string, Record<string, any>>
-    server: Record<string, Record<string, any>>,
-};
+export type ContainerItemData = Record<string, unknown>;
 
 export type ContainerItem = {
     path?: string,
-    data: Record<string, unknown>,
-    group: `${GroupKey}`,
-    id: string
+    data: ContainerItemData,
+    name: string,
+    group?: string
 };
 
-export type ContainerGetContext = {
-    id: string,
-    group: string
+export type ContainerBundleItem = {
+    paths: string[],
+    data: ContainerItemData,
+    name: string,
+    group?: string
+};
+
+export type ContainerContext = {
+    keys: string[] | Key[],
+    prefix: string
 };

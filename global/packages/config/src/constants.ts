@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum GroupKey {
-    CLIENT = 'client',
-    SERVER = 'server',
-    UNKNOWN = 'unknown',
+export enum EnvKey {
+    CONFIG_DIRECTORY = 'CONFIG_DIRECTORY',
+    CONFIG_FILE = 'CONFIG_FILE',
+    WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',
 }

@@ -10,18 +10,16 @@
 import cac from 'cac';
 
 import {
+    buildCleanupCommand,
     buildInfoCommand,
-    buildServerCommand,
     buildStartCommand,
-    buildUiCommand,
 } from './commands';
 
 const cli = cac();
 
 buildInfoCommand(cli);
 buildStartCommand(cli);
-buildServerCommand(cli);
-buildUiCommand(cli);
+buildCleanupCommand(cli);
 
 cli.help();
 

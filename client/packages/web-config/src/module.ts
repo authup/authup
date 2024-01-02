@@ -7,7 +7,7 @@
 
 import { extendObject, makeURLPublicAccessible } from '@authup/core';
 import { defineGetter, dycraft } from 'dycraft';
-import { assign, merge } from 'smob';
+import { merge } from 'smob';
 import { readConfigFromEnv } from './env';
 import { parseConfig } from './parse';
 import type { Config, ConfigBuildContext, ConfigInput } from './type';

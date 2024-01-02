@@ -5,62 +5,124 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/core';
-import { getModuleExport, load } from 'locter';
+import {
+    getEnv,
+    getEnvArray,
+    isObject,
+} from '@authup/core';
+import {
+    buildFilePath,
+    getModuleExport,
+    load,
+    locateMany,
+} from 'locter';
 import path from 'node:path';
+import { normalize } from 'pathe';
 import { assign } from 'smob';
-import { buildLookupDirectories } from './build';
-import { GroupKey } from './constants';
-import { findFilePaths } from './find';
-import type { ContainerGetContext, ContainerItem } from './types';
+import { EnvKey } from './constants';
+import { deserializeKey } from './key';
+import type {
+    ContainerBundleItem, ContainerContext, ContainerItem, Key,
+} from './types';
 
 export class Container {
     public readonly items : ContainerItem[];
 
-    constructor() {
+    protected readonly prefix : string;
+
+    protected readonly keys : Key[];
+
+    protected readonly groups: string[];
+
+    constructor(ctx: ContainerContext) {
+        this.prefix = ctx.prefix;
         this.items = [];
+        this.keys = this.buildKeys(ctx.keys);
+        this.groups = this.buildGroups(this.keys);
     }
 
-    get(context: ContainerGetContext) : Record<string, unknown> | undefined {
+    getData(id: string) : Record<string, unknown> | undefined {
+        const item = this.get(id);
+        if (item) {
+            return item.data;
+        }
+
+        return undefined;
+    }
+
+    get(id: string) : ContainerBundleItem | undefined {
+        const app = deserializeKey(id);
+        if (!app) {
+            return undefined;
+        }
+
         const items = this.items.filter((item) => {
             if (
-                item.id === context.id &&
-                item.group === context.group
+                item.name === app.name &&
+                item.group === app.group
             ) {
                 return true;
             }
 
-            return item.id === 'default' &&
-                item.group === GroupKey.UNKNOWN;
+            return item.name === 'default' && !item.group;
         });
 
         if (items.length === 0) {
             return undefined;
         }
 
-        const output : Record<string, unknown> = {};
+        const output : ContainerBundleItem = {
+            paths: [],
+            group: app.group,
+            name: app.name,
+            data: {},
+        };
+
         for (let i = 0; i < items.length; i++) {
-            assign(output, items[i].data);
+            const item = items[i];
+            assign(output.data, item.data);
+
+            if (item.path) {
+                output.paths.push(item.path);
+            }
         }
 
         return output;
     }
 
-    async load(input?: string | string[]) : Promise<void> {
-        const directories = buildLookupDirectories();
-        if (input) {
-            if (Array.isArray(input)) {
-                directories.push(...input);
-            } else {
-                directories.push(input);
+    async load() : Promise<void> {
+        const directories : string[] = [
+            '.',
+        ];
+
+        const writableDirectoryPath = getEnv(EnvKey.WRITABLE_DIRECTORY_PATH);
+        if (writableDirectoryPath) {
+            directories.push(normalize(writableDirectoryPath));
+        } else {
+            directories.push('writable');
+        }
+
+        const envDirectories = getEnvArray(EnvKey.CONFIG_DIRECTORY);
+        if (envDirectories) {
+            for (let i = 0; i < envDirectories.length; i++) {
+                directories.push(normalize(envDirectories[i]));
             }
         }
 
-        await this.loadFromPath(directories);
+        const filePaths = await this.findFilePaths(directories);
+
+        const envFilePaths = getEnvArray(EnvKey.CONFIG_FILE);
+        if (envFilePaths) {
+            for (let i = 0; i < envFilePaths.length; i++) {
+                filePaths.push(normalize(envFilePaths[i]));
+            }
+        }
+
+        await this.loadFromFilePath(filePaths);
     }
 
     async loadFromPath(input: string | string[]) : Promise<void> {
-        const filePaths = await findFilePaths(input);
+        const filePaths = await this.findFilePaths(input);
 
         await this.loadFromFilePath(filePaths);
     }
@@ -88,13 +150,12 @@ export class Container {
 
         if (parts.length === 0) {
             let found : boolean = false;
-            const groupKeys = Object.values(GroupKey);
-            for (let j = 0; j < groupKeys.length; j++) {
-                const group = fileExport.value[groupKeys[j]];
+            for (let j = 0; j < this.groups.length; j++) {
+                const group = fileExport.value[this.groups[j]];
                 if (isObject(group)) {
                     this.items.push(...this.extractGroupApps(group, {
                         path: input,
-                        group: groupKeys[j],
+                        group: this.groups[j],
                     }));
 
                     found = true;
@@ -106,8 +167,7 @@ export class Container {
                 isObject(fileExport.value)
             ) {
                 this.items.push({
-                    group: GroupKey.UNKNOWN,
-                    id: 'default',
+                    name: 'default',
                     data: fileExport.value,
                     path: input,
                 });
@@ -118,9 +178,6 @@ export class Container {
 
         if (parts.length === 1) {
             const [group] = parts;
-            if (group !== GroupKey.CLIENT && group !== GroupKey.SERVER) {
-                return;
-            }
 
             if (isObject(fileExport.value)) {
                 this.items.push(...this.extractGroupApps(fileExport.value, {
@@ -133,20 +190,37 @@ export class Container {
         }
 
         if (parts.length === 2) {
-            const [group, id] = parts;
-            if (group !== GroupKey.CLIENT && group !== GroupKey.SERVER) {
+            const [group, name] = parts;
+            if (
+                this.groups.length > 0 &&
+                this.groups.indexOf(group) === -1
+            ) {
                 return;
             }
 
             if (isObject(fileExport.value)) {
                 this.items.push({
-                    id,
+                    name,
                     group,
                     data: fileExport.value,
                     path: input,
                 });
             }
         }
+    }
+
+    protected async findFilePaths(path?: string[] | string) : Promise<string[]> {
+        const locations = await locateMany([
+            `${this.prefix}.*.*.{conf,js,mjs,cjs,ts,mts,mts}`,
+            `${this.prefix}.*.{conf,js,mjs,cjs,ts,mts,mts}`,
+            `${this.prefix}.{conf,js,mjs,cjs,ts,mts,mts}`,
+        ], {
+            path,
+        });
+
+        return locations.map(
+            (location) => buildFilePath(location),
+        );
     }
 
     protected extractGroupApps(
@@ -159,7 +233,7 @@ export class Container {
         for (let k = 0; k < appKeys.length; k++) {
             if (isObject(group[appKeys[k]])) {
                 items.push({
-                    id: appKeys[k],
+                    name: appKeys[k],
                     data: group[appKeys[k]],
                     ...context,
                 });
@@ -167,5 +241,31 @@ export class Container {
         }
 
         return items;
+    }
+
+    private buildKeys(input: string[] | Key[]) : Key[] {
+        const keys : Key[] = [];
+
+        let key : Key | undefined;
+        for (let i = 0; i < input.length; i++) {
+            key = this.buildKey(input[i]);
+            if (key) {
+                keys.push(key);
+            }
+        }
+
+        return keys;
+    }
+
+    private buildKey(input: string | Key) : Key {
+        return typeof input === 'string' ?
+            deserializeKey(input) :
+            input;
+    }
+
+    private buildGroups(keys: Key[]) : string[] {
+        return keys
+            .map((key) => key.group)
+            .filter(Boolean) as string[];
     }
 }

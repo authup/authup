@@ -2,17 +2,29 @@
     "name": "authup",
     "version": "0.45.10",
     "description": "This is the CLI for the authup framework.",
-    "main": "dist/index.js",
-    "scripts": {
-        "cli": "node dist/index.js",
-        "cli-dev": "npm run build && npm run cli",
-        "build": "rm -rf ./dist && tsc -p tsconfig.build.json"
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
     },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
     "files": [
-        "dist/"
+        "dist"
     ],
+    "scripts": {
+        "cli": "node dist/index.cjs",
+        "cli-dev": "npm run build && npm run cli",
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "rollup -c",
+        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
+    },
     "bin": {
-        "authup": "dist/index.js"
+        "authup": "dist/index.cjs"
     },
     "keywords": [],
     "author": {
@@ -35,8 +47,8 @@
         "@authup/client-web-config": "^0.0.0",
         "@authup/config": "^0.0.0",
         "@authup/core": "^0.45.10",
-        "@authup/server-core-app": "^0.45.10",
         "@authup/server-core": "^0.45.10",
+        "@authup/server-core-app": "^0.45.10",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^3.2.3",

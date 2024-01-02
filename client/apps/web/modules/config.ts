@@ -14,14 +14,16 @@ export default defineNuxtModule({
         name: 'config',
     },
     setup: async (_options, nuxt) => {
-        const container = new Container();
+        const container = new Container({
+            prefix: 'authup',
+            keys: [
+                'client/web',
+            ],
+        });
         await container.loadFromPath(nuxt.options.rootDir);
 
         const config = buildConfig({
-            data: container.get({
-                group: 'client',
-                id: 'web',
-            }),
+            data: container.getData('client/web'),
             env: true,
         });
 
