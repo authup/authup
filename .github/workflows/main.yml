@@ -78,14 +78,6 @@ jobs:
         name: Test Packages
         needs: [build]
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                package: [
-                    'server/packages/adapter',
-                    'server/packages/core',
-                    'server/apps/core',
-                    'global/packages/core'
-                ]
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
@@ -103,4 +95,4 @@ jobs:
 
             -   name: Run tests
                 run: |
-                    npm run test --workspace=${{matrix.package}} --if-present
+                    npm run test
