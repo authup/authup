@@ -6,10 +6,10 @@
  */
 
 import type { CAC } from 'cac';
-import { executeServicesCommand } from '../apps/execute';
+import { executeServicesCommand } from '../services/execute';
 import {
     ServiceCommand,
-} from '../apps';
+} from '../services';
 
 export function buildStartCommand(cac: CAC) {
     cac

@@ -6,8 +6,8 @@
  */
 
 import type { CAC } from 'cac';
-import { executeServicesCommand } from '../apps/execute';
-import { ServiceCommand } from '../apps';
+import { executeServicesCommand } from '../services/execute';
+import { ServiceCommand } from '../services';
 
 export function buildCleanupCommand(cac: CAC) {
     cac
