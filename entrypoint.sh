@@ -10,42 +10,35 @@
 set -e
 
 BASE_DIR=/usr/src/app
-
 cd "${BASE_DIR}"
 
-case "${1}" in
-    api) PACKAGE=api;;
-    ui) PACKAGE=ui;;
-    cli) PACKAGE=cli;;
-    *) echo "Unknown package: ${1}";;
-esac
-
+SERVICE="${1}"
 shift
 
-if [[ -z "${PACKAGE}" ]]; then
+COMMAND="${1}"
+shift
+
+if [[ -z "${COMMAND}" || -z "${SERVICE}" ]]; then
     printf 'Usage:\n'
-    printf '  api <command>\n    Start or run the api application in dev mode.\n'
-    printf '  ui <command>\n    Start or run the ui application in dev mode.\n'
-    printf '  cli <command>\n    Run a cli command.\n'
+    printf '  <service> <command>\n    Run a specific service cli/script command.\n'
+    printf 'Examples:\n'
+    printf '  server/core start\n    Start the server core service.\n'
+    printf '  client/web start\n    Reset a specific service\n'
     exit 0
 fi
 
-case "${PACKAGE}" in
-    api)
+case "${SERVICE}" in
+    server/core)
         export HOST=0.0.0.0
         export PORT=3000
-        exec npm run cli --workspace=server/apps/core -- "$@"
+        exec npm run cli --workspace=server/apps/core -- "${COMMAND}" "$@"
         ;;
-    ui)
+    client/web)
         export NUXT_HOST=0.0.0.0
         export NUXT_PORT=3000
-        exec npm run start --workspace=client/apps/web
+        exec npm run "${COMMAND}" --workspace=client/apps/web
         ;;
-    cli)
-        export UI_PORT=3000
-        export API_PORT=3001
-        exec npm run cli --workspace=global/apps/authup -- "$@"
-        ;;
+    *) echo "Unknown service: ${SERVICE}";;
 esac
 
 
