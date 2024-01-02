@@ -8,11 +8,9 @@
 import { buildConfig } from '@authup/client-web-config';
 import type { Container } from '@authup/config';
 import path from 'node:path';
-import process from 'node:process';
-import findUpPackagePath from 'resolve-package-path';
 import { ServiceCommand, ServicePackageName } from '../constants';
 import type { ShellCommandExecContext } from '../../utils';
-import { getClosestNodeModulesPath } from '../../utils';
+import { findModulePath } from '../../utils';
 
 function extendEnv(input: Record<string, string | undefined>) {
     const env : Record<string, any> = {};
@@ -56,19 +54,20 @@ export function buildWebAppExecutionContext(
         env.PORT = `${config.port}`;
     }
 
-    let base = `npx ${ServicePackageName.CLIENT_WEB}`;
-    const modulePath = findUpPackagePath(ServicePackageName.CLIENT_WEB, process.cwd()) ||
-        findUpPackagePath(ServicePackageName.CLIENT_WEB, getClosestNodeModulesPath());
+    let command : string;
 
+    const modulePath = findModulePath(ServicePackageName.CLIENT_WEB);
     if (typeof modulePath === 'string') {
         const directory = path.dirname(modulePath);
         const outputPath = path.join(directory, '.output', 'server', 'index.mjs');
-        base = `node ${outputPath}`;
+        command = `node ${outputPath}`;
+    } else {
+        command = `npx ${ServicePackageName.CLIENT_WEB}`;
     }
 
     return {
         ...ctx,
-        command: base,
+        command,
         env: extendEnv(env),
     };
 }

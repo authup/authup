@@ -1,8 +1,10 @@
+import type { ChildProcess } from 'node:child_process';
+import process from 'node:process';
+import readline from 'node:readline';
 import { Container, EnvKey, deserializeKey } from '@authup/config';
 import type { Key } from '@authup/config';
 import chalk from 'chalk';
 import consola from 'consola';
-import process from 'node:process';
 import type { ShellCommandExecContext } from '../utils';
 import { execShellCommand } from '../utils';
 import { isServiceValid } from './check';
@@ -24,7 +26,7 @@ type ServiceCommandExecutionContext = {
 
 async function executeServiceCommand(
     context: ServiceCommandExecutionContext,
-) {
+) : Promise<ChildProcess> {
     let service : Key;
     if (typeof context.service === 'string') {
         service = deserializeKey(context.service);
@@ -73,7 +75,7 @@ async function executeServiceCommand(
         process.exit(1);
     }
 
-    await execShellCommand({
+    return execShellCommand({
         ...shellExecContext,
         logDataStream(line) {
             consola.info(`${service.group}/${service.name}: ${line}`);
@@ -98,7 +100,7 @@ export async function executeServicesCommand(
         await container.load();
     }
 
-    const promises : Promise<void>[] = [];
+    const promises : Promise<ChildProcess>[] = [];
     for (let i = 0; i < context.services.length; i++) {
         const service = deserializeKey(context.services[i]);
         if (!isServiceValid(service)) {
@@ -121,5 +123,17 @@ export async function executeServicesCommand(
         }));
     }
 
-    await Promise.all(promises);
+    const childProcesses = await Promise.all(promises);
+    const readLine = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    readLine.on('SIGINT', () => {
+        for (let i = 0; i < childProcesses.length; i++) {
+            childProcesses[i].kill();
+        }
+
+        process.exit();
+    });
 }
