@@ -8,10 +8,10 @@
 import { getEnv, getEnvInt, hasEnv } from '@authup/core';
 import type { ConfigInput } from './type';
 
-export function readConfigFromEnv() {
+export function readConfigFromEnv() : ConfigInput {
     const config : ConfigInput = {};
 
-    let keys = [
+    const port = getEnvInt([
         'UI_PORT',
         'NITRO_UI_PORT',
         'NUXT_UI_PORT',
@@ -20,38 +20,40 @@ export function readConfigFromEnv() {
         'NITRO_PORT',
         'NUXT_PORT',
         'NUXT_PUBLIC_PORT',
-    ];
-    if (hasEnv(keys)) {
-        config.port = getEnvInt(keys, 3000);
+    ]);
+
+    if (typeof port !== 'undefined') {
+        config.port = port;
     }
 
-    keys = [
+    const host = getEnv([
         'HOST',
         'NITRO_HOST',
         'NUXT_HOST',
-    ];
+    ]);
 
-    if (hasEnv(keys)) {
-        config.host = getEnv(keys, '0.0.0.0');
+    if (host) {
+        config.host = host;
     }
 
-    keys = [
+    const apiUrl = getEnv([
         'API_URL',
         'NUXT_API_URL',
         'NUXT_PUBLIC_API_URL',
-    ];
+    ]);
 
-    if (hasEnv(keys)) {
-        config.apiUrl = getEnv(keys, 'http://localhost:3010');
+    if (apiUrl) {
+        config.apiUrl = apiUrl;
     }
 
-    keys = [
+    const publicURL = getEnv([
         'PUBLIC_URL',
         'NUXT_PUBLIC_URL',
         'NUXT_PUBLIC_PUBLIC_URL',
-    ];
-    if (hasEnv(keys)) {
-        config.publicUrl = getEnv(keys, 'http://localhost:3000');
+    ]);
+
+    if (publicURL) {
+        config.publicUrl = publicURL;
     }
 
     return config;

@@ -58,6 +58,7 @@ async function executeServiceCommand(
             service.name === 'web'
         ) {
             shellExecContext = buildWebAppExecutionContext({
+                container: context.container,
                 command: context.command,
                 env,
             });
