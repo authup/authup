@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    AClients, AUser, EntityDelete, ListPagination, ListSearch, ListTitle,
+    AClients, AEntityDelete, AUser, APagination, ASearch, ATitle,
 } from '@authup/client-vue';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
@@ -13,11 +13,11 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
-        ListSearch,
-        ListTitle,
+        ListPagination: APagination,
+        ListSearch: ASearch,
+        ListTitle: ATitle,
         BTable,
-        EntityDelete,
+        EntityDelete: AEntityDelete,
         ClientList: AClients,
         UserEntity: AUser,
     },

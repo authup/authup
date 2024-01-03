@@ -7,7 +7,7 @@
 
 import type { Slots, VNodeChild } from 'vue';
 
-export type ListTitleOptionsInput = {
+export type TitleOptionsInput = {
     slots?: Slots,
     icon?: boolean,
     iconClass?: string,
@@ -15,6 +15,6 @@ export type ListTitleOptionsInput = {
     tag?: string,
     text?: VNodeChild | (() => VNodeChild)
 };
-export type ListTitleOptions = ListTitleOptionsInput;
+export type TitleOptions = TitleOptionsInput;
 
-export type ListTitleSlotProps = Omit<ListTitleOptionsInput, 'text' | 'slots'>;
+export type TitleSlotProps = Omit<TitleOptionsInput, 'text' | 'slots'>;

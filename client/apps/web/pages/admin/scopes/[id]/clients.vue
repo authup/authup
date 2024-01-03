@@ -1,13 +1,13 @@
 <script lang="ts">
 
-import { AScopeClientAssignments, ListPagination } from '@authup/client-vue';
+import { AScopeClientAssignments, APagination } from '@authup/client-vue';
 import type { Scope } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
+        ListPagination: APagination,
         ScopeClientAssignmentList: AScopeClientAssignments,
     },
     props: {

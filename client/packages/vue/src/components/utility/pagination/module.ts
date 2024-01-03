@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPagination } from '@vuecs/pagination';
-import type { ListPaginationOptions } from './type';
+import { buildPagination as _buildPagination } from '@vuecs/pagination';
+import type { PaginationOptions } from './type';
 
-export function buildListPagination<T>(
-    ctx: ListPaginationOptions<T>,
+export function buildPagination(
+    ctx: PaginationOptions,
 ) {
-    return buildPagination({
+    return _buildPagination({
         load: (pagination) => ctx.load({
             ...ctx.meta,
             pagination: {

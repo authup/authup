@@ -7,10 +7,10 @@
 
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ListTitleSlotProps } from '../../core';
-import { buildListTitle } from '../../core';
+import type { TitleSlotProps } from './type';
+import { buildTitle } from './module';
 
-export const ListTitle = defineComponent({
+export const ATitle = defineComponent({
     props: {
         icon: {
             type: Boolean,
@@ -27,10 +27,10 @@ export const ListTitle = defineComponent({
         },
     },
     slots: Object as SlotsType<{
-        default: ListTitleSlotProps
+        default: TitleSlotProps
     }>,
     setup(props, { slots }) {
-        return () => buildListTitle({
+        return () => buildTitle({
             slots,
             icon: props.icon,
             iconPosition: props.iconPosition,

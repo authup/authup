@@ -1,13 +1,13 @@
 <script lang="ts">
 
-import { ARobotPermissionAssignments, ListPagination } from '@authup/client-vue';
+import { ARobotPermissionAssignments, APagination } from '@authup/client-vue';
 import type { Robot } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
+        ListPagination: APagination,
         RobotPermissionAssignmentList: ARobotPermissionAssignments,
     },
     props: {

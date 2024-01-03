@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { AIdentityProviderRoleAssignments, ListPagination } from '@authup/client-vue';
+import { AIdentityProviderRoleAssignments, APagination } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
@@ -9,7 +9,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
+        ListPagination: APagination,
         IdentityProviderRoleAssignmentList: AIdentityProviderRoleAssignments,
     },
     props: {

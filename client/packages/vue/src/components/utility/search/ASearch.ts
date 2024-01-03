@@ -8,10 +8,11 @@
 import type { ListLoadFn } from '@vuecs/list-controls';
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent, h } from 'vue';
-import type { ListMeta, ListSearchSlotProps } from '../../core';
-import { buildListSearch } from '../../core';
+import type { ListMeta } from '../../../core';
+import type { SearchSlotProps } from './type';
+import { buildListSearch } from './module';
 
-export const ListSearch = defineComponent({
+export const ASearch = defineComponent({
     props: {
         // todo: add entity-key prop
         icon: {
@@ -34,15 +35,9 @@ export const ListSearch = defineComponent({
         },
     },
     slots: Object as SlotsType<{
-        default: ListSearchSlotProps<any>
+        default: SearchSlotProps
     }>,
     setup(props, { slots }) {
-        if (!props.load) {
-            return h('div', [
-                'The "load" property must be defined.',
-            ]);
-        }
-
         return () => buildListSearch({
             slots,
             icon: props.icon,

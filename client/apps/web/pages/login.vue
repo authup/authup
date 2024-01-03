@@ -5,9 +5,9 @@ import {
     AIdentityProviderIcon,
     AIdentityProviders,
     ARealms,
-    ListPagination,
-    ListSearch,
-    ListTitle,
+    APagination,
+    ASearch,
+    ATitle,
     injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
@@ -30,9 +30,9 @@ import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
-        ListSearch,
-        ListTitle,
+        ListPagination: APagination,
+        ListSearch: ASearch,
+        ListTitle: ATitle,
         LoginSVG,
         IdentityProviderList: AIdentityProviders,
         IdentityProviderIcon: AIdentityProviderIcon,

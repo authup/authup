@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Role } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    ARoles, EntityDelete, ListPagination, ListSearch, ListTitle,
+    AEntityDelete, ARoles, APagination, ASearch, ATitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -13,12 +13,12 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListTitle,
-        ListPagination,
-        ListSearch,
+        ListTitle: ATitle,
+        ListPagination: APagination,
+        ListSearch: ASearch,
         BTable,
         RoleList: ARoles,
-        EntityDelete,
+        EntityDelete: AEntityDelete,
     },
     emits: ['deleted'],
     setup(props, { emit }) {

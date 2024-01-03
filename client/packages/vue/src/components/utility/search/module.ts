@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023.
+ * Copyright (c) 2023-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,10 +8,9 @@ import type { FormInputBuildOptionsInput } from '@vuecs/form-controls';
 import { buildFormInputText } from '@vuecs/form-controls';
 import type { VNodeChild } from 'vue';
 import { h } from 'vue';
-import type { ListMeta } from '../list';
-import { hasNormalizedSlot, normalizeSlot } from '../slot';
+import { hasNormalizedSlot, normalizeSlot } from '../../../core';
 import { ListSearchSlotName } from './constants';
-import type { ListSearchOptionsInput } from './type';
+import type { SearchOptionsInput } from './type';
 
 type Fn = (...args: any[]) => Promise<any> | any;
 function debounce<T extends Fn>(func: T, timeout = 200) {
@@ -23,8 +22,8 @@ function debounce<T extends Fn>(func: T, timeout = 200) {
     };
 }
 
-export function buildListSearch<T>(
-    ctx: ListSearchOptionsInput<T>,
+export function buildListSearch(
+    ctx: SearchOptionsInput,
 ) {
     ctx.icon = ctx.icon ?? true;
     ctx.iconClass = ctx.iconClass || 'fa fa-search';
@@ -81,7 +80,7 @@ export function buildListSearch<T>(
             pagination: {
                 offset: 0,
             },
-        } as ListMeta<T>);
+        });
     });
 
     return buildFormInputText({

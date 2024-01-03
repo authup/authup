@@ -27,7 +27,7 @@ enum ElementType {
     DROP_DOWN_ITEM = 'dropDownItem',
 }
 
-export default defineComponent({
+const AEntityDelete = defineComponent({
     props: {
         elementIcon: {
             type: String,
@@ -146,3 +146,7 @@ export default defineComponent({
         return () => render();
     },
 });
+
+export {
+    AEntityDelete,
+};

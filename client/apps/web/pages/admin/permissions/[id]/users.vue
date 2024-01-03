@@ -1,12 +1,12 @@
 <script lang="ts">
-import { APermissionUserAssignments, ListPagination } from '@authup/client-vue';
+import { APermissionUserAssignments, APagination } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
+        ListPagination: APagination,
         PermissionUserAssignmentList: APermissionUserAssignments,
     },
     props: {

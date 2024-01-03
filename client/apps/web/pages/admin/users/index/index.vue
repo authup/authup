@@ -6,7 +6,7 @@ import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core';
 import {
-    AUsers, EntityDelete, ListPagination, ListSearch, ListTitle,
+    AEntityDelete, AUsers, APagination, ASearch, ATitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -15,12 +15,12 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListTitle,
-        ListPagination,
-        ListSearch,
+        ListTitle: ATitle,
+        ListPagination: APagination,
+        ListSearch: ASearch,
         BTable,
         UserList: AUsers,
-        EntityDelete,
+        EntityDelete: AEntityDelete,
     },
     emits: ['deleted'],
     setup(props, { emit }) {

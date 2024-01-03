@@ -3,7 +3,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
-    APermissions, EntityDelete, ListPagination, ListSearch, ListTitle,
+    AEntityDelete, APermissions, APagination, ASearch, ATitle,
 } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -14,11 +14,11 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListTitle,
-        ListPagination,
-        ListSearch,
+        ListTitle: ATitle,
+        ListPagination: APagination,
+        ListSearch: ASearch,
         BTable,
-        EntityDelete,
+        EntityDelete: AEntityDelete,
         PermissionList: APermissions,
         VCTimeago,
     },

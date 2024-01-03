@@ -1,13 +1,13 @@
 <script lang="ts">
 
-import { ARolePermissionAssignments, ListPagination } from '@authup/client-vue';
+import { ARolePermissionAssignments, APagination } from '@authup/client-vue';
 import type { Role } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
+        ListPagination: APagination,
         RolePermissionAssignmentList: ARolePermissionAssignments,
     },
     props: {
