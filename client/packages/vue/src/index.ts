@@ -1,7 +1,7 @@
 import { applyStoreManagerOptions, installStoreManager } from '@vuecs/list-controls/core';
 import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
-import type { Options } from './type';
+import type { Options } from './types';
 import {
     provideAPIClient, provideSocketClient, provideStore, provideTranslatorLocale,
 } from './core';

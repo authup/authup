@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { RoleForm } from '@authup/client-vue';
+import { ARoleForm } from '@authup/client-vue';
 import type { Role } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
@@ -8,7 +8,7 @@ import { LayoutKey } from '../../../../config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RoleForm,
+        ARoleForm,
     },
     props: {
         entity: {
@@ -43,7 +43,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             General
         </h6>
-        <RoleForm
+        <ARoleForm
             :entity="entity"
             @update="handleUpdated"
             @failed="handleFailed"

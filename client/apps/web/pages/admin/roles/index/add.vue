@@ -1,5 +1,5 @@
 <script lang="ts">
-import { RoleForm } from '@authup/client-vue';
+import { ARoleForm } from '@authup/client-vue';
 import type { Role } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        RoleForm,
+        ARoleForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -42,7 +42,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <RoleForm
+    <ARoleForm
         :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"

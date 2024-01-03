@@ -1,13 +1,13 @@
 <script lang="ts">
-import { ClientScopeAssignmentList, ListPagination } from '@authup/client-vue';
+import { AClientScopeAssignments, APagination } from '@authup/client-vue';
 import type { Client } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
-        ClientScopeAssignmentList,
+        APagination,
+        AClientScopeAssignments,
     },
     props: {
         entity: {
@@ -24,13 +24,13 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ClientScopeAssignmentList :entity-id="entity.id">
+    <AClientScopeAssignments :entity-id="entity.id">
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
             />
         </template>
-    </ClientScopeAssignmentList>
+    </AClientScopeAssignments>
 </template>

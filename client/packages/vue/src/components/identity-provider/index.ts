@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { IdentityProviderEntity } from './IdentityProviderEntity';
-export { IdentityProviderForm } from './IdentityProviderForm';
-export { IdentityProviderOAuth2Form } from './IdentityProviderOAuth2Form';
-export { IdentityProviderList } from './IdentityProviderList';
-export { IdentityProviderPresetEntity } from './IdentityProviderPresetEntity';
-export { IdentityProviderProtocolEntity } from './IdentityProviderProtocolEntity';
-export { IdentityProviderIcon } from './IdentityProviderIcon';
+export { AIdentityProvider } from './AIdentityProvider';
+export { AIdentityProviderForm } from './AIdentityProviderForm';
+export { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
+export { AIdentityProviders } from './AIdentityProviders';
+export { AIdentityProviderPreset } from './AIdentityProviderPreset';
+export { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
+export { AIdentityProviderIcon } from './AIdentityProviderIcon';

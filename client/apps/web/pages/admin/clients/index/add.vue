@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ClientForm } from '@authup/client-vue';
+import { AClientForm } from '@authup/client-vue';
 import type { Client } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -11,7 +11,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ClientForm,
+        AClientForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -34,7 +34,7 @@ export default defineNuxtComponent({
         const store = useAuthStore();
         const { realmManagementId } = storeToRefs(store);
 
-        const form = resolveComponent('ClientForm');
+        const form = resolveComponent('AClientForm');
 
         return {
             realmManagementId,
@@ -45,7 +45,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ClientForm
+    <AClientForm
         :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"

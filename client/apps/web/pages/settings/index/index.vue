@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { UserForm } from '@authup/client-vue';
+import { AUserForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import { definePageMeta, useToast } from '#imports';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        UserForm,
+        UserForm: AUserForm,
     },
     setup() {
         definePageMeta({

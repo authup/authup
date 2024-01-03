@@ -5,5 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { RoleForm } from './RoleForm';
-export { RoleList } from './RoleList';
+export { ARoleForm } from './ARoleForm';
+export { ARoles } from './ARoles';
+export { ARole } from './ARole';

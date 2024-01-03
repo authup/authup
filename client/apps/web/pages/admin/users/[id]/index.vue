@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { UserForm, UserPasswordForm } from '@authup/client-vue';
+import { AUserForm, AUserPasswordForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import type { PropType } from 'vue';
 import {
@@ -10,8 +10,8 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        UserForm,
-        UserPasswordForm,
+        AUserForm,
+        AUserPasswordForm,
     },
     props: {
         entity: {
@@ -48,7 +48,7 @@ export default defineNuxtComponent({
                 General
             </h6>
 
-            <UserForm
+            <AUserForm
                 :entity="entity"
                 :realm-id="entity.realm_id"
                 @updated="handleUpdated"
@@ -60,7 +60,7 @@ export default defineNuxtComponent({
                 Password
             </h6>
 
-            <UserPasswordForm
+            <AUserPasswordForm
                 :id="entity.id"
                 @updated="handleUpdated"
                 @failed="handleFailed"

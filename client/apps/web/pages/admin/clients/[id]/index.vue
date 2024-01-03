@@ -1,14 +1,14 @@
 <script lang="ts">
 
 import type { Client } from '@authup/core';
-import { ClientForm } from '@authup/client-vue';
+import { AClientForm } from '@authup/client-vue';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        ClientForm,
+        AClientForm,
     },
     props: {
         entity: {
@@ -39,7 +39,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ClientForm
+    <AClientForm
         :entity="entity"
         :realm-id="entity.realm_id"
         @updated="handleUpdated"

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { RobotForm } from '@authup/client-vue';
+import { ARobotForm } from '@authup/client-vue';
 import type { Robot } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RobotForm,
+        ARobotForm,
     },
     props: {
         entity: {
@@ -43,7 +43,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             General
         </h6>
-        <RobotForm
+        <ARobotForm
             :entity="entity"
             :realm-id="entity.realm_id"
             @updated="handleUpdated"

@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    ClientList, EntityDelete, ListPagination, ListSearch, ListTitle, UserEntity,
+    AClients, AEntityDelete, APagination, ASearch, ATitle, AUser,
 } from '@authup/client-vue';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
@@ -13,13 +13,13 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
-        ListSearch,
-        ListTitle,
+        APagination,
+        ASearch,
+        ATitle,
         BTable,
-        EntityDelete,
-        ClientList,
-        UserEntity,
+        AEntityDelete,
+        AClients,
+        AUser,
     },
     emits: ['deleted'],
     setup(props, { emit }) {
@@ -74,19 +74,19 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ClientList
+    <AClients
         :query="query"
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <ListTitle />
-            <ListSearch
+            <ATitle />
+            <ASearch
                 :load="props.load"
                 :busy="props.busy"
             />
         </template>
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
@@ -107,14 +107,14 @@ export default defineNuxtComponent({
                     <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(user_id)="data">
-                    <UserEntity :entity-id="data.item.user_id">
+                    <AUser :entity-id="data.item.user_id">
                         <template #default="user">
                             {{ user.data.name }}
                         </template>
                         <template #error>
                             -
                         </template>
-                    </UserEntity>
+                    </AUser>
                 </template>
                 <template #cell(options)="data">
                     <NuxtLink
@@ -124,7 +124,7 @@ export default defineNuxtComponent({
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
-                    <EntityDelete
+                    <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
                         :entity-id="data.item.id"
                         entity-type="client"
@@ -135,5 +135,5 @@ export default defineNuxtComponent({
                 </template>
             </BTable>
         </template>
-    </ClientList>
+    </AClients>
 </template>

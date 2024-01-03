@@ -5,7 +5,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    EntityDelete, IdentityProviderList, ListPagination, ListSearch, ListTitle,
+    AEntityDelete, AIdentityProviders, APagination, ASearch, ATitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -14,12 +14,12 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListTitle,
-        ListPagination,
-        ListSearch,
+        ATitle,
+        APagination,
+        ASearch,
         BTable,
-        IdentityProviderList,
-        EntityDelete,
+        AIdentityProviders,
+        AEntityDelete,
         VCTimeago,
     },
     emits: ['deleted'],
@@ -74,19 +74,19 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <IdentityProviderList
+    <AIdentityProviders
         :query="query"
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <ListTitle />
-            <ListSearch
+            <ATitle />
+            <ASearch
                 :load="props.load"
                 :busy="props.busy"
             />
         </template>
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
@@ -114,7 +114,7 @@ export default defineNuxtComponent({
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
-                    <EntityDelete
+                    <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
                         :entity-id="data.item.id"
                         entity-type="identityProvider"
@@ -125,5 +125,5 @@ export default defineNuxtComponent({
                 </template>
             </BTable>
         </template>
-    </IdentityProviderList>
+    </AIdentityProviders>
 </template>

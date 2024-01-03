@@ -1,5 +1,5 @@
 <script lang="ts">
-import { IdentityProviderForm } from '@authup/client-vue';
+import { AIdentityProviderForm } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        IdentityProviderForm,
+        AIdentityProviderForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -43,6 +43,9 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <IdentityProviderForm />
+        <AIdentityProviderForm
+            @created="handleCreated"
+            @failed="handleFailed"
+        />
     </div>
 </template>

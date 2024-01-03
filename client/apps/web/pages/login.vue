@@ -2,12 +2,12 @@
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
-    IdentityProviderIcon,
-    IdentityProviderList,
-    ListPagination,
-    ListSearch,
-    ListTitle,
-    RealmList,
+    AIdentityProviderIcon,
+    AIdentityProviders,
+    APagination,
+    ARealms,
+    ASearch,
+    ATitle,
     injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
@@ -30,13 +30,13 @@ import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination,
-        ListSearch,
-        ListTitle,
+        APagination,
+        ASearch,
+        ATitle,
         LoginSVG,
-        IdentityProviderList,
-        IdentityProviderIcon,
-        RealmList,
+        AIdentityProviders,
+        AIdentityProviderIcon,
+        ARealms,
         RealmSelectAction,
     },
     setup() {
@@ -189,13 +189,13 @@ export default defineNuxtComponent({
 
                     <hr>
 
-                    <IdentityProviderList
+                    <AIdentityProviders
                         ref="identityProviderRef"
                         :query="identityProviderQuery"
                         :footer="false"
                     >
                         <template #footer="props">
-                            <ListPagination
+                            <APagination
                                 :busy="props.busy"
                                 :meta="props.meta"
                                 :load="props.load"
@@ -214,7 +214,7 @@ export default defineNuxtComponent({
                                     >
                                         <div class="d-flex flex-column">
                                             <div class="text-center mb-1">
-                                                <IdentityProviderIcon
+                                                <AIdentityProviderIcon
                                                     class="fa-2x"
                                                     :entity="item"
                                                 />
@@ -227,19 +227,19 @@ export default defineNuxtComponent({
                                 </div>
                             </div>
                         </template>
-                    </IdentityProviderList>
+                    </AIdentityProviders>
                 </div>
                 <div class="col-4">
-                    <RealmList>
+                    <ARealms>
                         <template #header="props">
-                            <ListTitle />
-                            <ListSearch
+                            <ATitle />
+                            <ASearch
                                 :load="props.load"
                                 :busy="props.busy"
                             />
                         </template>
                         <template #footer="props">
-                            <ListPagination
+                            <APagination
                                 :busy="props.busy"
                                 :meta="props.meta"
                                 :load="props.load"
@@ -253,7 +253,7 @@ export default defineNuxtComponent({
                                 :entity="props.data"
                             />
                         </template>
-                    </RealmList>
+                    </ARealms>
                 </div>
             </div>
         </form>

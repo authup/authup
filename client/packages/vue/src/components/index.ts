@@ -9,9 +9,6 @@ export * from './client';
 export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-role';
-export * from './list-pagination';
-export * from './list-search';
-export * from './list-title';
 export * from './permission';
 export * from './permission-robot';
 export * from './permission-role';
@@ -29,4 +26,6 @@ export * from './scope';
 export * from './scope-client';
 export * from './user';
 export * from './user-role';
-export { default as EntityDelete } from './EntityDelete';
+
+export * from './utility';
+export { AEntityDelete } from './AEntityDelete';

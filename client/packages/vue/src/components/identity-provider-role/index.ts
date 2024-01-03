@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { IdentityProviderRoleAssignmentList } from './IdentityProviderRoleAssignmentList';
-export { IdentityProviderRoleAssignAction } from './IdentityProviderRoleAssignAction';
+export { AIdentityProviderRoleAssignments } from './AIdentityProviderRoleAssignments';
+export { AIdentityProviderRoleAssignment } from './AIdentityProviderRoleAssignment';
