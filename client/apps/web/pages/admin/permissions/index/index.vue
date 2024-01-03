@@ -3,7 +3,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
-    EntityDelete, ListPagination, ListSearch, ListTitle, PermissionList,
+    APermissions, EntityDelete, ListPagination, ListSearch, ListTitle,
 } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -19,7 +19,7 @@ export default defineNuxtComponent({
         ListSearch,
         BTable,
         EntityDelete,
-        PermissionList,
+        PermissionList: APermissions,
         VCTimeago,
     },
     emits: ['deleted'],

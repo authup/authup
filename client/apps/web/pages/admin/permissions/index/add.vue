@@ -1,5 +1,5 @@
 <script lang="ts">
-import { PermissionForm } from '@authup/client-vue';
+import { APermissionForm } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        PermissionForm,
+        PermissionForm: APermissionForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {

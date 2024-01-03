@@ -6,7 +6,7 @@ import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core';
 import {
-    EntityDelete, ListPagination, ListSearch, ListTitle, UserList,
+    AUsers, EntityDelete, ListPagination, ListSearch, ListTitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -19,7 +19,7 @@ export default defineNuxtComponent({
         ListPagination,
         ListSearch,
         BTable,
-        UserList,
+        UserList: AUsers,
         EntityDelete,
     },
     emits: ['deleted'],

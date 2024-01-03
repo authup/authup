@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Robot } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    EntityDelete, ListPagination, ListSearch, ListTitle, RobotList,
+    ARobots, EntityDelete, ListPagination, ListSearch, ListTitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -18,7 +18,7 @@ export default defineNuxtComponent({
         ListPagination,
         ListSearch,
         BTable,
-        RobotList,
+        RobotList: ARobots,
         EntityDelete,
     },
     emits: ['deleted'],

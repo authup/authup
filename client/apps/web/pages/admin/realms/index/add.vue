@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { RealmForm } from '@authup/client-vue';
+import { ARealmForm } from '@authup/client-vue';
 import type { Realm } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { defineNuxtComponent, navigateTo } from '#app';
@@ -9,7 +9,7 @@ import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RealmForm,
+        RealmForm: ARealmForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {

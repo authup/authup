@@ -2,12 +2,12 @@
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
-    IdentityProviderIcon,
-    IdentityProviderList,
+    AIdentityProviderIcon,
+    AIdentityProviders,
+    ARealms,
     ListPagination,
     ListSearch,
     ListTitle,
-    RealmList,
     injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
 import type { IdentityProvider } from '@authup/core';
@@ -34,9 +34,9 @@ export default defineNuxtComponent({
         ListSearch,
         ListTitle,
         LoginSVG,
-        IdentityProviderList,
-        IdentityProviderIcon,
-        RealmList,
+        IdentityProviderList: AIdentityProviders,
+        IdentityProviderIcon: AIdentityProviderIcon,
+        RealmList: ARealms,
         RealmSelectAction,
     },
     setup() {

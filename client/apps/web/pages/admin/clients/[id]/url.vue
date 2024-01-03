@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ClientScopeList } from '@authup/client-vue';
+import { AClientScopes } from '@authup/client-vue';
 import type { Client, ClientScope } from '@authup/core';
 import {
     VCFormInput, VCFormInputCheckbox,
@@ -12,7 +12,7 @@ import { useRuntimeConfig } from '#app';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
-    components: { VCFormInput, VCFormInputCheckbox, ClientScopeList },
+    components: { VCFormInput, VCFormInputCheckbox, ClientScopeList: AClientScopes },
     props: {
         entity: {
             type: Object as PropType<Client>,

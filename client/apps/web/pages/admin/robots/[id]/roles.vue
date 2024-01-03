@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ListPagination, RobotRoleAssignmentList } from '@authup/client-vue';
+import { ARobotRoleAssignments, ListPagination } from '@authup/client-vue';
 import type { Robot } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
@@ -8,7 +8,7 @@ import { defineNuxtComponent } from '#imports';
 export default defineNuxtComponent({
     components: {
         ListPagination,
-        RobotRoleAssignmentList,
+        RobotRoleAssignmentList: ARobotRoleAssignments,
     },
     props: {
         entity: {

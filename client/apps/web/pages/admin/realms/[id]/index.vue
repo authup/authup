@@ -1,5 +1,5 @@
 <script lang="ts">
-import { RealmForm } from '@authup/client-vue';
+import { ARealmForm } from '@authup/client-vue';
 import type { Realm } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RealmForm,
+        RealmForm: ARealmForm,
     },
     props: {
         entity: {

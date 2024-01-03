@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { RobotEntity } from './RobotEntity';
-export { RobotForm } from './RobotForm';
-export { RobotList } from './RobotList';
+export { ARobot } from './ARobot';
+export { ARobotForm } from './ARobotForm';
+export { ARobots } from './ARobots';

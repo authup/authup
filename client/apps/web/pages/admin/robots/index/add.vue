@@ -1,5 +1,5 @@
 <script lang="ts">
-import { RobotForm } from '@authup/client-vue';
+import { ARobotForm } from '@authup/client-vue';
 import type { Robot } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        RobotForm,
+        RobotForm: ARobotForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {

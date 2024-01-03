@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { RobotRoleAssignmentList } from './RobotRoleAssignmentList';
-export { RobotRoleAssignAction } from './RobotRoleAssignAction';
+export { ARobotRoleAssignments } from './ARobotRoleAssignments';
+export { ARobotRoleAssignment } from './ARobotRoleAssignment';

@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { UserPermissionAssignmentList } from './UserPermissionAssignmentList';
-export { UserPermissionAssignAction } from './UserPermissionAssignAction';
+export { AUserPermissionAssignments } from './AUserPermissionAssignments';
+export { AUserPermissionAssignment } from './AUserPermissionAssignment';

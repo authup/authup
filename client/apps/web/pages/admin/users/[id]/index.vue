@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { UserForm, UserPasswordForm } from '@authup/client-vue';
+import { AUserForm, AUserPasswordForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import type { PropType } from 'vue';
 import {
@@ -10,8 +10,8 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        UserForm,
-        UserPasswordForm,
+        UserForm: AUserForm,
+        UserPasswordForm: AUserPasswordForm,
     },
     props: {
         entity: {

@@ -5,7 +5,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { IdentityProvider } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    EntityDelete, IdentityProviderList, ListPagination, ListSearch, ListTitle,
+    AIdentityProviders, EntityDelete, ListPagination, ListSearch, ListTitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -18,7 +18,7 @@ export default defineNuxtComponent({
         ListPagination,
         ListSearch,
         BTable,
-        IdentityProviderList,
+        IdentityProviderList: AIdentityProviders,
         EntityDelete,
         VCTimeago,
     },

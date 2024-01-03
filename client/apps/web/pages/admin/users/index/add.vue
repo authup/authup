@@ -1,5 +1,5 @@
 <script lang="ts">
-import { UserForm } from '@authup/client-vue';
+import { AUserForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        UserForm,
+        UserForm: AUserForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ListPagination, UserRoleAssignmentList } from '@authup/client-vue';
+import { AUserRoleAssignments, ListPagination } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
@@ -8,7 +8,7 @@ import { defineNuxtComponent } from '#app';
 export default defineNuxtComponent({
     components: {
         ListPagination,
-        UserRoleAssignmentList,
+        UserRoleAssignmentList: AUserRoleAssignments,
     },
     props: {
         entity: {

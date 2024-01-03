@@ -1,6 +1,6 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
-import { UserPasswordForm } from '@authup/client-vue';
+import { AUserPasswordForm } from '@authup/client-vue';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
 import { LayoutKey } from '~/config/layout';
@@ -8,7 +8,7 @@ import { useAuthStore } from '~/store/auth';
 
 export default defineNuxtComponent({
     components: {
-        UserPasswordForm,
+        UserPasswordForm: AUserPasswordForm,
     },
     setup() {
         definePageMeta({

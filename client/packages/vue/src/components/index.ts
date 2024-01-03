@@ -29,4 +29,4 @@ export * from './scope';
 export * from './scope-client';
 export * from './user';
 export * from './user-role';
-export { default as EntityDelete } from './EntityDelete';
+export { default as EntityDelete } from './AEntityDelete';

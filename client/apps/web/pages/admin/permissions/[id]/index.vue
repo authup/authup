@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { PermissionForm } from '@authup/client-vue';
+import { APermissionForm } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import type { PropType } from 'vue';
@@ -9,7 +9,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        PermissionForm,
+        PermissionForm: APermissionForm,
     },
     props: {
         entity: {

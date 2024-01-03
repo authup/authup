@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Role } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
 import {
-    EntityDelete, ListPagination, ListSearch, ListTitle, RoleList,
+    ARoles, EntityDelete, ListPagination, ListSearch, ListTitle,
 } from '@authup/client-vue';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -17,7 +17,7 @@ export default defineNuxtComponent({
         ListPagination,
         ListSearch,
         BTable,
-        RoleList,
+        RoleList: ARoles,
         EntityDelete,
     },
     emits: ['deleted'],

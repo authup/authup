@@ -5,5 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ScopeForm } from './ScopeForm';
-export { ScopeList } from './ScopeList';
+export { AScopeForm } from './AScopeForm';
+export { AScopes } from './AScopes';
+export { AScope } from './AScope';

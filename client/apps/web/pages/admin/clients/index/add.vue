@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ClientForm } from '@authup/client-vue';
+import { AClientForm } from '@authup/client-vue';
 import type { Client } from '@authup/core';
 import { PermissionName } from '@authup/core';
 import { storeToRefs } from 'pinia';
@@ -11,7 +11,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ClientForm,
+        ClientForm: AClientForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {

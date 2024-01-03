@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { ScopeForm } from '@authup/client-vue';
+import { AScopeForm } from '@authup/client-vue';
 import type { Scope } from '@authup/core';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        ScopeForm,
+        ScopeForm: AScopeForm,
     },
     props: {
         entity: {
