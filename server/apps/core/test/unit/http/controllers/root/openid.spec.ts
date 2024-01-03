@@ -8,17 +8,14 @@
 import type { OAuth2OpenIDProviderMetadata } from '@authup/core';
 import { OAuth2AuthorizationResponseType } from '@authup/core';
 import { useConfig } from '../../../../../src';
-import type { DatabaseRootSeederResult } from '../../../../../src';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
     const superTest = useSuperTest();
 
-    let seederResponse : DatabaseRootSeederResult | undefined;
-
     beforeAll(async () => {
-        seederResponse = await useTestDatabase();
+        await useTestDatabase();
     });
 
     afterAll(async () => {

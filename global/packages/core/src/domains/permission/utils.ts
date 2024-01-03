@@ -7,7 +7,7 @@
 
 import type { MongoQuery } from '@ucast/mongo2js';
 import type { PermissionRelation } from './types';
-import type { AbilityDescriptor } from '../../auth/ability-manager';
+import type { AbilityDescriptor } from '../../auth';
 
 export function buildPermissionMetaCondition(input: string | null): MongoQuery {
     if (typeof input === 'undefined') {
@@ -37,7 +37,7 @@ function isFieldsArray(input: unknown): input is string[] {
         return false;
     }
 
-    const items = input.map((item) => typeof input === 'string');
+    const items = input.map((item) => typeof item === 'string');
 
     return items.length === input.length;
 }

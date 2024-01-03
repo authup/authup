@@ -32,7 +32,7 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../domains';
-import type { Config, ConfigInput } from '../../config';
+import type { Config } from '../../config';
 import { useConfig } from '../../config';
 import type { DatabaseRootSeederResult } from './type';
 

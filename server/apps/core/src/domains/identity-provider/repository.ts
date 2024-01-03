@@ -13,7 +13,7 @@ import {
     hasOwnProperty,
 } from '@authup/core';
 import type { DataSource, EntityManager } from 'typeorm';
-import { In, InstanceChecker, Repository } from 'typeorm';
+import { InstanceChecker, Repository } from 'typeorm';
 import { IdentityProviderEntity } from './entity';
 import { transformAttributesToEntities, transformAttributesToRecord } from '../utils';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute';

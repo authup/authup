@@ -9,7 +9,6 @@ import type { DomainType } from '../contstants';
 import type { DomainEventBaseContext } from '../types-base';
 import type { User } from '../user';
 import type { PermissionRelation } from '../permission';
-import { Permission } from '../permission';
 import type { Realm } from '../realm';
 
 export interface UserPermission extends PermissionRelation {

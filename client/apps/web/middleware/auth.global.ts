@@ -6,7 +6,7 @@
  */
 
 import {
-    buildNameFromAbilityID, isAPIClientTokenExpiredError, isAPIClientTokenInvalidError,
+    buildNameFromAbilityID,
 } from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';

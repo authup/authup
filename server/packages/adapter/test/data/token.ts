@@ -29,7 +29,7 @@ export const TokenPayload : Omit<OAuth2TokenIntrospectionResponse, 'exp'> = {
     email_verified: true,
 };
 
-export async function introspectToken(data: { token: string }, options: Record<string, any>) : Promise<OAuth2TokenIntrospectionResponse> {
+export async function introspectToken(data: { token: string }) : Promise<OAuth2TokenIntrospectionResponse> {
     switch (data.token) {
         case ErrorCode.TOKEN_INVALID: {
             throw createResponseError(TokenError.payloadInvalid());

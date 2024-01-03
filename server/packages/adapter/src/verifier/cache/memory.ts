@@ -31,7 +31,7 @@ export class TokenVerifierMemoryCache implements TokenVerifierCache {
         return this.cache[token];
     }
 
-    async set(token: string, data: TokenVerificationData, seconds?: number): Promise<void> {
+    async set(token: string, data: TokenVerificationData): Promise<void> {
         this.cache[token] = data;
     }
 }

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MaybeRef, Ref, VNodeArrayChildren } from 'vue';
+import type { MaybeRef, VNodeArrayChildren } from 'vue';
 import { h, unref } from 'vue';
 
 type Context<T> = {

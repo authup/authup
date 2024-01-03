@@ -9,7 +9,7 @@ import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
-    maxLength, minLength, required, url,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
@@ -28,7 +28,7 @@ export const AIdentityProviderClientFields = defineComponent({
         },
     },
     emits: ['updated'],
-    setup(props, setup) {
+    setup(props) {
         const form = reactive({
             client_id: '',
             client_secret: '',

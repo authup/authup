@@ -6,7 +6,7 @@
  */
 
 import type { DataSource, EntityManager } from 'typeorm';
-import { In, InstanceChecker, Repository } from 'typeorm';
+import { InstanceChecker, Repository } from 'typeorm';
 import type {
     AbilityDescriptor,
     Role,

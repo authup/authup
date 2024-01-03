@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenGrantResponse, User } from '@authup/core';
 import {
-    OAuth2SubKind, Realm, ScopeName,
+    OAuth2SubKind, ScopeName,
 } from '@authup/core';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';

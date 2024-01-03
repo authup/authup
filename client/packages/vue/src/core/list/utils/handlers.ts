@@ -54,6 +54,10 @@ export function buildListUpdatedHandler<T>(
             for (let i = 0; i < keys.length; i++) {
                 items.value[index][keys[i]] = item[keys[i]];
             }
+
+            if (cb) {
+                cb(item);
+            }
         }
     };
 }

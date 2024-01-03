@@ -8,7 +8,7 @@
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
-    maxLength, minLength, required, url,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
 import {
     defineComponent, h, nextTick, reactive,

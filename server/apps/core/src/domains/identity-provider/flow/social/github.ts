@@ -7,7 +7,6 @@
 
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
-import { useConfig } from '../../../../config';
 import { OAuth2IdentityProviderFlow } from '../core';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 

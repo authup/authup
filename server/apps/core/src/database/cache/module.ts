@@ -37,7 +37,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         return query.replace(/[^a-zA-Z0-9_-]+/g, '');
     }
 
-    async clear(queryRunner?: QueryRunner): Promise<void> {
+    async clear(): Promise<void> {
         if (
             !hasConfig(this.options.redisAlias) &&
             !hasClient(this.options.redisAlias)
@@ -64,7 +64,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         return Promise.resolve(undefined);
     }
 
-    async getFromCache(options: QueryResultCacheOptions, queryRunner?: QueryRunner): Promise<QueryResultCacheOptions | undefined> {
+    async getFromCache(options: QueryResultCacheOptions): Promise<QueryResultCacheOptions | undefined> {
         if (
             !hasConfig(this.options.redisAlias) &&
             !hasClient(this.options.redisAlias)
@@ -100,7 +100,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         return savedCache.time + savedCache.duration < new Date().getTime();
     }
 
-    async remove(identifiers: string[], queryRunner?: QueryRunner): Promise<void> {
+    async remove(identifiers: string[]): Promise<void> {
         if (
             !hasConfig(this.options.redisAlias) &&
             !hasClient(this.options.redisAlias)
@@ -120,7 +120,9 @@ export class DatabaseQueryResultCache implements QueryResultCache {
 
     async storeInCache(
         options: QueryResultCacheOptions,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         savedCache: QueryResultCacheOptions | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         queryRunner?: QueryRunner,
     ): Promise<void> {
         if (
@@ -147,7 +149,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         );
     }
 
-    synchronize(queryRunner?: QueryRunner): Promise<void> {
+    synchronize(): Promise<void> {
         return Promise.resolve(undefined);
     }
 }

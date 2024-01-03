@@ -6,7 +6,7 @@
  */
 
 import { DomainType } from '@authup/core';
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 import type { RolePermission } from '@authup/core';
 import {
     createEntityManager,

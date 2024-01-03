@@ -6,7 +6,6 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core';
-import { OpenIDConnectIdentityProvider } from '@authup/core';
 
 export function extractLdapIdentityProviderProtocolAttributes(
     input: unknown,

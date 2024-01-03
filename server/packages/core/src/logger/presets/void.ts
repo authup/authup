@@ -12,7 +12,7 @@ export class VoidLogger implements Logger {
 
     error(message: string, ...meta: any[]) : any;
 
-    error(message: any, ...meta: any[]) {
+    error() {
         return this;
     }
 
@@ -22,7 +22,7 @@ export class VoidLogger implements Logger {
 
     warn(message: string, ...meta: any[]) : any;
 
-    warn(message: any, ...meta: any[]) {
+    warn() {
         return this;
     }
 
@@ -32,7 +32,7 @@ export class VoidLogger implements Logger {
 
     info(message: string, ...meta: any[]) : any;
 
-    info(message: any, ...meta: any[]) {
+    info() {
         return this;
     }
 
@@ -42,7 +42,7 @@ export class VoidLogger implements Logger {
 
     http(message: string, ...meta: any[]) : any;
 
-    http(message: any, ...meta: any[]) {
+    http() {
         return this;
     }
 
@@ -52,7 +52,7 @@ export class VoidLogger implements Logger {
 
     verbose(message: string, ...meta: any[]) : any;
 
-    verbose(message: any, ...meta: any[]) {
+    verbose() {
         return this;
     }
 
@@ -62,7 +62,7 @@ export class VoidLogger implements Logger {
 
     debug(message: string, ...meta: any[]) : any;
 
-    debug(message: any, ...meta: any[]) {
+    debug() {
         return this;
     }
 
