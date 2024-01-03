@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenPayload } from '@authup/core';
 import { ErrorCode, TokenError } from '@authup/core';
-import { decodeToken } from '@authup/server-core';
+import { decodeToken } from '@authup/server-kit';
 import { isHTTPError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';

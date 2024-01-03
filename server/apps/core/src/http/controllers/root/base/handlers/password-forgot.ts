@@ -13,7 +13,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig, useSMTPClient } from '@authup/server-core';
+import { hasSmtpConfig, useSMTPClient } from '@authup/server-kit';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
     useConfig,

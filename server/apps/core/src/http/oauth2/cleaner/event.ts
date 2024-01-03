@@ -1,6 +1,6 @@
 import { Cache, useClient } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
-import { useLogger } from '@authup/server-core';
+import { useLogger } from '@authup/server-kit';
 import { CachePrefix } from '../../../database';
 import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 

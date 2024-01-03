@@ -20,7 +20,7 @@ import {
     ROBOT_SYSTEM_NAME,
     ScopeName, createNanoID,
 } from '@authup/core';
-import { hasOwnProperty, hash } from '@authup/server-core';
+import { hasOwnProperty, hash } from '@authup/server-kit';
 import {
     PermissionEntity,
     RealmEntity,

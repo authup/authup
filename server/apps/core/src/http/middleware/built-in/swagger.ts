@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { useLogger } from '@authup/server-core';
+import { useLogger } from '@authup/server-kit';
 import type { UIOptions } from '@routup/swagger';
 import { swaggerUI } from '@routup/swagger';
 import { buildFilePath, loadSync, locateSync } from 'locter';

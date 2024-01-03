@@ -29,8 +29,8 @@
         "server/apps/core": {
             "component": "server-core-app"
         },
-        "server/packages/core": {
-            "component": "server-core"
+        "server/packages/kit": {
+            "component": "server-kit"
         }
     },
     "plugins": [
@@ -50,7 +50,7 @@
                 "global-core",
                 "server-adapter",
                 "server-core-app",
-                "server-core"
+                "server-kit"
             ]
         }
     ],

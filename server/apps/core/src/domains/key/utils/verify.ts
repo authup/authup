@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerifyOptions } from '@authup/server-core';
-import { verifyToken } from '@authup/server-core';
+import type { TokenVerifyOptions } from '@authup/server-kit';
+import { verifyToken } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/core';
 import {
     KeyType, wrapPrivateKeyPem, wrapPublicKeyPem,

@@ -47,7 +47,7 @@
     "dependencies": {
         "@authup/config": "^0.0.0",
         "@authup/core": "^0.45.10",
-        "@authup/server-core": "^0.45.10",
+        "@authup/server-kit": "^0.45.10",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.0",
         "@hapic/vault": "^2.3.0",

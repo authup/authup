@@ -13,7 +13,7 @@ import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-core';
+import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-kit';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {

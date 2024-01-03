@@ -13,7 +13,7 @@ import {
 } from '@authup/core';
 import {
     createKeyPair,
-} from '@authup/server-core';
+} from '@authup/server-kit';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';

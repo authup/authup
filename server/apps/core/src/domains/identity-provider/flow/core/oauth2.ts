@@ -6,7 +6,7 @@
  */
 
 import { buildIdentityProviderAuthorizeCallbackPath, isObject } from '@authup/core';
-import { buildHTTPClientConfigForProxy } from '@authup/server-core';
+import { buildHTTPClientConfigForProxy } from '@authup/server-kit';
 import type { JwtPayload, Options } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';

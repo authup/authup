@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenSignOptions } from '@authup/server-core';
-import { signToken } from '@authup/server-core';
+import type { TokenSignOptions } from '@authup/server-kit';
+import { signToken } from '@authup/server-kit';
 import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core';
 import type { KeyEntity } from '../entity';
 

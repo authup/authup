@@ -7,8 +7,8 @@
 
 import { createPublicKey } from 'node:crypto';
 import type { OAuth2JsonWebKey } from '@authup/core';
-import type { KeyPair } from '@authup/server-core';
-import { createKeyPair, signToken, useKeyPair } from '@authup/server-core';
+import type { KeyPair } from '@authup/server-kit';
+import { createKeyPair, signToken, useKeyPair } from '@authup/server-kit';
 
 export class Faker {
     protected keyPair: KeyPair;

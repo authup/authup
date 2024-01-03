@@ -24,7 +24,7 @@ import {
     createNanoID,
 } from '@authup/core';
 
-import { compare, hash } from '@authup/server-core';
+import { compare, hash } from '@authup/server-kit';
 import { buildKeyPath } from 'redis-extension';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';

@@ -19,8 +19,8 @@ import {
     isObject,
     mountClientResponseErrorTokenHook,
 } from '@authup/core';
-import { decodeToken, verifyToken } from '@authup/server-core';
-import type { TokenVerifyRSAlgorithm } from '@authup/server-core';
+import { decodeToken, verifyToken } from '@authup/server-kit';
+import type { TokenVerifyRSAlgorithm } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';

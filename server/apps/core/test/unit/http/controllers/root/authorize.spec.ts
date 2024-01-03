@@ -15,7 +15,7 @@ import {
     OAuth2TokenKind,
     ScopeName,
 } from '@authup/core';
-import { decodeToken } from '@authup/server-core';
+import { decodeToken } from '@authup/server-kit';
 import type { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestClientWithScope } from '../../../../utils/domains';

@@ -13,7 +13,7 @@ import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { Options as BodyOptions } from '@routup/basic/body';
 import type { CorsOptions } from 'cors';
 import type { Client, ClientOptions } from 'redis-extension';
-import type { SmtpConfig } from '@authup/server-core';
+import type { SmtpConfig } from '@authup/server-kit';
 import type { DatabaseConnectionOptions } from './utils';
 
 export type Config = {

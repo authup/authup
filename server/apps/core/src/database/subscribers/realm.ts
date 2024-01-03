@@ -13,7 +13,7 @@ import {
     DomainType,
     buildDomainChannelName,
 } from '@authup/core';
-import { publishDomainEvent } from '@authup/server-core';
+import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,

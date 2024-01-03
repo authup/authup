@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useLogger } from '@authup/server-core';
+import { useLogger } from '@authup/server-kit';
 import morgan from 'morgan';
 import type {
     Next, Request, Response, Router,

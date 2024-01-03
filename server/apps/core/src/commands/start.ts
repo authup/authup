@@ -11,7 +11,7 @@ import { hasClient as hasVaultClient } from '@hapic/vault';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
     setLogger, useLogger,
-} from '@authup/server-core';
+} from '@authup/server-kit';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
 import {

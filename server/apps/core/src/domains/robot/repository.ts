@@ -11,7 +11,7 @@ import type {
 } from '@authup/core';
 import { buildPermissionDescriptorFromRelation, createNanoID } from '@authup/core';
 
-import { compare, hash } from '@authup/server-core';
+import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';

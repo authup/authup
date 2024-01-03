@@ -1,7 +1,7 @@
 {
-    "name": "@authup/server-core",
+    "name": "@authup/server-kit",
     "version": "0.45.10",
-    "description": "Common server services and utilities.",
+    "description": "SDK for server side services.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -43,7 +43,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "server/packages/core"
+        "directory": "server/packages/kit"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
