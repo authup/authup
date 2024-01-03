@@ -59,7 +59,7 @@ export default defineNuxtPlugin((ctx) => {
                 store.handleTokenGrantResponse(response);
             }, 0);
         },
-        tokenFailed: (e) => {
+        tokenFailed: () => {
             store.logout();
         },
     });

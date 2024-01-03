@@ -9,6 +9,7 @@ import type { LdapIdentityProvider } from '@authup/core';
 import type { Request } from 'routup';
 
 export function validateLdapIdentityProviderProtocol(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     req: Request,
 ) : LdapIdentityProvider {
     throw new Error('Not implemented');

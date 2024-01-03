@@ -7,7 +7,7 @@
 
 import { ForbiddenError } from '@ebec/http';
 import {
-    PermissionName, Realm,
+    PermissionName,
 } from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';

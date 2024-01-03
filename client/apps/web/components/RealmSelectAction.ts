@@ -26,7 +26,6 @@ export default defineNuxtComponent({
     emits: ['update:modelValue'],
     setup(props, { emit }) {
         const modelValue = toRef(props, 'modelValue');
-        const listRef = toRef(props, 'listRef');
 
         const isMaster = computed(() => props.entity.name === REALM_MASTER_NAME);
         const canCheck = computed(() => !(isMaster.value && !modelValue.value) &&

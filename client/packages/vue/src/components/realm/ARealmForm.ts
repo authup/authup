@@ -14,7 +14,7 @@ import {
 } from 'vue';
 import type { Realm } from '@authup/core';
 import {
-    DomainType, REALM_MASTER_NAME, User, createNanoID,
+    DomainType, REALM_MASTER_NAME, createNanoID,
 } from '@authup/core';
 import {
     buildFormGroup,

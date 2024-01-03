@@ -11,8 +11,6 @@ import {
 } from '@routup/basic';
 import type { Router } from 'routup';
 
-export function registerBodyMiddleware(router: Router, input?: Options) {
-    const options = input || {};
-
-    router.use(basic());
+export function registerBasicMiddleware(router: Router, input?: Options) {
+    router.use(basic(input));
 }

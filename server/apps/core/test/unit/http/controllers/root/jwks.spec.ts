@@ -5,17 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DatabaseRootSeederResult } from '../../../../../src';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/auth/jwks/*.ts', () => {
     const superTest = useSuperTest();
 
-    let seederResponse : DatabaseRootSeederResult | undefined;
-
     beforeAll(async () => {
-        seederResponse = await useTestDatabase();
+        await useTestDatabase();
     });
 
     afterAll(async () => {

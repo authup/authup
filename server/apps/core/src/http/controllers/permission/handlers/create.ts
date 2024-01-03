@@ -6,7 +6,6 @@
  */
 
 import { ForbiddenError } from '@ebec/http';
-import { check, matchedData, validationResult } from 'express-validator';
 import {
     PermissionName,
 } from '@authup/core';

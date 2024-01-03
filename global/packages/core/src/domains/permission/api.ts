@@ -25,7 +25,7 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
     }
 
     async getOne(id: Permission['id'], record?: BuildInput<Permission>) {
-        const response = await this.client.get(`permissions/${id}`);
+        const response = await this.client.get(`permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }

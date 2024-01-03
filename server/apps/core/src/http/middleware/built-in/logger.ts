@@ -55,7 +55,7 @@ export function registerLoggerMiddleware(router: Router) {
                         useLogger().http(message.replace('\n', ''));
                     },
                 },
-                skip(req: Request, res: Response): boolean {
+                skip(req: Request): boolean {
                     let path = useRequestPath(req);
                     if (!path.startsWith('/')) {
                         path = `/${path}`;

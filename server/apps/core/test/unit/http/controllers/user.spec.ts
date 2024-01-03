@@ -7,19 +7,16 @@
 
 import type { User } from '@authup/core';
 import { hash } from '@authup/server-core';
-import type { DatabaseRootSeederResult } from '../../../../src';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
-import { TEST_DEFAULT_USER, createSuperTestUser } from '../../../utils/domains/user';
+import { TEST_DEFAULT_USER, createSuperTestUser } from '../../../utils/domains';
 
 describe('src/http/controllers/user', () => {
     const superTest = useSuperTest();
 
-    let seederResponse : DatabaseRootSeederResult | undefined;
-
     beforeAll(async () => {
-        seederResponse = await useTestDatabase();
+        await useTestDatabase();
     });
 
     afterAll(async () => {

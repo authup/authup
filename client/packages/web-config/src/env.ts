@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getEnv, getEnvInt, hasEnv } from '@authup/core';
+import { getEnv, getEnvInt } from '@authup/core';
 import type { ConfigInput } from './type';
 
 export function readConfigFromEnv() : ConfigInput {

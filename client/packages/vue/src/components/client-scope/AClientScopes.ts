@@ -7,7 +7,7 @@
 
 import { DomainType } from '@authup/core';
 import type { SlotsType } from 'vue';
-import { defineComponent, h } from 'vue';
+import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core';
 import type { ListSlotsType } from '../../core';
 import {

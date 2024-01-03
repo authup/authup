@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { basic } from '@routup/basic';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { useConfig } from '../../config';
 import {
-    registerAuthMiddleware,
+    registerAuthMiddleware, registerBasicMiddleware,
     registerCorsMiddleware,
     registerLoggerMiddleware,
     registerPrometheusMiddleware,
@@ -32,7 +31,7 @@ export function registerMiddlewares(router: Router) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
-    router.use(basic());
+    registerBasicMiddleware(router);
 
     const prometheus = config.middlewarePrometheus;
     if (isBuiltInMiddlewareEnabled(prometheus)) {

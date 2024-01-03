@@ -7,7 +7,6 @@
 
 import type { DomainType } from '../contstants';
 import type { PermissionRelation } from '../permission';
-import { Permission } from '../permission';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
 import type { DomainEventBaseContext } from '../types-base';

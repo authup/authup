@@ -17,7 +17,6 @@ export function registerErrorMiddleware(router: Router) {
         error,
         request,
         response,
-        _next,
     ) => {
         // catch and decorate some db errors :)
         switch (error.code) {

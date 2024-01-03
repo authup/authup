@@ -33,7 +33,7 @@ export const AIdentityProviderEndpointFields = defineComponent({
         },
     },
     emits: ['updated'],
-    setup(props, setup) {
+    setup(props) {
         const form = reactive({
             token_url: '',
             authorize_url: '',

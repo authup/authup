@@ -9,7 +9,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    PrimaryColumn, PrimaryGeneratedColumn,
+    PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import type { Realm } from '@authup/core';
