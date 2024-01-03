@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        RobotForm: ARobotForm,
+        ARobotForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -42,7 +42,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <RobotForm
+    <ARobotForm
         :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"

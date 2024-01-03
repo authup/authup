@@ -3,7 +3,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
-    AEntityDelete, APermissions, APagination, ASearch, ATitle,
+    AEntityDelete, APagination, APermissions, ASearch, ATitle,
 } from '@authup/client-vue';
 import type { Permission } from '@authup/core';
 import { PermissionName, isRealmResourceWritable } from '@authup/core';
@@ -14,12 +14,12 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ListTitle: ATitle,
-        ListPagination: APagination,
-        ListSearch: ASearch,
+        ATitle,
+        APagination,
+        ASearch,
         BTable,
-        EntityDelete: AEntityDelete,
-        PermissionList: APermissions,
+        AEntityDelete,
+        APermissions,
         VCTimeago,
     },
     emits: ['deleted'],
@@ -72,19 +72,19 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <PermissionList
+    <APermissions
         :query="query"
         @deleted="handleDeleted"
     >
         <template #header="props">
-            <ListTitle />
-            <ListSearch
+            <ATitle />
+            <ASearch
                 :load="props.load"
                 :busy="props.busy"
             />
         </template>
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
@@ -112,7 +112,7 @@ export default defineNuxtComponent({
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
-                    <EntityDelete
+                    <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
                         :entity-id="data.item.id"
                         entity-type="permission"
@@ -123,5 +123,5 @@ export default defineNuxtComponent({
                 </template>
             </BTable>
         </template>
-    </PermissionList>
+    </APermissions>
 </template>

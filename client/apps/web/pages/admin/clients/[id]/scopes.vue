@@ -6,8 +6,8 @@ import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination: APagination,
-        ClientScopeAssignmentList: AClientScopeAssignments,
+        APagination,
+        AClientScopeAssignments,
     },
     props: {
         entity: {
@@ -24,13 +24,13 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ClientScopeAssignmentList :entity-id="entity.id">
+    <AClientScopeAssignments :entity-id="entity.id">
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
             />
         </template>
-    </ClientScopeAssignmentList>
+    </AClientScopeAssignments>
 </template>

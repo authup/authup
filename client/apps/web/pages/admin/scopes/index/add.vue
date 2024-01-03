@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        ScopeForm: AScopeForm,
+        AScopeForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -41,7 +41,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ScopeForm
+    <AScopeForm
         :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"

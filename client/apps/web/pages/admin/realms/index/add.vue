@@ -9,7 +9,7 @@ import { LayoutKey, LayoutNavigationID } from '../../../../config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RealmForm: ARealmForm,
+        ARealmForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -37,7 +37,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <RealmForm
+    <ARealmForm
         @created="handleCreated"
         @failed="handleFailed"
     />

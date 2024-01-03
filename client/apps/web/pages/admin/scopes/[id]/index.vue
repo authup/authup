@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        ScopeForm: AScopeForm,
+        AScopeForm,
     },
     props: {
         entity: {
@@ -43,7 +43,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             General
         </h6>
-        <ScopeForm
+        <AScopeForm
             :entity="entity"
             :realm-id="entity.realm_id"
             @updated="handleUpdated"

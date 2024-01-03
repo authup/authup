@@ -9,8 +9,8 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        ListPagination: APagination,
-        IdentityProviderRoleAssignmentList: AIdentityProviderRoleAssignments,
+        APagination,
+        AIdentityProviderRoleAssignments,
     },
     props: {
         entity: {
@@ -39,16 +39,16 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <IdentityProviderRoleAssignmentList
+    <AIdentityProviderRoleAssignments
         :entity-id="entity.id"
         @failed="handleFailed"
     >
         <template #footer="props">
-            <ListPagination
+            <APagination
                 :busy="props.busy"
                 :meta="props.meta"
                 :load="props.load"
             />
         </template>
-    </IdentityProviderRoleAssignmentList>
+    </AIdentityProviderRoleAssignments>
 </template>

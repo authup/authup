@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        VClientForm: AClientForm,
+        AClientForm,
     },
     props: {
         entity: {
@@ -39,7 +39,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <VClientForm
+    <AClientForm
         :entity="entity"
         :realm-id="entity.realm_id"
         @updated="handleUpdated"

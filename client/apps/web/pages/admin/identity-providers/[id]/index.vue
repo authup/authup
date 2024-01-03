@@ -10,7 +10,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        OAuth2ProviderForm: AIdentityProviderOAuth2Form,
+        AIdentityProviderOAuth2Form,
     },
     props: {
         entity: {
@@ -47,7 +47,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <OAuth2ProviderForm
+    <AIdentityProviderOAuth2Form
         :api-url="apiUrl"
         :entity="entity"
         :realm-id="entity.realm_id"

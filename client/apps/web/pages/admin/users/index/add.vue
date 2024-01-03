@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        UserForm: AUserForm,
+        AUserForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -42,7 +42,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <UserForm
+    <AUserForm
         :realm-id="realmManagementId"
         @created="handleCreated"
         @failed="handleFailed"

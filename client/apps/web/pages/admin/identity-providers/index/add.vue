@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        IdentityProviderForm: AIdentityProviderForm,
+        AIdentityProviderForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -43,6 +43,9 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <IdentityProviderForm />
+        <AIdentityProviderForm
+            @created="handleCreated"
+            @failed="handleFailed"
+        />
     </div>
 </template>

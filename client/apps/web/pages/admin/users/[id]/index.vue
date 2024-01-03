@@ -10,8 +10,8 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        UserForm: AUserForm,
-        UserPasswordForm: AUserPasswordForm,
+        AUserForm,
+        AUserPasswordForm,
     },
     props: {
         entity: {
@@ -48,7 +48,7 @@ export default defineNuxtComponent({
                 General
             </h6>
 
-            <UserForm
+            <AUserForm
                 :entity="entity"
                 :realm-id="entity.realm_id"
                 @updated="handleUpdated"
@@ -60,7 +60,7 @@ export default defineNuxtComponent({
                 Password
             </h6>
 
-            <UserPasswordForm
+            <AUserPasswordForm
                 :id="entity.id"
                 @updated="handleUpdated"
                 @failed="handleFailed"

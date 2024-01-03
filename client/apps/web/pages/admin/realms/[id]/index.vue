@@ -8,7 +8,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        RealmForm: ARealmForm,
+        ARealmForm,
     },
     props: {
         entity: {
@@ -46,7 +46,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             General
         </h6>
-        <RealmForm
+        <ARealmForm
             :entity="entity"
             @updated="handleUpdated"
             @failed="handleFailed"

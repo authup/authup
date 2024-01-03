@@ -9,7 +9,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        PermissionForm: APermissionForm,
+        APermissionForm,
     },
     props: {
         entity: {
@@ -47,7 +47,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             General
         </h6>
-        <PermissionForm
+        <APermissionForm
             :entity="entity"
             @updated="handleUpdated"
             @failed="handleFailed"

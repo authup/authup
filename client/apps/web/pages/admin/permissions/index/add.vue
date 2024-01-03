@@ -10,7 +10,7 @@ import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
-        PermissionForm: APermissionForm,
+        APermissionForm,
     },
     emits: ['failed', 'created'],
     setup(props, { emit }) {
@@ -42,7 +42,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <PermissionForm
+    <APermissionForm
         :realm-id="realmManagementId"
         @failed="handleFailed"
         @created="handleCreated"

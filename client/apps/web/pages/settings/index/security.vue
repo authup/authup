@@ -8,7 +8,7 @@ import { useAuthStore } from '~/store/auth';
 
 export default defineNuxtComponent({
     components: {
-        UserPasswordForm: AUserPasswordForm,
+        AUserPasswordForm,
     },
     setup() {
         definePageMeta({
@@ -45,7 +45,7 @@ export default defineNuxtComponent({
         <h6 class="title">
             Password
         </h6>
-        <UserPasswordForm
+        <AUserPasswordForm
             :id="id"
             @updated="handleUpdated"
             @failed="handleFailed"
