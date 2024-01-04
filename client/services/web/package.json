@@ -1,5 +1,5 @@
 {
-    "name": "@authup/client-web-app",
+    "name": "@authup/client-web",
     "version": "0.45.10",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",

@@ -1,5 +1,5 @@
 {
-    "name": "@authup/server-core-app",
+    "name": "@authup/server-core",
     "version": "0.45.10",
     "description": "This is a standalone application.",
     "main": "dist/index.js",

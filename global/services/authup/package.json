@@ -43,11 +43,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-web-app": "^0.45.10",
+        "@authup/client-web": "^0.45.10",
         "@authup/client-web-config": "^0.0.0",
         "@authup/config": "^0.0.0",
         "@authup/core": "^0.45.10",
-        "@authup/server-core-app": "^0.45.10",
+        "@authup/server-core": "^0.45.10",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^3.2.3",

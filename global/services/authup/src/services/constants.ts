@@ -6,8 +6,8 @@
  */
 
 export enum ServicePackageName {
-    CLIENT_WEB = '@authup/client-web-app',
-    SERVER_CORE = '@authup/server-core-app',
+    CLIENT_WEB = '@authup/client-web',
+    SERVER_CORE = '@authup/server-core',
 }
 
 export enum ServiceCommand {

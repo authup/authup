@@ -1,9 +1,9 @@
 {
-    "global/apps/authup": "0.45.10",
+    "global/services/authup": "0.45.10",
     "global/packages/core": "0.45.10",
-    "client/apps/web": "0.45.10",
+    "client/services/web": "0.45.10",
     "client/packages/vue": "0.45.10",
-    "server/apps/adapter": "0.45.10",
     "server/packages/adapter": "0.45.10",
-    "server/packages/core": "0.45.10"
+    "server/packages/kit": "0.45.10",
+    "server/services/core": "0.45.10"
 }

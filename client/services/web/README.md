@@ -1,4 +1,4 @@
-# @authup/client-web-app 🎨
+# @authup/client-web 🎨
 
 [![npm version](https://badge.fury.io/js/@authup%2Fclient-ui.svg)](https://badge.fury.io/js/@authup%2Fclient-ui)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)

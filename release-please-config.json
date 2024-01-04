@@ -5,8 +5,8 @@
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
     "packages": {
-        "client/apps/web": {
-            "component": "client-web-app"
+        "client/services/web": {
+            "component": "client-web"
         },
         "client/packages/web-config": {
             "component": "client-web-config"
@@ -14,8 +14,8 @@
         "client/packages/vue": {
             "component": "client-vue"
         },
-        "global/apps/authup": {
-            "component": "global-authup-app"
+        "global/services/authup": {
+            "component": "global-authup"
         },
         "global/packages/config": {
             "component": "global-config"
@@ -26,8 +26,8 @@
         "server/packages/adapter": {
             "component": "server-adapter"
         },
-        "server/apps/core": {
-            "component": "server-core-app"
+        "server/services/core": {
+            "component": "server-core"
         },
         "server/packages/kit": {
             "component": "server-kit"
@@ -44,12 +44,12 @@
             "components": [
                 "client-vue",
                 "client-web-config",
-                "client-web-app",
-                "global-authup-app",
+                "client-web",
+                "global-authup",
                 "global-config",
                 "global-core",
                 "server-adapter",
-                "server-core-app",
+                "server-core",
                 "server-kit"
             ]
         }
