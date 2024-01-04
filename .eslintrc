@@ -21,7 +21,7 @@
                     "**/test/**/*.spec.js",
                     "**/test/**/*.spec.ts",
                     "**/rollup.config.mjs",
-                    "client/apps/web/**",
+                    "client/services/web/**",
                     "client/packages/vue/**"
                 ]
             }

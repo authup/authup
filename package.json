@@ -9,11 +9,11 @@
     "license": "MIT",
     "version": "1.0.0",
     "workspaces": [
-        "client/apps/*",
+        "client/services/*",
         "client/packages/*",
-        "global/apps/*",
+        "global/services/*",
         "global/packages/*",
-        "server/apps/*",
+        "server/services/*",
         "server/packages/*"
     ],
     "keywords": [

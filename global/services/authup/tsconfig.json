@@ -5,7 +5,7 @@
             "@authup/config": ["./global/packages/config/src"],
             "@authup/core": ["./global/packages/core/src"],
             "@authup/client-web-config": ["./client/packages/web-config/src"],
-            "@authup/server-core-app": ["./server/apps/core/src"]
+            "@authup/server-core-app": ["./server/services/core/src"]
         }
     }
 }
