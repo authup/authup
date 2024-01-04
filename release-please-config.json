@@ -4,6 +4,8 @@
     "release-type": "node",
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
+    "prerelease": true,
+    "prerelease-type": "beta",
     "packages": {
         "client/services/web": {
             "component": "client-web"
