@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0](https://github.com/authup/authup/compare/server-adapter-v0.45.10...server-adapter-v1.0.0) (2024-01-04)
+
+
+### Features
+
+* apply stricter linting rules ([#1611](https://github.com/authup/authup/issues/1611)) ([af0774d](https://github.com/authup/authup/commit/af0774d72a91d52f92b4d51c8391feca0f76f540))
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.1.3 to 5.2.0 ([#1593](https://github.com/authup/authup/issues/1593)) ([b29f72d](https://github.com/authup/authup/commit/b29f72d1d89c87befb8efd5bd611d2dd78e165cf))
+* version range in peer dependency section for internal packages ([ef95901](https://github.com/authup/authup/commit/ef9590163463f1cc8c230f12d315ecc44b9c3454))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0
+    * @authup/server-kit bumped from ^0.45.10 to ^1.0.0
+  * peerDependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0
+    * @authup/server-kit bumped from ^0.45.10 to ^1.0.0
+
 ## 0.45.10
 
 ### Patch Changes
