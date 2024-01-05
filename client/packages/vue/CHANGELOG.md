@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.0](https://github.com/authup/authup/compare/client-vue-v0.45.10...client-vue-v1.0.0-beta.0) (2024-01-05)
+
+
+### Features
+
+* apply stricter linting rules ([#1611](https://github.com/authup/authup/issues/1611)) ([af0774d](https://github.com/authup/authup/commit/af0774d72a91d52f92b4d51c8391feca0f76f540))
+* migrated from vue-layout to vuecs ([387e1e9](https://github.com/authup/authup/commit/387e1e940c3db69e84ef507df987d1fb84ffe96c))
+* prefix & reogranize components ([#1610](https://github.com/authup/authup/issues/1610)) ([0e4c6ee](https://github.com/authup/authup/commit/0e4c6eeacad42f5a3ca96e3172546e442480047b))
+
+
+### Bug Fixes
+
+* relational resource componentns slot rendering ([b28de46](https://github.com/authup/authup/commit/b28de468f87a73b5402ee113f5a3caa11283bf5e))
+* version range in peer dependency section for internal packages ([ef95901](https://github.com/authup/authup/commit/ef9590163463f1cc8c230f12d315ecc44b9c3454))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0-beta.0
+  * peerDependencies
+    * @authup/core bumped from ^0.45.10 to ^1.0.0-beta.0
+
 ## 0.45.10
 
 ### Patch Changes
