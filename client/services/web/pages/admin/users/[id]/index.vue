@@ -4,7 +4,7 @@ import { AUserForm, AUserPasswordForm } from '@authup/client-vue';
 import type { User } from '@authup/core';
 import type { PropType } from 'vue';
 import {
-    defineNuxtComponent, definePageMeta, resolveComponent,
+    defineNuxtComponent, definePageMeta,
 } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
