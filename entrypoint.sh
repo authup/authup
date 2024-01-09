@@ -31,12 +31,12 @@ case "${SERVICE}" in
     server/core)
         export HOST=0.0.0.0
         export PORT=3000
-        exec npm run cli --workspace=server/apps/core -- "${COMMAND}" "$@"
+        exec npm run cli --workspace=server/services/core -- "${COMMAND}" "$@"
         ;;
     client/web)
         export NUXT_HOST=0.0.0.0
         export NUXT_PORT=3000
-        exec npm run "${COMMAND}" --workspace=client/apps/web
+        exec npm run "${COMMAND}" --workspace=client/services/web
         ;;
     *) echo "Unknown service: ${SERVICE}";;
 esac
