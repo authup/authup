@@ -50,7 +50,7 @@
         "@authup/server-kit": "^1.0.0-beta.0",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.4.1",
-        "@hapic/vault": "^2.3.0",
+        "@hapic/vault": "^2.3.2",
         "@routup/basic": "^1.3.0",
         "@routup/decorators": "^3.3.0",
         "@routup/prometheus": "^2.3.0",
