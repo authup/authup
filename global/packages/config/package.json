@@ -1,6 +1,6 @@
 {
     "name": "@authup/config",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.1",
     "description": "This package contains the config helper module.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -41,7 +41,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core": "^1.0.0-beta.0",
+        "@authup/core": "^1.0.0-beta.1",
         "locter": "^1.2.3",
         "pathe": "^1.1.1",
         "smob": "^1.4.1"

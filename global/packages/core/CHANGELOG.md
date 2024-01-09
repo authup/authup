@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.0.0-beta.1](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.0...global-core-v1.0.0-beta.1) (2024-01-09)
+
+
+### Bug Fixes
+
+* **deps:** bump @hapic/oauth2 from 2.4.0 to 2.4.1 ([#1628](https://github.com/authup/authup/issues/1628)) ([e963096](https://github.com/authup/authup/commit/e963096552ff0fca2e9685d6d7712d0d6f5202a7))
+* **deps:** bump @hapic/vault from 2.3.1 to 2.3.2 ([#1629](https://github.com/authup/authup/issues/1629)) ([d9d3c25](https://github.com/authup/authup/commit/d9d3c25e46df759a34dbd393f01e0a84e8dfc9b9))
+* **deps:** bump hapic from 2.4.0 to 2.5.0 ([#1627](https://github.com/authup/authup/issues/1627)) ([4adea8e](https://github.com/authup/authup/commit/4adea8e84bb0188cac35be82bca77379f32db7cd))
+
 ## [1.0.0-beta.0](https://github.com/authup/authup/compare/global-core-v0.45.10...global-core-v1.0.0-beta.0) (2024-01-05)
 
 
