@@ -8,6 +8,5 @@
 export * from './crypto';
 export * from './domain-event';
 export * from './logger';
-export * from './proxy';
 export * from './smtp';
 export * from './utils';

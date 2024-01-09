@@ -6,7 +6,6 @@
  */
 
 import { buildIdentityProviderAuthorizeCallbackPath, isObject } from '@authup/core';
-import { buildHTTPClientConfigForProxy } from '@authup/server-kit';
 import type { JwtPayload, Options } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';
@@ -30,11 +29,6 @@ export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProvi
         this.client = new OAuth2Client({
             options: clientOptions,
         });
-    }
-
-    async setupProxy() {
-        const endpointURL = this.client.options.tokenEndpoint || this.client.options.authorizationEndpoint;
-        this.client.defaults = await buildHTTPClientConfigForProxy(endpointURL);
     }
 
     public buildAuthorizeURL() : string {

@@ -20,7 +20,6 @@ export type IdentityProviderFlowIdentity = {
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
 
 export interface IOAuth2IdentityProviderFlow {
-    setupProxy() : Promise<void>;
     buildAuthorizeURL() : string;
     getIdentityForRequest(request: Request) : Promise<IdentityProviderFlowIdentity>;
 }

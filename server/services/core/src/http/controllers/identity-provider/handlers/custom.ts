@@ -71,7 +71,6 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     }
 
     const flow = createOAuth2IdentityProviderFlow(entity);
-    await flow.setupProxy();
 
     const identity = await flow.getIdentityForRequest(req);
 
