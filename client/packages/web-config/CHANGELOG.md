@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.1](https://github.com/authup/authup/compare/client-web-config-v1.0.0-beta.0...client-web-config-v1.0.0-beta.1) (2024-01-09)
+
+
+### Miscellaneous Chores
+
+* **client-web-config:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.0 to ^1.0.0-beta.1
+
 ## 1.0.0-beta.0 (2024-01-05)
 
 

@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.1](https://github.com/authup/authup/compare/client-vue-v1.0.0-beta.0...client-vue-v1.0.0-beta.1) (2024-01-09)
+
+
+### Miscellaneous Chores
+
+* **client-vue:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.0 to ^1.0.0-beta.1
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.0 to ^1.0.0-beta.1
+
 ## [1.0.0-beta.0](https://github.com/authup/authup/compare/client-vue-v0.45.10...client-vue-v1.0.0-beta.0) (2024-01-05)
 
 

@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.1](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.0...server-kit-v1.0.0-beta.1) (2024-01-09)
+
+
+### Bug Fixes
+
+* remove proxy sub-module ([d52cd63](https://github.com/authup/authup/commit/d52cd63864ab32a3035ba803487de413ccad3df7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.0 to ^1.0.0-beta.1
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.0 to ^1.0.0-beta.1
+
 ## [1.0.0-beta.0](https://github.com/authup/authup/compare/server-kit-v0.45.10...server-kit-v1.0.0-beta.0) (2024-01-05)
 
 

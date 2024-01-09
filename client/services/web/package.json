@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.1",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
     "files": [
@@ -24,10 +24,10 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/client-vue": "^1.0.0-beta.0",
-        "@authup/config": "^1.0.0-beta.0",
-        "@authup/core": "^1.0.0-beta.0",
-        "@authup/client-web-config": "^1.0.0-beta.0",
+        "@authup/client-vue": "^1.0.0-beta.1",
+        "@authup/config": "^1.0.0-beta.1",
+        "@authup/core": "^1.0.0-beta.1",
+        "@authup/client-web-config": "^1.0.0-beta.1",
         "@fortawesome/fontawesome-free": "^6.4.2",
         "@hapic/oauth2": "^2.4.1",
         "@nuxtjs/google-fonts": "^3.1.1",

@@ -1,11 +1,11 @@
 {
-    "global/services/authup": "1.0.0-beta.0",
-    "global/packages/core": "1.0.0-beta.0",
-    "client/services/web": "1.0.0-beta.0",
-    "client/packages/vue": "1.0.0-beta.0",
-    "server/packages/adapter": "1.0.0-beta.0",
-    "server/packages/kit": "1.0.0-beta.0",
-    "server/services/core": "1.0.0-beta.0",
-    "client/packages/web-config": "1.0.0-beta.0",
-    "global/packages/config": "1.0.0-beta.0"
+    "global/services/authup": "1.0.0-beta.1",
+    "global/packages/core": "1.0.0-beta.1",
+    "client/services/web": "1.0.0-beta.1",
+    "client/packages/vue": "1.0.0-beta.1",
+    "server/packages/adapter": "1.0.0-beta.1",
+    "server/packages/kit": "1.0.0-beta.1",
+    "server/services/core": "1.0.0-beta.1",
+    "client/packages/web-config": "1.0.0-beta.1",
+    "global/packages/config": "1.0.0-beta.1"
 }
