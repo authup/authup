@@ -62,13 +62,13 @@
         "std-env": "^3.7.0"
     },
     "devDependencies": {
-        "@hapic/oauth2": "^2.3.0",
+        "@hapic/oauth2": "^2.4.1",
         "@hapic/vault": "^2.3.0",
         "hapic": "^2.3.0",
         "rapiq": "^0.9.0"
     },
     "peerDependencies": {
-        "@hapic/oauth2": "^2.3.0",
+        "@hapic/oauth2": "^2.4.1",
         "@hapic/vault": "^2.3.0",
         "hapic": "^2.3.0",
         "rapiq": ">=0.8.0 <1.0.0"
