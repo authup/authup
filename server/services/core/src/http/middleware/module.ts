@@ -48,7 +48,7 @@ export function registerMiddlewares(router: Router) {
         registerSwaggerMiddleware(router, {
             documentPath: path.join(config.writableDirectoryPath, 'swagger.json'),
             options: {
-                baseUrl: config.publicUrl,
+                baseURL: config.publicUrl,
                 ...transformBoolToEmptyObject(swagger),
             },
         });

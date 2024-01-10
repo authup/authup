@@ -19,9 +19,7 @@ type SwaggerMiddlewareOptions = {
     mountPath: string,
     options?: UIOptions
 };
-export function registerSwaggerMiddleware(router: Router, input?: Partial<SwaggerMiddlewareOptions>) {
-    input = input || {};
-
+export function registerSwaggerMiddleware(router: Router, input: Partial<SwaggerMiddlewareOptions> = {}) {
     const mountPath : string = input.mountPath || '/docs';
     let documentPath : string;
     if (input.documentPath) {
