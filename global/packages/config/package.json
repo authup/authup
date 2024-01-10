@@ -43,7 +43,7 @@
     "dependencies": {
         "@authup/core": "^1.0.0-beta.1",
         "locter": "^1.3.0",
-        "pathe": "^1.1.1",
+        "pathe": "^1.1.2",
         "smob": "^1.4.1"
     },
     "publishConfig": {
