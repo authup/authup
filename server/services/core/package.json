@@ -72,7 +72,7 @@
         "routup": "^3.2.0",
         "smob": "^1.4.1",
         "typeorm": "^0.3.19",
-        "typeorm-extension": "^3.1.1",
+        "typeorm-extension": "^3.3.0",
         "winston": "^3.11.0",
         "yargs": "^17.7.2",
         "zod": "^3.22.4"
