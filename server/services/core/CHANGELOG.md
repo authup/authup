@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.2](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.1...server-core-v1.0.0-beta.2) (2024-01-14)
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/basic from 1.3.0 to 1.3.1 ([#1636](https://github.com/authup/authup/issues/1636)) ([0e3acb1](https://github.com/authup/authup/commit/0e3acb146a984e795e63c32149862a0de14af2eb))
+* **deps:** bump @routup/decorators from 3.3.0 to 3.3.1 ([#1637](https://github.com/authup/authup/issues/1637)) ([4ee0314](https://github.com/authup/authup/commit/4ee031486e156b1def4e8dd887ce502552505f94))
+* **deps:** bump @routup/swagger from 2.3.1 to 2.3.2 ([#1635](https://github.com/authup/authup/issues/1635)) ([f889e38](https://github.com/authup/authup/commit/f889e3869b3cd8ddfa6c7329339de42a91d170d1))
+* **deps:** bump @routup/swagger from 2.3.2 to 2.3.3 ([#1644](https://github.com/authup/authup/issues/1644)) ([c3dfa71](https://github.com/authup/authup/commit/c3dfa71509677b2dc368a721de311be7061ebe18))
+* **deps:** bump locter from 1.2.3 to 1.3.0 ([#1632](https://github.com/authup/authup/issues/1632)) ([6c1ced2](https://github.com/authup/authup/commit/6c1ced2a309a3719970a837c07459511a9084e48))
+* **deps:** bump typeorm-extension from 3.2.0 to 3.3.0 ([#1642](https://github.com/authup/authup/issues/1642)) ([55ee6a5](https://github.com/authup/authup/commit/55ee6a5cd62f890ffdb294ec38dfc75c36ec5a64))
+* setting publicURL to swagger http middleware ([d5eabbd](https://github.com/authup/authup/commit/d5eabbd2c0fbf020ed0dd7c698e7be59f395feff))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.1 to ^1.0.0-beta.2
+    * @authup/core bumped from ^1.0.0-beta.1 to ^1.0.0-beta.2
+    * @authup/server-kit bumped from ^1.0.0-beta.1 to ^1.0.0-beta.2
+
 ## [1.0.0-beta.1](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.0...server-core-v1.0.0-beta.1) (2024-01-09)
 
 
