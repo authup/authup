@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.2](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.1...global-config-v1.0.0-beta.2) (2024-01-14)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 1.2.3 to 1.3.0 ([#1632](https://github.com/authup/authup/issues/1632)) ([6c1ced2](https://github.com/authup/authup/commit/6c1ced2a309a3719970a837c07459511a9084e48))
+* **deps:** bump pathe from 1.1.1 to 1.1.2 ([#1639](https://github.com/authup/authup/issues/1639)) ([50f631b](https://github.com/authup/authup/commit/50f631b600a7d774f212b9a67883d5a5b139555c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.1 to ^1.0.0-beta.2
+
 ## [1.0.0-beta.1](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.0...global-config-v1.0.0-beta.1) (2024-01-09)
 
 
