@@ -84,7 +84,7 @@
         "@types/supertest": "^6.0.2",
         "@types/yargs": "^17.0.32",
         "jest-serial-runner": "^1.2.1",
-        "supertest": "^6.3.3",
+        "supertest": "^6.3.4",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {
