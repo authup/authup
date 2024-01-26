@@ -58,7 +58,7 @@
         "@routup/swagger": "^2.3.4",
         "better-sqlite3": "^9.3.0",
         "cors": "^2.8.5",
-        "dotenv": "^16.3.1",
+        "dotenv": "^16.4.1",
         "dycraft": "^1.1.0",
         "express-validator": "^7.0.1",
         "hapic": "^2.5.0",
