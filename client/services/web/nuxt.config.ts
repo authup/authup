@@ -54,6 +54,5 @@ export default defineNuxtConfig({
             },
         ],
         '@pinia/nuxt',
-        './modules/config',
     ],
 });

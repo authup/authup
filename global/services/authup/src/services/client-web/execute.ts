@@ -54,6 +54,14 @@ export function buildWebAppExecutionContext(
         env.PORT = `${config.port}`;
     }
 
+    if (config.apiUrl) {
+        env.API_URL = config.apiUrl;
+    }
+
+    if (config.publicUrl) {
+        env.PUBLIC_URL = config.publicUrl;
+    }
+
     let command : string;
 
     const modulePath = findModulePath(ServicePackageName.CLIENT_WEB);
