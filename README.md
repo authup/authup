@@ -53,18 +53,18 @@ The **recommended** and optimal way to set up authup is using docker.
 To run the backend application with default settings on http://localhost:3001/, execute the following command:
 
 ```shell
-$ docker run authup/authup:latest \
-  -v authup:/usr/src/writable
+$ docker run \
+  -v authup:/usr/src/writable \
   -p 3000:3001 \
-  server/core start
+  authup/authup:latest server/core start
 ```
 
 To run the frontend application with default settings on http://localhost:3000/, execute the following command:
 
 ```shell
-$ docker run authup/authup:latest
+$ docker run \
   -p 3000:3000 \
-  client/web start
+  authup/authup:latest client/web start
 ```
 
 ### Bare Metal
