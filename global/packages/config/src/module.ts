@@ -12,7 +12,6 @@ import {
 } from '@authup/core';
 import {
     buildFilePath,
-    getModuleExport,
     load,
     locateMany,
 } from 'locter';
@@ -138,9 +137,9 @@ export class Container {
 
         const file = await load(input);
         const fileName = path.basename(input);
-        const fileExport = getModuleExport(file);
+        const data = file.default ? file.default : file;
 
-        if (!isObject(fileExport.value)) {
+        if (!isObject(data)) {
             return;
         }
 
@@ -151,7 +150,7 @@ export class Container {
         if (parts.length === 0) {
             let found : boolean = false;
             for (let j = 0; j < this.groups.length; j++) {
-                const group = fileExport.value[this.groups[j]];
+                const group = data[this.groups[j]];
                 if (isObject(group)) {
                     this.items.push(...this.extractGroupApps(group, {
                         path: input,
@@ -164,11 +163,11 @@ export class Container {
 
             if (
                 !found &&
-                isObject(fileExport.value)
+                isObject(data)
             ) {
                 this.items.push({
                     name: 'default',
-                    data: fileExport.value,
+                    data,
                     path: input,
                 });
             }
@@ -179,8 +178,8 @@ export class Container {
         if (parts.length === 1) {
             const [group] = parts;
 
-            if (isObject(fileExport.value)) {
-                this.items.push(...this.extractGroupApps(fileExport.value, {
+            if (isObject(data)) {
+                this.items.push(...this.extractGroupApps(data, {
                     path: input,
                     group,
                 }));
@@ -198,11 +197,11 @@ export class Container {
                 return;
             }
 
-            if (isObject(fileExport.value)) {
+            if (isObject(data)) {
                 this.items.push({
                     name,
                     group,
-                    data: fileExport.value,
+                    data,
                     path: input,
                 });
             }
