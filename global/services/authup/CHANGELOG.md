@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.3](https://github.com/authup/authup/compare/global-authup-v1.0.0-beta.2...global-authup-v1.0.0-beta.3) (2024-02-06)
+
+
+### Bug Fixes
+
+* remove nuxt module for loading configuration file ([3ad5f8c](https://github.com/authup/authup/commit/3ad5f8ca00ecbefb79ba41ea0784e6a36e38492a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/client-web-config bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/config bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/server-core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+
 ## [1.0.0-beta.2](https://github.com/authup/authup/compare/global-authup-v1.0.0-beta.1...global-authup-v1.0.0-beta.2) (2024-01-14)
 
 

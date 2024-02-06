@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.3](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.2...server-core-v1.0.0-beta.3) (2024-02-06)
+
+
+### Bug Fixes
+
+* bump locter to v2 & reset lock file ([d129f14](https://github.com/authup/authup/commit/d129f14fcfbd4e20b07d15dd87691452f0941842))
+* **deps:** bump @routup/swagger from 2.3.3 to 2.3.4 ([#1675](https://github.com/authup/authup/issues/1675)) ([5fb5373](https://github.com/authup/authup/commit/5fb537330b8113622b50989cdc736cead9841644))
+* **deps:** bump better-sqlite3 from 9.2.2 to 9.3.0 ([#1662](https://github.com/authup/authup/issues/1662)) ([a1e8763](https://github.com/authup/authup/commit/a1e876332081e36b0b16fe7859cec2ba3463c7ab))
+* **deps:** bump dotenv from 16.3.1 to 16.4.1 ([#1678](https://github.com/authup/authup/issues/1678)) ([ba5421c](https://github.com/authup/authup/commit/ba5421c0226ead1660fbe70e7d1c1a642b5892bd))
+* **deps:** bump typeorm from 0.3.19 to 0.3.20 ([#1677](https://github.com/authup/authup/issues/1677)) ([e929396](https://github.com/authup/authup/commit/e929396712c0618353aff39cae3043ab9f0e585b))
+* **deps:** bump typeorm-extension from 3.3.0 to 3.4.0 ([#1674](https://github.com/authup/authup/issues/1674)) ([87ca11b](https://github.com/authup/authup/commit/87ca11b0dbd5fa474cda0a61efaff60f30aec047))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/server-kit bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+
 ## [1.0.0-beta.2](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.1...server-core-v1.0.0-beta.2) (2024-01-14)
 
 

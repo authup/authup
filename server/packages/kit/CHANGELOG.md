@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.3](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.2...server-kit-v1.0.0-beta.3) (2024-02-06)
+
+
+### Bug Fixes
+
+* bump locter to v2 & reset lock file ([d129f14](https://github.com/authup/authup/commit/d129f14fcfbd4e20b07d15dd87691452f0941842))
+* **deps:** bump nodemailer from 6.9.8 to 6.9.9 ([#1694](https://github.com/authup/authup/issues/1694)) ([544553d](https://github.com/authup/authup/commit/544553d72eb7e369f05b0a471e3c55733923b129))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+
 ## [1.0.0-beta.2](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.1...server-kit-v1.0.0-beta.2) (2024-01-14)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.3](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.2...global-config-v1.0.0-beta.3) (2024-02-06)
+
+
+### Bug Fixes
+
+* bump locter to v2 & reset lock file ([d129f14](https://github.com/authup/authup/commit/d129f14fcfbd4e20b07d15dd87691452f0941842))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+
 ## [1.0.0-beta.2](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.1...global-config-v1.0.0-beta.2) (2024-01-14)
 
 

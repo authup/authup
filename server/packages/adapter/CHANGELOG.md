@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.3](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.2...server-adapter-v1.0.0-beta.3) (2024-02-06)
+
+
+### Miscellaneous Chores
+
+* **server-adapter:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/server-kit bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+    * @authup/server-kit bumped from ^1.0.0-beta.2 to ^1.0.0-beta.3
+
 ## [1.0.0-beta.2](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.1...server-adapter-v1.0.0-beta.2) (2024-01-14)
 
 
