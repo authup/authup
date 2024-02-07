@@ -61,7 +61,7 @@ export async function buildOAuth2BearerTokenResponse(
             token,
             key,
             {
-                keyid: key.id,
+                keyId: key.id,
                 expiresIn: maxAge || accessTokenMaxAge,
             },
         );

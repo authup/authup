@@ -42,7 +42,14 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static notActiveBefore(date: string | Date) {
+    static notActiveBefore(date?: string | Date) {
+        if (typeof date === 'undefined') {
+            return new TokenError({
+                code: ErrorCode.TOKEN_INACTIVE,
+                message: 'The token is not active yet.',
+            });
+        }
+
         return new TokenError({
             code: ErrorCode.TOKEN_INACTIVE,
             message: `The token is not active before: ${date}.`,

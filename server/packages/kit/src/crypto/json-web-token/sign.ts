@@ -5,16 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { sign } from 'jsonwebtoken';
+import type { JWTClaims } from '@authup/core';
 import { KeyType, TokenError } from '@authup/core';
+import type { Claims } from '@node-rs/jsonwebtoken';
+import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { isKeyPair, useKeyPair } from '../key-pair';
 import type { TokenSignOptions } from './type';
+import { transformJWTAlgorithm } from './utils';
 
-export async function signToken(
-    payload: string | object | Buffer | Record<string, any>,
-    context: TokenSignOptions,
-): Promise<string> {
-    context.expiresIn = context.expiresIn || 3600;
+const getUtcTimestamp = () => Math.floor(new Date().getTime() / 1000);
+
+export async function signToken(data: JWTClaims, context: TokenSignOptions): Promise<string> {
+    const claims : Claims = {};
+    claims.data = data;
+    claims.exp = data.exp ?? getUtcTimestamp() + 3600;
+    claims.iat = data.iat ?? getUtcTimestamp();
+    claims.iss = data.iss;
+    claims.jti = data.jti;
+    claims.nbf = data.nbf;
+    claims.sub = data.sub;
+    claims.aud = Array.isArray(data.aud) ? undefined : data.aud;
 
     switch (context.type) {
         case KeyType.RSA:
@@ -24,19 +34,33 @@ export async function signToken(
                 keyPair :
                 await useKeyPair(keyPair);
 
+            let algorithm : Algorithm;
+
             if (type === KeyType.RSA) {
-                options.algorithm = options.algorithm || 'RS256';
+                algorithm = options.algorithm ?
+                    transformJWTAlgorithm(options.algorithm) :
+                    Algorithm.RS256;
             } else {
-                options.algorithm = options.algorithm || 'ES256';
+                algorithm = options.algorithm ?
+                    transformJWTAlgorithm(options.algorithm) :
+                    Algorithm.ES256;
             }
 
-            return sign(payload, privateKey, options);
+            return sign(claims, privateKey, {
+                algorithm,
+                keyId: options.keyId,
+            });
         }
         case KeyType.OCT: {
             const { type, secret, ...options } = context;
-            options.algorithm = options.algorithm || 'HS256';
+            const algorithm : Algorithm = options.algorithm ?
+                transformJWTAlgorithm(options.algorithm) :
+                Algorithm.HS256;
 
-            return sign(payload, secret, options);
+            return sign(claims, secret, {
+                algorithm,
+                keyId: options.keyId,
+            });
         }
     }
 

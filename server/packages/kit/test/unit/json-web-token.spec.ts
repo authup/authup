@@ -7,21 +7,30 @@
 
 import path from 'path';
 import type { KeyPairOptions } from '../../src';
-import { decodeToken, deleteKeyPair, signToken } from '../../src';
+import {
+    decodeTokenHeader, deleteKeyPair, signToken, verifyToken,
+} from '../../src';
 
 describe('src/json-web-token', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
-    it('should sign and decrypt json webtoken', async () => {
+    it('should sign and decrypt jsonwebtoken', async () => {
         const data = { text: 'secretText' };
 
-        const signedText = await signToken(data, {
+        const signedText = await signToken({
+            data,
             type: 'rsa',
             keyPair: {
                 directory,
             },
         });
-        const decoded = decodeToken(signedText) as Record<string, any>;
+
+        const decoded = await verifyToken(signedText, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
@@ -40,25 +49,44 @@ describe('src/json-web-token', () => {
             directory,
         };
 
-        const signedText = await signToken(data, {
+        const signedText = await signToken({
+            data,
             type: 'rsa',
             keyPair: keyPairOptions,
         });
 
-        const decoded = decodeToken(signedText);
+        const decoded = await verifyToken(signedText, {
+            type: 'rsa',
+            keyPair: keyPairOptions,
+        });
 
         expect(decoded).toBeDefined();
-
-        if (
-            typeof decoded === 'object' &&
-            decoded !== null
-        ) {
-            expect(decoded.text).toEqual(data.text);
-        }
+        expect(decoded.text).toEqual(data.text);
 
         expect(decoded).toHaveProperty('iat');
         expect(decoded).toHaveProperty('exp');
 
         await deleteKeyPair(keyPairOptions);
+    });
+
+    it('should sign and decode header', async () => {
+        const data = { text: 'secretText' };
+
+        const signedText = await signToken({
+            data,
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        const header = decodeTokenHeader(signedText);
+        expect(header).toBeDefined();
+        expect(header.typ).toEqual('JWT');
+        expect(header.alg).toEqual('RS256');
+
+        await deleteKeyPair({
+            directory,
+        });
     });
 });

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { compare as compareMethod } from 'bcrypt';
+import { compare as compareMethod } from '@node-rs/bcrypt';
 
 export async function compare(value: string, hashedValue: string) : Promise<boolean> {
     return compareMethod(value, hashedValue);

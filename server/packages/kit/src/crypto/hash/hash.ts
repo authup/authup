@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hash as hashMethod } from 'bcrypt';
+import { hash as hashMethod } from '@node-rs/bcrypt';
 
-export async function hash(str: string, saltOrRounds: number | string = 10) : Promise<string> {
-    return hashMethod(str, saltOrRounds);
+export async function hash(str: string, rounds: number = 10) : Promise<string> {
+    return hashMethod(str, rounds);
 }
