@@ -10,7 +10,7 @@ import {
     read,
     readArray,
     readBool,
-    readNumber,
+    readInt,
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
@@ -73,7 +73,7 @@ export function readConfigFromEnv() : ConfigInput {
         options.host = host;
     }
 
-    const port = readNumber(EnvironmentVariableName.PORT);
+    const port = readInt(EnvironmentVariableName.PORT);
     if (port) {
         options.port = Number.parseInt(`${port}`, 10);
     }
@@ -88,12 +88,12 @@ export function readConfigFromEnv() : ConfigInput {
         options.authorizeRedirectUrl = authorizeRedirectURL;
     }
 
-    const accessTokenMaxAge = readNumber(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
+    const accessTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
     if (typeof accessTokenMaxAge !== 'undefined') {
         options.tokenMaxAgeAccessToken = accessTokenMaxAge;
     }
 
-    const refreshTokenMaxAge = readNumber(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
+    const refreshTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
     if (typeof refreshTokenMaxAge !== 'undefined') {
         options.tokenMaxAgeAccessToken = refreshTokenMaxAge;
     }
