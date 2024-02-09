@@ -42,7 +42,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/core": "^1.0.0-beta.3",
-        "envix": "^1.2.0",
+        "envix": "^1.3.0",
         "locter": "^2.0.2",
         "pathe": "^1.1.2",
         "smob": "^1.4.1"
