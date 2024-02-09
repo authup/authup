@@ -6,10 +6,9 @@
  */
 
 import {
-    getEnv,
-    getEnvArray,
-    isObject,
-} from '@authup/core';
+    read,
+    readArray,
+} from 'envix';
 import {
     buildFilePath,
     load,
@@ -17,7 +16,7 @@ import {
 } from 'locter';
 import path from 'node:path';
 import { normalize } from 'pathe';
-import { assign } from 'smob';
+import { assign, isObject } from 'smob';
 import { EnvKey } from './constants';
 import { deserializeKey } from './key';
 import type {
@@ -94,15 +93,18 @@ export class Container {
             '.',
         ];
 
-        const writableDirectoryPath = getEnv(EnvKey.WRITABLE_DIRECTORY_PATH);
+        const writableDirectoryPath = read(EnvKey.WRITABLE_DIRECTORY_PATH);
         if (writableDirectoryPath) {
             directories.push(normalize(writableDirectoryPath));
         } else {
             directories.push('writable');
         }
 
-        const envDirectories = getEnvArray(EnvKey.CONFIG_DIRECTORY);
-        if (envDirectories) {
+        const envDirectories = readArray(EnvKey.CONFIG_DIRECTORY);
+        if (
+            envDirectories &&
+            directories.length > 0
+        ) {
             for (let i = 0; i < envDirectories.length; i++) {
                 directories.push(normalize(envDirectories[i]));
             }
@@ -110,8 +112,11 @@ export class Container {
 
         const filePaths = await this.findFilePaths(directories);
 
-        const envFilePaths = getEnvArray(EnvKey.CONFIG_FILE);
-        if (envFilePaths) {
+        const envFilePaths = readArray(EnvKey.CONFIG_FILE);
+        if (
+            envFilePaths &&
+            envFilePaths.length > 0
+        ) {
             for (let i = 0; i < envFilePaths.length; i++) {
                 filePaths.push(normalize(envFilePaths[i]));
             }

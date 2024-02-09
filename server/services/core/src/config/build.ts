@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { extendObject, getEnv, makeURLPublicAccessible } from '@authup/core';
+import { extendObject, makeURLPublicAccessible } from '@authup/core';
 import { defineGetter, dycraft } from 'dycraft';
+import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
 import { merge } from 'smob';
@@ -19,7 +20,7 @@ export function buildConfig(
 ): Config {
     const config = dycraft({
         defaults: {
-            env: getEnv('NODE_ENV', 'development'),
+            env: read('NODE_ENV', 'development'),
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
 

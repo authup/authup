@@ -5,51 +5,51 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { getEnv, getEnvInt } from '@authup/core';
+import { oneOf, read, readInt } from 'envix';
 import type { ConfigInput } from './type';
 
 export function readConfigFromEnv() : ConfigInput {
     const config : ConfigInput = {};
 
-    const port = getEnvInt([
-        'UI_PORT',
-        'NITRO_UI_PORT',
-        'NUXT_UI_PORT',
-        'NUXT_PUBLIC_UI_PORT',
-        'PORT',
-        'NITRO_PORT',
-        'NUXT_PORT',
-        'NUXT_PUBLIC_PORT',
+    const port = oneOf([
+        readInt('UI_PORT'),
+        readInt('NITRO_UI_PORT'),
+        readInt('NUXT_UI_PORT'),
+        readInt('NUXT_PUBLIC_UI_PORT'),
+        readInt('PORT'),
+        readInt('NITRO_PORT'),
+        readInt('NUXT_PORT'),
+        readInt('NUXT_PUBLIC_PORT'),
     ]);
 
     if (typeof port !== 'undefined') {
         config.port = port;
     }
 
-    const host = getEnv([
-        'HOST',
-        'NITRO_HOST',
-        'NUXT_HOST',
+    const host = oneOf([
+        read('HOST'),
+        read('NITRO_HOST'),
+        read('NUXT_HOST'),
     ]);
 
     if (host) {
         config.host = host;
     }
 
-    const apiUrl = getEnv([
-        'API_URL',
-        'NUXT_API_URL',
-        'NUXT_PUBLIC_API_URL',
+    const apiUrl = oneOf([
+        read('API_URL'),
+        read('NUXT_API_URL'),
+        read('NUXT_PUBLIC_API_URL'),
     ]);
 
     if (apiUrl) {
         config.apiUrl = apiUrl;
     }
 
-    const publicURL = getEnv([
-        'PUBLIC_URL',
-        'NUXT_PUBLIC_URL',
-        'NUXT_PUBLIC_PUBLIC_URL',
+    const publicURL = oneOf([
+        read('PUBLIC_URL'),
+        read('NUXT_PUBLIC_URL'),
+        read('NUXT_PUBLIC_PUBLIC_URL'),
     ]);
 
     if (publicURL) {
