@@ -7,6 +7,7 @@
 
 import type { Client } from 'ldapjs';
 import { promisify } from 'node:util';
+import type { StartedTestContainer } from 'testcontainers';
 import { LdapIdentityProviderFlow } from '../../../src';
 
 const addClient = async (client: Client) => {
@@ -36,9 +37,11 @@ const dropClient = async (client: Client) => {
 describe('src/domains/identity-provider/flow/ldap', () => {
     let flow : LdapIdentityProviderFlow;
 
+    const container : StartedTestContainer = globalThis.OPENLDAP_CONTAINER;
+
     beforeAll(async () => {
         flow = new LdapIdentityProviderFlow({
-            url: 'ldap://localhost:389',
+            url: `ldap://${container.getHost()}:${container.getFirstMappedPort()}`,
             admin_username: 'admin',
             admin_password: 'password',
             base_dn: 'dc=example,dc=com',
