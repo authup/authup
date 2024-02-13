@@ -55,7 +55,7 @@ To run the backend application with default settings on http://localhost:3001/, 
 ```shell
 $ docker run \
   -v authup:/usr/src/writable \
-  -p 3000:3001 \
+  -p 3001:3000 \
   authup/authup:latest server/core start
 ```
 
