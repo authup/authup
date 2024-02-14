@@ -53,7 +53,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
         "@authup/core": "^1.0.0-beta.3",
-        "@types/node": "^20.11.16",
+        "@types/node": "^20.11.17",
         "@vitejs/plugin-vue": "^5.0.3",
         "@vuecs/form-controls": "^1.2.0",
         "@vuecs/list-controls": "^1.1.1",
