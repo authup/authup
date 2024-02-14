@@ -34,7 +34,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         });
     }
 
-    async getIdentityFroCredentials(user: string, password: string): Promise<IdentityProviderFlowIdentity> {
+    async getIdentityForCredentials(user: string, password: string): Promise<IdentityProviderFlowIdentity> {
         // verify user & password combination
         await this.bind(user, password);
         await this.unbind();
@@ -59,7 +59,9 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
             this.options.mail_attribute &&
             ldapUser[this.options.mail_attribute]
         ) {
-            identity.email = ldapUser[this.options.mail_attribute];
+            identity.email = Array.isArray(ldapUser[this.options.mail_attribute]) ?
+                ldapUser[this.options.mail_attribute].pop() :
+                ldapUser[this.options.mail_attribute];
         }
 
         try {

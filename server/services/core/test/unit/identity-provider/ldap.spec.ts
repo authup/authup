@@ -80,10 +80,7 @@ describe('src/domains/identity-provider/flow/ldap', () => {
         let client = await flow.bind();
         await addClient(client);
 
-        await flow.bind({
-            username: 'foo',
-            password: 'foo',
-        });
+        await flow.bind('foo', 'foo');
 
         client = await flow.bind();
         await dropClient(client);

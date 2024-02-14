@@ -17,9 +17,9 @@ export type IdentityProviderFlowIdentity = {
     last_name?: string
 };
 
-export type LdapIdentityProviderFlowOptions = IdentityProvider & Partial<LdapIdentityProvider>;
+export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;
 export interface ILdapIdentityProviderFlow {
-    getIdentityFroCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
+    getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
 }
 
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
