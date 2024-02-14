@@ -18,7 +18,7 @@ import {
 import { onChange, useUpdatedAt } from '../../composables';
 import { extendObjectProperties, useValidationTranslator } from '../../core';
 
-export const AIdentityProviderClientFields = defineComponent({
+export const AIdentityProviderOAuth2ClientFields = defineComponent({
     props: {
         entity: {
             type: Object as PropType<Partial<OAuth2IdentityProvider>>,
