@@ -31,6 +31,10 @@ const schema = zod.object({
     group_member_user_attribute: zod.string().optional().nullable(),
 });
 
+/**
+ * @throws ZodError
+ * @param req
+ */
 export function validateLdapIdentityProviderProtocol(
     req: Request,
 ) : Partial<LdapIdentityProvider> {

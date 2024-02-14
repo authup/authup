@@ -37,8 +37,24 @@ export function extractLdapIdentityProviderProtocolAttributes(
     const output : Partial<LdapIdentityProvider> = {};
 
     for (let i = 0; i < attributes.length; i++) {
-        if (hasOwnProperty(input, attributes[i])) {
-            output[attributes[i] as string] = input[attributes[i]];
+        const attribute = attributes[i];
+        if (!hasOwnProperty(input, attribute)) {
+            continue;
+        }
+
+        switch (attribute) {
+            case 'timeout': {
+                output[attributes[i] as string] = parseInt(`${input[attribute]}`, 10);
+                break;
+            }
+            case 'start_tls': {
+                output[attributes[i] as string] = Boolean(input[attribute]);
+                break;
+            }
+            default: {
+                output[attributes[i] as string] = input[attribute];
+                break;
+            }
         }
     }
 

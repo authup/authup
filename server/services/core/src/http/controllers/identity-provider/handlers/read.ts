@@ -42,7 +42,7 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
             ],
         },
         filters: {
-            allowed: ['name', 'realm_id', 'realm.name'],
+            allowed: ['name', 'protocol', 'enabled', 'realm_id', 'realm.name'],
         },
         sort: {
             allowed: ['id', 'created_at', 'updated_at'],

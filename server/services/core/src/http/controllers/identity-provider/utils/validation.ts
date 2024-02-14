@@ -15,6 +15,7 @@ import {
 } from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
+import { ZodError } from 'zod';
 import type { IdentityProviderEntity } from '../../../../domains';
 import {
     RealmEntity,
@@ -26,6 +27,7 @@ import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
     buildRequestValidationErrorMessage,
+    buildRequestValidationErrorMessageForZodError,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -117,7 +119,11 @@ export async function runOauth2ProviderValidation(
                 break;
             }
         }
-    } catch (e) {
+    } catch (e: any) {
+        if (e instanceof ZodError) {
+            throw new BadRequestError(buildRequestValidationErrorMessageForZodError(e));
+        }
+
         if (e instanceof Error) {
             throw new BadRequestError(e.message, {
                 cause: e,

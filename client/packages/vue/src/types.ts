@@ -21,6 +21,7 @@ import type {
     AIdentityProvider,
     AIdentityProviderForm,
     AIdentityProviderIcon,
+    AIdentityProviderLdapForm,
     AIdentityProviderOAuth2Form,
     AIdentityProviderPreset,
     AIdentityProviderProtocol,
@@ -93,6 +94,7 @@ declare module '@vue/runtime-core' {
         AIdentityProviders: typeof AIdentityProviders;
         AIdentityProviderForm: typeof AIdentityProviderForm;
         AIdentityProviderIcon: typeof AIdentityProviderIcon;
+        AIdentityProviderLdapForm: typeof AIdentityProviderLdapForm;
         AIdentityProviderOAuth2Form: typeof AIdentityProviderOAuth2Form;
         AIdentityProviderPreset: typeof AIdentityProviderPreset;
         AIdentityProviderProtocol: typeof AIdentityProviderProtocol;

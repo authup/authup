@@ -61,8 +61,10 @@ export const AIdentityProviderLdapForm = defineComponent({
             const data : Partial<IdentityProvider> = {
                 ...extractVuelidateResultsFromChild($v, 'basic'),
                 ...extractVuelidateResultsFromChild($v, 'connection'),
+                ...extractVuelidateResultsFromChild($v, 'credentials'),
                 ...extractVuelidateResultsFromChild($v, 'group'),
                 ...extractVuelidateResultsFromChild($v, 'user'),
+                protocol: IdentityProviderProtocol.LDAP,
             };
 
             await manager.createOrUpdate(data);

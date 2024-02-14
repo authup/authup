@@ -94,7 +94,13 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                 content: buildFormInput({
                     value: form.timeout,
                     onChange(input) {
-                        form.timeout = input;
+                        const intValue = Number.parseInt(input, 10);
+                        if (!Number.isNaN(intValue)) {
+                            form.timeout = intValue;
+                        }
+                    },
+                    props: {
+                        type: 'number',
                     },
                 }),
             }),

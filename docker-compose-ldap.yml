@@ -8,6 +8,6 @@ services:
         environment:
             LDAP_ORGANISATION: example
             LDAP_DOMAIN: example.com
-            LDAP_ADMIN_USERNAME: admin
-            LDAP_ADMIN_PASSWORD: password
+            LDAP_ADMIN_USERNAME: ldap
+            LDAP_ADMIN_PASSWORD: ldap
             LDAP_BASE_DN: dc=example,dc=com

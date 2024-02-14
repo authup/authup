@@ -10,6 +10,7 @@ import type {
 } from '@authup/core';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
     defineComponent, reactive,
@@ -38,8 +39,12 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         });
 
         const $v = useVuelidate({
-            user: {},
-            password: {},
+            user: {
+                required,
+            },
+            password: {
+                required,
+            },
         }, form, {
             $registerAs: 'credentials',
         });
