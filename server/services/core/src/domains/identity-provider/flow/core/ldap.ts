@@ -5,103 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasOwnProperty } from '@authup/core';
 import {
     AndFilter, EqualityFilter, OrFilter, createClient,
 } from 'ldapjs';
 import type { Client, Filter, SearchOptions } from 'ldapjs';
+import type { ILdapIdentityProviderFlow, IdentityProviderFlowIdentity, LdapIdentityProviderFlowOptions } from '../types';
 
 type LdapUser = {
     dn: string,
     [key: string]: any
 };
 
-type LdapGroup = {
-    [key: string]: any
-};
-
-type LdapIdentityProviderFlowOptions = {
-    /**
-     * Ldap URL
-     */
-    url: string | string[],
-
-    /**
-     * Timeout in milliseconds.
-     *
-     * @default infinity
-     */
-    timeout?: number,
-
-    /**
-     * Establish a secure connection.
-     */
-    startTLS?: boolean,
-
-    /**
-     * TLS Options for establishing a secure connection.
-     */
-    startTLSOptions?: Record<string, any>,
-
-    /**
-     * Base dn of all ldap objects.
-     */
-    base_dn: string,
-
-    /**
-     * The DN of the administrator.
-     *
-     * @example cn=read-only-admin,dc=example,dc=com
-     */
-    admin_username?: string,
-    /**
-     * The password of the administrator.
-     */
-    admin_password?: string,
-
-    /**
-     * The ldap base DN to search the user.
-     * @example dc=example,dc=com
-     */
-    user_base_dn?: string,
-    /**
-     *  It will be used with the value in username to
-     *  construct a ldap filter as ({attribute}={username}) to find the user and get user details in LDAP
-     */
-    username_attribute?: string,
-
-    /**
-     * Ff specified with groupClass, will serve as search base for authenticated user groups
-     */
-    group_base_dn?: string,
-
-    /**
-     * If specified with groupsSearchBase, will be used as objectClass in search filter for authenticated user groups
-     */
-    group_class?: string,
-
-    /**
-     * if specified with groupClass and groupsSearchBase,
-     * will be used as member name (if not specified this defaults to member) in search filter for authenticated user groups
-     */
-    group_member_attribute?: string,
-
-    /**
-     * if specified with groupClass and groupsSearchBase,
-     * will be used as the attribute on the user object (if not specified this defaults to dn) in search filter for authenticated user groups
-     */
-    group_member_user_attribute?: string
-};
-
-type LdapBindOptions = {
-    username?: string,
-    password?: string
-};
-
 function isLdapDn(input: string) {
     return input.includes('cn=') || input.includes('dc=');
 }
 
-export class LdapIdentityProviderFlow {
+export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     protected options : LdapIdentityProviderFlowOptions;
 
     protected client: Client;
@@ -114,7 +34,44 @@ export class LdapIdentityProviderFlow {
         });
     }
 
-    public async bind(options: LdapBindOptions = {}) {
+    async getIdentityFroCredentials(user: string, password: string): Promise<IdentityProviderFlowIdentity> {
+        // verify user & password combination
+        await this.bind(user, password);
+        await this.unbind();
+
+        await this.bind();
+
+        const ldapUser = await this.searchUser(user);
+
+        const identity : IdentityProviderFlowIdentity = {
+            id: ldapUser.dn,
+            name: ldapUser.dn,
+        };
+
+        if (
+            this.options.username_attribute &&
+            ldapUser[this.options.username_attribute]
+        ) {
+            identity.name = ldapUser[this.options.username_attribute];
+        }
+
+        if (
+            this.options.mail_attribute &&
+            ldapUser[this.options.mail_attribute]
+        ) {
+            identity.email = ldapUser[this.options.mail_attribute];
+        }
+
+        try {
+            identity.roles = await this.searchUserGroups(ldapUser);
+        } catch (e) {
+            // todo: log event
+        }
+
+        return identity;
+    }
+
+    public async bind(user?: string, password?: string) {
         if (this.client.connected || this.client.connecting) {
             await this.unbind();
         }
@@ -125,22 +82,24 @@ export class LdapIdentityProviderFlow {
             this.client.once('connect', () => {
                 this.establishSecureConnection()
                     .then(() => {
-                        if (!options.username && !options.password) {
-                            options.username = this.options.admin_username;
-                            options.password = this.options.admin_password;
+                        if (!user) {
+                            user = this.options.user;
+                            password = this.options.password;
                         }
 
                         // todo: throw on undefined
 
-                        if (!isLdapDn(options.username)) {
+                        const nameAttribute = this.options.username_attribute || 'cn';
+
+                        if (!isLdapDn(user)) {
                             if (this.options.user_base_dn) {
-                                options.username = `cn=${options.username},${this.options.user_base_dn}`;
+                                user = `${nameAttribute}=${user},${this.options.user_base_dn}`;
                             } else {
-                                options.username = `cn=${options.username},${this.options.base_dn}`;
+                                user = `${nameAttribute}=${user},${this.options.base_dn}`;
                             }
                         }
 
-                        this.client.bind(options.username, options.password, (err) => {
+                        this.client.bind(user, password, (err) => {
                             if (err) {
                                 this.client.unbind();
 
@@ -189,12 +148,12 @@ export class LdapIdentityProviderFlow {
 
     protected async establishSecureConnection() {
         return new Promise<void>((resolve, reject) => {
-            if (!this.options.startTLS) {
+            if (!this.options.start_tls) {
                 resolve();
                 return;
             }
 
-            this.client.starttls(this.options.startTLSOptions, null, (err) => {
+            this.client.starttls(this.options.tls, null, (err) => {
                 if (err) {
                     reject(err);
                     return;
@@ -275,8 +234,8 @@ export class LdapIdentityProviderFlow {
         });
     }
 
-    public async searchUserGroups(user: LdapUser) : Promise<LdapGroup[]> {
-        return new Promise<LdapGroup[]>((resolve, reject) => {
+    public async searchUserGroups(user: LdapUser) : Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
             const groupMemberAttribute = this.options.group_member_attribute || 'member';
             const groupMemberUserAttribute = this.options.group_member_user_attribute || 'dn';
 
@@ -285,7 +244,7 @@ export class LdapIdentityProviderFlow {
                     filters: [
                         new EqualityFilter({
                             attribute: 'objectclass',
-                            value: this.options.group_class || '*',
+                            value: this.options.group_class || 'group',
                         }),
                         new EqualityFilter({
                             attribute: groupMemberAttribute,
@@ -303,10 +262,21 @@ export class LdapIdentityProviderFlow {
                     return;
                 }
 
-                const entities: LdapGroup[] = [];
+                const entities: string[] = [];
 
+                const groupNameAttribute = this.options.group_name_attribute || 'cn';
                 res.on('searchEntry', (searchEntry) => {
-                    entities.push(searchEntry.pojo);
+                    if (!hasOwnProperty(searchEntry.pojo.attributes, groupNameAttribute)) {
+                        return;
+                    }
+
+                    const groupName = searchEntry.pojo.attributes[groupNameAttribute];
+                    if (Array.isArray(groupName)) {
+                        // todo: check if array elements are strings
+                        entities.push(...groupName);
+                    } else if (typeof groupName === 'string') {
+                        entities.push(groupName);
+                    }
                 });
 
                 res.on('error', (err) => {

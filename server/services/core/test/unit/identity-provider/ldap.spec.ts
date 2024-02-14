@@ -42,8 +42,8 @@ describe('src/domains/identity-provider/flow/ldap', () => {
     beforeAll(async () => {
         flow = new LdapIdentityProviderFlow({
             url: `ldap://${container.getHost()}:${container.getFirstMappedPort()}`,
-            admin_username: 'admin',
-            admin_password: 'password',
+            user: 'admin',
+            password: 'password',
             base_dn: 'dc=example,dc=com',
             username_attribute: 'cn',
         });

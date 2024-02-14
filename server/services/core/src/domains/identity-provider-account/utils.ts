@@ -21,7 +21,7 @@ import { UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 import { IdentityProviderRoleEntity } from '../identity-provider-role';
 
-export async function createOauth2ProviderAccount(
+export async function createIdentityProviderAccount(
     provider: IdentityProvider,
     identity: IdentityProviderFlowIdentity,
 ) : Promise<IdentityProviderAccount> {

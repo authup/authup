@@ -5,20 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/core';
+import type { IdentityProviderAccount, OAuth2TokenGrantResponse } from '@authup/core';
 import {
-    OAuth2SubKind, ScopeName,
-    UserError,
-    extractObjectProperty,
+    IdentityProviderProtocol, OAuth2SubKind, ScopeName, UserError, extractObjectProperty,
 } from '@authup/core';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import type { UserEntity } from '../../../domains';
-import { UserRepository, resolveRealm } from '../../../domains';
-import { AbstractGrant } from './abstract';
+import type { IdentityProviderEntity, IdentityProviderFlowIdentity } from '../../../domains';
+import {
+    IdentityProviderRepository,
+    LdapIdentityProviderFlow, UserEntity, UserRepository, createIdentityProviderAccount,
+    resolveRealm,
+} from '../../../domains';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
@@ -45,20 +47,25 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<UserEntity> {
-        const { username, password, realm_id: realmId } = useRequestBody(request);
+        const { username, password, realm_id: requestRealmId } = useRequestBody(request);
 
         const realm = await resolveRealm(
-            useRequestParam(request, 'realmId') || realmId,
+            useRequestParam(request, 'realmId') || requestRealmId,
         );
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
+        const realmId = extractObjectProperty(realm, 'id');
 
-        const entity = await repository.verifyCredentials(
+        let entity = await repository.verifyCredentials(
             username,
             password,
-            extractObjectProperty(realm, 'id'),
+            realmId,
         );
+
+        if (!entity) {
+            entity = await this.verifyCredentialsByLDAP(username, password, realmId);
+        }
 
         if (!entity) {
             throw UserError.credentialsInvalid();
@@ -69,5 +76,54 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         }
 
         return entity;
+    }
+
+    protected async verifyCredentialsByLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity> {
+        const dataSource = await useDataSource();
+        const repository = new IdentityProviderRepository(dataSource);
+        let entities : IdentityProviderEntity[] = [];
+
+        if (realmId) {
+            entities = await repository.createQueryBuilder('provider')
+                .where('provider.realm_id = :realmId', { realmId })
+                .andWhere('provider.protocol = :protocol', { protocol: IdentityProviderProtocol.LDAP })
+                .getMany();
+        } else {
+            entities = await repository.createQueryBuilder('provider')
+                .andWhere('provider.protocol = :protocol', { protocol: IdentityProviderProtocol.LDAP })
+                .getMany();
+        }
+
+        let account : IdentityProviderAccount | undefined;
+        let identity: IdentityProviderFlowIdentity | undefined;
+
+        for (let i = 0; i < entities.length; i++) {
+            const entity = await repository.extendEntity(entities[i]);
+            if (entity.protocol !== IdentityProviderProtocol.LDAP) {
+                continue;
+            }
+
+            const flow = new LdapIdentityProviderFlow(entity);
+            try {
+                identity = await flow.getIdentityFroCredentials(user, password);
+            } catch (e) {
+                continue;
+            }
+
+            account = await createIdentityProviderAccount(entity, identity);
+            break;
+        }
+
+        if (!account) {
+            return undefined;
+        }
+
+        if (account.user) {
+            return account.user as UserEntity;
+        }
+
+        const userRepository = dataSource.getRepository(UserEntity);
+
+        return userRepository.findOneBy({ id: account.user_id });
     }
 }
