@@ -13,8 +13,8 @@ module.exports = async () => {
         .withEnvironment({
             LDAP_ORGANISATION: 'example',
             LDAP_DOMAIN: 'example.com',
-            LDAP_ADMIN_USERNAME: 'ldap',
-            LDAP_ADMIN_PASSWORD: 'ldap',
+            LDAP_ADMIN_USERNAME: 'admin',
+            LDAP_ADMIN_PASSWORD: 'password',
             LDAP_BASE_DN: 'dc=example,dc=com',
         });
 
