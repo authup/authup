@@ -122,6 +122,9 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                     onChange(input) {
                         form.base_dn = input;
                     },
+                    props: {
+                        placeholder: 'e.g. dc=example,dc=com',
+                    },
                 }),
             }),
         ];

@@ -167,11 +167,11 @@ export const AIdentityProviderLdapForm = defineComponent({
                     h('div', {
                         class: 'col',
                     }, [
-                        connectionNode,
+                        credentialsNode,
                     ]),
                 ]),
                 h('hr'),
-                credentialsNode,
+                connectionNode,
                 h('hr'),
                 h('div', {
                     class: 'row',

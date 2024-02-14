@@ -75,18 +75,6 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_name_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
-                label: true,
-                labelContent: 'Name Attribute',
-                content: buildFormInput({
-                    value: form.group_name_attribute,
-                    onChange(input) {
-                        form.group_name_attribute = input;
-                    },
-                }),
-            }),
-            buildFormGroup({
                 validationResult: $v.value.group_class,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
@@ -95,6 +83,18 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
                     value: form.group_class,
                     onChange(input) {
                         form.group_class = input;
+                    },
+                }),
+            }),
+            buildFormGroup({
+                validationResult: $v.value.group_name_attribute,
+                validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
+                labelContent: 'Name Attribute',
+                content: buildFormInput({
+                    value: form.group_name_attribute,
+                    onChange(input) {
+                        form.group_name_attribute = input;
                     },
                 }),
             }),
