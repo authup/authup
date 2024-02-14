@@ -5,14 +5,58 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasOwnProperty, isObject } from '@authup/core';
 import type { LdapIdentityProvider } from '@authup/core';
 
 export function extractLdapIdentityProviderProtocolAttributes(
     input: unknown,
 ) : Partial<LdapIdentityProvider> {
-    if (typeof input !== 'object' || input === null) {
+    if (!isObject(input)) {
         return {};
     }
 
-    return {};
+    const attributes : (keyof LdapIdentityProvider)[] = [
+        'url',
+        'timeout',
+        'start_tls',
+        'tls',
+        'base_dn',
+        'user',
+        'password',
+        'user_base_dn',
+        'user_name_attribute',
+        'user_mail_attribute',
+        'user_display_name_attribute',
+        'group_base_dn',
+        'group_name_attribute',
+        'group_class',
+        'group_member_attribute',
+        'group_member_user_attribute',
+    ];
+
+    const output : Partial<LdapIdentityProvider> = {};
+
+    for (let i = 0; i < attributes.length; i++) {
+        const attribute = attributes[i];
+        if (!hasOwnProperty(input, attribute)) {
+            continue;
+        }
+
+        switch (attribute) {
+            case 'timeout': {
+                output[attributes[i] as string] = parseInt(`${input[attribute]}`, 10);
+                break;
+            }
+            case 'start_tls': {
+                output[attributes[i] as string] = Boolean(input[attribute]);
+                break;
+            }
+            default: {
+                output[attributes[i] as string] = input[attribute];
+                break;
+            }
+        }
+    }
+
+    return output;
 }

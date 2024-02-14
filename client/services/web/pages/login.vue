@@ -10,7 +10,7 @@ import {
     ATitle,
     injectAPIClient, useValidationTranslator,
 } from '@authup/client-vue';
-import type { IdentityProvider } from '@authup/core';
+import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import {
@@ -80,6 +80,8 @@ export default defineNuxtComponent({
         const identityProviderQuery : BuildInput<IdentityProvider> = {
             filters: {
                 realm_id: realmId.value || '',
+                protocol: `!${IdentityProviderProtocol.LDAP}`,
+                enabled: true,
             },
         };
         const identityProviderRef = ref<null | { load:() => any, [key: string]: any}>(null);

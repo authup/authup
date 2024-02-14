@@ -17,9 +17,9 @@ import {
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { extendObjectProperties, useValidationTranslator } from '../../core';
-import { AIdentityProviderDiscovery } from './AIdentityProviderDiscovery';
+import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
 
-export const AIdentityProviderEndpointFields = defineComponent({
+export const AIdentityProviderOAuth2EndpointFields = defineComponent({
     props: {
         entity: {
             type: Object as PropType<Partial<OAuth2IdentityProvider>>,
@@ -72,7 +72,7 @@ export const AIdentityProviderEndpointFields = defineComponent({
 
             if (props.discovery) {
                 discoveryNode = [
-                    h(AIdentityProviderDiscovery, {
+                    h(AIdentityProviderOAuth2Discovery, {
                         onLookup(data: OAuth2OpenIDProviderMetadata) {
                             form.authorize_url = data.authorization_endpoint;
                             form.token_url = data.token_endpoint;

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core';
+import type {
+    IdentityProvider, LdapIdentityProvider,
+} from '@authup/core';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
     defineComponent, reactive,
@@ -18,10 +18,14 @@ import {
 import { onChange, useUpdatedAt } from '../../composables';
 import { extendObjectProperties, useValidationTranslator } from '../../core';
 
-export const AIdentityProviderClientFields = defineComponent({
+export const AIdentityProviderLdapCredentialsFields = defineComponent({
     props: {
         entity: {
-            type: Object as PropType<Partial<OAuth2IdentityProvider>>,
+            type: Object as PropType<Partial<LdapIdentityProvider>>,
+        },
+        discovery: {
+            type: Boolean,
+            default: false,
         },
         translatorLocale: {
             type: String,
@@ -30,55 +34,54 @@ export const AIdentityProviderClientFields = defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
-            client_id: '',
-            client_secret: '',
+            user: '',
+            password: '',
         });
 
         const $v = useVuelidate({
-            client_id: {
+            user: {
                 required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
             },
-            client_secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(128),
+            password: {
+                required,
             },
         }, form, {
-            $registerAs: 'client',
+            $registerAs: 'credentials',
         });
 
-        function assign() {
+        function init() {
+            if (!props.entity) return;
+
             extendObjectProperties(form, props.entity);
         }
 
-        const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
-        onChange(updatedAt, () => assign());
+        const updated = useUpdatedAt(props.entity as IdentityProvider);
+        onChange(updated, () => init());
 
-        assign();
+        init();
 
         return () => [
             buildFormGroup({
-                validationResult: $v.value.client_id,
+                validationResult: $v.value.user,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
-                labelContent: 'Client ID',
+                labelContent: 'User',
                 content: buildFormInput({
-                    value: form.client_id,
+                    value: form.user,
                     onChange(input) {
-                        form.client_id = input;
+                        form.user = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.client_secret,
+                validationResult: $v.value.password,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
-                labelContent: 'Client Secret',
+                labelContent: 'Password',
                 content: buildFormInput({
-                    value: form.client_secret,
+                    value: form.password,
                     onChange(input) {
-                        form.client_secret = input;
+                        form.password = input;
                     },
                 }),
             }),

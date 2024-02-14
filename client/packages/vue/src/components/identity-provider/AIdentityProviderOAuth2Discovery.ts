@@ -17,7 +17,7 @@ import {
 } from 'vue';
 import { useValidationTranslator } from '../../core';
 
-export const AIdentityProviderDiscovery = defineComponent({
+export const AIdentityProviderOAuth2Discovery = defineComponent({
     props: {
         translatorLocale: {
             type: String,

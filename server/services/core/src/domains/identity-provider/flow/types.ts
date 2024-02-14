@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, OAuth2IdentityProviderBase } from '@authup/core';
+import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core';
 import type { Request } from 'routup';
 
 export type IdentityProviderFlowIdentity = {
@@ -16,6 +16,11 @@ export type IdentityProviderFlowIdentity = {
     first_name?: string,
     last_name?: string
 };
+
+export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;
+export interface ILdapIdentityProviderFlow {
+    getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
+}
 
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
 

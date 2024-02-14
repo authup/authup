@@ -33,11 +33,11 @@ import {
     createEntityManager, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
     injectAPIClient,
+    useTranslator,
 } from '../../core';
-import { useTranslator } from '../../core/translator';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
-import { AIdentityProviderClientFields } from './AIdentityProviderClientFields';
-import { AIdentityProviderEndpointFields } from './AIdentityProviderEndpointFields';
+import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
+import { AIdentityProviderOAuth2EndpointFields } from './AIdentityProviderOAuth2EndpointFields';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 import type { IdentityProviderPresetElement } from './preset';
@@ -46,7 +46,7 @@ import type { IdentityProviderProtocolElement } from './protocol';
 export const AIdentityProviderOAuth2Form = defineComponent({
     components: {
         IdentityProviderBasicFields: AIdentityProviderBasicFields,
-        IdentityProviderClientFields: AIdentityProviderClientFields,
+        IdentityProviderClientFields: AIdentityProviderOAuth2ClientFields,
     },
     props: {
         entity: {
@@ -244,7 +244,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                     ' ',
                     'Security',
                 ]),
-                h(AIdentityProviderClientFields, {
+                h(AIdentityProviderOAuth2ClientFields, {
                     entity: manager.data.value as OAuth2IdentityProvider,
                 }),
             ];
@@ -258,7 +258,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                         'Endpoints',
                     ]),
                     h(
-                        AIdentityProviderEndpointFields,
+                        AIdentityProviderOAuth2EndpointFields,
                         {
                             entity: manager.data.value as OAuth2IdentityProvider,
                             discovery: protocol.value === IdentityProviderProtocol.OIDC,

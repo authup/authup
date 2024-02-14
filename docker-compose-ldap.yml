@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+    ldap:
+        image: osixia/openldap:latest
+        ports:
+            - '389:389'
+            - '636:636'
+        environment:
+            LDAP_ORGANISATION: example
+            LDAP_DOMAIN: example.com
+            LDAP_ADMIN_USERNAME: ldap
+            LDAP_ADMIN_PASSWORD: ldap
+            LDAP_BASE_DN: dc=example,dc=com

@@ -21,7 +21,7 @@ import { UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 import { IdentityProviderRoleEntity } from '../identity-provider-role';
 
-export async function createOauth2ProviderAccount(
+export async function createIdentityProviderAccount(
     provider: IdentityProvider,
     identity: IdentityProviderFlowIdentity,
 ) : Promise<IdentityProviderAccount> {
@@ -104,6 +104,7 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
             display_name: name,
             realm_id: data.realm_id,
             active: true,
+            email: data.email,
         });
 
         await userRepository.insert(user);

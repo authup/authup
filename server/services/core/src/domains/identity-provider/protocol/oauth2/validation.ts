@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderPreset } from '@authup/core';
+import type { IdentityProviderPreset, OAuth2IdentityProvider } from '@authup/core';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import zod from 'zod';
@@ -33,22 +33,24 @@ const schema = zod.object({
 export function validateOAuth2IdentityProviderProtocol(
     req: Request,
     protocolConfig: `${IdentityProviderPreset}`,
-) {
+) : Partial<OAuth2IdentityProvider> {
     const body = useRequestBody(req);
 
     const attributes = extractOAuth2IdentityProviderProtocolAttributes(body);
 
     if (protocolConfig) {
-        const result = protocolSchema.safeParse(body);
+        const result = protocolSchema.safeParse(attributes);
         if (result.success === false) {
             throw result.error;
         }
-    } else {
-        const result = schema.safeParse(body);
-        if (result.success === false) {
-            throw result.error;
-        }
+
+        return result.data;
     }
 
-    return attributes;
+    const result = schema.safeParse(attributes);
+    if (result.success === false) {
+        throw result.error;
+    }
+
+    return result.data;
 }

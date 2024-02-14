@@ -8,6 +8,7 @@
 export { AIdentityProvider } from './AIdentityProvider';
 export { AIdentityProviderForm } from './AIdentityProviderForm';
 export { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
+export { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';
 export { AIdentityProviders } from './AIdentityProviders';
 export { AIdentityProviderPreset } from './AIdentityProviderPreset';
 export { AIdentityProviderProtocol } from './AIdentityProviderProtocol';

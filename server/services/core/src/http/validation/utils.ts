@@ -13,6 +13,7 @@ import { distinctArray } from 'smob';
 import type { EntityTarget } from 'typeorm';
 import { BadRequestError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
+import type { ZodError } from 'zod';
 import type { ExpressValidationExtendKeys, ExpressValidationResult } from './type';
 
 export function buildRequestValidationErrorMessage<
@@ -21,7 +22,21 @@ export function buildRequestValidationErrorMessage<
     const names = distinctArray(Array.isArray(name) ? name : [name]);
 
     if (names.length > 1) {
-        return `The parameters ${names.join(', ')} is invalid.`;
+        return `The parameters ${names.join(', ')} are invalid.`;
+    }
+    return `The parameter ${String(names[0])} is invalid.`;
+}
+
+export function buildRequestValidationErrorMessageForZodError(error: ZodError) {
+    const names : string[] = [];
+    for (let i = 0; i < error.issues.length; i++) {
+        for (let j = 0; j < error.issues[i].path.length; j++) {
+            names.push(`${error.issues[i].path[j]}`);
+        }
+    }
+
+    if (names.length > 1) {
+        return `The parameters ${names.join(', ')} are invalid.`;
     }
     return `The parameter ${String(names[0])} is invalid.`;
 }

@@ -6,11 +6,44 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
+import zod from 'zod';
+import { extractLdapIdentityProviderProtocolAttributes } from './extract';
 
+const schema = zod.object({
+    url: zod.string().url(),
+    timeout: zod.number().min(0).optional().nullable(),
+    start_tls: zod.boolean().optional().nullable(),
+    tls: zod.any().optional().nullable(),
+    base_dn: zod.string().min(3).max(2000).optional()
+        .nullable(),
+    user: zod.string().min(3),
+    password: zod.string().min(3),
+    user_base_dn: zod.string().optional().nullable(),
+    username_attribute: zod.string().optional().nullable(),
+    mail_attribute: zod.string().optional().nullable(),
+    display_name_attribute: zod.string().optional().nullable(),
+    group_base_dn: zod.string().optional().nullable(),
+    group_name_attribute: zod.string().optional().nullable(),
+    group_class: zod.string().optional().nullable(),
+    group_member_attribute: zod.string().optional().nullable(),
+    group_member_user_attribute: zod.string().optional().nullable(),
+});
+
+/**
+ * @throws ZodError
+ * @param req
+ */
 export function validateLdapIdentityProviderProtocol(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     req: Request,
-) : LdapIdentityProvider {
-    throw new Error('Not implemented');
+) : Partial<LdapIdentityProvider> {
+    const body = useRequestBody(req);
+    const attributes = extractLdapIdentityProviderProtocolAttributes(body);
+    const result = schema.safeParse(attributes);
+    if (result.success === false) {
+        throw result.error;
+    }
+
+    return result.data;
 }

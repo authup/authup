@@ -16,7 +16,7 @@ import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
 import { EnvironmentName, useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository, createOAuth2IdentityProviderFlow, createOauth2ProviderAccount } from '../../../../domains';
+import { IdentityProviderRepository, createIdentityProviderAccount, createOAuth2IdentityProviderFlow } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../../config';
@@ -74,7 +74,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const identity = await flow.getIdentityForRequest(req);
 
-    const account = await createOauth2ProviderAccount(entity, identity);
+    const account = await createIdentityProviderAccount(entity, identity);
     const grant = new InternalGrantType();
 
     setRequestEnv(req, 'userId', account.user_id);
