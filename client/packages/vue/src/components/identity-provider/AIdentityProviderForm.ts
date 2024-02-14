@@ -12,6 +12,7 @@ import { IdentityProviderProtocol } from '@authup/core';
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core';
 import type { PropType, VNodeChild } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
+import { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';
 import { AIdentityProviderPicker } from './AIdentityProviderPicker';
 import { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
 
@@ -99,6 +100,23 @@ export const AIdentityProviderForm = defineComponent({
                             protocol: protocol.value,
                             preset: preset.value,
                             apiUrl: props.apiUrl,
+                            onCreated(el: IdentityProvider) {
+                                entity.value = el;
+
+                                setup.emit('created', el);
+                            },
+                            onUpdated(el: IdentityProvider) {
+                                entity.value = el;
+
+                                setup.emit('updated', el);
+                            },
+                        }));
+                    }
+                    case IdentityProviderProtocol.LDAP: {
+                        return render(h(AIdentityProviderLdapForm, {
+                            entity: entity.value,
+                            realmId: props.realmId,
+                            translatorLocale: props.translatorLocale,
                             onCreated(el: IdentityProvider) {
                                 entity.value = el;
 

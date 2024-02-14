@@ -33,8 +33,8 @@ import {
     createEntityManager, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
     injectAPIClient,
+    useTranslator,
 } from '../../core';
-import { useTranslator } from '../../core/translator';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderClientFields } from './AIdentityProviderClientFields';
 import { AIdentityProviderEndpointFields } from './AIdentityProviderEndpointFields';
