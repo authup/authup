@@ -34,16 +34,16 @@ export const AIdentityProviderLdapUserFields = defineComponent({
     setup(props) {
         const form = reactive({
             user_base_dn: '',
-            username_attribute: '',
-            mail_attribute: '',
-            display_name_attribute: '',
-        });
+            user_name_attribute: '',
+            user_mail_attribute: '',
+            user_display_name_attribute: '',
+        } satisfies Omit<LdapIdentityProvider, keyof IdentityProvider | 'base_dn' | 'url'>);
 
         const $v = useVuelidate({
             user_base_dn: {},
-            username_attribute: {},
-            mail_attribute: {},
-            display_name_attribute: {},
+            user_name_attribute: {},
+            user_mail_attribute: {},
+            user_display_name_attribute: {},
         }, form, {
             $registerAs: 'user',
         });
@@ -73,38 +73,38 @@ export const AIdentityProviderLdapUserFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.username_attribute,
+                validationResult: $v.value.user_name_attribute,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
                 labelContent: 'Name Attribute',
                 content: buildFormInput({
-                    value: form.username_attribute,
+                    value: form.user_name_attribute,
                     onChange(input) {
-                        form.username_attribute = input;
+                        form.user_name_attribute = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.mail_attribute,
+                validationResult: $v.value.user_mail_attribute,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
                 labelContent: 'Mail Attribute',
                 content: buildFormInput({
-                    value: form.mail_attribute,
+                    value: form.user_mail_attribute,
                     onChange(input) {
-                        form.mail_attribute = input;
+                        form.user_mail_attribute = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.display_name_attribute,
+                validationResult: $v.value.user_display_name_attribute,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
                 label: true,
                 labelContent: 'DisplayName Attribute',
                 content: buildFormInput({
-                    value: form.display_name_attribute,
+                    value: form.user_display_name_attribute,
                     onChange(input) {
-                        form.display_name_attribute = input;
+                        form.user_display_name_attribute = input;
                     },
                 }),
             }),

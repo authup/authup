@@ -45,7 +45,7 @@ describe('src/domains/identity-provider/flow/ldap', () => {
             user: 'admin',
             password: 'password',
             base_dn: 'dc=example,dc=com',
-            username_attribute: 'cn',
+            user_name_attribute: 'cn',
         });
     });
 

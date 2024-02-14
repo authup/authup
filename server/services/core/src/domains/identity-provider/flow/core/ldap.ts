@@ -49,19 +49,19 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         };
 
         if (
-            this.options.username_attribute &&
-            ldapUser[this.options.username_attribute]
+            this.options.user_name_attribute &&
+            ldapUser[this.options.user_name_attribute]
         ) {
-            identity.name = ldapUser[this.options.username_attribute];
+            identity.name = ldapUser[this.options.user_name_attribute];
         }
 
         if (
-            this.options.mail_attribute &&
-            ldapUser[this.options.mail_attribute]
+            this.options.user_mail_attribute &&
+            ldapUser[this.options.user_mail_attribute]
         ) {
-            identity.email = Array.isArray(ldapUser[this.options.mail_attribute]) ?
-                ldapUser[this.options.mail_attribute].pop() :
-                ldapUser[this.options.mail_attribute];
+            identity.email = Array.isArray(ldapUser[this.options.user_mail_attribute]) ?
+                ldapUser[this.options.user_mail_attribute].pop() :
+                ldapUser[this.options.user_mail_attribute];
         }
 
         try {
@@ -91,7 +91,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
 
                         // todo: throw on undefined
 
-                        const nameAttribute = this.options.username_attribute || 'cn';
+                        const nameAttribute = this.options.user_name_attribute || 'cn';
 
                         if (!isLdapDn(user)) {
                             if (this.options.user_base_dn) {
@@ -169,9 +169,9 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     public async searchUser(username: string) : Promise<LdapUser> {
         return new Promise<LdapUser>((resolve, reject) => {
             let filter : Filter;
-            if (this.options.username_attribute) {
+            if (this.options.user_name_attribute) {
                 filter = new EqualityFilter({
-                    attribute: this.options.username_attribute,
+                    attribute: this.options.user_name_attribute,
                     value: username,
                 });
             } else {

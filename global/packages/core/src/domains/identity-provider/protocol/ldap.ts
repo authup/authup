@@ -59,17 +59,17 @@ export interface LdapIdentityProvider extends IdentityProvider {
      *  It will be used with the value in username to
      *  construct a ldap filter as ({attribute}={username}) to find the user and get user details in LDAP
      */
-    username_attribute?: string,
+    user_name_attribute?: string,
 
     /**
      * The attribute to retrieve which contains the users email addresses.
      */
-    mail_attribute?: string,
+    user_mail_attribute?: string,
 
     /**
      * The attribute to retrieve which is shown on the Web UI to the user when they log in.
      */
-    display_name_attribute?: string,
+    user_display_name_attribute?: string,
 
     /**
      * Ff specified with groupClass, will serve as search base for authenticated user groups
