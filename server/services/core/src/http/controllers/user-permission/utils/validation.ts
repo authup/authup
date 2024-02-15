@@ -49,6 +49,12 @@ export async function runUserPermissionValidation(
             .run(req);
     }
 
+    await check('condition')
+        .exists()
+        .isObject()
+        .optional({ nullable: true })
+        .run(req);
+
     // ----------------------------------------------
 
     const validation = validationResult(req);

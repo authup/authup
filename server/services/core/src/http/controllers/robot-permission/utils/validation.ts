@@ -47,6 +47,12 @@ export async function runRobotPermissionValidation(
             .run(req);
     }
 
+    await check('condition')
+        .exists()
+        .isObject()
+        .optional({ nullable: true })
+        .run(req);
+
     // ----------------------------------------------
 
     const validation = validationResult(req);

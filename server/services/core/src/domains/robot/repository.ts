@@ -9,7 +9,7 @@ import type {
     AbilityDescriptor, Robot,
     Role,
 } from '@authup/core';
-import { buildPermissionDescriptorFromRelation, createNanoID } from '@authup/core';
+import { buildAbilityDescriptor, createNanoID } from '@authup/core';
 
 import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
@@ -79,7 +79,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
         const result : AbilityDescriptor[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildPermissionDescriptorFromRelation(entities[i]));
+            result.push(buildAbilityDescriptor(entities[i]));
         }
 
         return result;

@@ -14,9 +14,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Realm, UserPermission } from '@authup/core';
+import type {
+    PermissionCondition, Realm, UserPermission,
+} from '@authup/core';
 import {
     Permission, User,
+    deserialize, serialize,
 } from '@authup/core';
 import { UserEntity } from '../user/entity';
 import { PermissionEntity } from '../permission';
@@ -31,8 +34,20 @@ export class UserPermissionEntity implements UserPermission {
     @Column({ type: 'int', default: 999 })
         power: number;
 
-    @Column({ type: 'text', nullable: true, default: null })
-        condition: string | null;
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
+        condition: PermissionCondition | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string | null;
