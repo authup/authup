@@ -12,5 +12,6 @@ export * from './object';
 export * from './object-property';
 export * from './proxy-connection';
 export * from './self-id';
+export * from './serialize';
 export * from './url';
 export * from './uuid';

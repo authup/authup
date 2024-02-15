@@ -30,7 +30,7 @@ export function transformAttributesToEntities<T extends BaseAttribute>(
     const keys = Object.keys(data);
     for (let i = 0; i < keys.length; i++) {
         entities.push({
-            ...extra,
+            ...(extra || {}),
             name: keys[i],
             value: data[keys[i]],
         });

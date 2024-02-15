@@ -12,8 +12,9 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type {
-    Realm, Role, RoleAttribute,
+import type { Realm, Role, RoleAttribute } from '@authup/core';
+import {
+    deserialize, serialize,
 } from '@authup/core';
 import { RealmEntity } from '../realm';
 import { RoleEntity } from '../role';
@@ -27,7 +28,18 @@ export class RoleAttributeEntity implements RoleAttribute {
     @Column({ type: 'varchar', length: 255 })
         name: string;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({
+        type: 'text',
+        nullable: true,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
         value: string | null;
 
     // ------------------------------------------------------------------
