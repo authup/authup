@@ -6,6 +6,7 @@
  */
 
 import type {
+    PermissionCondition,
     RolePermission,
 } from '@authup/core';
 import { createSuperTestPermission, createSuperTestRole } from '../../../utils/domains';
@@ -25,6 +26,11 @@ describe('src/http/controllers/role-permission', () => {
     });
 
     const details : Partial<RolePermission> = {};
+    const condition : PermissionCondition = {
+        age: {
+            $gt: 5,
+        },
+    };
 
     it('should create resource', async () => {
         const { body: role } = await createSuperTestRole(superTest);
@@ -35,6 +41,7 @@ describe('src/http/controllers/role-permission', () => {
             .send({
                 role_id: role.id,
                 permission_id: permission.id,
+                condition,
             })
             .auth('admin', 'start123');
 
@@ -64,6 +71,7 @@ describe('src/http/controllers/role-permission', () => {
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
+        expect(response.body.condition).toEqual(condition);
 
         expectPropertiesEqualToSrc(details, response.body);
     });

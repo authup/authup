@@ -14,10 +14,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Realm, RobotPermission } from '@authup/core';
 import {
     Permission, Robot,
+
+    deserialize, serialize,
 } from '@authup/core';
+import type { PermissionCondition, Realm, RobotPermission } from '@authup/core';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';
@@ -31,8 +33,20 @@ export class RobotPermissionEntity implements RobotPermission {
     @Column({ type: 'int', default: 999 })
         power: number;
 
-    @Column({ type: 'text', nullable: true, default: null })
-        condition: string | null;
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
+        condition: PermissionCondition | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string | null;

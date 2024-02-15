@@ -5,14 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { MongoQuery } from '@ucast/mongo2js';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 import type { DomainEventBaseContext } from '../types-base';
 
+export type PermissionCondition = MongoQuery;
+
 export interface PermissionRelation {
     power: number;
 
-    condition: string | null;
+    condition: PermissionCondition | null;
 
     fields: string | null;
 

@@ -12,7 +12,7 @@ import type {
     Role,
 } from '@authup/core';
 import {
-    buildPermissionDescriptorFromRelation,
+    buildAbilityDescriptor,
 
 } from '@authup/core';
 import { buildKeyPath } from 'redis-extension';
@@ -60,7 +60,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
         const result : AbilityDescriptor[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildPermissionDescriptorFromRelation(entities[i]));
+            result.push(buildAbilityDescriptor(entities[i]));
         }
 
         return result;
