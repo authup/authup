@@ -12,8 +12,9 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type {
-    IdentityProvider, IdentityProviderAttribute,
+import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core';
+import {
+    deserialize, serialize,
 } from '@authup/core';
 import { IdentityProviderEntity } from '../identity-provider/entity';
 
@@ -26,7 +27,18 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     @Column({ type: 'varchar', length: 255 })
         name: string;
 
-    @Column({ type: 'text', nullable: true })
+    @Column({
+        type: 'text',
+        nullable: true,
+        transformer: {
+            to(value: any): any {
+                return serialize(value);
+            },
+            from(value: any): any {
+                return deserialize(value);
+            },
+        },
+    })
         value: string | null;
 
     // ------------------------------------------------------------------

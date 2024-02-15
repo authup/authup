@@ -42,20 +42,7 @@ export function extractLdapIdentityProviderProtocolAttributes(
             continue;
         }
 
-        switch (attribute) {
-            case 'timeout': {
-                output[attributes[i] as string] = parseInt(`${input[attribute]}`, 10);
-                break;
-            }
-            case 'start_tls': {
-                output[attributes[i] as string] = Boolean(input[attribute]);
-                break;
-            }
-            default: {
-                output[attributes[i] as string] = input[attribute];
-                break;
-            }
-        }
+        output[attributes[i] as string] = input[attribute];
     }
 
     return output;
