@@ -12,4 +12,4 @@ This is the frontend application for Authup, a flexible and secure authenticatio
 
 Made with 💚
 
-Published under [MIT License](./LICENSE).
+Published under [Apache 2.0 License](./LICENSE).
