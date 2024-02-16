@@ -107,4 +107,4 @@ These guidelines will help to ensure that contributions are made effectively and
 
 Made with 💚
 
-Published under [MIT License](./LICENSE).
+Published under [Apache 2.0 License](./LICENSE).

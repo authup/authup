@@ -6,7 +6,7 @@
         "email": "contact@tada5hi.net",
         "url": "https://github.com/tada5hi"
     },
-    "license": "MIT",
+    "license": "Apache-2.0",
     "version": "1.0.0",
     "workspaces": [
         "client/services/*",

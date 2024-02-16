@@ -40,4 +40,4 @@ To customize the settings follow the [documentation](#documentation).
 
 Made with 💚
 
-Published under [MIT License](./LICENSE).
+Published under [Apache 2.0 License](./LICENSE).
