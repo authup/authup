@@ -5,15 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from 'ldapjs';
-import { promisify } from 'node:util';
+import { EqualityFilter } from 'ldapjs';
 import type { StartedTestContainer } from 'testcontainers';
-import { LdapIdentityProviderFlow } from '../../../src';
+import { LdapClient } from '../../../src/core';
 
-const addClient = async (client: Client) => {
-    const add = promisify(client.add.bind(client));
+const addClient = async (client: LdapClient) => {
     try {
-        await add('cn=foo,dc=example,dc=com', {
+        await client.add('cn=foo,dc=example,dc=com', {
             cn: 'foo',
             sn: 'bar',
             mail: 'foo.bar@example.com',
@@ -25,65 +23,61 @@ const addClient = async (client: Client) => {
     }
 };
 
-const dropClient = async (client: Client) => {
-    const drop = promisify(client.del.bind(client));
+const dropClient = async (client: LdapClient) => {
     try {
-        await drop('cn=foo,dc=example,dc=com');
+        await client.del('cn=foo,dc=example,dc=com');
     } catch (e) {
         // do nothing :)
     }
 };
 
 describe('src/domains/identity-provider/flow/ldap', () => {
-    let flow : LdapIdentityProviderFlow;
+    let client : LdapClient;
 
     const container : StartedTestContainer = globalThis.OPENLDAP_CONTAINER;
 
     beforeAll(async () => {
-        flow = new LdapIdentityProviderFlow({
+        client = new LdapClient({
             url: `ldap://${container.getHost()}:${container.getFirstMappedPort()}`,
-            user: 'admin',
+            user: 'cn=admin,dc=example,dc=com',
             password: 'password',
-            base_dn: 'dc=example,dc=com',
-            user_name_attribute: 'cn',
+            baseDn: 'dc=example,dc=com',
         });
     });
 
     afterAll(async () => {
-        await flow.unbind();
+        await client.unbind();
     });
 
     it('should establish a connection', async () => {
-        const client = await flow.bind();
-        expect(client.connected).toBeTruthy();
+        await client.bind();
 
-        await flow.unbind();
+        expect(client.connected).toBeTruthy();
     });
 
-    it('should search and find user', async () => {
-        const client = await flow.bind();
+    it('should search and login with user', async () => {
+        await client.bind();
         await addClient(client);
 
-        const user = await flow.searchUser('foo');
-        expect(user).toBeDefined();
+        const users = await client.search({
+            filter: new EqualityFilter({
+                attribute: 'cn',
+                value: 'foo',
+            }),
+        });
+        expect(users.length).toEqual(1);
+        const user = users.pop();
+
         expect(user.dn).toEqual('cn=foo,dc=example,dc=com');
         expect(user.cn).toEqual('foo');
         expect(user.sn).toEqual('bar');
         expect(user.mail).toEqual('foo.bar@example.com');
         expect(user.objectClass).toEqual('inetOrgPerson');
+        expect(user.userPassword).toEqual('foo');
 
+        await client.bind(user.dn, user.userPassword);
+
+        await client.bind();
         await dropClient(client);
-        await flow.unbind();
-    });
-
-    it('should login with user/password', async () => {
-        let client = await flow.bind();
-        await addClient(client);
-
-        await flow.bind('foo', 'foo');
-
-        client = await flow.bind();
-        await dropClient(client);
-        await flow.unbind();
     });
 });

@@ -104,9 +104,12 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             }
 
             const flow = new LdapIdentityProviderFlow(entity);
+
             try {
                 identity = await flow.getIdentityForCredentials(user, password);
+                await flow.unbind();
             } catch (e) {
+                await flow.unbind();
                 continue;
             }
 

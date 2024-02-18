@@ -5,67 +5,67 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty } from '@authup/core';
+import { template } from '@authup/core';
 import {
-    AndFilter, EqualityFilter, OrFilter, createClient,
+    AndFilter, EqualityFilter, OrFilter,
 } from 'ldapjs';
-import type { Client, Filter, SearchOptions } from 'ldapjs';
+import type { Filter } from 'ldapjs';
+import { LdapClient } from '../../../../core';
 import type { ILdapIdentityProviderFlow, IdentityProviderFlowIdentity, LdapIdentityProviderFlowOptions } from '../types';
-
-type LdapUser = {
-    dn: string,
-    [key: string]: any
-};
-
-function isLdapDn(input: string) {
-    return input.includes('cn=') || input.includes('dc=');
-}
 
 export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     protected options : LdapIdentityProviderFlowOptions;
 
-    protected client: Client;
+    protected client: LdapClient;
 
     constructor(options: LdapIdentityProviderFlowOptions) {
         this.options = options;
-        this.client = createClient({
+
+        this.client = new LdapClient({
             url: options.url,
-            connectTimeout: 3000,
+            tls: options.tls,
+            startTLS: options.start_tls,
+            baseDn: options.base_dn,
         });
     }
 
-    async getIdentityForCredentials(user: string, password: string): Promise<IdentityProviderFlowIdentity> {
-        // verify user & password combination
-        await this.bind(user, password);
-        await this.unbind();
+    async getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity> {
+        const identity = await this.getIdentity(user);
 
+        await this.bind(`${identity.id}`, password);
+
+        return identity;
+    }
+
+    async getIdentity(input: string): Promise<IdentityProviderFlowIdentity> {
         await this.bind();
 
-        const ldapUser = await this.searchUser(user);
-
+        const user = await this.findUser(input);
         const identity : IdentityProviderFlowIdentity = {
-            id: ldapUser.dn,
-            name: ldapUser.dn,
+            id: user.dn,
+            name: user.dn,
         };
+
+        // todo: transform attributes toElement
 
         if (
             this.options.user_name_attribute &&
-            ldapUser[this.options.user_name_attribute]
+            user[this.options.user_name_attribute]
         ) {
-            identity.name = ldapUser[this.options.user_name_attribute];
+            identity.name = user[this.options.user_name_attribute];
         }
 
         if (
             this.options.user_mail_attribute &&
-            ldapUser[this.options.user_mail_attribute]
+            user[this.options.user_mail_attribute]
         ) {
-            identity.email = Array.isArray(ldapUser[this.options.user_mail_attribute]) ?
-                ldapUser[this.options.user_mail_attribute].pop() :
-                ldapUser[this.options.user_mail_attribute];
+            identity.email = Array.isArray(user[this.options.user_mail_attribute]) ?
+                user[this.options.user_mail_attribute].pop() :
+                user[this.options.user_mail_attribute];
         }
 
         try {
-            identity.roles = await this.searchUserGroups(ldapUser);
+            identity.roles = await this.findUserGroups(user);
         } catch (e) {
             // todo: log event
         }
@@ -73,226 +73,108 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         return identity;
     }
 
-    public async bind(user?: string, password?: string) {
-        if (this.client.connected || this.client.connecting) {
-            await this.unbind();
+    public async bind(user?: string, password?: string) : Promise<void> {
+        if (!user) {
+            return this.client.bind();
         }
 
-        return new Promise<Client>((resolve, reject) => {
-            this.client.connect();
+        if (!this.client.isDn(user)) {
+            const nameAttribute = this.options.user_name_attribute || 'cn';
+            user = `${nameAttribute}=${user},${this.client.resolveDn(this.options.user_base_dn, this.options.base_dn)}`;
+        }
 
-            this.client.once('connect', () => {
-                this.establishSecureConnection()
-                    .then(() => {
-                        if (!user) {
-                            user = this.options.user;
-                            password = this.options.password;
-                        }
-
-                        // todo: throw on undefined
-
-                        const nameAttribute = this.options.user_name_attribute || 'cn';
-
-                        if (!isLdapDn(user)) {
-                            if (this.options.user_base_dn) {
-                                user = `${nameAttribute}=${user},${this.options.user_base_dn}`;
-                            } else {
-                                user = `${nameAttribute}=${user},${this.options.base_dn}`;
-                            }
-                        }
-
-                        this.client.bind(user, password, (err) => {
-                            if (err) {
-                                this.client.unbind();
-
-                                reject(err);
-                                return;
-                            }
-
-                            resolve(this.client);
-                        });
-                    })
-                    .catch((e) => reject(e));
-            });
-
-            this.client.once('timeout', (err) => {
-                reject(err);
-            });
-
-            this.client.once('connectTimeout', (err) => {
-                reject(err);
-            });
-
-            this.client.once('error', (err) => {
-                reject(err);
-            });
-
-            this.client.once('connectError', (error) => {
-                if (error) {
-                    reject(error);
-                }
-            });
-        });
+        return this.client.bind(user, password);
     }
 
-    public async unbind() : Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.client.unbind((err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve();
-            });
-        });
+    async unbind() : Promise<void> {
+        return this.client.unbind();
     }
 
-    protected async establishSecureConnection() {
-        return new Promise<void>((resolve, reject) => {
-            if (!this.options.start_tls) {
-                resolve();
-                return;
+    public async findUser(input: string) : Promise<Record<string, any> | undefined> {
+        let filter : Filter | string;
+
+        if (this.options.user_filter) {
+            filter = template(this.options.user_filter, {
+                input,
+            });
+        } else if (this.options.user_name_attribute) {
+            filter = new EqualityFilter({
+                attribute: this.options.user_name_attribute,
+                value: input,
+            });
+        } else {
+            filter = new OrFilter({
+                filters: [
+                    new EqualityFilter({
+                        attribute: 'cn',
+                        value: input,
+                    }),
+                    new EqualityFilter({
+                        attribute: 'sAMAccountName',
+                        value: input,
+                    }),
+                ],
+            });
+        }
+
+        const entities = await this.client.search({
+            filter,
+            scope: 'sub',
+        }, this.client.resolveDn(this.options.base_dn, this.options.user_base_dn));
+
+        if (entities.length === 0) {
+            return undefined;
+        }
+
+        return entities[0];
+    }
+
+    public async findUserGroups(user: Record<string, any>) : Promise<string[]> {
+        let filter : Filter | string;
+        if (this.options.group_filter) {
+            filter = template(this.options.group_filter, user);
+        } else {
+            filter = new AndFilter({
+                filters: [
+                    new EqualityFilter({
+                        attribute: 'objectClass',
+                        value: this.options.group_class || 'group',
+                    }),
+                    new EqualityFilter({
+                        attribute: this.options.group_member_attribute || 'member',
+                        value: user[this.options.group_member_user_attribute || 'dn'],
+                    }),
+                ],
+            });
+        }
+
+        const entities = await this.client.search({
+            filter,
+            scope: 'sub',
+        }, this.client.resolveDn(this.options.base_dn, this.options.group_base_dn));
+
+        if (entities.length === 0) {
+            return [];
+        }
+
+        const attributeKey = this.options.group_name_attribute || 'cn';
+        const names : string[] = [];
+        for (let i = 0; i < entities.length; i++) {
+            const attribute = entities[i][attributeKey];
+            if (typeof attribute === 'undefined') {
+                continue;
             }
 
-            this.client.starttls(this.options.tls, null, (err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve();
-            });
-        });
-    }
-
-    public async searchUser(username: string) : Promise<LdapUser> {
-        return new Promise<LdapUser>((resolve, reject) => {
-            let filter : Filter;
-            if (this.options.user_name_attribute) {
-                filter = new EqualityFilter({
-                    attribute: this.options.user_name_attribute,
-                    value: username,
-                });
-            } else {
-                filter = new OrFilter({
-                    filters: [
-                        new EqualityFilter({
-                            attribute: 'cn',
-                            value: username,
-                        }),
-                        new EqualityFilter({
-                            attribute: 'sAMAccountName',
-                            value: username,
-                        }),
-                    ],
-                });
+            if (typeof attribute === 'string') {
+                names.push(attribute);
+                continue;
             }
 
-            const searchOptions : SearchOptions = {
-                filter,
-                scope: 'sub',
-            };
+            if (Array.isArray(attribute)) {
+                names.push(...attribute.filter((el) => typeof el === 'string'));
+            }
+        }
 
-            const baseDn = this.options.user_base_dn || this.options.base_dn;
-
-            this.client.search(baseDn, searchOptions, (err, res) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                let entity: LdapUser | undefined;
-
-                res.on('searchEntry', (searchEntry) => {
-                    entity = {
-                        dn: searchEntry.pojo.objectName,
-                    };
-
-                    for (let i = 0; i < searchEntry.pojo.attributes.length; i++) {
-                        const attribute = searchEntry.pojo.attributes[i];
-                        entity[attribute.type] = attribute.values.length === 1 ?
-                            attribute.values[0] :
-                            attribute.values;
-                    }
-                });
-
-                res.on('searchReference', () => {
-                    // todo: implement this
-                });
-
-                res.on('error', (err) => {
-                    reject(err);
-                });
-
-                res.on('end', (searchResult) => {
-                    if (searchResult.status !== 0 || typeof entity === 'undefined') {
-                        reject(new Error('The user could not be found.'));
-                    } else {
-                        resolve(entity);
-                    }
-                });
-            });
-        });
-    }
-
-    public async searchUserGroups(user: LdapUser) : Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            const groupMemberAttribute = this.options.group_member_attribute || 'member';
-            const groupMemberUserAttribute = this.options.group_member_user_attribute || 'dn';
-
-            const searchOptions : SearchOptions = {
-                filter: new AndFilter({
-                    filters: [
-                        new EqualityFilter({
-                            attribute: 'objectclass',
-                            value: this.options.group_class || 'group',
-                        }),
-                        new EqualityFilter({
-                            attribute: groupMemberAttribute,
-                            value: user[groupMemberUserAttribute],
-                        }),
-                    ],
-                }),
-                scope: 'sub',
-            };
-
-            const baseDn = this.options.base_dn || this.options.group_base_dn;
-            this.client.search(baseDn, searchOptions, (err, res) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                const entities: string[] = [];
-
-                const groupNameAttribute = this.options.group_name_attribute || 'cn';
-                res.on('searchEntry', (searchEntry) => {
-                    if (!hasOwnProperty(searchEntry.pojo.attributes, groupNameAttribute)) {
-                        return;
-                    }
-
-                    const groupName = searchEntry.pojo.attributes[groupNameAttribute];
-                    if (Array.isArray(groupName)) {
-                        // todo: check if array elements are strings
-                        entities.push(...groupName);
-                    } else if (typeof groupName === 'string') {
-                        entities.push(groupName);
-                    }
-                });
-
-                res.on('error', (err) => {
-                    reject(err);
-                });
-
-                res.on('end', (searchResult) => {
-                    if (searchResult.status !== 0) {
-                        reject(new Error('The user groups could not be found.'));
-                    } else {
-                        resolve(entities);
-                    }
-                });
-            });
-        });
+        return names;
     }
 }
