@@ -26,9 +26,17 @@ describe('src/domains/identity-provider/flow/ldap', () => {
     });
 
     it('should resolve dns', () => {
-        expect(client.resolveDn('dc=example', 'dc=com')).toEqual('dc=example,dc=com');
-        expect(client.resolveDn('ou=user,dc=example,dc=com', 'dc=example,dc=com')).toEqual('ou=user,dc=example,dc=com');
-        expect(client.resolveDn(undefined, 'dc=example,dc=com')).toEqual('dc=example,dc=com');
+        expect(client.resolveDn('dc=example', 'dc=com'))
+            .toEqual('dc=example,dc=com');
+
+        expect(client.resolveDn('ou=user, dc=example,dc=com', 'dc=example,dc=com'))
+            .toEqual('ou=user, dc=example,dc=com');
+
+        expect(client.resolveDn(undefined, 'dc=example,dc=com'))
+            .toEqual('dc=example,dc=com');
+
+        expect(client.resolveDn('dc=example,dc=com', 'dc=example, dc=com'))
+            .toEqual('dc=example,dc=com');
     });
 
     it('should search and login with user', async () => {

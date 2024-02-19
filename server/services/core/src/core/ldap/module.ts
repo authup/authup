@@ -146,7 +146,7 @@ export class LdapClient {
     async search(options: SearchOptions, dn?: string) : Promise<Record<string, any>[]> {
         return new Promise((resolve, reject) => {
             this.driver.search(
-                dn || this.options.baseDn,
+                this.resolveDn(dn, this.options.baseDn),
                 {
                     scope: 'sub',
                     ...options,
@@ -205,7 +205,7 @@ export class LdapClient {
             }
 
             const dn = parseDN(output);
-            if (dn.childOf(input[i])) {
+            if (dn.childOf(input[i]) || dn.equals(input[i])) {
                 continue;
             }
 
