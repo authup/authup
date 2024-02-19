@@ -31,6 +31,6 @@ export function serialize(input: unknown) : string {
     return JSON.stringify(input);
 }
 
-export function deserialize<T = any>(input: string) : T {
+export function deserialize<T = any>(input: any) : T {
     return destr(input);
 }

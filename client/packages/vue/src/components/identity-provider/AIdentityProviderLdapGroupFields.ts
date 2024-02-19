@@ -33,6 +33,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
+            group_filter: '',
             group_base_dn: '',
             group_name_attribute: '',
             group_class: '',
@@ -41,6 +42,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
         });
 
         const $v = useVuelidate({
+            group_filter: {},
             group_base_dn: {},
             group_name_attribute: {},
             group_class: {},
@@ -62,6 +64,21 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
         init();
 
         return () => [
+            buildFormGroup({
+                validationResult: $v.value.group_filter,
+                validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
+                labelContent: 'Filter',
+                content: buildFormInput({
+                    value: form.group_filter,
+                    onChange(input) {
+                        form.group_filter = input;
+                    },
+                    props: {
+                        placeholder: '(member={{dn}})',
+                    },
+                }),
+            }),
             buildFormGroup({
                 validationResult: $v.value.group_base_dn,
                 validationTranslator: useValidationTranslator(props.translatorLocale),

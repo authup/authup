@@ -11,7 +11,7 @@ import type { Request } from 'routup';
 export type IdentityProviderFlowIdentity = {
     id: string | number,
     name: string | string[],
-    email?: string,
+    email?: string | string[],
     roles?: string[],
     first_name?: string,
     last_name?: string
@@ -19,7 +19,7 @@ export type IdentityProviderFlowIdentity = {
 
 export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;
 export interface ILdapIdentityProviderFlow {
-    getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
+    getIdentity(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
 }
 
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;

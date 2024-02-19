@@ -55,6 +55,12 @@ export interface LdapIdentityProvider extends IdentityProvider {
      * @example dc=example,dc=com
      */
     user_base_dn?: string,
+
+    /**
+     * The LDAP filter to narrow down which users are valid
+     */
+    user_filter?: string,
+
     /**
      *  It will be used with the value in username to
      *  construct a ldap filter as ({attribute}={username}) to find the user and get user details in LDAP
@@ -75,6 +81,11 @@ export interface LdapIdentityProvider extends IdentityProvider {
      * Ff specified with groupClass, will serve as search base for authenticated user groups
      */
     group_base_dn?: string,
+
+    /**
+     * Similar to user_filter, but it applies to group searches.
+     */
+    group_filter?: string,
 
     /**
      * The LDAP attribute that is used to determine the group name.
