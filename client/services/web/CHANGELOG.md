@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.4](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.3...client-web-v1.0.0-beta.4) (2024-02-19)
+
+
+### Features
+
+* ldap identity provider ([#1721](https://github.com/authup/authup/issues/1721)) ([3cf6858](https://github.com/authup/authup/commit/3cf68587b8ed44c3dbbf745fcbec6166e615f85b))
+
+
+### Bug Fixes
+
+* client web scope list view ([b76cffb](https://github.com/authup/authup/commit/b76cffbe7f600cea2ca426e89112cf2247e210d0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-vue bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+    * @authup/config bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+    * @authup/client-web-config bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+
 ## [1.0.0-beta.3](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.2...client-web-v1.0.0-beta.3) (2024-02-06)
 
 

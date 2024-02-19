@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.4](https://github.com/authup/authup/compare/client-vue-v1.0.0-beta.3...client-vue-v1.0.0-beta.4) (2024-02-19)
+
+
+### Features
+
+* ldap identity provider ([#1721](https://github.com/authup/authup/issues/1721)) ([3cf6858](https://github.com/authup/authup/commit/3cf68587b8ed44c3dbbf745fcbec6166e615f85b))
+* ldap identity-provider {user,role}-filter attribute ([#1743](https://github.com/authup/authup/issues/1743)) ([f36f70e](https://github.com/authup/authup/commit/f36f70e67fddbe7c37c8dff82075598757e39599))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+
 ## [1.0.0-beta.3](https://github.com/authup/authup/compare/client-vue-v1.0.0-beta.2...client-vue-v1.0.0-beta.3) (2024-02-06)
 
 
