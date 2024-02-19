@@ -73,7 +73,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
                         form.user_filter = input;
                     },
                     props: {
-                        placeholder: '(&(|({name_attribute}={{input}})({mail_attribute}={{input}}))',
+                        placeholder: '(|({name_attribute}={{input}})({mail_attribute}={{input}}))',
                     },
                 }),
             }),

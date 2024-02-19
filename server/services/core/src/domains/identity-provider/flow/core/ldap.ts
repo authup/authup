@@ -79,6 +79,9 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         if (this.options.user_filter) {
             filter = template(this.options.user_filter, {
                 input,
+                name_attribute: this.options.user_name_attribute || 'cn',
+                mail_attribute: this.options.user_mail_attribute || 'mail',
+                display_name_attribute: this.options.user_display_name_attribute || 'cn',
             });
         } else if (this.options.user_name_attribute) {
             filter = new EqualityFilter({
@@ -113,9 +116,16 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     }
 
     public async findUserGroups(user: Record<string, any>) : Promise<string[]> {
+        const nameAttribute = this.options.group_name_attribute || 'cn';
+        const memberAttribute = this.options.group_member_attribute || 'member';
+
         let filter : Filter | string;
         if (this.options.group_filter) {
-            filter = template(this.options.group_filter, user);
+            filter = template(this.options.group_filter, {
+                ...user,
+                name_attribute: nameAttribute,
+                member_attribute: memberAttribute,
+            });
         } else {
             filter = new AndFilter({
                 filters: [
@@ -124,7 +134,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
                         value: this.options.group_class || 'group',
                     }),
                     new EqualityFilter({
-                        attribute: this.options.group_member_attribute || 'member',
+                        attribute: memberAttribute,
                         value: user[this.options.group_member_user_attribute || 'dn'],
                     }),
                 ],
