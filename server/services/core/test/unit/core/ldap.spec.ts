@@ -69,13 +69,13 @@ describe('src/domains/identity-provider/flow/ldap', () => {
         const user = users.pop();
 
         expect(user.dn).toEqual('cn=foo,dc=example,dc=com');
-        expect(user.cn).toEqual('foo');
-        expect(user.sn).toEqual('bar');
-        expect(user.mail).toEqual('foo.bar@example.com');
-        expect(user.objectClass).toEqual('inetOrgPerson');
-        expect(user.userPassword).toEqual('foo');
+        expect(user.cn).toEqual(['foo']);
+        expect(user.sn).toEqual(['bar']);
+        expect(user.mail).toEqual(['foo.bar@example.com']);
+        expect(user.objectClass).toEqual(['inetOrgPerson']);
+        expect(user.userPassword).toEqual(['foo']);
 
-        await client.bind(user.dn, user.userPassword);
+        await client.bind(user.dn, user.userPassword[0]);
 
         await client.bind();
         await dropClient(client);

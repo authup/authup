@@ -164,12 +164,12 @@ export class LdapClient {
                             dn: searchEntry.pojo.objectName,
                         };
 
-                        for (let i = 0; i < searchEntry.pojo.attributes.length; i++) {
-                            entry[searchEntry.pojo.attributes[i].type] = this.transformAttributeValue(
-                                searchEntry.pojo.attributes[i].values
-                                    .map((el) => el.trim())
-                                    .filter(Boolean),
-                            );
+                        for (let i = 0; i < searchEntry.attributes.length; i++) {
+                            const attribute = searchEntry.attributes[i];
+
+                            entry[attribute.type] = Array.isArray(attribute.values) ?
+                                attribute.values.map((el) => el.trim()).filter(Boolean) :
+                                attribute.values;
                         }
 
                         entries.push(entry);
@@ -223,27 +223,5 @@ export class LdapClient {
         } catch (e) {
             return false;
         }
-    }
-
-    private transformAttributeValue(input: string[]) {
-        const [element] = input;
-        if (typeof element === 'undefined') {
-            return undefined;
-        }
-
-        const elementNumber = Number(element);
-        if (!Number.isNaN(elementNumber)) {
-            return elementNumber;
-        }
-
-        if (element.toLowerCase() === 'true') {
-            return true;
-        }
-
-        if (element.toLowerCase() === 'false') {
-            return false;
-        }
-
-        return element;
     }
 }

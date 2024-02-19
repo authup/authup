@@ -11,7 +11,7 @@ import type { Request } from 'routup';
 export type IdentityProviderFlowIdentity = {
     id: string | number,
     name: string | string[],
-    email?: string,
+    email?: string | string[],
     roles?: string[],
     first_name?: string,
     last_name?: string

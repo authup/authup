@@ -43,26 +43,9 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         const user = await this.findUser(input);
         const identity : IdentityProviderFlowIdentity = {
             id: user.dn,
-            name: user.dn,
+            name: user[this.options.user_name_attribute || 'cn'] || user.dn,
+            email: user[this.options.user_mail_attribute || 'mail'],
         };
-
-        // todo: transform attributes toElement
-
-        if (
-            this.options.user_name_attribute &&
-            user[this.options.user_name_attribute]
-        ) {
-            identity.name = user[this.options.user_name_attribute];
-        }
-
-        if (
-            this.options.user_mail_attribute &&
-            user[this.options.user_mail_attribute]
-        ) {
-            identity.email = Array.isArray(user[this.options.user_mail_attribute]) ?
-                user[this.options.user_mail_attribute].pop() :
-                user[this.options.user_mail_attribute];
-        }
 
         try {
             identity.roles = await this.findUserGroups(user);
