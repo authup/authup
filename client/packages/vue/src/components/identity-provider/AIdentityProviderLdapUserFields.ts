@@ -33,6 +33,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
     emits: ['updated'],
     setup(props) {
         const form = reactive({
+            user_filter: '',
             user_base_dn: '',
             user_name_attribute: '',
             user_mail_attribute: '',
@@ -40,6 +41,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
         } satisfies Omit<LdapIdentityProvider, keyof IdentityProvider | 'base_dn' | 'url'>);
 
         const $v = useVuelidate({
+            user_filter: {},
             user_base_dn: {},
             user_name_attribute: {},
             user_mail_attribute: {},
@@ -60,6 +62,21 @@ export const AIdentityProviderLdapUserFields = defineComponent({
         init();
 
         return () => [
+            buildFormGroup({
+                validationResult: $v.value.user_filter,
+                validationTranslator: useValidationTranslator(props.translatorLocale),
+                label: true,
+                labelContent: 'Filter',
+                content: buildFormInput({
+                    value: form.user_filter,
+                    onChange(input) {
+                        form.user_filter = input;
+                    },
+                    props: {
+                        placeholder: '(&(|({name_attribute}={{input}})({mail_attribute}={{input}}))',
+                    },
+                }),
+            }),
             buildFormGroup({
                 validationResult: $v.value.user_base_dn,
                 validationTranslator: useValidationTranslator(props.translatorLocale),
