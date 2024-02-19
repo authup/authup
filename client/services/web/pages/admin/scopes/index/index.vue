@@ -74,7 +74,7 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <ScopeList
+    <AScopes
         :query="query"
         @deleted="handleDeleted"
     >
@@ -125,5 +125,5 @@ export default defineNuxtComponent({
                 </template>
             </BTable>
         </template>
-    </ScopeList>
+    </AScopes>
 </template>
