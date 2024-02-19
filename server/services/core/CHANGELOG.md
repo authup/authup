@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.4](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.3...server-core-v1.0.0-beta.4) (2024-02-19)
+
+
+### Features
+
+* enable condition validation for permission-relation entities ([#1733](https://github.com/authup/authup/issues/1733)) ([bb96e9a](https://github.com/authup/authup/commit/bb96e9aa10d825191b79e5971701ba8135acba55))
+* ldap identity provider ([#1721](https://github.com/authup/authup/issues/1721)) ([3cf6858](https://github.com/authup/authup/commit/3cf68587b8ed44c3dbbf745fcbec6166e615f85b))
+* ldap identity-provider {user,role}-filter attribute ([#1743](https://github.com/authup/authup/issues/1743)) ([f36f70e](https://github.com/authup/authup/commit/f36f70e67fddbe7c37c8dff82075598757e39599))
+* serialize/deserialize {user,role,identity-provider}-attribute values ([#1731](https://github.com/authup/authup/issues/1731)) ([2283cca](https://github.com/authup/authup/commit/2283cca200ced41305f430c6a73e954dfd89bbf5))
+* store email of identity-provider flow & optimized account creation ([df97c1a](https://github.com/authup/authup/commit/df97c1ad4cb0502bfbf16cdad34edc833ca522c7))
+* use envix for environment variable interaction ([8d5a8fc](https://github.com/authup/authup/commit/8d5a8fc261cd34caea2a9d42222118cc54cef55f))
+
+
+### Bug Fixes
+
+* **deps:** bump @routup/swagger from 2.3.4 to 2.3.5 ([#1745](https://github.com/authup/authup/issues/1745)) ([0c8b7ab](https://github.com/authup/authup/commit/0c8b7ab35fd94f922d846539477cce5a3732c0b2))
+* **deps:** bump better-sqlite3 from 9.3.0 to 9.4.1 ([#1717](https://github.com/authup/authup/issues/1717)) ([6c587cc](https://github.com/authup/authup/commit/6c587cc31ad8c8476b3612891ed850d56202bbdc))
+* **deps:** bump dotenv from 16.4.1 to 16.4.4 ([#1728](https://github.com/authup/authup/issues/1728)) ([0952c01](https://github.com/authup/authup/commit/0952c013e5b26efece6f59974a5e584f64f97032))
+* **deps:** bump envix from 1.2.0 to 1.3.0 ([#1714](https://github.com/authup/authup/issues/1714)) ([c922704](https://github.com/authup/authup/commit/c9227042f021ac062fa7eeb36030d5aa9eda40ec))
+* **deps:** bump envix from 1.3.0 to 1.5.0 ([#1718](https://github.com/authup/authup/issues/1718)) ([68158fe](https://github.com/authup/authup/commit/68158fe5d41cc710da780b7d558d6990e88e8936))
+* **deps:** bump typeorm-extension from 3.4.0 to 3.5.0 ([#1724](https://github.com/authup/authup/issues/1724)) ([b95f0bc](https://github.com/authup/authup/commit/b95f0bcb1261f444429919f0108afced24551a51))
+* ldap identity-provider login flow + added idp ldap test suite ([bc78964](https://github.com/authup/authup/commit/bc7896472d4840a9197ef716ead1c4344c2f1679))
+* remove env.ts~ ([e2d68df](https://github.com/authup/authup/commit/e2d68dfee5238f6a9311ad6adab8d0796fd42960))
+* stricter implementation of ldap resolveDn fn ([135e66b](https://github.com/authup/authup/commit/135e66b6fecbbd312f23b9e337c95e7d60c1b169))
+* use read-int instead of read-number ([cb01c5e](https://github.com/authup/authup/commit/cb01c5e1fe59008fcd792f04ce581ec10254538d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+    * @authup/server-kit bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+
 ## [1.0.0-beta.3](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.2...server-core-v1.0.0-beta.3) (2024-02-06)
 
 

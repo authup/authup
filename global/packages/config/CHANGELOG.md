@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0-beta.4](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.3...global-config-v1.0.0-beta.4) (2024-02-19)
+
+
+### Features
+
+* use envix for environment variable interaction ([8d5a8fc](https://github.com/authup/authup/commit/8d5a8fc261cd34caea2a9d42222118cc54cef55f))
+
+
+### Bug Fixes
+
+* **deps:** bump envix from 1.2.0 to 1.3.0 ([#1714](https://github.com/authup/authup/issues/1714)) ([c922704](https://github.com/authup/authup/commit/c9227042f021ac062fa7eeb36030d5aa9eda40ec))
+* **deps:** bump envix from 1.3.0 to 1.5.0 ([#1718](https://github.com/authup/authup/issues/1718)) ([68158fe](https://github.com/authup/authup/commit/68158fe5d41cc710da780b7d558d6990e88e8936))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+
 ## [1.0.0-beta.3](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.2...global-config-v1.0.0-beta.3) (2024-02-06)
 
 

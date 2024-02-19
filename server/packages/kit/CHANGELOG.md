@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.4](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.3...server-kit-v1.0.0-beta.4) (2024-02-19)
+
+
+### Miscellaneous Chores
+
+* **server-kit:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.3 to ^1.0.0-beta.4
+
 ## [1.0.0-beta.3](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.2...server-kit-v1.0.0-beta.3) (2024-02-06)
 
 
