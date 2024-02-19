@@ -8,10 +8,12 @@
 import type {
     IdentityProvider,
     IdentityProviderAccount,
-    User,
 } from '@authup/core';
 import {
-    createNanoID, hasOwnProperty, isValidUserName,
+    createNanoID,
+    hasOwnProperty,
+    isValidUserEmail,
+    isValidUserName,
 } from '@authup/core';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
@@ -29,7 +31,7 @@ export async function createIdentityProviderAccount(
     const accountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
     let account = await accountRepository.findOne({
         where: {
-            provider_user_id: `${identity.id}`,
+            provider_user_id: identity.id,
             provider_id: provider.id,
         },
         relations: ['user'],
@@ -43,14 +45,30 @@ export async function createIdentityProviderAccount(
             names = [identity.name];
         }
 
+        let mails : string[];
+        if (identity.email) {
+            if (Array.isArray(identity.email)) {
+                mails = identity.email;
+            } else {
+                mails = [identity.email];
+            }
+        } else {
+            mails = [];
+        }
+
+        // preserve idp name
+        const [name] = names;
+
         const user = await createUser({
-            realm_id: provider.realm_id,
-        }, [...names]);
+            realmId: provider.realm_id,
+            mails,
+            names,
+        });
 
         account = accountRepository.create({
             provider_id: provider.id,
-            provider_user_id: `${identity.id}`,
-            provider_user_name: names.shift(),
+            provider_user_id: identity.id,
+            provider_user_name: name,
             user_id: user.id,
             user,
         });
@@ -82,17 +100,37 @@ export async function createIdentityProviderAccount(
     return account;
 }
 
-async function createUser(data: Partial<User>, names: string[]) : Promise<UserEntity> {
-    let name : string | undefined = names.shift();
-    let nameLocked = true;
+type UserCreateContext = {
+    names: string[],
+    mails: string[],
+    realmId: string
+};
 
+async function createUser(context: UserCreateContext) : Promise<UserEntity> {
+    let name : string | undefined;
+    while (!name && context.names.length > 0) {
+        if (isValidUserName(context.names[0])) {
+            [name] = context.names;
+            break;
+        }
+
+        context.names.shift();
+    }
+
+    let nameLocked = true;
     if (!name) {
         name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
         nameLocked = false;
     }
 
-    if (!isValidUserName(name)) {
-        return createUser(data, names);
+    let email : string | undefined;
+    while (!email && context.mails.length > 0) {
+        if (isValidUserEmail(context.mails[0])) {
+            [email] = context.mails;
+            break;
+        }
+
+        context.mails.shift();
     }
 
     try {
@@ -102,9 +140,9 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
             name,
             name_locked: nameLocked,
             display_name: name,
-            realm_id: data.realm_id,
+            realm_id: context.realmId,
             active: true,
-            email: data.email,
+            email,
         });
 
         await userRepository.insert(user);
@@ -120,7 +158,7 @@ async function createUser(data: Partial<User>, names: string[]) : Promise<UserEn
                 code === 'ER_DUP_ENTRY' ||
                 code === 'SQLITE_CONSTRAINT_UNIQUE'
             ) {
-                return createUser(data, names);
+                return createUser(context);
             }
         }
 

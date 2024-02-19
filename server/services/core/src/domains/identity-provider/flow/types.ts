@@ -9,7 +9,7 @@ import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase
 import type { Request } from 'routup';
 
 export type IdentityProviderFlowIdentity = {
-    id: string | number,
+    id: string,
     name: string | string[],
     email?: string | string[],
     roles?: string[],

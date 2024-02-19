@@ -32,7 +32,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     async getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity> {
         const identity = await this.getIdentity(user);
 
-        await this.bind(`${identity.id}`, password);
+        await this.bind(identity.id, password);
 
         return identity;
     }
