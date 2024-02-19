@@ -146,7 +146,7 @@ export class LdapClient {
     async search(options: SearchOptions, dn?: string) : Promise<Record<string, any>[]> {
         return new Promise((resolve, reject) => {
             this.driver.search(
-                this.resolveDn(dn, this.options.baseDn),
+                dn || this.options.baseDn,
                 {
                     scope: 'sub',
                     ...options,

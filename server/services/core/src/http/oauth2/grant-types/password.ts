@@ -121,12 +121,20 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             return undefined;
         }
 
-        if (account.user) {
+        if (
+            account.user &&
+            account.user.realm
+        ) {
             return account.user as UserEntity;
         }
 
         const userRepository = dataSource.getRepository(UserEntity);
 
-        return userRepository.findOneBy({ id: account.user_id });
+        return userRepository.findOne({
+            where: {
+                id: account.user_id,
+            },
+            relations: ['realm'],
+        });
     }
 }

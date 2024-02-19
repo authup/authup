@@ -26,6 +26,9 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
             tls: options.tls,
             startTLS: options.start_tls,
             baseDn: options.base_dn,
+            user: options.user,
+            password: options.password,
+            userNameAttribute: options.user_name_attribute,
         });
     }
 

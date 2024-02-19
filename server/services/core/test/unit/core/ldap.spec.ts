@@ -6,47 +6,23 @@
  */
 
 import { EqualityFilter } from 'ldapjs';
-import type { StartedTestContainer } from 'testcontainers';
-import { LdapClient } from '../../../src/core';
-
-const addClient = async (client: LdapClient) => {
-    try {
-        await client.add('cn=foo,dc=example,dc=com', {
-            cn: 'foo',
-            sn: 'bar',
-            mail: 'foo.bar@example.com',
-            objectClass: 'inetOrgPerson',
-            userPassword: 'foo',
-        });
-    } catch (e) {
-        // do nothing ;)
-    }
-};
-
-const dropClient = async (client: LdapClient) => {
-    try {
-        await client.del('cn=foo,dc=example,dc=com');
-    } catch (e) {
-        // do nothing :)
-    }
-};
+import type { LdapClient } from '../../../src/core';
+import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from '../../utils/ldap';
 
 describe('src/domains/identity-provider/flow/ldap', () => {
     let client : LdapClient;
 
-    const container : StartedTestContainer = globalThis.OPENLDAP_CONTAINER;
-
     beforeAll(async () => {
-        client = new LdapClient({
-            url: `ldap://${container.getHost()}:${container.getFirstMappedPort()}`,
-            user: 'cn=admin,dc=example,dc=com',
-            password: 'password',
-            baseDn: 'dc=example,dc=com',
-        });
+        client = createLdapTestClient();
+        await client.bind();
+        await createLdapTestUserAccount(client);
     });
 
     afterAll(async () => {
+        await client.bind();
+        await dropLdapTestUserAccount(client);
         await client.unbind();
+        client = undefined;
     });
 
     it('should resolve dns', () => {
@@ -55,16 +31,8 @@ describe('src/domains/identity-provider/flow/ldap', () => {
         expect(client.resolveDn(undefined, 'dc=example,dc=com')).toEqual('dc=example,dc=com');
     });
 
-    it('should establish a connection', async () => {
-        await client.bind();
-
-        expect(client.connected).toBeTruthy();
-    });
-
     it('should search and login with user', async () => {
         await client.bind();
-        await addClient(client);
-
         const users = await client.search({
             filter: new EqualityFilter({
                 attribute: 'cn',
@@ -80,10 +48,9 @@ describe('src/domains/identity-provider/flow/ldap', () => {
         expect(user.mail).toEqual(['foo.bar@example.com']);
         expect(user.objectClass).toEqual(['inetOrgPerson']);
         expect(user.userPassword).toEqual(['foo']);
+    });
 
-        await client.bind(user.dn, user.userPassword[0]);
-
-        await client.bind();
-        await dropClient(client);
+    it('should authenticate with test user account', async () => {
+        await client.bind('cn=foo,dc=example,dc=com', 'foo');
     });
 });

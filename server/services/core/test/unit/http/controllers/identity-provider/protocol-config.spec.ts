@@ -24,7 +24,7 @@ describe('src/http/controllers/identity-provider', () => {
         superTest = undefined;
     });
 
-    fit('should work with protocol config', async () => {
+    it('should work with protocol config', async () => {
         const data : Partial<OAuth2IdentityProvider> = {
             slug: 'google',
             name: 'google',
