@@ -103,7 +103,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         const entities = await this.client.search({
             filter,
             scope: 'sub',
-        }, this.client.resolveDn(this.options.base_dn, this.options.user_base_dn));
+        }, this.client.resolveDn(this.options.user_base_dn, this.options.base_dn));
 
         if (entities.length === 0) {
             return undefined;
@@ -134,7 +134,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         const entities = await this.client.search({
             filter,
             scope: 'sub',
-        }, this.client.resolveDn(this.options.base_dn, this.options.group_base_dn));
+        }, this.client.resolveDn(this.options.group_base_dn, this.options.base_dn));
 
         if (entities.length === 0) {
             return [];

@@ -49,6 +49,12 @@ describe('src/domains/identity-provider/flow/ldap', () => {
         await client.unbind();
     });
 
+    it('should resolve dns', () => {
+        expect(client.resolveDn('dc=example', 'dc=com')).toEqual('dc=example,dc=com');
+        expect(client.resolveDn('ou=user,dc=example,dc=com', 'dc=example,dc=com')).toEqual('ou=user,dc=example,dc=com');
+        expect(client.resolveDn(undefined, 'dc=example,dc=com')).toEqual('dc=example,dc=com');
+    });
+
     it('should establish a connection', async () => {
         await client.bind();
 
