@@ -89,14 +89,20 @@ export class AbilityManager {
             predicate = value;
         }
 
-        predicate.target = { $eq: null };
-        let item = this.getOne(predicate);
-        if (item) {
-            return item.target;
-        }
+        const item = this.getOne(predicate, {
+            sortFn: (a, b) => {
+                if (typeof a.target === 'undefined' || a.target === null) {
+                    return -1;
+                }
 
-        delete predicate.target;
-        item = this.getOne(predicate);
+                if (typeof b.target === 'undefined' || b.target === null) {
+                    return 1;
+                }
+
+                return 0;
+            },
+        });
+
         return item ? item.target : undefined;
     }
 
@@ -150,12 +156,12 @@ export class AbilityManager {
 
     getOne(
         predicate: MongoQuery<Ability> | string,
-        options?: {
+        options: {
             withoutInverse?: boolean,
             field?: string,
             subject?: Record<string, any>,
             sortFn?: (a: Ability, b: Ability) => number,
-        },
+        } = {},
     ) : Ability | undefined {
         if (typeof predicate === 'string') {
             predicate = {
@@ -174,9 +180,7 @@ export class AbilityManager {
         }
 
         for (let i = 0; i < this.items.length; i++) {
-            if (
-                !test(this.items[i])
-            ) {
+            if (!test(this.items[i])) {
                 // eslint-disable-next-line no-continue
                 continue;
             }

@@ -69,7 +69,7 @@ describe('src/ability/manager.ts', () => {
         expect(target).toEqual('test');
 
         target = manager.getTarget('user_add');
-        expect(target).toEqual(null);
+        expect(target).toEqual(undefined);
     });
 
     it('can and can not', () => {
