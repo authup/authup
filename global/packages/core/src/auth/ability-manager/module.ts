@@ -11,9 +11,6 @@ import { guard } from '@ucast/mongo2js';
 import type {
     Ability,
 } from './type';
-import {
-    extendAbility,
-} from './utils';
 
 export class AbilityManager {
     protected items: Ability[];
@@ -224,11 +221,9 @@ export class AbilityManager {
         input: Ability[] | Ability,
         merge?: boolean,
     ) {
-        let items = Array.isArray(input) ?
+        const items = Array.isArray(input) ?
             input :
             [input];
-
-        items = items.map((item) => extendAbility(item));
 
         if (merge) {
             // todo: check if unique !

@@ -12,7 +12,7 @@ import type {
     Role,
 } from '@authup/core';
 import {
-    buildAbilityDescriptor,
+    buildAbility,
 
 } from '@authup/core';
 import { buildKeyPath } from 'redis-extension';
@@ -60,7 +60,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
         const result : Ability[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildAbilityDescriptor(entities[i]));
+            result.push(buildAbility(entities[i]));
         }
 
         return result;

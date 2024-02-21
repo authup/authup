@@ -20,7 +20,7 @@ import type {
     UserRole,
 } from '@authup/core';
 import {
-    buildAbilityDescriptor,
+    buildAbility,
     createNanoID,
 } from '@authup/core';
 
@@ -155,7 +155,7 @@ export class UserRepository extends Repository<UserEntity> {
 
         const result : Ability[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildAbilityDescriptor(entities[i]));
+            result.push(buildAbility(entities[i]));
         }
 
         return result;
