@@ -7,12 +7,7 @@
 
 import type { MongoQuery } from '@ucast/mongo2js';
 
-export type AbilityID = {
-    action: string,
-    subject: string
-};
-
-export type AbilityDescriptor<T extends Record<string, any> = Record<string, any>> = {
+export type Ability<T extends Record<string, any> = Record<string, any>> = {
     name: string,
     inverse?: boolean,
     condition?: MongoQuery<T> | null,
@@ -20,5 +15,3 @@ export type AbilityDescriptor<T extends Record<string, any> = Record<string, any
     target?: string | null,
     power?: number | null
 };
-
-export type Ability<T extends Record<string, any> = Record<any, any>> = AbilityID & AbilityDescriptor<T>;

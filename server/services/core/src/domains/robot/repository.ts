@@ -6,10 +6,10 @@
  */
 
 import type {
-    AbilityDescriptor, Robot,
+    Ability, Robot,
     Role,
 } from '@authup/core';
-import { buildAbilityDescriptor, createNanoID } from '@authup/core';
+import { buildAbility, createNanoID } from '@authup/core';
 
 import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
@@ -28,8 +28,8 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getOwnedPermissions(
         id: Robot['id'],
-    ) : Promise<AbilityDescriptor[]> {
-        const permissions : AbilityDescriptor[] = await this.getSelfOwnedPermissions(id);
+    ) : Promise<Ability[]> {
+        const permissions : Ability[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)
@@ -58,7 +58,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<AbilityDescriptor[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<Ability[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
@@ -77,9 +77,9 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        const result : AbilityDescriptor[] = [];
+        const result : Ability[] = [];
         for (let i = 0; i < entities.length; i++) {
-            result.push(buildAbilityDescriptor(entities[i]));
+            result.push(buildAbility(entities[i]));
         }
 
         return result;

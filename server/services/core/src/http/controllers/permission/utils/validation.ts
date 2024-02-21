@@ -25,7 +25,6 @@ export async function runPermissionValidation(
         .exists()
         .notEmpty()
         .isString()
-        .matches(/^(?:[a-zA-Z-]+_[a-zA-Z-]+)+$/)
         .isLength({ min: 3, max: 128 });
 
     if (operation === RequestHandlerOperation.UPDATE) nameChain.optional({ nullable: true });

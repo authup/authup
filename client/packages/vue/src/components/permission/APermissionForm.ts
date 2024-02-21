@@ -12,7 +12,7 @@ import {
     defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import {
-    helpers, maxLength, minLength, required,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Permission } from '@authup/core';
 import {
@@ -50,7 +50,6 @@ export const APermissionForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
-                permissionNamePattern: helpers.regex(/^(?:[a-zA-Z-]+_[a-zA-Z-]+)+$/),
             },
             description: {
                 minLength: minLength(5),
@@ -101,7 +100,6 @@ export const APermissionForm = defineComponent({
                         form.name = input;
                     },
                     props: {
-                        placeholder: '{object}_{action}',
                         disabled: manager.data.value &&
                             manager.data.value.built_in,
                     },

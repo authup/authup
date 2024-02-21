@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityDescriptor } from '@authup/core';
+import type { Ability } from '@authup/core';
 import { OAuth2SubKind, ScopeName, transformOAuth2ScopeToArray } from '@authup/core';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, UserRepository } from '../../../domains';
@@ -14,7 +14,7 @@ export async function loadOAuth2SubPermissions(
     kind: `${OAuth2SubKind}`,
     id: string,
     scope?: string | string[],
-) : Promise<AbilityDescriptor[]> {
+) : Promise<Ability[]> {
     const scopes = transformOAuth2ScopeToArray(scope);
 
     // todo: grant permissions depending on scopes :)

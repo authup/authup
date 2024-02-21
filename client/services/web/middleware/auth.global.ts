@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    buildNameFromAbilityID,
-} from '@authup/core';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
@@ -35,13 +32,7 @@ function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: st
 
             const value = matchedRecord.meta[layoutKey];
             if (Array.isArray(value)) {
-                isAllowed = value.some((val) => {
-                    if (layoutKey !== LayoutKey.REQUIRED_PERMISSIONS) {
-                        val = buildNameFromAbilityID(val);
-                    }
-
-                    return has(val);
-                });
+                isAllowed = value.some((val) => has(val));
             }
 
             if (isAllowed) {

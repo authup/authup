@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityDescriptor } from '../../../src';
+import type { Ability } from '../../../src';
 import { AbilityManager } from '../../../src';
 
-const testPermissions : AbilityDescriptor[] = [
+const testPermissions : Ability[] = [
     {
         name: 'user_add', inverse: false, power: 777, target: 'test',
     },
@@ -69,7 +69,7 @@ describe('src/ability/manager.ts', () => {
         expect(target).toEqual('test');
 
         target = manager.getTarget('user_add');
-        expect(target).toEqual(null);
+        expect(target).toEqual(undefined);
     });
 
     it('can and can not', () => {

@@ -10,22 +10,14 @@ import { guard } from '@ucast/mongo2js';
 
 import type {
     Ability,
-    AbilityDescriptor,
-    AbilityID,
 } from './type';
-import {
-    buildAbilityMetaFromName,
-    buildNameFromAbilityID,
-    extendPermissionDescriptor,
-    isAbilityID,
-} from './utils';
 
 export class AbilityManager {
     protected items: Ability[];
 
     // ----------------------------------------------
 
-    constructor(input: AbilityDescriptor[] | AbilityDescriptor = []) {
+    constructor(input: Ability[] | Ability = []) {
         this.set(input);
     }
 
@@ -39,14 +31,10 @@ export class AbilityManager {
      * @param field
      */
     verify(
-        action: AbilityID | string,
+        action: string,
         subject?: Record<string, any>,
         field?: string,
     ) : boolean {
-        if (isAbilityID(action)) {
-            action = buildNameFromAbilityID(action);
-        }
-
         const item = this.getOne(action, {
             withoutInverse: true,
             subject,
@@ -63,15 +51,11 @@ export class AbilityManager {
      * @param withoutInverse
      */
     has(
-        action: AbilityID | AbilityID[] | string | string[],
+        action: string | string[],
         withoutInverse = true,
     ) : boolean {
         if (Array.isArray(action)) {
             return action.some((item) => this.has(item));
-        }
-
-        if (typeof action !== 'string') {
-            action = buildNameFromAbilityID(action);
         }
 
         const item = this.getOne(action, {
@@ -105,14 +89,20 @@ export class AbilityManager {
             predicate = value;
         }
 
-        predicate.target = { $eq: null };
-        let item = this.getOne(predicate);
-        if (item) {
-            return item.target;
-        }
+        const item = this.getOne(predicate, {
+            sortFn: (a, b) => {
+                if (typeof a.target === 'undefined' || a.target === null) {
+                    return -1;
+                }
 
-        delete predicate.target;
-        item = this.getOne(predicate);
+                if (typeof b.target === 'undefined' || b.target === null) {
+                    return 1;
+                }
+
+                return 0;
+            },
+        });
+
         return item ? item.target : undefined;
     }
 
@@ -166,12 +156,12 @@ export class AbilityManager {
 
     getOne(
         predicate: MongoQuery<Ability> | string,
-        options?: {
+        options: {
             withoutInverse?: boolean,
             field?: string,
             subject?: Record<string, any>,
             sortFn?: (a: Ability, b: Ability) => number,
-        },
+        } = {},
     ) : Ability | undefined {
         if (typeof predicate === 'string') {
             predicate = {
@@ -190,9 +180,7 @@ export class AbilityManager {
         }
 
         for (let i = 0; i < this.items.length; i++) {
-            if (
-                !test(this.items[i])
-            ) {
+            if (!test(this.items[i])) {
                 // eslint-disable-next-line no-continue
                 continue;
             }
@@ -234,23 +222,12 @@ export class AbilityManager {
     }
 
     set(
-        input: AbilityDescriptor[] | AbilityDescriptor,
+        input: Ability[] | Ability,
         merge?: boolean,
     ) {
-        const configurations = Array.isArray(input) ?
+        const items = Array.isArray(input) ?
             input :
             [input];
-
-        const items : Ability[] = [];
-
-        for (let i = 0; i < configurations.length; i++) {
-            configurations[i] = extendPermissionDescriptor(configurations[i]);
-
-            items[i] = {
-                ...configurations[i],
-                ...buildAbilityMetaFromName(configurations[i].name),
-            };
-        }
 
         if (merge) {
             // todo: check if unique !
