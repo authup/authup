@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityDescriptor } from '../../../src';
+import type { Ability } from '../../../src';
 import { AbilityManager } from '../../../src';
 
-const testPermissions : AbilityDescriptor[] = [
+const testPermissions : Ability[] = [
     {
         name: 'user_add', inverse: false, power: 777, target: 'test',
     },

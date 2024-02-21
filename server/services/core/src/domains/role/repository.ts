@@ -8,7 +8,7 @@
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type {
-    AbilityDescriptor,
+    Ability,
     Role,
 } from '@authup/core';
 import {
@@ -27,7 +27,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
     async getOwnedPermissionsByMany(
         ids: Role['id'][],
-    ) : Promise<AbilityDescriptor[]> {
+    ) : Promise<Ability[]> {
         const permissions = [];
 
         for (let i = 0; i < ids.length; i++) {
@@ -39,7 +39,7 @@ export class RoleRepository extends Repository<RoleEntity> {
 
     async getOwnedPermissions(
         id: Role['id'],
-    ) : Promise<AbilityDescriptor[]> {
+    ) : Promise<Ability[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
 
         const entities = await repository.find({
@@ -58,7 +58,7 @@ export class RoleRepository extends Repository<RoleEntity> {
             },
         });
 
-        const result : AbilityDescriptor[] = [];
+        const result : Ability[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push(buildAbilityDescriptor(entities[i]));
         }

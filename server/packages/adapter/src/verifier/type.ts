@@ -6,7 +6,7 @@
  */
 
 import type {
-    AbilityDescriptor,
+    Ability,
     OAuth2TokenPayload,
     TokenCreator,
     TokenCreatorOptions,
@@ -20,9 +20,9 @@ export type TokenVerifierOptions = {
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {
-    permissions: AbilityDescriptor[]
+    permissions: Ability[]
 };
 
 export type TokenVerificationDataInput = OAuth2TokenPayload & {
-    permissions?: AbilityDescriptor[]
+    permissions?: Ability[]
 };

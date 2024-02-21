@@ -6,7 +6,7 @@
  */
 
 import type { JwtPayload } from 'jsonwebtoken';
-import type { AbilityDescriptor } from './ability-manager';
+import type { Ability } from './ability-manager';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2TokenGrantResponse = {
@@ -113,7 +113,7 @@ export type OAuth2TokenPayload = JwtPayload & {
 
 export type OAuth2TokenIntrospectionResponse = {
     active: boolean,
-    permissions?: AbilityDescriptor[],
+    permissions?: Ability[],
 } & OAuth2TokenPayload;
 
 export type OAuth2JsonWebKey = {

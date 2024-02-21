@@ -15,7 +15,7 @@ import {
     Repository,
 } from 'typeorm';
 import type {
-    AbilityDescriptor,
+    Ability,
     Role, User,
     UserRole,
 } from '@authup/core';
@@ -104,8 +104,8 @@ export class UserRepository extends Repository<UserEntity> {
 
     async getOwnedPermissions(
         id: User['id'],
-    ) : Promise<AbilityDescriptor[]> {
-        const permissions : AbilityDescriptor[] = await this.getSelfOwnedPermissions(id);
+    ) : Promise<Ability[]> {
+        const permissions : Ability[] = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)
@@ -134,7 +134,7 @@ export class UserRepository extends Repository<UserEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<AbilityDescriptor[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<Ability[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
@@ -153,7 +153,7 @@ export class UserRepository extends Repository<UserEntity> {
             },
         });
 
-        const result : AbilityDescriptor[] = [];
+        const result : Ability[] = [];
         for (let i = 0; i < entities.length; i++) {
             result.push(buildAbilityDescriptor(entities[i]));
         }

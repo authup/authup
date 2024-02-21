@@ -6,6 +6,4 @@
  */
 
 export * from './build';
-export * from './descriptor';
-export * from './meta';
-export * from './shape';
+export * from './extend';

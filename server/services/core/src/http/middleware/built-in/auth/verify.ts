@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityDescriptor } from '@authup/core';
+import type { Ability } from '@authup/core';
 import {
     AbilityManager,
     HeaderError, OAuth2SubKind,
@@ -101,7 +101,7 @@ async function verifyBasicAuthorizationHeader(
     request: Request,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : AbilityDescriptor[] = [];
+    let permissions : Ability[] = [];
 
     const config = useConfig();
     const dataSource = await useDataSource();

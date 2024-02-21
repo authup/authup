@@ -10,14 +10,9 @@ import { guard } from '@ucast/mongo2js';
 
 import type {
     Ability,
-    AbilityDescriptor,
-    AbilityID,
 } from './type';
 import {
-    buildAbilityMetaFromName,
-    buildNameFromAbilityID,
-    extendPermissionDescriptor,
-    isAbilityID,
+    extendAbility,
 } from './utils';
 
 export class AbilityManager {
@@ -25,7 +20,7 @@ export class AbilityManager {
 
     // ----------------------------------------------
 
-    constructor(input: AbilityDescriptor[] | AbilityDescriptor = []) {
+    constructor(input: Ability[] | Ability = []) {
         this.set(input);
     }
 
@@ -39,14 +34,10 @@ export class AbilityManager {
      * @param field
      */
     verify(
-        action: AbilityID | string,
+        action: string,
         subject?: Record<string, any>,
         field?: string,
     ) : boolean {
-        if (isAbilityID(action)) {
-            action = buildNameFromAbilityID(action);
-        }
-
         const item = this.getOne(action, {
             withoutInverse: true,
             subject,
@@ -63,15 +54,11 @@ export class AbilityManager {
      * @param withoutInverse
      */
     has(
-        action: AbilityID | AbilityID[] | string | string[],
+        action: string | string[],
         withoutInverse = true,
     ) : boolean {
         if (Array.isArray(action)) {
             return action.some((item) => this.has(item));
-        }
-
-        if (typeof action !== 'string') {
-            action = buildNameFromAbilityID(action);
         }
 
         const item = this.getOne(action, {
@@ -234,23 +221,14 @@ export class AbilityManager {
     }
 
     set(
-        input: AbilityDescriptor[] | AbilityDescriptor,
+        input: Ability[] | Ability,
         merge?: boolean,
     ) {
-        const configurations = Array.isArray(input) ?
+        let items = Array.isArray(input) ?
             input :
             [input];
 
-        const items : Ability[] = [];
-
-        for (let i = 0; i < configurations.length; i++) {
-            configurations[i] = extendPermissionDescriptor(configurations[i]);
-
-            items[i] = {
-                ...configurations[i],
-                ...buildAbilityMetaFromName(configurations[i].name),
-            };
-        }
+        items = items.map((item) => extendAbility(item));
 
         if (merge) {
             // todo: check if unique !

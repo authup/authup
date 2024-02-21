@@ -1,5 +1,5 @@
 import type { PermissionRelation } from '../../../domains';
-import type { AbilityDescriptor } from '../type';
+import type { Ability } from '../type';
 
 function buildPermissionMetaFields(input: string | null): string[] | undefined {
     if (!input) {
@@ -26,7 +26,7 @@ function isFieldsArray(input: unknown): input is string[] {
 
 // todo: replace CURRENT_DATE with evaluation of Date.now()
 
-export function buildAbilityDescriptor(entity: PermissionRelation): AbilityDescriptor {
+export function buildAbilityDescriptor(entity: PermissionRelation): Ability {
     if (typeof entity.permission === 'undefined') {
         throw new Error('The permission relation attribute is mandatory.');
     }
