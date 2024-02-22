@@ -84,11 +84,11 @@ export async function runRobotPermissionValidation(
         }
     }
 
-    const permissionTarget = ability
-        .getTarget(PermissionName.ROBOT_PERMISSION_ADD);
+    const permission = ability
+        .findOne(PermissionName.ROBOT_PERMISSION_ADD);
 
-    if (permissionTarget) {
-        result.data.target = permissionTarget;
+    if (permission) {
+        result.data.target = permission.target;
     }
 
     // ----------------------------------------------
