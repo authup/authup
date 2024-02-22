@@ -86,9 +86,9 @@ export async function runUserPermissionValidation(
         }
     }
 
-    const permissionTarget = ability.getTarget(PermissionName.USER_PERMISSION_ADD);
+    const permissionTarget = ability.findOne(PermissionName.USER_PERMISSION_ADD);
     if (permissionTarget) {
-        result.data.target = permissionTarget;
+        result.data.target = permissionTarget.target;
     }
 
     // ----------------------------------------------

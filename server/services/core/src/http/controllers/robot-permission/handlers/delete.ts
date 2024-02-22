@@ -43,7 +43,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!ability.matchTarget(PermissionName.ROBOT_PERMISSION_DROP, entity.target)) {
+    if (!ability.satisfy(PermissionName.ROBOT_PERMISSION_DROP, { target: entity.target })) {
         throw new ForbiddenError('You are not permitted for the robot-permission target.');
     }
 

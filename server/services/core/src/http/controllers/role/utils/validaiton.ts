@@ -99,14 +99,14 @@ export async function runRoleValidation(
     const ability = useRequestEnv(req, 'ability');
 
     if (operation === RequestHandlerOperation.CREATE) {
-        const permissionTarget = ability.getTarget(PermissionName.ROLE_ADD);
+        const permissionTarget = ability.findOne(PermissionName.ROLE_ADD);
         if (permissionTarget) {
-            result.data.target = permissionTarget;
+            result.data.target = permissionTarget.target;
         }
     } else {
-        const permissionTarget = ability.getTarget(PermissionName.ROLE_EDIT);
+        const permissionTarget = ability.findOne(PermissionName.ROLE_EDIT);
         if (permissionTarget) {
-            result.data.target = permissionTarget;
+            result.data.target = permissionTarget.target;
         }
     }
 

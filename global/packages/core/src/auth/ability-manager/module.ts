@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MongoQuery } from '@ucast/mongo2js';
 import { guard } from '@ucast/mongo2js';
 
 import type {
-    Ability,
+    Ability, AbilityManagerFilterOptions,
 } from './type';
 
 export class AbilityManager {
@@ -25,200 +24,152 @@ export class AbilityManager {
 
     /**
      * Check if permission is assigned with field and condition restriction.
-     *
-     * @param action
-     * @param subject
-     * @param field
      */
-    verify(
-        action: string,
-        subject?: Record<string, any>,
-        field?: string,
-    ) : boolean {
-        const item = this.getOne(action, {
-            withoutInverse: true,
-            subject,
-            field,
-        });
+    satisfy(options: AbilityManagerFilterOptions) : boolean;
 
-        return !!item;
+    satisfy(name: string, options?: AbilityManagerFilterOptions) : boolean;
+
+    satisfy(name: AbilityManagerFilterOptions | string, options: AbilityManagerFilterOptions = {}) : boolean {
+        let items : Ability[];
+        if (typeof name === 'string') {
+            options.name = name;
+            items = this.find(options);
+        } else {
+            items = this.find({
+                ...name,
+                ...options,
+            });
+        }
+
+        return items.length > 0;
     }
 
     /**
-     * Check if permission is assigned without field or condition restriction.
+     * Check if permission is assigned without any restrictions.
      *
-     * @param action
-     * @param withoutInverse
+     * @param name
      */
-    has(
-        action: string | string[],
-        withoutInverse = true,
-    ) : boolean {
-        if (Array.isArray(action)) {
-            return action.some((item) => this.has(item));
+    has(name: string | string[]) : boolean {
+        if (Array.isArray(name)) {
+            return name.some((item) => this.has(item));
         }
 
-        const item = this.getOne(action, {
-            withoutInverse,
+        const items = this.find({
+            name,
         });
 
-        return !!item;
+        return items.length > 0;
     }
 
     // ----------------------------------------------
 
-    satisfy(
-        predicate: MongoQuery<Ability> | string,
-        subject?: Record<string, any>,
-    ) {
-        const item = this.getOne(predicate, {
-            subject,
-        });
+    /**
+     * Find the first matching ability.
+     *
+     * @param input
+     */
+    findOne(input?: string | AbilityManagerFilterOptions) : Ability | undefined {
+        const items = this.find(input);
+        if (items.length === 0) {
+            return undefined;
+        }
 
-        return !!item;
+        return items[0];
     }
 
-    // ----------------------------------------------
+    /**
+     * Find all matching abilities.
+     *
+     * @param input
+     */
+    find(input?: string | AbilityManagerFilterOptions) : Ability[] {
+        if (typeof input === 'undefined') {
+            return this.items;
+        }
 
-    getTarget(value: MongoQuery<Ability> | string) : string | null | undefined {
-        let predicate : MongoQuery<Ability>;
-
-        if (typeof value === 'string') {
-            predicate = { name: { $eq: value } };
+        let options : AbilityManagerFilterOptions;
+        if (typeof input === 'string') {
+            options = { name: input };
         } else {
-            predicate = value;
+            options = input;
         }
 
-        const item = this.getOne(predicate, {
-            sortFn: (a, b) => {
-                if (typeof a.target === 'undefined' || a.target === null) {
-                    return -1;
-                }
-
-                if (typeof b.target === 'undefined' || b.target === null) {
-                    return 1;
-                }
-
-                return 0;
-            },
-        });
-
-        return item ? item.target : undefined;
-    }
-
-    matchTarget(id: string | MongoQuery<Ability>, target?: string) {
-        let basePredicate : MongoQuery<Ability>;
-        if (typeof id === 'string') {
-            basePredicate = {
-                name: {
-                    $eq: id,
-                },
-            };
-        } else {
-            basePredicate = id;
-        }
-
-        return [null, target].some((value) => this.satisfy({
-            ...basePredicate,
-            target: {
-                $eq: value,
-            },
-        }));
-    }
-
-    // ----------------------------------------------
-
-    getPower(
-        id: string | MongoQuery<Ability>,
-        direction: 'max' | 'min' = 'max',
-    ) : undefined | number {
-        let sortFn : (a : Ability, b: Ability) => number;
-
-        if (direction === 'min') {
-            sortFn = (a, b) => a.power - b.power;
-        } else {
-            sortFn = (a, b) => b.power - a.power;
-        }
-
-        const item = this.getOne(id, {
-            withoutInverse: true,
-            sortFn,
-        });
-
-        return item ? item.power : undefined;
-    }
-
-    // ----------------------------------------------
-
-    getMany() : Ability[] {
-        return this.items;
-    }
-
-    getOne(
-        predicate: MongoQuery<Ability> | string,
-        options: {
-            withoutInverse?: boolean,
-            field?: string,
-            subject?: Record<string, any>,
-            sortFn?: (a: Ability, b: Ability) => number,
-        } = {},
-    ) : Ability | undefined {
-        if (typeof predicate === 'string') {
-            predicate = {
-                name: {
-                    $eq: predicate,
-                },
-            };
-        }
-
-        const test = guard<Ability>(predicate);
-
-        options = options || {};
-
-        if (typeof options.sortFn !== 'undefined') {
-            this.items.sort(options.sortFn);
-        }
+        const output : Ability[] = [];
 
         for (let i = 0; i < this.items.length; i++) {
-            if (!test(this.items[i])) {
-                // eslint-disable-next-line no-continue
+            if (
+                options.name &&
+                this.items[i].name !== options.name
+            ) {
+                continue;
+            }
+
+            if (
+                !options.inverse &&
+                this.items[i].inverse
+            ) {
                 continue;
             }
 
             if (
                 this.items[i].condition &&
-                options.subject
+                options.object
             ) {
-                const conditionTest = guard(this.items[i].condition);
-                if (!conditionTest(options.subject)) {
-                    // eslint-disable-next-line no-continue
+                const test = guard(this.items[i].condition);
+                if (!test(options.object)) {
+                    continue;
+                }
+            }
+
+            if (options.fn) {
+                if (!options.fn(this.items[i])) {
                     continue;
                 }
             }
 
             if (
-                this.items[i].fields &&
-                options.field
+                options.field &&
+                this.items[i].fields
             ) {
-                const index = this.items[i].fields.indexOf(options.field);
-                if (index === -1) {
-                    // eslint-disable-next-line no-continue
+                const fields = Array.isArray(options.field) ?
+                    options.field :
+                    [options.field];
+
+                let index : number;
+                let valid : boolean = true;
+                for (let j = 0; j < fields.length; j++) {
+                    index = this.items[i].fields.indexOf(fields[i]);
+                    if (index === -1) {
+                        valid = false;
+                        break;
+                    }
+                }
+
+                if (!valid) {
                     continue;
                 }
             }
 
             if (
-                options.withoutInverse &&
-                this.items[i].inverse
+                options.target &&
+                this.items[i].target &&
+                this.items[i].target !== options.target
             ) {
-                // eslint-disable-next-line no-continue
                 continue;
             }
 
-            return this.items[i];
+            if (
+                typeof options.power === 'number' &&
+                typeof this.items[i].power === 'number' &&
+                options.power > this.items[i].power
+            ) {
+                continue;
+            }
+
+            output.push(this.items[i]);
         }
 
-        return undefined;
+        return output;
     }
 
     set(
@@ -235,5 +186,19 @@ export class AbilityManager {
         } else {
             this.items = items;
         }
+
+        this.items
+            .sort((a, b) => {
+                if (typeof a.target === 'undefined' || a.target === null) {
+                    return -1;
+                }
+
+                if (typeof b.target === 'undefined' || b.target === null) {
+                    return 1;
+                }
+
+                return 0;
+            })
+            .sort((a, b) => b.power - a.power);
     }
 }

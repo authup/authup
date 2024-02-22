@@ -15,3 +15,13 @@ export type Ability<T extends Record<string, any> = Record<string, any>> = {
     target?: string | null,
     power?: number | null
 };
+
+export type AbilityManagerFilterOptions = {
+    name?: string,
+    inverse?: boolean,
+    object?: Record<string, any>,
+    field?: string | string[],
+    target?: string,
+    power?: number,
+    fn?: (input: Ability) => boolean
+};
