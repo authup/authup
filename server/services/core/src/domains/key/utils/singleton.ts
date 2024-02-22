@@ -37,17 +37,7 @@ export async function useKey(
     });
 
     if (!entity) {
-        const keyPair = await createKeyPair({
-            type: 'rsa',
-        });
-
-        entity = repository.create({
-            type: KeyType.RSA,
-            decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
-            encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
-            realm_id: where.realm_id,
-            signature_algorithm: 'RS256',
-        });
+        entity = await createKey(where.realm_id);
 
         await repository.save(entity);
     } else {
@@ -58,4 +48,18 @@ export async function useKey(
     }
 
     return entity;
+}
+
+export async function createKey(realmId: string) : Promise<KeyEntity> {
+    const keyPair = await createKeyPair({
+        type: 'rsa',
+    });
+
+    return {
+        type: KeyType.RSA,
+        decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
+        encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
+        realm_id: realmId,
+        signature_algorithm: 'RS256',
+    } satisfies Partial<KeyEntity> as KeyEntity;
 }

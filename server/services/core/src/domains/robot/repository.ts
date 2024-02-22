@@ -10,11 +10,10 @@ import type {
     Role,
 } from '@authup/core';
 import { buildAbility, createNanoID } from '@authup/core';
-
-import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { decryptWithKey, encryptWithKey, useKey } from '../key';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
@@ -105,8 +104,8 @@ export class RobotRepository extends Repository<RobotEntity> {
             return undefined;
         }
 
-        const verified = await compare(secret, entity.secret);
-        if (!verified) {
+        const decrypted = await this.decryptSecret(entity.secret, entity.realm_id);
+        if (decrypted !== secret) {
             return undefined;
         }
 
@@ -120,7 +119,8 @@ export class RobotRepository extends Repository<RobotEntity> {
         const entity = this.create(data);
 
         const secret = entity.secret || createNanoID(64);
-        entity.secret = await this.hashSecret(secret);
+
+        entity.secret = await this.encryptSecret(secret, data.realm_id);
 
         return {
             entity,
@@ -128,7 +128,19 @@ export class RobotRepository extends Repository<RobotEntity> {
         };
     }
 
-    async hashSecret(secret: string) : Promise<string> {
-        return hash(secret);
+    async encryptSecret(secret: string, realmId: string) : Promise<string> {
+        const key = await useKey({
+            realm_id: realmId,
+        });
+
+        return encryptWithKey(key, secret);
+    }
+
+    async decryptSecret(secret: string, realmId: string) : Promise<string> {
+        const key = await useKey({
+            realm_id: realmId,
+        });
+
+        return decryptWithKey(key, secret);
     }
 }

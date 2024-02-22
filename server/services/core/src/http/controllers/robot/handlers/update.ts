@@ -61,7 +61,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     entity = repository.merge(entity, result.data);
 
     if (result.data.secret) {
-        entity.secret = await repository.hashSecret(result.data.secret);
+        entity.secret = await repository.encryptSecret(result.data.secret, entity.realm_id);
     }
 
     entity = await repository.save(entity);

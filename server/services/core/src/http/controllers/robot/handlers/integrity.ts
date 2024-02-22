@@ -66,8 +66,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
 
         if (!credentials) {
             const secret = createNanoID(64);
-
-            entity.secret = await repository.hashSecret(secret);
+            entity.secret = await repository.encryptSecret(secret, realm.id);
             await repository.save(entity);
 
             await saveRobotCredentialsToVault({
@@ -77,5 +76,5 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         }
     }
 
-    sendAccepted(res);
+    return sendAccepted(res);
 }
