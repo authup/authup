@@ -8,5 +8,4 @@
 export enum TokenCreatorVariation {
     USER = 'user',
     ROBOT = 'robot',
-    ROBOT_IN_VAULT = 'robotInVault',
 }

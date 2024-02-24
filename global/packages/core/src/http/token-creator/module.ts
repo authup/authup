@@ -8,7 +8,6 @@
 import { TokenCreatorVariation } from './constants';
 import {
     createTokenCreatorWithRobot,
-    createTokenCreatorWithRobotInVault,
     createTokenCreatorWithUser,
 } from './variations';
 import type {
@@ -23,9 +22,6 @@ export function createTokenCreator(options: TokenCreatorOptions) : TokenCreator 
         }
         case TokenCreatorVariation.ROBOT: {
             return createTokenCreatorWithRobot(options);
-        }
-        case TokenCreatorVariation.ROBOT_IN_VAULT: {
-            return createTokenCreatorWithRobotInVault(options);
         }
     }
 

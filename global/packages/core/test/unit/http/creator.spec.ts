@@ -8,7 +8,7 @@
 import { KeyValueV1API } from '@hapic/vault';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { TokenAPI } from '@hapic/oauth2';
-import { RobotAPI, createTokenCreator } from '../../../src';
+import { createTokenCreator } from '../../../src';
 
 const tokenGrantResponse : TokenGrantResponse = {
     token_type: 'bearer',
@@ -37,9 +37,6 @@ jest.spyOn(KeyValueV1API.prototype, 'getOne')
         return Promise.resolve(undefined);
     });
 
-jest.spyOn(RobotAPI.prototype, 'integrity')
-    .mockReturnValue(Promise.resolve(undefined));
-
 describe('src/creator', () => {
     it('should create token grant response with user', async () => {
         const creator = createTokenCreator({
@@ -63,20 +60,6 @@ describe('src/creator', () => {
             baseURL: 'http://localhot:3001',
             id: 'SYSTEM',
             secret: 'start123',
-        });
-
-        expect(creator).toBeDefined();
-
-        const output = await creator();
-        expect(output).toEqual(tokenGrantResponse);
-    });
-
-    it('should create and use robot vault authenticator', async () => {
-        const creator = createTokenCreator({
-            type: 'robotInVault',
-            baseURL: 'http://localhot:3001',
-            name: 'SYSTEM',
-            vault: 'admin:start123@http://127.0.0.1:8098/v1/',
         });
 
         expect(creator).toBeDefined();

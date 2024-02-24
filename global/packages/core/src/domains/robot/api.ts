@@ -58,13 +58,4 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
 
         return response.data;
     }
-
-    async integrity(
-        id: Robot['id'] | Robot['name'],
-    ): Promise<SingleResourceResponse<Robot>> {
-        const { data: response } = await this.client
-            .get(`robots/${id}/integrity`);
-
-        return response;
-    }
 }

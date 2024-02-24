@@ -15,7 +15,6 @@ import {
     deleteRobotRouteHandler,
     getManyRobotRouteHandler,
     getOneRobotRouteHandler,
-    handleRobotIntegrityRouteHandler,
     updateRobotRouteHandler,
 } from './handlers';
 
@@ -37,15 +36,6 @@ export class RobotController {
             @DResponse() res: any,
     ): Promise<Robot> {
         return createRobotRouteHandler(req, res);
-    }
-
-    @DGet('/:id/integrity', [])
-    async command(
-        @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<Robot> {
-        return handleRobotIntegrityRouteHandler(req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])

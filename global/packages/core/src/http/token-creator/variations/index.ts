@@ -6,5 +6,4 @@
  */
 
 export * from './robot';
-export * from './robot-vault';
 export * from './user';

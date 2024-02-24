@@ -6,7 +6,6 @@
  */
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { VaultClient } from '@hapic/vault';
 import type { TokenCreatorVariation } from './constants';
 
 export type TokenCreatorCreatedHook = (response: TokenGrantResponse) => void;
@@ -32,21 +31,5 @@ export type TokenCreatorRobotOptions = TokenCreatorBaseOptions & {
     secret: string,
 };
 
-export type TokenCreatorRobotInVaultOptions = TokenCreatorBaseOptions & {
-    type: `${TokenCreatorVariation.ROBOT_IN_VAULT}`,
-    /**
-     * default: SYSTEM
-     */
-    name?: string,
-
-    /**
-     * connection string or vault client.
-     */
-    vault: string | VaultClient,
-};
-
-export type TokenCreatorOptions = TokenCreatorUserOptions |
-TokenCreatorRobotOptions |
-TokenCreatorRobotInVaultOptions;
-
+export type TokenCreatorOptions = TokenCreatorUserOptions | TokenCreatorRobotOptions;
 export type TokenCreator = () => Promise<TokenGrantResponse>;
