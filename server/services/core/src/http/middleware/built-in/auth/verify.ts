@@ -106,7 +106,7 @@ async function verifyBasicAuthorizationHeader(
     const config = useConfig();
     const dataSource = await useDataSource();
 
-    if (config.userBasicAuth) {
+    if (config.userAuthBasic) {
         const userRepository = new UserRepository(dataSource);
         const user = await userRepository.verifyCredentials(header.username, header.password);
         if (user) {
@@ -125,7 +125,7 @@ async function verifyBasicAuthorizationHeader(
         }
     }
 
-    if (config.robotBasicAuth) {
+    if (config.robotAuthBasic) {
         const robotRepository = new RobotRepository(dataSource);
         const robot = await robotRepository.verifyCredentials(header.username, header.password);
         if (robot) {
@@ -143,7 +143,7 @@ async function verifyBasicAuthorizationHeader(
         }
     }
 
-    if (config.clientBasicAuth) {
+    if (config.clientAuthBasic) {
         const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
         const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {

@@ -151,7 +151,7 @@ export type Config = {
     /**
      * default: false
      */
-    clientBasicAuth: boolean,
+    clientAuthBasic: boolean,
 
     // ----------------------------------------------------
 
@@ -170,14 +170,14 @@ export type Config = {
     /**
      * default: false
      */
-    userBasicAuth: boolean,
+    userAuthBasic: boolean,
 
     // ----------------------------------------------------
 
     /**
      * default: false
      */
-    robotBasicAuth: boolean,
+    robotAuthBasic: boolean,
     /**
      * default: false
      */

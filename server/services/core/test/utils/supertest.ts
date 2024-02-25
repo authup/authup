@@ -19,7 +19,7 @@ export function useSuperTest() : SuperTest<Test> {
     config.middlewarePrometheus = false;
     config.middlewareSwagger = false;
 
-    config.userBasicAuth = true;
+    config.userAuthBasic = true;
 
     setConfig(config);
 
