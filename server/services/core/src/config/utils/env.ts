@@ -59,8 +59,8 @@ export function readConfigFromEnv() : ConfigInput {
     }
 
     const vault = oneOf([
-        readBool(EnvironmentVariableName.SMTP),
-        read(EnvironmentVariableName.SMTP),
+        readBool(EnvironmentVariableName.VAULT),
+        read(EnvironmentVariableName.VAULT),
     ]);
     if (typeof vault !== 'undefined') {
         options.vault = vault;
@@ -83,7 +83,7 @@ export function readConfigFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
-    const authorizeRedirectURL = read(EnvironmentVariableName.PUBLIC_URL);
+    const authorizeRedirectURL = read(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);
     if (authorizeRedirectURL) {
         options.authorizeRedirectUrl = authorizeRedirectURL;
     }
@@ -93,7 +93,7 @@ export function readConfigFromEnv() : ConfigInput {
         options.tokenMaxAgeAccessToken = accessTokenMaxAge;
     }
 
-    const refreshTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
+    const refreshTokenMaxAge = readInt(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
     if (typeof refreshTokenMaxAge !== 'undefined') {
         options.tokenMaxAgeAccessToken = refreshTokenMaxAge;
     }
@@ -115,6 +115,11 @@ export function readConfigFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
+    const clientBasicAuth = readBool(EnvironmentVariableName.CLIENT_AUTH_BASIC);
+    if (typeof clientBasicAuth !== 'undefined') {
+        options.clientAuthBasic = clientBasicAuth;
+    }
+
     const adminUsername = read(EnvironmentVariableName.ADMIN_USERNAME);
     if (adminUsername) {
         options.adminUsername = adminUsername;
@@ -123,6 +128,16 @@ export function readConfigFromEnv() : ConfigInput {
     const adminPassword = read(EnvironmentVariableName.ADMIN_PASSWORD);
     if (adminPassword) {
         options.adminPassword = adminPassword;
+    }
+
+    const userBasicAuth = readBool(EnvironmentVariableName.USER_AUTH_BASIC);
+    if (typeof userBasicAuth !== 'undefined') {
+        options.userAuthBasic = userBasicAuth;
+    }
+
+    const robotBasicAuth = readBool(EnvironmentVariableName.ROBOT_AUTH_BASIC);
+    if (typeof robotBasicAuth !== 'undefined') {
+        options.robotAuthBasic = robotBasicAuth;
     }
 
     const robotEnabled = readBool(EnvironmentVariableName.ROBOT_ENABLED);

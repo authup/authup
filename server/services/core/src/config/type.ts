@@ -144,7 +144,14 @@ export type Config = {
      *
      * default: false
      */
-    forgotPassword: boolean
+    forgotPassword: boolean,
+
+    // ----------------------------------------------------
+
+    /**
+     * default: false
+     */
+    clientAuthBasic: boolean,
 
     // ----------------------------------------------------
 
@@ -160,6 +167,17 @@ export type Config = {
      * default: undefined
      */
     adminPasswordReset?: boolean,
+    /**
+     * default: false
+     */
+    userAuthBasic: boolean,
+
+    // ----------------------------------------------------
+
+    /**
+     * default: false
+     */
+    robotAuthBasic: boolean,
     /**
      * default: false
      */

@@ -14,10 +14,12 @@ import {
 } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
-    const config = buildConfig();
+    const config = buildConfig({ env: true });
     config.middlewareRateLimit = false;
     config.middlewarePrometheus = false;
     config.middlewareSwagger = false;
+
+    config.userAuthBasic = true;
 
     setConfig(config);
 

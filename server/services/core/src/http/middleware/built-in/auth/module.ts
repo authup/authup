@@ -43,10 +43,14 @@ export function registerAuthMiddleware(router: Router) {
         setRequestEnv(request, 'ability', new AbilityManager());
 
         try {
-            const cookie = parseRequestAccessTokenCookie(request);
-
-            if (cookie) {
-                headerValue = stringifyAuthorizationHeader({ type: 'Bearer', token: cookie });
+            if (typeof headerValue === 'undefined') {
+                const cookie = parseRequestAccessTokenCookie(request);
+                if (cookie) {
+                    headerValue = stringifyAuthorizationHeader({
+                        type: 'Bearer',
+                        token: cookie,
+                    });
+                }
             }
 
             if (typeof headerValue !== 'string') {
