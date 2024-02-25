@@ -106,52 +106,54 @@ async function verifyBasicAuthorizationHeader(
     const config = useConfig();
     const dataSource = await useDataSource();
 
-    const userRepository = new UserRepository(dataSource);
-    const user = await userRepository.verifyCredentials(header.username, header.password);
+    if (config.userBasicAuth) {
+        const userRepository = new UserRepository(dataSource);
+        const user = await userRepository.verifyCredentials(header.username, header.password);
+        if (user) {
+            await userRepository.appendAttributes(user);
 
-    if (user) {
-        await userRepository.appendAttributes(user);
-
-        // allow authentication but not authorization with basic auth in production!
-        if (config.env !== EnvironmentName.PRODUCTION) {
             permissions = await userRepository.getOwnedPermissions(user.id);
+
+            setRequestEnv(request, 'ability', new AbilityManager(permissions));
+            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+
+            setRequestEnv(request, 'user', user);
+            setRequestEnv(request, 'userId', user.id);
+            setRequestEnv(request, 'realm', user.realm);
+
+            return;
         }
-
-        setRequestEnv(request, 'ability', new AbilityManager(permissions));
-        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
-
-        setRequestEnv(request, 'user', user);
-        setRequestEnv(request, 'userId', user.id);
-        setRequestEnv(request, 'realm', user.realm);
-
-        return;
     }
 
-    const robotRepository = new RobotRepository(dataSource);
-    const robot = await robotRepository.verifyCredentials(header.username, header.password);
-    if (robot) {
-        // allow authentication but not authorization with basic auth in production!
-        if (config.env !== EnvironmentName.PRODUCTION) {
-            permissions = await robotRepository.getOwnedPermissions(robot.id);
+    if (config.robotBasicAuth) {
+        const robotRepository = new RobotRepository(dataSource);
+        const robot = await robotRepository.verifyCredentials(header.username, header.password);
+        if (robot) {
+            // allow authentication but not authorization with basic auth in production!
+            if (config.env !== EnvironmentName.PRODUCTION) {
+                permissions = await robotRepository.getOwnedPermissions(robot.id);
+            }
+
+            setRequestEnv(request, 'ability', new AbilityManager(permissions));
+            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+
+            setRequestEnv(request, 'robot', robot);
+            setRequestEnv(request, 'robotId', robot.id);
+            setRequestEnv(request, 'realm', robot.realm);
         }
-
-        setRequestEnv(request, 'ability', new AbilityManager(permissions));
-        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
-
-        setRequestEnv(request, 'robot', robot);
-        setRequestEnv(request, 'robotId', robot.id);
-        setRequestEnv(request, 'realm', robot.realm);
     }
 
-    const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
-    const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
-    if (oauth2Client) {
-        setRequestEnv(request, 'ability', new AbilityManager());
-        setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+    if (config.clientBasicAuth) {
+        const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
+        const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
+        if (oauth2Client) {
+            setRequestEnv(request, 'ability', new AbilityManager());
+            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
-        setRequestEnv(request, 'client', oauth2Client);
-        setRequestEnv(request, 'clientId', oauth2Client.id);
-        setRequestEnv(request, 'realm', oauth2Client.realm);
+            setRequestEnv(request, 'client', oauth2Client);
+            setRequestEnv(request, 'clientId', oauth2Client.id);
+            setRequestEnv(request, 'realm', oauth2Client.realm);
+        }
     }
 }
 

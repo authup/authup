@@ -115,6 +115,11 @@ export function readConfigFromEnv() : ConfigInput {
 
     // ---------------------------------------------------------------
 
+    const clientBasicAuth = readBool(EnvironmentVariableName.CLIENT_BASIC_AUTH);
+    if (typeof clientBasicAuth !== 'undefined') {
+        options.clientBasicAuth = clientBasicAuth;
+    }
+
     const adminUsername = read(EnvironmentVariableName.ADMIN_USERNAME);
     if (adminUsername) {
         options.adminUsername = adminUsername;
@@ -123,6 +128,16 @@ export function readConfigFromEnv() : ConfigInput {
     const adminPassword = read(EnvironmentVariableName.ADMIN_PASSWORD);
     if (adminPassword) {
         options.adminPassword = adminPassword;
+    }
+
+    const userBasicAuth = readBool(EnvironmentVariableName.USER_BASIC_AUTH);
+    if (typeof userBasicAuth !== 'undefined') {
+        options.userBasicAuth = userBasicAuth;
+    }
+
+    const robotBasicAuth = readBool(EnvironmentVariableName.ROBOT_BASIC_AUTH);
+    if (typeof robotBasicAuth !== 'undefined') {
+        options.robotBasicAuth = robotBasicAuth;
     }
 
     const robotEnabled = readBool(EnvironmentVariableName.ROBOT_ENABLED);

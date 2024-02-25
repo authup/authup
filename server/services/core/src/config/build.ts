@@ -45,8 +45,11 @@ export function buildConfig(
             emailVerification: false,
             forgotPassword: false,
 
+            clientBasicAuth: false,
             adminUsername: 'admin',
             adminPassword: 'start123',
+            userBasicAuth: false,
+            robotBasicAuth: false,
             robotEnabled: false,
             permissions: [],
         },
