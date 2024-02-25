@@ -59,8 +59,8 @@ export function readConfigFromEnv() : ConfigInput {
     }
 
     const vault = oneOf([
-        readBool(EnvironmentVariableName.SMTP),
-        read(EnvironmentVariableName.SMTP),
+        readBool(EnvironmentVariableName.VAULT),
+        read(EnvironmentVariableName.VAULT),
     ]);
     if (typeof vault !== 'undefined') {
         options.vault = vault;
@@ -83,7 +83,7 @@ export function readConfigFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
-    const authorizeRedirectURL = read(EnvironmentVariableName.PUBLIC_URL);
+    const authorizeRedirectURL = read(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);
     if (authorizeRedirectURL) {
         options.authorizeRedirectUrl = authorizeRedirectURL;
     }
@@ -93,7 +93,7 @@ export function readConfigFromEnv() : ConfigInput {
         options.tokenMaxAgeAccessToken = accessTokenMaxAge;
     }
 
-    const refreshTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
+    const refreshTokenMaxAge = readInt(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
     if (typeof refreshTokenMaxAge !== 'undefined') {
         options.tokenMaxAgeAccessToken = refreshTokenMaxAge;
     }
