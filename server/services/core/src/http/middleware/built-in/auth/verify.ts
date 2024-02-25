@@ -33,7 +33,7 @@ import type {
     UserEntity,
 } from '../../../../domains';
 import {
-    OAuth2ClientRepository,
+    ClientRepository,
     RealmEntity,
     RobotRepository,
     UserRepository,
@@ -144,7 +144,7 @@ async function verifyBasicAuthorizationHeader(
     }
 
     if (config.clientAuthBasic) {
-        const oauth2ClientRepository = new OAuth2ClientRepository(dataSource);
+        const oauth2ClientRepository = new ClientRepository(dataSource);
         const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
             setRequestEnv(request, 'ability', new AbilityManager());

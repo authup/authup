@@ -9,7 +9,7 @@ import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { ClientEntity } from './entity';
 
-export class OAuth2ClientRepository extends Repository<ClientEntity> {
+export class ClientRepository extends Repository<ClientEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(ClientEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
