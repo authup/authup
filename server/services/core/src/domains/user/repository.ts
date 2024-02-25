@@ -22,6 +22,7 @@ import type {
 import {
     buildAbility,
     createNanoID,
+    isUUID,
 } from '@authup/core';
 
 import { compare, hash } from '@authup/server-kit';
@@ -164,23 +165,28 @@ export class UserRepository extends Repository<UserEntity> {
     // ------------------------------------------------------------------
 
     /**
-     * Verify a user by name and password.
+     * Verify a user by id/name and password.
      *
-     * @param name
+     * @param idOrName
      * @param password
      * @param realmId
      */
     async verifyCredentials(
-        name: string,
+        idOrName: string,
         password: string,
         realmId?: string,
     ) : Promise<UserEntity | undefined> {
         const query = this.createQueryBuilder('user')
-            .leftJoinAndSelect('user.realm', 'realm')
-            .where('user.name LIKE :name', { name });
+            .leftJoinAndSelect('user.realm', 'realm');
 
-        if (realmId) {
-            query.andWhere('user.realm_id = :realmId', { realmId });
+        if (isUUID(idOrName)) {
+            query.where('user.id = :id', { id: idOrName });
+        } else {
+            query.where('user.name LIKE :name', { name: idOrName });
+
+            if (realmId) {
+                query.andWhere('user.realm_id = :realmId', { realmId });
+            }
         }
 
         const entities = await query
@@ -192,7 +198,7 @@ export class UserRepository extends Repository<UserEntity> {
                 continue;
             }
 
-            const verified = await compare(password, entities[i].password);
+            const verified = await this.verifyPassword(password, entities[i].password);
             if (verified) {
                 return entities[i];
             }
@@ -218,5 +224,9 @@ export class UserRepository extends Repository<UserEntity> {
 
     async hashPassword(password: string) : Promise<string> {
         return hash(password);
+    }
+
+    async verifyPassword(password: string, passwordHashed: string) : Promise<boolean> {
+        return compare(password, passwordHashed);
     }
 }

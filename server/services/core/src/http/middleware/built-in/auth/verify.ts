@@ -8,7 +8,8 @@
 import type { Ability } from '@authup/core';
 import {
     AbilityManager,
-    HeaderError, OAuth2SubKind,
+    HeaderError,
+    OAuth2SubKind,
     OAuth2TokenKind,
     ScopeName,
     TokenError, transformOAuth2ScopeToArray,
@@ -23,7 +24,7 @@ import {
 } from 'hapic';
 import { buildKeyPath } from 'redis-extension';
 import type { Request } from 'routup';
-import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { CachePrefix } from '../../../../database';
 import type {
@@ -129,10 +130,7 @@ async function verifyBasicAuthorizationHeader(
         const robotRepository = new RobotRepository(dataSource);
         const robot = await robotRepository.verifyCredentials(header.username, header.password);
         if (robot) {
-            // allow authentication but not authorization with basic auth in production!
-            if (config.env !== EnvironmentName.PRODUCTION) {
-                permissions = await robotRepository.getOwnedPermissions(robot.id);
-            }
+            permissions = await robotRepository.getOwnedPermissions(robot.id);
 
             setRequestEnv(request, 'ability', new AbilityManager(permissions));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
@@ -144,8 +142,8 @@ async function verifyBasicAuthorizationHeader(
     }
 
     if (config.clientAuthBasic) {
-        const oauth2ClientRepository = new ClientRepository(dataSource);
-        const oauth2Client = await oauth2ClientRepository.verifyCredentials(header.username, header.password);
+        const clientRepository = new ClientRepository(dataSource);
+        const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
             setRequestEnv(request, 'ability', new AbilityManager());
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);

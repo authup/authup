@@ -9,7 +9,11 @@ import type {
     Ability, Robot,
     Role,
 } from '@authup/core';
-import { buildAbility, createNanoID } from '@authup/core';
+import {
+    buildAbility,
+    createNanoID,
+    isUUID,
+} from '@authup/core';
 
 import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
@@ -86,31 +90,46 @@ export class RobotRepository extends Repository<RobotEntity> {
     }
 
     /**
-     * Verify a client by id and secret.
+     * Verify a client by id/name and secret.
      *
-     * @param id
+     * @param idOrName
      * @param secret
+     * @param realmId
      */
-    async verifyCredentials(id: string, secret: string) : Promise<RobotEntity | undefined> {
-        const entity = await this.createQueryBuilder('robot')
+    async verifyCredentials(
+        idOrName: string,
+        secret: string,
+        realmId?: string,
+    ) : Promise<RobotEntity | undefined> {
+        const query = this.createQueryBuilder('robot')
+            .leftJoinAndSelect('robot.realm', 'realm');
+
+        if (isUUID(idOrName)) {
+            query.where('robot.id = :id', { id: idOrName });
+        } else {
+            query.where('robot.name LIKE :name', { name: idOrName });
+
+            if (realmId) {
+                query.andWhere('robot.realm_id = :realmId', { realmId });
+            }
+        }
+
+        const entities = await query
             .addSelect('robot.secret')
-            .where('robot.id = :id', { id })
-            .leftJoinAndSelect('robot.realm', 'realm')
-            .getOne();
+            .getMany();
 
-        if (
-            !entity ||
-            !entity.secret
-        ) {
-            return undefined;
+        for (let i = 0; i < entities.length; i++) {
+            if (!entities[i].secret) {
+                continue;
+            }
+
+            const verified = await this.verifySecret(secret, entities[i].secret);
+            if (verified) {
+                return entities[i];
+            }
         }
 
-        const verified = await this.verifySecret(secret, entity.secret);
-        if (!verified) {
-            return undefined;
-        }
-
-        return entity;
+        return undefined;
     }
 
     async createWithSecret(data: Partial<Robot>) : Promise<{

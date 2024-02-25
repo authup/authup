@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/core';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { ClientEntity } from './entity';
@@ -17,27 +18,42 @@ export class ClientRepository extends Repository<ClientEntity> {
     /**
      * Verify a client by id and secret.
      *
-     * @param id
+     * @param idOrName
      * @param secret
+     * @param realmId
      */
-    async verifyCredentials(id: string, secret: string) : Promise<ClientEntity | undefined> {
-        const entity = await this.createQueryBuilder('client')
+    async verifyCredentials(
+        idOrName: string,
+        secret: string,
+        realmId?: string,
+    ) : Promise<ClientEntity | undefined> {
+        const query = this.createQueryBuilder('client')
+            .leftJoinAndSelect('client.realm', 'realm');
+
+        if (isUUID(idOrName)) {
+            query.where('client.id = :id', { id: idOrName });
+        } else {
+            query.where('client.name LIKE :name', { name: idOrName });
+
+            if (realmId) {
+                query.andWhere('client.realm_id = :realmId', { realmId });
+            }
+        }
+
+        const entities = await query
             .addSelect('client.secret')
-            .where('client.id = :id', { id })
-            .leftJoinAndSelect('client.realm', 'realm')
-            .getOne();
+            .getMany();
 
-        if (
-            !entity ||
-            !entity.secret
-        ) {
-            return undefined;
+        for (let i = 0; i < entities.length; i++) {
+            if (!entities[i].secret) {
+                continue;
+            }
+
+            if (secret === entities[i].secret) {
+                return entities[i];
+            }
         }
 
-        if (secret !== entity.secret) {
-            return undefined;
-        }
-
-        return entity;
+        return undefined;
     }
 }
