@@ -105,7 +105,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             return undefined;
         }
 
-        const verified = await compare(secret, entity.secret);
+        const verified = await this.verifySecret(secret, entity.secret);
         if (!verified) {
             return undefined;
         }
@@ -130,5 +130,9 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async hashSecret(secret: string) : Promise<string> {
         return hash(secret);
+    }
+
+    async verifySecret(secret: string, secretHashed: string) : Promise<boolean> {
+        return compare(secret, secretHashed);
     }
 }
