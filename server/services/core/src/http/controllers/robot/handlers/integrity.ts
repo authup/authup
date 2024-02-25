@@ -55,27 +55,36 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         realm = entity.realm;
     }
 
-    if (
-        hasClient() &&
-        realm &&
-        realm.name === REALM_MASTER_NAME
-    ) {
-        const credentials = await findRobotCredentialsInVault({
-            name: entity.name,
-        });
-
-        if (!credentials) {
-            const secret = createNanoID(64);
-
-            entity.secret = await repository.hashSecret(secret);
-            await repository.save(entity);
-
-            await saveRobotCredentialsToVault({
-                ...entity,
-                secret,
-            });
-        }
+    if (!hasClient() || !realm || realm.name !== REALM_MASTER_NAME) {
+        return sendAccepted(res);
     }
 
-    sendAccepted(res);
+    let refreshCredentials : boolean = false;
+    const credentials = await findRobotCredentialsInVault({
+        name: entity.name,
+    });
+
+    if (credentials) {
+        const secretHashed = await repository.hashSecret(credentials.secret);
+        const secretHashedEqual = await repository.verifySecret(credentials.secret, secretHashed);
+        if (!secretHashedEqual) {
+            refreshCredentials = true;
+        }
+    } else {
+        refreshCredentials = true;
+    }
+
+    if (refreshCredentials) {
+        const secret = createNanoID(64);
+
+        entity.secret = await repository.hashSecret(secret);
+        await repository.save(entity);
+
+        await saveRobotCredentialsToVault({
+            ...entity,
+            secret,
+        });
+    }
+
+    return sendAccepted(res);
 }
