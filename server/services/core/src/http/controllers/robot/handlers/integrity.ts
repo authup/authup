@@ -65,8 +65,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
     });
 
     if (credentials) {
-        const secretHashed = await repository.hashSecret(credentials.secret);
-        const secretHashedEqual = await repository.verifySecret(credentials.secret, secretHashed);
+        const secretHashedEqual = await repository.verifySecret(credentials.secret, entity.secret);
         if (!secretHashedEqual) {
             refreshCredentials = true;
         }
