@@ -23,7 +23,7 @@ export function registerRateLimitMiddleware(router: Router, input?: OptionsInput
 
                 if (
                     name === REALM_MASTER_NAME &&
-                    robot.name === config.robotName
+                    robot.name === config.robotAdminName
                 ) {
                     return true;
                 }

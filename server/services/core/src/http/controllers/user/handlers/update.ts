@@ -67,7 +67,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
 
         const config = useConfig();
 
-        if (entity.name === config.adminUsername) {
+        if (entity.name === config.userAdminName) {
             throw new BadRequestError('The default user name can not be changed.');
         }
     }

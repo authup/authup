@@ -53,7 +53,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     if (
         isPropertySet(result.data, 'name') &&
         entity.name.toLowerCase() !== result.data.name.toLowerCase() &&
-        entity.name.toLowerCase() === config.robotName.toLowerCase()
+        entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
     ) {
         const realm = await resolveRealm(entity.realm_id);
         if (realm.name === REALM_MASTER_NAME) {

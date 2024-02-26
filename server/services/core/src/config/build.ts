@@ -47,13 +47,16 @@ export function buildConfig(
 
             clientAuthBasic: false,
 
-            adminUsername: 'admin',
-            adminPassword: 'start123',
             userAuthBasic: false,
+            userAdminEnabled: true,
+            userAdminName: 'admin',
+            userAdminPassword: 'start123',
+            userAdminPasswordReset: false,
 
             robotAuthBasic: false,
-            robotName: 'system',
-            robotEnabled: false,
+            robotAdminName: 'system',
+            robotAdminEnabled: false,
+            robotAdminSecretReset: false,
 
             permissions: [],
         } satisfies Partial<Config>,
