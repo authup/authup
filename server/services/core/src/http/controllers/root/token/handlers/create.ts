@@ -80,12 +80,12 @@ export async function createTokenRouteHandler(
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, tokenResponse.access_token, {
         ...cookieOptions,
-        maxAge: config.tokenMaxAgeAccessToken * 1000,
+        maxAge: config.tokenRefreshMaxAge * 1000,
     });
 
     setResponseCookie(res, CookieName.REFRESH_TOKEN, tokenResponse.refresh_token, {
         ...cookieOptions,
-        maxAge: config.tokenMaxAgeRefreshToken * 1000,
+        maxAge: config.tokenAccessMaxAge * 1000,
     });
 
     return send(res, tokenResponse);

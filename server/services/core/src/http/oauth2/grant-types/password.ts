@@ -40,9 +40,9 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenMaxAgeAccessToken,
+            accessTokenMaxAge: this.config.tokenRefreshMaxAge,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenMaxAgeRefreshToken,
+            refreshTokenMaxAge: this.config.tokenAccessMaxAge,
         });
     }
 

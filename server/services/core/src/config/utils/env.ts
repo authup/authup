@@ -88,14 +88,14 @@ export function readConfigFromEnv() : ConfigInput {
         options.authorizeRedirectUrl = authorizeRedirectURL;
     }
 
-    const accessTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
-    if (typeof accessTokenMaxAge !== 'undefined') {
-        options.tokenMaxAgeAccessToken = accessTokenMaxAge;
+    const tokenAccessMaxAge = readInt(EnvironmentVariableName.TOKEN_ACCESS_MAX_AGE);
+    if (typeof tokenAccessMaxAge !== 'undefined') {
+        options.tokenAccessMaxAge = tokenAccessMaxAge;
     }
 
-    const refreshTokenMaxAge = readInt(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
-    if (typeof refreshTokenMaxAge !== 'undefined') {
-        options.tokenMaxAgeAccessToken = refreshTokenMaxAge;
+    const tokenRefreshMaxAge = readInt(EnvironmentVariableName.TOKEN_REFRESH_MAX_AGE);
+    if (typeof tokenRefreshMaxAge !== 'undefined') {
+        options.tokenRefreshMaxAge = tokenRefreshMaxAge;
     }
 
     const registration = readBool(EnvironmentVariableName.REGISTRATION);

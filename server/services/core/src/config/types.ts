@@ -116,14 +116,14 @@ export type Config = {
     middlewareSwagger: boolean | SwaggerUIOptions,
 
     /**
-     * default: 3600
+     * default: 259.200s (3d)
      */
-    tokenMaxAgeAccessToken: number,
+    tokenRefreshMaxAge: number,
 
     /**
-     * default: 3600
+     * default: 3.600s (1h)
      */
-    tokenMaxAgeRefreshToken: number,
+    tokenAccessMaxAge: number,
 
     /**
      * Enable registration.
