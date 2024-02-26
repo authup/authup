@@ -40,7 +40,7 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
     try {
         await client.keyValueV1.create(
             'robots',
-            entity.name,
+            entity.name.toLowerCase(),
             {
                 id: entity.id,
                 secret: entity.secret,
@@ -67,7 +67,7 @@ export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'
     try {
         await client.keyValueV1.delete(
             'robots',
-            entity.name,
+            entity.name.toLowerCase(),
         );
     } catch (e) {
         if (isClientErrorWithStatusCode(e, 404)) {
@@ -90,7 +90,7 @@ export async function findRobotCredentialsInVault(
     try {
         const response = await client.keyValueV1.getOne(
             'robots',
-            entity.name,
+            entity.name.toLowerCase(),
         );
         if (response && response.data) {
             return response.data as Robot;
