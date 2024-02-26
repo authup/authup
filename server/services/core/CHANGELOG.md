@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.0.0-beta.5](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.4...server-core-v1.0.0-beta.5) (2024-02-26)
+
+
+### Features
+
+* allow {client,robot,user}-authentication via id or name ([2c06e42](https://github.com/authup/authup/commit/2c06e42c0b835e135af3c285ad4ac5f8a34a6421))
+* better & consistent naming for configuration options ([#1773](https://github.com/authup/authup/issues/1773)) ([a4f966e](https://github.com/authup/authup/commit/a4f966e223181966b6bf3f63edd34d864ff5d29d))
+* configurable name of default robot account ([#1771](https://github.com/authup/authup/issues/1771)) ([4ec7cdc](https://github.com/authup/authup/commit/4ec7cdc23a5deb5f6019558f592909e60a1fd95d))
+* guarantee hashed robot vault secret is equal to db secret ([#1767](https://github.com/authup/authup/issues/1767)) ([9928256](https://github.com/authup/authup/commit/99282569585632659161eb2e1053e068f19129cd))
+* manage {user,robot,client}-basic-auth by configuration ([#1768](https://github.com/authup/authup/issues/1768)) ([2b66063](https://github.com/authup/authup/commit/2b66063ba24ef33dcfe6470801de1413c2f2aa04))
+* remove permission name regex restriction ([#1754](https://github.com/authup/authup/issues/1754)) ([c81a249](https://github.com/authup/authup/commit/c81a2499fe48cdbe258cac89d6084cb777ac27fc))
+* simplified and enhanced ability-manager ([#1758](https://github.com/authup/authup/issues/1758)) ([641be51](https://github.com/authup/authup/commit/641be51163afedb296301f16e2ee127121e46796))
+
+
+### Bug Fixes
+
+* client repository naming ([d213faa](https://github.com/authup/authup/commit/d213faaf6bee4b01ff36d149ad1b58f43c87e15d))
+* **deps:** bump better-sqlite3 from 9.4.1 to 9.4.3 ([#1760](https://github.com/authup/authup/issues/1760)) ([fdfd877](https://github.com/authup/authup/commit/fdfd877364d7f86223f44504fb177b44769abc25))
+* **deps:** bump dotenv from 16.4.4 to 16.4.5 ([#1750](https://github.com/authup/authup/issues/1750)) ([e19c93d](https://github.com/authup/authup/commit/e19c93da9757f9bdc9f3b93706545f5906c55271))
+* keys in build config fn ([b8deb00](https://github.com/authup/authup/commit/b8deb0017b3b94c8bcf81402b60e077c5622c2ce))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+    * @authup/core bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+    * @authup/server-kit bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+
 ## [1.0.0-beta.4](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.3...server-core-v1.0.0-beta.4) (2024-02-19)
 
 
