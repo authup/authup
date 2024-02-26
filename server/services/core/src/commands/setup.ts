@@ -91,8 +91,8 @@ export async function setupCommand(context?: SetupCommandContext) {
                 }
 
                 const seeder = new DatabaseSeeder({
-                    adminPasswordReset: true,
-                    robotSecretReset: true,
+                    userAdminPasswordReset: true,
+                    robotAdminSecretReset: true,
                 });
 
                 const seederData = await seeder.run(dataSource);

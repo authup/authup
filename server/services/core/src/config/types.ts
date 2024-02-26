@@ -116,14 +116,14 @@ export type Config = {
     middlewareSwagger: boolean | SwaggerUIOptions,
 
     /**
-     * default: 3600
+     * default: 259.200s (3d)
      */
-    tokenMaxAgeAccessToken: number,
+    tokenRefreshMaxAge: number,
 
     /**
-     * default: 3600
+     * default: 3.600s (1h)
      */
-    tokenMaxAgeRefreshToken: number,
+    tokenAccessMaxAge: number,
 
     /**
      * Enable registration.
@@ -156,21 +156,25 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
-     * default: 'admin'
-     */
-    adminUsername: string,
-    /**
-     * default: 'start123'
-     */
-    adminPassword: string,
-    /**
-     * default: undefined
-     */
-    adminPasswordReset?: boolean,
-    /**
      * default: false
      */
     userAuthBasic: boolean,
+    /**
+     * default: true
+     */
+    userAdminEnabled: boolean,
+    /**
+     * default: 'admin'
+     */
+    userAdminName: string,
+    /**
+     * default: 'start123'
+     */
+    userAdminPassword: string,
+    /**
+     * default: undefined
+     */
+    userAdminPasswordReset?: boolean,
 
     // ----------------------------------------------------
 
@@ -181,26 +185,26 @@ export type Config = {
     /**
      * default: false
      */
-    robotEnabled: boolean,
+    robotAdminEnabled: boolean,
     /**
      * default: system
      */
-    robotName?: string,
+    robotAdminName?: string,
     /**
      * default: undefined
      */
-    robotSecret?: string,
+    robotAdminSecret?: string,
     /**
      * default: undefined
      */
-    robotSecretReset?: boolean,
+    robotAdminSecretReset?: boolean,
+
+    // ----------------------------------------------------
+
     /**
      * default: []
      */
     permissions: string | string[],
-
-    // ----------------------------------------------------
-
 };
 
 export type ConfigInput = Partial<Config>;

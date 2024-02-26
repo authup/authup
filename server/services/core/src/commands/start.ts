@@ -49,7 +49,7 @@ export async function startCommand(context?: StartCommandContext) {
     logger.info(`Database: ${database.type}`);
     logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
     logger.info(`Vault: ${hasVaultClient() ? 'enabled' : 'disabled'}`);
-    logger.info(`Robot: ${config.robotEnabled ? 'enabled' : 'disabled'}`);
+    logger.info(`Robot: ${config.robotAdminEnabled ? 'enabled' : 'disabled'}`);
 
     /*
     HTTP Server & Express App
@@ -96,8 +96,8 @@ export async function startCommand(context?: StartCommandContext) {
     }
 
     const seeder = new DatabaseSeeder({
-        adminPasswordReset: context.databaseAdminPasswordReset ?? false,
-        robotSecretReset: context.databaseRobotSecretReset ?? false,
+        userAdminPasswordReset: context.databaseAdminPasswordReset ?? false,
+        robotAdminSecretReset: context.databaseRobotSecretReset ?? false,
     });
 
     if (!check.schema) {
@@ -114,7 +114,7 @@ export async function startCommand(context?: StartCommandContext) {
         try {
             await saveRobotCredentialsToVault(seederData.robot);
         } catch (e) {
-            useLogger().warn(`The ${config.robotName} robot credentials could not saved to vault.`);
+            useLogger().warn(`The ${config.robotAdminName} robot credentials could not saved to vault.`);
         }
 
         await saveSeedResult(config.writableDirectoryPath, seederData);

@@ -19,11 +19,11 @@ export function isRequestSubOwner(req: Request) : boolean {
     const config = useConfig();
 
     const user = useRequestEnv(req, 'user');
-    if (user && user.name === config.adminUsername) {
+    if (user && user.name === config.userAdminName) {
         return true;
     }
 
     const robot = useRequestEnv(req, 'robot');
     return robot &&
-        robot.name.toLowerCase() === config.robotName.toLowerCase();
+        robot.name.toLowerCase() === config.robotAdminName.toLowerCase();
 }

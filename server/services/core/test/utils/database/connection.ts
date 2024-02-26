@@ -36,7 +36,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
     setDataSource(dataSource);
 
     const core = new DatabaseSeeder({
-        robotEnabled: true,
+        robotAdminEnabled: true,
     });
 
     return core.run(dataSource);

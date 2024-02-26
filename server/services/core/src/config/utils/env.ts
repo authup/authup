@@ -88,14 +88,14 @@ export function readConfigFromEnv() : ConfigInput {
         options.authorizeRedirectUrl = authorizeRedirectURL;
     }
 
-    const accessTokenMaxAge = readInt(EnvironmentVariableName.ACCESS_TOKEN_MAX_AGE);
-    if (typeof accessTokenMaxAge !== 'undefined') {
-        options.tokenMaxAgeAccessToken = accessTokenMaxAge;
+    const tokenAccessMaxAge = readInt(EnvironmentVariableName.TOKEN_ACCESS_MAX_AGE);
+    if (typeof tokenAccessMaxAge !== 'undefined') {
+        options.tokenAccessMaxAge = tokenAccessMaxAge;
     }
 
-    const refreshTokenMaxAge = readInt(EnvironmentVariableName.REFRESH_TOKEN_MAX_AGE);
-    if (typeof refreshTokenMaxAge !== 'undefined') {
-        options.tokenMaxAgeAccessToken = refreshTokenMaxAge;
+    const tokenRefreshMaxAge = readInt(EnvironmentVariableName.TOKEN_REFRESH_MAX_AGE);
+    if (typeof tokenRefreshMaxAge !== 'undefined') {
+        options.tokenRefreshMaxAge = tokenRefreshMaxAge;
     }
 
     const registration = readBool(EnvironmentVariableName.REGISTRATION);
@@ -120,40 +120,61 @@ export function readConfigFromEnv() : ConfigInput {
         options.clientAuthBasic = clientBasicAuth;
     }
 
-    const adminUsername = read(EnvironmentVariableName.ADMIN_USERNAME);
-    if (adminUsername) {
-        options.adminUsername = adminUsername;
-    }
-
-    const adminPassword = read(EnvironmentVariableName.ADMIN_PASSWORD);
-    if (adminPassword) {
-        options.adminPassword = adminPassword;
-    }
+    // ---------------------------------------------------------------
 
     const userBasicAuth = readBool(EnvironmentVariableName.USER_AUTH_BASIC);
     if (typeof userBasicAuth !== 'undefined') {
         options.userAuthBasic = userBasicAuth;
     }
 
+    const userAdminEnabled = readBool(EnvironmentVariableName.USER_ADMIN_ENABLED);
+    if (typeof userAdminEnabled !== 'undefined') {
+        options.userAdminEnabled = userAdminEnabled;
+    }
+
+    const userAdminName = read(EnvironmentVariableName.USER_ADMIN_NAME);
+    if (userAdminName) {
+        options.userAdminName = userAdminName;
+    }
+
+    const userAdminPassword = read(EnvironmentVariableName.USER_ADMIN_PASSWORD);
+    if (userAdminPassword) {
+        options.userAdminPassword = userAdminPassword;
+    }
+
+    const userAdminPasswordReset = readBool(EnvironmentVariableName.USER_ADMIN_PASSWORD_RESET);
+    if (typeof userAdminPasswordReset !== 'undefined') {
+        options.userAdminPasswordReset = userAdminPasswordReset;
+    }
+
+    // ---------------------------------------------------------------
+
     const robotBasicAuth = readBool(EnvironmentVariableName.ROBOT_AUTH_BASIC);
     if (typeof robotBasicAuth !== 'undefined') {
         options.robotAuthBasic = robotBasicAuth;
     }
 
-    const robotName = read(EnvironmentVariableName.ROBOT_NAME);
-    if (robotName) {
-        options.robotName = robotName;
+    const robotAdminName = read(EnvironmentVariableName.ROBOT_ADMIN_NAME);
+    if (robotAdminName) {
+        options.robotAdminName = robotAdminName;
     }
 
-    const robotEnabled = readBool(EnvironmentVariableName.ROBOT_ENABLED);
-    if (typeof robotEnabled !== 'undefined') {
-        options.robotEnabled = robotEnabled;
+    const robotAdminEnabled = readBool(EnvironmentVariableName.ROBOT_ADMIN_ENABLED);
+    if (typeof robotAdminEnabled !== 'undefined') {
+        options.robotAdminEnabled = robotAdminEnabled;
     }
 
-    const robotSecret = read(EnvironmentVariableName.ROBOT_SECRET);
-    if (robotSecret) {
-        options.robotSecret = robotSecret;
+    const robotAdminSecret = read(EnvironmentVariableName.ROBOT_ADMIN_SECRET);
+    if (robotAdminSecret) {
+        options.robotAdminSecret = robotAdminSecret;
     }
+
+    const robotAdminSecretReset = readBool(EnvironmentVariableName.ROBOT_ADMIN_SECRET_RESET);
+    if (typeof robotAdminSecretReset !== 'undefined') {
+        options.robotAdminSecretReset = robotAdminSecretReset;
+    }
+
+    // ---------------------------------------------------------------
 
     const permissions = readArray(EnvironmentVariableName.PERMISSIONS);
     if (permissions && permissions.length > 0) {

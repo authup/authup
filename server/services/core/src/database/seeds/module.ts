@@ -143,22 +143,26 @@ export class DatabaseSeeder implements Seeder {
          */
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
-            name: this.getOption('adminUsername'),
+            name: this.getOption('userAdminName'),
         });
 
+        const userPassword = this.getOption('userAdminPassword');
         if (!user) {
             user = userRepository.create({
-                name: this.getOption('adminUsername'),
-                password: await hash(this.getOption('adminPassword')),
+                name: this.getOption('userAdminName'),
+                password: await hash(userPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: realm.id,
-                active: true,
+                active: this.getOption('userAdminEnabled'),
             });
 
             response.user = user;
-        } else if (this.getOption('adminPasswordReset')) {
-            user.password = await hash(this.getOption('adminPassword'));
-            user.active = true;
+        } else {
+            if (this.getOption('userAdminPasswordReset')) {
+                user.password = await hash(userPassword);
+            }
+
+            user.active = this.getOption('userAdminEnabled');
         }
 
         await userRepository.save(user);
@@ -265,17 +269,17 @@ export class DatabaseSeeder implements Seeder {
          */
         const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOneBy({
-            name: this.getOption('robotName'),
+            name: this.getOption('robotAdminName'),
             realm_id: realm.id,
         });
 
-        const secret = this.getOption('robotSecret') || createNanoID(64);
+        const secret = this.getOption('robotAdminSecret') || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
-                name: this.getOption('robotName'),
+                name: this.getOption('robotAdminName'),
                 realm_id: realm.id,
                 secret: await hash(secret),
-                active: this.getOption('robotEnabled'),
+                active: this.getOption('robotAdminEnabled'),
             });
 
             await robotRepository.save(robot);
@@ -283,15 +287,15 @@ export class DatabaseSeeder implements Seeder {
             robot.secret = secret;
             response.robot = robot;
         } else {
-            if (this.getOption('robotSecretReset')) {
+            if (this.getOption('robotAdminSecretReset')) {
                 robot.secret = await hash(secret);
             }
 
-            robot.active = this.getOption('robotEnabled');
+            robot.active = this.getOption('robotAdminEnabled');
 
             await robotRepository.save(robot);
 
-            if (this.getOption('robotSecretReset')) {
+            if (this.getOption('robotAdminSecretReset')) {
                 robot.secret = secret;
                 response.robot = robot;
             }

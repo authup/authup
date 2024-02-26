@@ -90,12 +90,12 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, token.access_token, {
         ...cookieOptions,
-        maxAge: config.tokenMaxAgeAccessToken * 1000,
+        maxAge: config.tokenRefreshMaxAge * 1000,
     });
 
     setResponseCookie(res, CookieName.REFRESH_TOKEN, token.refresh_token, {
         ...cookieOptions,
-        maxAge: config.tokenMaxAgeRefreshToken * 1000,
+        maxAge: config.tokenAccessMaxAge * 1000,
     });
 
     return sendRedirect(res, config.authorizeRedirectUrl);
