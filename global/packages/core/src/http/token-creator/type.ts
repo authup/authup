@@ -35,9 +35,9 @@ export type TokenCreatorRobotOptions = TokenCreatorBaseOptions & {
 export type TokenCreatorRobotInVaultOptions = TokenCreatorBaseOptions & {
     type: `${TokenCreatorVariation.ROBOT_IN_VAULT}`,
     /**
-     * default: SYSTEM
+     * the robot name
      */
-    name?: string,
+    name: string,
 
     /**
      * connection string or vault client.

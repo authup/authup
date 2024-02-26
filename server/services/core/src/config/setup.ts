@@ -9,7 +9,7 @@ import { Container } from '@authup/config';
 import { buildConfig } from './build';
 import { setupRedis, setupSmtp, setupVault } from './clients';
 import { setConfig } from './module';
-import type { Config, ConfigSetupContext } from './type';
+import type { Config, ConfigSetupContext } from './types';
 
 export async function setupConfig(context: ConfigSetupContext = {}): Promise<Config> {
     const container = new Container({

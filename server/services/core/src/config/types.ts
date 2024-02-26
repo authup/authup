@@ -183,6 +183,10 @@ export type Config = {
      */
     robotEnabled: boolean,
     /**
+     * default: system
+     */
+    robotName?: string,
+    /**
      * default: undefined
      */
     robotSecret?: string,

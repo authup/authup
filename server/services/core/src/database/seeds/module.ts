@@ -17,7 +17,6 @@ import type {
 import {
     PermissionName,
     REALM_MASTER_NAME,
-    ROBOT_SYSTEM_NAME,
     ScopeName, createNanoID,
 } from '@authup/core';
 import { hasOwnProperty, hash } from '@authup/server-kit';
@@ -266,14 +265,14 @@ export class DatabaseSeeder implements Seeder {
          */
         const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOneBy({
-            name: ROBOT_SYSTEM_NAME,
+            name: this.getOption('robotName'),
             realm_id: realm.id,
         });
 
         const secret = this.getOption('robotSecret') || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
-                name: ROBOT_SYSTEM_NAME,
+                name: this.getOption('robotName'),
                 realm_id: realm.id,
                 secret: await hash(secret),
                 active: this.getOption('robotEnabled'),

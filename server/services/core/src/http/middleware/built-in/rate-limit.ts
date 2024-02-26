@@ -5,14 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_MASTER_NAME, ROBOT_SYSTEM_NAME } from '@authup/core';
+import { REALM_MASTER_NAME } from '@authup/core';
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { Request, Router } from 'routup';
 import { merge } from 'smob';
+import { useConfig } from '../../../config';
 import { useRequestEnv } from '../../utils';
 
 export function registerRateLimitMiddleware(router: Router, input?: OptionsInput) {
+    const config = useConfig();
     let options : OptionsInput = {
         skip(req: Request) {
             const robot = useRequestEnv(req, 'robot');
@@ -21,7 +23,7 @@ export function registerRateLimitMiddleware(router: Router, input?: OptionsInput
 
                 if (
                     name === REALM_MASTER_NAME &&
-                    robot.name === ROBOT_SYSTEM_NAME
+                    robot.name === config.robotName
                 ) {
                     return true;
                 }

@@ -10,6 +10,6 @@ export * from './clients';
 export * from './module';
 export * from './parse';
 export * from './setup';
-export * from './type';
+export * from './types';
 export * from './build';
 export * from './utils';
