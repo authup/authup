@@ -7,11 +7,12 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionName, REALM_MASTER_NAME, ROBOT_SYSTEM_NAME, isPropertySet,
+    PermissionName, REALM_MASTER_NAME, isPropertySet,
 } from '@authup/core';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { useConfig } from '../../../../config';
 import { RobotRepository, resolveRealm, saveRobotCredentialsToVault } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRobotValidation } from '../utils';
@@ -47,10 +48,12 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
+    const config = useConfig();
+
     if (
         isPropertySet(result.data, 'name') &&
-        entity.name !== result.data.name &&
-        entity.name === ROBOT_SYSTEM_NAME
+        entity.name.toLowerCase() !== result.data.name.toLowerCase() &&
+        entity.name.toLowerCase() === config.robotName.toLowerCase()
     ) {
         const realm = await resolveRealm(entity.realm_id);
         if (realm.name === REALM_MASTER_NAME) {

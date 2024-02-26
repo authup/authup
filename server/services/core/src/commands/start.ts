@@ -6,7 +6,6 @@
  */
 
 import { URL } from 'url';
-import { ROBOT_SYSTEM_NAME } from '@authup/core';
 import { hasClient as hasVaultClient } from '@hapic/vault';
 import { hasConfig as hasRedisConfig } from 'redis-extension';
 import {
@@ -115,7 +114,7 @@ export async function startCommand(context?: StartCommandContext) {
         try {
             await saveRobotCredentialsToVault(seederData.robot);
         } catch (e) {
-            useLogger().warn(`The ${ROBOT_SYSTEM_NAME} robot credentials could not saved to vault.`);
+            useLogger().warn(`The ${config.robotName} robot credentials could not saved to vault.`);
         }
 
         await saveSeedResult(config.writableDirectoryPath, seederData);

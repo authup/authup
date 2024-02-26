@@ -6,7 +6,7 @@
  */
 
 import zod from 'zod';
-import type { ConfigInput } from './type';
+import type { ConfigInput } from './types';
 import type { DatabaseConnectionOptions } from './utils';
 import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';
 

@@ -14,7 +14,7 @@ import {
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import { EnvironmentVariableName } from '../constants';
-import type { ConfigInput } from '../type';
+import type { ConfigInput } from '../types';
 import { isDatabaseConnectionConfigurationSupported } from './database';
 
 export function readConfigFromEnv() : ConfigInput {
@@ -138,6 +138,11 @@ export function readConfigFromEnv() : ConfigInput {
     const robotBasicAuth = readBool(EnvironmentVariableName.ROBOT_AUTH_BASIC);
     if (typeof robotBasicAuth !== 'undefined') {
         options.robotAuthBasic = robotBasicAuth;
+    }
+
+    const robotName = read(EnvironmentVariableName.ROBOT_NAME);
+    if (robotName) {
+        options.robotName = robotName;
     }
 
     const robotEnabled = readBool(EnvironmentVariableName.ROBOT_ENABLED);

@@ -12,7 +12,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { merge } from 'smob';
 import { parseConfig } from './parse';
-import type { Config, ConfigBuildContext, ConfigInput } from './type';
+import type { Config, ConfigBuildContext, ConfigInput } from './types';
 import { type DatabaseConnectionOptions, readConfigFromEnv } from './utils';
 
 export function buildConfig(
@@ -46,13 +46,17 @@ export function buildConfig(
             forgotPassword: false,
 
             clientAuthBasic: false,
+
             adminUsername: 'admin',
             adminPassword: 'start123',
             userAuthBasic: false,
+
             robotAuthBasic: false,
+            robotName: 'system',
             robotEnabled: false,
+
             permissions: [],
-        },
+        } satisfies Partial<Config>,
         getters: {
             db: defineGetter((context) : DatabaseConnectionOptions => ({
                 type: 'better-sqlite3',
