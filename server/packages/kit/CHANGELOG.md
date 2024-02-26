@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.5](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.4...server-kit-v1.0.0-beta.5) (2024-02-26)
+
+
+### Bug Fixes
+
+* **deps:** bump nodemailer from 6.9.9 to 6.9.10 ([#1759](https://github.com/authup/authup/issues/1759)) ([da57ff5](https://github.com/authup/authup/commit/da57ff5ffe82c98eef4669a697376d0600e3d38b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+
 ## [1.0.0-beta.4](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.3...server-kit-v1.0.0-beta.4) (2024-02-19)
 
 

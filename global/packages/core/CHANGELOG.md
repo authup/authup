@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.0.0-beta.5](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.4...global-core-v1.0.0-beta.5) (2024-02-26)
+
+
+### Features
+
+* configurable name of default robot account ([#1771](https://github.com/authup/authup/issues/1771)) ([4ec7cdc](https://github.com/authup/authup/commit/4ec7cdc23a5deb5f6019558f592909e60a1fd95d))
+* remove permission name regex restriction ([#1754](https://github.com/authup/authup/issues/1754)) ([c81a249](https://github.com/authup/authup/commit/c81a2499fe48cdbe258cac89d6084cb777ac27fc))
+* simplified and enhanced ability-manager ([#1758](https://github.com/authup/authup/issues/1758)) ([641be51](https://github.com/authup/authup/commit/641be51163afedb296301f16e2ee127121e46796))
+
+
+### Bug Fixes
+
+* **deps:** bump destr from 2.0.2 to 2.0.3 ([#1753](https://github.com/authup/authup/issues/1753)) ([b99ae15](https://github.com/authup/authup/commit/b99ae159d6eaae12985eb90d9fe74dfacf3d2d61))
+
 ## [1.0.0-beta.4](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.3...global-core-v1.0.0-beta.4) (2024-02-19)
 
 

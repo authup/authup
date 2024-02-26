@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.5](https://github.com/authup/authup/compare/client-vue-v1.0.0-beta.4...client-vue-v1.0.0-beta.5) (2024-02-26)
+
+
+### Features
+
+* remove permission name regex restriction ([#1754](https://github.com/authup/authup/issues/1754)) ([c81a249](https://github.com/authup/authup/commit/c81a2499fe48cdbe258cac89d6084cb777ac27fc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.4 to ^1.0.0-beta.5
+
 ## [1.0.0-beta.4](https://github.com/authup/authup/compare/client-vue-v1.0.0-beta.3...client-vue-v1.0.0-beta.4) (2024-02-19)
 
 
