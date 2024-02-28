@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.0.0-beta.6](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.5...global-core-v1.0.0-beta.6) (2024-02-28)
+
+
+### Features
+
+* parse/check connection string fns ([4e497b0](https://github.com/authup/authup/commit/4e497b03b4940ce6d93129cb11c69599c1ccad22))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/jsonwebtoken from 9.0.5 to 9.0.6 ([#1777](https://github.com/authup/authup/issues/1777)) ([bec999f](https://github.com/authup/authup/commit/bec999fd1a17c1dea3578b0961e0937b51e4deca))
+
 ## [1.0.0-beta.5](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.4...global-core-v1.0.0-beta.5) (2024-02-26)
 
 
