@@ -12,11 +12,16 @@ export type ConnectionString = {
     password: string
 };
 
+const regex = /(?:(user|robot|client):\/\/)(?:(\w+)(?::(\w+))@)(.*)$/;
+
+export function isConnectionString(input: string) : boolean {
+    return regex.test(input);
+}
+
 export function parseConnectionString(
     input: string,
 ) : ConnectionString | undefined {
-    const match = input
-        .match(/(?:(user|robot|client):\/\/)(?:(\w+)(?::(\w+))@)(.*)$/);
+    const match = input.match(regex);
 
     if (!match) {
         return undefined;

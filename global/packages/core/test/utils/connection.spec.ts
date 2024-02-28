@@ -5,9 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parseConnectionString } from '../../src';
+import { isConnectionString, parseConnectionString } from '../../src';
 
 describe('src/utils/connection', () => {
+    it('should determine if it is a connection string', () => {
+        expect(isConnectionString('user://admin:start123@http://localhost/')).toBeTruthy();
+        expect(isConnectionString('http://localhost/')).toBeFalsy();
+    });
+
     it('should parse user connection string', () => {
         const parsed = parseConnectionString('user://admin:start123@http://localhost/');
         expect(parsed.type).toEqual('user');
