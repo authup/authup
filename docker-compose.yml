@@ -24,7 +24,7 @@ services:
         ports:
             - '6379:6379'
     vault:
-        image: vault
+        image: vault:1.12.0
         environment:
             VAULT_DEV_ROOT_TOKEN_ID: start123
             VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8090
