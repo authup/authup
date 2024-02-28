@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.6](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.5...server-core-v1.0.0-beta.6) (2024-02-28)
+
+
+### Bug Fixes
+
+* paring of server core options ([ac5709f](https://github.com/authup/authup/commit/ac5709ffa867db28b4fdea0ebd0aef5d8a55c9f9))
+* robot integrity http handler ([ba5e08e](https://github.com/authup/authup/commit/ba5e08e5aa725760b37033f2fdac0bf97ddcef5a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/core bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/server-kit bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+
 ## [1.0.0-beta.5](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.4...server-core-v1.0.0-beta.5) (2024-02-26)
 
 

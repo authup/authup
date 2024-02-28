@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.6](https://github.com/authup/authup/compare/global-authup-v1.0.0-beta.5...global-authup-v1.0.0-beta.6) (2024-02-28)
+
+
+### Miscellaneous Chores
+
+* **global-authup:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/client-web-config bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/config bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/core bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+    * @authup/server-core bumped from ^1.0.0-beta.5 to ^1.0.0-beta.6
+
 ## [1.0.0-beta.5](https://github.com/authup/authup/compare/global-authup-v1.0.0-beta.4...global-authup-v1.0.0-beta.5) (2024-02-26)
 
 
