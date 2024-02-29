@@ -54,7 +54,7 @@ describe('src/http/controllers/robot-role', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(1);
+        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {

@@ -11,8 +11,9 @@ import type { Seeder } from 'typeorm-extension';
 import type {
     Permission,
     Robot,
-    RobotPermission,
-    RolePermission, UserRole,
+    RobotRole,
+    RolePermission,
+    UserRole,
 } from '@authup/core';
 import {
     PermissionName,
@@ -24,7 +25,7 @@ import {
     PermissionEntity,
     RealmEntity,
     RobotEntity,
-    RobotPermissionEntity,
+    RobotRoleEntity,
     RoleEntity,
     RolePermissionEntity,
     ScopeEntity,
@@ -188,6 +189,64 @@ export class DatabaseSeeder implements Seeder {
         // -------------------------------------------------
 
         /**
+         * Create default robot account
+         */
+        const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
+        let robot = await robotRepository.findOneBy({
+            name: this.getOption('robotAdminName'),
+            realm_id: realm.id,
+        });
+
+        const secret = this.getOption('robotAdminSecret') || createNanoID(64);
+        if (!robot) {
+            robot = robotRepository.create({
+                name: this.getOption('robotAdminName'),
+                realm_id: realm.id,
+                secret: await hash(secret),
+                active: this.getOption('robotAdminEnabled'),
+            });
+
+            await robotRepository.save(robot);
+
+            robot.secret = secret;
+            response.robot = robot;
+        } else {
+            if (this.getOption('robotAdminSecretReset')) {
+                robot.secret = await hash(secret);
+            }
+
+            robot.active = this.getOption('robotAdminEnabled');
+
+            await robotRepository.save(robot);
+
+            if (this.getOption('robotAdminSecretReset')) {
+                robot.secret = secret;
+                response.robot = robot;
+            }
+        }
+
+        // -------------------------------------------------
+
+        /**
+         * Create default robot - role association
+         */
+        const robotRoleData : Partial<RobotRole> = {
+            role_id: role.id,
+            robot_id: robot.id,
+        };
+
+        const robotRoleRepository = dataSource.getRepository(RobotRoleEntity);
+        let robotRole = await robotRoleRepository.findOneBy(robotRoleData as FindOptionsWhere<RobotRole>);
+
+        if (!robotRole) {
+            robotRole = robotRoleRepository.create(robotRoleData);
+        }
+
+        await robotRoleRepository.save(robotRole);
+
+        // -------------------------------------------------
+
+        /**
          * Create all permissions
          */
         let permissionNames : string[];
@@ -260,77 +319,6 @@ export class DatabaseSeeder implements Seeder {
 
         if (rolePermissions.length > 0) {
             await rolePermissionRepository.save(rolePermissions);
-        }
-
-        // -------------------------------------------------
-
-        /**
-         * Create default robot account
-         */
-        const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
-        let robot = await robotRepository.findOneBy({
-            name: this.getOption('robotAdminName'),
-            realm_id: realm.id,
-        });
-
-        const secret = this.getOption('robotAdminSecret') || createNanoID(64);
-        if (!robot) {
-            robot = robotRepository.create({
-                name: this.getOption('robotAdminName'),
-                realm_id: realm.id,
-                secret: await hash(secret),
-                active: this.getOption('robotAdminEnabled'),
-            });
-
-            await robotRepository.save(robot);
-
-            robot.secret = secret;
-            response.robot = robot;
-        } else {
-            if (this.getOption('robotAdminSecretReset')) {
-                robot.secret = await hash(secret);
-            }
-
-            robot.active = this.getOption('robotAdminEnabled');
-
-            await robotRepository.save(robot);
-
-            if (this.getOption('robotAdminSecretReset')) {
-                robot.secret = secret;
-                response.robot = robot;
-            }
-        }
-
-        // -------------------------------------------------
-
-        /**
-         * Assign all permissions to default robot.
-         */
-        const robotPermissionIds = [...permissionIds];
-        const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
-
-        const existingRobotPermissions = await robotPermissionRepository.findBy({
-            permission_id: In(robotPermissionIds),
-            robot_id: robot.id,
-        });
-
-        for (let i = 0; i < existingRobotPermissions.length; i++) {
-            const index = robotPermissionIds.indexOf(existingRobotPermissions[i].permission_id);
-            if (index !== -1) {
-                robotPermissionIds.splice(index, 1);
-            }
-        }
-
-        const robotPermissions : RobotPermission[] = [];
-        for (let j = 0; j < robotPermissionIds.length; j++) {
-            robotPermissions.push(robotPermissionRepository.create({
-                robot_id: robot.id,
-                permission_id: robotPermissionIds[j],
-            }));
-        }
-
-        if (robotPermissions.length > 0) {
-            await robotPermissionRepository.save(robotPermissions);
         }
 
         return response;
