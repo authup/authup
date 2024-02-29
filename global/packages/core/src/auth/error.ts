@@ -59,6 +59,13 @@ export class TokenError extends BadRequestError {
         });
     }
 
+    static headerInvalid(message?: string) {
+        return new TokenError({
+            code: ErrorCode.TOKEN_INVALID,
+            message: message || 'The token header is malformed.',
+        });
+    }
+
     static payloadInvalid(message?: string) {
         return new TokenError({
             code: ErrorCode.TOKEN_INVALID,

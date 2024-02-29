@@ -79,12 +79,13 @@ export async function runOAuth2Authorization(
         responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
         hasOAuth2OpenIDScope(entity.scope)
     ) {
+        tokenBuildContext.expiresIn = idTokenMaxAge;
+
         entity.id_token = await signOAuth2TokenWithKey(
             await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
             key,
             {
-                keyid: key.id,
-                expiresIn: idTokenMaxAge,
+                keyId: key.id,
             },
         );
 
@@ -94,12 +95,13 @@ export async function runOAuth2Authorization(
     }
 
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
+        tokenBuildContext.expiresIn = accessTokenMaxAge;
+
         output.accessToken = await signOAuth2TokenWithKey(
-            await buildOAuth2AccessTokenPayload(tokenBuildContext),
+            buildOAuth2AccessTokenPayload(tokenBuildContext),
             key,
             {
-                keyid: key.id,
-                expiresIn: accessTokenMaxAge,
+                keyId: key.id,
             },
         );
     }

@@ -8,7 +8,8 @@
 import path from 'path';
 import type { KeyPairOptions } from '../../src';
 import {
-    decodeTokenHeader, deleteKeyPair, signToken, verifyToken,
+    decodeTokenHeader,
+    decodeTokenPayload, deleteKeyPair, signToken, verifyToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
@@ -86,5 +87,44 @@ describe('src/json-web-token', () => {
         await deleteKeyPair({
             directory,
         });
+    });
+
+    it('should sign and decode payload', async () => {
+        const data = { text: 'secretText' };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        const header = decodeTokenPayload(signedText);
+        expect(header).toBeDefined();
+        expect(header.text).toEqual(data.text);
+        expect(header.exp).toBeDefined();
+        expect(header.iat).toBeDefined();
+
+        await deleteKeyPair({
+            directory,
+        });
+    });
+
+    it('not decode header', async () => {
+        try {
+            decodeTokenHeader('foo.bar.baz');
+            expect(1).toEqual(2);
+        } catch (e) {
+            expect(1).toEqual(1);
+        }
+    });
+
+    it('not decode payload', async () => {
+        try {
+            decodeTokenPayload('foo.bar.baz');
+            expect(1).toEqual(2);
+        } catch (e) {
+            expect(1).toEqual(1);
+        }
     });
 });

@@ -6,12 +6,8 @@
  */
 
 import { KeyObject } from 'node:crypto';
-import type {
-    OAuth2JsonWebKey,
-    OAuth2TokenIntrospectionResponse,
-    OAuth2TokenPayload,
-} from '@authup/core';
 import {
+
     APIClient,
     ErrorCode,
     KeyType,
@@ -19,8 +15,13 @@ import {
     isObject,
     mountClientResponseErrorTokenHook,
 } from '@authup/core';
-import { decodeToken, verifyToken } from '@authup/server-kit';
-import type { TokenVerifyRSAlgorithm } from '@authup/server-kit';
+import type {
+    JWTAlgorithm,
+    OAuth2JsonWebKey,
+    OAuth2TokenIntrospectionResponse,
+    OAuth2TokenPayload,
+} from '@authup/core';
+import { decodeTokenHeader, verifyToken } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';
@@ -74,15 +75,15 @@ export class TokenVerifier {
             return output;
         }
 
-        const tokenDecoded = decodeToken(token, { complete: true });
-        if (!tokenDecoded) {
+        const header = decodeTokenHeader(token);
+        if (!header) {
             throw TokenError.payloadInvalid('The token could not be decoded.');
         }
 
         let jwk : OAuth2JsonWebKey;
 
         try {
-            jwk = await this.client.getJwk(tokenDecoded.header.kid);
+            jwk = await this.client.getJwk(header.kid);
         } catch (e) {
             /* istanbul ignore next */
             throw TokenError.payloadInvalid('The jwt key id is invalid or not present.');
@@ -110,7 +111,7 @@ export class TokenVerifier {
                         publicKey.toString('utf-8') :
                         publicKey,
                 },
-                ...(jwk.alg ? { algorithms: [jwk.alg as TokenVerifyRSAlgorithm] } : {}),
+                ...(jwk.alg ? { algorithms: [jwk.alg as JWTAlgorithm.RS256] } : {}),
             }) as OAuth2TokenPayload;
         } catch (e) {
             throw TokenError.payloadInvalid('The token could not be verified.');

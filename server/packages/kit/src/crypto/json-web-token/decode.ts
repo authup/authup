@@ -5,10 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTHeader } from '@authup/core';
+import type { JWTClaims, JWTHeader } from '@authup/core';
 import { TokenError } from '@authup/core';
-import { decodeHeader } from '@node-rs/jsonwebtoken';
-import { transformInternalToJWTAlgorithm } from './utils';
 
 /**
  * Decode a JWT token with no verification.
@@ -25,9 +23,14 @@ export function decodeTokenHeader(
         throw TokenError.payloadInvalid('The token format is not valid.');
     }
 
-    try {
-        const header = decodeHeader(token);
+    const [headerBase64] = parts;
 
+    try {
+        const payload = atob(headerBase64);
+
+        return JSON.parse(payload);
+
+        /*
         return {
             typ: 'JWT',
             alg: transformInternalToJWTAlgorithm(header.algorithm),
@@ -39,7 +42,27 @@ export function decodeTokenHeader(
             x5t: header.x5CertThumbprint,
             'x5t#S256': header.x5TS256CertThumbprint,
         };
+         */
     } catch (e) {
-        throw TokenError.payloadInvalid('The token header could not be extracted.');
+        throw TokenError.headerInvalid('The token header could not be extracted.');
+    }
+}
+
+export function decodeTokenPayload(
+    token: string,
+) : JWTClaims {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        throw TokenError.payloadInvalid('The token format is not valid.');
+    }
+
+    const [, payloadBase64] = parts;
+
+    try {
+        const payload = atob(payloadBase64);
+
+        return JSON.parse(payload);
+    } catch (e) {
+        throw TokenError.payloadInvalid('The token payload could not be extracted.');
     }
 }
