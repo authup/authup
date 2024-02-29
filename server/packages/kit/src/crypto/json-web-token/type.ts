@@ -9,7 +9,7 @@ import type Buffer from 'node:buffer';
 import type {
     Jwt,
 } from 'jsonwebtoken';
-import type { JWTAlgorithm, JWTClaims, KeyType } from '@authup/core';
+import type { JWTAlgorithm, KeyType } from '@authup/core';
 import type { KeyPair, KeyPairOptions } from '../key-pair';
 
 export {
