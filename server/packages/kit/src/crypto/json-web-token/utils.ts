@@ -54,7 +54,7 @@ export function createErrorForJWTError(e: unknown) : TokenError {
     });
 }
 
-export function transformJWTAlgorithm(algorithm: JWTAlgorithm) : Algorithm {
+export function transformJWTAlgorithmToInternal(algorithm: JWTAlgorithm) : Algorithm {
     switch (algorithm) {
         case JWTAlgorithm.HS256: {
             return Algorithm.HS256;
@@ -91,5 +91,34 @@ export function transformJWTAlgorithm(algorithm: JWTAlgorithm) : Algorithm {
         }
     }
 
-    throw new Error(`Token algorithm d${algorithm} is not implemented.`);
+    throw new Error(`The algorithm ${algorithm} is not supported.`);
+}
+
+export function transformInternalToJWTAlgorithm(input: Algorithm) : JWTAlgorithm {
+    switch (input) {
+        case Algorithm.HS256:
+            return JWTAlgorithm.HS256;
+        case Algorithm.HS384:
+            return JWTAlgorithm.HS384;
+        case Algorithm.HS512:
+            return JWTAlgorithm.HS512;
+        case Algorithm.RS256:
+            return JWTAlgorithm.RS256;
+        case Algorithm.RS384:
+            return JWTAlgorithm.RS384;
+        case Algorithm.RS512:
+            return JWTAlgorithm.RS512;
+        case Algorithm.ES256:
+            return JWTAlgorithm.ES256;
+        case Algorithm.ES384:
+            return JWTAlgorithm.ES384;
+        case Algorithm.PS256:
+            return JWTAlgorithm.PS256;
+        case Algorithm.PS384:
+            return JWTAlgorithm.PS384;
+        case Algorithm.PS512:
+            return JWTAlgorithm.PS512;
+    }
+
+    throw new SyntaxError(`The algorithm ${input} is not supported.`);
 }

@@ -17,8 +17,7 @@ describe('src/json-web-token', () => {
     it('should sign and decrypt jsonwebtoken', async () => {
         const data = { text: 'secretText' };
 
-        const signedText = await signToken({
-            data,
+        const signedText = await signToken(data, {
             type: 'rsa',
             keyPair: {
                 directory,
@@ -41,7 +40,7 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decrypt json webtoken with passphrase', async () => {
-        const data = { text: 'secretText' };
+        const data = { text: 'secretText', foo_bar: 'baz' };
         const keyPairOptions : Partial<KeyPairOptions> = {
             passphrase: 'start123',
             privateName: 'private-passphrase',
@@ -49,8 +48,7 @@ describe('src/json-web-token', () => {
             directory,
         };
 
-        const signedText = await signToken({
-            data,
+        const signedText = await signToken(data, {
             type: 'rsa',
             keyPair: keyPairOptions,
         });
@@ -62,6 +60,7 @@ describe('src/json-web-token', () => {
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
+        expect(decoded.foo_bar).toEqual(data.foo_bar);
 
         expect(decoded).toHaveProperty('iat');
         expect(decoded).toHaveProperty('exp');
@@ -72,8 +71,7 @@ describe('src/json-web-token', () => {
     it('should sign and decode header', async () => {
         const data = { text: 'secretText' };
 
-        const signedText = await signToken({
-            data,
+        const signedText = await signToken(data, {
             type: 'rsa',
             keyPair: {
                 directory,

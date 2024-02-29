@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { KeyType, type OAuth2TokenPayload, TokenError } from '@authup/core';
-import type { Claims } from '@node-rs/jsonwebtoken';
+import { KeyType, TokenError } from '@authup/core';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/core';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
 import type { TokenVerifyOptions } from './type';
-import { createErrorForJWTError, transformJWTAlgorithm } from './utils';
+import { createErrorForJWTError, transformJWTAlgorithmToInternal } from './utils';
 
 /**
  * Verify JWT.
@@ -24,9 +24,9 @@ export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
 ) : Promise<OAuth2TokenPayload> {
-    let promise : Promise<Claims>;
+    let promise : Promise<JWTClaims>;
 
-    let output : Claims;
+    let output : JWTClaims;
 
     try {
         switch (context.type) {
@@ -41,7 +41,7 @@ export async function verifyToken(
 
                 if (type === KeyType.RSA) {
                     algorithms = options.algorithms ?
-                        options.algorithms.map((algorithm) => transformJWTAlgorithm(algorithm)) :
+                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                         [
                             Algorithm.RS256,
                             Algorithm.RS384,
@@ -52,7 +52,7 @@ export async function verifyToken(
                         ];
                 } else {
                     algorithms = options.algorithms ?
-                        options.algorithms.map((algorithm) => transformJWTAlgorithm(algorithm)) :
+                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                         [
                             Algorithm.ES256,
                             Algorithm.ES384,
@@ -68,7 +68,7 @@ export async function verifyToken(
                 const { type, secret, ...options } = context;
 
                 const algorithms : Algorithm[] = options.algorithms ?
-                    options.algorithms.map((algorithm) => transformJWTAlgorithm(algorithm)) :
+                    options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                     [
                         Algorithm.HS256,
                         Algorithm.HS384,
@@ -90,10 +90,5 @@ export async function verifyToken(
         throw new TokenError({ message: 'Invalid type.' });
     }
 
-    const { data, ...payload } = output;
-
-    return {
-        ...payload,
-        ...(data || {}),
-    } as OAuth2TokenPayload;
+    return output as OAuth2TokenPayload;
 }
