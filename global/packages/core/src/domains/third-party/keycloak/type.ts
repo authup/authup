@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JwtPayload } from 'jsonwebtoken';
+import type { JWTClaims } from '../../../auth';
 
-export type KeycloakJWTPayload = JwtPayload & {
+export type KeycloakJWTPayload = JWTClaims & {
     realm_access?: {
         roles?: string[]
     }

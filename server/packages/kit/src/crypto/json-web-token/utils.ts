@@ -54,7 +54,7 @@ export function createErrorForJWTError(e: unknown) : TokenError {
     });
 }
 
-export function transformJWTAlgorithmToInternal(algorithm: JWTAlgorithm) : Algorithm {
+export function transformJWTAlgorithmToInternal(algorithm: `${JWTAlgorithm}`) : Algorithm {
     switch (algorithm) {
         case JWTAlgorithm.HS256: {
             return Algorithm.HS256;

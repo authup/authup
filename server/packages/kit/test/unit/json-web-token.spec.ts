@@ -137,12 +137,14 @@ describe('src/json-web-token', () => {
             keyPair: {
                 directory,
             },
+            keyId: 'foo',
         });
 
         const header = extractTokenHeader(signedText);
         expect(header).toBeDefined();
         expect(header.typ).toEqual('JWT');
         expect(header.alg).toEqual('RS256');
+        expect(header.kid).toEqual('foo');
 
         await deleteKeyPair({
             directory,

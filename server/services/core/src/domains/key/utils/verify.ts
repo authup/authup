@@ -22,7 +22,7 @@ export async function verifyOAuth2TokenWithKey(
             token,
             {
                 type: KeyType.OCT,
-                secret: Buffer.from(entity.decryption_key, 'base64'),
+                key: Buffer.from(entity.decryption_key, 'base64'),
             },
         );
     }

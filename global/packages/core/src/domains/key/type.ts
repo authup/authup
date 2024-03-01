@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Algorithm } from 'jsonwebtoken';
+import type { JWTAlgorithm } from '../../auth';
 import type { KeyType } from './constants';
 import type { Realm } from '../realm';
 
@@ -20,7 +20,7 @@ export interface Key {
     /**
      * Algorithm for signing and verifying
      */
-    signature_algorithm: `${Exclude<Algorithm, 'none'>}`
+    signature_algorithm: `${JWTAlgorithm}`
 
     /**
      * Usage priority.

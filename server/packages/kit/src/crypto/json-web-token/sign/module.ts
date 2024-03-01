@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,9 +8,9 @@
 import type { JWTClaims } from '@authup/core';
 import { KeyType, TokenError } from '@authup/core';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
-import { isKeyPair, useKeyPair } from '../key-pair';
-import type { TokenSignOptions } from './type';
-import { transformJWTAlgorithmToInternal } from './utils';
+import { isKeyPair, useKeyPair } from '../../key-pair';
+import { transformJWTAlgorithmToInternal } from '../utils';
+import type { TokenSignOptions } from './types';
 
 const getUtcTimestamp = () => Math.floor(new Date().getTime() / 1000);
 
@@ -25,37 +25,35 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
     switch (context.type) {
         case KeyType.RSA:
         case KeyType.EC: {
-            const { type, keyPair, ...options } = context;
-            const { privateKey } = isKeyPair(keyPair) ?
-                keyPair :
-                await useKeyPair(keyPair);
+            const { privateKey } = isKeyPair(context.keyPair) ?
+                context.keyPair :
+                await useKeyPair(context.keyPair);
 
             let algorithm : Algorithm;
 
-            if (type === KeyType.RSA) {
-                algorithm = options.algorithm ?
-                    transformJWTAlgorithmToInternal(options.algorithm) :
+            if (context.type === KeyType.RSA) {
+                algorithm = context.algorithm ?
+                    transformJWTAlgorithmToInternal(context.algorithm) :
                     Algorithm.RS256;
             } else {
-                algorithm = options.algorithm ?
-                    transformJWTAlgorithmToInternal(options.algorithm) :
+                algorithm = context.algorithm ?
+                    transformJWTAlgorithmToInternal(context.algorithm) :
                     Algorithm.ES256;
             }
 
             return sign(claims, privateKey, {
                 algorithm,
-                keyId: options.keyId,
+                keyId: context.keyId,
             });
         }
         case KeyType.OCT: {
-            const { type, secret, ...options } = context;
-            const algorithm : Algorithm = options.algorithm ?
-                transformJWTAlgorithmToInternal(options.algorithm) :
+            const algorithm : Algorithm = context.algorithm ?
+                transformJWTAlgorithmToInternal(context.algorithm) :
                 Algorithm.HS256;
 
-            return sign(claims, secret, {
+            return sign(claims, context.key, {
                 algorithm,
-                keyId: options.keyId,
+                keyId: context.keyId,
             });
         }
     }

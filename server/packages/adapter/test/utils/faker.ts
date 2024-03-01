@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createPublicKey } from 'node:crypto';
 import type { OAuth2JsonWebKey } from '@authup/core';
+import { JWTAlgorithm } from '@authup/core';
 import type { KeyPair } from '@authup/server-kit';
 import { createKeyPair, signToken, useKeyPair } from '@authup/server-kit';
+import { createPublicKey } from 'node:crypto';
 
 export class Faker {
     protected keyPair: KeyPair;
@@ -53,7 +54,7 @@ export class Faker {
         return signToken(payload, {
             type: 'rsa',
             keyPair: await useKeyPair(),
-            algorithm: 'RS256',
+            algorithm: JWTAlgorithm.RS256,
         });
     }
 }

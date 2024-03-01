@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,9 +8,9 @@
 import { KeyType, TokenError } from '@authup/core';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/core';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
-import { isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
-import type { TokenVerifyOptions } from './type';
-import { createErrorForJWTError, transformJWTAlgorithmToInternal } from './utils';
+import { isKeyPairWithPublicKey, useKeyPair } from '../../key-pair';
+import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';
+import type { TokenVerifyOptions } from './types';
 
 /**
  * Verify JWT.
@@ -32,16 +32,15 @@ export async function verifyToken(
         switch (context.type) {
             case KeyType.RSA:
             case KeyType.EC: {
-                const { type, keyPair, ...options } = context;
-                const { publicKey } = isKeyPairWithPublicKey(keyPair) ?
-                    keyPair :
-                    await useKeyPair(keyPair);
+                const { publicKey } = isKeyPairWithPublicKey(context.keyPair) ?
+                    context.keyPair :
+                    await useKeyPair(context.keyPair);
 
                 let algorithms : Algorithm[];
 
-                if (type === KeyType.RSA) {
-                    algorithms = options.algorithms ?
-                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                if (context.type === KeyType.RSA) {
+                    algorithms = context.algorithms ?
+                        context.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                         [
                             Algorithm.RS256,
                             Algorithm.RS384,
@@ -51,8 +50,8 @@ export async function verifyToken(
                             Algorithm.PS512,
                         ];
                 } else {
-                    algorithms = options.algorithms ?
-                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                    algorithms = context.algorithms ?
+                        context.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                         [
                             Algorithm.ES256,
                             Algorithm.ES384,
@@ -66,17 +65,15 @@ export async function verifyToken(
                 break;
             }
             case KeyType.OCT: {
-                const { type, secret, ...options } = context;
-
-                const algorithms : Algorithm[] = options.algorithms ?
-                    options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                const algorithms : Algorithm[] = context.algorithms ?
+                    context.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                     [
                         Algorithm.HS256,
                         Algorithm.HS384,
                         Algorithm.HS512,
                     ];
 
-                promise = verify(token, secret, {
+                promise = verify(token, context.key, {
                     algorithms,
                     validateNbf: true,
                 });

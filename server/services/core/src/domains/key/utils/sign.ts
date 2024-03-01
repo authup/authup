@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenSignOptions } from '@authup/server-kit';
+import type {
+    TokenECAlgorithm, TokenRSAAlgorithm, TokenSignECOptions, TokenSignOCTOptions, TokenSignOptions, TokenSignRSAOptions,
+} from '@authup/server-kit';
 import { signToken } from '@authup/server-kit';
-import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core';
 import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core';
+import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core';
 import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(
@@ -21,9 +23,24 @@ export async function signOAuth2TokenWithKey(
             payload,
             {
                 type: KeyType.OCT,
-                secret: Buffer.from(entity.decryption_key, 'base64'),
+                key: Buffer.from(entity.decryption_key, 'base64'),
                 ...options,
-            },
+            } satisfies TokenSignOCTOptions,
+        );
+    }
+
+    if (entity.type === KeyType.EC) {
+        return signToken(
+            payload,
+            {
+                type: entity.type,
+                keyPair: {
+                    publicKey: wrapPublicKeyPem(entity.encryption_key),
+                    privateKey: wrapPrivateKeyPem(entity.decryption_key),
+                },
+                algorithm: entity.signature_algorithm as TokenECAlgorithm,
+                ...options,
+            } satisfies TokenSignECOptions,
         );
     }
 
@@ -35,8 +52,8 @@ export async function signOAuth2TokenWithKey(
                 publicKey: wrapPublicKeyPem(entity.encryption_key),
                 privateKey: wrapPrivateKeyPem(entity.decryption_key),
             },
-            algorithm: entity.signature_algorithm,
+            algorithm: entity.signature_algorithm as TokenRSAAlgorithm,
             ...options,
-        } as TokenSignOptions,
+        } satisfies TokenSignRSAOptions,
     );
 }
