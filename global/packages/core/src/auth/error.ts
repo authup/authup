@@ -42,13 +42,27 @@ export class TokenError extends BadRequestError {
         });
     }
 
-    static notActiveBefore(date: string | Date) {
+    static notActiveBefore(date?: string | Date) {
+        if (typeof date === 'undefined') {
+            return new TokenError({
+                code: ErrorCode.TOKEN_INACTIVE,
+                message: 'The token is not active yet.',
+            });
+        }
+
         return new TokenError({
             code: ErrorCode.TOKEN_INACTIVE,
             message: `The token is not active before: ${date}.`,
             data: {
                 date,
             },
+        });
+    }
+
+    static headerInvalid(message?: string) {
+        return new TokenError({
+            code: ErrorCode.TOKEN_INVALID,
+            message: message || 'The token header is malformed.',
         });
     }
 

@@ -5,15 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import type { JWTClaims } from '@authup/core';
+import { TokenError } from '@authup/core';
+import path from 'node:path';
 import type { KeyPairOptions } from '../../src';
-import { decodeToken, deleteKeyPair, signToken } from '../../src';
+import {
+    deleteKeyPair,
+    extractTokenHeader,
+    extractTokenPayload,
+    signToken,
+    verifyToken,
+} from '../../src';
 
 describe('src/json-web-token', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
-    it('should sign and decrypt json webtoken', async () => {
-        const data = { text: 'secretText' };
+    it('should sign and decrypt', async () => {
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -21,7 +29,13 @@ describe('src/json-web-token', () => {
                 directory,
             },
         });
-        const decoded = decodeToken(signedText) as Record<string, any>;
+
+        const decoded = await verifyToken(signedText, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
@@ -31,8 +45,8 @@ describe('src/json-web-token', () => {
         });
     });
 
-    it('should sign and decrypt json webtoken with passphrase', async () => {
-        const data = { text: 'secretText' };
+    it('should sign and decrypt with passphrase', async () => {
+        const data : JWTClaims = { text: 'secretText', foo_bar: 'baz' };
         const keyPairOptions : Partial<KeyPairOptions> = {
             passphrase: 'start123',
             privateName: 'private-passphrase',
@@ -45,20 +59,122 @@ describe('src/json-web-token', () => {
             keyPair: keyPairOptions,
         });
 
-        const decoded = decodeToken(signedText);
+        const decoded = await verifyToken(signedText, {
+            type: 'rsa',
+            keyPair: keyPairOptions,
+        });
 
         expect(decoded).toBeDefined();
-
-        if (
-            typeof decoded === 'object' &&
-            decoded !== null
-        ) {
-            expect(decoded.text).toEqual(data.text);
-        }
+        expect(decoded.text).toEqual(data.text);
+        expect(decoded.foo_bar).toEqual(data.foo_bar);
 
         expect(decoded).toHaveProperty('iat');
         expect(decoded).toHaveProperty('exp');
 
         await deleteKeyPair(keyPairOptions);
+    });
+
+    it('sign and not verify token (expired)', async () => {
+        const data : JWTClaims = {
+            exp: 1000,
+        };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        await expect(async () => {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+        }).rejects.toThrow(TokenError.expired());
+    });
+
+    it('sign and not verify token (not active before)', async () => {
+        const data : JWTClaims = {
+            nbf: Math.floor(new Date().getTime() / 1000) + 3600,
+        };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        await expect(async () => {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+        }).rejects.toThrow(TokenError.notActiveBefore());
+    });
+
+    it('not verify token', async () => {
+        await expect(async () => {
+            await verifyToken('foo.bar.baz', {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+        }).rejects.toThrow(TokenError);
+    });
+
+    it('should sign and decode header', async () => {
+        const data : JWTClaims = { text: 'secretText' };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        const header = extractTokenHeader(signedText);
+        expect(header).toBeDefined();
+        expect(header.typ).toEqual('JWT');
+        expect(header.alg).toEqual('RS256');
+
+        await deleteKeyPair({
+            directory,
+        });
+    });
+
+    it('should sign and decode payload', async () => {
+        const data : JWTClaims = { text: 'secretText' };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        const header = extractTokenPayload(signedText);
+        expect(header).toBeDefined();
+        expect(header.text).toEqual(data.text);
+        expect(header.exp).toBeDefined();
+        expect(header.iat).toBeDefined();
+
+        await deleteKeyPair({
+            directory,
+        });
+    });
+
+    it('not decode header', async () => {
+        expect(() => extractTokenHeader('foo.bar.baz')).toThrow();
+    });
+
+    it('not decode payload', () => {
+        expect(() => extractTokenPayload('foo.bar.baz')).toThrow();
     });
 });

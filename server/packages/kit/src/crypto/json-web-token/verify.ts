@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Jwt, JwtPayload } from 'jsonwebtoken';
-import { verify } from 'jsonwebtoken';
 import { KeyType, TokenError } from '@authup/core';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/core';
+import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { isKeyPairWithPublicKey, useKeyPair } from '../key-pair';
 import type { TokenVerifyOptions } from './type';
-import { createErrorForJWTError } from './utils';
+import { createErrorForJWTError, transformJWTAlgorithmToInternal } from './utils';
 
 /**
  * Verify JWT.
@@ -20,15 +20,13 @@ import { createErrorForJWTError } from './utils';
  *
  * @throws TokenError
  */
-export async function verifyToken(token: string, context: TokenVerifyOptions & { complete: true }): Promise<string | Jwt>;
-export async function verifyToken(token: string, context: TokenVerifyOptions): Promise<JwtPayload | string>;
 export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
-) : Promise<JwtPayload | Jwt | string> {
-    let promise : Promise<JwtPayload | Jwt | string | undefined>;
+) : Promise<OAuth2TokenPayload> {
+    let promise : Promise<JWTClaims>;
 
-    let output : Jwt | JwtPayload | string | undefined;
+    let output : JWTClaims;
 
     try {
         switch (context.type) {
@@ -39,38 +37,48 @@ export async function verifyToken(
                     keyPair :
                     await useKeyPair(keyPair);
 
+                let algorithms : Algorithm[];
+
                 if (type === KeyType.RSA) {
-                    options.algorithms = options.algorithms || ['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512'];
+                    algorithms = options.algorithms ?
+                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                        [
+                            Algorithm.RS256,
+                            Algorithm.RS384,
+                            Algorithm.RS512,
+                            Algorithm.PS256,
+                            Algorithm.PS384,
+                            Algorithm.PS512,
+                        ];
                 } else {
-                    options.algorithms = options.algorithms || ['ES256', 'ES384', 'ES512'];
+                    algorithms = options.algorithms ?
+                        options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                        [
+                            Algorithm.ES256,
+                            Algorithm.ES384,
+                        ];
                 }
 
-                promise = new Promise<Jwt | JwtPayload | string>((resolve, reject) => {
-                    verify(token, publicKey, options, (err, decoded) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-
-                        resolve(decoded);
-                    });
+                promise = verify(token, publicKey, {
+                    algorithms,
+                    validateNbf: true,
                 });
                 break;
             }
             case KeyType.OCT: {
                 const { type, secret, ...options } = context;
 
-                options.algorithms = options.algorithms || ['HS256', 'HS384', 'HS512'];
+                const algorithms : Algorithm[] = options.algorithms ?
+                    options.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
+                    [
+                        Algorithm.HS256,
+                        Algorithm.HS384,
+                        Algorithm.HS512,
+                    ];
 
-                promise = new Promise<Jwt | JwtPayload | string>((resolve, reject) => {
-                    verify(token, secret, options, (err, decoded) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-
-                        resolve(decoded);
-                    });
+                promise = verify(token, secret, {
+                    algorithms,
+                    validateNbf: true,
                 });
             }
         }
@@ -84,5 +92,5 @@ export async function verifyToken(
         throw new TokenError({ message: 'Invalid type.' });
     }
 
-    return output;
+    return output as OAuth2TokenPayload;
 }

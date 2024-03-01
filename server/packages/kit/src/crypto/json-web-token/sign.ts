@@ -5,16 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { sign } from 'jsonwebtoken';
+import type { JWTClaims } from '@authup/core';
 import { KeyType, TokenError } from '@authup/core';
+import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { isKeyPair, useKeyPair } from '../key-pair';
 import type { TokenSignOptions } from './type';
+import { transformJWTAlgorithmToInternal } from './utils';
 
-export async function signToken(
-    payload: string | object | Buffer | Record<string, any>,
-    context: TokenSignOptions,
-): Promise<string> {
-    context.expiresIn = context.expiresIn || 3600;
+const getUtcTimestamp = () => Math.floor(new Date().getTime() / 1000);
+
+export async function signToken(claims: JWTClaims, context: TokenSignOptions): Promise<string> {
+    if (typeof claims.exp !== 'number') {
+        claims.exp = getUtcTimestamp() + 3600;
+    }
+    if (typeof claims.iat !== 'number') {
+        claims.iat = getUtcTimestamp();
+    }
 
     switch (context.type) {
         case KeyType.RSA:
@@ -24,19 +30,33 @@ export async function signToken(
                 keyPair :
                 await useKeyPair(keyPair);
 
+            let algorithm : Algorithm;
+
             if (type === KeyType.RSA) {
-                options.algorithm = options.algorithm || 'RS256';
+                algorithm = options.algorithm ?
+                    transformJWTAlgorithmToInternal(options.algorithm) :
+                    Algorithm.RS256;
             } else {
-                options.algorithm = options.algorithm || 'ES256';
+                algorithm = options.algorithm ?
+                    transformJWTAlgorithmToInternal(options.algorithm) :
+                    Algorithm.ES256;
             }
 
-            return sign(payload, privateKey, options);
+            return sign(claims, privateKey, {
+                algorithm,
+                keyId: options.keyId,
+            });
         }
         case KeyType.OCT: {
             const { type, secret, ...options } = context;
-            options.algorithm = options.algorithm || 'HS256';
+            const algorithm : Algorithm = options.algorithm ?
+                transformJWTAlgorithmToInternal(options.algorithm) :
+                Algorithm.HS256;
 
-            return sign(payload, secret, options);
+            return sign(claims, secret, {
+                algorithm,
+                keyId: options.keyId,
+            });
         }
     }
 

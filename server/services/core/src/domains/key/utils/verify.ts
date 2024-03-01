@@ -16,20 +16,18 @@ import type { KeyEntity } from '../entity';
 export async function verifyOAuth2TokenWithKey(
     token: string,
     entity: KeyEntity,
-    options?: Omit<TokenVerifyOptions, 'type' | 'algorithms' | 'keyPair' | 'secret'>,
 ) : Promise<OAuth2TokenPayload> {
     if (entity.type === KeyType.OCT) {
-        return await verifyToken(
+        return verifyToken(
             token,
             {
                 type: KeyType.OCT,
                 secret: Buffer.from(entity.decryption_key, 'base64'),
-                ...options,
             },
-        ) as OAuth2TokenPayload;
+        );
     }
 
-    return await verifyToken(
+    return verifyToken(
         token,
         {
             type: entity.type,
@@ -37,8 +35,7 @@ export async function verifyOAuth2TokenWithKey(
                 publicKey: wrapPublicKeyPem(entity.encryption_key),
                 privateKey: wrapPrivateKeyPem(entity.decryption_key),
             },
-            ...(entity.signature_algorithm ? { algorithms: [entity.signature_algorithm] } : {}),
-            ...options,
+            ...(entity.signature_algorithm ? { algorithms: [entity.signature_algorithm] } : []),
         } as TokenVerifyOptions,
-    ) as OAuth2TokenPayload;
+    );
 }

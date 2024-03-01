@@ -26,7 +26,8 @@ export function buildOpenIdTokenPayload(
         client_id: context.clientId,
         realm_id: context.realmId,
         realm_name: context.realmName,
-        auth_time: new Date().getTime(),
+        auth_time: Math.floor(new Date().getTime() / 1000),
+        ...(context.expiresIn ? { exp: Math.floor(new Date().getTime() / 1000) + context.expiresIn } : {}),
         ...(context.scope ? { scope: context.scope } : {}),
     };
 }

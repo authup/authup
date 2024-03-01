@@ -21,6 +21,8 @@ export type OAuth2AccessTokenBuildContext = {
     clientId?: string,
 
     remoteAddress: string,
+
+    expiresIn?: number
 };
 
 export type OAuth2OpenIdTokenBuildContext = OAuth2AccessTokenBuildContext;

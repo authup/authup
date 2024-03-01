@@ -57,12 +57,15 @@ export async function buildOAuth2BearerTokenResponse(
             key = await useKey({ realm_id: realmId });
         }
 
+        if (typeof token.exp === 'undefined') {
+            token.exp = Math.floor(new Date().getTime() / 1000) + (maxAge || accessTokenMaxAge);
+        }
+
         return signOAuth2TokenWithKey(
             token,
             key,
             {
-                keyid: key.id,
-                expiresIn: maxAge || accessTokenMaxAge,
+                keyId: key.id,
             },
         );
     };

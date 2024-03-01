@@ -7,11 +7,12 @@
 
 import type { TokenSignOptions } from '@authup/server-kit';
 import { signToken } from '@authup/server-kit';
+import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core';
 import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core';
 import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(
-    payload: string | object | Buffer | Record<string, any>,
+    payload: Partial<OAuth2TokenPayload | OAuth2OpenIdTokenPayload>,
     entity: KeyEntity,
     options?: Omit<TokenSignOptions, 'type' | 'algorithm' | 'keyPair' | 'secret'>,
 ) : Promise<string> {

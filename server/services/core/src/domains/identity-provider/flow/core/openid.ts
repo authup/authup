@@ -7,7 +7,7 @@
 
 import { TokenError } from '@authup/core';
 import type { KeycloakJWTPayload } from '@authup/core';
-import { decodeToken } from '@authup/server-kit';
+import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
@@ -27,7 +27,7 @@ export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
             state: state as string,
         });
 
-        const payload = decodeToken(token.access_token) as string | KeycloakJWTPayload;
+        const payload = extractTokenPayload(token.access_token) as string | KeycloakJWTPayload;
 
         if (typeof payload === 'string') {
             throw TokenError.payloadInvalid();
