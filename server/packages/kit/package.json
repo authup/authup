@@ -51,7 +51,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@node-rs/bcrypt": "^1.10.0",
-        "@node-rs/jsonwebtoken": "^0.5.0",
+        "@node-rs/jsonwebtoken": "^0.5.1",
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.14",
         "locter": "^2.0.2",
