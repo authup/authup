@@ -3,7 +3,7 @@
     "compilerOptions": {
         "paths": {
             "@authup/core": ["./global/packages/core/src"],
-            "@authup/server-kit": ["./global/apps/kit/src"]
+            "@authup/server-kit": ["./server/packages/kit/src"]
         }
     }
 }

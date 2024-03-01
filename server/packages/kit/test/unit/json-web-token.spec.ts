@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { JWTClaims } from '@authup/core';
+import { TokenError } from '@authup/core';
 import path from 'path';
 import type { KeyPairOptions } from '../../src';
 import {
-    decodeTokenHeader,
-    decodeTokenPayload, deleteKeyPair, signToken, verifyToken,
+    deleteKeyPair, extractTokenHeader, extractTokenPayload, signToken, verifyToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
@@ -69,6 +70,46 @@ describe('src/json-web-token', () => {
         await deleteKeyPair(keyPairOptions);
     });
 
+    it('sign and not verify token (expired)', async () => {
+        const data : JWTClaims = {
+            exp: 1000,
+        };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        try {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+            expect(1).toEqual(2);
+        } catch (e) {
+            expect(e).toEqual(TokenError.expired());
+            expect(1).toEqual(1);
+        }
+    });
+
+    it('not verify token', async () => {
+        try {
+            await verifyToken('foo.bar.baz', {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+            expect(1).toEqual(2);
+        } catch (e) {
+            expect(1).toEqual(1);
+        }
+    });
+
     it('should sign and decode header', async () => {
         const data = { text: 'secretText' };
 
@@ -79,7 +120,7 @@ describe('src/json-web-token', () => {
             },
         });
 
-        const header = decodeTokenHeader(signedText);
+        const header = extractTokenHeader(signedText);
         expect(header).toBeDefined();
         expect(header.typ).toEqual('JWT');
         expect(header.alg).toEqual('RS256');
@@ -99,7 +140,7 @@ describe('src/json-web-token', () => {
             },
         });
 
-        const header = decodeTokenPayload(signedText);
+        const header = extractTokenPayload(signedText);
         expect(header).toBeDefined();
         expect(header.text).toEqual(data.text);
         expect(header.exp).toBeDefined();
@@ -112,7 +153,7 @@ describe('src/json-web-token', () => {
 
     it('not decode header', async () => {
         try {
-            decodeTokenHeader('foo.bar.baz');
+            extractTokenHeader('foo.bar.baz');
             expect(1).toEqual(2);
         } catch (e) {
             expect(1).toEqual(1);
@@ -121,7 +162,7 @@ describe('src/json-web-token', () => {
 
     it('not decode payload', async () => {
         try {
-            decodeTokenPayload('foo.bar.baz');
+            extractTokenPayload('foo.bar.baz');
             expect(1).toEqual(2);
         } catch (e) {
             expect(1).toEqual(1);

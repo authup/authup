@@ -21,7 +21,7 @@ import type {
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
 } from '@authup/core';
-import { decodeTokenHeader, verifyToken } from '@authup/server-kit';
+import { extractTokenHeader, verifyToken } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
 import type { TokenVerifierCache } from './cache';
@@ -75,7 +75,7 @@ export class TokenVerifier {
             return output;
         }
 
-        const header = decodeTokenHeader(token);
+        const header = extractTokenHeader(token);
         if (!header) {
             throw TokenError.payloadInvalid('The token could not be decoded.');
         }

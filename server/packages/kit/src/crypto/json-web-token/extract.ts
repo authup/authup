@@ -15,7 +15,7 @@ import { TokenError } from '@authup/core';
  *
  * @throws TokenError
  */
-export function decodeTokenHeader(
+export function extractTokenHeader(
     token: string,
 ) : JWTHeader {
     const parts = token.split('.');
@@ -48,7 +48,7 @@ export function decodeTokenHeader(
     }
 }
 
-export function decodeTokenPayload(
+export function extractTokenPayload(
     token: string,
 ) : JWTClaims {
     const parts = token.split('.');

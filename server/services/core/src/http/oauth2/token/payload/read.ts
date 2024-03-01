@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenPayload } from '@authup/core';
 import { ErrorCode, TokenError } from '@authup/core';
-import { decodeTokenHeader } from '@authup/server-kit';
+import { extractTokenHeader } from '@authup/server-kit';
 import { isHTTPError } from '@ebec/http';
 import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
@@ -18,7 +18,7 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
         throw TokenError.requestInvalid('The token is not defined.');
     }
 
-    const header = decodeTokenHeader(token);
+    const header = extractTokenHeader(token);
 
     if (header.kid) {
         const dataSource = await useDataSource();

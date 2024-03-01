@@ -15,7 +15,7 @@ import {
     OAuth2TokenKind,
     ScopeName,
 } from '@authup/core';
-import { decodeTokenPayload } from '@authup/server-kit';
+import { extractTokenPayload } from '@authup/server-kit';
 import type { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { createSuperTestClientWithScope } from '../../../../utils/domains';
@@ -78,7 +78,7 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeDefined();
 
-        const tokenPayload = decodeTokenPayload(url.searchParams.get('id_token')) as OAuth2TokenPayload;
+        const tokenPayload = extractTokenPayload(url.searchParams.get('id_token')) as OAuth2TokenPayload;
         expect(tokenPayload).toBeDefined();
 
         expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ID_TOKEN);
@@ -111,7 +111,7 @@ describe('src/http/controllers/token', () => {
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeFalsy();
 
-        const tokenPayload = decodeTokenPayload(url.searchParams.get('access_token')) as OAuth2TokenPayload;
+        const tokenPayload = extractTokenPayload(url.searchParams.get('access_token')) as OAuth2TokenPayload;
         expect(tokenPayload).toBeDefined();
 
         expect(tokenPayload.kind).toEqual(OAuth2TokenKind.ACCESS);

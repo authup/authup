@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './decode';
+export * from './extract';
 export * from './sign';
 export * from './type';
 export * from './verify';
