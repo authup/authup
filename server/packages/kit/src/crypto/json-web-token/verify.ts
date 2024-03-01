@@ -61,6 +61,7 @@ export async function verifyToken(
 
                 promise = verify(token, publicKey, {
                     algorithms,
+                    validateNbf: true,
                 });
                 break;
             }
@@ -77,6 +78,7 @@ export async function verifyToken(
 
                 promise = verify(token, secret, {
                     algorithms,
+                    validateNbf: true,
                 });
             }
         }

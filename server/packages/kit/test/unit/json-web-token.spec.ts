@@ -7,17 +7,21 @@
 
 import type { JWTClaims } from '@authup/core';
 import { TokenError } from '@authup/core';
-import path from 'path';
+import path from 'node:path';
 import type { KeyPairOptions } from '../../src';
 import {
-    deleteKeyPair, extractTokenHeader, extractTokenPayload, signToken, verifyToken,
+    deleteKeyPair,
+    extractTokenHeader,
+    extractTokenPayload,
+    signToken,
+    verifyToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
     const directory = path.join(__dirname, '..', '..', 'writable');
 
-    it('should sign and decrypt jsonwebtoken', async () => {
-        const data = { text: 'secretText' };
+    it('should sign and decrypt', async () => {
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -41,8 +45,8 @@ describe('src/json-web-token', () => {
         });
     });
 
-    it('should sign and decrypt json webtoken with passphrase', async () => {
-        const data = { text: 'secretText', foo_bar: 'baz' };
+    it('should sign and decrypt with passphrase', async () => {
+        const data : JWTClaims = { text: 'secretText', foo_bar: 'baz' };
         const keyPairOptions : Partial<KeyPairOptions> = {
             passphrase: 'start123',
             privateName: 'private-passphrase',
@@ -82,36 +86,51 @@ describe('src/json-web-token', () => {
             },
         });
 
-        try {
+        await expect(async () => {
             await verifyToken(signedText, {
                 type: 'rsa',
                 keyPair: {
                     directory,
                 },
             });
-            expect(1).toEqual(2);
-        } catch (e) {
-            expect(e).toEqual(TokenError.expired());
-            expect(1).toEqual(1);
-        }
+        }).rejects.toThrow(TokenError.expired());
+    });
+
+    it('sign and not verify token (not active before)', async () => {
+        const data : JWTClaims = {
+            nbf: Math.floor(new Date().getTime() / 1000) + 3600,
+        };
+
+        const signedText = await signToken(data, {
+            type: 'rsa',
+            keyPair: {
+                directory,
+            },
+        });
+
+        await expect(async () => {
+            await verifyToken(signedText, {
+                type: 'rsa',
+                keyPair: {
+                    directory,
+                },
+            });
+        }).rejects.toThrow(TokenError.notActiveBefore());
     });
 
     it('not verify token', async () => {
-        try {
+        await expect(async () => {
             await verifyToken('foo.bar.baz', {
                 type: 'rsa',
                 keyPair: {
                     directory,
                 },
             });
-            expect(1).toEqual(2);
-        } catch (e) {
-            expect(1).toEqual(1);
-        }
+        }).rejects.toThrow(TokenError);
     });
 
     it('should sign and decode header', async () => {
-        const data = { text: 'secretText' };
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -131,7 +150,7 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decode payload', async () => {
-        const data = { text: 'secretText' };
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -152,20 +171,10 @@ describe('src/json-web-token', () => {
     });
 
     it('not decode header', async () => {
-        try {
-            extractTokenHeader('foo.bar.baz');
-            expect(1).toEqual(2);
-        } catch (e) {
-            expect(1).toEqual(1);
-        }
+        expect(() => extractTokenHeader('foo.bar.baz')).toThrow();
     });
 
-    it('not decode payload', async () => {
-        try {
-            extractTokenPayload('foo.bar.baz');
-            expect(1).toEqual(2);
-        } catch (e) {
-            expect(1).toEqual(1);
-        }
+    it('not decode payload', () => {
+        expect(() => extractTokenPayload('foo.bar.baz')).toThrow();
     });
 });
