@@ -1,6 +1,6 @@
 {
     "name": "authup",
-    "version": "1.0.0-beta.6",
+    "version": "1.0.0-beta.7",
     "description": "This is the CLI for the authup framework.",
     "exports": {
         "./package.json": "./package.json",
@@ -43,11 +43,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-web": "^1.0.0-beta.6",
-        "@authup/client-web-config": "^1.0.0-beta.6",
-        "@authup/config": "^1.0.0-beta.6",
-        "@authup/core": "^1.0.0-beta.6",
-        "@authup/server-core": "^1.0.0-beta.6",
+        "@authup/client-web": "^1.0.0-beta.7",
+        "@authup/client-web-config": "^1.0.0-beta.7",
+        "@authup/config": "^1.0.0-beta.7",
+        "@authup/core": "^1.0.0-beta.7",
+        "@authup/server-core": "^1.0.0-beta.7",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^3.2.3",

@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.7](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.6...client-web-v1.0.0-beta.7) (2024-03-06)
+
+
+### Bug Fixes
+
+* permission restriction in identity-provider routes ([18077d3](https://github.com/authup/authup/commit/18077d3c7684ec600da2d1b43fac0d1785d9def2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-vue bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/config bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/core bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/client-web-config bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+
 ## [1.0.0-beta.6](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.5...client-web-v1.0.0-beta.6) (2024-02-28)
 
 

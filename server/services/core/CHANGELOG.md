@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.7](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.6...server-core-v1.0.0-beta.7) (2024-03-06)
+
+
+### Features
+
+* bind default role to robot instead of individual permissions ([#1781](https://github.com/authup/authup/issues/1781)) ([bcc51d2](https://github.com/authup/authup/commit/bcc51d241a38541a2dcd1c83f9f149b37fde44d9))
+* use rust bindings to speed up bcrypt and jsonwebtokens ([#1784](https://github.com/authup/authup/issues/1784)) ([3a1fcf3](https://github.com/authup/authup/commit/3a1fcf3705acce2564e4d3692e3161c6f1c5021d))
+
+
+### Bug Fixes
+
+* **deps:** bump winston from 3.11.0 to 3.12.0 ([#1794](https://github.com/authup/authup/issues/1794)) ([ab2a496](https://github.com/authup/authup/commit/ab2a4966577a662a68aa7caff813bb16e8c46301))
+* maxAge assignment of refresh- & access-token ([5f112a0](https://github.com/authup/authup/commit/5f112a001f484cc81b2af9ccc928791829777efd))
+* minor cleanup for jwt sign/verify & remove unnecessary dependencies ([8ca8600](https://github.com/authup/authup/commit/8ca8600b9ebf635b6cacd30ce246a640ed507c25))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/core bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/server-kit bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+
 ## [1.0.0-beta.6](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.5...server-core-v1.0.0-beta.6) (2024-02-28)
 
 
