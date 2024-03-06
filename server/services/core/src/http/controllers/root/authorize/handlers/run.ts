@@ -18,7 +18,7 @@ export async function runAuthorizationRouteHandler(
     const config = useConfig();
     const result = await runOAuth2Authorization(req, {
         issuer: config.publicUrl,
-        accessTokenMaxAge: config.tokenRefreshMaxAge,
+        accessTokenMaxAge: config.tokenAccessMaxAge,
     });
 
     // ---------------------------------------------------------
@@ -40,5 +40,5 @@ export async function runAuthorizationRouteHandler(
         url.searchParams.set('id_token', result.idToken);
     }
 
-    send(res, { url: url.href });
+    return send(res, { url: url.href });
 }

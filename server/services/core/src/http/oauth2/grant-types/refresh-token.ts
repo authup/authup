@@ -39,9 +39,9 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenRefreshMaxAge,
+            accessTokenMaxAge: this.config.tokenAccessMaxAge,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenAccessMaxAge,
+            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
         });
     }
 

@@ -53,7 +53,7 @@ export abstract class AbstractGrant {
         const token = repository.create(
             transformToRefreshTokenEntity(
                 accessToken,
-                this.config.tokenAccessMaxAge,
+                this.config.tokenRefreshMaxAge,
             ),
         );
 

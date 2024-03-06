@@ -37,9 +37,9 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         const refreshToken = await this.issueRefreshToken(accessToken);
         const buildContext : OAuth2BearerResponseBuildContext = {
             accessToken,
-            accessTokenMaxAge: this.config.tokenRefreshMaxAge,
+            accessTokenMaxAge: this.config.tokenAccessMaxAge,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenAccessMaxAge,
+            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
         };
 
         if (hasOAuth2OpenIDScope(authorizationCode.scope)) {

@@ -34,8 +34,8 @@ export async function useInfo() {
     info = {
         version: pkgJson.version,
         timestamp: Date.now(),
-        tokenMaxAgeAccessToken: config.tokenRefreshMaxAge,
-        tokenMaxAgeRefreshToken: config.tokenAccessMaxAge,
+        tokenMaxAgeAccessToken: config.tokenAccessMaxAge,
+        tokenMaxAgeRefreshToken: config.tokenRefreshMaxAge,
         redis: !!config.redis,
         vault: !!config.vault,
     };
