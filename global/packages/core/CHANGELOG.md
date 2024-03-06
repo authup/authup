@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.0.0-beta.7](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.6...global-core-v1.0.0-beta.7) (2024-03-06)
+
+
+### Features
+
+* use rust bindings to speed up bcrypt and jsonwebtokens ([#1784](https://github.com/authup/authup/issues/1784)) ([3a1fcf3](https://github.com/authup/authup/commit/3a1fcf3705acce2564e4d3692e3161c6f1c5021d))
+
+
+### Bug Fixes
+
+* minor cleanup for jwt sign/verify & remove unnecessary dependencies ([8ca8600](https://github.com/authup/authup/commit/8ca8600b9ebf635b6cacd30ce246a640ed507c25))
+
 ## [1.0.0-beta.6](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.5...global-core-v1.0.0-beta.6) (2024-02-28)
 
 

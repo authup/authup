@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.7](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.6...server-adapter-v1.0.0-beta.7) (2024-03-06)
+
+
+### Features
+
+* use rust bindings to speed up bcrypt and jsonwebtokens ([#1784](https://github.com/authup/authup/issues/1784)) ([3a1fcf3](https://github.com/authup/authup/commit/3a1fcf3705acce2564e4d3692e3161c6f1c5021d))
+
+
+### Bug Fixes
+
+* minor cleanup for jwt sign/verify & remove unnecessary dependencies ([8ca8600](https://github.com/authup/authup/commit/8ca8600b9ebf635b6cacd30ce246a640ed507c25))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/server-kit bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+    * @authup/server-kit bumped from ^1.0.0-beta.6 to ^1.0.0-beta.7
+
 ## [1.0.0-beta.6](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.5...server-adapter-v1.0.0-beta.6) (2024-02-28)
 
 
