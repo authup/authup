@@ -99,7 +99,7 @@ These guidelines will help to ensure that contributions are made effectively and
 | Vue.JS Library                                  |   ✓    |    ✗     |     ✗     |    ✗     |
 | OAuth2 Protocol                                 |   ✓    |    ✓     |     ✓     |    ✓     |
 | OpenID Connect Protocol                         |   ✓    |    ✓     |     ✓     |    ✓     |
-| LDAP Protocol                                   |   ✗    |    ✗     |     ✓     |    ✓     |
+| LDAP Protocol                                   |   ✓    |    ✗     |     ✓     |    ✓     |
 
 
 
