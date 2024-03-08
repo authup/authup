@@ -55,7 +55,7 @@
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.14",
         "locter": "^2.0.2",
-        "nodemailer": "^6.9.10",
+        "nodemailer": "^6.9.12",
         "proxy-from-env": "^1.1.0",
         "smob": "^1.4.0"
     },
