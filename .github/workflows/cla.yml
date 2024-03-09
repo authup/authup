@@ -24,3 +24,5 @@ jobs:
                   path-to-signatures: '.cla/signatures.json'
                   path-to-document: 'https://gist.github.com/tada5hi/0777b868a51c7a6e4080b9d1b19c8192'
                   allowlist: tada5hi,bot*
+                  create-file-commit-message: "chore: created CLA file for storing signatures"
+                  signed-commit-message: "$contributorName signed the CLA"
