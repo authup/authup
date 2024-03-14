@@ -65,7 +65,7 @@
         "pinia": "^2.1.7",
         "rapiq": "^0.9.0",
         "smob": "^1.4.0",
-        "socket.io-client": "^4.7.4",
+        "socket.io-client": "^4.7.5",
         "vue": "^3.4.21",
         "vue-tsc": "^2.0.5"
     },
@@ -79,7 +79,7 @@
         "ilingo": "^3.x",
         "rapiq": ">=0.8.0 <1.0.0",
         "smob": "^1.4.x",
-        "socket.io-client": "^4.7.4",
+        "socket.io-client": "^4.7.5",
         "vue": "^3.3.x"
     },
     "publishConfig": {
