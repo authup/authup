@@ -7,6 +7,7 @@
 import type { DataSourceOptions } from 'typeorm';
 import { hasClient, hasConfig } from 'redis-extension';
 import { adjustFilePath } from 'typeorm-extension';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { isDatabaseTypeSupported, useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
@@ -50,6 +51,12 @@ export async function extendDataSourceOptions(options: DataSourceOptions) {
 
     options = setEntitiesForDataSourceOptions(options);
     options = setSubscribersForDataSourceOptions(options);
+
+    if (options.type === 'mysql') {
+        Object.assign(options, {
+            connectorPackage: 'mysql2',
+        } satisfies Partial<MysqlConnectionOptions>);
+    }
 
     return options;
 }

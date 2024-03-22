@@ -2,8 +2,7 @@
 version: '3.9'
 services:
     mysql:
-        image: mysql
-        command: --default-authentication-plugin=mysql_native_password
+        image: mysql:latest
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: start123
