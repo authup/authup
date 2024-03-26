@@ -26,3 +26,4 @@ jobs:
                   allowlist: tada5hi,bot*
                   create-file-commit-message: "chore: created CLA file for storing signatures"
                   signed-commit-message: "$contributorName signed the CLA"
+                  lock-pullrequest-aftermerge: false
