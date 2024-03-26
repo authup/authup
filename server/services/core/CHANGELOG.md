@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.7...server-core-v1.0.0-beta.8) (2024-03-26)
+
+
+### Features
+
+* use mysql2 driver package to support mysql v8 ([#1831](https://github.com/authup/authup/issues/1831)) ([d8fd28b](https://github.com/authup/authup/commit/d8fd28b9302bbf77ece1fb2837e2ada9510721cf))
+
+
+### Bug Fixes
+
+* **deps:** bump winston from 3.12.0 to 3.13.0 ([#1833](https://github.com/authup/authup/issues/1833)) ([7c9766c](https://github.com/authup/authup/commit/7c9766cef39343dff6276774166fef512333b62f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+    * @authup/server-kit bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+
 ## [1.0.0-beta.7](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.6...server-core-v1.0.0-beta.7) (2024-03-06)
 
 

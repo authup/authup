@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.8](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.7...global-config-v1.0.0-beta.8) (2024-03-26)
+
+
+### Miscellaneous Chores
+
+* **global-config:** Synchronize main versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+
 ## [1.0.0-beta.7](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.6...global-config-v1.0.0-beta.7) (2024-03-06)
 
 

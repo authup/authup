@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.8](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.7...global-core-v1.0.0-beta.8) (2024-03-26)
+
+
+### Miscellaneous Chores
+
+* **global-core:** Synchronize main versions
+
 ## [1.0.0-beta.7](https://github.com/authup/authup/compare/global-core-v1.0.0-beta.6...global-core-v1.0.0-beta.7) (2024-03-06)
 
 
