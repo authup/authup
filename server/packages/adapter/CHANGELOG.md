@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.7...server-adapter-v1.0.0-beta.8) (2024-03-26)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.2.2 to 5.2.3 ([#1802](https://github.com/authup/authup/issues/1802)) ([a7cf915](https://github.com/authup/authup/commit/a7cf915cfe7d7a8256f6641680068839df3c081a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+    * @authup/server-kit bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+    * @authup/server-kit bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+
 ## [1.0.0-beta.7](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.6...server-adapter-v1.0.0-beta.7) (2024-03-06)
 
 

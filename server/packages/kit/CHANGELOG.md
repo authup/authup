@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.7...server-kit-v1.0.0-beta.8) (2024-03-26)
+
+
+### Bug Fixes
+
+* **deps:** bump @node-rs/bcrypt from 1.10.0 to 1.10.1 ([#1810](https://github.com/authup/authup/issues/1810)) ([234deb1](https://github.com/authup/authup/commit/234deb191e60310c320018a33a0ed6cc43de98d7))
+* **deps:** bump @node-rs/jsonwebtoken from 0.5.1 to 0.5.2 ([#1809](https://github.com/authup/authup/issues/1809)) ([139c925](https://github.com/authup/authup/commit/139c925a6f9f5b44a9990c9118ced4323baab68a))
+* **deps:** bump nodemailer from 6.9.11 to 6.9.12 ([#1806](https://github.com/authup/authup/issues/1806)) ([fe74227](https://github.com/authup/authup/commit/fe74227be3ae7327a9fb56e947d5c0ff16c6a831))
+* **deps:** bump nodemailer from 6.9.12 to 6.9.13 ([#1830](https://github.com/authup/authup/issues/1830)) ([665d29c](https://github.com/authup/authup/commit/665d29c35312bcb956698316fcee1b63500301cf))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.7 to ^1.0.0-beta.8
+
 ## [1.0.0-beta.7](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.6...server-kit-v1.0.0-beta.7) (2024-03-06)
 
 
