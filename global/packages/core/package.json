@@ -61,13 +61,13 @@
         "nanoid": "^3.3.4"
     },
     "devDependencies": {
-        "@hapic/oauth2": "^2.4.1",
+        "@hapic/oauth2": "^2.4.2",
         "@hapic/vault": "^2.3.2",
         "hapic": "^2.5.0",
         "rapiq": "^0.9.0"
     },
     "peerDependencies": {
-        "@hapic/oauth2": "^2.4.1",
+        "@hapic/oauth2": "^2.4.2",
         "@hapic/vault": "^2.3.2",
         "hapic": "^2.5.0",
         "rapiq": ">=0.8.0 <1.0.0"
