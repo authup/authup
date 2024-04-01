@@ -57,7 +57,7 @@
         "locter": "^2.0.2",
         "nodemailer": "^6.9.13",
         "proxy-from-env": "^1.1.0",
-        "smob": "^1.4.0"
+        "smob": "^1.5.0"
     },
     "devDependencies": {
         "@authup/core": "^1.0.0-beta.8",

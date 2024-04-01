@@ -42,7 +42,7 @@
         "@authup/core": "^1.0.0-beta.8",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
-        "smob": "^1.4.1",
+        "smob": "^1.5.0",
         "zod": "^3.22.4"
     },
     "publishConfig": {
