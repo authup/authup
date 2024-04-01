@@ -46,7 +46,7 @@
         "bootstrap": "^5.3.3",
         "bootstrap-vue-next": "^0.15.5",
         "browser-storage-adapter": "^1.1.2",
-        "minimatch": "^9.0.3",
+        "minimatch": "^9.0.4",
         "nuxt": "3.11.1",
         "pinia": "^2.1.7",
         "rapiq": "^0.9.0",
