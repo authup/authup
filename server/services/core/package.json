@@ -64,7 +64,7 @@
         "express-validator": "^7.0.1",
         "hapic": "^2.5.1",
         "ldapjs": "^3.0.7",
-        "locter": "^2.0.2",
+        "locter": "^2.1.0",
         "morgan": "^1.10.0",
         "mysql2": "^3.9.2",
         "node-cron": "^3.0.3",
