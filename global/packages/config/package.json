@@ -43,7 +43,7 @@
     "dependencies": {
         "@authup/core": "^1.0.0-beta.8",
         "envix": "^1.5.0",
-        "locter": "^2.0.2",
+        "locter": "^2.1.0",
         "pathe": "^1.1.2",
         "smob": "^1.5.0"
     },

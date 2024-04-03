@@ -54,7 +54,7 @@
         "@node-rs/jsonwebtoken": "^0.5.2",
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.14",
-        "locter": "^2.0.2",
+        "locter": "^2.1.0",
         "nodemailer": "^6.9.13",
         "proxy-from-env": "^1.1.0",
         "smob": "^1.5.0"
