@@ -9,8 +9,8 @@ import { check, validationResult } from 'express-validator';
 import { isPropertySet, isRealmResourceWritable } from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RobotEntity } from '../../../../domains';
-import { RealmEntity } from '../../../../domains';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { RealmEntity, RobotEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -20,7 +20,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runRobotValidation(
     req: Request,
@@ -58,11 +58,13 @@ export async function runRobotValidation(
         .optional({ nullable: true })
         .run(req);
 
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional()
-        .run(req);
+    if (operation === RequestHandlerOperation.CREATE) {
+        await check('realm_id')
+            .exists()
+            .isUUID()
+            .optional()
+            .run(req);
+    }
 
     // ----------------------------------------------
 
@@ -92,6 +94,12 @@ export async function runRobotValidation(
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
+    }
+
+    // ----------------------------------------------
+
+    if (operation === RequestHandlerOperation.CREATE) {
+        await enforceUniquenessForDatabaseEntity(RobotEntity, result.data);
     }
 
     // ----------------------------------------------

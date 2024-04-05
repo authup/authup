@@ -11,8 +11,8 @@ import {
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RoleEntity } from '../../../../domains';
-import { RealmEntity } from '../../../../domains';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { RealmEntity, RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -30,7 +30,7 @@ export async function runRoleValidation(
 ) : Promise<ExpressValidationResult<RoleEntity>> {
     const result : ExpressValidationResult<RoleEntity> = initExpressValidationResult();
 
-    const nameChain = await check('name')
+    const nameChain = check('name')
         .exists()
         .notEmpty()
         .custom((value) => {
@@ -61,11 +61,14 @@ export async function runRoleValidation(
         .optional({ nullable: true })
         .run(req);
 
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
+    if (operation === 'create') {
+        await check('realm_id')
+            .exists()
+            .isUUID()
+            .optional({ nullable: true })
+            .default(null)
+            .run(req);
+    }
 
     // ----------------------------------------------
 
@@ -108,6 +111,12 @@ export async function runRoleValidation(
         if (permissionTarget) {
             result.data.target = permissionTarget.target;
         }
+    }
+
+    // ----------------------------------------------
+
+    if (operation === 'create') {
+        await enforceUniquenessForDatabaseEntity(RoleEntity, result.data);
     }
 
     // ----------------------------------------------
