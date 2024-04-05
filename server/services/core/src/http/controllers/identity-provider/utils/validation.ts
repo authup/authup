@@ -16,9 +16,8 @@ import {
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { ZodError } from 'zod';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import type { IdentityProviderEntity } from '../../../../domains';
 import {
-    IdentityProviderEntity,
     RealmEntity,
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol,
@@ -85,7 +84,6 @@ export async function runOauth2ProviderValidation(
             .exists()
             .isUUID()
             .optional({ nullable: true })
-            .default(null)
             .run(req);
     }
 
@@ -156,12 +154,6 @@ export async function runOauth2ProviderValidation(
     ) {
         const { id } = useRequestEnv(req, 'realm');
         result.data.realm_id = id;
-    }
-
-    // ----------------------------------------------
-
-    if (operation === 'create') {
-        await enforceUniquenessForDatabaseEntity(IdentityProviderEntity, result.data);
     }
 
     // ----------------------------------------------
