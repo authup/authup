@@ -37,7 +37,7 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
     for (let i = 0; i < metadata.ownUniques.length; i++) {
         uniqueMetadata = metadata.ownUniques[i];
 
-        const columnNames = uniqueMetadata.columns.map((column) => column.databaseName);
+        const columnNames = uniqueMetadata.columns.map((column) => column.propertyName);
         const whereClause : Record<string, any> = {};
         for (let j = 0; j < columnNames.length; j++) {
             whereClause[columnNames[j]] = data[columnNames[j]];
