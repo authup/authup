@@ -68,7 +68,7 @@
         "morgan": "^1.10.0",
         "mysql2": "^3.9.2",
         "node-cron": "^3.0.3",
-        "pg": "^8.11.3",
+        "pg": "^8.11.5",
         "redis-extension": "^1.3.0",
         "reflect-metadata": "^0.2.2",
         "routup": "^3.3.0",
