@@ -9,8 +9,8 @@ import { check, validationResult } from 'express-validator';
 import { isPropertySet, isRealmResourceWritable } from '@authup/core';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { RealmEntity, RobotEntity } from '../../../../domains';
+import type { RobotEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -94,12 +94,6 @@ export async function runRobotValidation(
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
-    }
-
-    // ----------------------------------------------
-
-    if (operation === RequestHandlerOperation.CREATE) {
-        await enforceUniquenessForDatabaseEntity(RobotEntity, result.data);
     }
 
     // ----------------------------------------------
