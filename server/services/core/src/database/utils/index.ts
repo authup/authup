@@ -8,3 +8,4 @@
 export * from './data-source-options';
 export * from './entities';
 export * from './subscribers';
+export * from './uniqueness';

@@ -20,7 +20,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runRobotValidation(
     req: Request,
@@ -58,11 +58,13 @@ export async function runRobotValidation(
         .optional({ nullable: true })
         .run(req);
 
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional()
-        .run(req);
+    if (operation === RequestHandlerOperation.CREATE) {
+        await check('realm_id')
+            .exists()
+            .isUUID()
+            .optional()
+            .run(req);
+    }
 
     // ----------------------------------------------
 

@@ -79,11 +79,13 @@ export async function runOauth2ProviderValidation(
         .isBoolean()
         .run(req);
 
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
+    if (operation === 'create') {
+        await check('realm_id')
+            .exists()
+            .isUUID()
+            .optional({ nullable: true })
+            .run(req);
+    }
 
     // ----------------------------------------------
 
@@ -153,6 +155,8 @@ export async function runOauth2ProviderValidation(
         const { id } = useRequestEnv(req, 'realm');
         result.data.realm_id = id;
     }
+
+    // ----------------------------------------------
 
     return result;
 }
