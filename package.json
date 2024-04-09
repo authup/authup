@@ -53,7 +53,7 @@
         "nx": "^18.2.2",
         "rimraf": "^5.0.5",
         "rollup": "^4.14.0",
-        "typescript": "5.4.3",
+        "typescript": "5.4.4",
         "workspaces-publish": "^1.4.3"
     },
     "scripts": {
