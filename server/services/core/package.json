@@ -55,7 +55,7 @@
         "@routup/decorators": "^3.3.2",
         "@routup/prometheus": "^2.3.0",
         "@routup/rate-limit": "^2.3.0",
-        "@routup/swagger": "^2.3.5",
+        "@routup/swagger": "^2.3.6",
         "better-sqlite3": "^9.4.5",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
