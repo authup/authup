@@ -6,31 +6,31 @@
     "bump-patch-for-minor-pre-major": true,
     "release-as": "1.0.0-beta.9",
     "packages": {
-        "client/services/web": {
+        "packages/client-web": {
             "component": "client-web"
         },
-        "client/packages/web-config": {
+        "packages/client-web-config": {
             "component": "client-web-config"
         },
-        "client/packages/vue": {
-            "component": "client-vue"
+        "packages/client-web-kit": {
+            "component": "client-web-kit"
         },
-        "global/services/authup": {
-            "component": "global-authup"
+        "packages/authup": {
+            "component": "authup"
         },
-        "global/packages/config": {
-            "component": "global-config"
+        "packages/config": {
+            "component": "config"
         },
-        "global/packages/core": {
-            "component": "global-core"
+        "packages/core-kit": {
+            "component": "core-kit"
         },
-        "server/packages/adapter": {
+        "packages/server-adapter": {
             "component": "server-adapter"
         },
-        "server/services/core": {
+        "packages/server-core": {
             "component": "server-core"
         },
-        "server/packages/kit": {
+        "packages/server-kit": {
             "component": "server-kit"
         }
     },
@@ -43,12 +43,12 @@
             "type": "linked-versions",
             "groupName": "main",
             "components": [
-                "client-vue",
+                "client-web-kit",
                 "client-web-config",
                 "client-web",
-                "global-authup",
-                "global-config",
-                "global-core",
+                "authup",
+                "config",
+                "core-kit",
                 "server-adapter",
                 "server-core",
                 "server-kit"
