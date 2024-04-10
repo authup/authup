@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-kit",
-    "version": "1.0.0-beta.8",
+    "version": "1.0.0-beta.9",
     "description": "SDK for server side services.",
     "exports": {
         "./package.json": "./package.json",
@@ -60,13 +60,13 @@
         "smob": "^1.5.0"
     },
     "devDependencies": {
-        "@authup/core": "^1.0.0-beta.8",
+        "@authup/core": "^1.0.0-beta.9",
         "@types/bcrypt": "^5.0.2",
         "@types/proxy-from-env": "^1.0.4",
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
-        "@authup/core": "^1.0.0-beta.8",
+        "@authup/core": "^1.0.0-beta.9",
         "redis-extension": "^1.2.x"
     },
     "publishConfig": {

@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.9](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.8...server-adapter-v1.0.0-beta.9) (2024-04-10)
+
+
+### Bug Fixes
+
+* **deps:** bump @hapic/oauth2 from 2.4.1 to 2.4.2 ([#1835](https://github.com/authup/authup/issues/1835)) ([d870a11](https://github.com/authup/authup/commit/d870a117850b1c0ccb3fbc988e43478d1d1cb826))
+* **deps:** bump jose from 5.2.3 to 5.2.4 ([#1879](https://github.com/authup/authup/issues/1879)) ([0348eed](https://github.com/authup/authup/commit/0348eed14090255b4a4b5526fbd830c20cf7c71d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/server-kit bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/server-kit bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+
 ## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-adapter-v1.0.0-beta.7...server-adapter-v1.0.0-beta.8) (2024-03-26)
 
 

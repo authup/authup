@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.9](https://github.com/authup/authup/compare/client-web-config-v1.0.0-beta.8...client-web-config-v1.0.0-beta.9) (2024-04-10)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 1.4.1 to 1.5.0 ([#1843](https://github.com/authup/authup/issues/1843)) ([4741a8a](https://github.com/authup/authup/commit/4741a8a93ea069fe4fcb7ab897d789414e372d69))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+
 ## [1.0.0-beta.8](https://github.com/authup/authup/compare/client-web-config-v1.0.0-beta.7...client-web-config-v1.0.0-beta.8) (2024-03-26)
 
 
