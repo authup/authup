@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.9](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.8...client-web-v1.0.0-beta.9) (2024-04-10)
+
+
+### Bug Fixes
+
+* **deps:** bump @hapic/oauth2 from 2.4.1 to 2.4.2 ([#1835](https://github.com/authup/authup/issues/1835)) ([d870a11](https://github.com/authup/authup/commit/d870a117850b1c0ccb3fbc988e43478d1d1cb826))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-vue bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/config bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/client-web-config bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+
 ## [1.0.0-beta.8](https://github.com/authup/authup/compare/client-web-v1.0.0-beta.7...client-web-v1.0.0-beta.8) (2024-03-26)
 
 

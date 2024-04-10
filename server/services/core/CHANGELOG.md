@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.9](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.8...server-core-v1.0.0-beta.9) (2024-04-10)
+
+
+### Features
+
+* check composite unique constraints on resource creation for sqlite ([#1870](https://github.com/authup/authup/issues/1870)) ([d07fcb9](https://github.com/authup/authup/commit/d07fcb9e30cfe8429aad007adcb75bed14894eff))
+
+
+### Bug Fixes
+
+* column names for sqlite uniqueness enforcement should be based on property name ([5de8c5f](https://github.com/authup/authup/commit/5de8c5f27592e4b106dac7afda602a3c9fb43dd1))
+* **deps:** bump @hapic/oauth2 from 2.4.1 to 2.4.2 ([#1835](https://github.com/authup/authup/issues/1835)) ([d870a11](https://github.com/authup/authup/commit/d870a117850b1c0ccb3fbc988e43478d1d1cb826))
+* **deps:** bump @hapic/vault from 2.3.2 to 2.3.3 ([#1836](https://github.com/authup/authup/issues/1836)) ([a51ef81](https://github.com/authup/authup/commit/a51ef81ccc04175cef233f1ea3836d6a3bca1b4d))
+* **deps:** bump @routup/basic from 1.3.1 to 1.3.2 ([#1865](https://github.com/authup/authup/issues/1865)) ([7c00221](https://github.com/authup/authup/commit/7c0022156a488e4f9f9bef6cf12aa6d4e042a451))
+* **deps:** bump @routup/decorators from 3.3.1 to 3.3.2 ([#1873](https://github.com/authup/authup/issues/1873)) ([0fdff25](https://github.com/authup/authup/commit/0fdff25b8dcf32ea7472983ca3795425b8d64993))
+* **deps:** bump @routup/swagger from 2.3.5 to 2.3.6 ([#1875](https://github.com/authup/authup/issues/1875)) ([cf13487](https://github.com/authup/authup/commit/cf134873f7c450e83b865620fdd65bc729089e78))
+* **deps:** bump better-sqlite3 from 9.4.3 to 9.4.5 ([#1868](https://github.com/authup/authup/issues/1868)) ([941324f](https://github.com/authup/authup/commit/941324f9b3cc2bfde7f2af816b681b5412618cd7))
+* **deps:** bump hapic from 2.5.0 to 2.5.1 ([#1834](https://github.com/authup/authup/issues/1834)) ([4f815b1](https://github.com/authup/authup/commit/4f815b1894e3fa793e6553cf04c710790ac730f1))
+* **deps:** bump locter from 2.0.2 to 2.1.0 ([#1855](https://github.com/authup/authup/issues/1855)) ([3628d76](https://github.com/authup/authup/commit/3628d76c0f5e7722bb6809cd8cab7228b1509850))
+* **deps:** bump mysql2 from 3.9.3 to 3.9.4 ([#1883](https://github.com/authup/authup/issues/1883)) ([c5118a7](https://github.com/authup/authup/commit/c5118a75a3ab154b3acc30fd4dca938f64091cdf))
+* **deps:** bump pg from 8.11.3 to 8.11.5 ([#1856](https://github.com/authup/authup/issues/1856)) ([8cb11c7](https://github.com/authup/authup/commit/8cb11c77c6857e62dffebe30f643e97f60cfe783))
+* **deps:** bump reflect-metadata from 0.2.1 to 0.2.2 ([#1841](https://github.com/authup/authup/issues/1841)) ([ee73bf7](https://github.com/authup/authup/commit/ee73bf792bd64e34474ac7c9e61df9047f96da2c))
+* **deps:** bump routup from 3.2.0 to 3.3.0 ([#1847](https://github.com/authup/authup/issues/1847)) ([3f80b81](https://github.com/authup/authup/commit/3f80b8167906085a4d4ecf7002867c10215dc45f))
+* **deps:** bump smob from 1.4.1 to 1.5.0 ([#1843](https://github.com/authup/authup/issues/1843)) ([4741a8a](https://github.com/authup/authup/commit/4741a8a93ea069fe4fcb7ab897d789414e372d69))
+* **deps:** bump typeorm-extension from 3.5.0 to 3.5.1 ([#1884](https://github.com/authup/authup/issues/1884)) ([f349c80](https://github.com/authup/authup/commit/f349c80dbd6d3b143041407d3c51c174470ac3cb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+    * @authup/server-kit bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+
 ## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-core-v1.0.0-beta.7...server-core-v1.0.0-beta.8) (2024-03-26)
 
 

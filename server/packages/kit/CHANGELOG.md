@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.9](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.8...server-kit-v1.0.0-beta.9) (2024-04-10)
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 2.0.2 to 2.1.0 ([#1855](https://github.com/authup/authup/issues/1855)) ([3628d76](https://github.com/authup/authup/commit/3628d76c0f5e7722bb6809cd8cab7228b1509850))
+* **deps:** bump smob from 1.4.1 to 1.5.0 ([#1843](https://github.com/authup/authup/issues/1843)) ([4741a8a](https://github.com/authup/authup/commit/4741a8a93ea069fe4fcb7ab897d789414e372d69))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+  * peerDependencies
+    * @authup/core bumped from ^1.0.0-beta.8 to ^1.0.0-beta.9
+
 ## [1.0.0-beta.8](https://github.com/authup/authup/compare/server-kit-v1.0.0-beta.7...server-kit-v1.0.0-beta.8) (2024-03-26)
 
 
