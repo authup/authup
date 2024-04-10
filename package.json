@@ -9,21 +9,17 @@
     "license": "Apache-2.0",
     "version": "1.0.0",
     "workspaces": [
-        "client/services/*",
-        "client/packages/*",
-        "global/services/*",
-        "global/packages/*",
-        "server/services/*",
-        "server/packages/*"
+        "packages/*"
     ],
     "keywords": [
         "auth",
+        "authentication",
+        "authorization",
         "module",
         "typescript",
-        "template",
-        "auth-template",
         "oauth2",
-        "oauth2-client"
+        "oauth2-server",
+        "ldap"
     ],
     "repository": {
         "type": "git",
@@ -59,7 +55,7 @@
     "scripts": {
         "build": "npx nx run-many -t build",
         "test": "npx nx run-many -t test",
-        "lint": "eslint --ext .ts ./client/ ./global ./server",
+        "lint": "eslint --ext .ts ./packages",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky install"
     },
