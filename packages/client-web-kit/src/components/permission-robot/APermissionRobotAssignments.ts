@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Robot } from '@authup/core';
+import type { Robot } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import {
     ARobotPermissionAssignment,

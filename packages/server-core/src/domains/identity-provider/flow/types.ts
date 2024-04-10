@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core';
+import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
 import type { Request } from 'routup';
 
 export type IdentityProviderFlowIdentity = {

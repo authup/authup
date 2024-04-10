@@ -19,10 +19,10 @@ import {
 import type {
     IdentityProvider,
     IdentityProviderPreset, OAuth2IdentityProvider,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     DomainType, IdentityProviderProtocol,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

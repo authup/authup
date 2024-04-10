@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { AClientScopes } from '@authup/client-vue';
-import type { Client, ClientScope } from '@authup/core';
+import { AClientScopes } from '@authup/client-web-kit';
+import type { Client, ClientScope } from '@authup/core-kit';
 import {
     VCFormInput, VCFormInputCheckbox,
 } from '@vuecs/form-controls';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/core';
-import { TokenError } from '@authup/core';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/core-kit';
+import { TokenError } from '@authup/core-kit';
 import type { KeyEntity } from '../../../domains';
 import { signOAuth2TokenWithKey, useKey } from '../../../domains';
 import type { OAuth2BearerResponseBuildContext } from './type';

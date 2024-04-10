@@ -1,4 +1,4 @@
-import { isObject } from '@authup/core';
+import { isObject } from '@authup/core-kit';
 import type { DataSourceOptions, DatabaseType } from 'typeorm';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';

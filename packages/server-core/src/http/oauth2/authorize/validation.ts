@@ -6,12 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationResponseType,
     TokenError,
     isOAuth2ScopeAllowed,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';

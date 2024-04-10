@@ -1,6 +1,6 @@
 <script lang="ts">
-import { AClientScopeAssignments, APagination } from '@authup/client-vue';
-import type { Client } from '@authup/core';
+import { AClientScopeAssignments, APagination } from '@authup/client-web-kit';
+import type { Client } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 

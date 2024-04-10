@@ -8,7 +8,7 @@
 import { check, validationResult } from 'express-validator';
 import {
     PermissionName, isPropertySet, isRealmResourceWritable, isValidUserName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { UserEntity } from '../../../../domains';

@@ -8,7 +8,7 @@
 import {
     defineComponent, h,
 } from 'vue';
-import type { User } from '@authup/core';
+import type { User } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { AUserRoleAssignment } from '../user-role';
 import { AUsers } from '../user/AUsers';

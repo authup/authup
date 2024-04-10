@@ -2,11 +2,11 @@
 
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
-import type { IdentityProvider } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { IdentityProvider } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
     AEntityDelete, AIdentityProviders, APagination, ASearch, ATitle,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';

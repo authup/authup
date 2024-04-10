@@ -6,11 +6,11 @@
  */
 
 /* istanbul ignore next */
-import type { OAuth2TokenGrantResponse } from '@authup/core';
+import type { OAuth2TokenGrantResponse } from '@authup/core-kit';
 import {
     CookieName,
     OAuth2TokenGrant, TokenError,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { URL } from 'node:url';

@@ -7,7 +7,7 @@
 
 import type { MatchedDataOptions } from 'express-validator';
 import { matchedData } from 'express-validator';
-import { deleteUndefinedObjectProperties } from '@authup/core';
+import { deleteUndefinedObjectProperties } from '@authup/core-kit';
 import type { Request } from 'routup';
 import { distinctArray } from 'smob';
 import type { EntityTarget } from 'typeorm';

@@ -7,10 +7,10 @@
 
 import type { TokenVerifyOptions } from '@authup/server-kit';
 import { verifyToken } from '@authup/server-kit';
-import type { OAuth2TokenPayload } from '@authup/core';
+import type { OAuth2TokenPayload } from '@authup/core-kit';
 import {
     KeyType, wrapPrivateKeyPem, wrapPublicKeyPem,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(

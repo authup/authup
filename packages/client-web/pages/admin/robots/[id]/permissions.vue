@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { APagination, ARobotPermissionAssignments } from '@authup/client-vue';
-import type { Robot } from '@authup/core';
+import { APagination, ARobotPermissionAssignments } from '@authup/client-web-kit';
+import type { Robot } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 

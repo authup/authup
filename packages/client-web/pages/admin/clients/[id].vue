@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { Client } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { Client } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { Ref } from 'vue';
 import { ref } from 'vue';

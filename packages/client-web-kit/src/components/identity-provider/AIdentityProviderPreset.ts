@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderPreset } from '@authup/core';
+import type { IdentityProviderPreset } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import { getIdentityProviderPresetElement } from './preset';
 import { hasNormalizedSlot, normalizeSlot } from '../../core';

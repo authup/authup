@@ -10,7 +10,7 @@ import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     CookieName,
     IdentityProviderProtocol,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';

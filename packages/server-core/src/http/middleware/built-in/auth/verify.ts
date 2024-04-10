@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '@authup/core';
+import type { Ability } from '@authup/core-kit';
 import {
     AbilityManager,
     HeaderError,
@@ -13,7 +13,7 @@ import {
     OAuth2TokenKind,
     ScopeName,
     TokenError, transformOAuth2ScopeToArray,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type {
     AuthorizationHeader,
     BasicAuthorizationHeader,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainsEventContext } from '@authup/core';
+import type { DomainsEventContext } from '@authup/core-kit';
 import { publishDomainRedisEvent } from './redis';
 import { publishDomainSocketEvent } from './socket';
 import type { DomainEventDestinations } from './type';

@@ -8,7 +8,7 @@
 import { ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';

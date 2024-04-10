@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LdapIdentityProvider } from '@authup/core';
-import { IdentityProviderProtocol } from '@authup/core';
+import type { LdapIdentityProvider } from '@authup/core-kit';
+import { IdentityProviderProtocol } from '@authup/core-kit';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import {
     createLdapTestClient, createLdapTestClientURL, createLdapTestUserAccount, dropLdapTestUserAccount,

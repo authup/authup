@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import {
@@ -14,7 +14,7 @@ import {
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
-import type { Permission } from '@authup/core';
+import type { Permission } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormSubmit, buildFormTextarea,
 } from '@vuecs/form-controls';

@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core';
+import type { Realm } from '@authup/core-kit';
 import {
     KeyType,
     unwrapPrivateKeyPem,
     unwrapPublicKeyPem,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     createKeyPair,
 } from '@authup/server-kit';

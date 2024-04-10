@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Permission } from '@authup/core';
+import type { Permission } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import {
     ARobotPermissionAssignment,

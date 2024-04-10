@@ -1,7 +1,7 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import type { Client, ClientScope } from '@authup/core';
+import type { Client, ClientScope } from '@authup/core-kit';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { definePageMeta, useToast } from '#imports';

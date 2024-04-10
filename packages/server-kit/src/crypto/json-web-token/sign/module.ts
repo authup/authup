@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '@authup/core';
-import { KeyType, TokenError } from '@authup/core';
+import type { JWTClaims } from '@authup/core-kit';
+import { KeyType, TokenError } from '@authup/core-kit';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { isKeyPair, useKeyPair } from '../../key-pair';
 import { transformJWTAlgorithmToInternal } from '../utils';

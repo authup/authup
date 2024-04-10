@@ -12,10 +12,10 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Realm, Role, RoleAttribute } from '@authup/core';
+import type { Realm, Role, RoleAttribute } from '@authup/core-kit';
 import {
     deserialize, serialize,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 import { RoleEntity } from '../role';
 

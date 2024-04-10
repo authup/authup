@@ -12,10 +12,10 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core';
+import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
 import {
     deserialize, serialize,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider/entity';
 
 @Unique(['name', 'provider_id'])

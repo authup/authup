@@ -1,6 +1,6 @@
 <script lang="ts">
-import { APagination, APermissionUserAssignments } from '@authup/client-vue';
-import type { Permission } from '@authup/core';
+import { APagination, APermissionUserAssignments } from '@authup/client-web-kit';
+import type { Permission } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 

@@ -8,10 +8,10 @@
 import type {
     SocketClientToServerEvents,
     SocketServerToClientEvents,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildSocketRealmNamespaceName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { ManagerOptions, Socket as _Socket } from 'socket.io-client';
 import { Manager } from 'socket.io-client';
 import type { Store } from '../store';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import installAuthup from '@authup/client-vue';
-import type { APIClient } from '@authup/core';
+import installAuthup from '@authup/client-web-kit';
+import type { APIClient } from '@authup/core-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';

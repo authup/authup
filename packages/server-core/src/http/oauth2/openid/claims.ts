@@ -7,8 +7,8 @@
 
 import type {
     Client, OAuth2OpenIdTokenPayload, Robot, User,
-} from '@authup/core';
-import { OAuth2SubKind, hasOwnProperty } from '@authup/core';
+} from '@authup/core-kit';
+import { OAuth2SubKind, hasOwnProperty } from '@authup/core-kit';
 
 type AttributeMap<T extends Record<string, any>> = Record<
 keyof OAuth2OpenIdTokenPayload,

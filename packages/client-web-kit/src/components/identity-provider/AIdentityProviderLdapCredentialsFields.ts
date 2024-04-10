@@ -7,7 +7,7 @@
 
 import type {
     IdentityProvider, LdapIdentityProvider,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';

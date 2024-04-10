@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core';
+import type { Client, Robot, User } from '@authup/core-kit';
 import {
     OAuth2SubKind, ScopeName, hasOwnProperty, transformOAuth2ScopeToArray,
-} from '@authup/core';
+} from '@authup/core-kit';
 
 type ScopeSubFields<
     I extends Record<string, Record<string, any>>,

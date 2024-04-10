@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientAPIConfigInput } from '@authup/core';
+import type { ClientAPIConfigInput } from '@authup/core-kit';
 import {
     APIClient,
     ClientResponseErrorTokenHook,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin, useRuntimeConfig } from '#app';

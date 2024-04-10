@@ -22,8 +22,8 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { Client, Realm } from '@authup/core';
-import { DomainType, createNanoID } from '@authup/core';
+import type { Client, Realm } from '@authup/core-kit';
+import { DomainType, createNanoID } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

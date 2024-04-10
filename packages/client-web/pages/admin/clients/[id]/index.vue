@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import type { Client } from '@authup/core';
-import { AClientForm } from '@authup/client-vue';
+import type { Client } from '@authup/core-kit';
+import { AClientForm } from '@authup/client-web-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';

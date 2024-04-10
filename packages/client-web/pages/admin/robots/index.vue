@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { Robot } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import type { Robot } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';

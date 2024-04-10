@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RoleAttribute } from '@authup/core';
+import type { RoleAttribute } from '@authup/core-kit';
 import {
     createRoleAttributeRouteHandler,
     deleteRoleAttributeRouteHandler,

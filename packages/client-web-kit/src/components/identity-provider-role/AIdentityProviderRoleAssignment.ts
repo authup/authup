@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
-import type { IdentityProviderRole, Role } from '@authup/core';
+import type { IdentityProviderRole, Role } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import {
     createEntityManager,

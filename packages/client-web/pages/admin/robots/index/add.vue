@@ -1,7 +1,7 @@
 <script lang="ts">
-import { ARobotForm } from '@authup/client-vue';
-import type { Robot } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import { ARobotForm } from '@authup/client-web-kit';
+import type { Robot } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { definePageMeta } from '#imports';

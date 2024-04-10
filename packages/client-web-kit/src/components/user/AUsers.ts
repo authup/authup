@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { User } from '@authup/core';
+import type { User } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import { createList, defineListEvents, defineListProps } from '../../core';
 

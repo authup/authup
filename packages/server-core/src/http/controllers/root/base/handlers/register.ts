@@ -7,8 +7,8 @@
 
 import { randomBytes } from 'node:crypto';
 import { check, validationResult } from 'express-validator';
-import type { User } from '@authup/core';
-import { isValidUserName } from '@authup/core';
+import type { User } from '@authup/core-kit';
+import { isValidUserName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';

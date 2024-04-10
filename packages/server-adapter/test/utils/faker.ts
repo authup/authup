@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2JsonWebKey } from '@authup/core';
-import { JWTAlgorithm } from '@authup/core';
+import type { OAuth2JsonWebKey } from '@authup/core-kit';
+import { JWTAlgorithm } from '@authup/core-kit';
 import type { KeyPair } from '@authup/server-kit';
 import { createKeyPair, signToken, useKeyPair } from '@authup/server-kit';
 import { createPublicKey } from 'node:crypto';

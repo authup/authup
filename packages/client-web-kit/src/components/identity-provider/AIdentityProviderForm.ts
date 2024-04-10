@@ -8,8 +8,8 @@
 import {
     defineComponent, h, ref, toRef,
 } from 'vue';
-import { IdentityProviderProtocol } from '@authup/core';
-import type { IdentityProvider, IdentityProviderPreset } from '@authup/core';
+import { IdentityProviderProtocol } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
 import type { PropType, VNodeChild } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';

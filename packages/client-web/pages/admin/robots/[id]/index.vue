@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { ARobotForm } from '@authup/client-vue';
-import type { Robot } from '@authup/core';
+import { ARobotForm } from '@authup/client-web-kit';
+import type { Robot } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';

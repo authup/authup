@@ -18,12 +18,12 @@ import type {
     Ability,
     Role, User,
     UserRole,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildAbility,
     createNanoID,
     isUUID,
-} from '@authup/core';
+} from '@authup/core-kit';
 
 import { compare, hash } from '@authup/server-kit';
 import { buildKeyPath } from 'redis-extension';

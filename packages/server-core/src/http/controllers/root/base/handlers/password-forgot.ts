@@ -8,7 +8,7 @@
 import { randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { check, oneOf, validationResult } from 'express-validator';
-import type { User } from '@authup/core';
+import type { User } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';

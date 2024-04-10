@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -24,7 +24,7 @@ import {
 } from '@vuelidate/validators';
 import type {
     Realm, Scope,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/core';
-import type { KeycloakJWTPayload } from '@authup/core';
+import { TokenError } from '@authup/core-kit';
+import type { KeycloakJWTPayload } from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';

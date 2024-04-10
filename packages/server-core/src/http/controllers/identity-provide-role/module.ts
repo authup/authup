@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { Request, Response } from 'routup';
-import type { IdentityProviderRole } from '@authup/core';
+import type { IdentityProviderRole } from '@authup/core-kit';
 import {
     createOauth2ProviderRoleRouteHandler,
     deleteOauth2ProvideRoleRouteHandler,

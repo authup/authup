@@ -8,7 +8,7 @@
 import type {
     PermissionCondition,
     RobotPermission,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { createSuperTestPermission, createSuperTestRobot } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';

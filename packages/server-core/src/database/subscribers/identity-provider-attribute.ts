@@ -7,11 +7,11 @@
 
 import type {
     IdentityProviderAttribute,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     DomainEventName, DomainType,
     buildDomainChannelName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,

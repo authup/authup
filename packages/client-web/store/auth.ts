@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createStore } from '@authup/client-vue';
+import { createStore } from '@authup/client-web-kit';
 import { defineStore } from 'pinia';
 import { useRuntimeConfig } from '#imports';
 

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/core';
-import { OAuth2AuthorizationResponseType } from '@authup/core';
+import type { OAuth2OpenIDProviderMetadata } from '@authup/core-kit';
+import { OAuth2AuthorizationResponseType } from '@authup/core-kit';
 import { useConfig } from '../../../../../src';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';

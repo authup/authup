@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core';
+import type { Realm } from '@authup/core-kit';
 import {
     REALM_MASTER_NAME,
     createNanoID,
     isUUID,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { NotFoundError } from '@ebec/http';
 import { hasClient } from '@hapic/vault';
 import type { Request, Response } from 'routup';

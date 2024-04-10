@@ -12,8 +12,8 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Realm, User, UserAttribute } from '@authup/core';
-import { deserialize, serialize } from '@authup/core';
+import type { Realm, User, UserAttribute } from '@authup/core-kit';
+import { deserialize, serialize } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user/entity';
 

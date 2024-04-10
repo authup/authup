@@ -10,7 +10,7 @@ import type {
     OAuth2TokenPayload,
     TokenCreator,
     TokenCreatorOptions,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { TokenVerifierCacheOptions } from './cache';
 
 export type TokenVerifierOptions = {

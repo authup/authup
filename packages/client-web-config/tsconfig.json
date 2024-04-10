@@ -1,10 +1,10 @@
 {
-    "extends": "../../../tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "esModuleInterop": true,
         "strict": true,
         "paths": {
-            "@authup/core": ["./global/packages/core/src"]
+            "@authup/core-kit": ["./packages/core-kit/src"]
         }
     },
     "include": [

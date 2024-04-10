@@ -15,7 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Permission, Realm } from '@authup/core';
+import type { Permission, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_permissions' })

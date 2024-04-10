@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import {
     defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import type { Role } from '@authup/core';
+import type { Role } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput, buildFormSubmit, buildFormTextarea,

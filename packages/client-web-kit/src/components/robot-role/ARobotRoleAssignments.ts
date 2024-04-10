@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Role } from '@authup/core';
+import type { Role } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { ARoles } from '../role';
 import { ARobotRoleAssignment } from './ARobotRoleAssignment';

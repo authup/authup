@@ -6,7 +6,7 @@
  */
 
 import type { NavigationItem } from '@vuecs/navigation';
-import { PermissionName } from '@authup/core';
+import { PermissionName } from '@authup/core-kit';
 
 export enum LayoutKey {
     // todo: renmae to NAVIGATION_TOP_ID

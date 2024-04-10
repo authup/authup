@@ -1,7 +1,7 @@
 <script lang="ts">
-import { ARealmForm } from '@authup/client-vue';
-import type { Realm } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import { ARealmForm } from '@authup/client-web-kit';
+import type { Realm } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';

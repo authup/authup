@@ -7,7 +7,7 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionName, REALM_MASTER_NAME, isPropertySet } from '@authup/core';
+import { PermissionName, REALM_MASTER_NAME, isPropertySet } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';

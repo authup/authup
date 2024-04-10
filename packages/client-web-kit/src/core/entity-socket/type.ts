@@ -12,7 +12,7 @@ import type {
     DomainEventSubscriptionFullName,
     DomainType,
     SocketServerToClientEventContext,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { MaybeRef } from 'vue';
 
 export type EntitySocketContext<

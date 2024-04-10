@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/core';
+import { isObject } from '@authup/core-kit';
 import type { Toast } from 'bootstrap-vue-next';
 import { useToast as _useToast } from 'bootstrap-vue-next';
 

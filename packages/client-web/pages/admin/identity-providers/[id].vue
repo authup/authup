@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import type { IdentityProvider } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { IdentityProvider } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import type { Ref } from 'vue';

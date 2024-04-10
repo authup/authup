@@ -17,8 +17,8 @@ import {
     mergeProps,
     ref, resolveDynamicComponent,
 } from 'vue';
-import type { DomainType } from '@authup/core';
-import { useDomainAPI } from '@authup/core';
+import type { DomainType } from '@authup/core-kit';
+import { useDomainAPI } from '@authup/core-kit';
 import { injectAPIClient, useTranslator } from '../core';
 
 enum ElementType {

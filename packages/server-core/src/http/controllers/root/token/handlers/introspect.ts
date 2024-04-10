@@ -7,7 +7,7 @@
 
 import type {
     OAuth2TokenIntrospectionResponse,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { ValidationChain } from 'express-validator';
 import {
     body, oneOf, param, query, validationResult,

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider } from '@authup/core';
-import { createNanoID } from '@authup/core';
+import type { IdentityProvider } from '@authup/core-kit';
+import { createNanoID } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {

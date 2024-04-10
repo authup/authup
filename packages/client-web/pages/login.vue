@@ -9,8 +9,8 @@ import {
     ASearch,
     ATitle,
     injectAPIClient, useValidationTranslator,
-} from '@authup/client-vue';
-import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core';
+} from '@authup/client-web-kit';
+import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import {

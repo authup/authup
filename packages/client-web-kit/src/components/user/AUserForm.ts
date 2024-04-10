@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm, User } from '@authup/core';
-import { DomainType } from '@authup/core';
+import type { Realm, User } from '@authup/core-kit';
+import { DomainType } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormInputCheckbox, buildFormSubmit,
 } from '@vuecs/form-controls';

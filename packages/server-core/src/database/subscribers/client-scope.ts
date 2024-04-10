@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientScope } from '@authup/core';
-import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core';
+import type { ClientScope } from '@authup/core-kit';
+import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core-kit';
 import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,

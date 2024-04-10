@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims, JWTHeader } from '@authup/core';
-import { TokenError } from '@authup/core';
+import type { JWTClaims, JWTHeader } from '@authup/core-kit';
+import { TokenError } from '@authup/core-kit';
 
 /**
  * Decode a JWT token with no verification.

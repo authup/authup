@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { AUserForm } from '@authup/client-vue';
-import type { User } from '@authup/core';
+import { AUserForm } from '@authup/client-web-kit';
+import type { User } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';

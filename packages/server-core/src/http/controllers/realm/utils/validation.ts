@@ -6,7 +6,7 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isValidRealmName } from '@authup/core';
+import { isValidRealmName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { RealmEntity } from '../../../../domains';

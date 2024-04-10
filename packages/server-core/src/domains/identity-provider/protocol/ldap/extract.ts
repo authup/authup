@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty, isObject } from '@authup/core';
-import type { LdapIdentityProvider } from '@authup/core';
+import { hasOwnProperty, isObject } from '@authup/core-kit';
+import type { LdapIdentityProvider } from '@authup/core-kit';
 
 export function extractLdapIdentityProviderProtocolAttributes(
     input: unknown,

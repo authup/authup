@@ -11,7 +11,7 @@ import {
 import type {
     Client, OAuth2AuthorizationCode, Realm, Robot,
     User,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { UserEntity } from '../user';
 import { RobotEntity } from '../robot';
 import { ClientEntity } from '../client';

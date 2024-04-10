@@ -1,11 +1,11 @@
 <script lang="ts">
 
 import { BTable } from 'bootstrap-vue-next';
-import type { Robot } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { Robot } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
     AEntityDelete, APagination, ARobots, ASearch, ATitle,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';

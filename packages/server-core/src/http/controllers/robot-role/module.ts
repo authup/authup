@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RobotRole } from '@authup/core';
+import type { RobotRole } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
     createRobotRoleRouteHandler,

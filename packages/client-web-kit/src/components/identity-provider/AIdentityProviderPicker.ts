@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderPreset, IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core';
+import { IdentityProviderPreset, IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core-kit';
 import { buildList } from '@vuecs/list-controls';
 import { defineComponent, h } from 'vue';
 import type { IdentityProviderPresetElement } from './preset';

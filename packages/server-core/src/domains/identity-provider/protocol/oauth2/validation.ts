@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderPreset, OAuth2IdentityProvider } from '@authup/core';
+import type { IdentityProviderPreset, OAuth2IdentityProvider } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import zod from 'zod';

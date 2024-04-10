@@ -2,11 +2,11 @@
 
 import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
-import type { Client } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { Client } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
     AClients, AEntityDelete, APagination, ASearch, ATitle, AUser,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';

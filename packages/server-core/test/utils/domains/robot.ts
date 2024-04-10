@@ -7,7 +7,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
-import type { Robot } from '@authup/core';
+import type { Robot } from '@authup/core-kit';
 
 export const TEST_DEFAULT_ROBOT : Partial<Robot> = {
     name: 'test',

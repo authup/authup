@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderPreset } from '@authup/core';
+import { IdentityProviderPreset } from '@authup/core-kit';
 import type { IdentityProviderPresetElement } from './type';
 
 const elements = {

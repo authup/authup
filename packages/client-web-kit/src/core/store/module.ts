@@ -11,12 +11,12 @@ import type {
     OAuth2TokenIntrospectionResponse,
     Realm,
     User,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     APIClient,
     AbilityManager,
     isAPIClientTokenExpiredError,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
 
 export const createStore = (context: StoreCreateContext) => {

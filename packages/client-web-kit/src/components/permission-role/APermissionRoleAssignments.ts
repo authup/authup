@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Role } from '@authup/core';
+import type { Role } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { ARolePermissionAssignment } from '../role-permission';
 import { ARoles } from '../role';

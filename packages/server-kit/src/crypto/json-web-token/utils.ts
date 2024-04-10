@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTAlgorithm, TokenError } from '@authup/core';
+import { JWTAlgorithm, TokenError } from '@authup/core-kit';
 import { Algorithm } from '@node-rs/jsonwebtoken';
 import { isObject } from 'smob';
 

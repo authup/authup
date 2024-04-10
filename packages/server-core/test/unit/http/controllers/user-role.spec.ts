@@ -7,7 +7,7 @@
 
 import type {
     UserRole,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { createSuperTestRole, createSuperTestUser } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';

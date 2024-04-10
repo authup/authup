@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { APagination, ARoleUserAssignments } from '@authup/client-vue';
-import type { Role } from '@authup/core';
+import { APagination, ARoleUserAssignments } from '@authup/client-web-kit';
+import type { Role } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
 

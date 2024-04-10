@@ -1,11 +1,11 @@
 <script lang="ts">
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
-import type { Realm } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import type { Realm } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
     AEntityDelete, APagination, ARealms, ASearch, ATitle,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent } from '#imports';
 import { useAuthStore } from '../../../../store/auth';

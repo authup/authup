@@ -14,13 +14,13 @@ import {
     TokenError,
     isObject,
     mountClientResponseErrorTokenHook,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type {
     JWTAlgorithm,
     OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { extractTokenHeader, verifyToken } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';

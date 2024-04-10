@@ -10,7 +10,7 @@ import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     hasOAuth2OpenIDScope,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';

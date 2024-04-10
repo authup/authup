@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot, User } from '@authup/core';
+import type { Robot, User } from '@authup/core-kit';
 
 export type DatabaseRootSeederResult = {
     robot?: Robot,

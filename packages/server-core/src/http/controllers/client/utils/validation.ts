@@ -9,7 +9,7 @@ import { check, validationResult } from 'express-validator';
 import {
     isPropertySet,
     isRealmResourceWritable,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import zod from 'zod';

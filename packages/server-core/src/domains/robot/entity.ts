@@ -17,10 +17,10 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Robot, User } from '@authup/core';
+import type { Robot, User } from '@authup/core-kit';
 import {
     Realm, createNanoID,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 

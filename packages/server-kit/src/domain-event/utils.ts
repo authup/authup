@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/core';
+import { isObject } from '@authup/core-kit';
 import type { DomainEventChannelName } from './type';
 
 export function transformDomainEventData<T>(input: T) : T {

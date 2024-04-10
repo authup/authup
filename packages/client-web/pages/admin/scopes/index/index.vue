@@ -1,13 +1,13 @@
 <script lang="ts">
 
 import { BTable } from 'bootstrap-vue-next';
-import type { Scope } from '@authup/core';
+import type { Scope } from '@authup/core-kit';
 import {
     PermissionName, isRealmResourceWritable,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     AEntityDelete, APagination, AScopes, ASearch, ATitle,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent, resolveComponent } from '#imports';

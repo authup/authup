@@ -4,9 +4,9 @@ import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
     AEntityDelete, APagination, APermissions, ASearch, ATitle,
-} from '@authup/client-vue';
-import type { Permission } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+} from '@authup/client-web-kit';
+import type { Permission } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#app';

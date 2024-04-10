@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core';
+import { DomainType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
-import type { ClientScope } from '@authup/core';
+import type { ClientScope } from '@authup/core-kit';
 import {
     createEntityManager,
     defineEntityManagerEvents,

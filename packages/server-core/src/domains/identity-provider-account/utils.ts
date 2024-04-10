@@ -8,13 +8,13 @@
 import type {
     IdentityProvider,
     IdentityProviderAccount,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     createNanoID,
     hasOwnProperty,
     isValidUserEmail,
     isValidUserName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { isObject } from 'smob';
 import { useDataSource } from 'typeorm-extension';
 import type { IdentityProviderFlowIdentity } from '../identity-provider';

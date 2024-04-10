@@ -9,8 +9,8 @@ import type {
     TokenECAlgorithm, TokenRSAAlgorithm, TokenSignECOptions, TokenSignOCTOptions, TokenSignOptions, TokenSignRSAOptions,
 } from '@authup/server-kit';
 import { signToken } from '@authup/server-kit';
-import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core';
-import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core';
+import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core-kit';
+import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core-kit';
 import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(

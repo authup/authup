@@ -10,11 +10,11 @@ import { InstanceChecker, Repository } from 'typeorm';
 import type {
     Ability,
     Role,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildAbility,
 
-} from '@authup/core';
+} from '@authup/core-kit';
 import { buildKeyPath } from 'redis-extension';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';

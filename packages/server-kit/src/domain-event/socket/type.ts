@@ -9,7 +9,7 @@ import type {
     DomainEventFullName,
     DomainsEventContext,
     SocketServerToClientEventContext,
-} from '@authup/core';
+} from '@authup/core-kit';
 
 export type SocketServerToClientEvents = {
     [K in DomainEventFullName]: (data: SocketServerToClientEventContext<DomainsEventContext>) => void

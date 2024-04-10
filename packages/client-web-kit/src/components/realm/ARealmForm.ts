@@ -12,10 +12,10 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
-import type { Realm } from '@authup/core';
+import type { Realm } from '@authup/core-kit';
 import {
     DomainType, REALM_MASTER_NAME, createNanoID,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

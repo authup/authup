@@ -8,13 +8,13 @@
 import type {
     OAuth2AuthorizationCodeRequest,
     OAuth2TokenPayload,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     OAuth2TokenKind,
     ScopeName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import type { SuperTest, Test } from 'supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';

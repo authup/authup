@@ -8,12 +8,12 @@
 import type {
     Ability, Robot,
     Role,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     buildAbility,
     createNanoID,
     isUUID,
-} from '@authup/core';
+} from '@authup/core-kit';
 
 import { compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';

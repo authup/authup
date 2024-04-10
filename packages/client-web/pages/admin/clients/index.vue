@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import type { Client } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import type { Client } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta, useToast } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';

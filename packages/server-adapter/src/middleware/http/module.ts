@@ -6,7 +6,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { CookieName } from '@authup/core';
+import { CookieName } from '@authup/core-kit';
 import type { TokenVerificationData } from '../../verifier';
 import { TokenVerifier } from '../../verifier';
 import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';

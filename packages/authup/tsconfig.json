@@ -1,11 +1,11 @@
 {
-    "extends": "../../../tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authup/config": ["./global/packages/config/src"],
-            "@authup/core": ["./global/packages/core/src"],
-            "@authup/client-web-config": ["./client/packages/web-config/src"],
-            "@authup/server-core": ["./server/services/core/src"]
+            "@authup/config": ["./packages/config/src"],
+            "@authup/core-kit": ["./packages/core-kit/src"],
+            "@authup/client-web-config": ["./package/client-web-config/src"],
+            "@authup/server-core": ["./packages/server-core/src"]
         }
     }
 }

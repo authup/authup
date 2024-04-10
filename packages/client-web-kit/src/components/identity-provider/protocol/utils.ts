@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderProtocol } from '@authup/core';
+import { IdentityProviderProtocol } from '@authup/core-kit';
 import type { IdentityProviderProtocolElement } from './type';
 
 const elements = {

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProvider } from '@authup/core';
-import { IdentityProviderPreset } from '@authup/core';
+import type { OAuth2IdentityProvider } from '@authup/core-kit';
+import { IdentityProviderPreset } from '@authup/core-kit';
 import { createOAuth2IdentityProviderFlow } from '../../../../../src';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 import { useSuperTest } from '../../../../utils/supertest';

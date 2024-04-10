@@ -6,7 +6,7 @@
  */
 
 import { defineComponent, h } from 'vue';
-import type { Client } from '@authup/core';
+import type { Client } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { AClients } from '../client';
 import { AClientScopeAssignment } from '../client-scope';

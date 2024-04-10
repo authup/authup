@@ -1,13 +1,13 @@
 <script lang="ts">
 
 import { BTable } from 'bootstrap-vue-next';
-import type { User } from '@authup/core';
+import type { User } from '@authup/core-kit';
 import {
     PermissionName, isRealmResourceWritable,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     AEntityDelete, APagination, ASearch, ATitle, AUsers,
-} from '@authup/client-vue';
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';

@@ -21,8 +21,8 @@ import {
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
-import type { Realm, Robot } from '@authup/core';
-import { DomainType, createNanoID } from '@authup/core';
+import type { Realm, Robot } from '@authup/core-kit';
+import { DomainType, createNanoID } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

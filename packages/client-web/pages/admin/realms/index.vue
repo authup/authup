@@ -1,6 +1,6 @@
 <script lang="ts">
-import type { Realm } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import type { Realm } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';

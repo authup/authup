@@ -15,8 +15,8 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderAccount } from '@authup/core';
-import { User } from '@authup/core';
+import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
+import { User } from '@authup/core-kit';
 import { UserEntity } from '../user';
 import { IdentityProviderEntity } from '../identity-provider';
 

@@ -8,7 +8,7 @@
 import {
     defineComponent, h,
 } from 'vue';
-import type { Scope } from '@authup/core';
+import type { Scope } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { AScopes } from '../scope';
 import {

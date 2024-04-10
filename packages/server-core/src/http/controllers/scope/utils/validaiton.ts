@@ -7,7 +7,7 @@
 
 import {
     isPropertySet, isRealmResourceWritable,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';

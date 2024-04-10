@@ -9,7 +9,7 @@ import type { KeyPathID } from 'redis-extension';
 import {
     Cache, hasClient, hasConfig, useClient,
 } from 'redis-extension';
-import { TokenError, hasOwnProperty } from '@authup/core';
+import { TokenError, hasOwnProperty } from '@authup/core-kit';
 
 export abstract class OAuth2AbstractCache<
     T extends Record<string, any> & { id: string, expires?: Date | string | number },

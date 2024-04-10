@@ -6,7 +6,7 @@
  */
 
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
-import type { APIClient } from '@authup/core';
+import type { APIClient } from '@authup/core-kit';
 import type { MaybeRef } from 'vue';
 import type {
     AClient,

@@ -1,7 +1,7 @@
 <script lang="ts">
-import { APermissionForm } from '@authup/client-vue';
-import type { Permission } from '@authup/core';
-import { PermissionName, isRealmResourceWritable } from '@authup/core';
+import { APermissionForm } from '@authup/client-web-kit';
+import type { Permission } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';

@@ -1,7 +1,7 @@
 <script lang="ts">
-import { AIdentityProviderForm } from '@authup/client-vue';
-import type { IdentityProvider } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import { AIdentityProviderForm } from '@authup/client-web-kit';
+import type { IdentityProvider } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { definePageMeta } from '#imports';

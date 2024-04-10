@@ -1,8 +1,8 @@
 <script lang="ts">
 
-import { APermissionForm } from '@authup/client-vue';
-import type { Permission } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import { APermissionForm } from '@authup/client-web-kit';
+import type { Permission } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';

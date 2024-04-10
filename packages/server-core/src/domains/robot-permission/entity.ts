@@ -18,8 +18,8 @@ import {
     Permission, Robot,
 
     deserialize, serialize,
-} from '@authup/core';
-import type { PermissionCondition, Realm, RobotPermission } from '@authup/core';
+} from '@authup/core-kit';
+import type { PermissionCondition, Realm, RobotPermission } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';

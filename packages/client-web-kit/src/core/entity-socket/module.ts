@@ -11,14 +11,14 @@ import {
     REALM_MASTER_NAME,
     buildDomainChannelName,
     buildDomainEventFullName, buildDomainEventSubscriptionFullName,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type {
     DomainEntity,
     DomainEventContext,
     DomainEventSubscriptionFullName,
     DomainType,
     SocketServerToClientEventContext,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { Socket } from 'socket.io-client';
 import {
     computed, isRef, onMounted, onUnmounted, watch,

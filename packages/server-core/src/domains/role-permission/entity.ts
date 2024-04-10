@@ -16,11 +16,11 @@ import {
 } from 'typeorm';
 import type {
     PermissionCondition, Realm, RolePermission,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     Permission, Role,
     deserialize, serialize,
-} from '@authup/core';
+} from '@authup/core-kit';
 import { RoleEntity } from '../role/entity';
 import { PermissionEntity } from '../permission';
 import { RealmEntity } from '../realm';

@@ -9,7 +9,7 @@ import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName, isPropertySet,
     isRealmResourceWritable,
-} from '@authup/core';
+} from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';

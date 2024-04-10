@@ -7,8 +7,8 @@
 
 import type {
     DomainAPI, DomainEntity, DomainEntityID, DomainType,
-} from '@authup/core';
-import { hasOwnProperty } from '@authup/core';
+} from '@authup/core-kit';
+import { hasOwnProperty } from '@authup/core-kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';

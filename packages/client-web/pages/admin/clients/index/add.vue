@@ -1,8 +1,8 @@
 <script lang="ts">
 
-import { AClientForm } from '@authup/client-vue';
-import type { Client } from '@authup/core';
-import { PermissionName } from '@authup/core';
+import { AClientForm } from '@authup/client-web-kit';
+import type { Client } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, navigateTo } from '#app';
 import { definePageMeta, resolveComponent } from '#imports';

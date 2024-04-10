@@ -13,7 +13,7 @@ import type {
 } from 'routup';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
-import { AbilityManager, CookieName } from '@authup/core';
+import { AbilityManager, CookieName } from '@authup/core-kit';
 import { EnvironmentName } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../utils';

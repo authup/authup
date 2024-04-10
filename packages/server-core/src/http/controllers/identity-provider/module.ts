@@ -12,11 +12,11 @@ import { coreHandler } from 'routup';
 import type {
     Router,
 } from 'routup';
-import type { IdentityProvider } from '@authup/core';
+import type { IdentityProvider } from '@authup/core-kit';
 import {
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
-} from '@authup/core';
+} from '@authup/core-kit';
 import {
     authorizeCallbackIdentityProviderRouteHandler,
     authorizeURLIdentityProviderRouteHandler,

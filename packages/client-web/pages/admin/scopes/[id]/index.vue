@@ -1,7 +1,7 @@
 <script lang="ts">
 
-import { AScopeForm } from '@authup/client-vue';
-import type { Scope } from '@authup/core';
+import { AScopeForm } from '@authup/client-web-kit';
+import type { Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
 import { LayoutKey } from '~/config/layout';

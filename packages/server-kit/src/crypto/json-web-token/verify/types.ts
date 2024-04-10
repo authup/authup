@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { KeyType } from '@authup/core';
+import type { KeyType } from '@authup/core-kit';
 import type Buffer from 'node:buffer';
 import type { KeyPair, KeyPairOptions } from '../../key-pair';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';

@@ -6,8 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { OAuth2RefreshToken, OAuth2TokenPayload } from '@authup/core';
-import { OAuth2SubKind, OAuth2TokenKind } from '@authup/core';
+import type { OAuth2RefreshToken, OAuth2TokenPayload } from '@authup/core-kit';
+import { OAuth2SubKind, OAuth2TokenKind } from '@authup/core-kit';
 import type { OAuth2RefreshTokenBuildContext } from './type';
 
 export function buildOAuth2RefreshTokenPayload(
