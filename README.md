@@ -4,13 +4,12 @@
 
 </div>
 
-# Authup 
-
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-`Authup` is an authentication & authorization system.
+## What is Authup?
+Authup is an authentication & authorization system.
 It is designed to be easy to use and flexible, with support for multiple authentication strategies.
 With Authup, developers can quickly and easily add authentication & authorization to their applications.
 
@@ -19,6 +18,8 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Features](#features)
 - [Documentation](#documentation)
 - [Usage](#usage)
+- [Packages](#packages)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Features
@@ -81,6 +82,23 @@ To find out how to configure and set up the bare metal variant in detail, click 
 This will lunch the following application with default settings:
 - Frontend Application: `http://localhost:3000/`
 - Backend Application: `http://localhost:3001/`
+
+## Packages
+The repository contains the following packages:
+
+Hier sind verbesserte Beschreibungen für die aufgelisteten Services:
+
+| Name                                                              | Type        | Description                                                                                           |
+|-------------------------------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
+| [authup](packages/authup)                                         | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
+| [client-web](packages/client-web)                                 | Application | A web application interface for end users.                                                            |
+| [client-web-config{,-utils,-helpers}](packages/client-web-config) | Library     | A library for creating and managing configurations for the web client application.                    |
+| [client-web-kit](packages/client-web-kit)                         | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
+| [config{,-helpers,-utils}](packages/config)                       | Library     | A collection of configuration helpers for the client and server side.                                 |
+| [core-kit](packages/core-kit)                                     | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
+| [server-adapter{,-utils,-helpers}](packages/server-adapter)       | Library     | A collection of middleware solutions for HTTP and socket services.                                    |
+| [server-core](packages/server-core)                               | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
+| [server-kit](packages/server-kit)                                 | Library     | A dedicated toolkit for server-side services.                                                         |
 
 ## Contributing
 
