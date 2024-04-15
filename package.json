@@ -52,7 +52,7 @@
         "lint-staged": "^15.2.2",
         "nx": "^18.2.4",
         "rimraf": "^5.0.5",
-        "rollup": "^4.14.1",
+        "rollup": "^4.14.3",
         "typescript": "5.4.4",
         "workspaces-publish": "^1.4.3"
     },
