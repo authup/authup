@@ -1,0 +1,79 @@
+{
+    "name": "@authup/core-kit",
+    "version": "1.0.0-beta.9",
+    "description": "Package containing global constants, types & interfaces.",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "rollup -c",
+        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
+        "build:watch": "npm run build -- --watch",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
+    },
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "template",
+        "auth-template",
+        "oauth2",
+        "oauth2-client",
+        "ability",
+        "permission",
+        "header",
+        "bearer",
+        "basic"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "global/packages/core"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@ebec/http": "^2.3.0",
+        "@ucast/mongo2js": "^1.3.4",
+        "change-case": "^4.1.2",
+        "destr": "^2.0.3",
+        "nanoid": "^3.3.4"
+    },
+    "devDependencies": {
+        "@hapic/oauth2": "^2.4.2",
+        "@hapic/vault": "^2.3.3",
+        "hapic": "^2.5.1",
+        "rapiq": "^0.9.0"
+    },
+    "peerDependencies": {
+        "@hapic/oauth2": "^2.4.2",
+        "@hapic/vault": "^2.3.3",
+        "hapic": "^2.5.1",
+        "rapiq": ">=0.8.0 <1.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "ed48328bdd01d844915c26c6fcfb7fdcc1f33396"
+}

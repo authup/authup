@@ -1,0 +1,9 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@authup/core-kit": ["./packages/core-kit/src"],
+            "@authup/server-kit": ["./packages/server-kit/src"]
+        }
+    }
+}

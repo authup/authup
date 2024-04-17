@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "module": "CommonJS",
+        "paths": {
+            "@authup/server-kit": ["./packages/server-kit/src"],
+            "@authup/config": ["./packages/config/src"],
+            "@authup/core-kit": ["./packages/core-kit/src"]
+        }
+    }
+}
+

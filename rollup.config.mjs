@@ -6,7 +6,6 @@
  */
 
 import resolve from '@rollup/plugin-node-resolve';
-
 import { merge } from 'smob';
 
 import { builtinModules } from 'node:module';
