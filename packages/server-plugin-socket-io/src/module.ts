@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerificationData } from '@authup/server-middleware-kit';
+import type { TokenVerificationData } from '@authup/server-plugin-kit';
 import {
     TokenVerifier,
-} from '@authup/server-middleware-kit';
-import type { MiddlewareOptions, Next, Socket } from './type';
+} from '@authup/server-plugin-kit';
+import type { MiddlewareOptions, Next, Socket } from './types';
 
-export function createSocketMiddleware(context: MiddlewareOptions) {
+export function createMiddleware(context: MiddlewareOptions) {
     let tokenVerifier : TokenVerifier;
     if (context.tokenVerifier instanceof TokenVerifier) {
         tokenVerifier = context.tokenVerifier;

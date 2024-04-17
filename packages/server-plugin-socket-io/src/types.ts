@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '@authup/server-middleware-kit';
+import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '@authup/server-plugin-kit';
 
 export type MiddlewareOptions = {
     tokenVerifier: TokenVerifierOptions | TokenVerifier,

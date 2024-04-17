@@ -1,7 +1,7 @@
 {
-    "name": "@authup/server-middleware-socket",
+    "name": "@authup/server-plugin-kit",
     "version": "1.0.0-beta.9",
-    "description": "An adapter package to integrate into other services.",
+    "description": "A package containing utilities for plugin solutions.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -19,9 +19,23 @@
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
-        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
+        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
+        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "npm run test -- --coverage"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "module",
+        "typescript",
+        "middleware",
+        "http",
+        "express",
+        "socket",
+        "socket.io",
+        "websocket",
+        "adapter",
+        "oauth2"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
@@ -31,18 +45,20 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-middleware-http"
+        "directory": "server/packages/adapter"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-middleware-kit": "^1.0.0-beta.9"
+        "jose": "^5.2.4",
+        "redis-extension": "^1.3.0"
     },
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",
-        "@authup/server-kit": "^1.0.0-beta.9"
+        "@authup/server-kit": "^1.0.0-beta.9",
+        "@hapic/oauth2": "^2.4.2"
     },
     "peerDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",

@@ -7,9 +7,9 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { CookieName } from '@authup/core-kit';
-import type { TokenVerificationData } from '@authup/server-middleware-kit';
-import { TokenVerifier } from '@authup/server-middleware-kit';
-import type { Middleware, MiddlewareOptions, Next } from './type';
+import type { TokenVerificationData } from '@authup/server-plugin-kit';
+import { TokenVerifier } from '@authup/server-plugin-kit';
+import type { Middleware, MiddlewareOptions, Next } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) : Middleware {
     let tokenVerifier : TokenVerifier;

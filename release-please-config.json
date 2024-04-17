@@ -6,6 +6,9 @@
     "bump-patch-for-minor-pre-major": true,
     "release-as": "1.0.0-beta.9",
     "packages": {
+        "packages/authup": {
+            "component": "authup"
+        },
         "packages/client-web": {
             "component": "client-web"
         },
@@ -15,23 +18,26 @@
         "packages/client-web-kit": {
             "component": "client-web-kit"
         },
-        "packages/authup": {
-            "component": "authup"
-        },
         "packages/config": {
             "component": "config"
         },
         "packages/core-kit": {
             "component": "core-kit"
         },
-        "packages/server-adapter": {
-            "component": "server-adapter"
-        },
         "packages/server-core": {
             "component": "server-core"
         },
         "packages/server-kit": {
             "component": "server-kit"
+        },
+        "packages/server-plugin-http": {
+            "component": "server-plugin-http"
+        },
+        "packages/server-plugin-kit": {
+            "component": "server-plugin-kit"
+        },
+        "packages/server-plugin-socket-io": {
+            "component": "server-plugin-socket-io"
         }
     },
     "plugins": [
@@ -43,15 +49,17 @@
             "type": "linked-versions",
             "groupName": "main",
             "components": [
-                "client-web-kit",
-                "client-web-config",
-                "client-web",
                 "authup",
+                "client-web",
+                "client-web-config",
+                "client-web-kit",
                 "config",
                 "core-kit",
-                "server-adapter",
                 "server-core",
-                "server-kit"
+                "server-kit",
+                "server-plugin-http",
+                "server-plugin-kit",
+                "server-plugin-socket-io"
             ]
         }
     ],
