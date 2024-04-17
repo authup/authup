@@ -1,16 +1,17 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { Socket, SocketMiddlewareOptions, SocketNextFunction } from './type';
-import type { TokenVerificationData } from '../../verifier';
+
+import type { TokenVerificationData } from '@authup/server-middleware-kit';
 import {
     TokenVerifier,
-} from '../../verifier';
+} from '@authup/server-middleware-kit';
+import type { MiddlewareOptions, Next, Socket } from './type';
 
-export function createSocketMiddleware(context: SocketMiddlewareOptions) {
+export function createSocketMiddleware(context: MiddlewareOptions) {
     let tokenVerifier : TokenVerifier;
     if (context.tokenVerifier instanceof TokenVerifier) {
         tokenVerifier = context.tokenVerifier;
@@ -18,7 +19,7 @@ export function createSocketMiddleware(context: SocketMiddlewareOptions) {
         tokenVerifier = new TokenVerifier(context.tokenVerifier);
     }
 
-    return async (socket: Socket, next: SocketNextFunction) => {
+    return async (socket: Socket, next: Next) => {
         const { token } = socket.handshake.auth;
 
         if (!token) {

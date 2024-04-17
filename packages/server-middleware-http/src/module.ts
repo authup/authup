@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,11 +7,11 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { CookieName } from '@authup/core-kit';
-import type { TokenVerificationData } from '../../verifier';
-import { TokenVerifier } from '../../verifier';
-import type { HTTPMiddleware, HTTPMiddlewareOptions, HTTPNext } from './type';
+import type { TokenVerificationData } from '@authup/server-middleware-kit';
+import { TokenVerifier } from '@authup/server-middleware-kit';
+import type { Middleware, MiddlewareOptions, Next } from './type';
 
-export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddleware {
+export function createMiddleware(context: MiddlewareOptions) : Middleware {
     let tokenVerifier : TokenVerifier;
     if (context.tokenVerifier instanceof TokenVerifier) {
         tokenVerifier = context.tokenVerifier;
@@ -19,7 +19,7 @@ export function createHTTPMiddleware(context: HTTPMiddlewareOptions) : HTTPMiddl
         tokenVerifier = new TokenVerifier(context.tokenVerifier);
     }
 
-    return async (req: IncomingMessage, res: ServerResponse, next: HTTPNext) => {
+    return async (req: IncomingMessage, res: ServerResponse, next: Next) => {
         let { authorization } = req.headers;
 
         if (!authorization && context.tokenByCookie) {

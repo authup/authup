@@ -25,7 +25,7 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/client-vue": "^1.0.0-beta.9",
+        "@authup/client-web-kit": "^1.0.0-beta.9",
         "@authup/config": "^1.0.0-beta.9",
         "@authup/core-kit": "^1.0.0-beta.9",
         "@authup/client-web-config": "^1.0.0-beta.9",
