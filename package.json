@@ -61,9 +61,5 @@
     },
     "lint-staged": {
         "*.ts": "eslint --fix"
-    },
-    "dependencies": {
-        "ioredis": "^5.4.0",
-        "redis-extension": "^1.5.0"
     }
 }
