@@ -24,6 +24,9 @@
         "packages/core-kit": {
             "component": "core-kit"
         },
+        "packages/core-socket-kit": {
+            "component": "core-socket-kit"
+        },
         "packages/server-core": {
             "component": "server-core"
         },
@@ -55,6 +58,7 @@
                 "client-web-kit",
                 "config",
                 "core-kit",
+                "core-socket-kit",
                 "server-core",
                 "server-kit",
                 "server-plugin-http",
