@@ -16,7 +16,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderOAuth2ClientFields = defineComponent({
     props: {
@@ -57,28 +57,30 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
 
         assign();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => [
             buildFormGroup({
-                validationResult: $v.value.client_id,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.client_id.value,
+                dirty: $v.value.client_id.$dirty,
                 label: true,
                 labelContent: 'Client ID',
                 content: buildFormInput({
-                    value: form.client_id,
+                    value: $v.value.client_id.$model,
                     onChange(input) {
-                        form.client_id = input;
+                        $v.value.client_id.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.client_secret,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.client_secret.value,
+                dirty: $v.value.client_secret.$dirty,
                 label: true,
                 labelContent: 'Client Secret',
                 content: buildFormInput({
-                    value: form.client_secret,
+                    value: $v.value.client_secret.$model,
                     onChange(input) {
-                        form.client_secret = input;
+                        $v.value.client_secret.$model = input;
                     },
                 }),
             }),

@@ -15,7 +15,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapUserFields = defineComponent({
     props: {
@@ -61,16 +61,18 @@ export const AIdentityProviderLdapUserFields = defineComponent({
 
         init();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => [
             buildFormGroup({
-                validationResult: $v.value.user_filter,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user_filter.value,
+                dirty: $v.value.user_filter.$dirty,
                 label: true,
                 labelContent: 'Filter',
                 content: buildFormInput({
-                    value: form.user_filter,
+                    value: $v.value.user_filter.$model,
                     onChange(input) {
-                        form.user_filter = input;
+                        $v.value.user_filter.$model = input;
                     },
                     props: {
                         placeholder: '(|({name_attribute}={{input}})({mail_attribute}={{input}}))',
@@ -78,50 +80,50 @@ export const AIdentityProviderLdapUserFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.user_base_dn,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user_base_dn.value,
+                dirty: $v.value.user_base_dn.$dirty,
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({
-                    value: form.user_base_dn,
+                    value: $v.value.user_base_dn.$model,
                     onChange(input) {
-                        form.user_base_dn = input;
+                        $v.value.user_base_dn.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.user_name_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user_name_attribute.value,
+                dirty: $v.value.user_name_attribute.$dirty,
                 label: true,
                 labelContent: 'Name Attribute',
                 content: buildFormInput({
-                    value: form.user_name_attribute,
+                    value: $v.value.user_name_attribute.$model,
                     onChange(input) {
-                        form.user_name_attribute = input;
+                        $v.value.user_name_attribute.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.user_mail_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user_mail_attribute.value,
+                dirty: $v.value.user_mail_attribute.$dirty,
                 label: true,
                 labelContent: 'Mail Attribute',
                 content: buildFormInput({
-                    value: form.user_mail_attribute,
+                    value: $v.value.user_mail_attribute.$model,
                     onChange(input) {
-                        form.user_mail_attribute = input;
+                        $v.value.user_mail_attribute.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.user_display_name_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user_display_name_attribute.value,
+                dirty: $v.value.user_display_name_attribute.$dirty,
                 label: true,
                 labelContent: 'DisplayName Attribute',
                 content: buildFormInput({
-                    value: form.user_display_name_attribute,
+                    value: $v.value.user_display_name_attribute.$model,
                     onChange(input) {
-                        form.user_display_name_attribute = input;
+                        $v.value.user_display_name_attribute.$model = input;
                     },
                 }),
             }),

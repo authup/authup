@@ -15,7 +15,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapGroupFields = defineComponent({
     props: {
@@ -63,16 +63,18 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
 
         init();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => [
             buildFormGroup({
-                validationResult: $v.value.group_filter,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_filter.value,
+                dirty: $v.value.group_filter.$dirty,
                 label: true,
                 labelContent: 'Filter',
                 content: buildFormInput({
-                    value: form.group_filter,
+                    value: $v.value.group_filter.$model,
                     onChange(input) {
-                        form.group_filter = input;
+                        $v.value.group_filter.$model = input;
                     },
                     props: {
                         placeholder: '(member={{dn}})',
@@ -80,62 +82,62 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_base_dn,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_base_dn.value,
+                dirty: $v.value.group_base_dn.$dirty,
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({
-                    value: form.group_base_dn,
+                    value: $v.value.group_base_dn.$model,
                     onChange(input) {
-                        form.group_base_dn = input;
+                        $v.value.group_base_dn.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_class,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_class.value,
+                dirty: $v.value.group_class.$dirty,
                 label: true,
                 labelContent: 'Class',
                 content: buildFormInput({
-                    value: form.group_class,
+                    value: $v.value.group_class.$model,
                     onChange(input) {
-                        form.group_class = input;
+                        $v.value.group_class.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_name_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_name_attribute.value,
+                dirty: $v.value.group_name_attribute.$dirty,
                 label: true,
                 labelContent: 'Name Attribute',
                 content: buildFormInput({
-                    value: form.group_name_attribute,
+                    value: $v.value.group_name_attribute.$model,
                     onChange(input) {
-                        form.group_name_attribute = input;
+                        $v.value.group_name_attribute.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_member_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_member_attribute.value,
+                dirty: $v.value.group_member_attribute.$dirty,
                 label: true,
                 labelContent: 'Member Attribute',
                 content: buildFormInput({
-                    value: form.group_member_attribute,
+                    value: $v.value.group_member_attribute.$model,
                     onChange(input) {
-                        form.group_member_attribute = input;
+                        $v.value.group_member_attribute.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.group_member_user_attribute,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.group_member_user_attribute.value,
+                dirty: $v.value.group_member_user_attribute.$dirty,
                 label: true,
                 labelContent: 'Member User Attribute',
                 content: buildFormInput({
-                    value: form.group_member_user_attribute,
+                    value: $v.value.group_member_user_attribute.$model,
                     onChange(input) {
-                        form.group_member_user_attribute = input;
+                        $v.value.group_member_user_attribute.$model = input;
                     },
                 }),
             }),

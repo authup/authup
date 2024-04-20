@@ -5,35 +5,41 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Ilingo } from 'ilingo';
-import { LanguageValidationGerman } from './de/validation';
-import { LanguageValidationEnglish } from './en/validation';
-import { LanguageAppEnglish } from './en/app';
-import { LanguageAppGerman } from './de/app';
-import { LanguageFormGerman } from './de/form';
-import { LanguageFormEnglish } from './en/form';
+import type {
+    BaseValidationTranslations,
+    NestedValidationsTranslations,
+} from '@ilingo/vuelidate';
+import {
+    useTranslationsForBaseValidation as _useTranslationsForBaseValidation,
+    useTranslationsForNestedValidations as _useTranslationsForNestedValidations,
+} from '@ilingo/vuelidate';
+import { useTranslation as _useTranslation, injectLocale } from '@ilingo/vuelidate/vue';
+import type {
+    BaseValidation, Validation, ValidationArgs, ValidationRuleCollection,
+} from '@vuelidate/core';
+import type { GetContext } from 'ilingo';
+import type { Ref } from 'vue';
 
-let instance : Ilingo | undefined;
+export function injectTranslatorLocale() : Ref<string> {
+    return injectLocale();
+}
 
-export function useTranslator() {
-    if (typeof instance !== 'undefined') {
-        return instance;
-    }
+export function useTranslation(input: GetContext) : Ref<string> {
+    return _useTranslation(input);
+}
 
-    instance = new Ilingo({
-        data: {
-            de: {
-                app: LanguageAppGerman,
-                form: LanguageFormGerman,
-                validation: LanguageValidationGerman,
-            },
-            en: {
-                app: LanguageAppEnglish,
-                form: LanguageFormEnglish,
-                validation: LanguageValidationEnglish,
-            },
-        },
-    });
+export function useTranslationsForBaseValidation<
+    T = unknown,
+    V extends ValidationRuleCollection<T> = ValidationRuleCollection<T>,
+>(
+    result: BaseValidation<T, V>,
+) : BaseValidationTranslations {
+    return _useTranslationsForBaseValidation(result as any);
+}
 
-    return instance;
+export function useTranslationsForNestedValidation<
+    V extends ValidationArgs = ValidationArgs,
+    T = unknown,
+>(validation: Validation<V, T>) : NestedValidationsTranslations<T> {
+    return _useTranslationsForNestedValidations(validation);
 }

@@ -26,14 +26,13 @@ import {
 import {
     buildFormGroup,
     buildFormInput,
-    buildFormSubmit,
 } from '@vuecs/form-controls';
 import { onChange, useIsEditing } from '../../composables';
 import {
-    createEntityManager, defineEntityManagerEvents,
+    buildFormSubmitWithTranslations,
+    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
     injectAPIClient,
-    useTranslator,
 } from '../../core';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
@@ -173,6 +172,8 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             await manager.createOrUpdate(data);
         };
 
+        const submitTranslations = createFormSubmitTranslations();
+
         return () => {
             let headerNode : VNodeChild;
 
@@ -267,14 +268,12 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                 ];
             }
 
-            const submitNode = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitNode = buildFormSubmitWithTranslations({
                 submit,
-                busy,
+                busy: busy.value,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             return h('form', {
                 onSubmit($event: any) {

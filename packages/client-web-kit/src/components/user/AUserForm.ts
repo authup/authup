@@ -8,7 +8,7 @@
 import type { Realm, User } from '@authup/core-kit';
 import { DomainType } from '@authup/core-kit';
 import {
-    buildFormGroup, buildFormInput, buildFormInputCheckbox, buildFormSubmit,
+    buildFormGroup, buildFormInput, buildFormInputCheckbox,
 } from '@vuecs/form-controls';
 import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
@@ -21,12 +21,13 @@ import {
 } from 'vue';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createEntityManager,
+    buildFormSubmitWithTranslations,
+    createEntityManager, createFormSubmitTranslations,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
     renderEntityAssignAction,
+    useTranslationsForNestedValidation,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 import { ARealms } from '../realm';
 
 export const AUserForm = defineComponent({
@@ -140,16 +141,20 @@ export const AUserForm = defineComponent({
         const handleDisplayNameChanged = (value: string) => {
             displayNameChanged.value = value.length !== 0;
         };
+
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+
         const render = () => {
             const name = buildFormGroup({
-                validationResult: $v.value.name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.name.value,
+                dirty: $v.value.name.$dirty,
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
-                    value: form.name,
+                    value: $v.value.name.$model,
                     onChange(input) {
-                        form.name = input;
+                        $v.value.name.$model = input;
                         updateDisplayName.call(null, input);
                     },
                     props: {
@@ -159,32 +164,32 @@ export const AUserForm = defineComponent({
             });
 
             const displayName = buildFormGroup({
-                validationResult: $v.value.display_name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.display_name.value,
+                dirty: $v.value.display_name.$dirty,
                 label: true,
                 labelContent: 'Display Name',
                 content: buildFormInput({
-                    value: form.display_name,
+                    value: $v.value.display_name.$model,
                     onChange(input) {
-                        form.display_name = input;
+                        $v.value.display_name.$model = input;
                         handleDisplayNameChanged.call(null, input);
                     },
                 }),
             });
 
             const email = buildFormGroup({
-                validationResult: $v.value.email,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.email.value,
+                dirty: $v.value.email.$dirty,
                 label: true,
                 labelContent: 'Email',
                 content: buildFormInput({
-                    value: form.email,
+                    value: $v.value.email.$model,
                     props: {
                         type: 'email',
                         placeholder: '...@...',
                     },
                     onChange(value) {
-                        form.email = value;
+                        $v.value.email.$model = value;
                     },
                 }),
             });
@@ -218,7 +223,7 @@ export const AUserForm = defineComponent({
                                 groupClass: 'form-switch mt-3',
                                 labelContent: h('span', {
                                     class: {
-                                        'text-warning': !form.active,
+                                        'text-danger': !form.active,
                                         'text-success': form.active,
                                     },
                                 }, [form.active ? 'active' : 'inactive']),
@@ -236,14 +241,12 @@ export const AUserForm = defineComponent({
                 ];
             }
 
-            const submitForm = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitForm = buildFormSubmitWithTranslations({
                 submit,
-                busy,
+                busy: busy.value,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             const leftColumn = h('div', { class: 'col' }, [
                 name,

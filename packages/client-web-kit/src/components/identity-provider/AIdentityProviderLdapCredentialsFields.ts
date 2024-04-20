@@ -16,7 +16,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapCredentialsFields = defineComponent({
     props: {
@@ -60,28 +60,30 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
 
         init();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => [
             buildFormGroup({
-                validationResult: $v.value.user,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.user.value,
+                dirty: $v.value.user.$dirty,
                 label: true,
                 labelContent: 'User',
                 content: buildFormInput({
-                    value: form.user,
+                    value: $v.value.user.$model,
                     onChange(input) {
-                        form.user = input;
+                        $v.value.user.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.password,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.password.value,
+                dirty: $v.value.password.$dirty,
                 label: true,
                 labelContent: 'Password',
                 content: buildFormInput({
-                    value: form.password,
+                    value: $v.value.password.$model,
                     onChange(input) {
-                        form.password = input;
+                        $v.value.password.$model = input;
                     },
                 }),
             }),

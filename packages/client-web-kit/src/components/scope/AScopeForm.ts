@@ -28,17 +28,19 @@ import type {
 import {
     buildFormGroup,
     buildFormInput,
-    buildFormSubmit, buildFormTextarea,
+    buildFormTextarea,
 } from '@vuecs/form-controls';
 import {
     SlotName,
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    alphaWithUpperNumHyphenUnderScore,
-    createEntityManager, defineEntityManagerEvents,
-    initFormAttributesFromSource, renderEntityAssignAction,
-    useTranslator, useValidationTranslator,
+    alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
+    createEntityManager, createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    initFormAttributesFromSource,
+    renderEntityAssignAction,
+    useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -134,17 +136,20 @@ export const AScopeForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+
         const render = () => {
             const name: VNodeChild = [
                 buildFormGroup({
-                    validationResult: $v.value.name,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.name.value,
+                    dirty: $v.value.name.$dirty,
                     label: true,
                     labelContent: 'Name',
                     content: buildFormInput({
-                        value: form.name,
+                        value: $v.value.name.$model,
                         onChange(input) {
-                            form.name = input;
+                            $v.value.name.$model = input;
                         },
                         props: {
                             disabled: isNameFixed.value,
@@ -155,14 +160,14 @@ export const AScopeForm = defineComponent({
 
             const description :VNodeChild = [
                 buildFormGroup({
-                    validationResult: $v.value.description,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.description.value,
+                    dirty: $v.value.description.$dirty,
                     label: true,
                     labelContent: 'Description',
                     content: buildFormTextarea({
-                        value: form.description,
+                        value: $v.value.description.$model,
                         onChange(input) {
-                            form.description = input;
+                            $v.value.description.$model = input;
                         },
                         props: {
                             rows: 7,
@@ -171,14 +176,12 @@ export const AScopeForm = defineComponent({
                 }),
             ];
 
-            const submitForm = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitForm = buildFormSubmitWithTranslations({
                 busy,
                 submit,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             let realm : VNodeArrayChildren = [];
 
