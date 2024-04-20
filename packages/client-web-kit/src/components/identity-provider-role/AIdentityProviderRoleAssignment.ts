@@ -18,7 +18,7 @@ import {
     createEntityManager,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
-    useValidationTranslator,
+    useTranslationsForBaseValidation,
 } from '../../core';
 
 export const AIdentityProviderRoleAssignment = defineComponent({
@@ -80,6 +80,8 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         if (manager.data.value) {
             initFormAttributesFromSource(form, manager.data.value);
         }
+
+        const validationMessages = useTranslationsForBaseValidation($v.value.external_id);
 
         const render = () => {
             let displayButton : VNodeArrayChildren = [];
@@ -184,12 +186,12 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                         buildFormGroup({
                             label: true,
                             labelContent: 'External ID',
-                            validationResult: $v.value.external_id,
-                            validationTranslator: useValidationTranslator(props.translatorLocale),
+                            validationMessages: validationMessages.value,
+                            dirty: $v.value.external_id.$dirty,
                             content: buildFormInput({
-                                value: form.external_id,
+                                value: $v.value.external_id.$model,
                                 onChange(input) {
-                                    form.external_id = input;
+                                    $v.value.external_id.$model = input;
                                 },
                             }),
                         }),

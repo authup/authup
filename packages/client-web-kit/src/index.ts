@@ -3,7 +3,10 @@ import type { App, Component, Plugin } from 'vue';
 import * as components from './components';
 import type { Options } from './types';
 import {
-    provideAPIClient, provideSocketClient, provideStore, provideTranslatorLocale,
+    installTranslator,
+    provideAPIClient,
+    provideSocketClient,
+    provideStore,
 } from './core';
 
 export function install(app: App, options?: Options) : void {
@@ -21,8 +24,9 @@ export function install(app: App, options?: Options) : void {
         provideStore(options.store, app);
     }
 
-    const translatorLocale = options.translatorLocale || 'en';
-    provideTranslatorLocale(translatorLocale, app);
+    installTranslator(app, {
+        locale: options.translatorLocale,
+    });
 
     const storeManager = installStoreManager(app, 'authup');
     if (options.storeManager) {

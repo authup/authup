@@ -18,7 +18,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
     props: {
@@ -70,16 +70,18 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
 
         init();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => [
             buildFormGroup({
-                validationResult: $v.value.url,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.url.value,
+                dirty: $v.value.url.$dirty,
                 label: true,
                 labelContent: 'URL',
                 content: buildFormInput({
-                    value: form.url,
+                    value: $v.value.url.$model,
                     onChange(input) {
-                        form.url = input;
+                        $v.value.url.$model = input;
                     },
                     props: {
                         placeholder: '<scheme>://<address>:<port>',
@@ -87,16 +89,16 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.timeout,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.timeout.value,
+                dirty: $v.value.timeout.$dirty,
                 label: true,
                 labelContent: 'Timeout',
                 content: buildFormInput({
-                    value: form.timeout,
+                    value: $v.value.timeout.$model,
                     onChange(input) {
                         const intValue = Number.parseInt(input, 10);
                         if (!Number.isNaN(intValue)) {
-                            form.timeout = intValue;
+                            $v.value.timeout.$model = intValue;
                         }
                     },
                     props: {
@@ -105,28 +107,28 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.start_tls,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.start_tls.value,
+                dirty: $v.value.start_tls.$dirty,
                 label: true,
                 labelContent: 'StartTLS',
                 content: buildFormInputCheckbox({
                     groupClass: 'form-switch',
                     labelContent: 'Enable StartTLS process?',
-                    value: form.start_tls,
+                    value: $v.value.start_tls.$model,
                     onChange(input) {
-                        form.start_tls = input;
+                        $v.value.start_tls.$model = input;
                     },
                 }),
             }),
             buildFormGroup({
-                validationResult: $v.value.base_dn,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.base_dn.value,
+                dirty: $v.value.base_dn.$dirty,
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({
-                    value: form.base_dn,
+                    value: $v.value.base_dn.$model,
                     onChange(input) {
-                        form.base_dn = input;
+                        $v.value.base_dn.$model = input;
                     },
                     props: {
                         placeholder: 'e.g. dc=example,dc=com',

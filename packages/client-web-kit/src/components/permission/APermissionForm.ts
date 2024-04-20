@@ -16,13 +16,16 @@ import {
 } from '@vuelidate/validators';
 import type { Permission } from '@authup/core-kit';
 import {
-    buildFormGroup, buildFormInput, buildFormSubmit, buildFormTextarea,
+    buildFormGroup, buildFormInput, buildFormTextarea,
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createEntityManager, defineEntityManagerEvents,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
     initFormAttributesFromSource,
-    useTranslator, useValidationTranslator,
+    useTranslationsForNestedValidation,
 } from '../../core';
 
 export const APermissionForm = defineComponent({
@@ -88,16 +91,19 @@ export const APermissionForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+
         const render = () => {
             const name = buildFormGroup({
-                validationResult: $v.value.name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.name.value,
+                dirty: $v.value.name.$dirty,
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
-                    value: form.name,
+                    value: $v.value.name.$model,
                     onChange(input) {
-                        form.name = input;
+                        $v.value.name.$model = input;
                     },
                     props: {
                         disabled: manager.data.value &&
@@ -107,15 +113,14 @@ export const APermissionForm = defineComponent({
             });
 
             const description = buildFormGroup({
-                validationResult: $v.value.description,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.description.value,
+                dirty: $v.value.description.$dirty,
                 label: true,
                 labelContent: 'Description',
                 content: buildFormTextarea({
-
-                    value: form.description,
+                    value: $v.value.description.$model,
                     onChange(input) {
-                        form.description = input;
+                        $v.value.description.$model = input;
                     },
                     props: {
                         rows: 4,
@@ -123,14 +128,12 @@ export const APermissionForm = defineComponent({
                 }),
             });
 
-            const submitButton = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitButton = buildFormSubmitWithTranslations({
                 submit,
                 busy,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             return h('form', {
                 onSubmit($event: any) {

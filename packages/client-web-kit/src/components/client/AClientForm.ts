@@ -28,15 +28,19 @@ import {
     buildFormGroup,
     buildFormInput,
     buildFormInputCheckbox,
-    buildFormSubmit,
     buildFormTextarea,
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     alphaWithUpperNumHyphenUnderScore,
-    createEntityManager, defineEntityManagerEvents,
-    initFormAttributesFromSource, renderEntityAssignAction,
-    useTranslator, useValidationTranslator,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    initFormAttributesFromSource,
+    renderEntityAssignAction,
+    useTranslation,
+    useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 import { AClientRedirectUris } from './AClientRedirectUris';
@@ -151,17 +155,24 @@ export const AClientForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+        const generateTranslation = useTranslation({
+            group: 'form',
+            key: 'generate.button',
+        });
+
         const render = () => {
             const name : VNodeChild = [
                 buildFormGroup({
-                    validationResult: $v.value.name,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.name.value,
+                    dirty: $v.value.name.$dirty,
                     label: true,
                     labelContent: 'Name',
                     content: buildFormInput({
-                        value: form.name,
+                        value: $v.value.name.$model,
                         onChange(input) {
-                            form.name = input;
+                            $v.value.name.$model = input;
                         },
                         props: {
                             disabled: isNameFixed.value,
@@ -173,14 +184,14 @@ export const AClientForm = defineComponent({
 
             const description : VNodeChild = [
                 buildFormGroup({
-                    validationResult: $v.value.description,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.description.value,
+                    dirty: $v.value.description.$dirty,
                     label: true,
                     labelContent: 'Description',
                     content: buildFormTextarea({
-                        value: form.description,
+                        value: $v.value.description.$model,
                         onChange(input) {
-                            form.description = input;
+                            $v.value.description.$model = input;
                         },
                         props: {
                             rows: 7,
@@ -204,14 +215,14 @@ export const AClientForm = defineComponent({
             ];
 
             const isConfidential = buildFormGroup({
-                validationResult: $v.value.is_confidential,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.is_confidential.value,
+                dirty: $v.value.is_confidential.$dirty,
                 label: true,
                 labelContent: 'Is Confidential?',
                 content: buildFormInputCheckbox({
-                    value: form.is_confidential,
+                    value: $v.value.is_confidential.$model,
                     onChange(input) {
-                        form.is_confidential = input;
+                        $v.value.is_confidential.$model = input;
                     },
                 }),
             });
@@ -235,17 +246,16 @@ export const AClientForm = defineComponent({
 
             const secret : VNodeArrayChildren = [
                 buildFormGroup({
-
-                    validationResult: $v.value.secret,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.secret.value,
+                    dirty: $v.value.secret.$dirty,
                     label: true,
                     labelContent: [
                         'Secret',
                     ],
                     content: buildFormInput({
-                        value: form.secret,
+                        value: $v.value.secret.$model,
                         onChange(input) {
-                            form.secret = input;
+                            $v.value.secret.$model = input;
                         },
                     }),
                 }),
@@ -260,19 +270,17 @@ export const AClientForm = defineComponent({
                     }, [
                         h('i', { class: 'fa fa-wrench' }),
                         ' ',
-                        useTranslator().getSync('form.generate.button', props.translatorLocale),
+                        generateTranslation.value,
                     ]),
                 ]),
             ];
 
-            const submitForm = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
-                busy,
+            const submitForm = buildFormSubmitWithTranslations({
+                busy: busy.value,
                 submit,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             let realm : VNodeChild = [];
 

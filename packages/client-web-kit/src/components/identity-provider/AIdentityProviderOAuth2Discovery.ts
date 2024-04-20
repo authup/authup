@@ -15,7 +15,7 @@ import type { VNodeChild } from 'vue';
 import {
     defineComponent, h, reactive, ref,
 } from 'vue';
-import { useValidationTranslator } from '../../core';
+import { useTranslationsForBaseValidation } from '../../core';
 
 export const AIdentityProviderOAuth2Discovery = defineComponent({
     props: {
@@ -66,6 +66,8 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
             }
         };
 
+        const validationMessages = useTranslationsForBaseValidation($v.value.url);
+
         return () => {
             let messageNode : VNodeChild;
             if (message.value) {
@@ -76,8 +78,8 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
 
             return [
                 buildFormGroup({
-                    validationResult: $v.value.url,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.value,
+                    dirty: $v.value.url.$dirty,
                     labelContent: 'Discovery',
                     content: buildFormInput({
                         class: {
@@ -86,9 +88,9 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
                         props: {
                             placeholder: 'https://example.com/.well-known/openid-configuration',
                         },
-                        value: form.url,
+                        value: $v.value.url.$model,
                         onChange(input) {
-                            form.url = input;
+                            $v.value.url.$model = input;
                         },
                     }),
                 }),

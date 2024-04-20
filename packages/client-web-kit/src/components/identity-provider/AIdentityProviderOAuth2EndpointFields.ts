@@ -16,7 +16,7 @@ import {
     defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useValidationTranslator } from '../../core';
+import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
 
 export const AIdentityProviderOAuth2EndpointFields = defineComponent({
@@ -67,6 +67,8 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
 
         init();
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => {
             let discoveryNode : VNodeChild;
 
@@ -84,14 +86,14 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
             return [
                 discoveryNode,
                 buildFormGroup({
-                    validationResult: $v.value.token_url,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.token_url.value,
+                    dirty: $v.value.token_url.$dirty,
                     label: true,
                     labelContent: 'Token',
                     content: buildFormInput({
-                        value: form.token_url,
+                        value: $v.value.token_url.$model,
                         onChange(input) {
-                            form.token_url = input;
+                            $v.value.token_url.$model = input;
                         },
                         props: {
                             placeholder: 'https://...',
@@ -99,14 +101,14 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                     }),
                 }),
                 buildFormGroup({
-                    validationResult: $v.value.authorize_url,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.authorize_url.value,
+                    dirty: $v.value.authorize_url.$dirty,
                     label: true,
                     labelContent: 'Authorize',
                     content: buildFormInput({
-                        value: form.authorize_url,
+                        value: $v.value.authorize_url.$model,
                         onChange(input) {
-                            form.authorize_url = input;
+                            $v.value.authorize_url.$model = input;
                         },
                         props: {
                             placeholder: 'https://...',
@@ -114,14 +116,14 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                     }),
                 }),
                 buildFormGroup({
-                    validationResult: $v.value.user_info_url,
-                    validationTranslator: useValidationTranslator(props.translatorLocale),
+                    validationMessages: validationMessages.user_info_url.value,
+                    dirty: $v.value.user_info_url.$dirty,
                     label: true,
                     labelContent: 'UserInfo',
                     content: buildFormInput({
-                        value: form.user_info_url,
+                        value: $v.value.user_info_url.$model,
                         onChange(input) {
-                            form.user_info_url = input;
+                            $v.value.user_info_url.$model = input;
                         },
                         props: {
                             placeholder: 'https://...',

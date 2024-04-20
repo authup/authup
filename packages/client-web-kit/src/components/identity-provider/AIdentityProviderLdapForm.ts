@@ -7,14 +7,17 @@
 
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { DomainType, IdentityProviderProtocol } from '@authup/core-kit';
-import { buildFormSubmit } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
     type PropType, type VNodeChild, defineComponent, h, ref,
 } from 'vue';
 import { useIsEditing } from '../../composables';
 import {
-    createEntityManager, defineEntityManagerEvents, extractVuelidateResultsFromChild, useTranslator,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    extractVuelidateResultsFromChild,
 } from '../../core';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderLdapConnectionFields } from './AIdentityProviderLdapConnectionFields';
@@ -70,15 +73,15 @@ export const AIdentityProviderLdapForm = defineComponent({
             await manager.createOrUpdate(data);
         };
 
+        const submitTranslations = createFormSubmitTranslations();
+
         return () => {
-            const submitNode = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitNode = buildFormSubmitWithTranslations({
                 submit,
-                busy,
+                busy: busy.value,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             let headerNode : VNodeChild | undefined;
             if (!manager.data.value) {

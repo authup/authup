@@ -7,7 +7,6 @@
 
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
 import type { APIClient } from '@authup/core-kit';
-import type { MaybeRef } from 'vue';
 import type {
     AClient,
     AClientForm,
@@ -71,10 +70,7 @@ export type Options = {
     apiClient?: APIClient,
     socketClient?: SocketClient,
     store?: Store,
-    /**
-     * Default: en
-     */
-    translatorLocale?: MaybeRef<string>
+    translatorLocale?: string
 };
 
 declare module '@vue/runtime-core' {

@@ -8,7 +8,8 @@ import {
     ARealms,
     ASearch,
     ATitle,
-    injectAPIClient, useValidationTranslator,
+    injectAPIClient,
+    useTranslationsForBaseValidation,
 } from '@authup/client-web-kit';
 import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
@@ -125,9 +126,13 @@ export default defineNuxtComponent({
             id,
         );
 
+        const nameMessages = useTranslationsForBaseValidation(vuelidate.value.name);
+        const passwordMessages = useTranslationsForBaseValidation(vuelidate.value.password);
+
         return {
             vuelidate,
-            translator: useValidationTranslator(),
+            nameMessages,
+            passwordMessages,
             form,
             submit,
             busy,
@@ -152,29 +157,29 @@ export default defineNuxtComponent({
             <div class="row">
                 <div class="col-8">
                     <VCFormGroup
-                        :validation-result="vuelidate.name"
-                        :validation-translator="translator"
+                        :dirty="vuelidate.name.$dirty"
+                        :validation-messages="nameMessages"
                     >
                         <template #label>
                             Name
                         </template>
                         <template #default>
                             <VCFormInput
-                                v-model="form.name"
+                                v-model="vuelidate.name.$model"
                             />
                         </template>
                     </VCFormGroup>
 
                     <VCFormGroup
-                        :validation-result="vuelidate.password"
-                        :validation-translator="translator"
+                        :dirty="vuelidate.password.$dirty"
+                        :validation-messages="passwordMessages"
                     >
                         <template #label>
                             Password
                         </template>
                         <template #default>
                             <VCFormInput
-                                v-model="form.password"
+                                v-model="vuelidate.password.$model"
                                 type="password"
                             />
                         </template>
@@ -182,7 +187,7 @@ export default defineNuxtComponent({
 
                     <VCFormSubmit
                         v-model="busy"
-                        :validation-result="vuelidate"
+                        :invalid="vuelidate.$invalid"
                         :create-text="'Login'"
                         :create-button-class="{value: 'btn btn-sm btn-dark btn-block', presets: { bootstrap: false }}"
                         :create-icon-class="'fa-solid fa-right-to-bracket'"

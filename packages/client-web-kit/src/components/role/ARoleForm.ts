@@ -15,14 +15,18 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core-kit';
 import {
     buildFormGroup,
-    buildFormInput, buildFormSubmit, buildFormTextarea,
+    buildFormInput,
+    buildFormTextarea,
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    createEntityManager, defineEntityManagerEvents,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
     initFormAttributesFromSource,
+    useTranslationsForNestedValidation,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 
 export const ARoleForm = defineComponent({
     props: {
@@ -86,29 +90,32 @@ export const ARoleForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+
         const render = () => {
             const name = buildFormGroup({
-                validationResult: $v.value.name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.name.value,
+                dirty: $v.value.name.$dirty,
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
-                    value: form.name,
+                    value: $v.value.name.$model,
                     onChange(input) {
-                        form.name = input;
+                        $v.value.name.$model = input;
                     },
                 }),
             });
 
             const description = buildFormGroup({
-                validationResult: $v.value.description,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.description.value,
+                dirty: $v.value.description.$dirty,
                 label: true,
                 labelContent: 'Description',
                 content: buildFormTextarea({
-                    value: form.description,
+                    value: $v.value.description.$model,
                     onChange(input) {
-                        form.description = input;
+                        $v.value.description.$model = input;
                     },
                     props: {
                         rows: 6,
@@ -116,14 +123,12 @@ export const ARoleForm = defineComponent({
                 }),
             });
 
-            const submitForm = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
+            const submitForm = buildFormSubmitWithTranslations({
                 submit,
-                busy,
+                busy: busy.value,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             return h('form', {
                 onSubmit($event: any) {

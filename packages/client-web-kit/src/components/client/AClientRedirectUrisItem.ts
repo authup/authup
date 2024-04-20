@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { useValidationTranslator } from '../../core';
+import { useTranslationsForNestedValidation } from '../../core';
 
 export const AClientRedirectUrisItem = defineComponent({
     props: {
@@ -44,14 +44,16 @@ export const AClientRedirectUrisItem = defineComponent({
             },
         }, form);
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         const render = () => buildFormGroup({
-            validationResult: $v.value.url,
-            validationTranslator: useValidationTranslator(props.translatorLocale),
+            validationMessages: validationMessages.url.value,
+            dirty: $v.value.url.$dirty,
             label: false,
             content: buildFormInput({
-                value: form.url,
+                value: $v.value.url.$model,
                 onChange(input) {
-                    form.url = input;
+                    $v.value.url.$model = input;
 
                     nextTick(() => {
                         ctx.emit('updated', input);

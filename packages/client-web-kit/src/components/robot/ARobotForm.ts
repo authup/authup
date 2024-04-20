@@ -26,18 +26,18 @@ import { DomainType, createNanoID } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
-    buildFormSubmit,
 } from '@vuecs/form-controls';
 import {
     SlotName,
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    alphaWithUpperNumHyphenUnderScore,
-    createEntityManager, defineEntityManagerEvents,
-    initFormAttributesFromSource, renderEntityAssignAction,
+    alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
+    createEntityManager, createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    initFormAttributesFromSource,
+    renderEntityAssignAction, useTranslation, useTranslationsForNestedValidation,
 } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
 import { ARealms } from '../realm';
 
 export const ARobotForm = defineComponent({
@@ -139,16 +139,24 @@ export const ARobotForm = defineComponent({
             });
         };
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
+        const generateTranslation = useTranslation({
+            group: 'form',
+            key: 'generate.button',
+            locale: props.translatorLocale,
+        });
+
         const render = () => {
             const name = buildFormGroup({
-                validationResult: $v.value.name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.name.value,
+                dirty: $v.value.name.$dirty,
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
-                    value: form.name,
+                    value: $v.value.name.$model,
                     onChange(input) {
-                        form.name = input;
+                        $v.value.name.$model = input;
                     },
                     props: {
                         disabled: isNameFixed.value,
@@ -174,8 +182,8 @@ export const ARobotForm = defineComponent({
             }
 
             const secret = buildFormGroup({
-                validationResult: $v.value.secret,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.secret.value,
+                dirty: $v.value.secret.$dirty,
                 label: true,
                 labelContent: [
                     'Secret',
@@ -188,9 +196,9 @@ export const ARobotForm = defineComponent({
                     ]) : '',
                 ],
                 content: buildFormInput({
-                    value: form.secret,
+                    value: $v.value.secret.$model,
                     onChange(input) {
-                        form.secret = input;
+                        $v.value.secret.$model = input;
                     },
                 }),
             });
@@ -206,18 +214,16 @@ export const ARobotForm = defineComponent({
                 }, [
                     h('i', { class: 'fa fa-wrench' }),
                     ' ',
-                    useTranslator().getSync('form.generate.button', props.translatorLocale),
+                    generateTranslation.value,
                 ]),
             ]);
 
-            const submitForm = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button', props.translatorLocale),
-                createText: useTranslator().getSync('form.create.button', props.translatorLocale),
-                busy,
+            const submitForm = buildFormSubmitWithTranslations({
+                busy: busy.value,
                 submit,
                 isEditing: isEditing.value,
-                validationResult: $v.value,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             const leftColumn = h('div', { class: 'col' }, [
                 id,

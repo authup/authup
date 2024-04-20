@@ -19,7 +19,7 @@ import {
 } from 'vue';
 import type { DomainType } from '@authup/core-kit';
 import { useDomainAPI } from '@authup/core-kit';
-import { injectAPIClient, useTranslator } from '../core';
+import { injectAPIClient, useTranslation, wrapFnWithBusyState } from '../core';
 
 enum ElementType {
     BUTTON = 'button',
@@ -66,15 +66,11 @@ const AEntityDelete = defineComponent({
         const instance = getCurrentInstance();
         const busy = ref(false);
 
-        const submit = async () => {
-            if (busy.value) return;
-
+        const submit = wrapFnWithBusyState(busy, async () => {
             const domainApi = useDomainAPI(apiClient, props.entityType);
             if (!domainApi) {
                 return;
             }
-
-            busy.value = true;
 
             try {
                 if ('delete' in domainApi) {
@@ -85,9 +81,13 @@ const AEntityDelete = defineComponent({
             } catch (e) {
                 ctx.emit('failed', e);
             }
+        });
 
-            busy.value = false;
-        };
+        const translation = useTranslation({
+            group: 'app.delete',
+            key: 'button',
+            locale: props.locale,
+        });
 
         const render = () => {
             let tag : Component | string = 'button';
@@ -121,8 +121,7 @@ const AEntityDelete = defineComponent({
             let text : VNodeArrayChildren = [];
             if (props.withText) {
                 text = [
-                    useTranslator()
-                        .getSync('app.delete.button', props.locale),
+                    translation.value,
                 ];
             }
 

@@ -13,10 +13,15 @@ import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
 import {
-    buildFormGroup, buildFormInput, buildFormInputCheckbox, buildFormSubmit,
+    buildFormGroup, buildFormInput, buildFormInputCheckbox,
 } from '@vuecs/form-controls';
-import { injectAPIClient } from '../../core';
-import { useTranslator, useValidationTranslator } from '../../core/translator';
+import {
+    buildFormSubmitWithTranslations,
+    createFormSubmitTranslations,
+    injectAPIClient,
+    useTranslationsForNestedValidation,
+    wrapFnWithBusyState,
+} from '../../core';
 
 export const AUserPasswordForm = defineComponent({
     props: {
@@ -54,11 +59,7 @@ export const AUserPasswordForm = defineComponent({
             },
         }, form);
 
-        const submit = async () => {
-            if (busy.value) return;
-
-            busy.value = true;
-
+        const submit = wrapFnWithBusyState(busy, async () => {
             try {
                 const user = await apiClient.user.update(props.id, {
                     password: form.password,
@@ -71,20 +72,21 @@ export const AUserPasswordForm = defineComponent({
                     ctx.emit('failed', e);
                 }
             }
+        });
 
-            busy.value = false;
-        };
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const submitTranslations = createFormSubmitTranslations();
 
         const render = () => {
             const password = buildFormGroup({
-                validationResult: $v.value.password,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.password.value,
+                dirty: $v.value.password.$dirty,
                 label: true,
                 labelContent: 'Password',
                 content: buildFormInput({
-                    value: form.password,
+                    value: $v.value.password.$model,
                     onChange(input) {
-                        form.password = input;
+                        $v.value.password.$model = input;
                     },
                     props: {
                         type: passwordShow.value ? 'text' : 'password',
@@ -94,14 +96,14 @@ export const AUserPasswordForm = defineComponent({
             });
 
             const passwordRepeat = buildFormGroup({
-                validationResult: $v.value.password_repeat,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.password_repeat.value,
+                dirty: $v.value.password_repeat.$dirty,
                 label: true,
                 labelContent: 'Password repeat',
                 content: buildFormInput({
-                    value: form.password_repeat,
+                    value: $v.value.password_repeat.$model,
                     onChange(input) {
-                        form.password_repeat = input;
+                        $v.value.password_repeat.$model = input;
                     },
                     props: {
                         type: passwordShow.value ? 'text' : 'password',
@@ -122,12 +124,11 @@ export const AUserPasswordForm = defineComponent({
                 },
             });
 
-            const submitButton = buildFormSubmit({
-                updateText: useTranslator().getSync('form.update.button'),
-                createText: useTranslator().getSync('form.create.button'),
+            const submitButton = buildFormSubmitWithTranslations({
                 submit,
                 isEditing: true,
-            });
+                invalid: $v.value.$invalid,
+            }, submitTranslations);
 
             return h('form', {
                 onSubmit($event: any) {

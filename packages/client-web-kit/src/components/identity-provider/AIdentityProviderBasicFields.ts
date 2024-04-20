@@ -17,8 +17,7 @@ import {
     computed, defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { alphaNumHyphenUnderscore, extendObjectProperties } from '../../core';
-import { useValidationTranslator } from '../../core/translator';
+import { alphaNumHyphenUnderscore, extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
     props: {
@@ -93,29 +92,31 @@ export const AIdentityProviderBasicFields = defineComponent({
 
         assign(props.entity);
 
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+
         return () => {
             const name = buildFormGroup({
-                validationResult: $v.value.name,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.name.value,
+                dirty: $v.value.name.$dirty,
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
-                    value: form.name,
+                    value: $v.value.name.$model,
                     onChange(input) {
-                        form.name = input;
+                        $v.value.name.$model = input;
                     },
                 }),
             });
 
             const slug = buildFormGroup({
-                validationResult: $v.value.slug,
-                validationTranslator: useValidationTranslator(props.translatorLocale),
+                validationMessages: validationMessages.slug.value,
+                dirty: $v.value.slug.$dirty,
                 label: true,
                 labelContent: 'Slug',
                 content: buildFormInput({
-                    value: form.slug,
+                    value: $v.value.slug.$model,
                     onChange(input) {
-                        form.slug = input;
+                        $v.value.slug.$model = input;
                         update();
                     },
                 }),
@@ -142,9 +143,9 @@ export const AIdentityProviderBasicFields = defineComponent({
             const enabled = buildFormInputCheckbox({
                 groupClass: 'form-switch mt-3',
                 labelContent: 'Enabled?',
-                value: form.enabled,
+                value: $v.value.enabled.$model,
                 onChange(input) {
-                    form.enabled = input;
+                    $v.value.enabled.$model = input;
                     update();
                 },
             });
