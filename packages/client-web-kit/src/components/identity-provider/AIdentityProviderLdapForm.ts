@@ -78,7 +78,7 @@ export const AIdentityProviderLdapForm = defineComponent({
         return () => {
             const submitNode = buildFormSubmitWithTranslations({
                 submit,
-                busy,
+                busy: busy.value,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
             }, submitTranslations);

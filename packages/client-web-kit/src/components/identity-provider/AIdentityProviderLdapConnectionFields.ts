@@ -108,7 +108,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.start_tls.value,
-                dirty: $v.value.base_dn.$dirty,
+                dirty: $v.value.start_tls.$dirty,
                 label: true,
                 labelContent: 'StartTLS',
                 content: buildFormInputCheckbox({
@@ -116,7 +116,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                     labelContent: 'Enable StartTLS process?',
                     value: $v.value.start_tls.$model,
                     onChange(input) {
-                        form.start_tls = input;
+                        $v.value.start_tls.$model = input;
                     },
                 }),
             }),
