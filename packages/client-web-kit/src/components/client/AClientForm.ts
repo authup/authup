@@ -59,10 +59,6 @@ export const AClientForm = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Client>(),
     setup(props, ctx) {

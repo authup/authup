@@ -28,9 +28,6 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
             type: Boolean,
             default: false,
         },
-        translatorLocale: {
-            type: String,
-        },
     },
     emits: ['updated'],
     setup(props) {

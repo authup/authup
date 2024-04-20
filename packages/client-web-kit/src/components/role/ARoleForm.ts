@@ -34,10 +34,6 @@ export const ARoleForm = defineComponent({
             type: Object as PropType<Role>,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Role>(),
     setup(props, ctx) {

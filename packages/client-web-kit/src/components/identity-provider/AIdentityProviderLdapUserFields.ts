@@ -26,9 +26,6 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             type: Boolean,
             default: false,
         },
-        translatorLocale: {
-            type: String,
-        },
     },
     emits: ['updated'],
     setup(props) {

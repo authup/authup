@@ -55,10 +55,6 @@ const AEntityDelete = defineComponent({
             type: String,
             default: undefined,
         },
-        locale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: ['deleted', 'failed'],
     setup(props, ctx) {
@@ -86,7 +82,6 @@ const AEntityDelete = defineComponent({
         const translation = useTranslation({
             group: 'app.delete',
             key: 'button',
-            locale: props.locale,
         });
 
         const render = () => {

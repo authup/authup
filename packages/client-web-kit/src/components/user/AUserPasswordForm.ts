@@ -29,10 +29,6 @@ export const AUserPasswordForm = defineComponent({
             type: String,
             required: true,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, ctx) {

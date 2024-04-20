@@ -24,9 +24,6 @@ export const AIdentityProviderForm = defineComponent({
         realmId: {
             type: String,
         },
-        translatorLocale: {
-            type: String,
-        },
         apiUrl: {
             type: String,
             default: 'http://localhost:3001',
@@ -96,7 +93,6 @@ export const AIdentityProviderForm = defineComponent({
                         return render(h(AIdentityProviderOAuth2Form, {
                             entity: entity.value,
                             realmId: props.realmId,
-                            translatorLocale: props.translatorLocale,
                             protocol: protocol.value,
                             preset: preset.value,
                             apiUrl: props.apiUrl,
@@ -116,7 +112,6 @@ export const AIdentityProviderForm = defineComponent({
                         return render(h(AIdentityProviderLdapForm, {
                             entity: entity.value,
                             realmId: props.realmId,
-                            translatorLocale: props.translatorLocale,
                             onCreated(el: IdentityProvider) {
                                 entity.value = el;
 

@@ -21,10 +21,6 @@ export const AClientRedirectUrisItem = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
         disabled: {
             type: Boolean,
             default: false,

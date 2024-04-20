@@ -57,10 +57,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
         apiUrl: {
             type: String,
             default: 'http://localhost:3001',

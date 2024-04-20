@@ -17,10 +17,6 @@ export const AClientRedirectUris = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: ['updated'],
     setup(props, ctx) {
@@ -49,7 +45,6 @@ export const AClientRedirectUris = defineComponent({
                 AClientRedirectUrisItem,
                 {
                     disabled: items.value.length <= 1,
-                    translatorLocale: props.translatorLocale,
                     class: 'mb-2',
                     uri: item,
                     onUpdated(input) {

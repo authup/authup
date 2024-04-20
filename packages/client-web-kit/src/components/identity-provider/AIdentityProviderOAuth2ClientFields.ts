@@ -23,9 +23,6 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         entity: {
             type: Object as PropType<Partial<OAuth2IdentityProvider>>,
         },
-        translatorLocale: {
-            type: String,
-        },
     },
     emits: ['updated'],
     setup(props) {

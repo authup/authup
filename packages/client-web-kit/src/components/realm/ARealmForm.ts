@@ -38,10 +38,6 @@ export const ARealmForm = defineComponent({
             required: false,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Realm>(),
     setup(props, ctx) {

@@ -58,10 +58,6 @@ export const AScopeForm = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Scope>(),
     setup(props, ctx) {

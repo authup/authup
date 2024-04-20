@@ -44,10 +44,6 @@ export const AUserForm = defineComponent({
             type: Boolean,
             default: true,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<User>(),
     async setup(props, ctx) {

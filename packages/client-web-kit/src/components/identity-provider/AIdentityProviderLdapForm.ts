@@ -38,10 +38,6 @@ export const AIdentityProviderLdapForm = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<IdentityProvider>(),
     setup(props, ctx) {

@@ -18,14 +18,8 @@ import {
 import { useTranslationsForBaseValidation } from '../../core';
 
 export const AIdentityProviderOAuth2Discovery = defineComponent({
-    props: {
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
-    },
     emits: ['lookup', 'failed'],
-    setup(props, setup) {
+    setup(_, setup) {
         const busy = ref(false);
         const form = reactive({
             url: '',

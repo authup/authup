@@ -24,9 +24,6 @@ export const AIdentityProviderBasicFields = defineComponent({
         entity: {
             type: Object as PropType<Partial<IdentityProvider>>,
         },
-        translatorLocale: {
-            type: String,
-        },
     },
     emits: ['updated'],
     setup(props, setup) {

@@ -54,10 +54,6 @@ export const ARobotForm = defineComponent({
             type: String,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Robot>(),
     setup(props, ctx) {
@@ -144,7 +140,6 @@ export const ARobotForm = defineComponent({
         const generateTranslation = useTranslation({
             group: 'form',
             key: 'generate.button',
-            locale: props.translatorLocale,
         });
 
         const render = () => {

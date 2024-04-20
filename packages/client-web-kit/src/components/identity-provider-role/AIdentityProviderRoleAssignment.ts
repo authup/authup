@@ -31,10 +31,6 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             type: String,
             required: true,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<IdentityProviderRole>(),
     async setup(props, setup) {

@@ -34,10 +34,6 @@ export const APermissionForm = defineComponent({
             type: Object as PropType<Permission>,
             default: undefined,
         },
-        translatorLocale: {
-            type: String,
-            default: undefined,
-        },
     },
     emits: defineEntityManagerEvents<Permission>(),
     setup(props, ctx) {
