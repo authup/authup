@@ -147,6 +147,7 @@ export const AUserForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.ACTIVE },
                 { key: TranslatorTranslationDefaultKey.INACTIVE },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.EMAIL },
                 { key: TranslatorTranslationDefaultKey.LOCKED },
                 { key: TranslatorTranslationDefaultKey.NOT_LOCKED },
                 { key: TranslatorTranslationDefaultKey.NAME },
