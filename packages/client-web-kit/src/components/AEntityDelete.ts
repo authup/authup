@@ -19,7 +19,9 @@ import {
 } from 'vue';
 import type { DomainType } from '@authup/core-kit';
 import { useDomainAPI } from '@authup/core-kit';
-import { injectAPIClient, useTranslation, wrapFnWithBusyState } from '../core';
+import {
+    TranslatorTranslationFormKey, TranslatorTranslationGroup, injectAPIClient, useTranslation, wrapFnWithBusyState,
+} from '../core';
 
 enum ElementType {
     BUTTON = 'button',
@@ -80,8 +82,8 @@ const AEntityDelete = defineComponent({
         });
 
         const translation = useTranslation({
-            group: 'app.delete',
-            key: 'button',
+            group: TranslatorTranslationGroup.FORM,
+            key: TranslatorTranslationFormKey.DELETE_BUTTON_TEXT,
         });
 
         const render = () => {

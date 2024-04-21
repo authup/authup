@@ -182,33 +182,33 @@ export function createList<
     });
     const handleUpdated = buildListUpdatedHandler(data);
 
-    let options : ListRenderOptions<T> = context.props;
+    function render(defaults?: ListRenderOptions<T>) : VNodeChild {
+        let renderOptions : ListRenderOptions<T>;
+        if (defaults) {
+            renderOptions = mergeListOptions(context.props, defaults);
+        } else {
+            renderOptions = context.props;
+        }
+        const header : ListHeaderBuildOptionsInput<T> = boolableToObject(renderOptions.header || {});
+        const footer : ListFooterBuildOptionsInput<T> = boolableToObject(renderOptions.footer || {});
 
-    const setDefaults = (defaults: ListRenderOptions<T>) => {
-        options = mergeListOptions(context.props, defaults);
-    };
-
-    function render() : VNodeChild {
-        const header : ListHeaderBuildOptionsInput<T> = boolableToObject(options.header || {});
-        const footer : ListFooterBuildOptionsInput<T> = boolableToObject(options.footer || {});
-
-        if (options.item) {
+        if (renderOptions.item) {
             if (
-                typeof options.body === 'undefined' ||
-                typeof options.body === 'boolean'
+                typeof renderOptions.body === 'undefined' ||
+                typeof renderOptions.body === 'boolean'
             ) {
-                options.body = { item: options.item };
+                renderOptions.body = { item: renderOptions.item };
             } else {
-                options.body.item = options.item;
+                renderOptions.body.item = renderOptions.item;
             }
         }
 
         return buildList<T, ListMeta<T>>({
             footer,
             header,
-            noMore: options.noMore,
-            body: options.body,
-            loading: options.loading,
+            noMore: renderOptions.noMore,
+            body: renderOptions.body,
+            loading: renderOptions.loading,
             total,
             load,
             busy: busy.value,
@@ -295,6 +295,5 @@ export function createList<
 
         render,
         load,
-        setDefaults,
     };
 }

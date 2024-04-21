@@ -79,12 +79,11 @@ export type ListProps<T> = {
 } & ListRenderOptions<T>;
 
 export type List<T> = {
-    render() : VNodeChild;
+    render(defaults?: ListRenderOptions<T>) : VNodeChild;
     load: ListLoadFn<ListMeta<T>>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
     handleUpdated(item: T) : void;
-    setDefaults(defaults: ListRenderOptions<T>) : void,
     data: Ref<T[]>,
     busy: Ref<boolean>,
     meta: Ref<ListMeta<T>>,

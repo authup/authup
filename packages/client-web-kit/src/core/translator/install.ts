@@ -8,26 +8,35 @@
 import { MemoryStore } from '@ilingo/vuelidate/core';
 import { install } from '@ilingo/vuelidate';
 import type { App } from 'vue';
-import { LanguageAppGerman } from './de/app';
-import { LanguageFormGerman } from './de/form';
-import { LanguageValidationGerman } from './de/validation';
-import { LanguageAppEnglish } from './en/app';
-import { LanguageFormEnglish } from './en/form';
-import { LanguageValidationEnglish } from './en/validation';
+import { TranslatorTranslationGroup } from './constants';
+import {
+    TranslatorTranslationClientGerman,
+    TranslatorTranslationFormGerman,
+    TranslatorTranslationVuecsGerman,
+    TranslatorTranslationVuelidateGerman,
+} from './de';
+import {
+    TranslatorTranslationClientEnglish,
+    TranslatorTranslationFormEnglish,
+    TranslatorTranslationVuecsEnglish,
+    TranslatorTranslationVuelidateEnglish,
+} from './en';
 import type { TranslatorInstallOptions } from './types';
 
 export function installTranslator(app: App, options: TranslatorInstallOptions = {}) {
     const store = new MemoryStore({
         data: {
             de: {
-                app: LanguageAppGerman,
-                form: LanguageFormGerman,
-                vuelidate: LanguageValidationGerman,
+                [TranslatorTranslationGroup.CLIENT]: TranslatorTranslationClientGerman,
+                [TranslatorTranslationGroup.FORM]: TranslatorTranslationFormGerman,
+                [TranslatorTranslationGroup.VUECS]: TranslatorTranslationVuecsGerman,
+                [TranslatorTranslationGroup.VUELIDATE]: TranslatorTranslationVuelidateGerman,
             },
             en: {
-                app: LanguageAppEnglish,
-                form: LanguageFormEnglish,
-                vuelidate: LanguageValidationEnglish,
+                [TranslatorTranslationGroup.CLIENT]: TranslatorTranslationClientEnglish,
+                [TranslatorTranslationGroup.FORM]: TranslatorTranslationFormEnglish,
+                [TranslatorTranslationGroup.VUECS]: TranslatorTranslationVuecsEnglish,
+                [TranslatorTranslationGroup.VUELIDATE]: TranslatorTranslationVuelidateEnglish,
             },
         },
     });

@@ -32,15 +32,15 @@ import {
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationFormKey,
+    TranslatorTranslationGroup,
     alphaWithUpperNumHyphenUnderScore,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
+    createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource,
     renderEntityAssignAction,
-    useTranslation,
-    useTranslationsForNestedValidation,
+    useTranslation, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 import { AClientRedirectUris } from './AClientRedirectUris';
@@ -151,17 +151,28 @@ export const AClientForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const validationTranslations = useTranslationsForNestedValidation($v.value);
         const submitTranslations = createFormSubmitTranslations();
+
+        const clientGroupTranslations = useTranslationsForGroup(
+            TranslatorTranslationGroup.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.NAME_HINT },
+                { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
+                { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
+                { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
+            ],
+        );
+
         const generateTranslation = useTranslation({
-            group: 'form',
-            key: 'generate.button',
+            group: TranslatorTranslationGroup.FORM,
+            key: TranslatorTranslationFormKey.GENERATE_BUTTON_TEXT,
         });
 
         const render = () => {
             const name : VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.name.value,
+                    validationMessages: validationTranslations.name.value,
                     dirty: $v.value.name.$dirty,
                     label: true,
                     labelContent: 'Name',
@@ -175,12 +186,12 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', 'Something users will recognize and trust.'),
+                h('small', clientGroupTranslations.nameHint.value),
             ];
 
             const description : VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.description.value,
+                    validationMessages: validationTranslations.description.value,
                     dirty: $v.value.description.$dirty,
                     label: true,
                     labelContent: 'Description',
@@ -194,7 +205,7 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', 'This is displayed to all users of this application.'),
+                h('small', clientGroupTranslations.descriptionHint.value),
             ];
 
             const redirectUri = [
@@ -207,14 +218,14 @@ export const AClientForm = defineComponent({
                         form.redirect_uri = value;
                     },
                 }),
-                h('small', 'URI pattern a browser can redirect to after a successful login.'),
+                h('small', clientGroupTranslations.redirectURIHint.value),
             ];
 
             const isConfidential = buildFormGroup({
-                validationMessages: validationMessages.is_confidential.value,
+                validationMessages: validationTranslations.is_confidential.value,
                 dirty: $v.value.is_confidential.$dirty,
                 label: true,
-                labelContent: 'Is Confidential?',
+                labelContent: clientGroupTranslations.isConfidential.value,
                 content: buildFormInputCheckbox({
                     value: $v.value.is_confidential.$model,
                     onChange(input) {
@@ -242,7 +253,7 @@ export const AClientForm = defineComponent({
 
             const secret : VNodeArrayChildren = [
                 buildFormGroup({
-                    validationMessages: validationMessages.secret.value,
+                    validationMessages: validationTranslations.secret.value,
                     dirty: $v.value.secret.$dirty,
                     label: true,
                     labelContent: [

@@ -10,26 +10,39 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
-import { createList, defineListEvents, defineListProps } from '../../core';
+import {
+    TranslatorTranslationGroup,
+    TranslatorTranslationVuecsKey,
+    createList,
+    defineListEvents,
+    defineListProps,
+    useTranslation,
+} from '../../core';
 
 export const AUsers = defineComponent({
     props: defineListProps<User>(),
     slots: Object as SlotsType<ListSlotsType<User>>,
     emits: defineListEvents<User>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createList({
+        const { render } = createList({
             type: `${DomainType.USER}`,
             props,
             setup: ctx,
         });
 
-        setDefaults({
-            noMore: {
-                content: 'No more users available...',
+        const translation = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationVuecsKey.NO_MORE,
+            data: {
+                name: 'users',
             },
         });
 
-        return () => render();
+        return () => render({
+            noMore: {
+                content: translation.value,
+            },
+        });
     },
 });
 

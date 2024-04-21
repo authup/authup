@@ -6,15 +6,12 @@
  */
 
 import type { LinesRecord } from 'ilingo';
+import { TranslatorTranslationFormKey } from '../constants';
 
-export const LanguageFormGerman : LinesRecord = {
-    update: {
-        button: 'Aktualisieren',
-    },
-    create: {
-        button: 'Erstellen',
-    },
-    generate: {
-        button: 'Generieren',
-    },
+export const TranslatorTranslationFormGerman : LinesRecord = {
+    [TranslatorTranslationFormKey.ADD_BUTTON_TEXT]: 'Hinzufügen',
+    [TranslatorTranslationFormKey.CREATE_BUTTON_TEXT]: 'Erstellen',
+    [TranslatorTranslationFormKey.DELETE_BUTTON_TEXT]: 'Löschen',
+    [TranslatorTranslationFormKey.GENERATE_BUTTON_TEXT]: 'Generieren',
+    [TranslatorTranslationFormKey.UPDATE_BUTTON_TEXT]: 'Aktualisieren',
 };

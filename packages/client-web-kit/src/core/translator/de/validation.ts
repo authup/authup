@@ -7,7 +7,7 @@
 
 import type { LinesRecord } from 'ilingo';
 
-export const LanguageValidationGerman : LinesRecord = {
+export const TranslatorTranslationVuelidateGerman : LinesRecord = {
     alphaNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-z-_]+',
     alphaWithUpperNumHyphenUnderscore: 'Der Eingabewert darf nur aus folgenden Zeichen bestehen: [0-9a-zA-Z-_]+',
 };

@@ -9,25 +9,38 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
-import { createList, defineListEvents, defineListProps } from '../../core';
+import {
+    TranslatorTranslationGroup,
+    TranslatorTranslationVuecsKey,
+    createList,
+    defineListEvents,
+    defineListProps,
+    useTranslation,
+} from '../../core';
 
 export const APermissions = defineComponent({
     props: defineListProps<Permission>(),
     slots: Object as SlotsType<ListSlotsType<Permission>>,
     emits: defineListEvents<Permission>(),
     setup(props, setup) {
-        const { render, setDefaults } = createList({
+        const { render } = createList({
             type: `${DomainType.PERMISSION}`,
             props,
             setup,
         });
 
-        setDefaults({
-            noMore: {
-                content: 'No more permissions available...',
+        const translation = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationVuecsKey.NO_MORE,
+            data: {
+                name: 'permissions',
             },
         });
 
-        return () => render();
+        return () => render({
+            noMore: {
+                content: translation.value,
+            },
+        });
     },
 });

@@ -10,26 +10,39 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
-import { createList, defineListEvents, defineListProps } from '../../core';
+import {
+    TranslatorTranslationGroup,
+    TranslatorTranslationVuecsKey,
+    createList,
+    defineListEvents,
+    defineListProps,
+    useTranslation,
+} from '../../core';
 
 export const AScopes = defineComponent({
     props: defineListProps<Scope>(),
     slots: Object as SlotsType<ListSlotsType<Scope>>,
     emits: defineListEvents<Scope>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createList({
+        const { render } = createList({
             type: DomainType.SCOPE,
             props,
             setup: ctx,
         });
 
-        setDefaults({
-            noMore: {
-                content: 'No more scopes available...',
+        const translation = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationVuecsKey.NO_MORE,
+            data: {
+                name: 'scopes',
             },
         });
 
-        return () => render();
+        return () => render({
+            noMore: {
+                content: translation.value,
+            },
+        });
     },
 });
 

@@ -32,11 +32,16 @@ import {
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations,
+    TranslatorTranslationFormKey, TranslatorTranslationGroup,
+    alphaWithUpperNumHyphenUnderScore,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
-    renderEntityAssignAction, useTranslation, useTranslationsForNestedValidation,
+    renderEntityAssignAction,
+    useTranslation,
+    useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -138,8 +143,8 @@ export const ARobotForm = defineComponent({
         const validationMessages = useTranslationsForNestedValidation($v.value);
         const submitTranslations = createFormSubmitTranslations();
         const generateTranslation = useTranslation({
-            group: 'form',
-            key: 'generate.button',
+            group: TranslatorTranslationGroup.FORM,
+            key: TranslatorTranslationFormKey.GENERATE_BUTTON_TEXT,
         });
 
         const render = () => {
