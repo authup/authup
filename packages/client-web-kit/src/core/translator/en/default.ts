@@ -36,6 +36,7 @@ export const TranslatorTranslationDefaultEnglish : LinesRecord = {
     [TranslatorTranslationDefaultKey.REALM]: 'realm',
     [TranslatorTranslationDefaultKey.REALMS]: 'realms',
     [TranslatorTranslationDefaultKey.ROLES]: 'roles',
+    [TranslatorTranslationDefaultKey.SCOPES]: 'scopes',
     [TranslatorTranslationDefaultKey.SECRET]: 'secret',
     [TranslatorTranslationDefaultKey.REDIRECT_URIS]: 'redirect uri(s)',
     [TranslatorTranslationDefaultKey.USERS]: 'users',

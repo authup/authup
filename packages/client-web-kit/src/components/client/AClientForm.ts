@@ -234,7 +234,7 @@ export const AClientForm = defineComponent({
                 dirty: $v.value.is_confidential.$dirty,
                 content: buildFormInputCheckbox({
                     groupClass: 'form-switch mt-3',
-                    labelContent: translationsClient.isConfidential.value,
+                    labelContent: translationsClient[TranslatorTranslationClientKey.IS_CONFIDENTIAL].value,
                     value: $v.value.is_confidential.$model,
                     onChange(input) {
                         $v.value.is_confidential.$model = input;

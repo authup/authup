@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createList,
@@ -30,11 +31,16 @@ export const AScopes = defineComponent({
             setup: ctx,
         });
 
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.SCOPES,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'scopes',
+                name: translationName,
             },
         });
 

@@ -54,6 +54,7 @@ export enum TranslatorTranslationDefaultKey {
     ROBOTS = 'robots',
     REALMS = 'realms',
     ROLES = 'roles',
+    SCOPES = 'scopes',
     SECRET = 'secret',
     REDIRECT_URIS = 'redirectUris',
     USERS = 'users',

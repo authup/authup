@@ -36,6 +36,7 @@ export const TranslatorTranslationDefaultGerman: LinesRecord = {
     [TranslatorTranslationDefaultKey.REALM]: 'Organisation',
     [TranslatorTranslationDefaultKey.REALMS]: 'Organisationen',
     [TranslatorTranslationDefaultKey.ROLES]: 'Rollen',
+    [TranslatorTranslationDefaultKey.SCOPES]: 'Bereiche',
     [TranslatorTranslationDefaultKey.SECRET]: 'Geheimnis',
     [TranslatorTranslationDefaultKey.REDIRECT_URIS]: 'Weiterleitungs-URIs',
     [TranslatorTranslationDefaultKey.USERS]: 'Benutzer',
