@@ -194,7 +194,7 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', translationsClient.nameHint.value),
+                h('small', translationsClient[TranslatorTranslationClientKey.NAME_HINT].value),
             ];
 
             const description : VNodeChild = [
@@ -213,7 +213,7 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', translationsClient.descriptionHint.value),
+                h('small', translationsClient[TranslatorTranslationClientKey.DESCRIPTION_HINT].value),
             ];
 
             const redirectUri = [
@@ -226,7 +226,7 @@ export const AClientForm = defineComponent({
                         form.redirect_uri = value;
                     },
                 }),
-                h('small', translationsClient.redirectURIHint.value),
+                h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
             ];
 
             const isConfidential = buildFormGroup({
@@ -300,7 +300,11 @@ export const AClientForm = defineComponent({
             if (!isRealmLocked.value) {
                 realm = [
                     h('hr'),
-                    h('label', { class: 'form-label' }, translationsDefault[TranslatorTranslationDefaultKey.REALM].value),
+                    h(
+                        'label',
+                        { class: 'form-label' },
+                        translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
+                    ),
                     h(ARealms, {
                         headerTitle: false,
                     }, {
