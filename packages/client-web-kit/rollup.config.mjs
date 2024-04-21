@@ -16,9 +16,5 @@ export default createConfig({
     pkg: JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), {encoding: 'utf-8'})),
     pluginsPost: [
         vue(),
-    ],
-    external: [
-        /@vue-layout\/form-controls\//i,
-        /@vue-layout\/list-controls\//i
     ]
 });

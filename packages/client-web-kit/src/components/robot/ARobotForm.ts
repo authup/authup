@@ -32,16 +32,16 @@ import {
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    TranslatorTranslationDefaultKey, TranslatorTranslationGroup,
-    alphaWithUpperNumHyphenUnderScore,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
     createEntityManager,
     createFormSubmitTranslations,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
-    renderEntityAssignAction,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -71,7 +71,9 @@ export const ARobotForm = defineComponent({
 
         const $v = useVuelidate({
             name: {
-                alphaWithUpperNumHyphenUnderScore,
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },

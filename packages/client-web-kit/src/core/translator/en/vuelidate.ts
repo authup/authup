@@ -6,8 +6,9 @@
  */
 
 import type { LinesRecord } from 'ilingo';
+import { VuelidateCustomRuleKey } from '../../vuelidate';
 
 export const TranslatorTranslationVuelidateEnglish : LinesRecord = {
-    alphaNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-z-_]+',
-    alphaWithUpperNumHyphenUnderscore: 'The input value is only allowed to consist of the following characters: [0-9a-zA-Z-_]+',
+    [VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE]: 'The input value is only allowed to consist of the following characters: [0-9a-z-_]+',
+    [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE]: 'The input value is only allowed to consist of the following characters: [0-9a-zA-Z-_]+',
 };

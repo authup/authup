@@ -35,10 +35,13 @@ import {
     TranslatorTranslationClientKey,
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    alphaWithUpperNumHyphenUnderScore,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    initFormAttributesFromSource,
     renderEntityAssignAction,
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
@@ -78,7 +81,9 @@ export const AClientForm = defineComponent({
         const $v = useVuelidate({
             name: {
                 required,
-                alphaWithUpperNumHyphenUnderScore,
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },

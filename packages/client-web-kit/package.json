@@ -45,7 +45,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "client/packages/vue"
+        "directory": "packages/client-web-kit"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"

@@ -35,12 +35,13 @@ import {
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    TranslatorTranslationDefaultKey, TranslatorTranslationGroup,
-    alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
-    createEntityManager,
-    createFormSubmitTranslations,
-    defineEntityManagerEvents, initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
+    buildFormSubmitWithTranslations,
+    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource,
+    renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -71,7 +72,9 @@ export const AScopeForm = defineComponent({
         const $v = useVuelidate({
             name: {
                 required,
-                alphaWithUpperNumHyphenUnderScore,
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },

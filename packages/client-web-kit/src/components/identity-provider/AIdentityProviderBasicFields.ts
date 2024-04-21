@@ -17,7 +17,12 @@ import {
     computed, defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { alphaNumHyphenUnderscore, extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import {
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
+    extendObjectProperties,
+    useTranslationsForNestedValidation,
+} from '../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
     props: {
@@ -41,7 +46,7 @@ export const AIdentityProviderBasicFields = defineComponent({
             },
             slug: {
                 required,
-                alphaNumHyphenUnderscore,
+                [VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE],
                 minLength: minLength(3),
                 maxLength: maxLength(36),
             },
