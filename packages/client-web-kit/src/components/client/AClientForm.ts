@@ -232,9 +232,9 @@ export const AClientForm = defineComponent({
             const isConfidential = buildFormGroup({
                 validationMessages: translationsValidation.is_confidential.value,
                 dirty: $v.value.is_confidential.$dirty,
-                label: true,
-                labelContent: translationsClient.isConfidential.value,
                 content: buildFormInputCheckbox({
+                    groupClass: 'form-switch mt-3',
+                    labelContent: translationsClient.isConfidential.value,
                     value: $v.value.is_confidential.$model,
                     onChange(input) {
                         $v.value.is_confidential.$model = input;

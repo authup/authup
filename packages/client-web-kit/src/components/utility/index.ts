@@ -8,3 +8,4 @@
 export * from './pagination';
 export * from './title';
 export * from './search';
+export * from './LanguageSwitcherDropdown';

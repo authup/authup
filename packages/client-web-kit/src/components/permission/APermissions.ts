@@ -10,6 +10,7 @@ import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createList,
@@ -29,11 +30,16 @@ export const APermissions = defineComponent({
             setup,
         });
 
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.PERMISSIONS,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'permissions',
+                name: translationName,
             },
         });
 

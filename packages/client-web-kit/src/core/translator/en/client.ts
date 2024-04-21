@@ -9,8 +9,8 @@ import type { LinesRecord } from 'ilingo';
 import { TranslatorTranslationClientKey } from '../constants';
 
 export const TranslatorTranslationClientEnglish : LinesRecord = {
-    [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust.',
-    [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'This is displayed to all users of this application.',
-    [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login.',
-    [TranslatorTranslationClientKey.IS_CONFIDENTIAL]: 'Is Confidential?',
+    [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust',
+    [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
+    [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',
+    [TranslatorTranslationClientKey.IS_CONFIDENTIAL]: 'Is confidential?',
 };
