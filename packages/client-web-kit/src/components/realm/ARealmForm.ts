@@ -23,11 +23,11 @@ import {
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
+    createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource, useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
 
@@ -99,15 +99,24 @@ export const ARealmForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-        const submitTranslations = createFormSubmitTranslations();
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
+        const translationsSubmit = createFormSubmitTranslations();
+
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+            ],
+        );
 
         const render = () => {
             const id = buildFormGroup({
-                validationMessages: validationMessages.name.value,
+                validationMessages: translationsValidation.name.value,
                 dirty: $v.value.name.$dirty,
                 label: true,
-                labelContent: 'Name',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
                     value: $v.value.name.$model,
                     onChange(input) {
@@ -140,17 +149,17 @@ export const ARealmForm = defineComponent({
                         }, [
                             h('i', { class: 'fa fa-wrench' }),
                             ' ',
-                            'Generate',
+                            translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                         ]),
                     ]),
                 ];
             }
 
             const description = buildFormGroup({
-                validationMessages: validationMessages.description.value,
+                validationMessages: translationsValidation.description.value,
                 dirty: $v.value.description.$dirty,
                 label: true,
-                labelContent: 'Description',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                 content: buildFormTextarea({
                     value: $v.value.description.$model,
                     onChange(input) {
@@ -167,7 +176,7 @@ export const ARealmForm = defineComponent({
                 busy: busy.value,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, submitTranslations);
+            }, translationsSubmit);
 
             return h('form', {
                 onSubmit($event: any) {

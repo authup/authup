@@ -5,11 +5,15 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+import { LanguageSwitcherDropdown } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, ref } from '#imports';
 import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
+    components: {
+        LanguageSwitcherDropdown,
+    },
     setup() {
         const store = useAuthStore();
         const { loggedIn, user } = storeToRefs(store);
@@ -61,34 +65,36 @@ export default defineNuxtComponent({
                         :tier="0"
                     />
 
-                    <ul
-                        v-if="loggedIn && user"
-                        class="navbar-nav nav-items navbar-gadgets"
-                    >
+                    <ul class="navbar-nav nav-items navbar-gadgets">
                         <li class="nav-item">
-                            <a
-                                href="javascript:void(0)"
-                                class="nav-link"
-                            >
-                                <span>{{ user.display_name ? user.display_name : user.name }}</span>
-                            </a>
+                            <LanguageSwitcherDropdown link-class-extra="nav-link" />
                         </li>
-                        <li class="nav-item">
-                            <NuxtLink
-                                :to="'/settings'"
-                                class="nav-link"
-                            >
-                                <i class="fa fa-cog" />
-                            </NuxtLink>
-                        </li>
-                        <li class="nav-item">
-                            <NuxtLink
-                                :to="'/logout'"
-                                class="nav-link"
-                            >
-                                <i class="fa fa-power-off" />
-                            </NuxtLink>
-                        </li>
+                        <template v-if="loggedIn && user">
+                            <li class="nav-item">
+                                <a
+                                    href="javascript:void(0)"
+                                    class="nav-link"
+                                >
+                                    <span>{{ user.display_name ? user.display_name : user.name }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <NuxtLink
+                                    :to="'/settings'"
+                                    class="nav-link"
+                                >
+                                    <i class="fa fa-cog" />
+                                </NuxtLink>
+                            </li>
+                            <li class="nav-item">
+                                <NuxtLink
+                                    :to="'/logout'"
+                                    class="nav-link"
+                                >
+                                    <i class="fa fa-power-off" />
+                                </NuxtLink>
+                            </li>
+                        </template>
                     </ul>
                 </div>
             </nav>

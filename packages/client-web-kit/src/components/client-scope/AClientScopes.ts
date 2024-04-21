@@ -11,7 +11,13 @@ import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
-    createList, defineListEvents, defineListProps,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    TranslatorTranslationVuecsKey,
+    createList,
+    defineListEvents,
+    defineListProps,
+    useTranslation,
 } from '../../core';
 
 export const AClientScopes = defineComponent({
@@ -21,20 +27,30 @@ export const AClientScopes = defineComponent({
     setup(props, ctx) {
         const {
             render,
-            setDefaults,
         } = createList({
             type: `${DomainType.CLIENT_SCOPE}`,
             props,
             setup: ctx,
         });
 
-        setDefaults({
-            noMore: {
-                content: 'No more client-scopes available...',
+        const translationClientScopes = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.CLIENT_SCOPES,
+        });
+
+        const translation = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationVuecsKey.NO_MORE,
+            data: {
+                name: translationClientScopes,
             },
         });
 
-        return () => render();
+        return () => render({
+            noMore: {
+                content: translation.value,
+            },
+        });
     },
 });
 

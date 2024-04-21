@@ -17,14 +17,14 @@ import { useTranslation as _useTranslation, injectLocale } from '@ilingo/vuelida
 import type {
     BaseValidation, Validation, ValidationArgs, ValidationRuleCollection,
 } from '@vuelidate/core';
-import type { GetContext } from 'ilingo';
+import type { GetContextReactive } from '@ilingo/vue';
 import type { Ref } from 'vue';
 
 export function injectTranslatorLocale() : Ref<string> {
     return injectLocale();
 }
 
-export function useTranslation(input: GetContext) : Ref<string> {
+export function useTranslation(input: GetContextReactive) : Ref<string> {
     return _useTranslation(input);
 }
 

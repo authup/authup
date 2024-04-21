@@ -10,26 +10,45 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
-import { createList, defineListEvents, defineListProps } from '../../core';
+import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    TranslatorTranslationVuecsKey,
+    createList,
+    defineListEvents,
+    defineListProps,
+    useTranslation,
+} from '../../core';
 
 export const AIdentityProviders = defineComponent({
     props: defineListProps<IdentityProvider>(),
     slots: Object as SlotsType<ListSlotsType<IdentityProvider>>,
     emits: defineListEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const { render, setDefaults } = createList({
+        const { render } = createList({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,
         });
 
-        setDefaults({
-            noMore: {
-                content: 'No more identity-providers available...',
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS,
+        });
+
+        const translation = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationVuecsKey.NO_MORE,
+            data: {
+                name: translationName,
             },
         });
 
-        return () => render();
+        return () => render({
+            noMore: {
+                content: translation.value,
+            },
+        });
     },
 });
 

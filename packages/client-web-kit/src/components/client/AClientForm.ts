@@ -32,14 +32,15 @@ import {
 } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
     alphaWithUpperNumHyphenUnderScore,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
+    createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource,
     renderEntityAssignAction,
-    useTranslation,
+    useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
@@ -151,20 +152,38 @@ export const AClientForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-        const submitTranslations = createFormSubmitTranslations();
-        const generateTranslation = useTranslation({
-            group: 'form',
-            key: 'generate.button',
-        });
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
+        const translationsSubmit = createFormSubmitTranslations();
+
+        const translationsClient = useTranslationsForGroup(
+            TranslatorTranslationGroup.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.NAME_HINT },
+                { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
+                { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
+                { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
+            ],
+        );
+
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
+                { key: TranslatorTranslationDefaultKey.REDIRECT_URIS },
+                { key: TranslatorTranslationDefaultKey.SECRET },
+            ],
+        );
 
         const render = () => {
             const name : VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.name.value,
+                    validationMessages: translationsValidation.name.value,
                     dirty: $v.value.name.$dirty,
                     label: true,
-                    labelContent: 'Name',
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                     content: buildFormInput({
                         value: $v.value.name.$model,
                         onChange(input) {
@@ -175,15 +194,15 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', 'Something users will recognize and trust.'),
+                h('small', translationsClient[TranslatorTranslationClientKey.NAME_HINT].value),
             ];
 
             const description : VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.description.value,
+                    validationMessages: translationsValidation.description.value,
                     dirty: $v.value.description.$dirty,
                     label: true,
-                    labelContent: 'Description',
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                     content: buildFormTextarea({
                         value: $v.value.description.$model,
                         onChange(input) {
@@ -194,12 +213,12 @@ export const AClientForm = defineComponent({
                         },
                     }),
                 }),
-                h('small', 'This is displayed to all users of this application.'),
+                h('small', translationsClient[TranslatorTranslationClientKey.DESCRIPTION_HINT].value),
             ];
 
             const redirectUri = [
                 h('label', { class: 'form-label' }, [
-                    'Redirect Uri(s)',
+                    translationsDefault[TranslatorTranslationDefaultKey.REDIRECT_URIS].value,
                 ]),
                 h(AClientRedirectUris, {
                     uri: form.redirect_uri,
@@ -207,15 +226,15 @@ export const AClientForm = defineComponent({
                         form.redirect_uri = value;
                     },
                 }),
-                h('small', 'URI pattern a browser can redirect to after a successful login.'),
+                h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
             ];
 
             const isConfidential = buildFormGroup({
-                validationMessages: validationMessages.is_confidential.value,
+                validationMessages: translationsValidation.is_confidential.value,
                 dirty: $v.value.is_confidential.$dirty,
-                label: true,
-                labelContent: 'Is Confidential?',
                 content: buildFormInputCheckbox({
+                    groupClass: 'form-switch mt-3',
+                    labelContent: translationsClient[TranslatorTranslationClientKey.IS_CONFIDENTIAL].value,
                     value: $v.value.is_confidential.$model,
                     onChange(input) {
                         $v.value.is_confidential.$model = input;
@@ -242,12 +261,10 @@ export const AClientForm = defineComponent({
 
             const secret : VNodeArrayChildren = [
                 buildFormGroup({
-                    validationMessages: validationMessages.secret.value,
+                    validationMessages: translationsValidation.secret.value,
                     dirty: $v.value.secret.$dirty,
                     label: true,
-                    labelContent: [
-                        'Secret',
-                    ],
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.SECRET].value,
                     content: buildFormInput({
                         value: $v.value.secret.$model,
                         onChange(input) {
@@ -266,7 +283,7 @@ export const AClientForm = defineComponent({
                     }, [
                         h('i', { class: 'fa fa-wrench' }),
                         ' ',
-                        generateTranslation.value,
+                        translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                     ]),
                 ]),
             ];
@@ -276,14 +293,18 @@ export const AClientForm = defineComponent({
                 submit,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, submitTranslations);
+            }, translationsSubmit);
 
             let realm : VNodeChild = [];
 
             if (!isRealmLocked.value) {
                 realm = [
                     h('hr'),
-                    h('label', { class: 'form-label' }, 'Realm'),
+                    h(
+                        'label',
+                        { class: 'form-label' },
+                        translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
+                    ),
                     h(ARealms, {
                         headerTitle: false,
                     }, {

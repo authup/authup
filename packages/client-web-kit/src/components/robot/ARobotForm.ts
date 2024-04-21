@@ -32,11 +32,16 @@ import {
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations,
+    TranslatorTranslationDefaultKey, TranslatorTranslationGroup,
+    alphaWithUpperNumHyphenUnderScore,
+    buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
     defineEntityManagerEvents,
     initFormAttributesFromSource,
-    renderEntityAssignAction, useTranslation, useTranslationsForNestedValidation,
+    renderEntityAssignAction,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -135,19 +140,26 @@ export const ARobotForm = defineComponent({
             });
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-        const submitTranslations = createFormSubmitTranslations();
-        const generateTranslation = useTranslation({
-            group: 'form',
-            key: 'generate.button',
-        });
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
+        const translationsSubmit = createFormSubmitTranslations();
+
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.HASHED },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.SECRET },
+            ],
+        );
 
         const render = () => {
             const name = buildFormGroup({
-                validationMessages: validationMessages.name.value,
+                validationMessages: translationsValidation.name.value,
                 dirty: $v.value.name.$dirty,
                 label: true,
-                labelContent: 'Name',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
                     value: $v.value.name.$model,
                     onChange(input) {
@@ -177,15 +189,15 @@ export const ARobotForm = defineComponent({
             }
 
             const secret = buildFormGroup({
-                validationMessages: validationMessages.secret.value,
+                validationMessages: translationsValidation.secret.value,
                 dirty: $v.value.secret.$dirty,
                 label: true,
                 labelContent: [
-                    'Secret',
+                    translationsDefault[TranslatorTranslationDefaultKey.SECRET].value,
                     isSecretHashed.value ? h('span', {
                         class: 'text-danger font-weight-bold ps-1',
                     }, [
-                        'Hashed',
+                        translationsDefault[TranslatorTranslationDefaultKey.HASHED].value,
                         ' ',
                         h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
                     ]) : '',
@@ -209,7 +221,7 @@ export const ARobotForm = defineComponent({
                 }, [
                     h('i', { class: 'fa fa-wrench' }),
                     ' ',
-                    generateTranslation.value,
+                    translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                 ]),
             ]);
 
@@ -218,7 +230,7 @@ export const ARobotForm = defineComponent({
                 submit,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, submitTranslations);
+            }, translationsSubmit);
 
             const leftColumn = h('div', { class: 'col' }, [
                 id,
