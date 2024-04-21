@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ClientManager } from '@authup/core-socket-kit';
 import type { App } from 'vue';
-import { hasInjectionContext, inject, provide } from 'vue';
-import type { SocketClient } from './module';
+import { hasInjectionContext } from 'vue';
+import { inject } from '../inject';
+import { provide } from '../provide';
 
-export const SocketClientSymbol = Symbol.for('AuthupSocketClient');
+export const SocketClientSymbol = Symbol.for('AuthupSocketClientManager');
 
-export function isSocketClientInjected() {
+export function isSocketClientManagerInjected() {
     if (!hasInjectionContext()) {
         return false;
     }
@@ -20,32 +22,15 @@ export function isSocketClientInjected() {
     return !!instance;
 }
 
-export function provideSocketClient(manager: SocketClient, app?: App) {
-    if (typeof app === 'undefined') {
-        if (isSocketClientInjected()) {
-            return;
-        }
-
-        provide(SocketClientSymbol, manager);
-        return;
-    }
-
-    if (
-        app._context &&
-        app._context.provides &&
-        app._context.provides[SocketClientSymbol]
-    ) {
-        return;
-    }
-
-    app.provide(SocketClientSymbol, manager);
+export function provideSocketClientManager(manager: ClientManager, app?: App) {
+    provide(SocketClientSymbol, manager, app);
 }
 
-export function injectSocketClient() : SocketClient {
-    const manager = inject(SocketClientSymbol);
+export function injectSocketClientManager() : ClientManager {
+    const manager = inject<ClientManager>(SocketClientSymbol);
     if (!manager) {
-        throw new Error('The Socket Client is not provided.');
+        throw new Error('The socket client manager has not been injected in the app context.');
     }
 
-    return manager as SocketClient;
+    return manager;
 }
