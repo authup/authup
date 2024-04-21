@@ -9,7 +9,7 @@ import type { Ref } from 'vue';
 import {
     computed, defineComponent, h, ref,
 } from 'vue';
-import { TranslatorTranslationFormKey, TranslatorTranslationGroup, useTranslation } from '../../core';
+import { TranslatorTranslationDefaultKey, TranslatorTranslationGroup, useTranslation } from '../../core';
 import { AClientRedirectUrisItem } from './AClientRedirectUrisItem';
 
 export const AClientRedirectUris = defineComponent({
@@ -42,8 +42,8 @@ export const AClientRedirectUris = defineComponent({
         });
 
         const addTranslation = useTranslation({
-            group: TranslatorTranslationGroup.FORM,
-            key: TranslatorTranslationFormKey.ADD_BUTTON_TEXT,
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.ADD,
         });
 
         const render = () => {

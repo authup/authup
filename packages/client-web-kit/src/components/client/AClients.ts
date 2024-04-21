@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { Client } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createList,
     defineListEvents, defineListProps, useTranslation,
 } from '../../core';
@@ -26,11 +27,16 @@ export const AClients = defineComponent({
             setup: ctx,
         });
 
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationDefaultKey.CLIENTS,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'clients',
+                name: translationName,
             },
         });
 

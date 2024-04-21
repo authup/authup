@@ -20,7 +20,7 @@ import {
 import type { DomainType } from '@authup/core-kit';
 import { useDomainAPI } from '@authup/core-kit';
 import {
-    TranslatorTranslationFormKey, TranslatorTranslationGroup, injectAPIClient, useTranslation, wrapFnWithBusyState,
+    TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectAPIClient, useTranslation, wrapFnWithBusyState,
 } from '../core';
 
 enum ElementType {
@@ -82,8 +82,8 @@ const AEntityDelete = defineComponent({
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.FORM,
-            key: TranslatorTranslationFormKey.DELETE_BUTTON_TEXT,
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.DELETE,
         });
 
         const render = () => {

@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createList,
@@ -30,11 +31,16 @@ export const AIdentityProviders = defineComponent({
             setup: ctx,
         });
 
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'identity-providers',
+                name: translationName,
             },
         });
 

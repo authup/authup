@@ -6,6 +6,6 @@
  */
 
 export * from './client';
-export * from './form';
-export * from './validation';
+export * from './default';
+export * from './vuelidate';
 export * from './vuecs';

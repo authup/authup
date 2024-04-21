@@ -11,13 +11,13 @@ import type { App } from 'vue';
 import { TranslatorTranslationGroup } from './constants';
 import {
     TranslatorTranslationClientGerman,
-    TranslatorTranslationFormGerman,
+    TranslatorTranslationDefaultGerman,
     TranslatorTranslationVuecsGerman,
     TranslatorTranslationVuelidateGerman,
 } from './de';
 import {
     TranslatorTranslationClientEnglish,
-    TranslatorTranslationFormEnglish,
+    TranslatorTranslationDefaultEnglish,
     TranslatorTranslationVuecsEnglish,
     TranslatorTranslationVuelidateEnglish,
 } from './en';
@@ -28,13 +28,13 @@ export function installTranslator(app: App, options: TranslatorInstallOptions = 
         data: {
             de: {
                 [TranslatorTranslationGroup.CLIENT]: TranslatorTranslationClientGerman,
-                [TranslatorTranslationGroup.FORM]: TranslatorTranslationFormGerman,
+                [TranslatorTranslationGroup.DEFAULT]: TranslatorTranslationDefaultGerman,
                 [TranslatorTranslationGroup.VUECS]: TranslatorTranslationVuecsGerman,
                 [TranslatorTranslationGroup.VUELIDATE]: TranslatorTranslationVuelidateGerman,
             },
             en: {
                 [TranslatorTranslationGroup.CLIENT]: TranslatorTranslationClientEnglish,
-                [TranslatorTranslationGroup.FORM]: TranslatorTranslationFormEnglish,
+                [TranslatorTranslationGroup.DEFAULT]: TranslatorTranslationDefaultEnglish,
                 [TranslatorTranslationGroup.VUECS]: TranslatorTranslationVuecsEnglish,
                 [TranslatorTranslationGroup.VUELIDATE]: TranslatorTranslationVuelidateEnglish,
             },

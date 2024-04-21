@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createList,
     defineListEvents, defineListProps, useTranslation,
 } from '../../core';
@@ -26,11 +27,16 @@ export const ARobots = defineComponent({
             setup: ctx,
         });
 
+        const translationName = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationDefaultKey.ROBOTS,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'robots',
+                name: translationName,
             },
         });
 

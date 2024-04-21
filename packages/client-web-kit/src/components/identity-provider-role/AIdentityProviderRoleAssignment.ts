@@ -15,9 +15,9 @@ import {
 import type { IdentityProviderRole, Role } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import {
-    createEntityManager,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    createEntityManager, defineEntityManagerEvents, initFormAttributesFromSource, useTranslation,
     useTranslationsForBaseValidation,
 } from '../../core';
 
@@ -78,6 +78,10 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         }
 
         const validationMessages = useTranslationsForBaseValidation($v.value.external_id);
+        const translationExternalID = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.EXTERNAL_ID,
+        });
 
         const render = () => {
             let displayButton : VNodeArrayChildren = [];
@@ -181,7 +185,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                     }, [
                         buildFormGroup({
                             label: true,
-                            labelContent: 'External ID',
+                            labelContent: translationExternalID.value,
                             validationMessages: validationMessages.value,
                             dirty: $v.value.external_id.$dirty,
                             content: buildFormInput({

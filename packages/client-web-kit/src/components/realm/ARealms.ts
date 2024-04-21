@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createList,
@@ -30,11 +31,16 @@ export const ARealms = defineComponent({
             setup: ctx,
         });
 
+        const translationsName = useTranslation({
+            group: TranslatorTranslationGroup.VUECS,
+            key: TranslatorTranslationDefaultKey.REALMS,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'realms',
+                name: translationsName,
             },
         });
 

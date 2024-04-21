@@ -6,7 +6,7 @@
  */
 
 export enum TranslatorTranslationGroup {
-    FORM = 'form',
+    DEFAULT = 'default',
 
     CLIENT = 'authupClient',
 
@@ -25,13 +25,33 @@ export enum TranslatorTranslationClientKey {
     IS_CONFIDENTIAL = 'isConfidential',
 }
 
-export enum TranslatorTranslationFormKey {
-    ADD_BUTTON_TEXT = 'addButtonText',
-    CREATE_BUTTON_TEXT = 'createButtonText',
-    DELETE_BUTTON_TEXT = 'deleteButtonText',
-    GENERATE_BUTTON_TEXT = 'generateButtonText',
-    UPDATE_BUTTON_TEXT = 'updateButtonText',
+export enum TranslatorTranslationDefaultKey {
+    ADD = 'add',
+    CREATE = 'create',
+    DELETE = 'delete',
+    GENERATE = 'generate',
+    UPDATE = 'update',
 
-    NAME_LABEL = 'nameLabel',
-    DESCRIPTION_LABEL = 'descriptionLabel',
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+
+    LOCKED = 'locked',
+    NOT_LOCKED = 'notLocked',
+
+    CLIENT = 'client',
+    CLIENTS = 'clients',
+    CLIENT_SCOPES = 'clientScopes',
+    DISPLAY_NAME = 'displayName',
+    EMAIL = 'email',
+    EXTERNAL_ID = 'externalId',
+    HASHED = 'hashed',
+    IDENTITY_PROVIDERS = 'identityProviders',
+    NAME = 'name',
+    DESCRIPTION = 'description',
+    REALM = 'realm',
+    ROBOTS = 'robots',
+    REALMS = 'realms',
+    ROLES = 'roles',
+    SECRET = 'secret',
+    REDIRECT_URIS = 'redirectUris',
 }

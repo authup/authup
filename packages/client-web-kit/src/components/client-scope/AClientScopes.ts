@@ -11,6 +11,7 @@ import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import type { ListSlotsType } from '../../core';
 import {
+    TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createList,
@@ -32,11 +33,16 @@ export const AClientScopes = defineComponent({
             setup: ctx,
         });
 
+        const translationClientScopes = useTranslation({
+            group: TranslatorTranslationGroup.DEFAULT,
+            key: TranslatorTranslationDefaultKey.CLIENT_SCOPES,
+        });
+
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: {
-                name: 'client-scopes',
+                name: translationClientScopes,
             },
         });
 

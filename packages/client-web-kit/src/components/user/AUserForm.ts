@@ -21,11 +21,11 @@ import {
 } from 'vue';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
-    buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
-    renderEntityAssignAction,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup, buildFormSubmitWithTranslations,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents, initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
@@ -138,15 +138,28 @@ export const AUserForm = defineComponent({
             displayNameChanged.value = value.length !== 0;
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-        const submitTranslations = createFormSubmitTranslations();
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
+        const translationsSubmit = createFormSubmitTranslations();
+
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.ACTIVE },
+                { key: TranslatorTranslationDefaultKey.INACTIVE },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.LOCKED },
+                { key: TranslatorTranslationDefaultKey.NOT_LOCKED },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+            ],
+        );
 
         const render = () => {
             const name = buildFormGroup({
-                validationMessages: validationMessages.name.value,
+                validationMessages: translationsValidation.name.value,
                 dirty: $v.value.name.$dirty,
                 label: true,
-                labelContent: 'Name',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
                     value: $v.value.name.$model,
                     onChange(input) {
@@ -160,10 +173,10 @@ export const AUserForm = defineComponent({
             });
 
             const displayName = buildFormGroup({
-                validationMessages: validationMessages.display_name.value,
+                validationMessages: translationsValidation.display_name.value,
                 dirty: $v.value.display_name.$dirty,
                 label: true,
-                labelContent: 'Display Name',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
                 content: buildFormInput({
                     value: $v.value.display_name.$model,
                     onChange(input) {
@@ -174,10 +187,10 @@ export const AUserForm = defineComponent({
             });
 
             const email = buildFormGroup({
-                validationMessages: validationMessages.email.value,
+                validationMessages: translationsValidation.email.value,
                 dirty: $v.value.email.$dirty,
                 label: true,
-                labelContent: 'Email',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.EMAIL].value,
                 content: buildFormInput({
                     value: $v.value.email.$model,
                     props: {
@@ -203,7 +216,10 @@ export const AUserForm = defineComponent({
                                     'text-warning': !form.name_locked,
                                     'text-success': form.name_locked,
                                 },
-                            }, [form.name_locked ? 'locked' : 'not locked']), // todo: add translation
+                            }, [form.name_locked ?
+                                translationsDefault[TranslatorTranslationDefaultKey.LOCKED].value :
+                                translationsDefault[TranslatorTranslationDefaultKey.NOT_LOCKED].value,
+                            ]), // todo: add translation
                             value: form.name_locked,
                             onChange(input) {
                                 form.name_locked = input;
@@ -222,7 +238,10 @@ export const AUserForm = defineComponent({
                                         'text-danger': !form.active,
                                         'text-success': form.active,
                                     },
-                                }, [form.active ? 'active' : 'inactive']),
+                                }, [form.active ?
+                                    translationsDefault[TranslatorTranslationDefaultKey.ACTIVE].value :
+                                    translationsDefault[TranslatorTranslationDefaultKey.INACTIVE].value,
+                                ]),
                                 value: form.active,
                                 onChange(input) {
                                     form.active = input;
@@ -242,7 +261,7 @@ export const AUserForm = defineComponent({
                 busy: busy.value,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, submitTranslations);
+            }, translationsSubmit);
 
             const leftColumn = h('div', { class: 'col' }, [
                 name,

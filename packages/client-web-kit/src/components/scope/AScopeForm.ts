@@ -35,11 +35,11 @@ import {
 } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
+    TranslatorTranslationDefaultKey, TranslatorTranslationGroup,
     alphaWithUpperNumHyphenUnderScore, buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations,
-    defineEntityManagerEvents,
-    initFormAttributesFromSource,
-    renderEntityAssignAction,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents, initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
@@ -132,16 +132,25 @@ export const AScopeForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-        const submitTranslations = createFormSubmitTranslations();
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
+        const translationsSubmit = createFormSubmitTranslations();
+
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
+            ],
+        );
 
         const render = () => {
             const name: VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.name.value,
+                    validationMessages: translationsValidation.name.value,
                     dirty: $v.value.name.$dirty,
                     label: true,
-                    labelContent: 'Name',
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                     content: buildFormInput({
                         value: $v.value.name.$model,
                         onChange(input) {
@@ -156,10 +165,10 @@ export const AScopeForm = defineComponent({
 
             const description :VNodeChild = [
                 buildFormGroup({
-                    validationMessages: validationMessages.description.value,
+                    validationMessages: translationsValidation.description.value,
                     dirty: $v.value.description.$dirty,
                     label: true,
-                    labelContent: 'Description',
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                     content: buildFormTextarea({
                         value: $v.value.description.$model,
                         onChange(input) {
@@ -177,7 +186,7 @@ export const AScopeForm = defineComponent({
                 submit,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, submitTranslations);
+            }, translationsSubmit);
 
             let realm : VNodeArrayChildren = [];
 
@@ -187,7 +196,7 @@ export const AScopeForm = defineComponent({
             ) {
                 realm = [
                     h('hr'),
-                    h('label', { class: 'form-label' }, 'Realm'),
+                    h('label', { class: 'form-label' }, translationsDefault[TranslatorTranslationDefaultKey.REALM].value),
                     h(ARealms, {
                         headerTitle: false,
                     }, {

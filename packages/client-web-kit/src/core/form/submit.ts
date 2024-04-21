@@ -8,7 +8,7 @@
 import type { FormSubmitOptionsInput } from '@vuecs/form-controls';
 import { buildFormSubmit } from '@vuecs/form-controls';
 import type { Ref, VNodeChild } from 'vue';
-import { TranslatorTranslationFormKey, TranslatorTranslationGroup, useTranslation } from '../translator';
+import { TranslatorTranslationDefaultKey, TranslatorTranslationGroup, useTranslation } from '../translator';
 
 type FormSubmitTranslations = {
     createText: Ref<string>,
@@ -17,12 +17,12 @@ type FormSubmitTranslations = {
 
 export function createFormSubmitTranslations() : FormSubmitTranslations {
     const updateText = useTranslation({
-        group: TranslatorTranslationGroup.FORM,
-        key: TranslatorTranslationFormKey.UPDATE_BUTTON_TEXT,
+        group: TranslatorTranslationGroup.DEFAULT,
+        key: TranslatorTranslationDefaultKey.UPDATE,
     });
     const createText = useTranslation({
-        group: TranslatorTranslationGroup.FORM,
-        key: TranslatorTranslationFormKey.CREATE_BUTTON_TEXT,
+        group: TranslatorTranslationGroup.DEFAULT,
+        key: TranslatorTranslationDefaultKey.CREATE,
     });
 
     return {
