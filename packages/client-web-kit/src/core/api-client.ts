@@ -7,45 +7,20 @@
 
 import type { APIClient } from '@authup/core-kit';
 import type { App } from 'vue';
-import { hasInjectionContext, inject, provide } from 'vue';
+import { inject } from './inject';
+import { provide } from './provide';
 
 export const APIClientSymbol = Symbol.for('AuthupAPIClient');
 
-export function isAPIClientInjected() {
-    if (!hasInjectionContext()) {
-        return false;
-    }
-
-    const instance = inject(APIClientSymbol);
-    return !!instance;
-}
-
 export function provideAPIClient(client: APIClient, app?: App) {
-    if (typeof app === 'undefined') {
-        if (isAPIClientInjected()) {
-            return;
-        }
-
-        provide(APIClientSymbol, client);
-        return;
-    }
-
-    if (
-        app._context &&
-        app._context.provides &&
-        app._context.provides[APIClientSymbol]
-    ) {
-        return;
-    }
-
-    app.provide(APIClientSymbol, client);
+    provide(APIClientSymbol, client, app);
 }
 
 export function injectAPIClient() {
-    const instance = inject(APIClientSymbol);
+    const instance = inject<APIClient>(APIClientSymbol);
     if (!instance) {
-        throw new Error('The APIClient is not set.');
+        throw new Error('The api client has not been injected.');
     }
 
-    return instance as APIClient;
+    return instance;
 }

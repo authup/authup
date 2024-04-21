@@ -5,7 +5,7 @@ import type { Options } from './types';
 import {
     installTranslator,
     provideAPIClient,
-    provideSocketClient,
+    provideSocketClientManager,
     provideStore,
 } from './core';
 
@@ -16,8 +16,8 @@ export function install(app: App, options?: Options) : void {
         provideAPIClient(options.apiClient, app);
     }
 
-    if (options.socketClient) {
-        provideSocketClient(options.socketClient, app);
+    if (options.socketClientManager) {
+        provideSocketClientManager(options.socketClientManager, app);
     }
 
     if (options.store) {

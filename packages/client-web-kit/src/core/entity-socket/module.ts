@@ -10,22 +10,22 @@ import {
     DomainEventSubscriptionName,
     REALM_MASTER_NAME,
     buildDomainChannelName,
-    buildDomainEventFullName, buildDomainEventSubscriptionFullName,
+    buildDomainEventFullName,
+    buildDomainEventSubscriptionFullName,
 } from '@authup/core-kit';
 import type {
     DomainEntity,
     DomainEventContext,
     DomainEventSubscriptionFullName,
     DomainType,
-    SocketServerToClientEventContext,
 } from '@authup/core-kit';
-import type { Socket } from 'socket.io-client';
+import type { STCEventContext } from '@authup/core-socket-kit';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
 import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
-import { injectSocketClient, isSocketClientInjected } from '../socket-client';
+import { injectSocketClientManager, isSocketClientManagerInjected } from '../socket-client';
 
 type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 
@@ -35,7 +35,7 @@ export function createEntitySocket<
 >(
     ctx: EntitySocketContext<A, T>,
 ) : EntitySocket {
-    if (!isSocketClientInjected()) {
+    if (!isSocketClientManagerInjected()) {
         return {
             mount() {
 
@@ -69,7 +69,7 @@ export function createEntitySocket<
 
     const lockId = computed(() => (isRef(ctx.lockId) ? ctx.lockId.value : ctx.lockId));
 
-    const processEvent = (event: SocketServerToClientEventContext<DomainEventContext<A>>) : boolean => {
+    const processEvent = (event: STCEventContext<DomainEventContext<A>>) : boolean => {
         if (
             ctx.processEvent &&
             !ctx.processEvent(event, realmId.value)
@@ -92,7 +92,7 @@ export function createEntitySocket<
         return event.data.id !== lockId.value;
     };
 
-    const handleCreated = (event: SocketServerToClientEventContext<DomainEventContext<A>>) => {
+    const handleCreated = (event: STCEventContext<DomainEventContext<A>>) => {
         if (!processEvent(event)) {
             return;
         }
@@ -102,7 +102,7 @@ export function createEntitySocket<
         }
     };
 
-    const handleUpdated = (event: SocketServerToClientEventContext<DomainEventContext<A>>) => {
+    const handleUpdated = (event: STCEventContext<DomainEventContext<A>>) => {
         if (!processEvent(event)) {
             return;
         }
@@ -111,7 +111,7 @@ export function createEntitySocket<
             ctx.onUpdated(event.data as T);
         }
     };
-    const handleDeleted = (event: SocketServerToClientEventContext<DomainEventContext<A>>) => {
+    const handleDeleted = (event: STCEventContext<DomainEventContext<A>>) => {
         if (!processEvent(event)) {
             return;
         }
@@ -121,17 +121,16 @@ export function createEntitySocket<
         }
     };
 
-    const socketManager = injectSocketClient();
-    const useSocket = () : Socket => socketManager.forRealm(realmId.value);
     let mounted = false;
-    const mount = () => {
+    const mount = async () => {
         if ((ctx.target && !targetId.value) || mounted) {
             return;
         }
 
         mounted = true;
 
-        const socket = useSocket();
+        const socketManager = injectSocketClientManager();
+        const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
         let event : DomainEventSubscriptionFullName | undefined;
         if (ctx.buildSubscribeEventName) {
@@ -170,14 +169,15 @@ export function createEntitySocket<
         }
     };
 
-    const unmount = () => {
+    const unmount = async () => {
         if ((ctx.target && !targetId.value) || !mounted) {
             return;
         }
 
         mounted = false;
 
-        const socket = useSocket();
+        const socketManager = injectSocketClientManager();
+        const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
         let event : DomainEventSubscriptionFullName | undefined;
         if (ctx.buildUnsubscribeEventName) {

@@ -6,6 +6,8 @@
  */
 
 export * from './api-client';
+export * from './inject';
+export * from './provide';
 export * from './entity-assign-action';
 export * from './list';
 export * from './entity-manager';

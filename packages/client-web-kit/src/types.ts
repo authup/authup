@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ClientManager } from '@authup/core-socket-kit';
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
 import type { APIClient } from '@authup/core-kit';
 import type {
@@ -62,13 +63,13 @@ import type {
     AUserRoleAssignments,
     AUsers,
 } from './components';
-import type { SocketClient, Store } from './core';
+import type { Store } from './core';
 
 export type Options = {
     storeManager?: StoreManagerOptions,
     components?: boolean | string[],
     apiClient?: APIClient,
-    socketClient?: SocketClient,
+    socketClientManager?: ClientManager,
     store?: Store,
     translatorLocale?: string
 };
