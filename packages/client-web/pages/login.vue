@@ -1,4 +1,5 @@
 <script lang="ts">
+import { IVuelidate } from '@ilingo/vuelidate';
 import { isClientError } from '@hapic/oauth2';
 import type { BuildInput } from 'rapiq';
 import {
@@ -9,7 +10,6 @@ import {
     ASearch,
     ATitle,
     injectAPIClient,
-    useTranslationsForBaseValidation,
 } from '@authup/client-web-kit';
 import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
@@ -34,6 +34,7 @@ export default defineNuxtComponent({
         APagination,
         ASearch,
         ATitle,
+        IVuelidate,
         LoginSVG,
         AIdentityProviders,
         AIdentityProviderIcon,
@@ -126,13 +127,8 @@ export default defineNuxtComponent({
             id,
         );
 
-        const nameMessages = useTranslationsForBaseValidation(vuelidate.value.name);
-        const passwordMessages = useTranslationsForBaseValidation(vuelidate.value.password);
-
         return {
             vuelidate,
-            nameMessages,
-            passwordMessages,
             form,
             submit,
             busy,
@@ -156,34 +152,42 @@ export default defineNuxtComponent({
         <form @submit.prevent="submit">
             <div class="row">
                 <div class="col-8">
-                    <VCFormGroup
-                        :dirty="vuelidate.name.$dirty"
-                        :validation-messages="nameMessages"
-                    >
-                        <template #label>
-                            Name
+                    <IVuelidate :validation="vuelidate.name">
+                        <template #default="props">
+                            <VCFormGroup
+                                :validation-messages="props.data"
+                                :validation-severity="props.severity"
+                            >
+                                <template #label>
+                                    Name
+                                </template>
+                                <template #default>
+                                    <VCFormInput
+                                        v-model="vuelidate.name.$model"
+                                    />
+                                </template>
+                            </VCFormGroup>
                         </template>
-                        <template #default>
-                            <VCFormInput
-                                v-model="vuelidate.name.$model"
-                            />
-                        </template>
-                    </VCFormGroup>
+                    </IVuelidate>
 
-                    <VCFormGroup
-                        :dirty="vuelidate.password.$dirty"
-                        :validation-messages="passwordMessages"
-                    >
-                        <template #label>
-                            Password
+                    <IVuelidate :validation="vuelidate.password">
+                        <template #default="props">
+                            <VCFormGroup
+                                :validation-messages="props.data"
+                                :validation-severity="props.severity"
+                            >
+                                <template #label>
+                                    Password
+                                </template>
+                                <template #default>
+                                    <VCFormInput
+                                        v-model="vuelidate.password.$model"
+                                        type="password"
+                                    />
+                                </template>
+                            </VCFormGroup>
                         </template>
-                        <template #default>
-                            <VCFormInput
-                                v-model="vuelidate.password.$model"
-                                type="password"
-                            />
-                        </template>
-                    </VCFormGroup>
+                    </IVuelidate>
 
                     <VCFormSubmit
                         v-model="busy"
