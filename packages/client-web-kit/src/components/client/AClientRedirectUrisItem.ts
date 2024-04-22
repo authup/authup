@@ -13,7 +13,7 @@ import {
 import {
     defineComponent, h, nextTick, reactive,
 } from 'vue';
-import { useTranslationsForNestedValidation } from '../../core';
+import { getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AClientRedirectUrisItem = defineComponent({
     props: {
@@ -44,7 +44,7 @@ export const AClientRedirectUrisItem = defineComponent({
 
         const render = () => buildFormGroup({
             validationMessages: validationMessages.url.value,
-            dirty: $v.value.url.$dirty,
+            validationSeverity: getVuelidateSeverity($v.value.url),
             label: false,
             content: buildFormInput({
                 value: $v.value.url.$model,

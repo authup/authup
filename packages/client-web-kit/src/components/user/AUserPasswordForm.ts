@@ -17,7 +17,7 @@ import {
 } from '@vuecs/form-controls';
 import {
     buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
+    createFormSubmitTranslations, getVuelidateSeverity,
     injectAPIClient,
     useTranslationsForNestedValidation,
     wrapFnWithBusyState,
@@ -76,7 +76,7 @@ export const AUserPasswordForm = defineComponent({
         const render = () => {
             const password = buildFormGroup({
                 validationMessages: validationMessages.password.value,
-                dirty: $v.value.password.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.password),
                 label: true,
                 labelContent: 'Password',
                 content: buildFormInput({
@@ -93,7 +93,7 @@ export const AUserPasswordForm = defineComponent({
 
             const passwordRepeat = buildFormGroup({
                 validationMessages: validationMessages.password_repeat.value,
-                dirty: $v.value.password_repeat.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.password_repeat),
                 label: true,
                 labelContent: 'Password repeat',
                 content: buildFormInput({

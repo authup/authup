@@ -40,8 +40,8 @@ import {
     createEntityManager,
     createFormSubmitTranslations,
     defineEntityManagerEvents,
-    initFormAttributesFromSource,
-    renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
+    getVuelidateSeverity,
+    initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -159,7 +159,7 @@ export const ARobotForm = defineComponent({
         const render = () => {
             const name = buildFormGroup({
                 validationMessages: translationsValidation.name.value,
-                dirty: $v.value.name.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
@@ -192,7 +192,7 @@ export const ARobotForm = defineComponent({
 
             const secret = buildFormGroup({
                 validationMessages: translationsValidation.secret.value,
-                dirty: $v.value.secret.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.secret),
                 label: true,
                 labelContent: [
                     translationsDefault[TranslatorTranslationDefaultKey.SECRET].value,

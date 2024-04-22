@@ -40,8 +40,8 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource,
-    renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
+    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity,
+    initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -151,7 +151,7 @@ export const AScopeForm = defineComponent({
             const name: VNodeChild = [
                 buildFormGroup({
                     validationMessages: translationsValidation.name.value,
-                    dirty: $v.value.name.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.name),
                     label: true,
                     labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                     content: buildFormInput({
@@ -169,7 +169,7 @@ export const AScopeForm = defineComponent({
             const description :VNodeChild = [
                 buildFormGroup({
                     validationMessages: translationsValidation.description.value,
-                    dirty: $v.value.description.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.description),
                     label: true,
                     labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                     content: buildFormTextarea({

@@ -15,7 +15,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapUserFields = defineComponent({
     props: {
@@ -63,7 +63,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
         return () => [
             buildFormGroup({
                 validationMessages: validationMessages.user_filter.value,
-                dirty: $v.value.user_filter.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user_filter),
                 label: true,
                 labelContent: 'Filter',
                 content: buildFormInput({
@@ -78,7 +78,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.user_base_dn.value,
-                dirty: $v.value.user_base_dn.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user_base_dn),
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({
@@ -90,7 +90,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.user_name_attribute.value,
-                dirty: $v.value.user_name_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user_name_attribute),
                 label: true,
                 labelContent: 'Name Attribute',
                 content: buildFormInput({
@@ -102,7 +102,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.user_mail_attribute.value,
-                dirty: $v.value.user_mail_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user_mail_attribute),
                 label: true,
                 labelContent: 'Mail Attribute',
                 content: buildFormInput({
@@ -114,7 +114,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.user_display_name_attribute.value,
-                dirty: $v.value.user_display_name_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user_display_name_attribute),
                 label: true,
                 labelContent: 'DisplayName Attribute',
                 content: buildFormInput({

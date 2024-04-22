@@ -16,7 +16,7 @@ import {
     defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
 
 export const AIdentityProviderOAuth2EndpointFields = defineComponent({
@@ -84,7 +84,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                 discoveryNode,
                 buildFormGroup({
                     validationMessages: validationMessages.token_url.value,
-                    dirty: $v.value.token_url.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.token_url),
                     label: true,
                     labelContent: 'Token',
                     content: buildFormInput({
@@ -99,7 +99,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                 }),
                 buildFormGroup({
                     validationMessages: validationMessages.authorize_url.value,
-                    dirty: $v.value.authorize_url.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.authorize_url),
                     label: true,
                     labelContent: 'Authorize',
                     content: buildFormInput({
@@ -114,7 +114,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                 }),
                 buildFormGroup({
                     validationMessages: validationMessages.user_info_url.value,
-                    dirty: $v.value.user_info_url.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.user_info_url),
                     label: true,
                     labelContent: 'UserInfo',
                     content: buildFormInput({

@@ -18,7 +18,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
     props: {
@@ -72,7 +72,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
         return () => [
             buildFormGroup({
                 validationMessages: validationMessages.url.value,
-                dirty: $v.value.url.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.url),
                 label: true,
                 labelContent: 'URL',
                 content: buildFormInput({
@@ -87,7 +87,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.timeout.value,
-                dirty: $v.value.timeout.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.timeout),
                 label: true,
                 labelContent: 'Timeout',
                 content: buildFormInput({
@@ -105,7 +105,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.start_tls.value,
-                dirty: $v.value.start_tls.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.start_tls),
                 label: true,
                 labelContent: 'StartTLS',
                 content: buildFormInputCheckbox({
@@ -119,7 +119,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.base_dn.value,
-                dirty: $v.value.base_dn.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.base_dn),
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({

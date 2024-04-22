@@ -24,8 +24,8 @@ import {
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations, defineEntityManagerEvents, initFormAttributesFromSource, useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
+    useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const ARoleForm = defineComponent({
@@ -100,7 +100,7 @@ export const ARoleForm = defineComponent({
         const render = () => {
             const name = buildFormGroup({
                 validationMessages: translationsValidation.name.value,
-                dirty: $v.value.name.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
@@ -113,7 +113,7 @@ export const ARoleForm = defineComponent({
 
             const description = buildFormGroup({
                 validationMessages: translationsValidation.description.value,
-                dirty: $v.value.description.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.description),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                 content: buildFormTextarea({

@@ -21,7 +21,7 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     extendObjectProperties,
-    useTranslationsForNestedValidation,
+    getVuelidateSeverity, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
@@ -99,7 +99,7 @@ export const AIdentityProviderBasicFields = defineComponent({
         return () => {
             const name = buildFormGroup({
                 validationMessages: validationMessages.name.value,
-                dirty: $v.value.name.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
                 labelContent: 'Name',
                 content: buildFormInput({
@@ -112,7 +112,7 @@ export const AIdentityProviderBasicFields = defineComponent({
 
             const slug = buildFormGroup({
                 validationMessages: validationMessages.slug.value,
-                dirty: $v.value.slug.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.slug),
                 label: true,
                 labelContent: 'Slug',
                 content: buildFormInput({

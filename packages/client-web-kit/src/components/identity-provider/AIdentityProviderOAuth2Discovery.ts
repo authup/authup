@@ -15,7 +15,7 @@ import type { VNodeChild } from 'vue';
 import {
     defineComponent, h, reactive, ref,
 } from 'vue';
-import { useTranslationsForBaseValidation } from '../../core';
+import { getVuelidateSeverity, useTranslationsForBaseValidation } from '../../core';
 
 export const AIdentityProviderOAuth2Discovery = defineComponent({
     emits: ['lookup', 'failed'],
@@ -73,7 +73,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
             return [
                 buildFormGroup({
                     validationMessages: validationMessages.value,
-                    dirty: $v.value.url.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.url),
                     labelContent: 'Discovery',
                     content: buildFormInput({
                         class: {

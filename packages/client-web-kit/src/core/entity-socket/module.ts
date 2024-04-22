@@ -25,7 +25,7 @@ import {
 } from 'vue';
 import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
-import { injectSocketClientManager, isSocketClientManagerInjected } from '../socket-client';
+import { injectSocketClientManager, isSocketClientManagerInjected } from '../socket-client-manager';
 
 type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 

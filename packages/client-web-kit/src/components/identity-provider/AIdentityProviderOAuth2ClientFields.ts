@@ -16,7 +16,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderOAuth2ClientFields = defineComponent({
     props: {
@@ -59,7 +59,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         return () => [
             buildFormGroup({
                 validationMessages: validationMessages.client_id.value,
-                dirty: $v.value.client_id.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.client_id),
                 label: true,
                 labelContent: 'Client ID',
                 content: buildFormInput({
@@ -71,7 +71,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.client_secret.value,
-                dirty: $v.value.client_secret.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.client_secret),
                 label: true,
                 labelContent: 'Client Secret',
                 content: buildFormInput({

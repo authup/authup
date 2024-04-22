@@ -17,8 +17,8 @@ import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    createEntityManager, defineEntityManagerEvents, initFormAttributesFromSource, useTranslation,
-    useTranslationsForBaseValidation,
+    createEntityManager, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
+    useTranslation, useTranslationsForBaseValidation,
 } from '../../core';
 
 export const AIdentityProviderRoleAssignment = defineComponent({
@@ -187,7 +187,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                             label: true,
                             labelContent: translationExternalID.value,
                             validationMessages: validationMessages.value,
-                            dirty: $v.value.external_id.$dirty,
+                            validationSeverity: getVuelidateSeverity($v.value.external_id),
                             content: buildFormInput({
                                 value: $v.value.external_id.$model,
                                 onChange(input) {

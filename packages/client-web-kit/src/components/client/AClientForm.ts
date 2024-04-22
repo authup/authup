@@ -30,7 +30,6 @@ import {
     buildFormInputCheckbox,
     buildFormTextarea,
 } from '@vuecs/form-controls';
-import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationClientKey,
     TranslatorTranslationDefaultKey,
@@ -41,11 +40,13 @@ import {
     createEntityManager,
     createFormSubmitTranslations,
     defineEntityManagerEvents,
+    getVuelidateSeverity,
     initFormAttributesFromSource,
     renderEntityAssignAction,
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
+import { useIsEditing, useUpdatedAt } from '../../composables';
 import { ARealms } from '../realm';
 import { AClientRedirectUris } from './AClientRedirectUris';
 
@@ -186,7 +187,7 @@ export const AClientForm = defineComponent({
             const name : VNodeChild = [
                 buildFormGroup({
                     validationMessages: translationsValidation.name.value,
-                    dirty: $v.value.name.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.name),
                     label: true,
                     labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                     content: buildFormInput({
@@ -205,7 +206,7 @@ export const AClientForm = defineComponent({
             const description : VNodeChild = [
                 buildFormGroup({
                     validationMessages: translationsValidation.description.value,
-                    dirty: $v.value.description.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.description),
                     label: true,
                     labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
                     content: buildFormTextarea({
@@ -236,7 +237,7 @@ export const AClientForm = defineComponent({
 
             const isConfidential = buildFormGroup({
                 validationMessages: translationsValidation.is_confidential.value,
-                dirty: $v.value.is_confidential.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.is_confidential),
                 content: buildFormInputCheckbox({
                     groupClass: 'form-switch mt-3',
                     labelContent: translationsClient[TranslatorTranslationClientKey.IS_CONFIDENTIAL].value,
@@ -267,7 +268,7 @@ export const AClientForm = defineComponent({
             const secret : VNodeArrayChildren = [
                 buildFormGroup({
                     validationMessages: translationsValidation.secret.value,
-                    dirty: $v.value.secret.$dirty,
+                    validationSeverity: getVuelidateSeverity($v.value.secret),
                     label: true,
                     labelContent: translationsDefault[TranslatorTranslationDefaultKey.SECRET].value,
                     content: buildFormInput({

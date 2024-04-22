@@ -15,7 +15,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapGroupFields = defineComponent({
     props: {
@@ -65,7 +65,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
         return () => [
             buildFormGroup({
                 validationMessages: validationMessages.group_filter.value,
-                dirty: $v.value.group_filter.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_filter),
                 label: true,
                 labelContent: 'Filter',
                 content: buildFormInput({
@@ -80,7 +80,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.group_base_dn.value,
-                dirty: $v.value.group_base_dn.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_base_dn),
                 label: true,
                 labelContent: 'Base DN',
                 content: buildFormInput({
@@ -92,7 +92,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.group_class.value,
-                dirty: $v.value.group_class.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_class),
                 label: true,
                 labelContent: 'Class',
                 content: buildFormInput({
@@ -104,7 +104,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.group_name_attribute.value,
-                dirty: $v.value.group_name_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_name_attribute),
                 label: true,
                 labelContent: 'Name Attribute',
                 content: buildFormInput({
@@ -116,7 +116,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.group_member_attribute.value,
-                dirty: $v.value.group_member_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_member_attribute),
                 label: true,
                 labelContent: 'Member Attribute',
                 content: buildFormInput({
@@ -128,7 +128,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.group_member_user_attribute.value,
-                dirty: $v.value.group_member_user_attribute.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.group_member_user_attribute),
                 label: true,
                 labelContent: 'Member User Attribute',
                 content: buildFormInput({

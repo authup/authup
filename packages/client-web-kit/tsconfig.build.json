@@ -14,8 +14,7 @@
         "jsx": "preserve",
 
         "declaration": true,
-        "declarationDir": "dist",
-        "isolatedModules": true
+        "declarationDir": "dist"
     },
     "exclude": [
         "node_modules",

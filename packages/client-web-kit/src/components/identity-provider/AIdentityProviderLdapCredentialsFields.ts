@@ -16,7 +16,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, useTranslationsForNestedValidation } from '../../core';
+import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapCredentialsFields = defineComponent({
     props: {
@@ -62,7 +62,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         return () => [
             buildFormGroup({
                 validationMessages: validationMessages.user.value,
-                dirty: $v.value.user.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.user),
                 label: true,
                 labelContent: 'User',
                 content: buildFormInput({
@@ -74,7 +74,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
             }),
             buildFormGroup({
                 validationMessages: validationMessages.password.value,
-                dirty: $v.value.password.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.password),
                 label: true,
                 labelContent: 'Password',
                 content: buildFormInput({

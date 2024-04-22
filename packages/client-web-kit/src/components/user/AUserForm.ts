@@ -25,8 +25,8 @@ import {
     TranslatorTranslationGroup, buildFormSubmitWithTranslations,
     createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents, initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
+    useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
 
@@ -158,7 +158,7 @@ export const AUserForm = defineComponent({
         const render = () => {
             const name = buildFormGroup({
                 validationMessages: translationsValidation.name.value,
-                dirty: $v.value.name.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
@@ -175,7 +175,7 @@ export const AUserForm = defineComponent({
 
             const displayName = buildFormGroup({
                 validationMessages: translationsValidation.display_name.value,
-                dirty: $v.value.display_name.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
                 content: buildFormInput({
@@ -189,7 +189,7 @@ export const AUserForm = defineComponent({
 
             const email = buildFormGroup({
                 validationMessages: translationsValidation.email.value,
-                dirty: $v.value.email.$dirty,
+                validationSeverity: getVuelidateSeverity($v.value.email),
                 label: true,
                 labelContent: translationsDefault[TranslatorTranslationDefaultKey.EMAIL].value,
                 content: buildFormInput({
