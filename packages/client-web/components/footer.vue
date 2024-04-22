@@ -7,11 +7,11 @@
 <script lang="ts">
 
 import { defineComponent } from 'vue';
-import { BToaster } from 'bootstrap-vue-next';
+import { BToastOrchestrator } from 'bootstrap-vue-next';
 
 export default defineComponent({
     components: {
-        BToaster,
+        BToastOrchestrator,
     },
     computed: {
         year() {
@@ -27,7 +27,7 @@ export default defineComponent({
                 &copy; Authup {{ year }}
             </div>
         </div>
-        <BToaster />
+        <BToastOrchestrator />
     </div>
 </template>
 <style>

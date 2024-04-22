@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/core-kit';
-import type { Toast } from 'bootstrap-vue-next';
+import type { OrchestratedToast } from 'bootstrap-vue-next';
 import { useToast as _useToast } from 'bootstrap-vue-next';
 
 export function useToast() {
@@ -14,22 +14,35 @@ export function useToast() {
 
     return {
         hide(el: symbol) {
-            toast.hide(el);
+            if (typeof toast.remove !== 'undefined') {
+                toast.remove(el);
+            }
         },
         show(
-            el: string | Toast,
-            options?: Omit<Toast, 'body'>,
+            el: string | OrchestratedToast,
+            options: OrchestratedToast = {},
         ) {
+            if (typeof toast.show === 'undefined') {
+                return Symbol('');
+            }
+
             if (isObject(el)) {
                 el.pos = el.pos || 'top-center';
-                return toast.show(el);
+                return toast.show({
+                    props: el,
+                });
             }
 
             if (options) {
                 options.pos = options.pos || 'top-center';
             }
 
-            return toast.show(el, options);
+            return toast.show({
+                props: {
+                    ...(options || {}),
+                    body: el,
+                },
+            });
         },
     };
 }
