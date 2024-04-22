@@ -1,10 +1,10 @@
-# @authup/client-web-kit 🧩
+# @authup/config 🧩
 
-[![npm version](https://badge.fury.io/js/@authup%2Fclient-web-kit.svg)](https://badge.fury.io/js/@authup%2Fclient-web-kit)
+[![npm version](https://badge.fury.io/js/@authup%2Fconfig.svg)](https://badge.fury.io/js/@authup%2Fconfig)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-This package contains different vue components for the Authup system.
+A collection of configuration helpers for the client and server side.
 
 **Table of Contents**
 

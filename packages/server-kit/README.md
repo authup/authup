@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/authup/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/authup/authup)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-The main propose of this package, is to provide general utilities for server side services.
+A dedicated toolkit for server-side services.
 
 **Table of Contents**
 

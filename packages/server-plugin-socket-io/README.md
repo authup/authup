@@ -1,16 +1,10 @@
-# @authup/server-adapter 🌉
+# @authup/server-plugin-socket-io 🌉
 
-[![npm version](https://badge.fury.io/js/@authup%2Fserver-adapter.svg)](https://badge.fury.io/js/@authup%2Fserver-adapter)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver-plugin-socket-io.svg)](https://badge.fury.io/js/@authup%2Fserver-plugin-socket-io)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/authup/authup/branch/master/graph/badge.svg?token=FHE347R1NW)](https://codecov.io/gh/authup/authup)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-The main propose of this package, is to provide middlewares for:
-
-- http &
-- (web-) socket
-
-based services. These middlewares provide a way to validate and verify the request and inject information about the corresponding token owner.
+A plugin for a socket.io service.
 
 **Table of Contents**
 
@@ -19,7 +13,7 @@ based services. These middlewares provide a way to validate and verify the reque
 
 ## Documentation
 
-To read the docs, visit [https://authup.org/packages/server-adapter](https://authup.org/packages/server-adapter)
+To read the docs, visit [https://authup.org/](https://authup.org/)
 
 ## License
 

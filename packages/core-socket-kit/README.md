@@ -1,10 +1,10 @@
-# @authup/client-web-kit 🧩
+# @authup/core-socket-kit 🎉
 
-[![npm version](https://badge.fury.io/js/@authup%2Fclient-web-kit.svg)](https://badge.fury.io/js/@authup%2Fclient-web-kit)
+[![npm version](https://badge.fury.io/js/@authup%2Fcore.svg)](https://badge.fury.io/js/@authup%2Fcore)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-This package contains different vue components for the Authup system.
+A toolkit for the core socket service.
 
 **Table of Contents**
 
@@ -13,7 +13,7 @@ This package contains different vue components for the Authup system.
 
 ## Documentation
 
-To read the docs, visit [https://authup.org](https://authup.org)
+To read the docs, visit [https://authup.org/](https://authup.org/)
 
 ## License
 

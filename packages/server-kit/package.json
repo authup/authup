@@ -43,7 +43,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "server/packages/kit"
+        "directory": "packages/server-kit"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
