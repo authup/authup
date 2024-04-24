@@ -4,7 +4,7 @@
     "release-type": "node",
     "bump-minor-pre-major": true,
     "bump-patch-for-minor-pre-major": true,
-    "release-as": "1.0.0-beta.9",
+    "release-as": "1.0.0-beta.10",
     "packages": {
         "packages/authup": {
             "component": "authup"
@@ -24,8 +24,8 @@
         "packages/core-kit": {
             "component": "core-kit"
         },
-        "packages/core-socket-kit": {
-            "component": "core-socket-kit"
+        "packages/core-realtime-kit": {
+            "component": "core-realtime-kit"
         },
         "packages/server-core": {
             "component": "server-core"
@@ -58,7 +58,7 @@
                 "client-web-kit",
                 "config",
                 "core-kit",
-                "core-socket-kit",
+                "core-realtime-kit",
                 "server-core",
                 "server-kit",
                 "server-plugin-http",
