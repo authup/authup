@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientManager } from '@authup/core-socket-kit';
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
 import type { APIClient } from '@authup/core-kit';
+import type { ClientManager } from '@authup/core-realtime-kit';
 import type {
     AClient,
     AClientForm,

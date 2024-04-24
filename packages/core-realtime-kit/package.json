@@ -1,7 +1,7 @@
 {
-    "name": "@authup/core-socket-kit",
+    "name": "@authup/core-realtime-kit",
     "version": "1.0.0-beta.9",
-    "description": "Package containing a toolkit for socket services.",
+    "description": "Package containing a toolkit for the realtime service.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -34,7 +34,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/core-socket-kit"
+        "directory": "packages/core-realtime-kit"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"

@@ -12,8 +12,8 @@ import type {
     DomainEventSubscriptionFullName,
     DomainType,
 } from '@authup/core-kit';
-import type { STCEventContext } from '@authup/core-socket-kit';
 import type { MaybeRef } from 'vue';
+import type { STCEventContext } from '@authup/core-realtime-kit';
 
 export type EntitySocketContext<
     A extends `${DomainType}`,

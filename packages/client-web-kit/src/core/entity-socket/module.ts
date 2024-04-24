@@ -19,10 +19,10 @@ import type {
     DomainEventSubscriptionFullName,
     DomainType,
 } from '@authup/core-kit';
-import type { STCEventContext } from '@authup/core-socket-kit';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
+import type { STCEventContext } from '@authup/core-realtime-kit';
 import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
 import { injectSocketClientManager, isSocketClientManagerInjected } from '../socket-client-manager';

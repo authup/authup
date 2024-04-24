@@ -94,7 +94,7 @@ The repository contains the following packages:
 | [client-web-kit](packages/client-web-kit)                   | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
 | [config](packages/config)                                   | Library     | A collection of configuration helpers for the client and server side.                                 |
 | [core-kit](packages/core-kit)                               | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
-| [core-socket-kit](packages/core-socket-kit)                 | Library     | A toolkit for the core socket service.                                                                |
+| [core-realtime-kit](packages/core-realtime-kit)             | Library     | A toolkit for the core socket service.                                                                |
 | [server-plugin-kit](packages/server-plugin-kit)             | Library     | A plugin toolkit targeting external services.                                                         |
 | [server-plugin-http](packages/server-plugin-http)           | Library     | A plugin for a HTTP service.                                                                          |
 | [server-plugin-socket-io](packages/server-plugin-socket-io) | Library     | A plugin for a socket.io service.                                                                     |

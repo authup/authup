@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientManager } from '@authup/core-socket-kit';
 import type { App } from 'vue';
 import { hasInjectionContext } from 'vue';
+import type { ClientManager } from '@authup/core-realtime-kit';
 import { inject } from '../inject';
 import { provide } from '../provide';
 

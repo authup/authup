@@ -10,7 +10,7 @@
         "strict": true,
         "paths": {
             "@authup/core-kit": ["./packages/core-kit/src"],
-            "@authup/core-socket-kit": ["./packages/core-socket-kit/src"],
+            "@authup/core-realtime-kit": ["./packages/core-realtime-kit/src"],
         }
     },
     "include": [

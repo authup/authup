@@ -61,14 +61,14 @@
     },
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",
-        "@authup/core-socket-kit": "^1.0.0-beta.9",
+        "@authup/core-realtime-kit": "^1.0.0-beta.9",
         "@types/bcrypt": "^5.0.2",
         "@types/proxy-from-env": "^1.0.4",
         "redis-extension": "^1.3.0"
     },
     "peerDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",
-        "@authup/core-socket-kit": "^1.0.0-beta.9",
+        "@authup/core-realtime-kit": "^1.0.0-beta.9",
         "redis-extension": "^1.2.x"
     },
     "publishConfig": {
