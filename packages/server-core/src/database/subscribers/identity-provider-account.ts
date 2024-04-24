@@ -7,7 +7,6 @@
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -17,6 +16,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { IdentityProviderAccountEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -25,14 +25,17 @@ async function publishEvent(
     data: IdentityProviderAccount,
 ) {
     await publishDomainEvent({
-        type: DomainType.IDENTITY_PROVIDER_ACCOUNT,
-        event,
-        data,
-    }, [
-        {
-            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ACCOUNT, id),
+        content: {
+            type: DomainType.IDENTITY_PROVIDER_ACCOUNT,
+            event,
+            data,
         },
-    ]);
+        destinations: [
+            {
+                channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ACCOUNT, id),
+            },
+        ],
+    });
 }
 
 @EventSubscriber()

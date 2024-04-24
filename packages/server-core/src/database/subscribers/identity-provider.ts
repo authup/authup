@@ -9,7 +9,6 @@ import type { IdentityProvider } from '@authup/core-kit';
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -19,6 +18,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { IdentityProviderEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -26,13 +26,13 @@ async function publishEvent(
     event: `${DomainEventName}`,
     data: IdentityProvider,
 ) {
-    await publishDomainEvent(
-        {
+    await publishDomainEvent({
+        content: {
             type: DomainType.IDENTITY_PROVIDER,
             event,
             data,
         },
-        [
+        destinations: [
             {
                 channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
@@ -41,7 +41,7 @@ async function publishEvent(
                 channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER, id),
             },
         ],
-    );
+    });
 }
 
 @EventSubscriber()

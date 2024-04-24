@@ -1,0 +1,42 @@
+/*
+ * Copyright (c) 2023-2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { DomainEventName } from '@authup/core-kit';
+import type { Client } from 'redis-extension';
+import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
+import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
+
+export class DomainEventRedisPublisher implements IDomainEventPublisher {
+    protected driver : Client;
+
+    constructor(client: Client) {
+        this.driver = client;
+    }
+
+    async publish(ctx: DomainEventPublishContext) : Promise<void> {
+        const data = JSON.stringify(transformDomainEventData(ctx.content));
+
+        const pipeline = this.driver.pipeline();
+        for (let i = 0; i < ctx.destinations.length; i++) {
+            const { namespace } = ctx.destinations[i];
+            const keyPrefix = (namespace ? `${namespace}:` : '');
+
+            let key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel);
+            pipeline.publish(key, data);
+
+            if (
+                ctx.content.event !== DomainEventName.CREATED &&
+                typeof ctx.destinations[i].channel === 'function'
+            ) {
+                key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel, ctx.content.data.id);
+                pipeline.publish(key, data);
+            }
+        }
+
+        await pipeline.exec();
+    }
+}

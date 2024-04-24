@@ -13,7 +13,6 @@ import {
     DomainType,
     buildDomainChannelName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -23,6 +22,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { RealmEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -30,18 +30,18 @@ async function publishEvent(
     event: `${DomainEventName}`,
     data: Realm,
 ) {
-    await publishDomainEvent(
-        {
+    await publishDomainEvent({
+        content: {
             type: DomainType.REALM,
             event,
             data,
         },
-        [
+        destinations: [
             {
                 channel: (id) => buildDomainChannelName(DomainType.REALM, id),
             },
         ],
-    );
+    });
 }
 
 @EventSubscriber()

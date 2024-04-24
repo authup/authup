@@ -11,7 +11,6 @@ import type {
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,6 +20,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { ClientEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -28,13 +28,13 @@ async function publishEvent(
     event: `${DomainEventName}`,
     data: Client,
 ) {
-    await publishDomainEvent(
-        {
+    await publishDomainEvent({
+        content: {
             type: DomainType.CLIENT,
             event,
             data,
         },
-        [
+        destinations: [
             {
                 channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
@@ -43,7 +43,7 @@ async function publishEvent(
                 channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
             },
         ],
-    );
+    });
 }
 
 @EventSubscriber()
