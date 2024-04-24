@@ -73,6 +73,7 @@
         "reflect-metadata": "^0.2.2",
         "routup": "^3.3.0",
         "smob": "^1.5.0",
+        "singa": "^1.0.0",
         "typeorm": "^0.3.20",
         "typeorm-extension": "^3.5.1",
         "winston": "^3.13.0",

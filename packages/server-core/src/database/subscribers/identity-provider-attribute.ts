@@ -12,7 +12,6 @@ import {
     DomainEventName, DomainType,
     buildDomainChannelName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -22,6 +21,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { IdentityProviderAttributeEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -29,20 +29,20 @@ async function publishEvent(
     event: `${DomainEventName}`,
     data: IdentityProviderAttribute,
 ) {
-    await publishDomainEvent(
-        {
+    await publishDomainEvent({
+        content: {
             type: DomainType.IDENTITY_PROVIDER_ATTRIBUTE,
             event,
             data,
         },
-        [
+        destinations: [
             {
                 channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ATTRIBUTE, id),
             },
 
             // todo: realm attribute
         ],
-    );
+    });
 }
 
 @EventSubscriber()

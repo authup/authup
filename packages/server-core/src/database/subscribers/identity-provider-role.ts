@@ -14,7 +14,6 @@ import {
     buildDomainNamespaceName,
 } from '@authup/core-kit';
 import type { DomainEventDestination } from '@authup/server-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -24,6 +23,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { IdentityProviderRoleEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -50,10 +50,13 @@ async function publishEvent(
     }
 
     await publishDomainEvent({
-        type: DomainType.IDENTITY_PROVIDER_ROLE,
-        event,
-        data,
-    }, destinations);
+        content: {
+            type: DomainType.IDENTITY_PROVIDER_ROLE,
+            event,
+            data,
+        },
+        destinations,
+    });
 }
 
 @EventSubscriber()

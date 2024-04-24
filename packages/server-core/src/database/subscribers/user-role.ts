@@ -14,7 +14,6 @@ import {
     buildDomainNamespaceName,
 } from '@authup/core-kit';
 import type { DomainEventDestination } from '@authup/server-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -24,6 +23,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { UserRoleEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -48,10 +48,13 @@ async function publishEvent(
     }
 
     await publishDomainEvent({
-        type: DomainType.USER_ROLE,
-        event,
-        data,
-    }, destinations);
+        content: {
+            type: DomainType.USER_ROLE,
+            event,
+            data,
+        },
+        destinations,
+    });
 }
 
 @EventSubscriber()
@@ -69,7 +72,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),
             ]);
@@ -86,7 +89,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),
             ]);
@@ -103,7 +106,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildKeyPath({
-                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),
             ]);

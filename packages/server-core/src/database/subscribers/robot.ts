@@ -13,7 +13,6 @@ import {
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -23,6 +22,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { RobotEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -30,13 +30,13 @@ async function publishEvent(
     event: `${DomainEventName}`,
     data: Robot,
 ) {
-    await publishDomainEvent(
-        {
+    await publishDomainEvent({
+        content: {
             type: DomainType.ROBOT,
             event,
             data,
         },
-        [
+        destinations: [
             {
                 channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
@@ -45,7 +45,7 @@ async function publishEvent(
                 channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
             },
         ],
-    );
+    });
 }
 
 @EventSubscriber()

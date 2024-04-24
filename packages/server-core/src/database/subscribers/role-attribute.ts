@@ -9,7 +9,6 @@ import type { RoleAttribute } from '@authup/core-kit';
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
-import { publishDomainEvent } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -19,6 +18,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { buildKeyPath } from 'redis-extension';
+import { publishDomainEvent } from '../../core';
 import { RoleAttributeEntity } from '../../domains';
 import { CachePrefix } from '../constants';
 
@@ -27,18 +27,21 @@ async function publishEvent(
     data: RoleAttribute,
 ) {
     await publishDomainEvent({
-        type: DomainType.ROLE_ATTRIBUTE,
-        event,
-        data,
-    }, [
-        {
-            channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
-            namespace: buildDomainNamespaceName(data.realm_id),
+        content: {
+            type: DomainType.ROLE_ATTRIBUTE,
+            event,
+            data,
         },
-        {
-            channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
-        },
-    ]);
+        destinations: [
+            {
+                channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
+                namespace: buildDomainNamespaceName(data.realm_id),
+            },
+            {
+                channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
+            },
+        ],
+    });
 }
 
 @EventSubscriber()
