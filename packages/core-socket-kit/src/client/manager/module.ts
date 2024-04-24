@@ -39,8 +39,6 @@ export class ClientManager<
             return socket;
         }
 
-        socket.connect();
-
         return new Promise((resolve, reject) => {
             socket.once('connect', () => {
                 resolve(socket);
@@ -49,6 +47,8 @@ export class ClientManager<
             socket.once('connect_error', (err) => {
                 reject(err);
             });
+
+            socket.connect();
         });
     }
 
