@@ -12,8 +12,9 @@ import { isValidUserName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig, useLogger, useSMTPClient } from '@authup/server-kit';
+import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { hasSmtpConfig } from '@authup/server-kit';
+import { isSMTPClientUsable, useLogger, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
@@ -90,8 +91,15 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     await repository.save(entity);
 
-    if (config.emailVerification) {
-        const smtpClient = await useSMTPClient();
+    if (
+        config.emailVerification &&
+        config.env !== EnvironmentName.TEST
+    ) {
+        if (!isSMTPClientUsable()) {
+            throw new BadRequestError('Email verification is not possible.');
+        }
+
+        const smtpClient = useSMTPClient();
 
         const info = await smtpClient.sendMail({
             to: entity.email,
@@ -102,7 +110,8 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
                 `,
         });
 
-        useLogger().debug(`Message #${info.messageId} has been sent!`);
+        useLogger()
+            .debug(`Message #${info.messageId} has been sent!`);
     }
 
     return sendAccepted(res, entity);

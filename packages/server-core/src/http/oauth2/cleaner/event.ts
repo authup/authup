@@ -1,11 +1,11 @@
-import { Cache, useClient } from 'redis-extension';
+import { Cache } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
-import { useLogger } from '@authup/server-kit';
+import { useLogger, useRedisClient } from '../../../core';
 import { CachePrefix } from '../../../database';
 import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 
 export async function runOAuth2CleanerByEvent() {
-    const redis = useClient();
+    const redis = useRedisClient();
 
     const authorizationCodeCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_AUTHORIZATION_CODE });
     authorizationCodeCache.on('expired', async (data) => {

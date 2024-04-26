@@ -12,8 +12,8 @@ import type { User } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig, useSMTPClient } from '@authup/server-kit';
+import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
     useConfig,
@@ -31,7 +31,10 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         throw new BadRequestError('Email verification is not enabled, but required to reset a password.');
     }
 
-    if (!hasSmtpConfig() && config.env !== 'test') {
+    if (
+        !isSMTPClientUsable() &&
+        config.env !== 'test'
+    ) {
         throw new BadRequestError('SMTP modul is not configured.');
     }
 
@@ -83,16 +86,17 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
     entity.reset_expires = new Date(Date.now() + (1000 * 60 * 30)).toISOString();
     entity.reset_hash = randomBytes(32).toString('hex');
 
-    const smtpClient = await useSMTPClient();
-
-    await smtpClient.sendMail({
-        to: entity.email,
-        subject: 'Forgot Password - Reset code',
-        html: `
+    if (config.env !== EnvironmentName.TEST) {
+        const smtpClient = useSMTPClient();
+        await smtpClient.sendMail({
+            to: entity.email,
+            subject: 'Forgot Password - Reset code',
+            html: `
             <p>Please use the code below to reset your account password.</p>
             <p>${entity.reset_hash}</p>
             `,
-    });
+        });
+    }
 
     return sendAccepted(res);
 }

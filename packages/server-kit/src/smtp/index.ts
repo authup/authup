@@ -8,4 +8,3 @@
 export * from './config';
 export * from './module';
 export * from './type';
-export * from './singleton';

@@ -10,7 +10,7 @@ import type {
     Router,
 } from 'routup';
 import { errorHandler, send } from 'routup';
-import { useLogger } from '@authup/server-kit';
+import { useLogger } from '../../../core';
 
 export function registerErrorMiddleware(router: Router) {
     router.use(errorHandler((

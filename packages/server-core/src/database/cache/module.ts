@@ -6,13 +6,11 @@
  */
 
 import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
-import { hasClient, hasConfig, useClient } from 'redis-extension';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
 import type { QueryRunner } from 'typeorm';
+import { isRedisClientUsable, useRedisClient } from '../../core';
 
 type DatabaseQueryResultCacheOptions = {
-    redisAlias?: string,
-
     redisKeyPrefix?: string
 };
 
@@ -38,14 +36,11 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async clear(): Promise<void> {
-        if (
-            !hasConfig(this.options.redisAlias) &&
-            !hasClient(this.options.redisAlias)
-        ) {
+        if (!isRedisClientUsable()) {
             return;
         }
 
-        const client = useClient(this.options.redisAlias);
+        const client = useRedisClient();
         const pipeline = client.pipeline();
 
         const keys = await client.keys(this.buildFullQualifiedId('*'));
@@ -65,10 +60,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async getFromCache(options: QueryResultCacheOptions): Promise<QueryResultCacheOptions | undefined> {
-        if (
-            !hasConfig(this.options.redisAlias) &&
-            !hasClient(this.options.redisAlias)
-        ) {
+        if (!isRedisClientUsable()) {
             return undefined;
         }
 
@@ -79,7 +71,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         }
 
         const key = this.buildFullQualifiedId(options.identifier || options.query);
-        const client = useClient(this.options.redisAlias);
+        const client = useRedisClient();
 
         const data = await client.get(
             key,
@@ -101,14 +93,11 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async remove(identifiers: string[]): Promise<void> {
-        if (
-            !hasConfig(this.options.redisAlias) &&
-            !hasClient(this.options.redisAlias)
-        ) {
+        if (!isRedisClientUsable()) {
             return;
         }
 
-        const client = useClient(this.options.redisAlias);
+        const client = useRedisClient();
         const pipeline = client.pipeline();
 
         for (let i = 0; i < identifiers.length; i++) {
@@ -125,10 +114,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         queryRunner?: QueryRunner,
     ): Promise<void> {
-        if (
-            !hasConfig(this.options.redisAlias) &&
-            !hasClient(this.options.redisAlias)
-        ) {
+        if (!isRedisClientUsable()) {
             return;
         }
 
@@ -139,7 +125,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
         }
 
         const key = this.buildFullQualifiedId(options.identifier || options.query);
-        const client = useClient(this.options.redisAlias);
+        const client = useRedisClient();
 
         await client.set(
             key,

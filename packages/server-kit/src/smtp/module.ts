@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Transporter } from 'nodemailer';
 import { createTransport } from 'nodemailer';
-import type { SmtpConfig } from './type';
-import { useLogger } from '../logger';
+import type { SMTPClient, SMTPOptions } from './type';
 
-export function createSmtpClient(options?: SmtpConfig | string) : Transporter {
-    let transport : Transporter;
+export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
+    let transport : SMTPClient;
 
     options = options || {};
 
@@ -40,10 +38,6 @@ export function createSmtpClient(options?: SmtpConfig | string) : Transporter {
             },
         });
     }
-
-    transport.on('error', (e) => {
-        useLogger().error(e.message);
-    });
 
     return transport;
 }

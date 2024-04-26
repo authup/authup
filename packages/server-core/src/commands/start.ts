@@ -5,12 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { URL } from 'url';
-import { hasClient as hasVaultClient } from '@hapic/vault';
-import { hasConfig as hasRedisConfig } from 'redis-extension';
-import {
-    setLogger, useLogger,
-} from '@authup/server-kit';
+import { URL } from 'node:url';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
 import {
@@ -20,6 +15,7 @@ import {
     synchronizeDatabaseSchema,
 } from 'typeorm-extension';
 import { useConfig } from '../config';
+import { isRedisClientUsable, isVaultClientUsable, useLogger } from '../core';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { saveRobotCredentialsToVault } from '../domains';
 import {
@@ -32,10 +28,6 @@ export async function startCommand(context?: StartCommandContext) {
 
     const config = useConfig();
 
-    if (context.logger) {
-        setLogger(context.logger);
-    }
-
     const logger = useLogger();
 
     logger.info(`Environment: ${config.env}`);
@@ -47,8 +39,8 @@ export async function startCommand(context?: StartCommandContext) {
 
     const database = config.db;
     logger.info(`Database: ${database.type}`);
-    logger.info(`Redis: ${hasRedisConfig() ? 'enabled' : 'disabled'}`);
-    logger.info(`Vault: ${hasVaultClient() ? 'enabled' : 'disabled'}`);
+    logger.info(`Redis: ${isRedisClientUsable() ? 'enabled' : 'disabled'}`);
+    logger.info(`Vault: ${isVaultClientUsable() ? 'enabled' : 'disabled'}`);
     logger.info(`Robot: ${config.robotAdminEnabled ? 'enabled' : 'disabled'}`);
 
     /*

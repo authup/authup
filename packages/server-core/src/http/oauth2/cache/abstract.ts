@@ -7,9 +7,10 @@
 
 import type { KeyPathID } from 'redis-extension';
 import {
-    Cache, hasClient, hasConfig, useClient,
+    Cache,
 } from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authup/core-kit';
+import { isRedisClientUsable, useRedisClient } from '../../../core';
 
 export abstract class OAuth2AbstractCache<
     T extends Record<string, any> & { id: string, expires?: Date | string | number },
@@ -102,12 +103,12 @@ export abstract class OAuth2AbstractCache<
             return this.driver;
         }
 
-        if (!hasClient() && !hasConfig()) {
+        if (!isRedisClientUsable()) {
             return undefined;
         }
 
         this.driver = new Cache<T['id'], T>({
-            redis: useClient(),
+            redis: useRedisClient(),
         }, { prefix: this.prefix });
 
         return this.driver;

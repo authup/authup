@@ -5,7 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type SmtpConfig = {
+import { Transporter as SMTPClient } from 'nodemailer';
+
+export {
+    SMTPClient,
+};
+
+export type SMTPOptions = {
     host?: string,
 
     port?: number,

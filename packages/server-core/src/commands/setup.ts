@@ -8,6 +8,7 @@
 import { createDatabase, synchronizeDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { useConfig } from '../config';
+import { useLogger } from '../core';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { generateSwaggerDocumentation } from '../http';
 import type { SetupCommandContext } from './type';
@@ -25,12 +26,11 @@ export async function setupCommand(context?: SetupCommandContext) {
         context.database = context.databaseSeed = context.databaseSchema = context.documentation = true;
     }
 
-    const config = await useConfig();
+    const config = useConfig();
+    const logger = useLogger();
 
     if (context.documentation) {
-        if (context.logger) {
-            context.logger.info('Generating documentation.');
-        }
+        logger.info('Generating documentation.');
 
         await generateSwaggerDocumentation({
             rootPath: config.rootPath,
@@ -38,9 +38,7 @@ export async function setupCommand(context?: SetupCommandContext) {
             baseUrl: config.publicUrl,
         });
 
-        if (context.logger) {
-            context.logger.info('Generated documentation.');
-        }
+        logger.info('Generated documentation.');
     }
 
     if (context.database || context.databaseSchema || context.databaseSeed) {
@@ -50,15 +48,11 @@ export async function setupCommand(context?: SetupCommandContext) {
         const options = context.dataSourceOptions || await buildDataSourceOptions();
 
         if (context.database) {
-            if (context.logger) {
-                context.logger.info('Creating database.');
-            }
+            logger.info('Creating database.');
 
             await createDatabase({ options, synchronize: false });
 
-            if (context.logger) {
-                context.logger.info('Created database.');
-            }
+            logger.info('Created database.');
         }
 
         const dataSource = new DataSource(options);
@@ -66,29 +60,21 @@ export async function setupCommand(context?: SetupCommandContext) {
 
         try {
             if (context.databaseSchema) {
-                if (context.logger) {
-                    context.logger.info('Execute schema setup.');
-                }
+                logger.info('Execute schema setup.');
 
                 await synchronizeDatabaseSchema(dataSource);
 
-                if (context.logger) {
-                    context.logger.info('Executed schema setup.');
-                }
+                logger.info('Executed schema setup.');
             }
         } catch (e) {
-            if (context.logger) {
-                context.logger.fail('Setup of the database schema failed.');
-            }
+            logger.error('Setup of the database schema failed.');
 
             throw e;
         }
 
         try {
             if (context.databaseSeed) {
-                if (context.logger) {
-                    context.logger.info('Seeding database.');
-                }
+                logger.info('Seeding database.');
 
                 const seeder = new DatabaseSeeder({
                     userAdminPasswordReset: true,
@@ -97,18 +83,14 @@ export async function setupCommand(context?: SetupCommandContext) {
 
                 const seederData = await seeder.run(dataSource);
 
-                if (context.logger) {
-                    context.logger.info('Seeded database.');
-                }
+                logger.info('Seeded database.');
 
                 if (seederData.robot) {
                     await saveSeedResult(config.writableDirectoryPath, seederData);
                 }
             }
         } catch (e) {
-            if (context.logger) {
-                context.logger.fail('Seeding the database failed.');
-            }
+            logger.error('Seeding the database failed.');
 
             throw e;
         }

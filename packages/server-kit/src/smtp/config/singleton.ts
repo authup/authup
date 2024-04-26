@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SmtpConfig } from '../type';
+import type { SMTPOptions } from '../type';
 
-let instance : SmtpConfig | string | undefined;
+let instance : SMTPOptions | string | undefined;
 
 export function hasSmtpConfig() {
     return !!instance;
 }
 
-export function setSmtpConfig(value: SmtpConfig | string | undefined) {
+export function setSmtpConfig(value: SMTPOptions | string | undefined) {
     instance = value;
 }
 
-export function useSmtpConfig() : SmtpConfig | string {
+export function useSmtpConfig() : SMTPOptions | string {
     if (typeof instance !== 'undefined') {
         return instance;
     }

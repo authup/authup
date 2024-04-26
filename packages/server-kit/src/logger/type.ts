@@ -5,17 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type LeveledLogMethod = {
-    (message: string, ...meta: any[]) : any;
-    (message: any) : any;
+import { Logger } from 'winston';
+
+export {
+    Logger,
 };
 
-export type Logger = {
-    error: LeveledLogMethod,
-    warn: LeveledLogMethod,
-    info: LeveledLogMethod,
-    http: LeveledLogMethod,
-    verbose: LeveledLogMethod,
-    debug: LeveledLogMethod,
-    [key: string]: any
+export type LoggerSetupContext = {
+    env: string
+    directory: string
 };

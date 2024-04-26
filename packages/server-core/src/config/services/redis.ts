@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createClient } from 'redis-extension';
 import type { Client, ClientOptions } from 'redis-extension';
-import { buildConfig, setClient, setConfig } from 'redis-extension';
 import { isObject } from 'smob';
+import { setRedisClient, setRedisFactory } from '../../core';
 
 export function isRedisClient(data: unknown) : data is Client {
     return isObject(data) &&
@@ -16,12 +17,9 @@ export function isRedisClient(data: unknown) : data is Client {
 }
 
 export function setupRedis(data: string | boolean | Client | ClientOptions): void {
-    if (
-        typeof data === 'boolean' ||
-        !data
-    ) {
+    if (typeof data === 'boolean' || !data) {
         if (data) {
-            setConfig(buildConfig({
+            setRedisFactory(() => createClient({
                 connectionString: 'redis://127.0.0.1',
             }));
         }
@@ -30,7 +28,7 @@ export function setupRedis(data: string | boolean | Client | ClientOptions): voi
     }
 
     if (typeof data === 'string') {
-        setConfig(buildConfig({
+        setRedisFactory(() => createClient({
             connectionString: data,
         }));
 
@@ -38,12 +36,12 @@ export function setupRedis(data: string | boolean | Client | ClientOptions): voi
     }
 
     if (!isRedisClient(data)) {
-        setConfig(buildConfig({
+        setRedisFactory(() => createClient({
             options: data,
         }));
 
         return;
     }
 
-    setClient(data);
+    setRedisClient(data);
 }

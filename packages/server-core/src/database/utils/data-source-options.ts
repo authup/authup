@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { DataSourceOptions } from 'typeorm';
-import { hasClient, hasConfig } from 'redis-extension';
 import { adjustFilePath } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { isDatabaseTypeSupported, useConfig } from '../../config';
+import { isRedisClientUsable } from '../../core';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
@@ -38,7 +38,7 @@ export async function extendDataSourceOptions(options: DataSourceOptions) {
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);
 
-    if (hasClient() || hasConfig()) {
+    if (isRedisClientUsable()) {
         Object.assign(options, {
             cache: {
                 provider() {

@@ -6,9 +6,9 @@
  */
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { createLogger } from '../../core';
 import { startCommand } from '../../commands';
-import { setupConfig } from '../../config';
+import { setupConfig, setupLogger } from '../../config';
+import { useLogger } from '../../core';
 import { buildDataSourceOptions } from '../../database';
 
 interface StartArguments extends Arguments {
@@ -34,18 +34,17 @@ export class StartCommand implements CommandModule {
         });
 
         const dataSourceOptions = await buildDataSourceOptions();
-        const logger = createLogger({
+        setupLogger({
             directory: config.writableDirectoryPath,
             env: config.env,
         });
 
         try {
             await startCommand({
-                logger,
                 dataSourceOptions,
             });
         } catch (e) {
-            logger.error(e);
+            useLogger().error(e);
 
             process.exit(1);
         }

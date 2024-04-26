@@ -12,10 +12,10 @@ import {
     isUUID,
 } from '@authup/core-kit';
 import { NotFoundError } from '@ebec/http';
-import { hasClient } from '@hapic/vault';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { isVaultClientUsable } from '../../../../core';
 import {
     RobotRepository,
     findRobotCredentialsInVault,
@@ -55,7 +55,11 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         realm = entity.realm;
     }
 
-    if (!hasClient() || !realm || realm.name !== REALM_MASTER_NAME) {
+    if (
+        !isVaultClientUsable() ||
+        !realm ||
+        realm.name !== REALM_MASTER_NAME
+    ) {
         return sendAccepted(res);
     }
 
