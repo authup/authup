@@ -5,28 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from 'redis-extension';
-import { Cache, createClient } from 'redis-extension';
+import type { RedisClient } from '@authup/server-kit';
+import { RedisCache, createRedisClient } from '@authup/server-kit';
 import type { TokenVerificationData } from '../type';
 import type { TokenVerifierCache } from './type';
 
 export class TokenVerifierRedisCache implements TokenVerifierCache {
-    protected instance : Cache<string>;
+    protected instance : RedisCache<string>;
 
-    constructor(input?: Client | string) {
-        let client: Client;
+    constructor(input?: RedisClient | string) {
+        let client: RedisClient;
 
         if (!input) {
-            client = createClient();
+            client = createRedisClient();
         } else if (typeof input === 'string') {
-            client = createClient({
+            client = createRedisClient({
                 connectionString: input,
             });
         } else {
             client = input;
         }
 
-        this.instance = new Cache<string>({
+        this.instance = new RedisCache<string>({
             redis: client,
         }, {
             prefix: 'token',

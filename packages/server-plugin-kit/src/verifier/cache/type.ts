@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from 'redis-extension';
+import type { RedisClient } from '@authup/server-kit';
 import type { TokenVerificationData } from '../type';
 
 export interface TokenVerifierCache {
@@ -15,7 +15,7 @@ export interface TokenVerifierCache {
 
 export type TokenVerifierRedisCacheOptions = {
     type: 'redis',
-    client?: Client | string
+    client?: RedisClient | string
 };
 
 export type TokenVerifierMemoryCacheOptions = {
