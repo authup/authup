@@ -13,6 +13,7 @@ import {
     DomainType,
     buildDomainChannelName,
 } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -21,10 +22,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { RealmEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, RealmEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -66,7 +65,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.REALM,
                     id: event.entity.id,
                 }),
@@ -83,7 +82,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.REALM,
                     id: event.entity.id,
                 }),

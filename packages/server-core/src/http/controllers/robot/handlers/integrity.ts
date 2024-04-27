@@ -15,7 +15,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { isVaultClientUsable } from '../../../../core';
+import { isVaultClientUsable } from '@authup/server-kit';
 import {
     RobotRepository,
     findRobotCredentialsInVault,

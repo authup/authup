@@ -7,7 +7,7 @@
 
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { useLogger } from '../../core';
+import { useLogger } from '@authup/server-kit';
 import { setupCommand } from '../../commands';
 import {
     setupConfig, setupLogger,

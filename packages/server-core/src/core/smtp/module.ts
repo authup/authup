@@ -1,26 +1,43 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SMTPClient } from '@authup/server-kit';
-import type { Factory } from 'singa';
-import { singa } from 'singa';
+import { createTransport } from 'nodemailer';
+import type { SMTPClient, SMTPOptions } from './type';
 
-const instance = singa<SMTPClient>({
-    name: 'smtp',
-});
+export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
+    let transport : SMTPClient;
 
-export function setSMTPClientFactory(factory: Factory<SMTPClient>) {
-    instance.setFactory(factory);
-}
+    options = options || {};
 
-export function isSMTPClientUsable() {
-    return instance.has() || instance.hasFactory();
-}
+    if (typeof options === 'string') {
+        transport = createTransport(options);
+    } else if (options.connectionString) {
+        transport = createTransport(options.connectionString);
+    } else {
+        let auth: Record<string, any> | undefined;
+        if (options.user && options.password) {
+            auth = {
+                type: 'login',
+                user: options.user,
+                pass: options.password,
+            };
+        }
 
-export function useSMTPClient() {
-    return instance.use();
+        transport = createTransport({
+            host: options.host,
+            port: options.port,
+            auth,
+            secure: options.ssl,
+            opportunisticTLS: options.starttls,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+    }
+
+    return transport;
 }

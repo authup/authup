@@ -9,6 +9,7 @@ import type { RoleAttribute } from '@authup/core-kit';
 import {
     DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -17,10 +18,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { RoleAttributeEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, RoleAttributeEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -58,7 +57,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
                     id: event.entity.role_id,
                 }),
@@ -75,7 +74,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
                     id: event.entity.role_id,
                 }),
@@ -92,7 +91,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
                     id: event.entity.role_id,
                 }),

@@ -6,9 +6,8 @@
  */
 
 import type { DomainEventPublishContext } from '@authup/server-kit';
-import { DomainEventPublisher } from '@authup/server-kit';
+import { DomainEventPublisher, isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 import { singa } from 'singa';
-import { isRedisClientUsable, useRedisClient } from '../redis';
 
 const singleton = singa<DomainEventPublisher>({
     name: 'domainEvent',

@@ -10,7 +10,7 @@ import { createNodeDispatcher } from 'routup';
 import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
 import {
-    buildConfig, createRouter, setConfig,
+    buildConfig, createRouter, setConfig, setupLogger,
 } from '../../src';
 
 export function useSuperTest() : SuperTest<Test> {
@@ -22,6 +22,10 @@ export function useSuperTest() : SuperTest<Test> {
     config.userAuthBasic = true;
 
     setConfig(config);
+
+    setupLogger({
+        env: 'test',
+    });
 
     const router = createRouter();
 

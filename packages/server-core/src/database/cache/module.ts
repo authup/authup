@@ -8,7 +8,7 @@
 import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
 import type { QueryRunner } from 'typeorm';
-import { isRedisClientUsable, useRedisClient } from '../../core';
+import { isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 
 type DatabaseQueryResultCacheOptions = {
     redisKeyPrefix?: string

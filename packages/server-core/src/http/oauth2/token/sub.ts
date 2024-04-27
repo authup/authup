@@ -9,15 +9,15 @@ import {
     OAuth2SubKind,
     TokenError,
 } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
-import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
-import { CachePrefix } from '../../../database';
 import type {
     RobotEntity,
     UserEntity,
 } from '../../../domains';
 import {
+    CachePrefix,
     ClientEntity,
     RobotRepository,
     UserRepository,
@@ -60,7 +60,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const query = repository.createQueryBuilder('client')
                 .where('client.id = :id', { id })
                 .cache({
-                    id: buildKeyPath({
+                    id: buildRedisKeyPath({
                         prefix: CachePrefix.CLIENT,
                         id,
                     }),
@@ -86,7 +86,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const query = repository.createQueryBuilder('user')
                 .where('user.id = :id', { id })
                 .cache({
-                    id: buildKeyPath({
+                    id: buildRedisKeyPath({
                         prefix: CachePrefix.USER,
                         id,
                     }),
@@ -118,7 +118,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const query = repository.createQueryBuilder('robot')
                 .where('robot.id = :id', { id })
                 .cache({
-                    id: buildKeyPath({
+                    id: buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT,
                         id,
                     }),

@@ -5,21 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createClient } from 'redis-extension';
-import type { Client, ClientOptions } from 'redis-extension';
 import { isObject } from 'smob';
-import { setRedisClient, setRedisFactory } from '../../core';
+import type { RedisClient, RedisClientOptions } from '@authup/server-kit';
+import { createRedisClient, setRedisClient, setRedisFactory } from '@authup/server-kit';
 
-export function isRedisClient(data: unknown) : data is Client {
+export function isRedisClient(data: unknown) : data is RedisClient {
     return isObject(data) &&
         typeof data.connect === 'function' &&
         typeof data.disconnect === 'function';
 }
 
-export function setupRedis(data: string | boolean | Client | ClientOptions): void {
+export function setupRedis(data: string | boolean | RedisClient | RedisClientOptions): void {
     if (typeof data === 'boolean' || !data) {
         if (data) {
-            setRedisFactory(() => createClient({
+            setRedisFactory(() => createRedisClient({
                 connectionString: 'redis://127.0.0.1',
             }));
         }
@@ -28,7 +27,7 @@ export function setupRedis(data: string | boolean | Client | ClientOptions): voi
     }
 
     if (typeof data === 'string') {
-        setRedisFactory(() => createClient({
+        setRedisFactory(() => createRedisClient({
             connectionString: data,
         }));
 
@@ -36,7 +35,7 @@ export function setupRedis(data: string | boolean | Client | ClientOptions): voi
     }
 
     if (!isRedisClient(data)) {
-        setRedisFactory(() => createClient({
+        setRedisFactory(() => createRedisClient({
             options: data,
         }));
 

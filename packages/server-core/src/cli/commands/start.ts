@@ -6,9 +6,9 @@
  */
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
+import { useLogger } from '@authup/server-kit';
 import { startCommand } from '../../commands';
 import { setupConfig, setupLogger } from '../../config';
-import { useLogger } from '../../core';
 import { buildDataSourceOptions } from '../../database';
 
 interface StartArguments extends Arguments {

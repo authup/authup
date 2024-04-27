@@ -1,9 +1,12 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './types';
+import { buildKeyPath as buildRedisKeyPath } from 'redis-extension';
+
+export {
+    buildRedisKeyPath,
+};

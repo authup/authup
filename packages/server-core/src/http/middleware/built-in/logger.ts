@@ -10,7 +10,7 @@ import type {
     Next, Request, Response, Router,
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
-import { useLogger } from '../../../core';
+import { useLogger } from '@authup/server-kit';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {

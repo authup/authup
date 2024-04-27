@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SMTPOptions } from '@authup/server-kit';
-import { createSMTPClient } from '@authup/server-kit';
-import { setSMTPClientFactory } from '../../core';
+import type { SMTPOptions } from '../../core';
+import { createSMTPClient, setSMTPClientFactory } from '../../core';
 
 export function setupSMTP(
     data: string | boolean | SMTPOptions,

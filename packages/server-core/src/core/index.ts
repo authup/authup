@@ -7,7 +7,4 @@
 
 export * from './domain-event-publisher';
 export * from './ldap';
-export * from './logger';
-export * from './redis';
 export * from './smtp';
-export * from './vault';

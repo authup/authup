@@ -6,8 +6,7 @@
  */
 
 import type { LoggerSetupContext } from '@authup/server-kit';
-import { createLogger } from '@authup/server-kit';
-import { setLoggerFactory } from '../../core';
+import { createLogger, setLoggerFactory } from '@authup/server-kit';
 
 export function setupLogger(ctx: LoggerSetupContext): void {
     setLoggerFactory(() => createLogger(ctx));

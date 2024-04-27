@@ -13,8 +13,8 @@ import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { EnvironmentName, useDataSource } from 'typeorm-extension';
-import { hasSmtpConfig } from '@authup/server-kit';
-import { isSMTPClientUsable, useLogger, useSMTPClient } from '../../../../../core';
+import { useLogger } from '@authup/server-kit';
+import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
@@ -31,7 +31,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     if (
         config.emailVerification &&
         config.env !== 'test' &&
-        !hasSmtpConfig()
+        !isSMTPClientUsable()
     ) {
         throw new BadRequestError('SMTP options are not defined.');
     }

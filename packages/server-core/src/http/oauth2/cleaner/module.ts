@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isRedisClientUsable } from '../../../core';
+import { isRedisClientUsable } from '@authup/server-kit';
 import { cleanUp } from './utils';
 import { runOAuth2CleanerInInterval } from './interval';
 import { runOAuth2CleanerByEvent } from './event';

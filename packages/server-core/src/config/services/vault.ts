@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { VaultClient } from '@hapic/vault';
-import { setVaultFactory } from '../../core';
+import { createVaultClient, setVaultFactory } from '@authup/server-kit';
 
 export function setupVault(data: string | boolean) {
     if (
@@ -14,7 +13,7 @@ export function setupVault(data: string | boolean) {
         typeof data === 'undefined'
     ) {
         if (data) {
-            setVaultFactory(() => new VaultClient({
+            setVaultFactory(() => createVaultClient({
                 connectionString: 'start123@http://127.0.0.1:8090/v1/',
             }));
         }
@@ -23,7 +22,7 @@ export function setupVault(data: string | boolean) {
     }
 
     if (typeof data === 'string') {
-        setVaultFactory(() => new VaultClient({
+        setVaultFactory(() => createVaultClient({
             connectionString: data,
         }));
     }

@@ -25,13 +25,12 @@ import {
     isUUID,
 } from '@authup/core-kit';
 
-import { compare, hash } from '@authup/server-kit';
-import { buildKeyPath } from 'redis-extension';
+import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
+import { CachePrefix } from '../constants';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
-import { CachePrefix } from '../../database/constants';
 import { UserAttributeEntity } from '../user-attribute';
 import { appendAttributes, transformAttributesToRecord } from '../utils';
 
@@ -58,7 +57,7 @@ export class UserRepository extends Repository<UserEntity> {
                 user_id: entity.id,
             },
             cache: {
-                id: buildKeyPath({
+                id: buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
                     id: entity.id,
                 }),
@@ -115,7 +114,7 @@ export class UserRepository extends Repository<UserEntity> {
                     user_id: id,
                 },
                 cache: {
-                    id: buildKeyPath({
+                    id: buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ROLES,
                         id,
                     }),
@@ -146,7 +145,7 @@ export class UserRepository extends Repository<UserEntity> {
                 permission: true,
             },
             cache: {
-                id: buildKeyPath({
+                id: buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     id,
                 }),

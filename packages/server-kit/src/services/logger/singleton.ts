@@ -6,7 +6,7 @@
  */
 
 import { type Factory, singa } from 'singa';
-import type { Logger } from '@authup/server-kit';
+import type { Logger } from 'winston';
 
 const instance = singa<Logger>({
     name: 'logger',

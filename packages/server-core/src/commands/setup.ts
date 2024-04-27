@@ -7,8 +7,8 @@
 
 import { createDatabase, synchronizeDatabaseSchema } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
+import { useLogger } from '@authup/server-kit';
 import { useConfig } from '../config';
-import { useLogger } from '../core';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { generateSwaggerDocumentation } from '../http';
 import type { SetupCommandContext } from './type';

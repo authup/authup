@@ -8,8 +8,8 @@
 import type { Robot } from '@authup/core-kit';
 import {
     isClientErrorWithStatusCode,
-} from '@hapic/vault';
-import { isVaultClientUsable, useVaultClient } from '../../core';
+} from 'hapic';
+import { isVaultClientUsable, useVaultClient } from '@authup/server-kit';
 
 export async function createRobotVaultEngine() {
     if (!isVaultClientUsable()) {

@@ -7,8 +7,8 @@
 import type { DataSourceOptions } from 'typeorm';
 import { adjustFilePath } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import { isRedisClientUsable } from '@authup/server-kit';
 import { isDatabaseTypeSupported, useConfig } from '../../config';
-import { isRedisClientUsable } from '../../core';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';

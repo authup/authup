@@ -14,8 +14,8 @@ import {
     setDataSource,
     synchronizeDatabaseSchema,
 } from 'typeorm-extension';
+import { isRedisClientUsable, isVaultClientUsable, useLogger } from '@authup/server-kit';
 import { useConfig } from '../config';
-import { isRedisClientUsable, isVaultClientUsable, useLogger } from '../core';
 import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
 import { saveRobotCredentialsToVault } from '../domains';
 import {

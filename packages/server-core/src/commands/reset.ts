@@ -6,7 +6,7 @@
  */
 
 import { dropDatabase } from 'typeorm-extension';
-import { useLogger } from '../core';
+import { useLogger } from '@authup/server-kit';
 import { buildDataSourceOptions } from '../database';
 import type { ResetCommandContext } from './type';
 
