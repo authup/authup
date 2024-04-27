@@ -52,8 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "jose": "^5.2.4",
-        "redis-extension": "^1.3.0"
+        "jose": "^5.2.4"
     },
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",

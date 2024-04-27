@@ -13,6 +13,7 @@ import {
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -22,10 +23,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { UserAttributeEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, UserAttributeEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -59,7 +58,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
     async afterInsert(event: InsertEvent<UserAttributeEntity>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
                     id: event.entity.user_id,
                 }),
@@ -78,7 +77,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
                     id: event.entity.user_id,
                 }),
@@ -95,7 +94,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
                     id: event.entity.user_id,
                 }),

@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './domain-event';
+export * from './domain-event-publisher';
 export * from './ldap';
-export * from './logger';
+export * from './smtp';

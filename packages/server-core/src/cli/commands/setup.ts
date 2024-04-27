@@ -7,10 +7,10 @@
 
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { createLogger } from '../../core';
+import { useLogger } from '@authup/server-kit';
 import { setupCommand } from '../../commands';
 import {
-    setupConfig,
+    setupConfig, setupLogger,
 } from '../../config';
 import { buildDataSourceOptions } from '../../database';
 
@@ -67,7 +67,8 @@ export class SetupCommand implements CommandModule {
         });
 
         const dataSourceOptions = await buildDataSourceOptions();
-        const logger = createLogger({
+
+        setupLogger({
             directory: config.writableDirectoryPath,
             env: config.env,
         });
@@ -75,11 +76,10 @@ export class SetupCommand implements CommandModule {
         try {
             await setupCommand({
                 dataSourceOptions,
-                logger,
                 ...args,
             });
         } catch (e) {
-            logger.error(e);
+            useLogger().error(e);
 
             process.exit(1);
         }

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type {
@@ -15,10 +16,9 @@ import {
     buildAbility,
 
 } from '@authup/core-kit';
-import { buildKeyPath } from 'redis-extension';
+import { CachePrefix } from '../constants';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
-import { CachePrefix } from '../../database/constants';
 
 export class RoleRepository extends Repository<RoleEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -50,7 +50,7 @@ export class RoleRepository extends Repository<RoleEntity> {
                 permission: true,
             },
             cache: {
-                id: buildKeyPath({
+                id: buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
                     id,
                 }),

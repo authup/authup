@@ -7,17 +7,16 @@
 
 import type { Robot } from '@authup/core-kit';
 import {
-    hasClient,
     isClientErrorWithStatusCode,
-    useClient,
-} from '@hapic/vault';
+} from 'hapic';
+import { isVaultClientUsable, useVaultClient } from '@authup/server-kit';
 
 export async function createRobotVaultEngine() {
-    if (!hasClient()) {
+    if (!isVaultClientUsable()) {
         return;
     }
 
-    const client = useClient();
+    const client = useVaultClient();
 
     await client.mount.create(
         'robots',
@@ -31,11 +30,11 @@ export async function createRobotVaultEngine() {
 }
 
 export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'secret' | 'name'>) {
-    if (!hasClient()) {
+    if (!isVaultClientUsable()) {
         return;
     }
 
-    const client = useClient();
+    const client = useVaultClient();
 
     try {
         await client.keyValueV1.create(
@@ -58,11 +57,11 @@ export async function saveRobotCredentialsToVault(entity: Pick<Robot, 'id' | 'se
 }
 
 export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'>) {
-    if (!hasClient()) {
+    if (!isVaultClientUsable()) {
         return;
     }
 
-    const client = useClient();
+    const client = useVaultClient();
 
     try {
         await client.keyValueV1.delete(
@@ -81,11 +80,11 @@ export async function removeRobotCredentialsFromVault(entity: Pick<Robot, 'name'
 export async function findRobotCredentialsInVault(
     entity: Pick<Robot, 'name'>,
 ) : Promise<Pick<Robot, 'id' | 'secret'> | undefined> {
-    if (!hasClient()) {
+    if (!isVaultClientUsable()) {
         return undefined;
     }
 
-    const client = useClient();
+    const client = useVaultClient();
 
     try {
         const response = await client.keyValueV1.getOne(

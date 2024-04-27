@@ -15,15 +15,14 @@ import {
     isUUID,
 } from '@authup/core-kit';
 
-import { compare, hash } from '@authup/server-kit';
+import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
+import { CachePrefix } from '../constants';
 import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
-import { CachePrefix } from '../../database/constants';
 
 export class RobotRepository extends Repository<RobotEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -42,7 +41,7 @@ export class RobotRepository extends Repository<RobotEntity> {
                     robot_id: id,
                 },
                 cache: {
-                    id: buildKeyPath({
+                    id: buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT_OWNED_ROLES,
                         id,
                     }),
@@ -73,7 +72,7 @@ export class RobotRepository extends Repository<RobotEntity> {
                 permission: true,
             },
             cache: {
-                id: buildKeyPath({
+                id: buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
                     id,
                 }),

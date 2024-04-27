@@ -7,6 +7,7 @@
 
 import type { ClientScope } from '@authup/core-kit';
 import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -15,10 +16,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { ClientScopeEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, ClientScopeEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -62,8 +61,8 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROBOT,
+                buildRedisKeyPath({
+                    prefix: CachePrefix.CLIENT_SCOPE,
                     id: event.entity.id,
                 }),
             ]);
@@ -79,8 +78,8 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROBOT,
+                buildRedisKeyPath({
+                    prefix: CachePrefix.CLIENT_SCOPE,
                     id: event.entity.id,
                 }),
             ]);

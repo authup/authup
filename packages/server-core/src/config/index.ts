@@ -6,7 +6,7 @@
  */
 
 export * from './constants';
-export * from './clients';
+export * from './services';
 export * from './module';
 export * from './parse';
 export * from './setup';

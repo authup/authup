@@ -1,11 +1,17 @@
 /*
- * Copyright (c) 2022-2023.
+ * Copyright (c) 2023.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './cache';
-export * from './seeds';
-export * from './subscribers';
-export * from './utils';
+import { Logger } from 'winston';
+
+export {
+    Logger,
+};
+
+export type LoggerSetupContext = {
+    env: string
+    directory?: string
+};

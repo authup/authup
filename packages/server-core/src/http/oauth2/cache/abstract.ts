@@ -5,18 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { KeyPathID } from 'redis-extension';
-import {
-    Cache, hasClient, hasConfig, useClient,
-} from 'redis-extension';
 import { TokenError, hasOwnProperty } from '@authup/core-kit';
+import type { RedisKeyPathID } from '@authup/server-kit';
+import { RedisCache, isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 
 export abstract class OAuth2AbstractCache<
     T extends Record<string, any> & { id: string, expires?: Date | string | number },
 > {
     protected prefix: string;
 
-    protected driver : Cache<T['id'], T> | undefined;
+    protected driver : RedisCache<T['id'], T> | undefined;
 
     protected constructor(prefix: string) {
         this.prefix = prefix;
@@ -32,7 +30,7 @@ export abstract class OAuth2AbstractCache<
 
         const seconds = Math.ceil((date.getTime() - Date.now()) / 1000);
         await driver.set(
-            { id: entity.id } as KeyPathID<T['id'], T>,
+            { id: entity.id } as RedisKeyPathID<T['id'], T>,
             entity,
             { seconds },
         );
@@ -45,7 +43,7 @@ export abstract class OAuth2AbstractCache<
             return;
         }
 
-        await driver.drop({ id } as KeyPathID<T['id'], T>);
+        await driver.drop({ id } as RedisKeyPathID<T['id'], T>);
         await this.deleteDBEntity(id);
     }
 
@@ -65,7 +63,7 @@ export abstract class OAuth2AbstractCache<
 
         entity = await driver.get({
             id,
-        } as KeyPathID<T['id'], T>);
+        } as RedisKeyPathID<T['id'], T>);
 
         if (!entity) {
             entity = await this.loadDBEntity(id);
@@ -86,7 +84,7 @@ export abstract class OAuth2AbstractCache<
         ) {
             const driver = await this.useDriver();
             if (driver) {
-                await driver.drop(entity.id as KeyPathID<T['id'], T>);
+                await driver.drop(entity.id as RedisKeyPathID<T['id'], T>);
             }
 
             await this.deleteDBEntity(entity.id);
@@ -97,17 +95,17 @@ export abstract class OAuth2AbstractCache<
         return false;
     }
 
-    protected async useDriver() : Promise<Cache<T['id'], T> | undefined> {
+    protected async useDriver() : Promise<RedisCache<T['id'], T> | undefined> {
         if (this.driver) {
             return this.driver;
         }
 
-        if (!hasClient() && !hasConfig()) {
+        if (!isRedisClientUsable()) {
             return undefined;
         }
 
-        this.driver = new Cache<T['id'], T>({
-            redis: useClient(),
+        this.driver = new RedisCache<T['id'], T>({
+            redis: useRedisClient(),
         }, { prefix: this.prefix });
 
         return this.driver;

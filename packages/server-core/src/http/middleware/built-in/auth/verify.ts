@@ -14,6 +14,7 @@ import {
     ScopeName,
     TokenError, transformOAuth2ScopeToArray,
 } from '@authup/core-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     AuthorizationHeader,
     BasicAuthorizationHeader,
@@ -22,11 +23,9 @@ import type {
 import {
     AuthorizationHeaderType,
 } from 'hapic';
-import { buildKeyPath } from 'redis-extension';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
-import { CachePrefix } from '../../../../database';
 import type {
     ClientEntity,
     RobotEntity,
@@ -34,6 +33,7 @@ import type {
     UserEntity,
 } from '../../../../domains';
 import {
+    CachePrefix,
     ClientRepository,
     RealmEntity,
     RobotRepository,
@@ -65,7 +65,7 @@ async function verifyBearerAuthorizationHeader(
             id: payload.realm_id,
         },
         cache: {
-            id: buildKeyPath({
+            id: buildRedisKeyPath({
                 prefix: CachePrefix.REALM,
                 id: payload.realm_id,
             }),

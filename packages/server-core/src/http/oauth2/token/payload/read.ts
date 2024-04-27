@@ -7,9 +7,8 @@
 
 import type { OAuth2TokenPayload } from '@authup/core-kit';
 import { ErrorCode, TokenError } from '@authup/core-kit';
-import { extractTokenHeader } from '@authup/server-kit';
+import { buildRedisKeyPath, extractTokenHeader } from '@authup/server-kit';
 import { isHTTPError } from '@ebec/http';
-import { buildKeyPath } from 'redis-extension';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';
 
@@ -35,7 +34,7 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
                 id: header.kid,
             },
             cache: {
-                id: buildKeyPath({
+                id: buildRedisKeyPath({
                     prefix: 'realm_key',
                     id: header.kid,
                 }),

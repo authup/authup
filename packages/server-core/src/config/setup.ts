@@ -7,7 +7,7 @@
 
 import { Container } from '@authup/config';
 import { buildConfig } from './build';
-import { setupRedis, setupSmtp, setupVault } from './clients';
+import { setupRedis, setupSMTP, setupVault } from './services';
 import { setConfig } from './module';
 import type { Config, ConfigSetupContext } from './types';
 
@@ -38,7 +38,7 @@ export async function setupConfig(context: ConfigSetupContext = {}): Promise<Con
     }
 
     if (config.smtp) {
-        setupSmtp(config.smtp);
+        setupSMTP(config.smtp);
     }
 
     if (config.vault) {

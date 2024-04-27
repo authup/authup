@@ -6,20 +6,19 @@
  */
 
 import { dropDatabase } from 'typeorm-extension';
+import { useLogger } from '@authup/server-kit';
 import { buildDataSourceOptions } from '../database';
 import type { ResetCommandContext } from './type';
 
 export async function resetCommand(context?: ResetCommandContext) {
     context = context || {};
 
-    if (context.logger) {
-        context.logger.info('Executing database reset.');
-    }
+    const logger = useLogger();
+
+    logger.info('Executing database reset.');
 
     const options = context.dataSourceOptions || await buildDataSourceOptions();
     await dropDatabase({ options });
 
-    if (context.logger) {
-        context.logger.info('Executed database reset.');
-    }
+    logger.info('Executed database reset.');
 }

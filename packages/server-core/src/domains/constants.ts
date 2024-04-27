@@ -1,15 +1,21 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 export enum CachePrefix {
+    IDENTITY_PROVIDER = 'identity_provider',
+    IDENTITY_PROVIDER_ACCOUNT = 'identity_provider_account',
+    IDENTITY_PROVIDER_ATTRIBUTE = 'identity_provider_attribute',
+    IDENTITY_PROVIDER_ROLE = 'identity_provider_role',
+
     OAUTH2_AUTHORIZATION_CODE = 'oauth2_authorization_code',
     OAUTH2_REFRESH_TOKEN = 'oauth2_refresh_token',
 
     CLIENT = 'client',
+    CLIENT_SCOPE = 'client_scope',
 
     USER = 'user',
     USER_OWNED_ATTRIBUTES = 'user_owned_attributes',

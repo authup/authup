@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useLogger } from '@authup/server-kit';
 import morgan from 'morgan';
 import type {
     Next, Request, Response, Router,
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
+import { useLogger } from '@authup/server-kit';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {

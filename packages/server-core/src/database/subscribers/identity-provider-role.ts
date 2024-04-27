@@ -13,7 +13,7 @@ import {
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -22,10 +22,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { IdentityProviderRoleEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, IdentityProviderRoleEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -81,8 +79,8 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROBOT,
+                buildRedisKeyPath({
+                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
                     id: event.entity.id,
                 }),
             ]);
@@ -98,8 +96,8 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
-                    prefix: CachePrefix.ROBOT,
+                buildRedisKeyPath({
+                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
                     id: event.entity.id,
                 }),
             ]);

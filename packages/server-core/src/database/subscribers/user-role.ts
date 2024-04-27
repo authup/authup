@@ -13,7 +13,7 @@ import {
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -22,10 +22,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { UserRoleEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, UserRoleEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -71,7 +69,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),
@@ -88,7 +86,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),
@@ -105,7 +103,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ROLES,
                     id: event.entity.user_id,
                 }),

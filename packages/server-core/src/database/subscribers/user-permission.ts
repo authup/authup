@@ -13,7 +13,7 @@ import {
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -22,10 +22,8 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { buildKeyPath } from 'redis-extension';
 import { publishDomainEvent } from '../../core';
-import { UserPermissionEntity } from '../../domains';
-import { CachePrefix } from '../constants';
+import { CachePrefix, UserPermissionEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
@@ -70,7 +68,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
     async afterInsert(event: InsertEvent<UserPermissionEntity>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     id: event.entity.user_id,
                 }),
@@ -89,7 +87,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     id: event.entity.user_id,
                 }),
@@ -106,7 +104,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
 
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
-                buildKeyPath({
+                buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     id: event.entity.user_id,
                 }),

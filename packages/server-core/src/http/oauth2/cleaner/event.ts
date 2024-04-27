@@ -1,13 +1,11 @@
-import { Cache, useClient } from 'redis-extension';
+import { RedisCache, useLogger, useRedisClient } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
-import { useLogger } from '@authup/server-kit';
-import { CachePrefix } from '../../../database';
-import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { CachePrefix, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
 
 export async function runOAuth2CleanerByEvent() {
-    const redis = useClient();
+    const redis = useRedisClient();
 
-    const authorizationCodeCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_AUTHORIZATION_CODE });
+    const authorizationCodeCache = new RedisCache<string>({ redis }, { prefix: CachePrefix.OAUTH2_AUTHORIZATION_CODE });
     authorizationCodeCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);
@@ -20,7 +18,7 @@ export async function runOAuth2CleanerByEvent() {
 
     // -------------------------------------------------
 
-    const refreshTokenCache = new Cache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
+    const refreshTokenCache = new RedisCache<string>({ redis }, { prefix: CachePrefix.OAUTH2_REFRESH_TOKEN });
     refreshTokenCache.on('expired', async (data) => {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
