@@ -6,17 +6,13 @@
  */
 
 import type { DomainEventPublishContext } from '@authup/server-kit';
-import { DomainEventPublisher, isRedisClientUsable, useRedisClient } from '@authup/server-kit';
+import { DomainEventPublisher } from '@authup/server-kit';
 import { singa } from 'singa';
 
 const singleton = singa<DomainEventPublisher>({
     name: 'domainEvent',
     factory() {
-        if (!isRedisClientUsable()) {
-            throw new Error('The redis client is not configured.');
-        }
-
-        return new DomainEventPublisher(useRedisClient());
+        return new DomainEventPublisher();
     },
 });
 
@@ -25,11 +21,6 @@ export function useDomainEventPublisher() {
 }
 
 export async function publishDomainEvent(ctx: DomainEventPublishContext) : Promise<void> {
-    if (!isRedisClientUsable()) {
-        // todo: maybe log info
-        return;
-    }
-
     await useDomainEventPublisher()
         .publish(ctx);
 }

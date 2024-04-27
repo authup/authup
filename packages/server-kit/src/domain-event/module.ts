@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from 'redis-extension';
+import { isRedisClientUsable, useRedisClient } from '../services';
 import { DomainEventRedisPublisher } from './redis';
 import { DomainEventSocketPublisher } from './socket';
 import type { DomainEventPublishContent, DomainEventPublishContext, IDomainEventPublisher } from './type';
@@ -13,10 +13,15 @@ import type { DomainEventPublishContent, DomainEventPublishContext, IDomainEvent
 export class DomainEventPublisher implements IDomainEventPublisher {
     protected publishers : Set<IDomainEventPublisher>;
 
-    constructor(client: Client) {
+    constructor() {
         this.publishers = new Set<IDomainEventPublisher>();
-        this.publishers.add(new DomainEventRedisPublisher(client));
-        this.publishers.add(new DomainEventSocketPublisher(client));
+
+        if (isRedisClientUsable()) {
+            const client = useRedisClient();
+
+            this.publishers.add(new DomainEventRedisPublisher(client));
+            this.publishers.add(new DomainEventSocketPublisher(client));
+        }
     }
 
     async publish<T extends DomainEventPublishContent>(
