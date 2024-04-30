@@ -87,7 +87,7 @@
         "@types/yargs": "^17.0.32",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.0.0",
-        "testcontainers": "^10.8.1",
+        "testcontainers": "^10.9.0",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {
