@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTAlgorithm } from '../../auth';
-import type { KeyType } from './constants';
+import type { JWKType, JWTAlgorithm } from '@authup/kit';
 import type { Realm } from '../realm';
 
 export interface Key {
@@ -15,7 +14,7 @@ export interface Key {
     /**
      * OCT, RSA or EC
      */
-    type: `${KeyType}`,
+    type: `${JWKType}`,
 
     /**
      * Algorithm for signing and verifying

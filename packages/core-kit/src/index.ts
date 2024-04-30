@@ -8,5 +8,4 @@
 export * from './auth';
 export * from './http';
 export * from './domains';
-export * from './error';
 export * from './utils';

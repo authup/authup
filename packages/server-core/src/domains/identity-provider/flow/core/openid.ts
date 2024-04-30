@@ -5,13 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { JWTClaims } from '@authup/core-kit';
 import { TokenError } from '@authup/core-kit';
-import type { KeycloakJWTPayload } from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 import { OAuth2IdentityProviderFlow } from './oauth2';
+
+export type KeycloakJWTPayload = JWTClaims & {
+    realm_access?: {
+        roles?: string[]
+    }
+};
 
 export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     // eslint-disable-next-line no-useless-constructor,@typescript-eslint/no-useless-constructor

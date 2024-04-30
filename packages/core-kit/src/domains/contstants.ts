@@ -26,14 +26,3 @@ export enum DomainType {
     USER_PERMISSION = 'userPermission',
     USER_ROLE = 'userRole',
 }
-
-export enum DomainEventName {
-    CREATED = 'created',
-    DELETED = 'deleted',
-    UPDATED = 'updated',
-}
-
-export enum DomainEventSubscriptionName {
-    SUBSCRIBE = 'subscribe',
-    UNSUBSCRIBE = 'unsubscribe',
-}

@@ -7,7 +7,6 @@
 
 import type { Client, RequestBaseOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
-import type { DomainEventName } from './contstants';
 
 export type SingleResourceResponse<R> = R;
 export type CollectionResourceResponse<R> = {
@@ -40,9 +39,4 @@ export interface DomainAPI<T> extends DomainAPISlim<T> {
 
 export type BaseAPIContext = {
     client?: Client | RequestBaseOptions
-};
-
-export type DomainEventBaseContext = {
-    event: `${DomainEventName}`,
-    type: string
 };

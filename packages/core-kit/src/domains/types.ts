@@ -7,7 +7,7 @@
 
 import type { Client, ClientEventContext } from './client';
 import type { ClientScope, ClientScopeEventContext } from './client-scope';
-import type { DomainEventName, DomainEventSubscriptionName, DomainType } from './contstants';
+import type { DomainType } from './contstants';
 import type { IdentityProvider, IdentityProviderEventContext } from './identity-provider';
 import type { IdentityProviderAccount, IdentityProviderAccountEventContext } from './identity-provider-account';
 import type { IdentityProviderAttribute, IdentityProviderAttributeEventContext } from './identity-provider-attribute';
@@ -25,26 +25,6 @@ import type { User, UserEventContext } from './user';
 import type { UserAttribute, UserAttributeEventContext } from './user-attribute';
 import type { UserPermission, UserPermissionEventContext } from './user-permission';
 import type { UserRole, UserRoleEventContext } from './user-role';
-
-export type DomainsEventContext = ClientEventContext |
-ClientScopeEventContext |
-IdentityProviderEventContext |
-IdentityProviderAccountEventContext |
-IdentityProviderAttributeEventContext |
-IdentityProviderRoleEventContext |
-PermissionEventContext |
-RealmEventContext |
-RobotEventContext |
-RobotPermissionEventContext |
-RobotRoleEventContext |
-RoleEventContext |
-RoleAttributeEventContext |
-RolePermissionEventContext |
-ScopeEventContext |
-UserEventContext |
-UserAttributeEventContext |
-UserPermissionEventContext |
-UserRoleEventContext;
 
 export type DomainEventContext<T extends `${DomainType}`> = T extends `${DomainType.CLIENT}` ?
     ClientEventContext :
@@ -125,11 +105,3 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                                                                         T extends `${DomainType.USER_ROLE}` ?
                                                                             UserRole :
                                                                             never;
-
-export type DomainEventFullName<
-    T extends `${DomainType}` | DomainType = `${DomainType}` | DomainType,
-> = `${T}${Capitalize<`${DomainEventName}`>}`;
-
-export type DomainEventSubscriptionFullName<
-    T extends `${DomainType}` | DomainType = `${DomainType}` | DomainType,
-> = `${T}${Capitalize<`${DomainEventSubscriptionName}`>}`;

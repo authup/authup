@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2AuthorizationResponseType } from '@authup/kit';
 import type { User } from '../user';
 import type { Client } from '../client';
 import type { Realm } from '../realm';
-import type { OAuth2AuthorizationResponseType } from './constants';
 
 export interface OAuth2AuthorizationCode {
     id: string,
