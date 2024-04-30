@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainEventName } from '@authup/core-kit';
 import type { Client } from 'redis-extension';
 import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
 import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
@@ -28,10 +27,7 @@ export class DomainEventRedisPublisher implements IDomainEventPublisher {
             let key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel);
             pipeline.publish(key, data);
 
-            if (
-                ctx.content.event !== DomainEventName.CREATED &&
-                typeof ctx.destinations[i].channel === 'function'
-            ) {
+            if (typeof ctx.destinations[i].channel === 'function') {
                 key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel, ctx.content.data.id);
                 pipeline.publish(key, data);
             }

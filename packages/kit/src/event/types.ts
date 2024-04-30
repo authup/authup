@@ -7,7 +7,8 @@
 
 export type EventPayload = {
     event: string,
-    type: string
+    type: string,
+    data: Record<string, any>
 };
 
 export type EventFullName<

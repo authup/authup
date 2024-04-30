@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainEventName, buildDomainEventFullName } from '@authup/core-kit';
+import { buildEventFullName } from '@authup/kit';
 import { Emitter } from '@socket.io/redis-emitter';
 import type { Client } from 'redis-extension';
 import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
@@ -31,7 +31,7 @@ export class DomainEventSocketPublisher implements IDomainEventPublisher {
 
             let roomName = buildDomainEventChannelName(ctx.destinations[i].channel);
 
-            const fullEventName = buildDomainEventFullName(ctx.content.type, ctx.content.event);
+            const fullEventName = buildEventFullName(ctx.content.type, ctx.content.event);
 
             emitter
                 .in(roomName)
@@ -42,10 +42,7 @@ export class DomainEventSocketPublisher implements IDomainEventPublisher {
                     },
                 });
 
-            if (
-                ctx.content.event !== DomainEventName.CREATED &&
-                typeof ctx.destinations[i].channel === 'function'
-            ) {
+            if (typeof ctx.destinations[i].channel === 'function') {
                 roomName = buildDomainEventChannelName(ctx.destinations[i].channel, ctx.content.data.id);
 
                 emitter

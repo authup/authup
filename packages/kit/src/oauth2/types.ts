@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '../jwt';
+import type { JWTClaims } from '../json-web-token';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
 export type OAuth2TokenGrantResponse = {

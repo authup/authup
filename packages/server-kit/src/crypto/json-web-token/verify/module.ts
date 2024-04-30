@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { KeyType, TokenError } from '@authup/core-kit';
-import type { JWTClaims, OAuth2TokenPayload } from '@authup/core-kit';
+import { JWKType, TokenError } from '@authup/kit';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/kit';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { isKeyPairWithPublicKey, useKeyPair } from '../../key-pair';
 import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';
@@ -30,15 +30,15 @@ export async function verifyToken(
 
     try {
         switch (context.type) {
-            case KeyType.RSA:
-            case KeyType.EC: {
+            case JWKType.RSA:
+            case JWKType.EC: {
                 const { publicKey } = isKeyPairWithPublicKey(context.keyPair) ?
                     context.keyPair :
                     await useKeyPair(context.keyPair);
 
                 let algorithms : Algorithm[];
 
-                if (context.type === KeyType.RSA) {
+                if (context.type === JWKType.RSA) {
                     algorithms = context.algorithms ?
                         context.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                         [
@@ -64,7 +64,7 @@ export async function verifyToken(
                 });
                 break;
             }
-            case KeyType.OCT: {
+            case JWKType.OCT: {
                 const algorithms : Algorithm[] = context.algorithms ?
                     context.algorithms.map((algorithm) => transformJWTAlgorithmToInternal(algorithm)) :
                     [

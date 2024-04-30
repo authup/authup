@@ -5,23 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { KeyType } from '@authup/core-kit';
+import type { JWKType } from '@authup/kit';
 import type Buffer from 'node:buffer';
 import type { KeyPair, KeyPairOptions } from '../../key-pair';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
 
 export type TokenVerifyRSAOptions = {
-    type: `${KeyType.RSA}` | KeyType.RSA,
+    type: `${JWKType.RSA}` | JWKType.RSA,
     algorithms?: TokenRSAAlgorithm[],
     keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string,
 };
 export type TokenVerifyECOptions = {
-    type: `${KeyType.EC}` | KeyType.EC,
+    type: `${JWKType.EC}` | JWKType.EC,
     algorithms?: TokenECAlgorithm[],
     keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string,
 };
 export type TokenVerifyOCTOptions = {
-    type: `${KeyType.OCT}` | KeyType.OCT,
+    type: `${JWKType.OCT}` | JWKType.OCT,
     algorithms?: TokenOCTAlgorithm[],
     key: string | Buffer
 };
