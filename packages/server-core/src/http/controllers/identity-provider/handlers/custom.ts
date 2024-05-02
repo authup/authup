@@ -8,9 +8,11 @@
 import { URL } from 'node:url';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
-    CookieName,
     IdentityProviderProtocol,
 } from '@authup/core-kit';
+import {
+    CookieName,
+} from '@authup/core-http-kit';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';

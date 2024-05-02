@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
-    OAuth2SubKind, ScopeName, TokenError, UserError,
+    OAuth2SubKind, TokenError,
+} from '@authup/kit';
+import {
+    ScopeName, UserError,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';

@@ -19,8 +19,11 @@ import type {
 } from '@authup/core-kit';
 import {
     Permission, User,
-    deserialize, serialize,
 } from '@authup/core-kit';
+import {
+    deserialize,
+    serialize,
+} from '@authup/kit';
 import { UserEntity } from '../user/entity';
 import { PermissionEntity } from '../permission';
 import { RealmEntity } from '../realm';

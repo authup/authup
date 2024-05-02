@@ -9,6 +9,8 @@ import { randomBytes } from 'node:crypto';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
+} from '@authup/kit';
+import {
     hasOAuth2OpenIDScope,
 } from '@authup/core-kit';
 import type { Request } from 'routup';

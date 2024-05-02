@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient, isOAuth2OpenIDProviderMetadata } from '@authup/core-kit';
+import { APIClient } from '@authup/core-http-kit';
+import { isOAuth2OpenIDProviderMetadata } from '@authup/kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {

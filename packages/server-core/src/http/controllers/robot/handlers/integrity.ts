@@ -8,9 +8,11 @@
 import type { Realm } from '@authup/core-kit';
 import {
     REALM_MASTER_NAME,
+} from '@authup/core-kit';
+import {
     createNanoID,
     isUUID,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';

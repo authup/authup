@@ -6,9 +6,8 @@
  */
 
 import type { Client, Robot, User } from '@authup/core-kit';
-import {
-    OAuth2SubKind, ScopeName, hasOwnProperty, transformOAuth2ScopeToArray,
-} from '@authup/core-kit';
+import { OAuth2SubKind, hasOwnProperty } from '@authup/kit';
+import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
 
 type ScopeSubFields<
     I extends Record<string, Record<string, any>>,

@@ -6,8 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { OAuth2OpenIdTokenPayload } from '@authup/core-kit';
-import { OAuth2TokenKind } from '@authup/core-kit';
+import type { OAuth2OpenIdTokenPayload } from '@authup/kit';
+import { OAuth2TokenKind } from '@authup/kit';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
 import type { OAuth2OpenIdTokenBuildContext } from './type';

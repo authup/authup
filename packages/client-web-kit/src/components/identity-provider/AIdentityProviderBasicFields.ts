@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider } from '@authup/core-kit';
-import { createNanoID } from '@authup/core-kit';
+import { createNanoID } from '@authup/kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {

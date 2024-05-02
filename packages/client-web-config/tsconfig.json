@@ -4,6 +4,7 @@
         "esModuleInterop": true,
         "strict": true,
         "paths": {
+            "@authup/kit": ["./packages/kit/src"],
             "@authup/core-kit": ["./packages/core-kit/src"]
         }
     },

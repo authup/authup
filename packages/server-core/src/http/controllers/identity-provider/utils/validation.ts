@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from '@authup/kit';
 import { check, oneOf, validationResult } from 'express-validator';
 import {
     IdentityProviderPreset,
     IdentityProviderProtocol,
-    getIdentityProviderProtocolForPreset, isPropertySet,
+    getIdentityProviderProtocolForPreset,
     isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authup/core-kit';

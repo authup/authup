@@ -6,7 +6,7 @@
  */
 
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
-import type { APIClient } from '@authup/core-kit';
+import type { APIClient } from '@authup/core-http-kit';
 import type { ClientManager } from '@authup/core-realtime-kit';
 import type {
     AClient,

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Ability } from '../ability-manager';
 import type { JWTClaims } from '../json-web-token';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
@@ -105,6 +106,11 @@ export type OAuth2TokenPayload = JWTClaims & {
      * Additional parameters
      */
     [key: string]: any
+};
+
+export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & {
+    active: boolean,
+    permissions?: Ability[]
 };
 
 export type OAuth2JsonWebKey = {

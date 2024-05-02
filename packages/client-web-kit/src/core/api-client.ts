@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { APIClient } from '@authup/core-kit';
+import type { APIClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { inject } from './inject';
 import { provide } from './provide';

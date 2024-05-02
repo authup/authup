@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createNanoID } from '@authup/kit';
 import type { DataSource, FindOptionsWhere } from 'typeorm';
 import { In } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
@@ -18,7 +19,7 @@ import type {
 import {
     PermissionName,
     REALM_MASTER_NAME,
-    ScopeName, createNanoID,
+    ScopeName,
 } from '@authup/core-kit';
 import { hasOwnProperty, hash } from '@authup/server-kit';
 import {

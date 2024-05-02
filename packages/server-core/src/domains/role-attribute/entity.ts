@@ -14,8 +14,9 @@ import {
 } from 'typeorm';
 import type { Realm, Role, RoleAttribute } from '@authup/core-kit';
 import {
-    deserialize, serialize,
-} from '@authup/core-kit';
+    deserialize,
+    serialize,
+} from '@authup/kit';
 import { RealmEntity } from '../realm';
 import { RoleEntity } from '../role';
 

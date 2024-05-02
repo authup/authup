@@ -15,16 +15,17 @@ import {
     Repository,
 } from 'typeorm';
 import type {
-    Ability,
     Role, User,
     UserRole,
 } from '@authup/core-kit';
 import {
     buildAbility,
+} from '@authup/core-kit';
+import type { Ability } from '@authup/kit';
+import {
     createNanoID,
     isUUID,
-} from '@authup/core-kit';
-
+} from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import { CachePrefix } from '../constants';
 import { RoleRepository } from '../role';
@@ -105,7 +106,7 @@ export class UserRepository extends Repository<UserEntity> {
     async getOwnedPermissions(
         id: User['id'],
     ) : Promise<Ability[]> {
-        const permissions : Ability[] = await this.getSelfOwnedPermissions(id);
+        const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(UserRoleEntity)

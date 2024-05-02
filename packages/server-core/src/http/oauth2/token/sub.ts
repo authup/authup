@@ -8,7 +8,7 @@
 import {
     OAuth2SubKind,
     TokenError,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';

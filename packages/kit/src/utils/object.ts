@@ -11,7 +11,10 @@ export function isObject(input: unknown) : input is Record<string, any> {
         !Array.isArray(input);
 }
 
-export function extendObject<T extends Record<string, any>>(target: T, source: Partial<T>) : T {
+export function extendObject<T extends Record<string, any>>(
+    target: T,
+    source: Partial<T>,
+) : T {
     const keys = Object.keys(source);
     for (let i = 0; i < keys.length; i++) {
         target[keys[i] as keyof T] = source[keys[i]];

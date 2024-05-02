@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { JWKType } from '@authup/kit';
 import type { JsonWebKey } from 'node:crypto';
 import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import { In } from 'typeorm';
-import { KeyType, wrapPublicKeyPem } from '@authup/core-kit';
+import { wrapPublicKeyPem } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../domains';
 
@@ -23,7 +24,7 @@ export async function getRealmJwksRouteHandler(req: Request, res: Response) : Pr
     const entities = await repository.find({
         where: {
             realm_id: id,
-            type: In([KeyType.RSA, KeyType.EC]),
+            type: In([JWKType.RSA, JWKType.EC]),
         },
         order: {
             priority: 'DESC',

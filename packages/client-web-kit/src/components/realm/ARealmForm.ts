@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import { createNanoID } from '@authup/kit';
 import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required,
@@ -14,7 +15,7 @@ import {
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import {
-    DomainType, REALM_MASTER_NAME, createNanoID,
+    DomainType, REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import {
     buildFormGroup,

@@ -7,20 +7,21 @@
 
 import { KeyObject } from 'node:crypto';
 import {
-
     APIClient,
+    mountClientResponseErrorTokenHook,
+} from '@authup/core-http-kit';
+import {
     ErrorCode,
-    KeyType,
+    JWKType,
     TokenError,
     isObject,
-    mountClientResponseErrorTokenHook,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import type {
     JWTAlgorithm,
     OAuth2JsonWebKey,
     OAuth2TokenIntrospectionResponse,
     OAuth2TokenPayload,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import { extractTokenHeader, verifyToken } from '@authup/server-kit';
 import { importJWK } from 'jose';
 import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
@@ -105,7 +106,7 @@ export class TokenVerifier {
 
         try {
             payload = await verifyToken(token, {
-                type: KeyType.RSA,
+                type: JWKType.RSA,
                 keyPair: {
                     publicKey: Buffer.isBuffer(publicKey) ?
                         publicKey.toString('utf-8') :

@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildIdentityProviderAuthorizeCallbackPath, isObject } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
+import { buildIdentityProviderAuthorizeCallbackPath } from '@authup/core-kit';
 import type { JwtPayload, Options } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';

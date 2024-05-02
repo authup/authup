@@ -11,7 +11,7 @@ import {
 import type {
     OAuth2JsonWebKey,
     OAuth2OpenIDProviderMetadata,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import { runAuthorizationRouteHandler } from './authorize';
 import { ForceUserLoggedInMiddleware } from '../../middleware';
 import { getJwkRouteHandler, getJwksRouteHandler } from './jwks';

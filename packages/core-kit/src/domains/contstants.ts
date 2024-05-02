@@ -26,3 +26,10 @@ export enum DomainType {
     USER_PERMISSION = 'userPermission',
     USER_ROLE = 'userRole',
 }
+
+// todo: rename to Event{Domain,Resource,Default}Event
+export enum DomainEventName {
+    CREATED = 'created',
+    DELETED = 'deleted',
+    UPDATED = 'updated',
+}

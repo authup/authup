@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createNanoID } from '@authup/kit';
 import {
     BeforeInsert,
     BeforeUpdate,
@@ -19,7 +20,7 @@ import {
 } from 'typeorm';
 import type { Robot, User } from '@authup/core-kit';
 import {
-    Realm, createNanoID,
+    Realm,
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';

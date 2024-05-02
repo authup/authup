@@ -41,11 +41,13 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
+        "@authup/kit": "^1.0.0-beta.9",
         "@authup/core-kit": "^1.0.0-beta.9",
         "socket.io": "^4.7.5",
         "socket.io-client": "^4.7.5"
     },
     "peerDependencies": {
+        "@authup/kit": "^1.0.0-beta.9",
         "@authup/core-kit": "^1.0.0-beta.9",
         "socket.io-client": "^4.7.5"
     },

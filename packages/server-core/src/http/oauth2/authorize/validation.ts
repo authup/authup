@@ -10,6 +10,8 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationResponseType,
     TokenError,
+} from '@authup/kit';
+import {
     isOAuth2ScopeAllowed,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';

@@ -8,7 +8,7 @@
 import type { Container } from '@authup/config';
 import type { Config } from '@authup/client-web-config';
 import { buildConfig } from '@authup/client-web-config';
-import { makeURLPublicAccessible } from '@authup/core-kit';
+import { makeURLPublicAccessible } from '@authup/kit';
 
 export async function buildClientWebConfig(container: Container): Promise<Config> {
     const client = container.getData('client/web');

@@ -18,7 +18,7 @@ type EntityWithID = {
     id: any
 };
 
-type EntityID<T> = T extends EntityWithID ?
+export type EntityID<T> = T extends EntityWithID ?
     T['id'] :
     never;
 

@@ -7,13 +7,13 @@
 
 import type {
     DomainEntity,
-    DomainEntityID,
     DomainEventContext,
-    DomainEventSubscriptionFullName,
     DomainType,
 } from '@authup/core-kit';
+import type { EventFullName, EventNameSuffix } from '@authup/kit';
 import type { MaybeRef } from 'vue';
 import type { STCEventContext } from '@authup/core-realtime-kit';
+import type { EntityID } from '../entity-manager';
 
 export type EntitySocketContext<
     A extends `${DomainType}`,
@@ -22,15 +22,15 @@ export type EntitySocketContext<
     type: A,
     realmId?: MaybeRef<string | undefined>,
     target?: boolean,
-    targetId?: MaybeRef<DomainEntityID<T> | undefined>,
-    lockId?: MaybeRef<DomainEntityID<T> | undefined>,
+    targetId?: MaybeRef<EntityID<T> | undefined>,
+    lockId?: MaybeRef<EntityID<T> | undefined>,
     onCreated?(entity: T): any,
     onUpdated?(entity: Partial<T>): any,
     onDeleted?(entity: T): any,
     processEvent?(event: STCEventContext<DomainEventContext<A>>, realmId?: string) : boolean;
-    buildChannelName?(entityId?: DomainEntityID<T>) : string;
-    buildSubscribeEventName?(): DomainEventSubscriptionFullName;
-    buildUnsubscribeEventName?(): DomainEventSubscriptionFullName;
+    buildChannelName?(entityId?: EntityID<T>) : string;
+    buildSubscribeEventName?(): EventFullName<A, `${EventNameSuffix.SUBSCRIBE}`>;
+    buildUnsubscribeEventName?(): EventFullName<A, `${EventNameSuffix.UNSUBSCRIBE}`>;
 };
 
 export type EntitySocket = {

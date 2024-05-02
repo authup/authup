@@ -9,14 +9,17 @@ import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
+} from '@authup/kit';
+import type {
     Realm,
     User,
 } from '@authup/core-kit';
 import {
-    APIClient,
+    APIClient, isAPIClientTokenExpiredError,
+} from '@authup/core-http-kit';
+import {
     AbilityManager,
-    isAPIClientTokenExpiredError,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
 
 export const createStore = (context: StoreCreateContext) => {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '../../utils';
+import { isPropertySet } from '@authup/kit';
 import { REALM_MASTER_NAME } from './constants';
 
 /**

@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAccount, OAuth2TokenGrantResponse } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/kit';
+import { OAuth2SubKind } from '@authup/kit';
+import type { IdentityProviderAccount } from '@authup/core-kit';
 import {
-    IdentityProviderProtocol, OAuth2SubKind, ScopeName, UserError, extractObjectProperty,
+    IdentityProviderProtocol, ScopeName, UserError,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
@@ -55,7 +57,10 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
-        const realmId = extractObjectProperty(realm, 'id');
+        let realmId : undefined | string;
+        if (realm && realm.id) {
+            realmId = realm.id;
+        }
 
         let entity = await repository.verifyCredentials(
             username,

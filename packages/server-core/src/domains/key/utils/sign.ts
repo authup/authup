@@ -9,8 +9,9 @@ import type {
     TokenECAlgorithm, TokenRSAAlgorithm, TokenSignECOptions, TokenSignOCTOptions, TokenSignOptions, TokenSignRSAOptions,
 } from '@authup/server-kit';
 import { signToken } from '@authup/server-kit';
-import { KeyType, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core-kit';
-import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/core-kit';
+import { wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core-kit';
+import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/kit';
+import { JWKType } from '@authup/kit';
 import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(
@@ -18,18 +19,18 @@ export async function signOAuth2TokenWithKey(
     entity: KeyEntity,
     options?: Omit<TokenSignOptions, 'type' | 'algorithm' | 'keyPair' | 'secret'>,
 ) : Promise<string> {
-    if (entity.type === KeyType.OCT) {
+    if (entity.type === JWKType.OCT) {
         return signToken(
             payload,
             {
-                type: KeyType.OCT,
+                type: JWKType.OCT,
                 key: Buffer.from(entity.decryption_key, 'base64'),
                 ...options,
             } satisfies TokenSignOCTOptions,
         );
     }
 
-    if (entity.type === KeyType.EC) {
+    if (entity.type === JWKType.EC) {
         return signToken(
             payload,
             {

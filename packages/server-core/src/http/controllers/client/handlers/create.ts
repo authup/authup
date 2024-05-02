@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    PermissionName, isPropertySet,
+    PermissionName,
     isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';

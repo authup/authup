@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
 import type { PermissionRelation } from '../permission';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
-import type { DomainEventBaseContext } from '../types-base';
 
 export interface RolePermission extends PermissionRelation {
     id: string;
@@ -31,7 +31,7 @@ export interface RolePermission extends PermissionRelation {
     role_realm: Realm | null;
 }
 
-export type RolePermissionEventContext = DomainEventBaseContext & {
+export type RolePermissionEventContext = EventPayload & {
     type: `${DomainType.ROLE_PERMISSION}`,
     data: RolePermission
 };

@@ -15,9 +15,11 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
+    deserialize,
+    serialize,
+} from '@authup/kit';
+import {
     Permission, Robot,
-
-    deserialize, serialize,
 } from '@authup/core-kit';
 import type { PermissionCondition, Realm, RobotPermission } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';

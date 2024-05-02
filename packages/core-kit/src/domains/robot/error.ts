@@ -6,7 +6,7 @@
  */
 
 import { BadRequestError } from '@ebec/http';
-import { ErrorCode } from '../../error';
+import { ErrorCode } from '@authup/kit';
 
 export class RobotError extends BadRequestError {
     static credentialsInvalid() {

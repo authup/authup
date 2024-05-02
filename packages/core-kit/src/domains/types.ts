@@ -105,3 +105,12 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                                                                         T extends `${DomainType.USER_ROLE}` ?
                                                                             UserRole :
                                                                             never;
+export type SingleResourceResponse<R> = R;
+export type CollectionResourceResponse<R> = {
+    data: R[],
+    meta: {
+        limit: number,
+        offset: number,
+        total: number
+    }
+};

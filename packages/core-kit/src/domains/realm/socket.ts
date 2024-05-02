@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from './types';
+import type { Realm } from './entity';
 
 export function buildSocketRealmNamespaceName(realmId: Realm['id']) {
     return `/realm#${realmId}`;

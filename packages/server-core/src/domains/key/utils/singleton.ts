@@ -7,10 +7,10 @@
 
 import type { Realm } from '@authup/core-kit';
 import {
-    KeyType,
     unwrapPrivateKeyPem,
     unwrapPublicKeyPem,
 } from '@authup/core-kit';
+import { JWKType } from '@authup/kit';
 import {
     createKeyPair,
 } from '@authup/server-kit';
@@ -42,7 +42,7 @@ export async function useKey(
         });
 
         entity = repository.create({
-            type: KeyType.RSA,
+            type: JWKType.RSA,
             decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
             encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
             realm_id: where.realm_id,

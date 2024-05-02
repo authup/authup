@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Ability } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type {
-    Ability,
     Role,
 } from '@authup/core-kit';
 import {
     buildAbility,
-
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
 import { RoleEntity } from './entity';
