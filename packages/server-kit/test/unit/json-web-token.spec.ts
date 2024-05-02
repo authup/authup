@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '@authup/core-kit';
-import { TokenError } from '@authup/core-kit';
+import type { JWTClaims } from '@authup/kit';
+import { TokenError } from '@authup/kit';
 import path from 'node:path';
 import type { KeyPairOptions } from '../../src';
 import {

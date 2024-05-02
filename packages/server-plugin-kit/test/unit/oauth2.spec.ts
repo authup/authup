@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient, ErrorCode, TokenError } from '@authup/core-kit';
+import { ErrorCode, TokenError } from '@authup/kit';
+import { APIClient } from '@authup/core-http-kit';
 import { TokenAPI } from '@hapic/oauth2';
 import { TokenVerifier } from '../../src';
 import { TokenPayload, introspectToken } from '../data/token';

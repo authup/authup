@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
-    ErrorCode, OAuth2AuthorizationResponseType, ScopeName,
-} from '@authup/core-kit';
+    ErrorCode, OAuth2AuthorizationResponseType,
+} from '@authup/kit';
+import { ScopeName } from '@authup/core-kit';
 import type { SuperTest, Test } from 'supertest';
 import type { DatabaseRootSeederResult } from '../../../../../src';
 import { useSuperTest } from '../../../../utils/supertest';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, TokenError } from '@authup/core-kit';
-import type { OAuth2TokenIntrospectionResponse } from '@authup/core-kit';
+import { ErrorCode, TokenError } from '@authup/kit';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/kit';
 import { createResponseError } from '../utils';
 
 export const TokenPayload : Omit<OAuth2TokenIntrospectionResponse, 'exp'> = {
