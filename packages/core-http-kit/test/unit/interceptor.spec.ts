@@ -8,16 +8,16 @@
 import { ErrorCode } from '@authup/kit';
 import { createResponseError } from '../utils';
 import {
-    APIClient,
+    Client,
     getRequestRetryState,
     hasClientResponseErrorTokenHook,
-    isAPIClientErrorWithCode, isAPIClientTokenExpiredError, isAPIClientTokenInvalidError,
+    isClientErrorWithCode, isClientTokenExpiredError, isClientTokenInvalidError,
     mountClientResponseErrorTokenHook, unmountClientResponseErrorTokenHook,
 } from '../../src';
 
 describe('src/interceptor/utils', () => {
     it('should mount and unmount interceptor', () => {
-        const client = new APIClient();
+        const client = new Client();
 
         expect(hasClientResponseErrorTokenHook(client)).toBeFalsy();
 
@@ -39,30 +39,30 @@ describe('src/interceptor/utils', () => {
             status: 401,
             code: ErrorCode.TOKEN_INACTIVE,
         });
-        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_INACTIVE)).toBeTruthy();
+        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_INACTIVE)).toBeTruthy();
 
         error = createResponseError({
             status: 500,
             code: ErrorCode.TOKEN_EXPIRED,
         });
-        expect(isAPIClientTokenExpiredError(error)).toBeTruthy();
+        expect(isClientTokenExpiredError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.TOKEN_INVALID,
         });
-        expect(isAPIClientTokenInvalidError(error)).toBeTruthy();
+        expect(isClientTokenInvalidError(error)).toBeTruthy();
     });
 
     it('should not be valid response error', () => {
         let error = new Error('foo');
-        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
+        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
 
         error = createResponseError({
             status: 400,
             code: ErrorCode.CREDENTIALS_INVALID,
         });
-        expect(isAPIClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
+        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

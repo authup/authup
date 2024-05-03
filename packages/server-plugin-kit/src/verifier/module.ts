@@ -7,7 +7,7 @@
 
 import { KeyObject } from 'node:crypto';
 import {
-    APIClient,
+    Client,
     mountClientResponseErrorTokenHook,
 } from '@authup/core-http-kit';
 import {
@@ -31,7 +31,7 @@ import type { TokenVerificationData, TokenVerificationDataInput, TokenVerifierOp
 export class TokenVerifier {
     protected interceptorMounted : boolean | undefined;
 
-    protected client: APIClient;
+    protected client: Client;
 
     protected cache : TokenVerifierCache;
 
@@ -43,7 +43,7 @@ export class TokenVerifier {
             this.cache = new TokenVerifierMemoryCache();
         }
 
-        this.client = new APIClient({ baseURL: context.baseURL });
+        this.client = new Client({ baseURL: context.baseURL });
 
         if (context.creator) {
             if (

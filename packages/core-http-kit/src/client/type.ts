@@ -7,4 +7,4 @@
 
 import type { RequestBaseOptions } from 'hapic';
 
-export type ClientAPIConfigInput = RequestBaseOptions;
+export type ClientOptions = RequestBaseOptions;

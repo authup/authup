@@ -6,27 +6,27 @@
  */
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { Client, HookErrorFn } from 'hapic';
+import type { Client as BaseClient, HookErrorFn } from 'hapic';
 import {
     HeaderName,
     HookName,
     setHeader,
     stringifyAuthorizationHeader,
 } from 'hapic';
-import { APIClient } from '../client';
+import { Client } from '../client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import type { ClientResponseErrorTokenHookOptions } from './type';
-import { getRequestRetryState, isAPIClientTokenExpiredError } from './utils';
+import { getRequestRetryState, isClientTokenExpiredError } from './utils';
 
 const hookSymbol = Symbol.for('ClientResponseErrorTokenHook');
 
 export class ClientResponseErrorTokenHook {
-    protected client : Client;
+    protected client : BaseClient;
 
     protected creator: TokenCreator;
 
-    protected creatorClient : APIClient;
+    protected creatorClient : Client;
 
     protected options : ClientResponseErrorTokenHookOptions;
 
@@ -36,7 +36,7 @@ export class ClientResponseErrorTokenHook {
 
     protected createPromise?: Promise<TokenGrantResponse>;
 
-    constructor(client: Client, options: ClientResponseErrorTokenHookOptions) {
+    constructor(client: BaseClient, options: ClientResponseErrorTokenHookOptions) {
         this.client = client;
 
         options.timer ??= true;
@@ -60,7 +60,7 @@ export class ClientResponseErrorTokenHook {
         }
 
         this.creator = creator;
-        this.creatorClient = new APIClient({ baseURL });
+        this.creatorClient = new Client({ baseURL });
 
         client[hookSymbol] = this;
     }
@@ -71,7 +71,7 @@ export class ClientResponseErrorTokenHook {
         }
 
         const handler : HookErrorFn = (err) => {
-            if (!isAPIClientTokenExpiredError(err)) {
+            if (!isClientTokenExpiredError(err)) {
                 return Promise.reject(err);
             }
 
@@ -196,11 +196,11 @@ function isClientResponseErrorTokenHook(input: unknown) : input is ClientRespons
     return input instanceof ClientResponseErrorTokenHook;
 }
 
-export function hasClientResponseErrorTokenHook(client: Client) {
+export function hasClientResponseErrorTokenHook(client: BaseClient) {
     return hookSymbol in client;
 }
 
-export function unmountClientResponseErrorTokenHook(client: Client) {
+export function unmountClientResponseErrorTokenHook(client: BaseClient) {
     if (!isClientResponseErrorTokenHook(client[hookSymbol])) {
         return;
     }
@@ -211,7 +211,7 @@ export function unmountClientResponseErrorTokenHook(client: Client) {
 }
 
 export function mountClientResponseErrorTokenHook(
-    client: Client,
+    client: BaseClient,
     options: ClientResponseErrorTokenHookOptions,
 ) : ClientResponseErrorTokenHook {
     if (isClientResponseErrorTokenHook(client[hookSymbol])) {

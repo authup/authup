@@ -6,7 +6,7 @@
  */
 
 import type { StoreManagerOptions } from '@vuecs/list-controls/core';
-import type { APIClient } from '@authup/core-http-kit';
+import type { Client } from '@authup/core-http-kit';
 import type { ClientManager } from '@authup/core-realtime-kit';
 import type {
     AClient,
@@ -68,7 +68,7 @@ import type { Store } from './core';
 export type Options = {
     storeManager?: StoreManagerOptions,
     components?: boolean | string[],
-    apiClient?: APIClient,
+    apiClient?: Client,
     socketClientManager?: ClientManager,
     store?: Store,
     translatorLocale?: string

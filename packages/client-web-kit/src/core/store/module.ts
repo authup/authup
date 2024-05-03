@@ -15,7 +15,7 @@ import type {
     User,
 } from '@authup/core-kit';
 import {
-    APIClient, isAPIClientTokenExpiredError,
+    Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import {
     AbilityManager,
@@ -23,7 +23,7 @@ import {
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
 
 export const createStore = (context: StoreCreateContext) => {
-    const client = new APIClient({
+    const client = new Client({
         baseURL: context.baseURL,
     });
 
@@ -189,7 +189,7 @@ export const createStore = (context: StoreCreateContext) => {
                 userResolved.value = true;
             }
         } catch (e) {
-            if (isAPIClientTokenExpiredError(e)) {
+            if (isClientTokenExpiredError(e)) {
                 await attemptRefreshToken();
 
                 await resolve({

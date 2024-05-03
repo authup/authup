@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient } from '../../client';
+import { Client } from '../../client';
 import type { TokenCreator, TokenCreatorUserOptions } from '../type';
 
 export function createTokenCreatorWithUser(options: Omit<TokenCreatorUserOptions, 'type'>) : TokenCreator {
-    const client : APIClient = new APIClient({ baseURL: options.baseURL });
+    const client = new Client({ baseURL: options.baseURL });
 
     return async () => client.token.createWithPasswordGrant({
         username: options.name,

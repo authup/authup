@@ -14,7 +14,6 @@ import {
     TokenAPI,
     UserInfoAPI,
 } from '@hapic/oauth2';
-
 import type { OAuth2JsonWebKey } from '@authup/kit';
 import {
     ClientAPI,
@@ -34,9 +33,9 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
-import type { ClientAPIConfigInput } from './type';
+import type { ClientOptions } from './type';
 
-export class APIClient extends BaseClient {
+export class Client extends BaseClient {
     public readonly token : TokenAPI;
 
     public readonly authorize : AuthorizeAPI;
@@ -77,7 +76,7 @@ export class APIClient extends BaseClient {
 
     public readonly userRole : UserRoleAPI;
 
-    constructor(config?: ClientAPIConfigInput) {
+    constructor(config: ClientOptions = {}) {
         super(config);
 
         const options : Options = {

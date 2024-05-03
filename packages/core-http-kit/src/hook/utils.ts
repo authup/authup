@@ -8,7 +8,7 @@
 import type { RequestOptions } from 'hapic';
 import { ErrorCode, isObject } from '@authup/kit';
 
-export function isAPIClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : boolean {
+export function isClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : boolean {
     if (!isObject(err) || !isObject(err.response)) {
         return false;
     }
@@ -25,12 +25,12 @@ export function isAPIClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : b
     return err.response.data.code === code;
 }
 
-export function isAPIClientTokenExpiredError(err: unknown) {
-    return isAPIClientErrorWithCode(err, ErrorCode.TOKEN_EXPIRED);
+export function isClientTokenExpiredError(err: unknown) {
+    return isClientErrorWithCode(err, ErrorCode.TOKEN_EXPIRED);
 }
 
-export function isAPIClientTokenInvalidError(err: unknown) {
-    return isAPIClientErrorWithCode(err, ErrorCode.TOKEN_INVALID);
+export function isClientTokenInvalidError(err: unknown) {
+    return isClientErrorWithCode(err, ErrorCode.TOKEN_INVALID);
 }
 
 type RetryState = {

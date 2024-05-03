@@ -8,7 +8,7 @@
 import { VaultClient } from '@hapic/vault';
 import { isObject } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import { APIClient } from '../../client';
+import { Client } from '../../client';
 import type { TokenCreator, TokenCreatorRobotInVaultOptions } from '../type';
 import { createTokenCreatorWithRobot } from './robot';
 
@@ -22,7 +22,7 @@ export function createTokenCreatorWithRobotInVault(
         client = options.vault;
     }
 
-    const apiClient : APIClient = new APIClient({ baseURL: options.baseURL });
+    const apiClient = new Client({ baseURL: options.baseURL });
 
     const robotName = options.name.toLowerCase();
 

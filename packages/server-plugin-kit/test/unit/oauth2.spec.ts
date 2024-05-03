@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode, TokenError } from '@authup/kit';
-import { APIClient } from '@authup/core-http-kit';
+import { Client } from '@authup/core-http-kit';
 import { TokenAPI } from '@hapic/oauth2';
 import { TokenVerifier } from '../../src';
 import { TokenPayload, introspectToken } from '../data/token';
@@ -20,7 +20,7 @@ describe('src/oauth2/**', () => {
         token = await faker.sign(TokenPayload);
 
         jest.spyOn(TokenAPI.prototype, 'introspect').mockImplementation(introspectToken);
-        jest.spyOn(APIClient.prototype, 'getJwk').mockReturnValue(faker.useJwk());
+        jest.spyOn(Client.prototype, 'getJwk').mockReturnValue(faker.useJwk());
     });
 
     it('should verify token local', async () => {

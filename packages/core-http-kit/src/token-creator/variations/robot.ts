@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient } from '../../client';
+import { Client } from '../../client';
 import type { TokenCreator, TokenCreatorRobotOptions } from '../type';
 
 export function createTokenCreatorWithRobot(
     options: Omit<TokenCreatorRobotOptions, 'type'>,
-    client?: APIClient,
+    client?: Client,
 ): TokenCreator {
-    const api = client || new APIClient({ baseURL: options.baseURL });
+    const api = client || new Client({ baseURL: options.baseURL });
 
     return async () => api.token.createWithRobotCredentials({
         id: options.id,
