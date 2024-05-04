@@ -6,7 +6,7 @@
  */
 
 import { isPropertySet } from '@authup/kit';
-import { REALM_MASTER_NAME } from './constants';
+import { REALM_MASTER_NAME, REALM_NAME_REGEX } from './constants';
 
 /**
  * Check if a realm resource is writable.
@@ -81,6 +81,6 @@ export function isRealmResourceReadable(
         realm.id === resourceRealmId;
 }
 
-export function isValidRealmName(name: string) : boolean {
-    return /^[a-zA-Z0-9-_]{3,128}$/.test(name);
+export function isRealmNameValid(name: string) : boolean {
+    return REALM_NAME_REGEX.test(name);
 }

@@ -6,11 +6,11 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { isValidRealmName } from '@authup/core-kit';
+import { isRealmNameValid } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { RealmEntity } from '../../../../domains';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
@@ -29,7 +29,7 @@ export async function runRealmValidation(
         .isString()
         .isLength({ min: 3, max: 128 })
         .custom((value) => {
-            const isValid = isValidRealmName(value);
+            const isValid = isRealmNameValid(value);
             if (!isValid) {
                 throw new BadRequestError('Only the characters [a-zA-Z0-9-_]+ are allowed.');
             }
