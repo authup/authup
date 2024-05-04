@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerificationData } from '@authup/server-plugin-kit';
+import type { TokenVerificationData } from '@authup/server-core-plugin-kit';
 import {
     TokenVerifier,
-} from '@authup/server-plugin-kit';
+} from '@authup/server-core-plugin-kit';
 import type { MiddlewareOptions, Next, Socket } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) {

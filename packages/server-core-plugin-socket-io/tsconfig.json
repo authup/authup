@@ -4,7 +4,7 @@
         "paths": {
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/server-kit": ["./packages/server-kit/src"],
-            "@authup/server-plugin-kit": ["./packages/server-plugin-kit/src"]
+            "@authup/server-core-plugin-kit": ["./packages/server-core-plugin-kit/src"]
         }
     }
 }

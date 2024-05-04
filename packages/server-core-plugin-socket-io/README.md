@@ -1,10 +1,10 @@
-# @authup/server-plugin-kit 🌉
+# @authup/server-core-plugin-socket-io 🌉
 
-[![npm version](https://badge.fury.io/js/@authup%2Fserver-plugin-kit.svg)](https://badge.fury.io/js/@authup%2Fserver-plugin-kit)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver-core-plugin-socket-io.svg)](https://badge.fury.io/js/@authup%2Fserver-core-plugin-socket-io)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-A plugin toolkit targeting external services.
+A plugin for a socket.io service.
 
 **Table of Contents**
 
@@ -13,7 +13,7 @@ A plugin toolkit targeting external services.
 
 ## Documentation
 
-To read the docs, visit [https://authup.org](https://authup.org)
+To read the docs, visit [https://authup.org/](https://authup.org/)
 
 ## License
 

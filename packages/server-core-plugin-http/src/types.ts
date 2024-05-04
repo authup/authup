@@ -6,7 +6,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '@authup/server-plugin-kit';
+import type { TokenVerificationData, TokenVerifier, TokenVerifierOptions } from '@authup/server-core-plugin-kit';
 
 export type MiddlewareOptions = {
     tokenByCookie?: (req: IncomingMessage, name?: string) => string | undefined,

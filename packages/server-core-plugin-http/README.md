@@ -1,10 +1,10 @@
-# @authup/server-plugin-socket-io 🌉
+# @authup/server-core-plugin-http 🌉
 
-[![npm version](https://badge.fury.io/js/@authup%2Fserver-plugin-socket-io.svg)](https://badge.fury.io/js/@authup%2Fserver-plugin-socket-io)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver-core-plugin-http.svg)](https://badge.fury.io/js/@authup%2Fserver-core-plugin-http)
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-A plugin for a socket.io service.
+A plugin for an HTTP service.
 
 **Table of Contents**
 

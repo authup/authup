@@ -1,5 +1,5 @@
 {
-    "name": "@authup/server-plugin-kit",
+    "name": "@authup/server-core-plugin-kit",
     "version": "1.0.0-beta.9",
     "description": "A package containing utilities for plugin solutions.",
     "exports": {
