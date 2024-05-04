@@ -31,7 +31,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-plugin-http"
+        "directory": "packages/server-core-plugin-http"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
@@ -39,7 +39,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/core-http-kit": "^1.0.0-beta.9",
-        "@authup/server-plugin-kit": "^1.0.0-beta.9"
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.9"
     },
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.9",

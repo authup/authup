@@ -31,7 +31,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-plugin-socket-io"
+        "directory": "packages/server-core-plugin-socket-io"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
