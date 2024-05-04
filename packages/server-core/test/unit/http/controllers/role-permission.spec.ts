@@ -6,9 +6,9 @@
  */
 
 import type {
-    PermissionCondition,
     RolePermission,
 } from '@authup/core-kit';
+import type { AbilityCondition } from '@authup/kit';
 import { createSuperTestPermission, createSuperTestRole } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -26,7 +26,7 @@ describe('src/http/controllers/role-permission', () => {
     });
 
     const details : Partial<RolePermission> = {};
-    const condition : PermissionCondition = {
+    const condition : AbilityCondition = {
         age: {
             $gt: 5,
         },

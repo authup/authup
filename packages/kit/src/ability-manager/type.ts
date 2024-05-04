@@ -7,10 +7,12 @@
 
 import type { MongoQuery } from '@ucast/mongo2js';
 
+export type AbilityCondition<T = any> = MongoQuery<T>;
+
 export type Ability<T extends Record<string, any> = Record<string, any>> = {
     name: string,
     inverse?: boolean,
-    condition?: MongoQuery<T> | null,
+    condition?: AbilityCondition<T> | null,
     fields?: string[] | null,
     target?: string | null,
     power?: number | null

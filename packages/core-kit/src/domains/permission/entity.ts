@@ -5,17 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { MongoQuery } from '@ucast/mongo2js';
+import type { AbilityCondition, EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
-
-export type PermissionCondition = MongoQuery;
 
 export interface PermissionRelation {
     power: number;
 
-    condition: PermissionCondition | null;
+    condition: AbilityCondition | null;
 
     fields: string | null;
 

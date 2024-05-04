@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCondition, UserPermission } from '@authup/core-kit';
+import type { UserPermission } from '@authup/core-kit';
+import type { AbilityCondition } from '@authup/kit';
 import { createSuperTestPermission, createSuperTestUser } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -23,7 +24,7 @@ describe('src/http/controllers/user-permission', () => {
     });
 
     const details : Partial<UserPermission> = {};
-    const condition : PermissionCondition = {
+    const condition : AbilityCondition = {
         age: {
             $gt: 5,
         },

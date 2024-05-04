@@ -15,12 +15,13 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import type {
-    PermissionCondition, Realm, UserPermission,
+    Realm, UserPermission,
 } from '@authup/core-kit';
 import {
     Permission, User,
 } from '@authup/core-kit';
 import {
+    AbilityCondition,
     deserialize,
     serialize,
 } from '@authup/kit';
@@ -50,7 +51,7 @@ export class UserPermissionEntity implements UserPermission {
             },
         },
     })
-        condition: PermissionCondition | null;
+        condition: AbilityCondition | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string | null;
