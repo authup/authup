@@ -14,10 +14,13 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    OAuth2SubKind,
-    PermissionName, REALM_MASTER_NAME, isSelfId, isUUID,
+    OAuth2SubKind, isUUID,
+} from '@authup/kit';
+import {
+    PermissionName, REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../domains';
+import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 

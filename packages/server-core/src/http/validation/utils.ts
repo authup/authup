@@ -7,7 +7,6 @@
 
 import type { MatchedDataOptions } from 'express-validator';
 import { matchedData } from 'express-validator';
-import { deleteUndefinedObjectProperties } from '@authup/core-kit';
 import type { Request } from 'routup';
 import { distinctArray } from 'smob';
 import type { EntityTarget } from 'typeorm';
@@ -39,6 +38,18 @@ export function buildRequestValidationErrorMessageForZodError(error: ZodError) {
         return `The parameters ${names.join(', ')} are invalid.`;
     }
     return `The parameter ${String(names[0])} is invalid.`;
+}
+
+function deleteUndefinedObjectProperties<T extends Record<string, any>>(data: T) : T {
+    const keys : string[] = Object.keys(data);
+
+    for (let i = 0; i < keys.length; i++) {
+        if (typeof data[keys[i]] === 'undefined') {
+            delete data[keys[i]];
+        }
+    }
+
+    return data;
 }
 
 export function matchedValidationData(

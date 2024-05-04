@@ -11,6 +11,8 @@ import type {
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
+import { EnvironmentName } from 'typeorm-extension';
+import { useConfig } from '../../../config';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {
@@ -19,6 +21,8 @@ export function registerLoggerMiddleware(router: Router) {
         response: Response,
         next: Next,
     ) => {
+        const config = useConfig();
+
         morgan(
             (tokens, req: Request, res: Response) => {
                 const parts = [
@@ -52,7 +56,10 @@ export function registerLoggerMiddleware(router: Router) {
             {
                 stream: {
                     write(message) {
-                        useLogger().http(message.replace('\n', ''));
+                        if (config.env !== EnvironmentName.TEST) {
+                            useLogger()
+                                .http(message.replace('\n', ''));
+                        }
                     },
                 },
                 skip(req: Request): boolean {

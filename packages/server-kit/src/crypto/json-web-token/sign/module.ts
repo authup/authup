@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '@authup/core-kit';
-import { KeyType, TokenError } from '@authup/core-kit';
+import type { JWTClaims } from '@authup/kit';
+import { JWKType, TokenError } from '@authup/kit';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { isKeyPair, useKeyPair } from '../../key-pair';
 import { transformJWTAlgorithmToInternal } from '../utils';
@@ -23,15 +23,15 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
     }
 
     switch (context.type) {
-        case KeyType.RSA:
-        case KeyType.EC: {
+        case JWKType.RSA:
+        case JWKType.EC: {
             const { privateKey } = isKeyPair(context.keyPair) ?
                 context.keyPair :
                 await useKeyPair(context.keyPair);
 
             let algorithm : Algorithm;
 
-            if (context.type === KeyType.RSA) {
+            if (context.type === JWKType.RSA) {
                 algorithm = context.algorithm ?
                     transformJWTAlgorithmToInternal(context.algorithm) :
                     Algorithm.RS256;
@@ -46,7 +46,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 keyId: context.keyId,
             });
         }
-        case KeyType.OCT: {
+        case JWKType.OCT: {
             const algorithm : Algorithm = context.algorithm ?
                 transformJWTAlgorithmToInternal(context.algorithm) :
                 Algorithm.HS256;

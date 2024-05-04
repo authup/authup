@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DomainAPI } from '@authup/core-http-kit';
 import type {
-    DomainAPI, DomainEntity, DomainEntityID, DomainType,
+    DomainEntity, DomainType,
 } from '@authup/core-kit';
-import { hasOwnProperty } from '@authup/core-kit';
+import { hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
@@ -22,6 +23,7 @@ import { extendObjectProperties } from '../object';
 import { hasNormalizedSlot, normalizeSlot } from '../slot';
 import { EntityManagerError } from './error';
 import type {
+    EntityID,
     EntityManager,
     EntityManagerContext,
     EntityManagerRenderFn,
@@ -43,7 +45,7 @@ export function createEntityManager<
     }
 
     const entity : Ref<T | undefined> = ref(undefined);
-    const entityId = computed<DomainEntityID<T> | undefined>(
+    const entityId = computed<EntityID<T> | undefined>(
         () => (
             entity.value ? (entity.value as any).id : undefined),
     );
@@ -73,7 +75,7 @@ export function createEntityManager<
         },
     );
 
-    const lockId = ref(undefined) as Ref<DomainEntityID<T> | undefined>;
+    const lockId = ref(undefined) as Ref<EntityID<T> | undefined>;
 
     if (ctx.props && ctx.props.entity) {
         entity.value = ctx.props.entity;

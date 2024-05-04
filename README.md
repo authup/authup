@@ -86,20 +86,20 @@ This will lunch the following application with default settings:
 ## Packages
 The repository contains the following packages:
 
-| Name                                                        | Type        | Description                                                                                           |
-|-------------------------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](packages/authup)                                   | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](packages/client-web)                           | Application | A web application interface for end users.                                                            |
-| [client-web-config](packages/client-web-config)             | Library     | A library for creating and managing configurations for the web client application.                    |
-| [client-web-kit](packages/client-web-kit)                   | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
-| [config](packages/config)                                   | Library     | A collection of configuration helpers for the client and server side.                                 |
-| [core-kit](packages/core-kit)                               | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
-| [core-realtime-kit](packages/core-realtime-kit)             | Library     | A toolkit for the core socket service.                                                                |
-| [server-plugin-kit](packages/server-plugin-kit)             | Library     | A plugin toolkit targeting external services.                                                         |
-| [server-plugin-http](packages/server-plugin-http)           | Library     | A plugin for a HTTP service.                                                                          |
-| [server-plugin-socket-io](packages/server-plugin-socket-io) | Library     | A plugin for a socket.io service.                                                                     |
-| [server-core](packages/server-core)                         | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
-| [server-kit](packages/server-kit)                           | Library     | A dedicated toolkit for server-side services.                                                         |
+| Name                                                                  | Type        | Description                                                                                           |
+|-----------------------------------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
+| [authup](packages/authup)                                             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
+| [client-web](packages/client-web)                                     | Application | A web application interface for end users.                                                            |
+| [client-web-config](packages/client-web-config)                       | Library     | A library for creating and managing configurations for the web client application.                    |
+| [client-web-kit](packages/client-web-kit)                             | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
+| [config](packages/config)                                             | Library     | A collection of configuration helpers for the client and server side.                                 |
+| [core-kit](packages/core-kit)                                         | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
+| [core-realtime-kit](packages/core-realtime-kit)                       | Library     | A toolkit for the core socket service.                                                                |
+| [server-core](packages/server-core)                                   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
+| [server-core-plugin-kit](packages/server-core-plugin-kit)             | Library     | A plugin toolkit targeting external services.                                                         |
+| [server-core-plugin-http](packages/server-core-plugin-http)           | Library     | A plugin for a HTTP service.                                                                          |
+| [server-core-plugin-socket-io](packages/server-core-plugin-socket-io) | Library     | A plugin for a socket.io service.                                                                     |
+| [server-kit](packages/server-kit)                                     | Library     | A dedicated toolkit for server-side services.                                                         |
 
 ## Contributing
 

@@ -6,9 +6,9 @@
  */
 
 import type {
-    PermissionCondition,
     RobotPermission,
 } from '@authup/core-kit';
+import type { AbilityCondition } from '@authup/kit';
 import { createSuperTestPermission, createSuperTestRobot } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -26,7 +26,7 @@ describe('src/http/controllers/robot-permission', () => {
     });
 
     const details : Partial<RobotPermission> = {};
-    const condition : PermissionCondition = {
+    const condition : AbilityCondition = {
         age: {
             $gt: 5,
         },

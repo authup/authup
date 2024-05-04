@@ -7,7 +7,7 @@
 
 import { generateKeyPair } from 'node:crypto';
 import type { KeyPair, KeyPairOptions } from './type';
-import { decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
+import { decryptRSAPrivateKey, extendKeyPairOptions } from './helpers';
 import { saveKeyPair } from './save';
 
 export async function createKeyPair(context?: Partial<KeyPairOptions>) : Promise<KeyPair> {

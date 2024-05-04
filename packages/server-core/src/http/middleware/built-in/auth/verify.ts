@@ -5,14 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '@authup/core-kit';
+import type { Ability } from '@authup/kit';
 import {
     AbilityManager,
     HeaderError,
     OAuth2SubKind,
     OAuth2TokenKind,
+    TokenError,
+} from '@authup/kit';
+import {
     ScopeName,
-    TokenError, transformOAuth2ScopeToArray,
+    transformOAuth2ScopeToArray,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {

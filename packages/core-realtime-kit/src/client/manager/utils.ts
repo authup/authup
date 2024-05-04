@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
 import type { DisconnectDescription } from '../../types';
 import type { ClientManagerTokenFn } from './types';
 

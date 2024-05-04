@@ -8,7 +8,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { KeyPair, KeyPairOptions } from './type';
-import { buildKeyFileName, extendKeyPairOptions } from './utils';
+import { buildKeyFileName, extendKeyPairOptions } from './helpers';
 import { KeyPairKind } from './constants';
 
 export async function saveKeyPair(keyPair: KeyPair, context?: KeyPairOptions) : Promise<KeyPair> {

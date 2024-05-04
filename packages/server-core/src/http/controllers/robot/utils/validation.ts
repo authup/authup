@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from '@authup/kit';
 import { check, validationResult } from 'express-validator';
-import { isPropertySet, isRealmResourceWritable } from '@authup/core-kit';
+import { isRealmResourceWritable } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { RobotEntity } from '../../../../domains';

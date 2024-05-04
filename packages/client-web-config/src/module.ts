@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { extendObject, makeURLPublicAccessible } from '@authup/core-kit';
+import { extendObject, makeURLPublicAccessible } from '@authup/kit';
 import { defineGetter, dycraft } from 'dycraft';
 import { merge } from 'smob';
 import { readConfigFromEnv } from './env';

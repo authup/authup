@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createNanoID } from '@authup/kit';
 import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
@@ -23,7 +24,7 @@ import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
 import type { Client, Realm } from '@authup/core-kit';
-import { DomainType, createNanoID } from '@authup/core-kit';
+import { DomainType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

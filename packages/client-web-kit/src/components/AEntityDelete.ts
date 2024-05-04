@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { hasOwnProperty, isObject } from '@authup/kit';
 import type {
     Component,
     PropType,
@@ -18,7 +19,7 @@ import {
     ref, resolveDynamicComponent,
 } from 'vue';
 import type { DomainType } from '@authup/core-kit';
-import { useDomainAPI } from '@authup/core-kit';
+import type { DomainAPISlim } from '@authup/core-http-kit';
 import {
     TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectAPIClient, useTranslation, wrapFnWithBusyState,
 } from '../core';
@@ -65,17 +66,23 @@ const AEntityDelete = defineComponent({
         const busy = ref(false);
 
         const submit = wrapFnWithBusyState(busy, async () => {
-            const domainApi = useDomainAPI(apiClient, props.entityType);
-            if (!domainApi) {
+            let domainAPI : DomainAPISlim<any> | undefined;
+            if (
+                hasOwnProperty(apiClient, props.entityType) &&
+                isObject(apiClient[props.entityType]) &&
+                hasOwnProperty(apiClient[props.entityType], 'delete')
+            ) {
+                domainAPI = apiClient[props.entityType] as DomainAPISlim<any>;
+            }
+
+            if (!domainAPI) {
                 return;
             }
 
             try {
-                if ('delete' in domainApi) {
-                    const response = await domainApi.delete(props.entityId);
-                    response.id = props.entityId;
-                    ctx.emit('deleted', response);
-                }
+                const response = await domainAPI.delete(props.entityId);
+                response.id = props.entityId;
+                ctx.emit('deleted', response);
             } catch (e) {
                 ctx.emit('failed', e);
             }

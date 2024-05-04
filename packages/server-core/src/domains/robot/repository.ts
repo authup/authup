@@ -6,15 +6,17 @@
  */
 
 import type {
-    Ability, Robot,
+    Robot,
     Role,
 } from '@authup/core-kit';
 import {
     buildAbility,
+} from '@authup/core-kit';
+import type { Ability } from '@authup/kit';
+import {
     createNanoID,
     isUUID,
-} from '@authup/core-kit';
-
+} from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -32,7 +34,7 @@ export class RobotRepository extends Repository<RobotEntity> {
     async getOwnedPermissions(
         id: Robot['id'],
     ) : Promise<Ability[]> {
-        const permissions : Ability[] = await this.getSelfOwnedPermissions(id);
+        const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
             .getRepository(RobotRoleEntity)

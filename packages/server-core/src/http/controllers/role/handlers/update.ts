@@ -13,7 +13,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');

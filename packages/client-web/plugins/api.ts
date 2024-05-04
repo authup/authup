@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientAPIConfigInput } from '@authup/core-kit';
+import type { ClientOptions } from '@authup/core-http-kit';
 import {
-    APIClient,
+    Client,
     ClientResponseErrorTokenHook,
-} from '@authup/core-kit';
+} from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin, useRuntimeConfig } from '#app';
@@ -17,13 +17,13 @@ import { useAuthStore } from '../store/auth';
 
 declare module '#app' {
     interface NuxtApp {
-        $api: APIClient;
+        $api: Client;
     }
 }
 
 declare module '@vue/runtime-core' {
     interface ComponentCustomProperties {
-        $api: APIClient;
+        $api: Client;
     }
 }
 
@@ -32,10 +32,10 @@ export default defineNuxtPlugin((ctx) => {
 
     const { apiUrl: baseURL } = runtimeConfig.public;
 
-    const config : ClientAPIConfigInput = {
+    const config : ClientOptions = {
         baseURL,
     };
-    const client = new APIClient(config);
+    const client = new Client(config);
 
     const store = useAuthStore(ctx.$pinia as Pinia);
 

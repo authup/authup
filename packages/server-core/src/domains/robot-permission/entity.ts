@@ -15,11 +15,14 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
+    AbilityCondition,
+    deserialize,
+    serialize,
+} from '@authup/kit';
+import {
     Permission, Robot,
-
-    deserialize, serialize,
 } from '@authup/core-kit';
-import type { PermissionCondition, Realm, RobotPermission } from '@authup/core-kit';
+import type { Realm, RobotPermission } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
 import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';
@@ -46,7 +49,7 @@ export class RobotPermissionEntity implements RobotPermission {
             },
         },
     })
-        condition: PermissionCondition | null;
+        condition: AbilityCondition | null;
 
     @Column({ type: 'text', nullable: true, default: null })
         fields: string | null;

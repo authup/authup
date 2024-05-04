@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createNanoID } from '@authup/kit';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -22,7 +23,7 @@ import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core-kit';
-import { DomainType, createNanoID } from '@authup/core-kit';
+import { DomainType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,

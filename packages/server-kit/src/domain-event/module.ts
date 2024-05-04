@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EventPayload } from '@authup/kit';
 import { isRedisClientUsable, useRedisClient } from '../services';
 import { DomainEventRedisPublisher } from './redis';
 import { DomainEventSocketPublisher } from './socket';
-import type { DomainEventPublishContent, DomainEventPublishContext, IDomainEventPublisher } from './type';
+import type { DomainEventPublishContext, IDomainEventPublisher } from './type';
 
 export class DomainEventPublisher implements IDomainEventPublisher {
     protected publishers : Set<IDomainEventPublisher>;
@@ -24,7 +25,7 @@ export class DomainEventPublisher implements IDomainEventPublisher {
         }
     }
 
-    async publish<T extends DomainEventPublishContent>(
+    async publish<T extends EventPayload>(
         ctx: DomainEventPublishContext<T>,
     ) : Promise<void> {
         const publishers = this.publishers.values();

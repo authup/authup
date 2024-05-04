@@ -9,7 +9,8 @@ import type {
     IdentityProviderRole,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName,
+    DomainType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';

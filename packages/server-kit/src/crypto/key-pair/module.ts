@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { KeyPair, KeyPairOptions } from './type';
-import { extendKeyPairOptions } from './utils';
+import { extendKeyPairOptions } from './helpers';
 import { loadKeyPair } from './load';
 import { createKeyPair } from './create';
 

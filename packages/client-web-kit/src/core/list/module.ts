@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty } from '@authup/core-kit';
-import type { DomainAPI, DomainEntity, DomainType } from '@authup/core-kit';
+import { hasOwnProperty } from '@authup/kit';
+import type { DomainAPI } from '@authup/core-http-kit';
+import type { DomainEntity, DomainType } from '@authup/core-kit';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
 } from '@vuecs/list-controls';

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty } from '@authup/core-kit';
+import { hasOwnProperty } from '@authup/kit';
 import { getSeverity } from '@ilingo/vuelidate';
 import type { BaseValidation, Validation, ValidationRuleCollection } from '@vuelidate/core';
 import { helpers } from '@vuelidate/validators';

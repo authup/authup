@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/core-kit';
+import type { OAuth2TokenGrantResponse } from '@authup/kit';
+import { OAuth2SubKind } from '@authup/kit';
 import {
-    OAuth2SubKind,
     RobotError,
     ScopeName,
 } from '@authup/core-kit';

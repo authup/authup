@@ -8,9 +8,11 @@
 import {
     Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
+import {
+    JWKType,
+} from '@authup/kit';
 import type {
     Key,
-    KeyType,
     Realm,
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
@@ -31,7 +33,7 @@ export class KeyEntity implements Key {
         length: 64,
         default: null,
     })
-        type: `${KeyType}`;
+        type: `${JWKType}`;
 
     @Column({
         type: 'int',

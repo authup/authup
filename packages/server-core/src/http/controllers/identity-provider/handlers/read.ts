@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
@@ -13,7 +14,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName, isUUID } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 

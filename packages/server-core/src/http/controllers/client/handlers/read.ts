@@ -15,9 +15,13 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import {
-    OAuth2SubKind, PermissionName, isSelfId, isUUID,
+    PermissionName,
 } from '@authup/core-kit';
+import {
+    OAuth2SubKind, isUUID,
+} from '@authup/kit';
 import { ClientEntity, resolveRealm } from '../../../../domains';
+import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 

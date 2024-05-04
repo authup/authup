@@ -13,7 +13,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');

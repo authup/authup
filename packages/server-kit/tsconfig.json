@@ -2,8 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authup/core-kit": ["./packages/core-kit/src"],
-            "@authup/core-realtime-kit": ["./packages/core-realtime-kit/src"],
+            "@authup/kit": ["./packages/kit/src"]
         }
     }
 }

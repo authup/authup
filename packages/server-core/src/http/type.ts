@@ -6,8 +6,9 @@
  */
 
 import type {
-    AbilityManager, Client, Realm, Robot, User,
+    Client, Realm, Robot, User,
 } from '@authup/core-kit';
+import type { AbilityManager } from '@authup/kit';
 
 export type RequestEnv = {
     user?: User,

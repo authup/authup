@@ -7,18 +7,16 @@
 
 import {
     DomainEventName,
-    DomainEventSubscriptionName,
     REALM_MASTER_NAME,
     buildDomainChannelName,
-    buildDomainEventFullName,
-    buildDomainEventSubscriptionFullName,
 } from '@authup/core-kit';
 import type {
     DomainEntity,
     DomainEventContext,
-    DomainEventSubscriptionFullName,
     DomainType,
 } from '@authup/core-kit';
+import type { EventFullName } from '@authup/kit';
+import { EventNameSuffix, buildEventFullName } from '@authup/kit';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
@@ -132,13 +130,13 @@ export function createEntitySocket<
         const socketManager = injectSocketClientManager();
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
-        let event : DomainEventSubscriptionFullName | undefined;
+        let event : EventFullName<A, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
         if (ctx.buildSubscribeEventName) {
             event = ctx.buildSubscribeEventName();
         } else {
-            event = buildDomainEventSubscriptionFullName(
-                ctx.type as `${DomainType}`,
-                DomainEventSubscriptionName.SUBSCRIBE,
+            event = buildEventFullName(
+                ctx.type as A,
+                EventNameSuffix.SUBSCRIBE,
             );
         }
 
@@ -148,21 +146,21 @@ export function createEntitySocket<
         );
 
         if (ctx.onCreated) {
-            socket.on(buildDomainEventFullName(
+            socket.on(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.CREATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
-            socket.on(buildDomainEventFullName(
+            socket.on(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
-            socket.on(buildDomainEventFullName(
+            socket.on(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.DELETED,
             ), handleDeleted);
@@ -179,13 +177,13 @@ export function createEntitySocket<
         const socketManager = injectSocketClientManager();
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
-        let event : DomainEventSubscriptionFullName | undefined;
+        let event : EventFullName<A, `${EventNameSuffix.UNSUBSCRIBE}`>;
         if (ctx.buildUnsubscribeEventName) {
             event = ctx.buildUnsubscribeEventName();
         } else {
-            event = buildDomainEventSubscriptionFullName(
-                ctx.type as `${DomainType}`,
-                DomainEventSubscriptionName.SUBSCRIBE,
+            event = buildEventFullName(
+                ctx.type as A,
+                EventNameSuffix.UNSUBSCRIBE,
             );
         }
 
@@ -195,21 +193,21 @@ export function createEntitySocket<
         );
 
         if (ctx.onCreated) {
-            socket.off(buildDomainEventFullName(
+            socket.off(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.UPDATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
-            socket.off(buildDomainEventFullName(
+            socket.off(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
-            socket.off(buildDomainEventFullName(
+            socket.off(buildEventFullName(
                 ctx.type as `${DomainType}`,
                 DomainEventName.DELETED,
             ), handleDeleted);

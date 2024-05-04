@@ -46,7 +46,9 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/config": "^1.0.0-beta.9",
+        "@authup/kit": "^1.0.0-beta.9",
         "@authup/core-kit": "^1.0.0-beta.9",
+        "@authup/core-http-kit": "^1.0.0-beta.9",
         "@authup/server-kit": "^1.0.0-beta.9",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.3",

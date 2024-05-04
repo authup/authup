@@ -14,8 +14,9 @@ import {
 } from 'typeorm';
 import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
 import {
-    deserialize, serialize,
-} from '@authup/core-kit';
+    deserialize,
+    serialize,
+} from '@authup/kit';
 import { IdentityProviderEntity } from '../identity-provider/entity';
 
 @Unique(['name', 'provider_id'])

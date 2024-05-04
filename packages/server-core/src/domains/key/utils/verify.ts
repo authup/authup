@@ -6,22 +6,23 @@
  */
 
 import type { TokenVerifyOptions } from '@authup/server-kit';
-import { verifyToken } from '@authup/server-kit';
-import type { OAuth2TokenPayload } from '@authup/core-kit';
 import {
-    KeyType, wrapPrivateKeyPem, wrapPublicKeyPem,
-} from '@authup/core-kit';
+    verifyToken,
+    wrapPrivateKeyPem, wrapPublicKeyPem,
+} from '@authup/server-kit';
+import type { OAuth2TokenPayload } from '@authup/kit';
+import { JWKType } from '@authup/kit';
 import type { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(
     token: string,
     entity: KeyEntity,
 ) : Promise<OAuth2TokenPayload> {
-    if (entity.type === KeyType.OCT) {
+    if (entity.type === JWKType.OCT) {
         return verifyToken(
             token,
             {
-                type: KeyType.OCT,
+                type: JWKType.OCT,
                 key: Buffer.from(entity.decryption_key, 'base64'),
             },
         );

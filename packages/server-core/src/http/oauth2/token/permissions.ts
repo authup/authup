@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '@authup/core-kit';
-import { OAuth2SubKind, ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
+import type { Ability } from '@authup/kit';
+import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
+import { OAuth2SubKind } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, UserRepository } from '../../../domains';
 

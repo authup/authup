@@ -13,7 +13,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import type { Realm, User, UserAttribute } from '@authup/core-kit';
-import { deserialize, serialize } from '@authup/core-kit';
+import { deserialize, serialize } from '@authup/kit';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user/entity';
 

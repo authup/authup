@@ -5,14 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type {
-    OAuth2AuthorizationCodeRequest,
     OAuth2TokenPayload,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     OAuth2TokenKind,
+} from '@authup/kit';
+import {
     ScopeName,
 } from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';

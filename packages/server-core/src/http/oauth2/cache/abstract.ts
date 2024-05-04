@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError, hasOwnProperty } from '@authup/core-kit';
+import { TokenError, hasOwnProperty } from '@authup/kit';
 import type { RedisKeyPathID } from '@authup/server-kit';
 import { RedisCache, isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { template } from '@authup/core-kit';
+import { template } from '@authup/kit';
 import {
     AndFilter, EqualityFilter, OrFilter,
 } from 'ldapjs';

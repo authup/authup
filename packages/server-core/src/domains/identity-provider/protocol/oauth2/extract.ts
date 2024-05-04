@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2IdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
-import { hasOwnProperty, isObject } from '@authup/core-kit';
+import { hasOwnProperty, isObject } from '@authup/kit';
 
 export function extractOAuth2IdentityProviderProtocolAttributes(
     input: unknown,

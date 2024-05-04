@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from '@authup/kit';
 import {
-    PermissionName, isPropertySet, isRealmResourceWritable, isValidRoleName,
+    PermissionName, isRealmResourceWritable, isValidRoleName,
 } from '@authup/core-kit';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';

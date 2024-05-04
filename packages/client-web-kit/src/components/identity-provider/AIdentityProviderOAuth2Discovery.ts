@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { APIClient, isOAuth2OpenIDProviderMetadata } from '@authup/core-kit';
+import { Client } from '@authup/core-http-kit';
+import { isOAuth2OpenIDProviderMetadata } from '@authup/kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -35,7 +36,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
 
         const message = ref<string | null>(null);
 
-        const apiClient = new APIClient();
+        const apiClient = new Client();
 
         const lookup = async () => {
             if (busy.value || $v.value.url.$invalid) {

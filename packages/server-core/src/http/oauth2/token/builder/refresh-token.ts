@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2RefreshToken } from '@authup/core-kit';
 import { randomUUID } from 'node:crypto';
-import type { OAuth2RefreshToken, OAuth2TokenPayload } from '@authup/core-kit';
-import { OAuth2SubKind, OAuth2TokenKind } from '@authup/core-kit';
+import type { OAuth2TokenPayload } from '@authup/kit';
+import { OAuth2SubKind, OAuth2TokenKind } from '@authup/kit';
 import type { OAuth2RefreshTokenBuildContext } from './type';
 
 export function buildOAuth2RefreshTokenPayload(

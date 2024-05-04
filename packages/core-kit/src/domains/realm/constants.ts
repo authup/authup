@@ -6,3 +6,4 @@
  */
 
 export const REALM_MASTER_NAME = 'master';
+export const REALM_NAME_REGEX = /^[a-zA-Z0-9_]{3,128}$/;

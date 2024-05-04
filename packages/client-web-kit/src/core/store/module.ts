@@ -9,18 +9,21 @@ import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
+} from '@authup/kit';
+import type {
     Realm,
     User,
 } from '@authup/core-kit';
 import {
-    APIClient,
+    Client, isClientTokenExpiredError,
+} from '@authup/core-http-kit';
+import {
     AbilityManager,
-    isAPIClientTokenExpiredError,
-} from '@authup/core-kit';
+} from '@authup/kit';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
 
 export const createStore = (context: StoreCreateContext) => {
-    const client = new APIClient({
+    const client = new Client({
         baseURL: context.baseURL,
     });
 
@@ -186,7 +189,7 @@ export const createStore = (context: StoreCreateContext) => {
                 userResolved.value = true;
             }
         } catch (e) {
-            if (isAPIClientTokenExpiredError(e)) {
+            if (isClientTokenExpiredError(e)) {
                 await attemptRefreshToken();
 
                 await resolve({

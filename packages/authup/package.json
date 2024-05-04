@@ -46,6 +46,7 @@
         "@authup/client-web": "^1.0.0-beta.9",
         "@authup/client-web-config": "^1.0.0-beta.9",
         "@authup/config": "^1.0.0-beta.9",
+        "@authup/kit": "^1.0.0-beta.9",
         "@authup/core-kit": "^1.0.0-beta.9",
         "@authup/server-core": "^1.0.0-beta.9",
         "cac": "^6.7.14",

@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2OpenIdTokenPayload } from '@authup/kit';
+import { OAuth2SubKind, hasOwnProperty } from '@authup/kit';
 import type {
-    Client, OAuth2OpenIdTokenPayload, Robot, User,
+    Client, Robot, User,
 } from '@authup/core-kit';
-import { OAuth2SubKind, hasOwnProperty } from '@authup/core-kit';
 
 type AttributeMap<T extends Record<string, any>> = Record<
 keyof OAuth2OpenIdTokenPayload,
