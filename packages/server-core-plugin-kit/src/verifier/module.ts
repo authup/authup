@@ -24,7 +24,7 @@ import type {
 } from '@authup/kit';
 import { extractTokenHeader, verifyToken } from '@authup/server-kit';
 import { importJWK } from 'jose';
-import { TokenVerifierMemoryCache, TokenVerifierRedisCache } from './cache';
+import { TokenVerifierMemoryCache, TokenVerifierRedisCache, isTokenVerifierCache } from './cache';
 import type { TokenVerifierCache } from './cache';
 import type { TokenVerificationData, TokenVerificationDataInput, TokenVerifierOptions } from './type';
 
@@ -36,12 +36,19 @@ export class TokenVerifier {
     protected cache : TokenVerifierCache;
 
     constructor(context: TokenVerifierOptions) {
-        /* istanbul ignore next */
-        if (context.cache && context.cache.type === 'redis') {
-            this.cache = new TokenVerifierRedisCache(context.cache.client);
-        } else {
-            this.cache = new TokenVerifierMemoryCache();
+        let cache : TokenVerifierCache | undefined;
+
+        if (context.cache) {
+            if (isTokenVerifierCache(context.cache)) {
+                this.cache = context.cache;
+            } else if (context.cache.type === 'redis') {
+                this.cache = new TokenVerifierRedisCache(context.cache.client);
+            } else {
+                this.cache = new TokenVerifierMemoryCache(context.cache.intervalMs);
+            }
         }
+
+        this.cache = cache || new TokenVerifierMemoryCache();
 
         this.client = new Client({ baseURL: context.baseURL });
 
