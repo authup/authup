@@ -9,7 +9,7 @@ import { createPublicKey } from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import type { KeyPair, KeyPairOptions } from './type';
-import { buildKeyFileName, decryptRSAPrivateKey, extendKeyPairOptions } from './utils';
+import { buildKeyFileName, decryptRSAPrivateKey, extendKeyPairOptions } from './helpers';
 import { KeyPairKind } from './constants';
 import { saveKeyPair } from './save';
 

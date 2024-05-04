@@ -8,8 +8,7 @@
 import type {
     TokenECAlgorithm, TokenRSAAlgorithm, TokenSignECOptions, TokenSignOCTOptions, TokenSignOptions, TokenSignRSAOptions,
 } from '@authup/server-kit';
-import { signToken } from '@authup/server-kit';
-import { wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/core-kit';
+import { signToken, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/server-kit';
 import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/kit';
 import { JWKType } from '@authup/kit';
 import type { KeyEntity } from '../entity';

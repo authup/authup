@@ -6,12 +6,12 @@
  */
 
 import type { TokenVerifyOptions } from '@authup/server-kit';
-import { verifyToken } from '@authup/server-kit';
+import {
+    verifyToken,
+    wrapPrivateKeyPem, wrapPublicKeyPem,
+} from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/kit';
 import { JWKType } from '@authup/kit';
-import {
-    wrapPrivateKeyPem, wrapPublicKeyPem,
-} from '@authup/core-kit';
 import type { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(

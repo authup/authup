@@ -7,13 +7,12 @@
 
 import type { Realm } from '@authup/core-kit';
 import {
-    unwrapPrivateKeyPem,
-    unwrapPublicKeyPem,
-} from '@authup/core-kit';
-import { JWKType } from '@authup/kit';
-import {
     createKeyPair,
+    unwrapPrivateKeyPem,
+
+    unwrapPublicKeyPem,
 } from '@authup/server-kit';
+import { JWKType } from '@authup/kit';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';

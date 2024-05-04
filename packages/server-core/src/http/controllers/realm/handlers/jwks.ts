@@ -11,7 +11,7 @@ import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import { In } from 'typeorm';
-import { wrapPublicKeyPem } from '@authup/core-kit';
+import { wrapPublicKeyPem } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../domains';
 

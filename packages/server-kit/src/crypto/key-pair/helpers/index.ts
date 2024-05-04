@@ -9,3 +9,4 @@ export * from './check';
 export * from './options';
 export * from './file-name';
 export * from './private-key';
+export * from './wrap';
