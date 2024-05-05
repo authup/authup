@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@ebec/http';
-import { ErrorCode } from '@authup/kit';
+import { AuthupError, ErrorCode } from '@authup/kit';
 
-export class RobotError extends BadRequestError {
+export class RobotError extends AuthupError {
     static credentialsInvalid() {
         return new RobotError({
             code: ErrorCode.CREDENTIALS_INVALID,
