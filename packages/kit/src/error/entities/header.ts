@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Input } from '@ebec/http';
-import { BadRequestError } from '@ebec/http';
 import type { AuthorizationHeaderType } from 'hapic';
 import { ErrorCode } from '../constants';
+import { AuthupError } from './base';
+import type { AuthupErrorOptionsInput } from './types';
 
-export class HeaderError extends BadRequestError {
-    constructor(...input: Input[]) {
+export class HeaderError extends AuthupError {
+    constructor(...input: AuthupErrorOptionsInput[]) {
         super({ code: ErrorCode.HEADER_INVALID }, ...input);
     }
 

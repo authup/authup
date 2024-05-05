@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Input } from '@ebec/http';
-import { BadRequestError } from '@ebec/http';
 import { OAuth2TokenKind } from '../../oauth2';
 import type { OAuth2SubKind } from '../../oauth2';
 import { ErrorCode } from '../constants';
+import { AuthupError } from './base';
+import type { AuthupErrorOptionsInput } from './types';
 
-export class TokenError extends BadRequestError {
-    constructor(...input: Input[]) {
+export class TokenError extends AuthupError {
+    constructor(...input: AuthupErrorOptionsInput[]) {
         super({
             code: ErrorCode.TOKEN_INVALID,
             message: 'The Token is invalid.',
