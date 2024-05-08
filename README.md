@@ -95,6 +95,7 @@ The repository contains the following packages:
 | [config](packages/config)                                             | Library     | A collection of configuration helpers for the client and server side.                                 |
 | [core-kit](packages/core-kit)                                         | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
 | [core-realtime-kit](packages/core-realtime-kit)                       | Library     | A toolkit for the core socket service.                                                                |
+| [kit](packages/kit)                                                   | Library     | A toolkit for the whole ecosystem.                                                                    |
 | [server-core](packages/server-core)                                   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 | [server-core-plugin-kit](packages/server-core-plugin-kit)             | Library     | A plugin toolkit targeting external services.                                                         |
 | [server-core-plugin-http](packages/server-core-plugin-http)           | Library     | A plugin for a HTTP service.                                                                          |
