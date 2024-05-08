@@ -11,8 +11,7 @@ import type {
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
-import { EnvironmentName } from 'typeorm-extension';
-import { useConfig } from '../../../config';
+import { EnvironmentName, useConfig } from '../../../config';
 import { useRequestEnv } from '../../utils';
 
 export function registerLoggerMiddleware(router: Router) {
@@ -62,12 +61,17 @@ export function registerLoggerMiddleware(router: Router) {
                         }
                     },
                 },
-                skip(req: Request): boolean {
-                    let path = useRequestPath(req);
-                    if (!path.startsWith('/')) {
-                        path = `/${path}`;
+                skip(req: Request, res: Response): boolean {
+                    const path = useRequestPath(req);
+                    if (path.length === 0 || path === '/') {
+                        return true;
                     }
-                    return path === '/';
+
+                    if (config.env === EnvironmentName.PRODUCTION) {
+                        return res.statusCode < 400;
+                    }
+
+                    return false;
                 },
             },
         )(request, response, next);

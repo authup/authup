@@ -12,13 +12,13 @@ import { isValidUserName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { useDataSource } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
 import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
-    useConfig,
+    EnvironmentName, useConfig,
 } from '../../../../../config';
 
 export async function createAuthRegisterRouteHandler(req: Request, res: Response) : Promise<any> {

@@ -5,6 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export enum EnvironmentName {
+    PRODUCTION = 'production',
+    TEST = 'test',
+    DEVELOPMENT = 'development',
+}
+
 export enum EnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',
     WRITABLE_DIRECTORY_PATH = 'WRITABLE_DIRECTORY_PATH',

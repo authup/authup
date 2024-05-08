@@ -12,11 +12,11 @@ import type { User } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { useDataSource } from 'typeorm-extension';
 import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
-    useConfig,
+    EnvironmentName, useConfig,
 } from '../../../../../config';
 import { RequestValidationError, matchedValidationData } from '../../../../validation';
 

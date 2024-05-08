@@ -28,7 +28,7 @@ export const AClients = defineComponent({
         });
 
         const translationName = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            group: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.CLIENTS,
         });
 

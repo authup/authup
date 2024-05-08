@@ -17,11 +17,11 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
-import { EnvironmentName, useDataSource } from 'typeorm-extension';
+import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository, createIdentityProviderAccount, createOAuth2IdentityProviderFlow } from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
-import { useConfig } from '../../../../config';
+import { EnvironmentName, useConfig } from '../../../../config';
 
 async function resolve(id: string) {
     const dataSource = await useDataSource();
