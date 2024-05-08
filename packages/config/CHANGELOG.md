@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1-beta.9](https://github.com/authup/authup/compare/v1.0.0-beta.9...v1.0.1-beta.9) (2024-05-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.9 to ^1.0.0-beta.10
+
 ## [1.0.0-beta.9](https://github.com/authup/authup/compare/global-config-v1.0.0-beta.8...global-config-v1.0.0-beta.9) (2024-04-10)
 
 
