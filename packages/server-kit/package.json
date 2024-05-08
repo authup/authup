@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-kit",
-    "version": "1.0.0-beta.9",
+    "version": "1.0.0-beta.10",
     "description": "SDK for server side services.",
     "exports": {
         "./package.json": "./package.json",
@@ -62,10 +62,10 @@
         "winston": "^3.13.0"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.9"
+        "@authup/kit": "^1.0.0-beta.10"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.9"
+        "@authup/kit": "^1.0.0-beta.10"
     },
     "publishConfig": {
         "access": "public"

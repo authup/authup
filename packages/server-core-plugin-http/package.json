@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-plugin-http",
-    "version": "1.0.0-beta.9",
+    "version": "1.0.0-beta.10",
     "description": "An adapter package to integrate into other services.",
     "exports": {
         "./package.json": "./package.json",
@@ -38,16 +38,16 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-http-kit": "^1.0.0-beta.9",
-        "@authup/server-core-plugin-kit": "^1.0.0-beta.9"
+        "@authup/core-http-kit": "^1.0.0-beta.10",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.10"
     },
     "devDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.9",
-        "@authup/server-kit": "^1.0.0-beta.9"
+        "@authup/core-kit": "^1.0.0-beta.10",
+        "@authup/server-kit": "^1.0.0-beta.10"
     },
     "peerDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.9",
-        "@authup/server-kit": "^1.0.0-beta.9"
+        "@authup/core-kit": "^1.0.0-beta.10",
+        "@authup/server-kit": "^1.0.0-beta.10"
     },
     "publishConfig": {
         "access": "public"
