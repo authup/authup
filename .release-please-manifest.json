@@ -3,7 +3,7 @@
     "packages/client-web": "1.0.0-beta.10",
     "packages/client-web-config": "1.0.0-beta.10",
     "packages/client-web-kit": "1.0.0-beta.10",
-    "packages/config": "1.0.1-beta.9",
+    "packages/config": "1.0.0-beta.10",
     "packages/core-http-kit": "1.0.0-beta.10",
     "packages/core-kit": "1.0.0-beta.10",
     "packages/core-realtime-kit": "1.0.0-beta.10",
