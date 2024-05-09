@@ -8,7 +8,7 @@
 import de from 'date-fns/locale/de';
 import { watch } from 'vue';
 import installAuthup, { injectTranslatorLocale } from '@authup/client-web-kit';
-import type { APIClient } from '@authup/core-kit';
+import type { Client } from '@authup/core-http-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
@@ -74,7 +74,7 @@ export default defineNuxtPlugin((ctx) => {
 
     // preset missing ...
     ctx.vueApp.use(installAuthup, {
-        apiClient: ctx.$api as APIClient,
+        apiClient: ctx.$api as Client,
         store,
         components: false,
     });

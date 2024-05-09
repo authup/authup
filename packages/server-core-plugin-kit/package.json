@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-core-plugin-kit",
     "version": "1.0.0-beta.10",
-    "description": "A package containing utilities for plugin solutions.",
+    "description": "A package containing a toolkit for the server core plugins.",
     "exports": {
         "./package.json": "./package.json",
         ".": {

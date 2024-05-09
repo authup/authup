@@ -1,7 +1,7 @@
 {
-    "name": "@authup/server-middleware-socket-io",
+    "name": "@authup/server-core-plugin-socket-io",
     "version": "1.0.0-beta.10",
-    "description": "An adapter package to integrate into other services.",
+    "description": "A socket.io plugin for the server core service.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
