@@ -4,7 +4,7 @@
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-A plugin for a socket.io service.
+A socket.io plugin for the server core service.
 
 **Table of Contents**
 
