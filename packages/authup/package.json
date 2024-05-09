@@ -45,7 +45,7 @@
     "dependencies": {
         "@authup/client-web": "^1.0.0-beta.10",
         "@authup/client-web-config": "^1.0.0-beta.10",
-        "@authup/config": "^1.0.1-beta.9",
+        "@authup/config": "^1.0.0-beta.10",
         "@authup/kit": "^1.0.0-beta.10",
         "@authup/core-kit": "^1.0.0-beta.10",
         "@authup/server-core": "^1.0.0-beta.10",
