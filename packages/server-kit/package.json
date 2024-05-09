@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-kit",
     "version": "1.0.0-beta.10",
-    "description": "SDK for server side services.",
+    "description": "A toolkit for server-side services.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -25,6 +25,7 @@
     },
     "keywords": [
         "auth",
+        "kit",
         "utils",
         "jwt",
         "token",
