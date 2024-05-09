@@ -1,6 +1,6 @@
 {
     "name": "authup",
-    "version": "1.0.1-beta.10",
+    "version": "1.0.2-beta.10",
     "description": "This is the CLI for the authup framework.",
     "exports": {
         "./package.json": "./package.json",
@@ -48,7 +48,7 @@
         "@authup/config": "^1.0.0-beta.10",
         "@authup/kit": "^1.0.0-beta.10",
         "@authup/core-kit": "^1.0.0-beta.10",
-        "@authup/server-core": "^1.0.1-beta.10",
+        "@authup/server-core": "^1.0.2-beta.10",
         "cac": "^6.7.14",
         "chalk": "^4.1.2",
         "consola": "^3.2.3",
