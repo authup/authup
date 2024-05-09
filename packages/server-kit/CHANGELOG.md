@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.11](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2024-05-09)
+
+
+### Miscellaneous Chores
+
+* minor README.md(s) updates ([8ae5c10](https://github.com/authup/authup/commit/8ae5c10d178745ad1921dfdaba9c7487944e42c0))
+
 ## [1.0.0-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-05-08)
 
 
