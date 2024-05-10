@@ -59,7 +59,7 @@ jobs:
                     registryRepository: authup/authup
                     registryTag: |
                         latest
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+                        ${{ steps.release.outputs['packages/server-core--major'] }}.${{ steps.release.outputs['packages/server-core--minor'] }}.${{ steps.release.outputs['packages/server-core--patch'] }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
                 if: steps.release.outputs.releases_created == 'true'
@@ -69,5 +69,5 @@ jobs:
                     registryUser: authup
                     registryTag: |
                         latest
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+                        ${{ steps.release.outputs['packages/server-core--major'] }}.${{ steps.release.outputs['packages/server-core--minor'] }}.${{ steps.release.outputs['packages/server-core--patch'] }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
