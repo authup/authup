@@ -34,7 +34,7 @@ export function useTranslationsForBaseValidation<
 >(
     result: BaseValidation<T, V>,
 ) : BaseValidationTranslations {
-    return _useTranslationsForBaseValidation(result as any);
+    return _useTranslationsForBaseValidation(result);
 }
 
 export function useTranslationsForNestedValidation<

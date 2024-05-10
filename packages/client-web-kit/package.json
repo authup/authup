@@ -56,7 +56,7 @@
         "@authup/core-kit": "^1.0.0-beta.10",
         "@authup/core-http-kit": "^1.0.0-beta.10",
         "@authup/core-realtime-kit": "^1.0.0-beta.10",
-        "@ilingo/vuelidate": "^5.0.0",
+        "@ilingo/vuelidate": "^5.0.1",
         "@types/node": "^20.12.7",
         "@vitejs/plugin-vue": "^5.0.4",
         "@vuecs/form-controls": "^2.2.0",
