@@ -55,7 +55,7 @@
         "dycraft": "^1.1.0",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.5.0",
-        "zod": "^3.23.7"
+        "zod": "^3.23.8"
     },
     "publishConfig": {
         "access": "public"
