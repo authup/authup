@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-10)
+
+
+### Bug Fixes
+
+* typings in translator + updated vuelidate ([0e1a8e8](https://github.com/authup/authup/commit/0e1a8e8e0418324db43dc0e437c8b69af253f8bb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-http-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-http-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+
 ## [1.0.0-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-05-08)
 
 

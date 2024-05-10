@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.1.0-beta.10](https://github.com/authup/authup/compare/v1.0.1-beta.10...v1.1.0-beta.10) (2024-05-10)
+
+
+### Features
+
+* implement interaction between timeago and ilingo library ([5b44aaf](https://github.com/authup/authup/commit/5b44aaf7bb3133d8ace60cb84a4affd4ff1c85bf))
+* implemented ilingo v4 with reactive form rules translations ([#1913](https://github.com/authup/authup/issues/1913)) ([75aaa16](https://github.com/authup/authup/commit/75aaa169a0ea1db0ea7543a8baca434ad4154634))
+* migrated to bootstrap-vue-next v0.17 ([7d32617](https://github.com/authup/authup/commit/7d32617db8d78665e952eb0601996b740e9dd195))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+* simplified validation handling in login.vue component ([320e049](https://github.com/authup/authup/commit/320e0497572f5b30219e41cbd67523260b23b8fa))
+* translations for components ([#1914](https://github.com/authup/authup/issues/1914)) ([e713752](https://github.com/authup/authup/commit/e71375241c01b66626dced01021bc974d9166fa4))
+* validaiton severity implementation ([0e4d0a0](https://github.com/authup/authup/commit/0e4d0a0fd75847754a9b769121ef0f6703913cfa))
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+* package name of plugin packages ([2c8a5ca](https://github.com/authup/authup/commit/2c8a5cab37b9483af57f94151e9a43b9d4decb10))
+* typings in translator + updated vuelidate ([0e1a8e8](https://github.com/authup/authup/commit/0e1a8e8e0418324db43dc0e437c8b69af253f8bb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/config bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-http-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/client-web-config bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+
 ## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-09)
 
 

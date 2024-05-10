@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web-config",
-    "version": "1.0.0-beta.10",
+    "version": "1.0.1-beta.10",
     "description": "This package contains the web config module.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -39,7 +39,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.10",
+        "@authup/kit": "^1.0.1-beta.10",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
         "smob": "^1.5.0",

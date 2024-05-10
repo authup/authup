@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.1.0-beta.10](https://github.com/authup/authup/compare/v1.0.1-beta.10...v1.1.0-beta.10) (2024-05-10)
+
+
+### Features
+
+* refactored domain event publishing + fixed cache invalidation ([#1928](https://github.com/authup/authup/issues/1928)) ([53f2fba](https://github.com/authup/authup/commit/53f2fbaeeb4190a48bb920bc4595fef27a4cf2d5))
+* refactored service singleton usage ([#1933](https://github.com/authup/authup/issues/1933)) ([cbf2f58](https://github.com/authup/authup/commit/cbf2f5836d5f3bf4cd26ab0add44e78222d54602))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 9.5.0 to 9.6.0 ([#1935](https://github.com/authup/authup/issues/1935)) ([e835eff](https://github.com/authup/authup/commit/e835eff9e5de0a919cbb7117d7f5ce8cdc686916))
+* **deps:** bump mysql2 from 3.9.5 to 3.9.6 ([#1905](https://github.com/authup/authup/issues/1905)) ([5d9cbd3](https://github.com/authup/authup/commit/5d9cbd3219a32cd09284be62265b73396a5325e8))
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+* only log non 400/500 status code in dev and test env ([cff84e0](https://github.com/authup/authup/commit/cff84e0cc1900d827d3df5a80002851aa2a6a7f6))
+* throwing error on token decoding issue ([1617abe](https://github.com/authup/authup/commit/1617abe754d0dec9ad93867ffa0271a33f7c05dd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-http-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/server-kit bumped from ^1.0.0-beta.11 to ^1.1.0-beta.11
+
 ## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-09)
 
 

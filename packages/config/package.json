@@ -1,6 +1,6 @@
 {
     "name": "@authup/config",
-    "version": "1.0.0-beta.10",
+    "version": "1.0.1-beta.10",
     "description": "This package contains the config helper module.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
