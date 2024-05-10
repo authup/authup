@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
+
+
+### Features
+
+* refactored domain event publishing + fixed cache invalidation ([#1928](https://github.com/authup/authup/issues/1928)) ([53f2fba](https://github.com/authup/authup/commit/53f2fbaeeb4190a48bb920bc4595fef27a4cf2d5))
+* refactored service singleton usage ([#1933](https://github.com/authup/authup/issues/1933)) ([cbf2f58](https://github.com/authup/authup/commit/cbf2f5836d5f3bf4cd26ab0add44e78222d54602))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/jsonwebtoken from 9.0.3 to 9.0.4 ([#1444](https://github.com/authup/authup/issues/1444)) ([185bee1](https://github.com/authup/authup/commit/185bee120615e5c51a9d643b9af03d73c35e56d0))
+* **deps:** bump @types/jsonwebtoken from 9.0.4 to 9.0.5 ([#1507](https://github.com/authup/authup/issues/1507)) ([598b9af](https://github.com/authup/authup/commit/598b9af61e739e74ace804941dc05f1cc79e6e14))
+* **deps:** bump @types/nodemailer from 6.4.13 to 6.4.14 ([#1543](https://github.com/authup/authup/issues/1543)) ([b67c556](https://github.com/authup/authup/commit/b67c556bd5ef799d97456b67de5cfcb57ddeca1d))
+* **deps:** bump better-sqlite3 from 9.5.0 to 9.6.0 ([#1935](https://github.com/authup/authup/issues/1935)) ([e835eff](https://github.com/authup/authup/commit/e835eff9e5de0a919cbb7117d7f5ce8cdc686916))
+* **deps:** bump mysql2 from 3.9.5 to 3.9.6 ([#1905](https://github.com/authup/authup/issues/1905)) ([5d9cbd3](https://github.com/authup/authup/commit/5d9cbd3219a32cd09284be62265b73396a5325e8))
+* **deps:** bump nodemailer and @types/nodemailer ([#1448](https://github.com/authup/authup/issues/1448)) ([026830c](https://github.com/authup/authup/commit/026830c71255d400ba24584b390012cc79cd136a))
+* **deps:** bump nodemailer from 6.9.5 to 6.9.6 ([#1418](https://github.com/authup/authup/issues/1418)) ([bf4eb3d](https://github.com/authup/authup/commit/bf4eb3de649e89b1585bdced3af5a81bdd3eb365))
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+* only log non 400/500 status code in dev and test env ([cff84e0](https://github.com/authup/authup/commit/cff84e0cc1900d827d3df5a80002851aa2a6a7f6))
+* throwing error on token decoding issue ([1617abe](https://github.com/authup/authup/commit/1617abe754d0dec9ad93867ffa0271a33f7c05dd))
+* throwing token error ([35663eb](https://github.com/authup/authup/commit/35663eb994ee18980298b173afb31c2983a9c91d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-http-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/server-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+
 ## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-09)
 
 

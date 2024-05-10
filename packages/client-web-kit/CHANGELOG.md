@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
+
+
+### Features
+
+* implemented ilingo v4 with reactive form rules translations ([#1913](https://github.com/authup/authup/issues/1913)) ([75aaa16](https://github.com/authup/authup/commit/75aaa169a0ea1db0ea7543a8baca434ad4154634))
+* remove socket-client implementation ([#1915](https://github.com/authup/authup/issues/1915)) ([28f1cce](https://github.com/authup/authup/commit/28f1cce4190de8c429cee1f785300aa2868abfcd))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+* translations for components ([#1914](https://github.com/authup/authup/issues/1914)) ([e713752](https://github.com/authup/authup/commit/e71375241c01b66626dced01021bc974d9166fa4))
+* validaiton severity implementation ([0e4d0a0](https://github.com/authup/authup/commit/0e4d0a0fd75847754a9b769121ef0f6703913cfa))
+
+
+### Bug Fixes
+
+* minor enhancement for vue installer ([166b912](https://github.com/authup/authup/commit/166b9121041c3cb2968475c92a0057c0a04022ad))
+* only log non 400/500 status code in dev and test env ([cff84e0](https://github.com/authup/authup/commit/cff84e0cc1900d827d3df5a80002851aa2a6a7f6))
+* remove osbolete translatorLocale component property ([4ef5be9](https://github.com/authup/authup/commit/4ef5be998f7799c6daff4e1426352591d39ca521))
+* typings in translator + updated vuelidate ([0e1a8e8](https://github.com/authup/authup/commit/0e1a8e8e0418324db43dc0e437c8b69af253f8bb))
+* use consts for custom vuelidate rules ([4f1bb7c](https://github.com/authup/authup/commit/4f1bb7c3181827cd5c564cac8c5021e6f252e838))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-http-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-http-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+
 ## [1.0.0-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-05-08)
 
 
