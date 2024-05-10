@@ -9,9 +9,7 @@ import {
     provideStore,
 } from './core';
 
-export function install(app: App, options?: Options) : void {
-    options = options || {};
-
+export function install(app: App, options: Options = {}) : void {
     if (options.apiClient) {
         provideAPIClient(options.apiClient, app);
     }
