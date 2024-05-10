@@ -51,7 +51,8 @@
     "plugins": [
         {
             "type": "node-workspace",
-            "updatePeerDependencies": true
+            "updatePeerDependencies": true,
+            "updateAllPackages": true
         },
         {
             "type": "linked-versions",
