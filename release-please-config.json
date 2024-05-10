@@ -2,7 +2,7 @@
     "bootstrap-sha": "de74b12b089b90b32c6f11523ad3b51a2907cd02",
     "include-component-in-tag": false,
     "release-type": "node",
-    "prerelease": true,
+    "release-as": "1.0.0-beta.12",
     "packages": {
         "packages/authup": {
             "component": "authup"
