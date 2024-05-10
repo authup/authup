@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.0.1-beta.11](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.1-beta.11) (2024-05-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.1-beta.11
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.1-beta.11
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.1-beta.11
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.1-beta.11
+
 ## [1.0.0-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-05-08)
 
 
