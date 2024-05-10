@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core",
-    "version": "1.0.1-beta.10",
+    "version": "1.0.2-beta.10",
     "description": "This is a standalone application.",
     "main": "dist/index.js",
     "scripts": {
@@ -45,10 +45,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/config": "^1.0.0-beta.10",
-        "@authup/kit": "^1.0.0-beta.10",
-        "@authup/core-kit": "^1.0.0-beta.10",
-        "@authup/core-http-kit": "^1.0.0-beta.10",
+        "@authup/config": "^1.0.1-beta.10",
+        "@authup/kit": "^1.0.1-beta.10",
+        "@authup/core-kit": "^1.0.1-beta.10",
+        "@authup/core-http-kit": "^1.0.1-beta.10",
         "@authup/server-kit": "^1.0.0-beta.11",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.3",

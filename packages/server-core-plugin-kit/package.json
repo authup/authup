@@ -55,16 +55,16 @@
         "jose": "^5.2.4"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.10",
-        "@authup/core-kit": "^1.0.0-beta.10",
-        "@authup/core-http-kit": "^1.0.0-beta.10",
+        "@authup/kit": "^1.0.1-beta.10",
+        "@authup/core-kit": "^1.0.1-beta.10",
+        "@authup/core-http-kit": "^1.0.1-beta.10",
         "@authup/server-kit": "^1.0.0-beta.11",
         "@hapic/oauth2": "^2.4.2"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.10",
-        "@authup/core-kit": "^1.0.0-beta.10",
-        "@authup/core-http-kit": "^1.0.0-beta.10",
+        "@authup/kit": "^1.0.1-beta.10",
+        "@authup/core-kit": "^1.0.1-beta.10",
+        "@authup/core-http-kit": "^1.0.1-beta.10",
         "@authup/server-kit": "^1.0.0-beta.11"
     },
     "publishConfig": {

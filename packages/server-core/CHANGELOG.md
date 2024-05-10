@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.0.2-beta.10](https://github.com/authup/authup/compare/v1.0.1-beta.10...v1.0.2-beta.10) (2024-05-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+    * @authup/core-http-kit bumped from ^1.0.0-beta.10 to ^1.0.1-beta.10
+
 ## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-09)
 
 
