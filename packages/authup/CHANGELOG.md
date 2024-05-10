@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
+
+
+### Features
+
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/client-web-config bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/core-kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+    * @authup/server-core bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+
 ## [1.0.1-beta.10](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.1-beta.10) (2024-05-09)
 
 

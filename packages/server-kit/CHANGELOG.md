@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
+
+
+### Features
+
+* refactored domain event publishing + fixed cache invalidation ([#1928](https://github.com/authup/authup/issues/1928)) ([53f2fba](https://github.com/authup/authup/commit/53f2fbaeeb4190a48bb920bc4595fef27a4cf2d5))
+* refactored service singleton usage ([#1933](https://github.com/authup/authup/issues/1933)) ([cbf2f58](https://github.com/authup/authup/commit/cbf2f5836d5f3bf4cd26ab0add44e78222d54602))
+* remove socket-client implementation ([#1915](https://github.com/authup/authup/issues/1915)) ([28f1cce](https://github.com/authup/authup/commit/28f1cce4190de8c429cee1f785300aa2868abfcd))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* **deps:** bump @node-rs/bcrypt from 1.10.2 to 1.10.4 ([#1925](https://github.com/authup/authup/issues/1925)) ([600c8fc](https://github.com/authup/authup/commit/600c8fce8c71a87ba88fed9c17ea1c4e3abfaa8c))
+* **deps:** bump @node-rs/jsonwebtoken from 0.5.4 to 0.5.6 ([#1927](https://github.com/authup/authup/issues/1927)) ([afe82f6](https://github.com/authup/authup/commit/afe82f6babe4e9854b91534bf34d38c7a8ee21cc))
+* **deps:** bump @types/nodemailer from 6.4.14 to 6.4.15 ([#1946](https://github.com/authup/authup/issues/1946)) ([e3c9f7c](https://github.com/authup/authup/commit/e3c9f7ce5893c16ebe5e8aa3071cd09b93110a4b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.11 to ^1.0.0-beta.12
+
 ## [1.0.0-beta.11](https://github.com/authup/authup/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2024-05-09)
 
 
