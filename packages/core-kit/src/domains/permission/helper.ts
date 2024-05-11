@@ -43,5 +43,6 @@ export function buildAbility(entity: PermissionRelation): Ability {
         fields: buildAbilityFields(entity.fields),
         inverse: entity.negation,
         target: entity.target,
+        realmId: entity.permission.realm_id,
     };
 }

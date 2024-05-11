@@ -12,18 +12,19 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import type { Permission, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
+@Unique(['name', 'realm_id'])
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity implements Permission {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 128, unique: true })
+    @Column({ type: 'varchar', length: 128 })
         name: string;
 
     @Column({ type: 'boolean', default: false })

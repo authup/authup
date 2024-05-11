@@ -5,13 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isRealmResourceWritable } from '@authup/core-kit';
+import { isPropertySet } from '@authup/kit';
+import { BadRequestError } from '@ebec/http';
 import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
 import type { PermissionEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
+import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
-    RequestValidationError,
+    RequestValidationError, buildRequestValidationErrorMessage,
+    extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
 
@@ -39,6 +45,14 @@ export async function runPermissionValidation(
         .optional({ nullable: true })
         .run(req);
 
+    if (operation === 'create') {
+        await check('realm_id')
+            .isUUID()
+            .optional({ values: 'null' })
+            .default(null)
+            .run(req);
+    }
+
     // ----------------------------------------------
 
     const validation = validationResult(req);
@@ -49,6 +63,22 @@ export async function runPermissionValidation(
     result.data = matchedValidationData(req, { includeOptionals: true });
 
     // ----------------------------------------------
+
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'realm_id',
+        entity: 'realm',
+    });
+
+    if (isPropertySet(result.data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        }
+    } else if (
+        operation === RequestHandlerOperation.CREATE &&
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
+    ) {
+        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+    }
 
     return result;
 }
