@@ -6,6 +6,7 @@
  */
 
 import type { Realm } from '@authup/core-kit';
+import { buildFormGroup } from '@vuecs/form-controls';
 import { SlotName } from '@vuecs/list-controls';
 import type { VNode } from 'vue';
 import { h } from 'vue';
@@ -17,18 +18,22 @@ type RealmForm = {
 };
 
 export function createRealmFormPicker(form: RealmForm) : VNode {
-    return h(ARealms, {}, {
-        [SlotName.ITEM_ACTIONS]: (
-            props: { data: Realm, busy: boolean },
-        ) => renderEntityAssignAction({
-            item: form.realm_id === props.data.id,
-            busy: props.busy,
-            add() {
-                form.realm_id = props.data.id;
-            },
-            drop() {
-                form.realm_id = '';
-            },
+    return buildFormGroup({
+        label: true,
+        labelContent: 'Realm',
+        content: h(ARealms, {}, {
+            [SlotName.ITEM_ACTIONS]: (
+                props: { data: Realm, busy: boolean },
+            ) => renderEntityAssignAction({
+                item: form.realm_id === props.data.id,
+                busy: props.busy,
+                add() {
+                    form.realm_id = props.data.id;
+                },
+                drop() {
+                    form.realm_id = '';
+                },
+            }),
         }),
     });
 }

@@ -29,8 +29,8 @@ import {
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    injectStore,
+    storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { createRealmFormPicker } from '../realm/helpers';
 
@@ -38,9 +38,6 @@ export const APermissionForm = defineComponent({
     props: {
         entity: {
             type: Object as PropType<Permission>,
-        },
-        realmId: {
-            type: String,
         },
     },
     emits: defineEntityManagerEvents<Permission>(),
@@ -63,7 +60,13 @@ export const APermissionForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
+            realm_id: {
+
+            },
         }, form);
+
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
 
         const manager = createEntityManager({
             type: `${DomainType.PERMISSION}`,
@@ -71,7 +74,16 @@ export const APermissionForm = defineComponent({
             props,
         });
 
-        const isRealmLocked = computed(() => !!props.realmId);
+        const realmId = computed(() => {
+            if (!storeRefs.realmIsRoot) {
+                return storeRefs.realmId.value;
+            }
+
+            return manager.data.value ?
+                manager.data.value.realm_id :
+                null;
+        });
+
         const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
@@ -144,7 +156,7 @@ export const APermissionForm = defineComponent({
                 }),
             }));
 
-            if (!isRealmLocked.value) {
+            if (!realmId.value && !isEditing.value) {
                 children.push(createRealmFormPicker(form));
             }
 

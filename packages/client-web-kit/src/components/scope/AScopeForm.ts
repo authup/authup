@@ -9,7 +9,7 @@ import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
-    VNodeArrayChildren, VNodeChild,
+    VNodeArrayChildren,
 } from 'vue';
 import {
     computed,
@@ -23,16 +23,13 @@ import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type {
-    Realm, Scope,
+    Scope,
 } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
     buildFormTextarea,
 } from '@vuecs/form-controls';
-import {
-    SlotName,
-} from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -40,10 +37,17 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity,
-    initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
+    createEntityManager,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    getVuelidateSeverity,
+    initFormAttributesFromSource,
+    injectStore,
+    storeToRefs,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
-import { ARealms } from '../realm';
+import { createRealmFormPicker } from '../realm/helpers';
 
 export const AScopeForm = defineComponent({
     props: {
@@ -53,11 +57,6 @@ export const AScopeForm = defineComponent({
         },
         entity: {
             type: Object as PropType<Scope>,
-            default: undefined,
-        },
-        realmId: {
-            type: String,
-            default: undefined,
         },
     },
     emits: defineEntityManagerEvents<Scope>(),
@@ -87,10 +86,23 @@ export const AScopeForm = defineComponent({
             },
         }, form);
 
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
+
         const manager = createEntityManager({
             type: `${DomainType.SCOPE}`,
             setup: ctx,
             props,
+        });
+
+        const realmId = computed(() => {
+            if (!storeRefs.realmIsRoot) {
+                return storeRefs.realmId.value;
+            }
+
+            return manager.data.value ?
+                manager.data.value.realm_id :
+                null;
         });
 
         const isEditing = useIsEditing(manager.data);
@@ -104,15 +116,9 @@ export const AScopeForm = defineComponent({
             return !!(manager.data.value && manager.data.value.built_in);
         });
 
-        const isRealmLocked = computed(() => !!props.realmId);
-
         function initForm() {
             if (props.name) {
                 form.name = props.name;
-            }
-
-            if (props.realmId) {
-                form.realm_id = props.realmId;
             }
 
             initFormAttributesFromSource(form, manager.data.value);
@@ -147,8 +153,8 @@ export const AScopeForm = defineComponent({
             ],
         );
 
-        const render = () => {
-            const name: VNodeChild = [
+        return () => {
+            const children : VNodeArrayChildren = [
                 buildFormGroup({
                     validationMessages: translationsValidation.name.value,
                     validationSeverity: getVuelidateSeverity($v.value.name),
@@ -164,9 +170,6 @@ export const AScopeForm = defineComponent({
                         },
                     }),
                 }),
-            ];
-
-            const description :VNodeChild = [
                 buildFormGroup({
                     validationMessages: translationsValidation.description.value,
                     validationSeverity: getVuelidateSeverity($v.value.description),
@@ -184,40 +187,20 @@ export const AScopeForm = defineComponent({
                 }),
             ];
 
-            const submitForm = buildFormSubmitWithTranslations({
-                busy,
+            if (
+                !realmId.value &&
+                !isNameFixed.value &&
+                !isEditing.value
+            ) {
+                children.push(createRealmFormPicker(form));
+            }
+
+            children.push(buildFormSubmitWithTranslations({
                 submit,
+                busy,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, translationsSubmit);
-
-            let realm : VNodeArrayChildren = [];
-
-            if (
-                !isRealmLocked.value &&
-                !isNameFixed.value
-            ) {
-                realm = [
-                    h('hr'),
-                    h('label', { class: 'form-label' }, translationsDefault[TranslatorTranslationDefaultKey.REALM].value),
-                    h(ARealms, {
-                        headerTitle: false,
-                    }, {
-                        [SlotName.ITEM_ACTIONS]: (
-                            props: { data: Realm, busy: boolean },
-                        ) => renderEntityAssignAction({
-                            item: form.realm_id === props.data.id,
-                            busy: props.busy,
-                            add() {
-                                form.realm_id = props.data.id;
-                            },
-                            drop() {
-                                form.realm_id = '';
-                            },
-                        }),
-                    }),
-                ];
-            }
+            }, translationsSubmit));
 
             return h('form', {
                 onSubmit($event: any) {
@@ -225,19 +208,8 @@ export const AScopeForm = defineComponent({
 
                     return submit.apply(null);
                 },
-            }, [
-                h('div', [
-                    name,
-                    h('hr'),
-                    description,
-                    realm,
-                    h('hr'),
-                    submitForm,
-                ]),
-            ]);
+            }, children);
         };
-
-        return () => render();
     },
 });
 

@@ -114,6 +114,13 @@ export const createStore = (context: StoreCreateContext) => {
     const realm = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
     const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
     const realmName = computed<string | undefined>(() => (realm.value ? realm.value.name : undefined));
+    const realmIsRoot = computed<boolean>(() => {
+        if (realm.value) {
+            return realm.value.name === REALM_MASTER_NAME;
+        }
+
+        return false;
+    });
 
     const setRealm = (entity?: Pick<Realm, 'id' | 'name'>) => {
         realm.value = entity;
@@ -122,13 +129,7 @@ export const createStore = (context: StoreCreateContext) => {
     const realmManagement = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
     const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
-    const realmManagementIsRoot = computed<boolean>(() => {
-        if (realmManagement.value) {
-            return realmManagement.value.id === REALM_MASTER_NAME;
-        }
 
-        return false;
-    });
     const setRealmManagement = (entity?: Pick<Realm, 'id' | 'name'>) => {
         realmManagement.value = entity;
     };
@@ -256,13 +257,13 @@ export const createStore = (context: StoreCreateContext) => {
 
         realm,
         realmId,
+        realmIsRoot,
         realmName,
         setRealm,
 
         realmManagement,
         realmManagementId,
         realmManagementName,
-        realmManagementIsRoot,
         setRealmManagement,
 
         user,

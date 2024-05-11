@@ -3,7 +3,7 @@
 import { AScopeForm } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { defineNuxtComponent, definePageMeta, resolveComponent } from '#imports';
+import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
@@ -45,7 +45,6 @@ export default defineNuxtComponent({
         </h6>
         <AScopeForm
             :entity="entity"
-            :realm-id="entity.realm_id"
             @updated="handleUpdated"
             @failed="handleFailed"
         />

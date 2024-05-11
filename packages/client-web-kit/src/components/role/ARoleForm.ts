@@ -7,9 +7,9 @@
 
 import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
-import type { PropType } from 'vue';
+import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    defineComponent, h, reactive, ref, watch,
+    computed, defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core-kit';
@@ -25,8 +25,9 @@ import {
     buildFormSubmitWithTranslations,
     createEntityManager,
     createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
+    injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
+import { createRealmFormPicker } from '../realm/helpers';
 
 export const ARoleForm = defineComponent({
     props: {
@@ -41,6 +42,7 @@ export const ARoleForm = defineComponent({
         const form = reactive({
             name: '',
             description: '',
+            realm_id: '',
         });
 
         const $v = useVuelidate({
@@ -53,12 +55,28 @@ export const ARoleForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
+            realm_id: {
+
+            },
         }, form);
+
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
 
         const manager = createEntityManager({
             type: `${DomainType.ROLE}`,
             setup: ctx,
             props,
+        });
+
+        const realmId = computed(() => {
+            if (!storeRefs.realmIsRoot) {
+                return storeRefs.realmId.value;
+            }
+
+            return manager.data.value ?
+                manager.data.value.realm_id :
+                null;
         });
 
         const isEditing = useIsEditing(manager.data);
@@ -98,7 +116,9 @@ export const ARoleForm = defineComponent({
         );
 
         const render = () => {
-            const name = buildFormGroup({
+            const children : VNodeArrayChildren = [];
+
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.name.value,
                 validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
@@ -109,9 +129,9 @@ export const ARoleForm = defineComponent({
                         $v.value.name.$model = input;
                     },
                 }),
-            });
+            }));
 
-            const description = buildFormGroup({
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.description.value,
                 validationSeverity: getVuelidateSeverity($v.value.description),
                 label: true,
@@ -125,14 +145,18 @@ export const ARoleForm = defineComponent({
                         rows: 6,
                     },
                 }),
-            });
+            }));
 
-            const submitForm = buildFormSubmitWithTranslations({
+            if (!realmId.value && !isEditing.value) {
+                children.push(createRealmFormPicker(form));
+            }
+
+            children.push(buildFormSubmitWithTranslations({
                 submit,
-                busy: busy.value,
+                busy,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, translationsSubmit);
+            }, translationsSubmit));
 
             return h('form', {
                 onSubmit($event: any) {
@@ -140,11 +164,7 @@ export const ARoleForm = defineComponent({
 
                     return submit.apply(null);
                 },
-            }, [
-                name,
-                description,
-                submitForm,
-            ]);
+            }, children);
         };
 
         return () => render();
