@@ -18,7 +18,7 @@ import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.PERMISSION_ADD)) {
         throw new ForbiddenError();
     }

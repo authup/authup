@@ -8,7 +8,7 @@
 import type {
     Client, Realm, Robot, User,
 } from '@authup/core-kit';
-import type { AbilityManager } from '@authup/kit';
+import type { Abilities } from '@authup/kit';
 
 export type RequestEnv = {
     user?: User,
@@ -25,5 +25,5 @@ export type RequestEnv = {
     token?: string,
     scopes?: string[],
 
-    ability: AbilityManager
+    abilities: Abilities
 };

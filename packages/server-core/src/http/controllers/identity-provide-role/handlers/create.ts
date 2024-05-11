@@ -18,7 +18,7 @@ import { runIdentityProviderRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.PROVIDER_EDIT)) {
         throw new ForbiddenError();
     }

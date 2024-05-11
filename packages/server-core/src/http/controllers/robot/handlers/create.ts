@@ -22,7 +22,7 @@ import { RequestHandlerOperation } from '../../../request';
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runRobotValidation(req, RequestHandlerOperation.CREATE);
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     const userId = useRequestEnv(req, 'userId');
 
     if (!ability.has(PermissionName.ROBOT_ADD)) {

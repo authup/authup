@@ -6,7 +6,7 @@
  */
 
 import type { Ability } from '../../../src';
-import { AbilityManager } from '../../../src';
+import { Abilities } from '../../../src';
 
 const testPermissions : Ability[] = [
     {
@@ -23,7 +23,7 @@ const testPermissions : Ability[] = [
     },
 ];
 
-const manager = new AbilityManager();
+const manager = new Abilities();
 
 describe('src/ability/manager.ts', () => {
     it('should set permissions', () => {
@@ -95,9 +95,9 @@ describe('src/ability/manager.ts', () => {
     });
 
     it('should init with permissions', () => {
-        const filledManager = new AbilityManager(testPermissions);
+        const abilities = new Abilities(testPermissions);
 
-        const items = filledManager.find();
+        const items = abilities.find();
         expect(items.length).toEqual(testPermissions.length);
     });
 });

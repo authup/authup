@@ -35,7 +35,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.ROBOT_EDIT)) {
         if (!entity.user_id) {
             throw new ForbiddenError();

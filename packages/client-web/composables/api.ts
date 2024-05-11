@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { APIClient } from '@authup/core-http-kit';
+import type { Client } from '@authup/core-http-kit';
 import { useNuxtApp } from '#app';
 
-export const useAPI = () : APIClient => {
+export const useAPI = () : Client => {
     const nuxtApp = useNuxtApp();
 
     return nuxtApp.$api;

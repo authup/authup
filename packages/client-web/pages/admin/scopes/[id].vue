@@ -51,9 +51,8 @@ export default defineNuxtComponent({
         }
 
         const store = useAuthStore();
-        const { realmManagement } = storeToRefs(store);
-
-        if (!isRealmResourceWritable(realmManagement.value, entity.value.realm_id)) {
+        const { realm } = storeToRefs(store);
+        if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {
             await navigateTo({ path: '/admin/scopes' });
             throw createError({});
         }

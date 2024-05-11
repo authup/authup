@@ -99,7 +99,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
 
         try {
-            checkAbilityOrPermission(to, (name) => store.has(name));
+            checkAbilityOrPermission(to, (name) => store.abilities.has(name));
         } catch (e) {
             return navigateTo({
                 path: redirectPath,

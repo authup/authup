@@ -22,7 +22,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
     const env = useRequestEnv(req);
 
     if (
-        !env.ability.has(PermissionName.USER_EDIT) &&
+        !env.abilities.has(PermissionName.USER_EDIT) &&
         env.userId !== id
     ) {
         throw new ForbiddenError('You are not authorized to modify a user.');

@@ -14,7 +14,7 @@ import type {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { AbilityManager } from '@authup/kit';
+import { Abilities } from '@authup/kit';
 import { EnvironmentName, useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../utils';
 import { verifyAuthorizationHeader } from './verify';
@@ -40,7 +40,7 @@ export function registerAuthMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
-        setRequestEnv(request, 'ability', new AbilityManager());
+        setRequestEnv(request, 'abilities', new Abilities());
 
         try {
             if (typeof headerValue === 'undefined') {

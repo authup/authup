@@ -18,7 +18,7 @@ import { runRealmValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.REALM_ADD)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }

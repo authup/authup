@@ -19,7 +19,7 @@ export type Ability<T extends Record<string, any> = Record<string, any>> = {
     realmId?: string | null
 };
 
-export type AbilityManagerFilterOptions = {
+export type AbilitiesFilterOptions = {
     realmId?: string | null,
     name?: string,
     inverse?: boolean,

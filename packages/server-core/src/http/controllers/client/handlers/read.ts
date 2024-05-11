@@ -50,7 +50,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         ],
     };
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (ability.has(PermissionName.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }
@@ -129,7 +129,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         ],
     };
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (ability.has(PermissionName.CLIENT_EDIT)) {
         options.allowed = ['secret'];
     }

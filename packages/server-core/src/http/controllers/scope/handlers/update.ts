@@ -18,7 +18,7 @@ import { RequestHandlerOperation } from '../../../request';
 export async function updateScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.SCOPE_EDIT)) {
         throw new NotFoundError();
     }

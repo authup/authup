@@ -34,7 +34,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, result.data);
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (
         !ability.has(PermissionName.ROLE_EDIT) ||
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)

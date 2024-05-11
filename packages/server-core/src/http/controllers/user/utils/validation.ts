@@ -29,7 +29,7 @@ export async function runUserValidation(
     req: Request,
     operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
 ) : Promise<ExpressValidationResult<UserEntity>> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     const result : ExpressValidationResult<UserEntity> = initExpressValidationResult();
 
     const nameChain = check('name')

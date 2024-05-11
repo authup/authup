@@ -100,7 +100,7 @@ export async function runRoleValidation(
 
     // ----------------------------------------------
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
 
     if (operation === RequestHandlerOperation.CREATE) {
         const permissionTarget = ability.findOne(PermissionName.ROLE_ADD);

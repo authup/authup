@@ -7,7 +7,7 @@
 
 import type { Ability } from '@authup/kit';
 import {
-    AbilityManager,
+    Abilities,
     HeaderError,
     OAuth2SubKind,
     OAuth2TokenKind,
@@ -80,7 +80,7 @@ async function verifyBearerAuthorizationHeader(
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    setRequestEnv(request, 'ability', new AbilityManager(permissions));
+    setRequestEnv(request, 'abilities', new Abilities(permissions));
 
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
@@ -118,7 +118,7 @@ async function verifyBasicAuthorizationHeader(
 
             permissions = await userRepository.getOwnedPermissions(user.id);
 
-            setRequestEnv(request, 'ability', new AbilityManager(permissions));
+            setRequestEnv(request, 'abilities', new Abilities(permissions));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'user', user);
@@ -135,7 +135,7 @@ async function verifyBasicAuthorizationHeader(
         if (robot) {
             permissions = await robotRepository.getOwnedPermissions(robot.id);
 
-            setRequestEnv(request, 'ability', new AbilityManager(permissions));
+            setRequestEnv(request, 'abilities', new Abilities(permissions));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'robot', robot);
@@ -148,7 +148,7 @@ async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
-            setRequestEnv(request, 'ability', new AbilityManager());
+            setRequestEnv(request, 'abilities', new Abilities());
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'client', oauth2Client);

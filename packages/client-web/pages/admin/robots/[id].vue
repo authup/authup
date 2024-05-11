@@ -55,9 +55,9 @@ export default defineNuxtComponent({
         }
 
         const store = useAuthStore();
-        const { realmManagement } = storeToRefs(store);
+        const { realm } = storeToRefs(store);
 
-        if (!isRealmResourceWritable(realmManagement.value, entity.value.realm_id)) {
+        if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {
             await navigateTo({ path: '/admin/robots' });
             createError({});
         }

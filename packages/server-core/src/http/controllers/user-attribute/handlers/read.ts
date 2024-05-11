@@ -26,7 +26,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('userAttribute');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
 
     query.where(new Brackets((qb) => {
         onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));

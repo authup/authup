@@ -107,7 +107,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (
         ability.has(PermissionName.PROVIDER_EDIT)
     ) {

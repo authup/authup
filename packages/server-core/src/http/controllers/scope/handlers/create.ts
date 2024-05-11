@@ -18,7 +18,7 @@ import { runScopeValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.SCOPE_ADD)) {
         throw new ForbiddenError();
     }

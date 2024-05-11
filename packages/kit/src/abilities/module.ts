@@ -5,18 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { EventEmitter } from '@posva/event-emitter';
 import { guard } from '@ucast/mongo2js';
 
-import type {
-    Ability, AbilityManagerFilterOptions,
-} from './type';
+import type { AbilitiesFilterOptions, Ability } from './types';
 
-export class AbilityManager {
+export class Abilities extends EventEmitter<{
+    updated: []
+}> {
     protected items: Ability[];
 
     // ----------------------------------------------
 
     constructor(input: Ability[] | Ability = []) {
+        super();
+
         this.set(input);
     }
 
@@ -25,11 +28,11 @@ export class AbilityManager {
     /**
      * Check if permission is assigned with field and condition restriction.
      */
-    satisfy(options: AbilityManagerFilterOptions) : boolean;
+    satisfy(options: AbilitiesFilterOptions) : boolean;
 
-    satisfy(name: string, options?: AbilityManagerFilterOptions) : boolean;
+    satisfy(name: string, options?: AbilitiesFilterOptions) : boolean;
 
-    satisfy(name: AbilityManagerFilterOptions | string, options: AbilityManagerFilterOptions = {}) : boolean {
+    satisfy(name: AbilitiesFilterOptions | string, options: AbilitiesFilterOptions = {}) : boolean {
         let items : Ability[];
         if (typeof name === 'string') {
             options.name = name;
@@ -72,7 +75,7 @@ export class AbilityManager {
      *
      * @param input
      */
-    findOne(input?: string | AbilityManagerFilterOptions) : Ability | undefined {
+    findOne(input?: string | AbilitiesFilterOptions) : Ability | undefined {
         const items = this.find(input);
         if (items.length === 0) {
             return undefined;
@@ -86,12 +89,12 @@ export class AbilityManager {
      *
      * @param input
      */
-    find(input?: string | AbilityManagerFilterOptions) : Ability[] {
+    find(input?: string | AbilitiesFilterOptions) : Ability[] {
         if (typeof input === 'undefined') {
             return this.items;
         }
 
-        let options : AbilityManagerFilterOptions;
+        let options : AbilitiesFilterOptions;
         if (typeof input === 'string') {
             options = { name: input };
         } else {
@@ -191,21 +194,26 @@ export class AbilityManager {
         return output;
     }
 
-    set(
-        input: Ability[] | Ability,
-        merge?: boolean,
-    ) {
-        const items = Array.isArray(input) ?
+    add(input: Ability) {
+        this.addMany([input]);
+    }
+
+    addMany(input: Ability[]) {
+        this.items.push(...input);
+        this.sort();
+        this.emit('updated');
+    }
+
+    set(input: Ability[] | Ability) {
+        this.items = Array.isArray(input) ?
             input :
             [input];
 
-        if (merge) {
-            // todo: check if unique !
-            this.items = [...this.items, ...items];
-        } else {
-            this.items = items;
-        }
+        this.sort();
+        this.emit('updated');
+    }
 
+    protected sort() {
         this.items
             .sort((a, b) => {
                 if (typeof a.target === 'undefined' || a.target === null) {

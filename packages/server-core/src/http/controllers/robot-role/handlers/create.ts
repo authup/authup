@@ -16,7 +16,7 @@ import { runRobotRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.ROBOT_ROLE_ADD)) {
         throw new NotFoundError();
     }

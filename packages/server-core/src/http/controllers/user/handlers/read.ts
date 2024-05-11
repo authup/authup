@@ -45,7 +45,7 @@ function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
         ],
     };
 
-    if (useRequestEnv(req, 'ability').has(PermissionName.USER_EDIT)) {
+    if (useRequestEnv(req, 'abilities').has(PermissionName.USER_EDIT)) {
         options.allowed = ['email'];
     }
 

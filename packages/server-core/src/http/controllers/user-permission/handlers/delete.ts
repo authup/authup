@@ -22,7 +22,7 @@ import { useRequestEnv } from '../../../utils/env';
 export async function deleteUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.USER_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }

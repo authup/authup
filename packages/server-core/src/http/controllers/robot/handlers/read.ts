@@ -63,8 +63,8 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const env = useRequestEnv(req);
 
     if (
-        !env.ability.has(PermissionName.ROBOT_EDIT) &&
-        !env.ability.has(PermissionName.ROBOT_DROP)
+        !env.abilities.has(PermissionName.ROBOT_EDIT) &&
+        !env.abilities.has(PermissionName.ROBOT_DROP)
     ) {
         if (env.userId) {
             query.andWhere('robot.user_id = :userId', { userId: env.userId });
@@ -148,8 +148,8 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (
         env.robotId !== entity.id &&
-        !env.ability.has(PermissionName.ROBOT_DROP) &&
-        !env.ability.has(PermissionName.ROBOT_EDIT)
+        !env.abilities.has(PermissionName.ROBOT_DROP) &&
+        !env.abilities.has(PermissionName.ROBOT_EDIT)
     ) {
         if (
             !entity.user_id

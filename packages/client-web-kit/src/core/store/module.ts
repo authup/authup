@@ -19,7 +19,7 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import {
-    AbilityManager,
+    Abilities,
 } from '@authup/kit';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
 
@@ -54,6 +54,8 @@ export const createStore = (context: StoreCreateContext) => {
         refreshToken.value = input;
     };
 
+    // --------------------------------------------------------------------
+
     const handleTokenGrantResponse = (response: OAuth2TokenGrantResponse) => {
         const expireDate = new Date(Date.now() + response.expires_in * 1000);
 
@@ -61,6 +63,8 @@ export const createStore = (context: StoreCreateContext) => {
         setAccessToken(response.access_token);
         setRefreshToken(response.refresh_token);
     };
+
+    // --------------------------------------------------------------------
 
     let refreshTokenPromise : Promise<OAuth2TokenGrantResponse> | undefined;
 
@@ -79,13 +83,10 @@ export const createStore = (context: StoreCreateContext) => {
             .then((r) => {
                 handleTokenGrantResponse(r);
 
-                refreshTokenPromise = undefined;
-
                 return r;
             })
-            .catch((e) => {
+            .finally(() => {
                 refreshTokenPromise = undefined;
-                throw e;
             });
 
         return refreshTokenPromise;
@@ -103,13 +104,6 @@ export const createStore = (context: StoreCreateContext) => {
     };
 
     // --------------------------------------------------------------------
-
-    const abilityManager = new AbilityManager();
-
-    const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
-    const tokenResolved = ref(false);
-
-    const has = (name: string) => abilityManager.has(name);
 
     const realm = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
     const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
@@ -134,6 +128,10 @@ export const createStore = (context: StoreCreateContext) => {
         realmManagement.value = entity;
     };
 
+    const abilities = new Abilities();
+
+    const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
+    const tokenResolved = ref(false);
     const setTokenInfo = (entity?: OAuth2TokenIntrospectionResponse) => {
         tokenResolved.value = !!entity;
 
@@ -142,7 +140,7 @@ export const createStore = (context: StoreCreateContext) => {
         if (!entity) {
             setRealm(undefined);
             setRealmManagement(undefined);
-            abilityManager.set([]);
+            abilities.set([]);
             return;
         }
 
@@ -166,7 +164,7 @@ export const createStore = (context: StoreCreateContext) => {
         }
 
         if (entity.permissions) {
-            abilityManager.set(entity.permissions);
+            abilities.set(entity.permissions);
         }
     };
 
@@ -239,6 +237,8 @@ export const createStore = (context: StoreCreateContext) => {
     };
 
     return {
+        abilities,
+
         login,
         logout,
         loggedIn,
@@ -269,7 +269,5 @@ export const createStore = (context: StoreCreateContext) => {
         user,
         userId,
         setUser,
-
-        has,
     };
 };

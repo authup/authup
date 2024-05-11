@@ -24,7 +24,7 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
         return sendAccepted(res);
     }
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (
         !ability.has(PermissionName.ROLE_EDIT) ||
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)

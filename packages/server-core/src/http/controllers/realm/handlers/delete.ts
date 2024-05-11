@@ -17,7 +17,7 @@ import { useRequestEnv } from '../../../utils/env';
 export async function deleteRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.REALM_DROP)) {
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }

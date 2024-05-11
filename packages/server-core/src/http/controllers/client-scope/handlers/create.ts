@@ -16,7 +16,7 @@ import { runClientScopeValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request/constants';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.CLIENT_EDIT)) {
         throw new NotFoundError();
     }

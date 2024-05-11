@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AClients, AEntityDelete, APagination, ASearch, ATitle, AUser,
+    AClients, AEntityDelete, APagination, ASearch, ATitle, AUser, useAbilityCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
@@ -40,8 +40,8 @@ export default defineNuxtComponent({
             resource: Client,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = store.has(PermissionName.CLIENT_EDIT);
-        const hasDropPermission = store.has(PermissionName.CLIENT_DROP);
+        const hasEditPermission = useAbilityCheck(PermissionName.CLIENT_EDIT);
+        const hasDropPermission = useAbilityCheck(PermissionName.CLIENT_DROP);
 
         const fields = [
             {

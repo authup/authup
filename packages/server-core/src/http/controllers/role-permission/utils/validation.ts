@@ -64,7 +64,7 @@ export async function runRolePermissionValidation(
 
     // ----------------------------------------------
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
 
     await extendExpressValidationResultWithRelation(result, PermissionEntity, {
         id: 'permission_id',

@@ -22,7 +22,7 @@ import { useRequestEnv } from '../../../utils';
 export async function deleteRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.ROBOT_PERMISSION_DROP)) {
         throw new ForbiddenError();
     }

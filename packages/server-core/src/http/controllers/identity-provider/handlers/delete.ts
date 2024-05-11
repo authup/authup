@@ -19,7 +19,7 @@ export async function deleteIdentityProviderRouteHandler(
 ) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.PROVIDER_DROP)) {
         throw new ForbiddenError();
     }

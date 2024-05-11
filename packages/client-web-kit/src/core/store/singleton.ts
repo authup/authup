@@ -26,8 +26,8 @@ _ExtractActionsFromSetupStore<StoreData>
 
 export const StoreSymbol = Symbol.for('AuthupStore');
 
-export function injectStore() : Store {
-    const instance = inject<Store>(StoreSymbol);
+export function injectStore(app?: App) : Store {
+    const instance = inject<Store>(StoreSymbol, app);
     if (!instance) {
         throw new Error('The store has not been injected in the app context.');
     }

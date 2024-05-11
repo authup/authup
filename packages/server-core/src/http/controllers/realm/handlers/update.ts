@@ -19,7 +19,7 @@ import { RequestHandlerOperation } from '../../../request/constants';
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const ability = useRequestEnv(req, 'ability');
+    const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.REALM_EDIT)) {
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
