@@ -23,7 +23,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runRoleValidation(
     req: Request,
