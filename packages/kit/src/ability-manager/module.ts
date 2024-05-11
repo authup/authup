@@ -33,6 +33,9 @@ export class AbilityManager {
         let items : Ability[];
         if (typeof name === 'string') {
             options.name = name;
+            if (typeof options.realmId === 'undefined') {
+                options.realmId = null;
+            }
             items = this.find(options);
         } else {
             items = this.find({
@@ -56,6 +59,7 @@ export class AbilityManager {
 
         const items = this.find({
             name,
+            realmId: null,
         });
 
         return items.length > 0;
@@ -97,6 +101,21 @@ export class AbilityManager {
         const output : Ability[] = [];
 
         for (let i = 0; i < this.items.length; i++) {
+            if (
+                options.realmId === null &&
+                typeof this.items[i].realmId !== 'undefined' &&
+                this.items[i].realmId !== null
+            ) {
+                continue;
+            }
+
+            if (
+                options.realmId &&
+                this.items[i].realmId !== options.realmId
+            ) {
+                continue;
+            }
+
             if (
                 options.name &&
                 this.items[i].name !== options.name

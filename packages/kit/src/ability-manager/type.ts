@@ -15,10 +15,12 @@ export type Ability<T extends Record<string, any> = Record<string, any>> = {
     condition?: AbilityCondition<T> | null,
     fields?: string[] | null,
     target?: string | null,
-    power?: number | null
+    power?: number | null,
+    realmId?: string | null
 };
 
 export type AbilityManagerFilterOptions = {
+    realmId?: string | null,
     name?: string,
     inverse?: boolean,
     object?: Record<string, any>,

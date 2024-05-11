@@ -5,16 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Permission } from '@authup/core-kit';
 import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
-import type { PropType } from 'vue';
+import type { PropType, VNodeArrayChildren } from 'vue';
 import {
+    computed,
     defineComponent, h, reactive, ref, watch,
 } from 'vue';
 import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
-import type { Permission } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormTextarea,
 } from '@vuecs/form-controls';
@@ -24,15 +25,22 @@ import {
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
     createEntityManager,
-    createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
+    createFormSubmitTranslations,
+    defineEntityManagerEvents,
+    getVuelidateSeverity,
+    initFormAttributesFromSource,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
+import { createRealmFormPicker } from '../realm/helpers';
 
 export const APermissionForm = defineComponent({
     props: {
         entity: {
             type: Object as PropType<Permission>,
-            default: undefined,
+        },
+        realmId: {
+            type: String,
         },
     },
     emits: defineEntityManagerEvents<Permission>(),
@@ -42,6 +50,7 @@ export const APermissionForm = defineComponent({
         const form = reactive({
             name: '',
             description: '',
+            realm_id: '',
         });
 
         const $v = useVuelidate({
@@ -62,6 +71,7 @@ export const APermissionForm = defineComponent({
             props,
         });
 
+        const isRealmLocked = computed(() => !!props.realmId);
         const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
 
@@ -99,7 +109,9 @@ export const APermissionForm = defineComponent({
         );
 
         const render = () => {
-            const name = buildFormGroup({
+            const children : VNodeArrayChildren = [];
+
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.name.value,
                 validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
@@ -114,9 +126,9 @@ export const APermissionForm = defineComponent({
                             manager.data.value.built_in,
                     },
                 }),
-            });
+            }));
 
-            const description = buildFormGroup({
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.description.value,
                 validationSeverity: getVuelidateSeverity($v.value.description),
                 label: true,
@@ -130,14 +142,18 @@ export const APermissionForm = defineComponent({
                         rows: 4,
                     },
                 }),
-            });
+            }));
 
-            const submitButton = buildFormSubmitWithTranslations({
+            if (!isRealmLocked.value) {
+                children.push(createRealmFormPicker(form));
+            }
+
+            children.push(buildFormSubmitWithTranslations({
                 submit,
                 busy,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, translationsSubmit);
+            }, translationsSubmit));
 
             return h('form', {
                 onSubmit($event: any) {
@@ -145,11 +161,7 @@ export const APermissionForm = defineComponent({
 
                     return submit.apply(null);
                 },
-            }, [
-                name,
-                description,
-                submitButton,
-            ]);
+            }, children);
         };
 
         return () => render();

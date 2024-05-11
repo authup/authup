@@ -14,6 +14,7 @@ import type {
     Realm,
     User,
 } from '@authup/core-kit';
+import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
@@ -121,7 +122,13 @@ export const createStore = (context: StoreCreateContext) => {
     const realmManagement = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
     const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
+    const realmManagementIsRoot = computed<boolean>(() => {
+        if (realmManagement.value) {
+            return realmManagement.value.id === REALM_MASTER_NAME;
+        }
 
+        return false;
+    });
     const setRealmManagement = (entity?: Pick<Realm, 'id' | 'name'>) => {
         realmManagement.value = entity;
     };
@@ -255,6 +262,7 @@ export const createStore = (context: StoreCreateContext) => {
         realmManagement,
         realmManagementId,
         realmManagementName,
+        realmManagementIsRoot,
         setRealmManagement,
 
         user,

@@ -12,6 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
@@ -23,6 +24,8 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
     }
 
     const { data } = await runPermissionValidation(req, 'create');
+
+    await enforceUniquenessForDatabaseEntity(PermissionEntity, data);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
