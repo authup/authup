@@ -45,7 +45,8 @@ export function createLogger(context: LoggerSetupContext) : Logger {
     return create({
         format: format.combine(
             format.timestamp(),
-            format.json(),
+            format.colorize(),
+            format.simple(),
         ),
         transports: items,
     });
