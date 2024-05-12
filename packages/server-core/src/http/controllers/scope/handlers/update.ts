@@ -10,6 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
@@ -43,6 +44,12 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
         throw new ForbiddenError();
     }
+
+    // ----------------------------------------------
+
+    await enforceUniquenessForDatabaseEntity(ScopeEntity, result.data, {
+        id: entity.id,
+    });
 
     // ----------------------------------------------
 

@@ -15,8 +15,8 @@ import {
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import zod from 'zod';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { ClientEntity, RealmEntity } from '../../../../domains';
+import type { ClientEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -139,12 +139,6 @@ export async function runOauth2ClientValidation(
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-    }
-
-    // ----------------------------------------------
-
-    if (operation === 'create') {
-        await enforceUniquenessForDatabaseEntity(ClientEntity, result.data);
     }
 
     // ----------------------------------------------

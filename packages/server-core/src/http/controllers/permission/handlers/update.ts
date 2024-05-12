@@ -11,6 +11,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
@@ -44,6 +45,10 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
     ) {
         throw new BadRequestError('The name of a built-in permission can not be changed.');
     }
+
+    await enforceUniquenessForDatabaseEntity(PermissionEntity, result.data, {
+        id: entity.id,
+    });
 
     entity = repository.merge(entity, result.data);
 

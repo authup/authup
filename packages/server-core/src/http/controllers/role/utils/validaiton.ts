@@ -12,8 +12,8 @@ import {
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { RealmEntity, RoleEntity } from '../../../../domains';
+import type { RoleEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -112,12 +112,6 @@ export async function runRoleValidation(
         if (permissionTarget) {
             result.data.target = permissionTarget.target;
         }
-    }
-
-    // ----------------------------------------------
-
-    if (operation === 'create') {
-        await enforceUniquenessForDatabaseEntity(RoleEntity, result.data);
     }
 
     // ----------------------------------------------

@@ -12,10 +12,11 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { RoleEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -24,6 +25,8 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
     }
 
     const result = await runRoleValidation(req, RequestHandlerOperation.CREATE);
+
+    await enforceUniquenessForDatabaseEntity(RoleEntity, result.data);
 
     // ----------------------------------------------
 

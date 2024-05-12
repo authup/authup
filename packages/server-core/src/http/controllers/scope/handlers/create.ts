@@ -12,6 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runScopeValidation } from '../utils';
@@ -24,6 +25,7 @@ export async function createScopeRouteHandler(req: Request, res: Response) : Pro
     }
 
     const result = await runScopeValidation(req, RequestHandlerOperation.CREATE);
+    await enforceUniquenessForDatabaseEntity(ScopeEntity, result.data);
 
     // ----------------------------------------------
 

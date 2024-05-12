@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientOptions } from '@authup/core-http-kit';
 import {
     Client,
     ClientResponseErrorTokenHook,
 } from '@authup/core-http-kit';
-import type { Pinia } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { defineNuxtPlugin, useRuntimeConfig } from '#app';
 import { useAuthStore } from '../store/auth';
@@ -32,18 +30,14 @@ export default defineNuxtPlugin((ctx) => {
 
     const { apiUrl: baseURL } = runtimeConfig.public;
 
-    const config : ClientOptions = {
-        baseURL,
-    };
-    const client = new Client(config);
+    const client = new Client({ baseURL });
 
-    const store = useAuthStore(ctx.$pinia as Pinia);
+    const store = useAuthStore();
+    const { refreshToken } = storeToRefs(store);
 
     const tokenHook = new ClientResponseErrorTokenHook(client, {
         baseURL,
         tokenCreator: () => {
-            const { refreshToken } = storeToRefs(store);
-
             if (!refreshToken.value) {
                 throw new Error('No refresh token available.');
             }

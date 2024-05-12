@@ -12,8 +12,8 @@ import {
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { RealmEntity, ScopeEntity } from '../../../../domains';
+import type { ScopeEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
@@ -23,7 +23,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runScopeValidation(
     req: Request,
@@ -31,7 +31,7 @@ export async function runScopeValidation(
 ) : Promise<ExpressValidationResult<ScopeEntity>> {
     const result : ExpressValidationResult<ScopeEntity> = initExpressValidationResult();
 
-    const nameChain = await check('name')
+    const nameChain = check('name')
         .exists()
         .isString()
         .notEmpty();
@@ -82,12 +82,6 @@ export async function runScopeValidation(
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-    }
-
-    // ----------------------------------------------
-
-    if (operation === RequestHandlerOperation.CREATE) {
-        await enforceUniquenessForDatabaseEntity(ScopeEntity, result.data);
     }
 
     // ----------------------------------------------

@@ -10,6 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runRoleValidation } from '../utils';
@@ -51,6 +52,10 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
     }
 
     // ----------------------------------------------
+
+    await enforceUniquenessForDatabaseEntity(RoleEntity, result.data, {
+        id: entity.id,
+    });
 
     entity = repository.merge(entity, result.data);
 

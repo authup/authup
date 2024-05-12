@@ -6,15 +6,87 @@
  */
 
 import { ConflictError } from '@ebec/http';
-import type { EntityMetadata, EntityTarget } from 'typeorm';
+import type { EntityMetadata, EntityTarget, WhereExpressionBuilder } from 'typeorm';
+import { Brackets } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type { UniqueMetadata } from 'typeorm/metadata/UniqueMetadata';
 
+function transformUndefinedToNull(input: unknown) {
+    if (typeof input === 'undefined') {
+        return null;
+    }
+
+    return input;
+}
+
+function buildWhereExpression(
+    qb: WhereExpressionBuilder,
+    data: Record<string, any>,
+    type: 'source' | 'target',
+) {
+    const keys = Object.keys(data);
+
+    let statements : string[];
+    let bindingKey : string;
+    let value : unknown;
+    for (let j = 0; j < keys.length; j++) {
+        value = transformUndefinedToNull(data[keys[j]]);
+
+        statements = [
+            `entity.${keys[j]}`,
+        ];
+
+        if (value === null) {
+            statements.push('IS');
+            if (type === 'source') {
+                statements.push('NOT');
+            }
+            statements.push('NULL');
+
+            if (j === 0) {
+                qb.where(statements.join(' '));
+            } else {
+                qb.andWhere(statements.join(' '));
+            }
+        } else {
+            if (type === 'target') {
+                statements.push('=');
+            } else {
+                statements.push('!=');
+            }
+
+            bindingKey = `${type}_${keys[j]}`;
+            statements.push(`:${bindingKey}`);
+
+            if (j === 0) {
+                qb.where(statements.join(' '), {
+                    [bindingKey]: value,
+                });
+            } else {
+                qb.andWhere(statements.join(' '), {
+                    [bindingKey]: value,
+                });
+            }
+        }
+    }
+}
+
+function pickRecord(data: Record<string, any>, keys: string[]) {
+    const output : Record<string, any> = {};
+    for (let i = 0; i < keys.length; i++) {
+        output[keys[i]] = data[keys[i]];
+    }
+
+    return output;
+}
+
 export async function enforceUniquenessForDatabaseEntity<T = any>(
     clazz: EntityTarget<T>,
-    data: Partial<T>,
+    target: Partial<T>,
+    source?: Partial<T>,
 ) : Promise<void> {
     const dataSource = await useDataSource();
+
     if (
         dataSource.options.type !== 'sqlite' &&
         dataSource.options.type !== 'better-sqlite3'
@@ -36,14 +108,20 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
     let uniqueMetadata : UniqueMetadata;
     for (let i = 0; i < metadata.ownUniques.length; i++) {
         uniqueMetadata = metadata.ownUniques[i];
-
         const columnNames = uniqueMetadata.columns.map((column) => column.propertyName);
-        const whereClause : Record<string, any> = {};
-        for (let j = 0; j < columnNames.length; j++) {
-            whereClause[columnNames[j]] = data[columnNames[j]];
+
+        const queryBuilder = repository.createQueryBuilder('entity');
+        queryBuilder.where(new Brackets((qb) => {
+            buildWhereExpression(qb, pickRecord(target, columnNames), 'target');
+        }));
+
+        if (source) {
+            queryBuilder.andWhere(new Brackets((qb) => {
+                buildWhereExpression(qb, source, 'source');
+            }));
         }
 
-        const entity = await repository.findOneBy(whereClause);
+        const entity = await queryBuilder.getOne();
         if (entity) {
             throw new ConflictError('An entry with some unique attributes already exist.');
         }

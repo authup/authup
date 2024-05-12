@@ -14,6 +14,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
@@ -33,6 +34,8 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
             throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
     }
+
+    await enforceUniquenessForDatabaseEntity(ClientEntity, result.data);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);

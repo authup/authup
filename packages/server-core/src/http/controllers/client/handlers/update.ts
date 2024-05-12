@@ -10,6 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runOauth2ClientValidation } from '../utils';
@@ -39,6 +40,10 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
         throw new ForbiddenError();
     }
+
+    await enforceUniquenessForDatabaseEntity(ClientEntity, result.data, {
+        id: entity.id,
+    });
 
     entity = repository.merge(entity, result.data);
 
