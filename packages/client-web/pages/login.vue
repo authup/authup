@@ -9,7 +9,7 @@ import {
     ARealms,
     ASearch,
     ATitle,
-    injectAPIClient, useStore,
+    injectHTTPClient, useStore,
 } from '@authup/client-web-kit';
 import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
@@ -46,7 +46,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
-        const apiClient = injectAPIClient();
+        const apiClient = injectHTTPClient();
         const toast = useToast();
 
         const form = reactive({

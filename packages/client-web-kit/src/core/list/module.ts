@@ -22,7 +22,7 @@ import {
 } from 'vue';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../utils';
-import { injectAPIClient } from '../http-client/singleton';
+import { injectHTTPClient } from '../http-client/singleton';
 import { createEntitySocket } from '../entity-socket';
 import type { EntitySocketContext } from '../entity-socket';
 import { isQuerySortedDescByDate } from '../query';
@@ -77,7 +77,7 @@ export function createList<
         },
     );
 
-    const client = injectAPIClient();
+    const client = injectHTTPClient();
 
     let domainAPI : DomainAPI<Entity<T>> | undefined;
     if (hasOwnProperty(client, context.type)) {

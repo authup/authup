@@ -1,5 +1,5 @@
 <script lang="ts">
-import { injectAPIClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import {
     PermissionName, isRealmResourceWritable,
@@ -43,7 +43,7 @@ export default defineNuxtComponent({
         const entity: Ref<Scope> = ref(null) as any;
 
         try {
-            entity.value = await injectAPIClient()
+            entity.value = await injectHTTPClient()
                 .scope
                 .getOne(route.params.id as string);
         } catch (e) {

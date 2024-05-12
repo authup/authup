@@ -18,7 +18,7 @@ import {
 import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations, getVuelidateSeverity,
-    injectAPIClient,
+    injectHTTPClient,
     useTranslationsForNestedValidation,
     wrapFnWithBusyState,
 } from '../../core';
@@ -32,7 +32,7 @@ export const AUserPasswordForm = defineComponent({
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, ctx) {
-        const apiClient = injectAPIClient();
+        const apiClient = injectHTTPClient();
         const busy = ref(false);
         const form = reactive({
             password: '',

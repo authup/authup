@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 
-import { injectAPIClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
 
@@ -23,9 +23,8 @@ export default defineNuxtComponent({
             return tokenExpireDate.value.getTime() - Date.now();
         });
 
+        const api = injectHTTPClient();
         const docsUrl = computed(() => {
-            const api = injectAPIClient();
-
             return new URL('docs/', api.getBaseURL()).href;
         });
 

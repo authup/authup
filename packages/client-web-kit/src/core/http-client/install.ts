@@ -8,12 +8,9 @@
 import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
-import { injectStore } from '../store';
-import { hasHTTPClient, provideAPIClient } from './singleton';
-
-export type HTTPClientInstallOptions = {
-    baseURL?: string
-};
+import { STORE_ID, injectStore } from '../store';
+import { hasHTTPClient, provideHTTPClient } from './singleton';
+import type { HTTPClientInstallOptions } from './types';
 
 export function installHTTPClient(app: App, options: HTTPClientInstallOptions = {}) {
     if (hasHTTPClient(app)) {
@@ -54,7 +51,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         mutation,
         state,
     ) => {
-        if (mutation.storeId !== 'authup') return;
+        if (mutation.storeId !== STORE_ID) return;
 
         if (state.accessToken) {
             client.setAuthorizationHeader({
@@ -82,5 +79,5 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         }
     });
 
-    provideAPIClient(client, app);
+    provideHTTPClient(client, app);
 }

@@ -26,10 +26,8 @@
     },
     "devDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.12",
-        "@authup/config": "^1.0.0-beta.11",
         "@authup/kit": "^1.0.0-beta.12",
         "@authup/core-kit": "^1.0.0-beta.12",
-        "@authup/core-http-kit": "^1.0.0-beta.12",
         "@authup/client-web-config": "^1.0.0-beta.12",
         "@ilingo/vuelidate": "^5.0.2",
         "@fortawesome/fontawesome-free": "^6.5.2",
@@ -48,7 +46,6 @@
         "@vuelidate/validators": "^2.0.4",
         "bootstrap": "^5.3.3",
         "bootstrap-vue-next": "^0.17.5",
-        "browser-storage-adapter": "^1.1.2",
         "date-fns": "^3.6.0",
         "minimatch": "^9.0.4",
         "nuxt": "3.11.2",

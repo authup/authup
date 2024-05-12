@@ -10,18 +10,18 @@ import type { App } from 'vue';
 import { inject } from '../inject';
 import { provide } from '../provide';
 
-export const APIClientSymbol = Symbol.for('AuthupAPIClient');
+export const HTTPClientSymbol = Symbol.for('AuthupHTTPClient');
 
-export function provideAPIClient(client: Client, app?: App) {
-    provide(APIClientSymbol, client, app);
+export function provideHTTPClient(client: Client, app?: App) {
+    provide(HTTPClientSymbol, client, app);
 }
 
 export function hasHTTPClient(app?: App) : boolean {
-    return !!inject(APIClientSymbol, app);
+    return !!inject(HTTPClientSymbol, app);
 }
 
-export function injectAPIClient(app?: App) {
-    const instance = inject<Client>(APIClientSymbol, app);
+export function injectHTTPClient(app?: App) {
+    const instance = inject<Client>(HTTPClientSymbol, app);
     if (!instance) {
         throw new Error('The api client has not been injected.');
     }

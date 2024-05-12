@@ -32,7 +32,7 @@ import {
     buildFormSubmitWithTranslations,
     createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
-    injectAPIClient,
+    injectHTTPClient,
 } from '../../core';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
@@ -71,7 +71,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
     },
     emits: defineEntityManagerEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const apiClient = injectAPIClient();
+        const apiClient = injectHTTPClient();
         const manager = createEntityManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             setup: ctx,

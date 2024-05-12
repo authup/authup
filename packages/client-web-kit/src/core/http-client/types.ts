@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './singleton';
-export * from './install';
-export * from './types';
+export type HTTPClientInstallOptions = {
+    baseURL?: string
+};

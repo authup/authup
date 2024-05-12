@@ -1,5 +1,5 @@
 <script lang="ts">
-import { injectAPIClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -89,7 +89,7 @@ export default defineNuxtComponent({
             relations: ['scope'],
         };
 
-        const { data: clientScopes } = await injectAPIClient().clientScope.getMany(clientScopeQuery);
+        const { data: clientScopes } = await injectHTTPClient().clientScope.getMany(clientScopeQuery);
 
         const abort = () => {
             const url = new URL(`${parameters.redirect_uri}`);
@@ -111,7 +111,7 @@ export default defineNuxtComponent({
 
         const authorize = async () => {
             try {
-                const response = await injectAPIClient()
+                const response = await injectHTTPClient()
                     .post('authorize', {
                         response_type: parameters.response_type,
                         client_id: entity.value.id,

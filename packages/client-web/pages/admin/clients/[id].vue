@@ -1,5 +1,5 @@
 <script lang="ts">
-import { injectAPIClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
@@ -45,7 +45,7 @@ export default defineNuxtComponent({
         const entity: Ref<Client> = ref(null) as any;
 
         try {
-            entity.value = await injectAPIClient()
+            entity.value = await injectHTTPClient()
                 .client
                 .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch (e) {
