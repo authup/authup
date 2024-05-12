@@ -1,4 +1,5 @@
 <script lang="ts">
+import { injectAPIClient, useStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -9,10 +10,8 @@ import { isGlobMatch } from '../utils';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
-import { useAPI } from '../composables/api';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { extractOAuth2QueryParameters } from '../domains';
-import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     async setup() {
@@ -25,7 +24,7 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const store = useAuthStore();
+        const store = useStore();
         const { loggedIn } = storeToRefs(store);
         if (!loggedIn.value) {
             await navigateTo({
@@ -90,7 +89,7 @@ export default defineNuxtComponent({
             relations: ['scope'],
         };
 
-        const { data: clientScopes } = await useAPI().clientScope.getMany(clientScopeQuery);
+        const { data: clientScopes } = await injectAPIClient().clientScope.getMany(clientScopeQuery);
 
         const abort = () => {
             const url = new URL(`${parameters.redirect_uri}`);
@@ -112,7 +111,7 @@ export default defineNuxtComponent({
 
         const authorize = async () => {
             try {
-                const response = await useAPI()
+                const response = await injectAPIClient()
                     .post('authorize', {
                         response_type: parameters.response_type,
                         client_id: entity.value.id,

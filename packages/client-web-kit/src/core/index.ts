@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './api-client';
+export * from './http-client';
 export * from './inject';
 export * from './provide';
 export * from './entity-assign-action';

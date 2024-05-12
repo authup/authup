@@ -1,42 +1,34 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Client,
-    ClientResponseErrorTokenHook,
-} from '@authup/core-http-kit';
+import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
-import { defineNuxtPlugin, useRuntimeConfig } from '#app';
-import { useAuthStore } from '../store/auth';
+import type { App } from 'vue';
+import { injectStore } from '../store';
+import { hasHTTPClient, provideAPIClient } from './singleton';
 
-declare module '#app' {
-    interface NuxtApp {
-        $api: Client;
+export type HTTPClientInstallOptions = {
+    baseURL?: string
+};
+
+export function installHTTPClient(app: App, options: HTTPClientInstallOptions = {}) {
+    if (hasHTTPClient(app)) {
+        return;
     }
-}
 
-declare module '@vue/runtime-core' {
-    interface ComponentCustomProperties {
-        $api: Client;
-    }
-}
+    const client = new Client({ baseURL: options.baseURL });
 
-export default defineNuxtPlugin((ctx) => {
-    const runtimeConfig = useRuntimeConfig();
+    const storeCreator = injectStore(app);
+    const store = storeCreator();
 
-    const { apiUrl: baseURL } = runtimeConfig.public;
-
-    const client = new Client({ baseURL });
-
-    const store = useAuthStore();
     const { refreshToken } = storeToRefs(store);
 
     const tokenHook = new ClientResponseErrorTokenHook(client, {
-        baseURL,
+        baseURL: options.baseURL,
         tokenCreator: () => {
             if (!refreshToken.value) {
                 throw new Error('No refresh token available.');
@@ -58,8 +50,11 @@ export default defineNuxtPlugin((ctx) => {
         },
     });
 
-    store.$subscribe((mutation, state) => {
-        if (mutation.storeId !== 'auth') return;
+    store.$subscribe((
+        mutation,
+        state,
+    ) => {
+        if (mutation.storeId !== 'authup') return;
 
         if (state.accessToken) {
             client.setAuthorizationHeader({
@@ -87,5 +82,5 @@ export default defineNuxtPlugin((ctx) => {
         }
     });
 
-    ctx.provide('api', client);
-});
+    provideAPIClient(client, app);
+}

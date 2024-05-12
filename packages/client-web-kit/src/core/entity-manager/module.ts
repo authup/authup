@@ -16,7 +16,7 @@ import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef, ref, toRef, watch,
 } from 'vue';
-import { injectAPIClient } from '../api-client';
+import { injectAPIClient } from '../http-client/singleton';
 import type { EntitySocket, EntitySocketContext } from '../entity-socket';
 import { createEntitySocket } from '../entity-socket';
 import { extendObjectProperties } from '../object';

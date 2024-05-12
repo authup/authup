@@ -1,5 +1,6 @@
 <script lang="ts">
 
+import { injectAPIClient, useStore } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
@@ -10,12 +11,10 @@ import {
     defineNuxtComponent,
     definePageMeta,
     navigateTo,
-    useAPI,
     useRoute,
     useToast,
 } from '#imports';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
-import { useAuthStore } from '../../../store/auth';
 import { updateObjectProperties } from '../../../utils';
 
 export default defineNuxtComponent({
@@ -44,7 +43,7 @@ export default defineNuxtComponent({
         const entity: Ref<IdentityProvider> = ref(null) as any;
 
         try {
-            entity.value = await useAPI()
+            entity.value = await injectAPIClient()
                 .identityProvider
                 .getOne(route.params.id as string);
         } catch (e) {
@@ -52,7 +51,7 @@ export default defineNuxtComponent({
             throw createError({});
         }
 
-        const store = useAuthStore();
+        const store = useStore();
         const { realm } = storeToRefs(store);
 
         if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {

@@ -7,8 +7,7 @@
 
 import de from 'date-fns/locale/de';
 import { watch } from 'vue';
-import installAuthup, { injectTranslatorLocale } from '@authup/client-web-kit';
-import type { Client } from '@authup/core-http-kit';
+import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
@@ -20,11 +19,9 @@ import installPagination from '@vuecs/pagination';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
 import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
 
-import type { Pinia } from 'pinia';
-import { storeToRefs } from 'pinia';
+import { type Pinia, storeToRefs } from 'pinia';
 import { defineNuxtPlugin } from '#imports';
 import { Navigation } from '../config/layout';
-import { useAuthStore } from '../store/auth';
 
 export default defineNuxtPlugin((ctx) => {
     const storeManagerOptions : StoreManagerOptions = {
@@ -60,7 +57,7 @@ export default defineNuxtPlugin((ctx) => {
         },
     });
 
-    const store = useAuthStore(ctx.$pinia as Pinia);
+    const store = useStore(ctx.$pinia as Pinia);
     const { loggedIn } = storeToRefs(store);
 
     ctx.vueApp.use(installNavigation, {
@@ -73,11 +70,6 @@ export default defineNuxtPlugin((ctx) => {
     ctx.vueApp.use(installPagination);
 
     // preset missing ...
-    ctx.vueApp.use(installAuthup, {
-        apiClient: ctx.$api as Client,
-        store,
-        components: false,
-    });
 
     const locale = injectTranslatorLocale();
     const timeagoLocale = injectTimeagoLocale();

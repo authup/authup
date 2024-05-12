@@ -5,29 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Store as BaseStore,
-    _ExtractActionsFromSetupStore,
-    _ExtractGettersFromSetupStore,
-    _ExtractStateFromSetupStore,
-} from 'pinia';
+import type { Pinia } from 'pinia';
 import type { App } from 'vue';
 import { inject } from '../inject';
 import { provide } from '../provide';
-import type { createStore } from './module';
-
-type StoreData = ReturnType<typeof createStore>;
-export type Store = BaseStore<
-string,
-_ExtractStateFromSetupStore<StoreData>,
-_ExtractGettersFromSetupStore<StoreData>,
-_ExtractActionsFromSetupStore<StoreData>
->;
+import type { Store, StoreDefinition } from './types';
 
 export const StoreSymbol = Symbol.for('AuthupStore');
 
-export function injectStore(app?: App) : Store {
-    const instance = inject<Store>(StoreSymbol, app);
+export function useStore(pinia?: Pinia, app?: App) : Store {
+    const instance = injectStore(app);
+    if (!instance) {
+        throw new Error('The store has not been injected in the app context.');
+    }
+
+    return instance(pinia);
+}
+
+export function injectStore(app?: App) : StoreDefinition {
+    const instance = inject<StoreDefinition>(StoreSymbol, app);
     if (!instance) {
         throw new Error('The store has not been injected in the app context.');
     }
@@ -35,6 +31,10 @@ export function injectStore(app?: App) : Store {
     return instance;
 }
 
-export function provideStore(store: Store, app?: App) {
+export function hasStore(app?: App) : boolean {
+    return !!inject(StoreSymbol, app);
+}
+
+export function provideStore(store: StoreDefinition, app?: App) {
     provide(StoreSymbol, store, app);
 }

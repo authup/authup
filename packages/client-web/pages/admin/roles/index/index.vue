@@ -4,12 +4,11 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Role } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ARoles, ASearch, ATitle, useAbilityCheck,
+    AEntityDelete, APagination, ARoles, ASearch, ATitle, useAbilityCheck, useStore,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
-import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
@@ -26,7 +25,7 @@ export default defineNuxtComponent({
             emit('deleted', e);
         };
 
-        const store = useAuthStore();
+        const store = useStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Role> = {

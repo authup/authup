@@ -29,8 +29,8 @@ import {
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
-    injectStore,
-    storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    storeToRefs,
+    useStore, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { createRealmFormPicker } from '../realm/helpers';
 
@@ -65,7 +65,7 @@ export const APermissionForm = defineComponent({
             },
         }, form);
 
-        const store = injectStore();
+        const store = useStore();
         const storeRefs = storeToRefs(store);
 
         const manager = createEntityManager({

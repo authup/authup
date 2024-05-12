@@ -22,7 +22,7 @@ import {
 } from 'vue';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../utils';
-import { injectAPIClient } from '../api-client';
+import { injectAPIClient } from '../http-client/singleton';
 import { createEntitySocket } from '../entity-socket';
 import type { EntitySocketContext } from '../entity-socket';
 import { isQuerySortedDescByDate } from '../query';
