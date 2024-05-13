@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-config",
     "version": "1.0.0-beta.12",
-    "description": "This package contains the web config module.",
+    "description": "This package contains the config module for the client web app.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",

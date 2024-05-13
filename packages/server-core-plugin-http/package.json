@@ -21,7 +21,11 @@
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
     },
-    "keywords": [],
+    "keywords": [
+        "http",
+        "plugin",
+        "auth"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",

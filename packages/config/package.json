@@ -1,7 +1,7 @@
 {
     "name": "@authup/config",
     "version": "1.0.0-beta.12",
-    "description": "This package contains the config helper module.",
+    "description": "This package contains the config helpers for the ecosystem.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
