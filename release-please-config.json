@@ -1,5 +1,5 @@
 {
-    "bootstrap-sha": "de74b12b089b90b32c6f11523ad3b51a2907cd02",
+    "bootstrap-sha": "7260c0b9920f251ff90b0c73d40be8be4888c34d",
     "include-component-in-tag": false,
     "release-type": "node",
     "release-as": "1.0.0-beta.13",
@@ -50,7 +50,8 @@
     "plugins": [
         {
             "type": "node-workspace",
-            "updatePeerDependencies": true
+            "updatePeerDependencies": true,
+            "merge": false
         },
         {
             "type": "linked-versions",
