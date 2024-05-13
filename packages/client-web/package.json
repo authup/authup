@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web",
-    "version": "1.0.0-beta.14",
+    "version": "1.0.1-beta.14",
     "license": "Apache-2.0",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
