@@ -87,6 +87,7 @@
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "@ilingo/vuelidate": "^5.x",
+        "pinia": "^2.1.7",
         "rapiq": ">=0.8.0 <1.0.0",
         "smob": "^1.4.x",
         "socket.io-client": "^4.7.5",

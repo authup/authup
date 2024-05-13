@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { setActivePinia } from 'pinia';
 import type { App, Component } from 'vue';
 import * as components from './components';
 import {
@@ -44,10 +43,6 @@ export function install(app: App, options: Options): void {
         installSocketClientManager(app, {
             baseURL: options.realtimeURL || options.baseURL,
         });
-    }
-
-    if (options.pinia) {
-        setActivePinia(options.pinia);
     }
 
     installStore(app, {
