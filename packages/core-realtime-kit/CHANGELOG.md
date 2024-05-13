@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Bug Fixes
+
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 
