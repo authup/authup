@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Features
+
+* enable local/global permissions & unqiueness by name + realm_id ([#1985](https://github.com/authup/authup/issues/1985)) ([56b366a](https://github.com/authup/authup/commit/56b366af26b63e41c75080800e8c8cf638f2813b))
+* optimized pinia based store + renamed ability manager ([f309e99](https://github.com/authup/authup/commit/f309e99c93c73e5b5a217e207e706768106f9442))
+* reimplemented store,http-client,... installation & usage ([#1986](https://github.com/authup/authup/issues/1986)) ([ca5fc93](https://github.com/authup/authup/commit/ca5fc9395628a2a2bf1ea9b81265346ae6c603a2))
+* simplified role-,permission-,scope-form ([7b5cb4a](https://github.com/authup/authup/commit/7b5cb4af8420f50a2cb4b84f83fd5acd1d64f59d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-http-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.12 to ^1.0.1-beta.12
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-http-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.12 to ^1.0.1-beta.12
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 
