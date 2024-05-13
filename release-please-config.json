@@ -1,9 +1,11 @@
 {
-    "bootstrap-sha": "7260c0b9920f251ff90b0c73d40be8be4888c34d",
     "include-component-in-tag": false,
     "release-type": "node",
     "release-as": "1.0.0-beta.13",
     "packages": {
+        ".": {
+            "component": "root"
+        },
         "packages/authup": {
             "component": "authup"
         },
@@ -57,6 +59,7 @@
             "type": "linked-versions",
             "groupName": "main",
             "components": [
+                "root",
                 "authup",
                 "client-web",
                 "client-web-config",
