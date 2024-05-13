@@ -37,7 +37,12 @@
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
-    "dependencies": {
+    "devDependencies": {
+        "@authup/core-kit": "^1.0.0-beta.12",
+        "@authup/server-kit": "^1.0.0-beta.12",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.12"
+    },
+    "peerDependencies": {
         "@authup/core-kit": "^1.0.0-beta.12",
         "@authup/server-kit": "^1.0.0-beta.12",
         "@authup/server-core-plugin-kit": "^1.0.0-beta.12"
