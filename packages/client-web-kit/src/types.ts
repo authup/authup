@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StoreManagerOptions } from '@vuecs/list-controls/core';
-import type { ClientManager } from '@authup/core-realtime-kit';
 import type {
     AClient,
     AClientForm,
@@ -68,10 +66,12 @@ export type CookieUnsetFn = (key: string) => void;
 export type CookieGetFn = (key: string) => any;
 
 export type Options = {
-    baseURL?: string,
-    storeManager?: StoreManagerOptions,
+    baseURL: string,
+
+    realtime?: boolean,
+    realtimeURL?: string,
+
     components?: boolean | string[],
-    socketClientManager?: ClientManager,
     translatorLocale?: string,
 
     cookieSet?: CookieSetFn,

@@ -10,7 +10,7 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent, resolveComponent } from '#imports';
+import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
@@ -23,8 +23,6 @@ export default defineNuxtComponent({
     },
     emits: ['deleted'],
     setup(props, { emit }) {
-        const list = resolveComponent('ScopeList');
-
         const handleDeleted = (e: Scope) => {
             emit('deleted', e);
         };

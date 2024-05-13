@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { applyStoreManagerOptions, installStoreManager } from '@vuecs/list-controls/core';
 import type { App, Component } from 'vue';
 import * as components from './components';
 import {
     installHTTPClient,
+    installSocketClientManager,
     installStore,
     installTranslator,
-    provideSocketClientManager,
 } from './core';
 import type { Options } from './types';
 
@@ -39,33 +38,25 @@ export function installComponents(input?: boolean | string[]) {
         });
 }
 
-export function install(app: App, options: Options = {}): void {
-    let baseURL : string | undefined;
-    if (options.baseURL) {
-        baseURL = options.baseURL;
-    }
-
-    if (options.socketClientManager) {
-        provideSocketClientManager(options.socketClientManager, app);
+export function install(app: App, options: Options): void {
+    if (options.realtime) {
+        installSocketClientManager(app, {
+            baseURL: options.realtimeURL || options.baseURL,
+        });
     }
 
     installStore(app, {
-        baseURL,
+        baseURL: options.baseURL,
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
     });
 
-    installHTTPClient(app, { baseURL });
+    installHTTPClient(app, { baseURL: options.baseURL });
 
     installTranslator(app, {
         locale: options.translatorLocale,
     });
-
-    const storeManager = installStoreManager(app, 'authup');
-    if (options.storeManager) {
-        applyStoreManagerOptions(storeManager, options.storeManager);
-    }
 
     installComponents(options.components);
 }

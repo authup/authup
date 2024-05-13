@@ -36,11 +36,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
             });
         },
         tokenCreated: (response) => {
-            store.setAccessTokenExpireDate(undefined);
-
-            setTimeout(() => {
-                store.handleTokenGrantResponse(response);
-            }, 0);
+            store.handleTokenGrantResponse(response);
         },
         tokenFailed: () => {
             store.logout();
@@ -73,6 +69,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
             const expiresIn = Math.floor((state.accessTokenExpireDate.getTime() - Date.now()) / 1000);
 
             tokenHook.setTimer({
+                // todo: refresh_token should also accept a fn
                 refresh_token: state.refreshToken,
                 expires_in: expiresIn,
             });

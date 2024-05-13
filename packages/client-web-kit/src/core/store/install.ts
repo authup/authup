@@ -104,8 +104,6 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         }
     };
 
-    initStore();
-
     store.$onAction((action) => {
         if (action.store.$id !== STORE_ID) {
             return;
@@ -120,6 +118,8 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             cookieUnset(CookieName.REALM_MANAGEMENT);
         }
     });
+
+    initStore();
 
     store.$subscribe((
         mutation,
