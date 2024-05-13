@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Features
+
+* enable local/global permissions & unqiueness by name + realm_id ([#1985](https://github.com/authup/authup/issues/1985)) ([56b366a](https://github.com/authup/authup/commit/56b366af26b63e41c75080800e8c8cf638f2813b))
+* enhance logger formatting ([85011d5](https://github.com/authup/authup/commit/85011d53d8f27f733d4f6ef46b99112473efa3ee))
+* optimized pinia based store + renamed ability manager ([f309e99](https://github.com/authup/authup/commit/f309e99c93c73e5b5a217e207e706768106f9442))
+* reimplemented store,http-client,... installation & usage ([#1986](https://github.com/authup/authup/issues/1986)) ([ca5fc93](https://github.com/authup/authup/commit/ca5fc9395628a2a2bf1ea9b81265346ae6c603a2))
+* simplified role-,permission-,scope-form ([7b5cb4a](https://github.com/authup/authup/commit/7b5cb4af8420f50a2cb4b84f83fd5acd1d64f59d))
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.2.4 to 5.3.0 ([#1979](https://github.com/authup/authup/issues/1979)) ([231f1b6](https://github.com/authup/authup/commit/231f1b6dde1e9567b2586ff77ab05867c51d416e))
+* encforcing entity unique constraints on create/update operation ([a9680df](https://github.com/authup/authup/commit/a9680df90c7f24bc463051068f8afba3493c36b7))
+
 ## [0.45.1](https://github.com/authup/authup/compare/v0.45.0...v0.45.1) (2023-10-23)
 
 

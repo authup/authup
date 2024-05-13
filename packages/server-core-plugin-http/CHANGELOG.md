@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.1-beta.12) (2024-05-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-http-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/server-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/server-core-plugin-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 
