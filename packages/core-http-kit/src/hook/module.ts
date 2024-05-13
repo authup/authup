@@ -16,7 +16,7 @@ import {
 import { Client } from '../client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import type { ClientResponseErrorTokenHookOptions } from './type';
+import type { ClientResponseErrorHookTimerOptions, ClientResponseErrorTokenHookOptions } from './type';
 import { getRequestRetryState, isClientTokenExpiredError } from './utils';
 
 const hookSymbol = Symbol.for('ClientResponseErrorTokenHook');
@@ -117,18 +117,18 @@ export class ClientResponseErrorTokenHook {
         this.clearTimer();
     }
 
-    setTimer(response: Pick<TokenGrantResponse, 'refresh_token' | 'expires_in'>) {
+    setTimer(options: ClientResponseErrorHookTimerOptions) {
         if (
             !this.hookId ||
             !this.options.timer ||
-            !response.refresh_token ||
-            !response.expires_in ||
+            !options.expires_in ||
+            !options.refresh_token ||
             this.createPromise
         ) {
             return;
         }
 
-        const refreshInMs = (response.expires_in - 60) * 1000;
+        const refreshInMs = (options.expires_in - 60) * 1000;
         if (refreshInMs <= 0) {
             return;
         }
@@ -136,8 +136,19 @@ export class ClientResponseErrorTokenHook {
         this.clearTimer();
 
         this.timer = setTimeout(async () => {
+            let refreshToken : string | undefined;
+            if (typeof options.refresh_token === 'function') {
+                refreshToken = options.refresh_token();
+            } else {
+                refreshToken = options.refresh_token;
+            }
+
+            if (!refreshToken) {
+                return;
+            }
+
             const myCreator : TokenCreator = () => this.creatorClient.token.createWithRefreshToken({
-                refresh_token: response.refresh_token,
+                refresh_token: refreshToken,
             });
 
             await this.create(myCreator)

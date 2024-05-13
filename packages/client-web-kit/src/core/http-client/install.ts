@@ -69,8 +69,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
             const expiresIn = Math.floor((state.accessTokenExpireDate.getTime() - Date.now()) / 1000);
 
             tokenHook.setTimer({
-                // todo: refresh_token should also accept a fn
-                refresh_token: state.refreshToken,
+                refresh_token: () => refreshToken.value,
                 expires_in: expiresIn,
             });
         }
