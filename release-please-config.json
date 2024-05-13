@@ -51,11 +51,6 @@
     },
     "plugins": [
         {
-            "type": "node-workspace",
-            "updatePeerDependencies": true,
-            "merge": false
-        },
-        {
             "type": "linked-versions",
             "groupName": "main",
             "components": [
