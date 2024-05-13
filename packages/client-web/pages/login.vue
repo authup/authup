@@ -9,7 +9,7 @@ import {
     ARealms,
     ASearch,
     ATitle,
-    injectAPIClient,
+    injectHTTPClient, useStore,
 } from '@authup/client-web-kit';
 import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
@@ -27,7 +27,6 @@ import {
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
-import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     components: {
@@ -47,7 +46,7 @@ export default defineNuxtComponent({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
-        const apiClient = injectAPIClient();
+        const apiClient = injectHTTPClient();
         const toast = useToast();
 
         const form = reactive({
@@ -72,7 +71,7 @@ export default defineNuxtComponent({
             },
         }, form);
 
-        const store = useAuthStore();
+        const store = useStore();
         const runtimeConfig = useRuntimeConfig();
 
         const busy = ref(false);

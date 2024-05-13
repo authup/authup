@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StoreManagerOptions } from '@vuecs/list-controls/core';
-import type { Client } from '@authup/core-http-kit';
-import type { ClientManager } from '@authup/core-realtime-kit';
 import type {
     AClient,
     AClientForm,
@@ -63,15 +60,23 @@ import type {
     AUserRoleAssignments,
     AUsers,
 } from './components';
-import type { Store } from './core';
+
+export type CookieSetFn = (key: string, value?: any) => void;
+export type CookieUnsetFn = (key: string) => void;
+export type CookieGetFn = (key: string) => any;
 
 export type Options = {
-    storeManager?: StoreManagerOptions,
+    baseURL: string,
+
+    realtime?: boolean,
+    realtimeURL?: string,
+
     components?: boolean | string[],
-    apiClient?: Client,
-    socketClientManager?: ClientManager,
-    store?: Store,
-    translatorLocale?: string
+    translatorLocale?: string,
+
+    cookieSet?: CookieSetFn,
+    cookieUnset?: CookieUnsetFn,
+    cookieGet?: CookieGetFn
 };
 
 declare module '@vue/runtime-core' {

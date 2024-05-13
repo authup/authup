@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
     navigateTo,
 } from '#app';
 import { LayoutKey } from '../config/layout';
-import { useAuthStore } from '../store/auth';
 
 function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: string) => boolean) {
     const layoutKeys : string[] = [
@@ -54,8 +54,11 @@ function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: st
     return true;
 }
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
-    const store = useAuthStore();
+export default defineNuxtRouteMiddleware(async (
+    to,
+    from,
+) => {
+    const store = useStore();
 
     let redirectPath = '/';
 
@@ -66,9 +69,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try {
         await store.resolve();
     } catch (e) {
-        await store.logout();
+        store.logout();
 
-        if (!to.fullPath.startsWith('/logout') && !to.fullPath.startsWith('/login')) {
+        if (
+            !to.fullPath.startsWith('/logout') &&
+            !to.fullPath.startsWith('/login')
+        ) {
             return navigateTo({
                 path: '/logout',
                 query: {
@@ -77,18 +83,19 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             });
         }
 
-        return undefined;
+        return Promise.resolve();
     }
 
     const { loggedIn } = storeToRefs(store);
 
-    if (
-        to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])
-    ) {
+    if (to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])) {
         if (!loggedIn.value) {
             const query : Record<string, any> = {};
 
-            if (!to.fullPath.startsWith('/logout')) {
+            if (
+                !to.fullPath.startsWith('/logout') &&
+                !to.fullPath.startsWith('/login')
+            ) {
                 query.redirect = to.fullPath;
             }
 
@@ -105,7 +112,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                 path: redirectPath,
             });
         }
-    } else if (
+
+        return Promise.resolve();
+    }
+
+    if (
         !to.fullPath.startsWith('/logout') &&
         to.matched.some((matched) => matched.meta[LayoutKey.REQUIRED_LOGGED_OUT])
     ) {
@@ -122,5 +133,5 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         }
     }
 
-    return undefined;
+    return Promise.resolve();
 });

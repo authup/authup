@@ -25,7 +25,7 @@ import {
     buildFormSubmitWithTranslations,
     createEntityManager,
     createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
-    injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    storeToRefs, useStore, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { createRealmFormPicker } from '../realm/helpers';
 
@@ -60,7 +60,7 @@ export const ARoleForm = defineComponent({
             },
         }, form);
 
-        const store = injectStore();
+        const store = useStore();
         const storeRefs = storeToRefs(store);
 
         const manager = createEntityManager({

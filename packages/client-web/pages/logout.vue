@@ -1,9 +1,8 @@
 <script lang="ts">
-
 import { defineNuxtComponent, useRouter } from '#app';
 import { definePageMeta } from '#imports';
+import { useStore } from '@authup/client-web-kit';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
-import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     async setup() {
@@ -28,7 +27,7 @@ export default defineNuxtComponent({
             query.redirect = redirect;
         }
 
-        const store = useAuthStore();
+        const store = useStore();
         await store.logout();
 
         await router.push({ path: '/login', query });

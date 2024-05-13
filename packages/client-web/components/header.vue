@@ -5,17 +5,16 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { LanguageSwitcherDropdown } from '@authup/client-web-kit';
+import { LanguageSwitcherDropdown, useStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, ref } from '#imports';
-import { useAuthStore } from '../store/auth';
 
 export default defineNuxtComponent({
     components: {
         LanguageSwitcherDropdown,
     },
     setup() {
-        const store = useAuthStore();
+        const store = useStore();
         const { loggedIn, user } = storeToRefs(store);
 
         const displayNav = ref(false);

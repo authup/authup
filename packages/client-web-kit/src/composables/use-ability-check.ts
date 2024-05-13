@@ -7,10 +7,10 @@
 
 import type { Ref } from 'vue';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { injectStore } from '../core';
+import { useStore } from '../core';
 
 export function useAbilityCheck(name: string) : Ref<boolean> {
-    const { abilities } = injectStore();
+    const { abilities } = useStore();
 
     const data = ref(false);
     data.value = abilities.has(name);

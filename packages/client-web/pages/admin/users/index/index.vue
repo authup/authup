@@ -6,12 +6,11 @@ import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ASearch, ATitle, AUsers, useAbilityCheck,
+    AEntityDelete, APagination, ASearch, ATitle, AUsers, useAbilityCheck, useStore,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import { defineNuxtComponent } from '#imports';
-import { useAuthStore } from '../../../../store/auth';
 
 export default defineNuxtComponent({
     components: {
@@ -28,7 +27,7 @@ export default defineNuxtComponent({
             emit('deleted', e);
         };
 
-        const store = useAuthStore();
+        const store = useStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<User> = {

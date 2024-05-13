@@ -34,9 +34,7 @@ export default defineNuxtConfig({
     alias: {
         '@authup/core-kit': path.join(__dirname, '..', 'core-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
-        '@authup/config': path.join(__dirname, '..', 'config', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
-        '@authup/client-web-config': path.join(__dirname, '..', 'client-web-config', 'src'),
     },
     runtimeConfig: {
         public: {

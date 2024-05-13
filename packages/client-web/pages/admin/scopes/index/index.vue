@@ -6,12 +6,11 @@ import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, AScopes, ASearch, ATitle, useAbilityCheck,
+    AEntityDelete, APagination, AScopes, ASearch, ATitle, useAbilityCheck, useStore,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent, resolveComponent } from '#imports';
-import { useAuthStore } from '../../../../store/auth';
+import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
@@ -24,13 +23,11 @@ export default defineNuxtComponent({
     },
     emits: ['deleted'],
     setup(props, { emit }) {
-        const list = resolveComponent('ScopeList');
-
         const handleDeleted = (e: Scope) => {
             emit('deleted', e);
         };
 
-        const store = useAuthStore();
+        const store = useStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Scope> = {

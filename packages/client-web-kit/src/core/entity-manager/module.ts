@@ -16,7 +16,7 @@ import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef, ref, toRef, watch,
 } from 'vue';
-import { injectAPIClient } from '../api-client';
+import { injectHTTPClient } from '../http-client';
 import type { EntitySocket, EntitySocketContext } from '../entity-socket';
 import { createEntitySocket } from '../entity-socket';
 import { extendObjectProperties } from '../object';
@@ -38,7 +38,7 @@ export function createEntityManager<
 >(
     ctx: EntityManagerContext<A, T>,
 ) : EntityManager<T> {
-    const client = injectAPIClient();
+    const client = injectHTTPClient();
     let domainAPI : DomainAPI<T> | undefined;
     if (hasOwnProperty(client, ctx.type)) {
         domainAPI = client[ctx.type] as any;

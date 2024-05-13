@@ -1,4 +1,5 @@
 <script lang="ts">
+import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
@@ -6,13 +7,12 @@ import { ref } from 'vue';
 import type { Ref } from 'vue';
 import {
     definePageMeta,
-    updateObjectProperties, useAPI, useToast,
+    updateObjectProperties, useToast,
 } from '#imports';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
-import { useAuthStore } from '../../../store/auth';
 
 export default defineNuxtComponent({
     async setup() {
@@ -46,7 +46,7 @@ export default defineNuxtComponent({
         const entity: Ref<Robot> = ref(null) as any;
 
         try {
-            entity.value = await useAPI()
+            entity.value = await injectHTTPClient()
                 .robot
                 .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch (e) {
@@ -54,7 +54,7 @@ export default defineNuxtComponent({
             createError({});
         }
 
-        const store = useAuthStore();
+        const store = useStore();
         const { realm } = storeToRefs(store);
 
         if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {

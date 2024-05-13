@@ -21,12 +21,17 @@ import {
 import {
     Abilities,
 } from '@authup/kit';
-import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './type';
+import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
-export const createStore = (context: StoreCreateContext) => {
+export function createStore(context: StoreCreateContext = {}) {
     const client = new Client({
         baseURL: context.baseURL,
     });
+
+    const initialized = ref<boolean>(false);
+    const setInitialized = (value: boolean) => {
+        initialized.value = value;
+    };
 
     // --------------------------------------------------------------------
 
@@ -231,12 +236,16 @@ export const createStore = (context: StoreCreateContext) => {
 
     const logout = () => {
         setAccessToken(undefined);
+        setAccessTokenExpireDate(undefined);
         setRefreshToken(undefined);
         setUser(undefined);
         setTokenInfo(undefined);
     };
 
     return {
+        initialized,
+        setInitialized,
+
         abilities,
 
         login,
@@ -270,4 +279,4 @@ export const createStore = (context: StoreCreateContext) => {
         userId,
         setUser,
     };
-};
+}

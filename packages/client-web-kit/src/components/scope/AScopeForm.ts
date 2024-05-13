@@ -42,8 +42,8 @@ import {
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
-    injectStore,
     storeToRefs,
+    useStore,
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
@@ -86,7 +86,7 @@ export const AScopeForm = defineComponent({
             },
         }, form);
 
-        const store = injectStore();
+        const store = useStore();
         const storeRefs = storeToRefs(store);
 
         const manager = createEntityManager({

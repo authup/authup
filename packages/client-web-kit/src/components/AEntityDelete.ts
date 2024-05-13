@@ -21,7 +21,7 @@ import {
 import type { DomainType } from '@authup/core-kit';
 import type { DomainAPISlim } from '@authup/core-http-kit';
 import {
-    TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectAPIClient, useTranslation, wrapFnWithBusyState,
+    TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectHTTPClient, useTranslation, wrapFnWithBusyState,
 } from '../core';
 
 enum ElementType {
@@ -61,7 +61,7 @@ const AEntityDelete = defineComponent({
     },
     emits: ['deleted', 'failed'],
     setup(props, ctx) {
-        const apiClient = injectAPIClient();
+        const apiClient = injectHTTPClient();
         const instance = getCurrentInstance();
         const busy = ref(false);
 
