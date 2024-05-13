@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Features
+
+* reimplemented store,http-client,... installation & usage ([#1986](https://github.com/authup/authup/issues/1986)) ([ca5fc93](https://github.com/authup/authup/commit/ca5fc9395628a2a2bf1ea9b81265346ae6c603a2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 
