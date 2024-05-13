@@ -53,8 +53,7 @@
         {
             "type": "node-workspace",
             "updatePeerDependencies": true,
-            "merge": false,
-            "updateAllPackages": true
+            "merge": false
         },
         {
             "type": "linked-versions",
