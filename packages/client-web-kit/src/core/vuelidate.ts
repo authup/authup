@@ -23,7 +23,7 @@ export const VuelidateCustomRule = {
 
 export function getVuelidateSeverity<
     T = unknown,
-    V extends ValidationRuleCollection<T> | undefined = ValidationRuleCollection<T>,
+    V extends ValidationRuleCollection<T> = ValidationRuleCollection<T>,
 >(vuelidate: BaseValidation<T, V>) {
     return getSeverity<T, V>(vuelidate);
 }

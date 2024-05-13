@@ -20,7 +20,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
     const client = new Client({ baseURL: options.baseURL });
 
     const storeCreator = injectStore(app);
-    const store = storeCreator();
+    const store = storeCreator(options.pinia);
 
     const { refreshToken } = storeToRefs(store);
 
