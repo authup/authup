@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty, isObject } from 'smob';
+import { hasOwnProperty, isObject } from '@authup/kit';
 import { removeLineBreaks } from './line-breaks';
 
 export function parseProcessOutputData(input: unknown) : string[] {
