@@ -1,7 +1,7 @@
 {
     "include-component-in-tag": false,
     "release-type": "node",
-    "release-as": "1.0.0-beta.15",
+    "release-as": "1.0.0-beta.16",
     "packages": {
         ".": {
             "component": "root"
