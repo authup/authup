@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Features
+
+* enhance logger formatting ([85011d5](https://github.com/authup/authup/commit/85011d53d8f27f733d4f6ef46b99112473efa3ee))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 

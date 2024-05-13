@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.2.4 to 5.3.0 ([#1979](https://github.com/authup/authup/issues/1979)) ([231f1b6](https://github.com/authup/authup/commit/231f1b6dde1e9567b2586ff77ab05867c51d416e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-http-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/server-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/core-http-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+    * @authup/server-kit bumped from ^1.0.0-beta.12 to ^1.0.0-beta.13
+
 ## [1.0.0-beta.12](https://github.com/authup/authup/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-10)
 
 
