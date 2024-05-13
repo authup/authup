@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web",
-    "version": "1.0.0-beta.14",
+    "version": "1.0.1-beta.14",
     "license": "Apache-2.0",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
@@ -25,7 +25,7 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.14",
+        "@authup/client-web-kit": "^1.0.0-beta.15",
         "@authup/kit": "^1.0.0-beta.13",
         "@authup/core-kit": "^1.0.0-beta.13",
         "@authup/client-web-config": "^1.0.0-beta.13",
