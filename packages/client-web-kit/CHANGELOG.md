@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.15](https://github.com/authup/authup/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2024-05-13)
+
+
+### Bug Fixes
+
+* don't bundle pinia in client-web-kit dist ([ba12cef](https://github.com/authup/authup/commit/ba12cef41dbe89c50572573a8422e13c6ad061fe))
+
 ## [1.0.0-beta.14](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2024-05-13)
 
 
