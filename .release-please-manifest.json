@@ -1,7 +1,7 @@
 {
     ".": "1.0.0-beta.15",
-    "packages/authup": "1.0.1-beta.14",
-    "packages/client-web": "1.0.1-beta.14",
+    "packages/authup": "1.0.2-beta.14",
+    "packages/client-web": "1.0.2-beta.14",
     "packages/client-web-config": "1.0.0-beta.13",
     "packages/client-web-kit": "1.0.0-beta.15",
     "packages/config": "1.0.0-beta.13",
