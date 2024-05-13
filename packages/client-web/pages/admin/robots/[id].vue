@@ -40,7 +40,7 @@ export default defineNuxtComponent({
         ];
 
         const toast = useToast();
-
+        const store = useStore();
         const route = useRoute();
 
         const entity: Ref<Robot> = ref(null) as any;
@@ -54,7 +54,6 @@ export default defineNuxtComponent({
             createError({});
         }
 
-        const store = useStore();
         const { realm } = storeToRefs(store);
 
         if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {
