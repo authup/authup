@@ -15,7 +15,7 @@ export * from './form';
 export * from './query';
 export * from './busy';
 export * from './object';
-export * from './socket-client-manager';
+export * from './socket-manager';
 export * from './store';
 export * from './slot';
 export * from './translator';

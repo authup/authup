@@ -9,7 +9,7 @@ import type { App, Component } from 'vue';
 import * as components from './components';
 import {
     installHTTPClient,
-    installSocketClientManager,
+    installSocketManager,
     installStore,
     installTranslator,
 } from './core';
@@ -40,7 +40,7 @@ export function installComponents(input?: boolean | string[]) {
 
 export function install(app: App, options: Options): void {
     if (options.realtime) {
-        installSocketClientManager(app, {
+        installSocketManager(app, {
             baseURL: options.realtimeURL || options.baseURL,
         });
     }
@@ -50,12 +50,10 @@ export function install(app: App, options: Options): void {
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
-        pinia: options.pinia,
     });
 
     installHTTPClient(app, {
         baseURL: options.baseURL,
-        pinia: options.pinia,
     });
 
     installTranslator(app, {

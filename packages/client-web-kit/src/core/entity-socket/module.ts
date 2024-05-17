@@ -23,7 +23,7 @@ import {
 import type { STCEventContext } from '@authup/core-realtime-kit';
 import { storeToRefs, useStore } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
-import { injectSocketClientManager, isSocketClientManagerInjected } from '../socket-client-manager';
+import { injectSocketManager, isSocketManagerUsable } from '../socket-manager';
 
 type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 
@@ -33,7 +33,7 @@ export function createEntitySocket<
 >(
     ctx: EntitySocketContext<A, T>,
 ) : EntitySocket {
-    if (!isSocketClientManagerInjected()) {
+    if (!isSocketManagerUsable()) {
         return {
             mount() {
 
@@ -44,6 +44,7 @@ export function createEntitySocket<
         };
     }
 
+    const socketManager = injectSocketManager();
     const store = useStore();
     const storeRefs = storeToRefs(store);
 
@@ -127,7 +128,6 @@ export function createEntitySocket<
 
         mounted = true;
 
-        const socketManager = injectSocketClientManager();
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
         let event : EventFullName<A, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
@@ -174,7 +174,6 @@ export function createEntitySocket<
 
         mounted = false;
 
-        const socketManager = injectSocketClientManager();
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
         let event : EventFullName<A, `${EventNameSuffix.UNSUBSCRIBE}`>;
