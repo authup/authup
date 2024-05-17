@@ -24,7 +24,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         STORE_ID,
         () => createStore({ baseURL: options.baseURL }),
     );
-    const store = storeCreator(options.pinia);
+    const store = storeCreator();
 
     const cookies = useCookies();
 

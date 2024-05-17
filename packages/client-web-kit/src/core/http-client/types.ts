@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Pinia } from 'pinia';
-
 export type HTTPClientInstallOptions = {
-    baseURL?: string,
-    pinia?: Pinia
+    baseURL?: string
 };

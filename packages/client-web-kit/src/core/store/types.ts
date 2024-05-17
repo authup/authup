@@ -8,7 +8,6 @@
 import type {
     Store as BaseStore,
     StoreDefinition as BaseStoreDefinition,
-    Pinia,
     _ExtractActionsFromSetupStore,
     _ExtractGettersFromSetupStore, _ExtractStateFromSetupStore,
 } from 'pinia';
@@ -47,7 +46,6 @@ export type StoreLoginContext = {
 
 export type StoreInstallOptions = {
     baseURL?: string,
-    pinia?: Pinia,
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn
