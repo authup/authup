@@ -62,7 +62,7 @@
         "dotenv": "^16.4.5",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
-        "express-validator": "^7.0.1",
+        "express-validator": "^7.1.0",
         "hapic": "^2.5.1",
         "ldapjs": "^3.0.7",
         "locter": "^2.1.0",
