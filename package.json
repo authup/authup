@@ -50,7 +50,7 @@
         "rimraf": "^5.0.6",
         "rollup": "^4.17.2",
         "typescript": "5.4.4",
-        "workspaces-publish": "^1.4.3"
+        "workspaces-publish": "^1.4.4"
     },
     "scripts": {
         "build": "npx nx run-many -t build",
