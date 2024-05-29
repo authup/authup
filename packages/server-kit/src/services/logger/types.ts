@@ -11,7 +11,7 @@ export {
     Logger,
 };
 
-export type LoggerSetupContext = {
+export type LoggerCreateContext = {
     env: string
     directory?: string
 };

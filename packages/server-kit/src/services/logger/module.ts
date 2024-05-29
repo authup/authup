@@ -9,9 +9,9 @@ import path from 'node:path';
 import * as process from 'node:process';
 import type { LoggerOptions } from 'winston';
 import { createLogger as create, format, transports } from 'winston';
-import type { Logger, LoggerSetupContext } from './types';
+import type { Logger, LoggerCreateContext } from './types';
 
-export function createLogger(context: LoggerSetupContext) : Logger {
+export function createLogger(context: LoggerCreateContext) : Logger {
     let items : LoggerOptions['transports'];
 
     const cwd = context.directory || process.cwd();

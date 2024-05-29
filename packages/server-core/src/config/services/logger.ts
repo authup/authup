@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LoggerSetupContext } from '@authup/server-kit';
+import type { LoggerCreateContext } from '@authup/server-kit';
 import { createLogger, setLoggerFactory } from '@authup/server-kit';
 
-export function setupLogger(ctx: LoggerSetupContext): void {
+export function setupLogger(ctx: LoggerCreateContext): void {
     setLoggerFactory(() => createLogger(ctx));
 }
