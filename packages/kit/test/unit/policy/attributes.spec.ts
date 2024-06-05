@@ -17,7 +17,7 @@ describe('src/policy/attributes', () => {
     it('should restrict', () => {
         const policy : AttributesPolicyEvalContext<User> = {
             invert: false,
-            condition: {
+            conditions: {
                 name: {
                     $regex: /t/,
                 },

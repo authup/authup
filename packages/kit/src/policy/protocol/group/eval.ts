@@ -40,8 +40,8 @@ export function evalPolicyGroup(
 ): boolean {
     let count = 0;
 
-    for (let i = 0; i < policy.policies.length; i++) {
-        const outcome = evalPolicy(policy.policies[i], target);
+    for (let i = 0; i < policy.children.length; i++) {
+        const outcome = evalPolicy(policy.children[i], target);
         if (outcome) {
             if (policy.decisionStrategy === PolicyDecisionStrategy.AFFIRMATIVE) {
                 return invertPolicyOutcome(true, policy.invert);

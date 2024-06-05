@@ -23,7 +23,16 @@ export enum PolicyDecisionStrategy {
 export enum PolicyType {
     GROUP = 'group',
     DATE = 'date',
+    /**
+     * Time Based Access Control (TBAC)
+     */
     TIME = 'time',
     ATTRIBUTE_NAMES = 'attributeNames',
+    /**
+     * Attribute Based Access Control (ABAC)
+     */
     ATTRIBUTES = 'attributes',
+
+    // Location (LBAC)
+    // Device (DBAC)
 }

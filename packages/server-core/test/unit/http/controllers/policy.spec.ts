@@ -47,8 +47,8 @@ describe('src/http/controllers/policy', () => {
             .send({
                 name: 'time',
                 type: PolicyType.TIME,
-                notBefore: Date.now(),
-                notAfter: Date.now(),
+                start: Date.now(),
+                end: Date.now(),
                 invert: false,
                 parent_id: ids[0],
             } as Partial<TimePolicy>)
@@ -86,8 +86,8 @@ describe('src/http/controllers/policy', () => {
             .send({
                 name: 'time',
                 type: PolicyType.TIME,
-                notBefore: Date.now(),
-                notAfter: Date.now(),
+                start: Date.now(),
+                end: Date.now(),
                 invert: false,
             } satisfies Partial<TimePolicy>)
             .auth('admin', 'start123');

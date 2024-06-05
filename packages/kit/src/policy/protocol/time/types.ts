@@ -7,13 +7,33 @@
 
 import type { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
+import type { TimePolicyInterval } from './constants';
 
 export interface TimePolicy extends PolicyBase {
     type: `${PolicyType.TIME}`,
 
-    notBefore?: string | Date | number,
+    start?: string | Date | number,
 
-    notAfter?: string | Date | number,
+    end?: string | Date | number,
+
+    interval?: TimePolicyInterval,
+
+    /**
+     *  0 (Sunday) - 6 (Saturday)
+     */
+    dayOfWeek?: number,
+
+    /**
+     * 1 - 31
+     */
+    dayOfMonth?: number,
+
+    /**
+     * 1 - 365
+     */
+    dayOfYear?: number,
 }
 
 export type TimePolicyEvalContext = Omit<TimePolicy, 'type'>;
+
+// date policy: startDate, endDate, ...

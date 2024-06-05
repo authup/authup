@@ -23,8 +23,8 @@ export function validateTimePolicyShaping(body: Record<string, any>) : Partial<T
     let attributes : Record<string, any>;
     if (isObject(body)) {
         attributes = extractAttributes<keyof TimePolicy>(body, [
-            'notAfter',
-            'notBefore',
+            'end',
+            'start',
         ]);
     } else {
         attributes = {};

@@ -14,7 +14,7 @@ export interface AttributesPolicy<
 > extends PolicyBase {
     type: `${PolicyType.ATTRIBUTES}`,
 
-    condition: MongoQuery<T>
+    conditions: MongoQuery<T>
 }
 
 export type AttributesPolicyEvalContext<

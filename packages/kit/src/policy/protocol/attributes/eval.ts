@@ -14,6 +14,6 @@ export function evalPolicyAttributes(policy: AttributesPolicyEvalContext, input?
         return invertPolicyOutcome(true, policy.invert);
     }
 
-    const testIt = guard(policy.condition);
+    const testIt = guard(policy.conditions);
     return invertPolicyOutcome(testIt(input), policy.invert);
 }

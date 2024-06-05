@@ -57,7 +57,7 @@ export class Abilities extends EventEmitter<{
             const outcome = evalPolicyGroup(
                 {
                     invert: false,
-                    policies: item.policies,
+                    children: item.policies,
                     decisionStrategy: item.decisionStrategy || PolicyDecisionStrategy.UNANIMOUS,
                 },
                 target,

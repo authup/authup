@@ -23,16 +23,16 @@ function toDate(input: Date | string | number) : Date {
 export function evalPolicyTime(
     policy: TimePolicyEvalContext,
 ): boolean {
-    if (policy.notBefore) {
-        const notBefore = toDate(policy.notBefore);
+    if (policy.start) {
+        const notBefore = toDate(policy.start);
 
         if (notBefore.getTime() > Date.now()) {
             return invertPolicyOutcome(false, policy.invert);
         }
     }
 
-    if (policy.notAfter) {
-        const notAfter = toDate(policy.notAfter);
+    if (policy.end) {
+        const notAfter = toDate(policy.end);
         if (notAfter.getTime() < Date.now()) {
             return invertPolicyOutcome(false, policy.invert);
         }

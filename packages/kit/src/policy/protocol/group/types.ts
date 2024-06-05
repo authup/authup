@@ -18,7 +18,7 @@ export interface GroupPolicy extends PolicyBase {
     /**
      * Child policies.
      */
-    policies: PolicyBase[],
+    children: PolicyBase[],
 }
 
 export type PolicyGroupEvalContext = Omit<GroupPolicy, 'type'>;
