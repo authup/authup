@@ -7,7 +7,7 @@
 
 import { check, validationResult } from 'express-validator';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { UserPermissionEntity } from '../../../../domains';
 import {
@@ -22,7 +22,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runUserPermissionValidation(
     req: Request,
@@ -40,20 +40,7 @@ export async function runUserPermissionValidation(
             .exists()
             .isString()
             .run(req);
-
-        await check('target')
-            .exists()
-            .isString()
-            .isLength({ min: 3, max: 16 })
-            .optional({ nullable: true })
-            .run(req);
     }
-
-    await check('condition')
-        .exists()
-        .isObject()
-        .optional({ nullable: true })
-        .run(req);
 
     // ----------------------------------------------
 
@@ -84,11 +71,6 @@ export async function runUserPermissionValidation(
         ) {
             throw new ForbiddenError('It is only allowed to assign user permissions, which are also owned.');
         }
-    }
-
-    const permissionTarget = ability.findOne(PermissionName.USER_PERMISSION_ADD);
-    if (permissionTarget) {
-        result.data.target = permissionTarget.target;
     }
 
     // ----------------------------------------------

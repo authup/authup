@@ -12,4 +12,5 @@ export * from './json-web-key';
 export * from './json-web-token';
 export * from './oauth2';
 export * from './openid';
+export * from './policy';
 export * from './utils';

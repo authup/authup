@@ -18,6 +18,7 @@ import {
     useRequestQuery,
 } from '@routup/basic/query';
 import { ClientScopeController } from './client-scope';
+import { PolicyController } from './policy';
 import { RobotController } from './robot';
 import { OAuth2ProviderRoleController } from './identity-provide-role';
 import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
@@ -50,6 +51,7 @@ export function registerControllers(
             OAuth2ProviderRoleController,
             IdentityProviderController,
             PermissionController,
+            PolicyController,
             RobotController,
             RobotPermissionController,
             RobotRoleController,

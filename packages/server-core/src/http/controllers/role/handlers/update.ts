@@ -47,12 +47,6 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!ability.satisfy(PermissionName.ROLE_EDIT, { target: entity.target })) {
-        throw new ForbiddenError('You are not permitted for the role target.');
-    }
-
-    // ----------------------------------------------
-
     await enforceUniquenessForDatabaseEntity(RoleEntity, result.data, {
         id: entity.id,
     });
