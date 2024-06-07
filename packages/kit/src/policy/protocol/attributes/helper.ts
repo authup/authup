@@ -9,6 +9,6 @@ import { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
 import type { AttributesPolicy } from './types';
 
-export function isPolicyAttributes(input: PolicyBase) : input is AttributesPolicy {
+export function isAttributesPolicy(input: PolicyBase) : input is AttributesPolicy {
     return input.type === PolicyType.ATTRIBUTES;
 }

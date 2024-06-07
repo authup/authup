@@ -23,7 +23,7 @@ import { Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
 @Unique(['name', 'realm_id'])
-@Entity({ name: 'auth_policy' })
+@Entity({ name: 'auth_policies' })
 @Tree('closure-table', {
     closureTableName: 'auth_policy_tree',
     ancestorColumnName: () => 'ancestor_id',

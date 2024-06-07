@@ -7,5 +7,6 @@
 
 export * from './attribute-names';
 export * from './attributes';
+export * from './date';
 export * from './group';
 export * from './time';

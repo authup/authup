@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from '@posva/event-emitter';
-import { PolicyDecisionStrategy, evalPolicyGroup } from '../policy';
+import { PolicyDecisionStrategy, evalGroupPolicy } from '../policy';
 
 import type { AbilitiesFilterOptions, Ability } from './types';
 
@@ -54,7 +54,7 @@ export class Abilities extends EventEmitter<{
             }
 
             hasPolicies = true;
-            const outcome = evalPolicyGroup(
+            const outcome = evalGroupPolicy(
                 {
                     invert: false,
                     children: item.policies,

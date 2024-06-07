@@ -5,16 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyType } from './constants';
-
 export interface PolicyBase {
     /**
      * The policy type.
      */
-    type: `${PolicyType}`,
+    type: string,
 
     /**
      * Invert evaluation result of policy (true->false and false->true)
      */
     invert: boolean
+}
+
+export type PolicyEvaluationContext = {
+    [key: string]: any
+};
+
+export interface PolicyEvaluator<
+    P extends Record<string, any> = Record<string, any>,
+    C extends Record<string, any> = Record<string, any>,
+> {
+    try(policy: PolicyBase, context: PolicyEvaluationContext): boolean;
+
+    execute(policy: P, context: C): boolean;
 }

@@ -12,9 +12,15 @@ import type { TimePolicyInterval } from './constants';
 export interface TimePolicy extends PolicyBase {
     type: `${PolicyType.TIME}`,
 
-    start?: string | Date | number,
+    /**
+     * Format: HH:MM
+     */
+    start?: string,
 
-    end?: string | Date | number,
+    /**
+     * Format HH:MM
+     */
+    end?: string,
 
     interval?: TimePolicyInterval,
 

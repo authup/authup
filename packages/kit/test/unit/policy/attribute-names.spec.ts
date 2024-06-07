@@ -6,7 +6,7 @@
  */
 
 import type { AttributeNamesPolicyEvalContext } from '../../../src/policy';
-import { evalPolicyAttributeNames } from '../../../src/policy';
+import { evalAttributeNamesPolicy } from '../../../src/policy';
 
 describe('src/policy/attribute-names', () => {
     it('should restrict', () => {
@@ -15,16 +15,16 @@ describe('src/policy/attribute-names', () => {
             names: ['foo', 'bar'],
         };
 
-        let outcome = evalPolicyAttributeNames(policy);
+        let outcome = evalAttributeNamesPolicy(policy);
         expect(outcome).toBeTruthy();
 
-        outcome = evalPolicyAttributeNames(policy, {
+        outcome = evalAttributeNamesPolicy(policy, {
             foo: 'bar',
             bar: 'baz',
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evalPolicyAttributeNames(policy, {
+        outcome = evalAttributeNamesPolicy(policy, {
             foo: 'bar',
             bar: 'baz',
             baz: 'boz',

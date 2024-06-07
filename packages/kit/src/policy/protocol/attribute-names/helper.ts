@@ -7,8 +7,8 @@
 
 import { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
-import type { TimePolicy } from './types';
+import type { AttributeNamesPolicy } from './types';
 
-export function isPolicyTime(input: PolicyBase) : input is TimePolicy {
-    return input.type === PolicyType.TIME;
+export function isAttributeNamesPolicy(input: PolicyBase) : input is AttributeNamesPolicy {
+    return input.type === PolicyType.ATTRIBUTE_NAMES;
 }

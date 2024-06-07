@@ -6,7 +6,7 @@
  */
 
 import type { AttributesPolicyEvalContext } from '../../../src';
-import { evalPolicyAttributes } from '../../../src';
+import { evalAttributesPolicy } from '../../../src';
 
 type User = {
     name: string,
@@ -28,16 +28,16 @@ describe('src/policy/attributes', () => {
             },
         };
 
-        let outcome = evalPolicyAttributes(policy);
+        let outcome = evalAttributesPolicy(policy);
         expect(outcome).toBeTruthy();
 
-        outcome = evalPolicyAttributes(policy, {
+        outcome = evalAttributesPolicy(policy, {
             name: 'Peter',
             age: 15,
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evalPolicyAttributes(policy, {
+        outcome = evalAttributesPolicy(policy, {
             name: 'Peter',
             age: 28,
         });
