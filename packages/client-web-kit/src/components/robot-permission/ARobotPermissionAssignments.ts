@@ -27,6 +27,7 @@ export const ARobotPermissionAssignments = defineComponent({
                 {
                     robotId: props.entityId,
                     permissionId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
             ...slots,

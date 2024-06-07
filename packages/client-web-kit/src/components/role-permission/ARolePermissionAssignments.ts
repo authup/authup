@@ -29,6 +29,7 @@ export const ARolePermissionAssignments = defineComponent({
                 {
                     roleId: props.entityId,
                     permissionId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
             ...slots,

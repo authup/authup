@@ -25,6 +25,7 @@ export const APermissionUserAssignments = defineComponent({
                 {
                     permissionId: props.entityId,
                     userId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
             ...slots,

@@ -24,6 +24,7 @@ export const ARoleUserAssignments = defineComponent({
                 {
                     roleId: props.entityId,
                     userId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
             ...slots,

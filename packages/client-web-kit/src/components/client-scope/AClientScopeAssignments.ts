@@ -29,6 +29,7 @@ export const AClientScopeAssignments = defineComponent({
                 {
                     clientId: props.entityId,
                     scopeId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
             ...slots,

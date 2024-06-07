@@ -26,6 +26,7 @@ export const ARoleRobotAssignments = defineComponent({
                 {
                     roleId: props.entityId,
                     robotId: slotProps.data.id,
+                    key: slotProps.data.id,
                 },
             ),
         });
