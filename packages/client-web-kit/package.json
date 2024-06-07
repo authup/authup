@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@vueuse/integrations": "^10.9.0",
+        "@vueuse/integrations": "^10.10.0",
         "universal-cookie": "^7.1.4"
     },
     "devDependencies": {
