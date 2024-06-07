@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.16](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.16) (2024-06-07)
+
+
+### Features
+
+* allow filtering permissions by built_in attribute ([2ad788a](https://github.com/authup/authup/commit/2ad788aaa53c7d9f9ab4f68351750f389cb38c8b))
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 10.0.0 to 11.0.0 ([#2030](https://github.com/authup/authup/issues/2030)) ([0b65564](https://github.com/authup/authup/commit/0b65564c53357061e3f333ed906c13092e2a4d70))
+* **deps:** bump better-sqlite3 from 9.6.0 to 10.0.0 ([#2000](https://github.com/authup/authup/issues/2000)) ([776509c](https://github.com/authup/authup/commit/776509c702854326b9a75d43699503019530d247))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.16
+
 ## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
 
 

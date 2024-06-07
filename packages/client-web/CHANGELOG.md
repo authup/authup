@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.0.0-beta.16](https://github.com/authup/authup/compare/v1.0.1-beta.14...v1.0.0-beta.16) (2024-06-07)
+
+
+### Bug Fixes
+
+* use store access in page components ([8d75d0d](https://github.com/authup/authup/commit/8d75d0dca0614e099abf3ff6febd532b694c7643))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.15 to ^1.0.0-beta.16
+
 ## [1.0.1-beta.14](https://github.com/authup/authup/compare/v1.0.0-beta.14...v1.0.1-beta.14) (2024-05-13)
 
 

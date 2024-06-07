@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core-plugin-http",
-    "version": "1.0.0-beta.13",
+    "version": "1.0.1-beta.13",
     "description": "A http plugin for the server core service.",
     "exports": {
         "./package.json": "./package.json",
@@ -44,14 +44,14 @@
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.13",
         "@authup/core-http-kit": "^1.0.0-beta.13",
-        "@authup/server-kit": "^1.0.0-beta.13",
-        "@authup/server-core-plugin-kit": "^1.0.0-beta.13"
+        "@authup/server-kit": "^1.0.0-beta.16",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.16"
     },
     "peerDependencies": {
         "@authup/core-kit": "^1.0.0-beta.13",
         "@authup/core-http-kit": "^1.0.0-beta.13",
-        "@authup/server-kit": "^1.0.0-beta.13",
-        "@authup/server-core-plugin-kit": "^1.0.0-beta.13"
+        "@authup/server-kit": "^1.0.0-beta.16",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.16"
     },
     "publishConfig": {
         "access": "public"
