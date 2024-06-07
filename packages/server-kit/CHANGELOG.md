@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.16](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.16) (2024-06-07)
+
+
+### Features
+
+* allow filtering permissions by built_in attribute ([2ad788a](https://github.com/authup/authup/commit/2ad788aaa53c7d9f9ab4f68351750f389cb38c8b))
+
 ## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
 
 

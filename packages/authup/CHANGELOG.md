@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.0.2-beta.14](https://github.com/authup/authup/compare/v1.0.1-beta.14...v1.0.2-beta.14) (2024-06-07)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.1-beta.14 to ^1.0.0-beta.16
+    * @authup/server-core bumped from ^1.0.0-beta.13 to ^1.0.0-beta.16
+
 ## [1.0.1-beta.14](https://github.com/authup/authup/compare/v1.0.0-beta.14...v1.0.1-beta.14) (2024-05-13)
 
 
