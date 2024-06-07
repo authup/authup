@@ -6,17 +6,20 @@
  */
 
 import { ClientManager } from '@authup/core-realtime-kit';
+import type { Pinia } from 'pinia';
 import type { App } from 'vue';
 import { ref } from 'vue';
-import { storeToRefs, useStore } from '../store';
+import { injectStore, storeToRefs } from '../store';
 import { provideSocketManager } from './singleton';
 
 export type SocketManagerInstallOptions = {
+    pinia?: Pinia,
     baseURL: string
 };
 
 export function installSocketManager(app: App, options : SocketManagerInstallOptions) {
-    const store = useStore();
+    const storeCreator = injectStore(app);
+    const store = storeCreator(options.pinia);
     const { accessToken } = storeToRefs(store);
 
     const manager = new ClientManager({

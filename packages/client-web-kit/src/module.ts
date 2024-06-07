@@ -41,11 +41,13 @@ export function installComponents(input?: boolean | string[]) {
 export function install(app: App, options: Options): void {
     if (options.realtime) {
         installSocketManager(app, {
+            pinia: options.pinia,
             baseURL: options.realtimeURL || options.baseURL,
         });
     }
 
     installStore(app, {
+        pinia: options.pinia,
         baseURL: options.baseURL,
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
@@ -53,6 +55,7 @@ export function install(app: App, options: Options): void {
     });
 
     installHTTPClient(app, {
+        pinia: options.pinia,
         baseURL: options.baseURL,
     });
 

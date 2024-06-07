@@ -8,8 +8,8 @@
 import type {
     Store as BaseStore,
     StoreDefinition as BaseStoreDefinition,
-    _ExtractActionsFromSetupStore,
-    _ExtractGettersFromSetupStore, _ExtractStateFromSetupStore,
+    Pinia,
+    _ExtractActionsFromSetupStore, _ExtractGettersFromSetupStore, _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
@@ -48,5 +48,6 @@ export type StoreInstallOptions = {
     baseURL?: string,
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
-    cookieGet?: CookieGetFn
+    cookieGet?: CookieGetFn,
+    pinia?: Pinia
 };
