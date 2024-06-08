@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributesPolicyEvalContext } from '../../../src';
-import { evalAttributesPolicy } from '../../../src';
+import type { AttributesPolicyOptions } from '../../../src';
+import { AttributesPolicyEvaluator } from '../../../src';
 
 type User = {
     name: string,
@@ -15,7 +15,7 @@ type User = {
 
 describe('src/policy/attributes', () => {
     it('should restrict', () => {
-        const policy : AttributesPolicyEvalContext<User> = {
+        const policy : AttributesPolicyOptions<User> = {
             invert: false,
             conditions: {
                 name: {
@@ -28,18 +28,24 @@ describe('src/policy/attributes', () => {
             },
         };
 
-        let outcome = evalAttributesPolicy(policy);
+        const evaluator = new AttributesPolicyEvaluator();
+
+        let outcome = evaluator.execute(policy, {});
         expect(outcome).toBeTruthy();
 
-        outcome = evalAttributesPolicy(policy, {
-            name: 'Peter',
-            age: 15,
+        outcome = evaluator.execute(policy, {
+            target: {
+                name: 'Peter',
+                age: 15,
+            },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evalAttributesPolicy(policy, {
-            name: 'Peter',
-            age: 28,
+        outcome = evaluator.execute(policy, {
+            target: {
+                name: 'Peter',
+                age: 28,
+            },
         });
         expect(outcome).toBeFalsy();
     });

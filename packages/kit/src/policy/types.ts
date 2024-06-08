@@ -14,10 +14,17 @@ export interface PolicyBase {
     /**
      * Invert evaluation result of policy (true->false and false->true)
      */
-    invert: boolean
+    invert?: boolean,
 }
 
+export type AnyPolicy = {
+    type: string,
+    [key: string]: any
+};
+
 export type PolicyEvaluationContext = {
+    target?: Record<string, any>,
+    dateTime?: Date | number | string,
     [key: string]: any
 };
 
@@ -25,7 +32,7 @@ export interface PolicyEvaluator<
     P extends Record<string, any> = Record<string, any>,
     C extends Record<string, any> = Record<string, any>,
 > {
-    try(policy: PolicyBase, context: PolicyEvaluationContext): boolean;
+    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean;
 
     execute(policy: P, context: C): boolean;
 }

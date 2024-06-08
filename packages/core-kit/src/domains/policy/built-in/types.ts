@@ -7,10 +7,12 @@
 
 import type { AttributeNamesPolicy } from './attribute-names';
 import type { AttributesPolicy } from './attributes';
+import type { DatePolicy } from './date';
 import type { GroupPolicy } from './group';
 import type { TimePolicy } from './time';
 
-export type PolicyVariant = AttributesPolicy |
+export type PolicyBuiltIn = AttributesPolicy |
 AttributeNamesPolicy |
+DatePolicy |
 GroupPolicy |
 TimePolicy;

@@ -6,19 +6,21 @@
  */
 
 import { PolicyDecisionStrategy } from '../../constants';
-import type { PolicyBase, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
+import type { AnyPolicy, PolicyEvaluator } from '../../types';
 import { invertPolicyOutcome } from '../../utils';
 import { isGroupPolicy } from './helper';
-import type { PolicyGroupEvalContext } from './types';
+import type { PolicyGroupOptions } from './types';
 
-export class GroupPolicyEvaluator implements PolicyEvaluator<PolicyGroupEvalContext> {
+export class PolicyGroupEvaluator<
+    C extends Record<string, any> = Record<string, any>,
+> implements PolicyEvaluator<PolicyGroupOptions, C> {
     protected evaluators : Record<string, PolicyEvaluator>;
 
     constructor(evaluators: Record<string, PolicyEvaluator>) {
         this.evaluators = evaluators;
     }
 
-    try(policy: PolicyBase, context: PolicyEvaluationContext): boolean {
+    try(policy: AnyPolicy, context: C): boolean {
         if (!isGroupPolicy(policy)) {
             throw new Error('');
         }
@@ -26,7 +28,7 @@ export class GroupPolicyEvaluator implements PolicyEvaluator<PolicyGroupEvalCont
         return this.execute(policy, context);
     }
 
-    execute(policy: PolicyGroupEvalContext, context: PolicyEvaluationContext): boolean {
+    execute(policy: PolicyGroupOptions, context: C): boolean {
         let count = 0;
 
         for (let i = 0; i < policy.children.length; i++) {

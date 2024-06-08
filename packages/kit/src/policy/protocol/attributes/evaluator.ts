@@ -6,13 +6,13 @@
  */
 
 import { guard } from '@ucast/mongo2js';
-import type { PolicyBase, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
+import type { AnyPolicy, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
-import type { AttributesPolicyEvalContext } from './types';
+import type { AttributesPolicyOptions } from './types';
 
-export class AttributesEvaluator implements PolicyEvaluator<AttributesPolicyEvalContext> {
-    try(policy: PolicyBase, context: PolicyEvaluationContext): boolean {
+export class AttributesPolicyEvaluator implements PolicyEvaluator<AttributesPolicyOptions> {
+    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
         if (!isAttributesPolicy(policy)) {
             return false;
         }
@@ -20,12 +20,12 @@ export class AttributesEvaluator implements PolicyEvaluator<AttributesPolicyEval
         return this.execute(policy, context);
     }
 
-    execute(policy: AttributesPolicyEvalContext, context: PolicyEvaluationContext): boolean {
-        if (typeof context === 'undefined') {
+    execute(policy: AttributesPolicyOptions, context: PolicyEvaluationContext): boolean {
+        if (typeof context.target === 'undefined') {
             return invertPolicyOutcome(true, policy.invert);
         }
 
         const testIt = guard(policy.conditions);
-        return invertPolicyOutcome(testIt(context), policy.invert);
+        return invertPolicyOutcome(testIt(context.target), policy.invert);
     }
 }

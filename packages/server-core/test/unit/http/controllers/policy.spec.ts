@@ -6,7 +6,7 @@
  */
 
 import type { GroupPolicy, TimePolicy } from '@authup/core-kit';
-import { PolicyType } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/kit';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -30,7 +30,7 @@ describe('src/http/controllers/policy', () => {
             .post('/policies')
             .send({
                 name: 'group',
-                type: PolicyType.GROUP,
+                type: BuiltInPolicyType.GROUP,
                 invert: false,
             } as Partial<GroupPolicy>)
             .auth('admin', 'start123');
@@ -46,7 +46,7 @@ describe('src/http/controllers/policy', () => {
             .post('/policies')
             .send({
                 name: 'time',
-                type: PolicyType.TIME,
+                type: BuiltInPolicyType.TIME,
                 start: Date.now(),
                 end: Date.now(),
                 invert: false,
@@ -85,7 +85,7 @@ describe('src/http/controllers/policy', () => {
             .post(`/policies/${ids[1]}`)
             .send({
                 name: 'time',
-                type: PolicyType.TIME,
+                type: BuiltInPolicyType.TIME,
                 start: Date.now(),
                 end: Date.now(),
                 invert: false,

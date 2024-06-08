@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType, isPropertySet } from '@authup/kit';
+import { BuiltInPolicyType, isPropertySet } from '@authup/kit';
 import { useRequestBody } from '@routup/basic/body';
 import { check, validationResult } from 'express-validator';
 import {
@@ -19,6 +19,7 @@ import {
     RealmEntity,
     validateAttributeNamesPolicyShaping,
     validateAttributesPolicyShaping,
+    validateDatePolicyShaping,
     validateTimePolicyShaping,
 } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
@@ -59,7 +60,7 @@ export async function runPolicyProviderValidation(
     await check('type')
         .exists()
         .notEmpty()
-        .isIn(Object.values(PolicyType))
+        .isIn(Object.values(BuiltInPolicyType))
         .run(req);
 
     await check('parent_id')
@@ -93,15 +94,19 @@ export async function runPolicyProviderValidation(
         const body = useRequestBody(req);
 
         switch (result.data.type) {
-            case PolicyType.ATTRIBUTES: {
+            case BuiltInPolicyType.ATTRIBUTES: {
                 result.meta.attributes = validateAttributesPolicyShaping(body);
                 break;
             }
-            case PolicyType.ATTRIBUTE_NAMES: {
+            case BuiltInPolicyType.ATTRIBUTE_NAMES: {
                 result.meta.attributes = validateAttributeNamesPolicyShaping(body);
                 break;
             }
-            case PolicyType.TIME: {
+            case BuiltInPolicyType.DATE: {
+                result.meta.attributes = validateDatePolicyShaping(body);
+                break;
+            }
+            case BuiltInPolicyType.TIME: {
                 result.meta.attributes = validateTimePolicyShaping(body);
                 break;
             }

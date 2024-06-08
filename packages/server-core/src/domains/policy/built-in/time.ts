@@ -6,13 +6,18 @@
  */
 
 import type { TimePolicy } from '@authup/kit';
-import { isObject } from '@authup/kit';
+import { TimePolicyInterval, isObject } from '@authup/kit';
+
 import zod from 'zod';
 import { extractAttributes } from '../../../utils';
 
 const schema = zod.object({
-    notAfter: zod.date().or(zod.string()).or(zod.number()),
-    notBefore: zod.date().or(zod.string()).or(zod.number()),
+    start: zod.date().or(zod.string()).or(zod.number()).optional(),
+    end: zod.date().or(zod.string()).or(zod.number()).optional(),
+    interval: zod.nativeEnum(TimePolicyInterval).optional(),
+    dayOfWeek: zod.number().min(0).max(6).optional(),
+    dayOfMonth: zod.number().min(1).max(31).optional(),
+    dayOfYear: zod.number().min(1).max(366).optional(),
 });
 
 /**
@@ -25,6 +30,10 @@ export function validateTimePolicyShaping(body: Record<string, any>) : Partial<T
         attributes = extractAttributes<keyof TimePolicy>(body, [
             'end',
             'start',
+            'interval',
+            'dayOfWeek',
+            'dayOfMonth',
+            'dayOfYear',
         ]);
     } else {
         attributes = {};

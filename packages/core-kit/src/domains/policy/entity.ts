@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyType } from '@authup/kit';
+import type { AnyPolicy, BuiltInPolicyType } from '@authup/kit';
 import type { Realm } from '../realm';
 
 export interface Policy {
     id: string;
 
-    type: `${PolicyType}`;
+    type: `${BuiltInPolicyType}`;
 
     name: string;
 
@@ -19,7 +19,7 @@ export interface Policy {
 
     invert: boolean;
 
-    children: Policy[];
+    children: AnyPolicy[];
 
     parent_id?: string,
 

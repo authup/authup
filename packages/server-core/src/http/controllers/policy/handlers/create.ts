@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/kit';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
@@ -34,7 +34,7 @@ export async function createPolicyRouteHandler(req: Request, res: Response) : Pr
     if (result.data.parent_id) {
         const parent = await repository.findOneBy({ id: result.data.parent_id });
         if (parent) {
-            if (parent.type !== PolicyType.GROUP) {
+            if (parent.type !== BuiltInPolicyType.GROUP) {
                 throw new BadRequestError('The parent policy must be of type group.');
             }
         }

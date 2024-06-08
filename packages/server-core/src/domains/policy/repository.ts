@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Policy, PolicyVariant } from '@authup/core-kit';
+import type { Policy, PolicyBuiltIn } from '@authup/core-kit';
 import {
     hasOwnProperty,
 } from '@authup/kit';
@@ -82,11 +82,11 @@ export class PolicyRepository extends TreeRepository<PolicyEntity> {
         return entity;
     }
 
-    async extendEntity(entity: Policy) : Promise<PolicyVariant> {
+    async extendEntity(entity: Policy) : Promise<PolicyBuiltIn> {
         const attributes = await this.getAttributes(entity.id);
 
         this.appendAttributes(entity, attributes);
 
-        return entity as PolicyVariant;
+        return entity as PolicyBuiltIn;
     }
 }

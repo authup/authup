@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/kit';
 import {
     Column,
     CreateDateColumn,
@@ -34,7 +34,7 @@ export class PolicyEntity implements Policy {
         id: string;
 
     @Column({ type: 'varchar', length: 64 })
-        type: `${PolicyType}`;
+        type: `${BuiltInPolicyType}`;
 
     @Column({ type: 'varchar', length: 128 })
         name: string;

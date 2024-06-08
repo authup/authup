@@ -5,16 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MongoQuery } from '@ucast/mongo2js';
-import type { PolicyBase, PolicyDecisionStrategy } from '../policy';
-
-export type AbilityCondition<T = any> = MongoQuery<T>;
+import type { AnyPolicy, PolicyDecisionStrategy } from '../policy';
 
 export type Ability = {
     name: string,
     realmId?: string | null,
     decisionStrategy?: `${PolicyDecisionStrategy}`,
-    policies?: PolicyBase[],
+    policy?: AnyPolicy,
 };
 
 export type AbilitiesFilterOptions = {

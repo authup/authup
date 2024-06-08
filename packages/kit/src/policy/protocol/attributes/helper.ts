@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from '../../constants';
-import type { PolicyBase } from '../../types';
+import type { AnyPolicy } from '../../types';
+import { BuiltInPolicyType } from '../constants';
 import type { AttributesPolicy } from './types';
 
-export function isAttributesPolicy(input: PolicyBase) : input is AttributesPolicy {
-    return input.type === PolicyType.ATTRIBUTES;
+export function isAttributesPolicy(input: AnyPolicy) : input is AttributesPolicy {
+    return input.type === BuiltInPolicyType.ATTRIBUTES;
 }

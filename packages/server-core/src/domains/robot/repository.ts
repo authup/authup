@@ -10,7 +10,7 @@ import type {
     Role,
 } from '@authup/core-kit';
 import {
-    buildAbility,
+    buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
 import type { Ability } from '@authup/kit';
 import {
@@ -71,7 +71,10 @@ export class RobotRepository extends Repository<RobotEntity> {
                 robot_id: id,
             },
             relations: {
-                permission: true,
+                policy: true,
+                permission: {
+                    policy: true,
+                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -82,12 +85,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        const result : Ability[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            result.push(buildAbility(entities[i]));
-        }
-
-        return result;
+        return entities.map((entity) => buildAbilityFromPermissionRelation(entity));
     }
 
     /**

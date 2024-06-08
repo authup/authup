@@ -5,20 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyDecisionStrategy, PolicyType } from '../../constants';
-import type { PolicyBase } from '../../types';
+import type { PolicyDecisionStrategy } from '../../constants';
+import type { AnyPolicy, PolicyBase } from '../../types';
+import type { BuiltInPolicyType } from '../constants';
 
 export interface GroupPolicy extends PolicyBase {
-    type: `${PolicyType.GROUP}`,
+    type: `${BuiltInPolicyType.GROUP}`,
 
     /**
      * How to decide if a policy evaluates to true.
      */
-    decisionStrategy: `${PolicyDecisionStrategy}`,
+    decisionStrategy?: `${PolicyDecisionStrategy}`,
     /**
      * Child policies.
      */
-    children: PolicyBase[],
+    children: AnyPolicy[],
 }
 
-export type PolicyGroupEvalContext = Omit<GroupPolicy, 'type'>;
+export type PolicyGroupOptions = Omit<GroupPolicy, 'type'>;

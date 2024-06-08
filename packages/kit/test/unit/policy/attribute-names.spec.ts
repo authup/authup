@@ -5,29 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributeNamesPolicyEvalContext } from '../../../src/policy';
-import { evalAttributeNamesPolicy } from '../../../src/policy';
+import type { AttributeNamesPolicyOptions } from '../../../src';
+import { AttributeNamesPolicyEvaluator } from '../../../src';
 
 describe('src/policy/attribute-names', () => {
     it('should restrict', () => {
-        const policy : AttributeNamesPolicyEvalContext = {
+        const policy : AttributeNamesPolicyOptions = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        let outcome = evalAttributeNamesPolicy(policy);
+        const evaluator = new AttributeNamesPolicyEvaluator();
+
+        let outcome = evaluator.execute(policy, {});
         expect(outcome).toBeTruthy();
 
-        outcome = evalAttributeNamesPolicy(policy, {
-            foo: 'bar',
-            bar: 'baz',
+        outcome = evaluator.execute(policy, {
+            target: {
+                foo: 'bar',
+                bar: 'baz',
+            },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evalAttributeNamesPolicy(policy, {
-            foo: 'bar',
-            bar: 'baz',
-            baz: 'boz',
+        outcome = evaluator.execute(policy, {
+            target: {
+                foo: 'bar',
+                bar: 'baz',
+                baz: 'boz',
+            },
         });
         expect(outcome).toBeFalsy();
     });

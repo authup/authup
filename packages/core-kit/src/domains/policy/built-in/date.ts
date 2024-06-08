@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributesPolicy as BaseAttributesPolicy, PolicyType } from '@authup/kit';
+import type { DatePolicy as BaseDatePolicy, BuiltInPolicyType } from '@authup/kit';
 import type { Policy } from '../entity';
 
-export interface AttributesPolicy extends Policy, BaseAttributesPolicy {
-    type: `${PolicyType.ATTRIBUTES}`
+export interface DatePolicy extends Policy, Omit<BaseDatePolicy, 'invert'> {
+    type: `${BuiltInPolicyType.DATE}`
 }

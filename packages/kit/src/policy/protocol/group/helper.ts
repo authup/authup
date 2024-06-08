@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from '../../constants';
-import type { PolicyBase } from '../../types';
+import type { AnyPolicy } from '../../types';
+import { BuiltInPolicyType } from '../constants';
 import type { GroupPolicy } from './types';
 
-export function isGroupPolicy(input: PolicyBase) : input is GroupPolicy {
-    return input.type === PolicyType.GROUP;
+export function isGroupPolicy(input: AnyPolicy) : input is GroupPolicy {
+    return input.type === BuiltInPolicyType.GROUP;
 }

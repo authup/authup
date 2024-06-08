@@ -5,23 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
+import type { BuiltInPolicyType } from '../constants';
 import type { TimePolicyInterval } from './constants';
 
 export interface TimePolicy extends PolicyBase {
-    type: `${PolicyType.TIME}`,
+    type: `${BuiltInPolicyType.TIME}`,
 
     /**
      * Format: HH:MM
      */
-    start?: string,
+    start?: string | number | Date,
 
     /**
      * Format HH:MM
      */
-    end?: string,
+    end?: string | number | Date,
 
+    /**
+     * Interval: daily, weekly, monthly, yearly
+     */
     interval?: TimePolicyInterval,
 
     /**
@@ -40,6 +43,6 @@ export interface TimePolicy extends PolicyBase {
     dayOfYear?: number,
 }
 
-export type TimePolicyEvalContext = Omit<TimePolicy, 'type'>;
+export type TimePolicyOptions = Omit<TimePolicy, 'type'>;
 
 // date policy: startDate, endDate, ...

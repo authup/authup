@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
+import type { BuiltInPolicyType } from '../constants';
 
 export interface DatePolicy extends PolicyBase {
-    type: `${PolicyType.DATE}`,
+    type: `${BuiltInPolicyType.DATE}`,
 
     start?: string | Date | number,
 
     end?: string | Date | number,
 }
 
-export type DatePolicyEvalContext = Omit<DatePolicy, 'type'>;
+export type DatePolicyOptions = Omit<DatePolicy, 'type'>;

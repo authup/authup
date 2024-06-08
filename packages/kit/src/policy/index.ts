@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './enforcer';
 export * from './protocol';
 export * from './constants';
 export * from './types';

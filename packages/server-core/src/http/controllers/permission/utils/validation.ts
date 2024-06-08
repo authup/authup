@@ -11,7 +11,7 @@ import { BadRequestError } from '@ebec/http';
 import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
 import type { PermissionEntity } from '../../../../domains';
-import { RealmEntity } from '../../../../domains';
+import { PolicyEntity, RealmEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
@@ -53,6 +53,12 @@ export async function runPermissionValidation(
             .run(req);
     }
 
+    await check('policy_id')
+        .isUUID()
+        .optional({ values: 'null' })
+        .default(null)
+        .run(req);
+
     // ----------------------------------------------
 
     const validation = validationResult(req);
@@ -61,6 +67,13 @@ export async function runPermissionValidation(
     }
 
     result.data = matchedValidationData(req, { includeOptionals: true });
+
+    // ----------------------------------------------
+
+    await extendExpressValidationResultWithRelation(result, PolicyEntity, {
+        id: 'policy_id',
+        entity: 'policy',
+    });
 
     // ----------------------------------------------
 

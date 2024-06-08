@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
+import type { BuiltInPolicyType } from '../constants';
 
 export interface AttributeNamesPolicy extends PolicyBase {
-    type: `${PolicyType.ATTRIBUTE_NAMES}`,
+    type: `${BuiltInPolicyType.ATTRIBUTE_NAMES}`,
 
     names: string[],
 }
 
-export type AttributeNamesPolicyEvalContext = Omit<AttributeNamesPolicy, 'type'>;
+export type AttributeNamesPolicyOptions = Omit<AttributeNamesPolicy, 'type'>;

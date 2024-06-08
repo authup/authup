@@ -6,19 +6,24 @@
  */
 
 import { EventEmitter } from '@posva/event-emitter';
-import { PolicyDecisionStrategy, evalGroupPolicy } from '../policy';
+import type { PolicyEvaluationContext } from '../policy';
+import { PolicyEnforcer } from '../policy';
 
 import type { AbilitiesFilterOptions, Ability } from './types';
 
 export class Abilities extends EventEmitter<{
     updated: []
 }> {
+    protected policyEnforcer : PolicyEnforcer;
+
     protected items: Ability[];
 
     // ----------------------------------------------
 
     constructor(input: Ability[] | Ability = []) {
         super();
+
+        this.policyEnforcer = new PolicyEnforcer();
 
         this.set(input);
     }
@@ -29,9 +34,9 @@ export class Abilities extends EventEmitter<{
      * Check if permission is assigned without evaluation of any policies.
      *
      * @param name
-     * @param target
+     * @param evaluationContext
      */
-    has(name: string | string[], target?: Record<string, any>) : boolean {
+    has(name: string | string[], evaluationContext?: PolicyEvaluationContext) : boolean {
         if (Array.isArray(name)) {
             return name.some((item) => this.has(item));
         }
@@ -49,19 +54,12 @@ export class Abilities extends EventEmitter<{
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
-            if (!item.policies) {
+            if (!item.policy) {
                 continue;
             }
 
             hasPolicies = true;
-            const outcome = evalGroupPolicy(
-                {
-                    invert: false,
-                    children: item.policies,
-                    decisionStrategy: item.decisionStrategy || PolicyDecisionStrategy.UNANIMOUS,
-                },
-                target,
-            );
+            const outcome = this.policyEnforcer.execute(item.policy, evaluationContext);
 
             if (outcome) {
                 return true;
@@ -72,20 +70,6 @@ export class Abilities extends EventEmitter<{
     }
 
     // ----------------------------------------------
-
-    /**
-     * Find the first matching ability.
-     *
-     * @param input
-     */
-    findOne(input?: string | AbilitiesFilterOptions) : Ability | undefined {
-        const items = this.find(input);
-        if (items.length === 0) {
-            return undefined;
-        }
-
-        return items[0];
-    }
 
     /**
      * Find all matching abilities.

@@ -18,6 +18,7 @@ export function registerErrorMiddleware(router: Router) {
         request,
         response,
     ) => {
+        console.log(error.cause);
         // catch and decorate some db errors :)
         switch (error.code) {
             case 'ER_DUP_ENTRY':

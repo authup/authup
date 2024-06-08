@@ -6,12 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { RobotPermissionEntity } from '../../../../domains';
-import { PermissionEntity, RobotEntity } from '../../../../domains';
-import { isRequestSubOwner, useRequestEnv } from '../../../utils';
+import { PermissionEntity, PolicyEntity, RobotEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
@@ -40,6 +40,12 @@ export async function runRobotPermissionValidation(
             .run(req);
     }
 
+    await check('policy_id')
+        .isUUID()
+        .optional({ values: 'null' })
+        .default(null)
+        .run(req);
+
     // ----------------------------------------------
 
     const validation = validationResult(req);
@@ -51,25 +57,17 @@ export async function runRobotPermissionValidation(
 
     // ----------------------------------------------
 
-    const ability = useRequestEnv(req, 'abilities');
-
     await extendExpressValidationResultWithRelation(result, PermissionEntity, {
         id: 'permission_id',
         entity: 'permission',
     });
 
-    if (result.relation.permission) {
-        if (result.relation.permission.target) {
-            result.data.target = result.relation.permission.target;
-        }
+    // ----------------------------------------------
 
-        if (
-            !isRequestSubOwner(req) &&
-            !ability.has(result.relation.permission.name)
-        ) {
-            throw new ForbiddenError('It is only allowed to assign robot permissions, which are also owned.');
-        }
-    }
+    await extendExpressValidationResultWithRelation(result, PolicyEntity, {
+        id: 'policy_id',
+        entity: 'policy',
+    });
 
     // ----------------------------------------------
 

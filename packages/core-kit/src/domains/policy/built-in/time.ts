@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TimePolicy as BaseTimePolicy, PolicyType } from '@authup/kit';
+import type { TimePolicy as BaseTimePolicy, BuiltInPolicyType } from '@authup/kit';
 import type { Policy } from '../entity';
 
-export interface TimePolicy extends Policy, BaseTimePolicy {
-    type: `${PolicyType.TIME}`
+export interface TimePolicy extends Policy, Omit<BaseTimePolicy, 'invert'> {
+    type: `${BuiltInPolicyType.TIME}`
 }

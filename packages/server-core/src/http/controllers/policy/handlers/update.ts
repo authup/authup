@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType, isPropertySet } from '@authup/kit';
+import { BuiltInPolicyType, isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -41,7 +41,7 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
         if (result.data.parent_id) {
             const parent = await repository.findOneBy({ id: result.data.parent_id });
             if (parent) {
-                if (parent.type !== PolicyType.GROUP) {
+                if (parent.type !== BuiltInPolicyType.GROUP) {
                     throw new BadRequestError('The parent policy must be of type group.');
                 }
             }

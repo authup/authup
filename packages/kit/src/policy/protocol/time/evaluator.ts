@@ -5,25 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyBase, PolicyEvaluator } from '../../types';
+import type {
+    AnyPolicy, PolicyEvaluationContext, PolicyEvaluator,
+} from '../../types';
 import { invertPolicyOutcome } from '../../utils';
 import { isTimePolicy } from './helper';
-import type { TimePolicyEvalContext } from './types';
+import type { TimePolicyOptions } from './types';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
-function normalizeDate(input: Date) {
-    const date = new Date();
+function normalizeDate(input: Date, dateRef?: Date) {
+    const date = new Date(dateRef);
     date.setHours(input.getHours(), input.getMinutes());
 
     return date;
 }
 
-function toDate(input: Date | string | number) : Date {
+function toDate(
+    input: Date | string | number,
+    dateRef?: Date,
+) : Date {
     if (typeof input === 'string') {
         if (timeRegex.test(input)) {
             const [startHours, startMinutes] = input.split(':').map(Number);
-            const date = new Date();
+            const date = new Date(dateRef);
             date.setHours(startHours, startMinutes);
             return date;
         }
@@ -38,29 +43,34 @@ function toDate(input: Date | string | number) : Date {
     return input;
 }
 
-export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyEvalContext> {
-    try(policy: PolicyBase): boolean {
+export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
+    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
         if (!isTimePolicy(policy)) {
             return false;
         }
 
-        return this.execute(policy);
+        return this.execute(policy, context);
     }
 
-    execute(policy: TimePolicyEvalContext): boolean {
-        const now = new Date();
+    execute(policy: TimePolicyOptions, context: PolicyEvaluationContext): boolean {
+        let now : Date;
+        if (context.dateTime) {
+            now = toDate(context.dateTime);
+        } else {
+            now = new Date();
+        }
 
         if (policy.start) {
-            const start = normalizeDate(toDate(policy.start));
+            const start = normalizeDate(toDate(policy.start, now), now);
 
-            if (now > start) {
+            if (now < start) {
                 return invertPolicyOutcome(false, policy.invert);
             }
         }
 
         if (policy.end) {
-            const end = normalizeDate(toDate(policy.end));
-            if (end < now) {
+            const end = normalizeDate(toDate(policy.end, now), now);
+            if (now > end) {
                 return invertPolicyOutcome(false, policy.invert);
             }
         }

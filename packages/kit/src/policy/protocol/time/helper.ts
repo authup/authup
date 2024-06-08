@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from '../../constants';
-import type { PolicyBase } from '../../types';
+import type { AnyPolicy } from '../../types';
+import { BuiltInPolicyType } from '../constants';
 import type { TimePolicy } from './types';
 
-export function isTimePolicy(input: PolicyBase) : input is TimePolicy {
-    return input.type === PolicyType.TIME;
+export function isTimePolicy(input: AnyPolicy) : input is TimePolicy {
+    return input.type === BuiltInPolicyType.TIME;
 }

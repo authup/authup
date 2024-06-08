@@ -5,27 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributeNamesPolicy } from '@authup/kit';
+import type { DatePolicy } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
+
 import zod from 'zod';
 import { extractAttributes } from '../../../utils';
 
 const schema = zod.object({
-    names: zod.array(zod.string()),
+    start: zod.date().or(zod.string()).or(zod.number()).optional(),
+    end: zod.date().or(zod.string()).or(zod.number()).optional(),
 });
 
 /**
  * @throws ZodError
  * @param body
  */
-export function validateAttributeNamesPolicyShaping(body: Record<string, any>) : Partial<AttributeNamesPolicy> {
+export function validateDatePolicyShaping(body: Record<string, any>) : Partial<DatePolicy> {
     let attributes : Record<string, any>;
     if (isObject(body)) {
-        attributes = extractAttributes<keyof AttributeNamesPolicy>(body, ['names']);
+        attributes = extractAttributes<keyof DatePolicy>(body, [
+            'end',
+            'start',
+        ]);
     } else {
         attributes = {};
     }
-
     const result = schema.safeParse(attributes);
     if (result.success === false) {
         throw result.error;

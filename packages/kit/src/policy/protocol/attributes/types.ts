@@ -6,17 +6,17 @@
  */
 
 import type { MongoQuery } from '@ucast/mongo2js';
-import type { PolicyType } from '../../constants';
 import type { PolicyBase } from '../../types';
+import type { BuiltInPolicyType } from '../constants';
 
 export interface AttributesPolicy<
     T extends Record<string, any> = Record<string, any>,
 > extends PolicyBase {
-    type: `${PolicyType.ATTRIBUTES}`,
+    type: `${BuiltInPolicyType.ATTRIBUTES}`,
 
     conditions: MongoQuery<T>
 }
 
-export type AttributesPolicyEvalContext<
+export type AttributesPolicyOptions<
     T extends Record<string, any> = Record<string, any>,
 > = Omit<AttributesPolicy<T>, 'type'>;

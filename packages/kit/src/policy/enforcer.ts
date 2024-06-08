@@ -5,33 +5,59 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyType } from './constants';
 import {
-    GroupPolicyEvaluator,
+    AttributeNamesPolicyEvaluator,
+    AttributesPolicyEvaluator, BuiltInPolicyType, DatePolicyEvaluator,
+    PolicyGroupEvaluator, TimePolicyEvaluator,
 } from './protocol';
-import type { PolicyBase, PolicyEvaluationContext, PolicyEvaluator } from './types';
+import type {
+    AnyPolicy,
+    PolicyEvaluationContext,
+    PolicyEvaluator,
+} from './types';
 
 export class PolicyEnforcer {
     protected evaluators : Record<string, PolicyEvaluator>;
 
-    constructor(evaluators: Record<string, PolicyEvaluator>) {
-        this.evaluators = evaluators;
-
-        this.evaluators[PolicyType.GROUP] = new GroupPolicyEvaluator(this.evaluators);
+    constructor() {
+        this.evaluators = {};
+        this.registerDefaultEvaluators();
     }
 
-    execute(policies: PolicyBase[], context: PolicyEvaluationContext) {
-        for (let i = 0; i < policies.length; i++) {
-            if (!this.evaluate(policies[i], context)) {
-                return false;
+    public registerEvaluator(
+        type: string,
+        evaluator: PolicyEvaluator,
+    ) : void {
+        this.evaluators[type] = evaluator;
+    }
+
+    private registerDefaultEvaluators() {
+        this.registerEvaluator(BuiltInPolicyType.GROUP, new PolicyGroupEvaluator(this.evaluators));
+        this.registerEvaluator(BuiltInPolicyType.ATTRIBUTES, new AttributesPolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
+    }
+
+    execute(
+        policies: AnyPolicy[] | AnyPolicy,
+        context: PolicyEvaluationContext,
+    ) : boolean {
+        if (Array.isArray(policies)) {
+            for (let i = 0; i < policies.length; i++) {
+                if (!this.evaluate(policies[i], context)) {
+                    return false;
+                }
             }
+
+            return true;
         }
 
-        return true;
+        return this.execute([policies], context);
     }
 
     evaluate(
-        policy: PolicyBase,
+        policy: AnyPolicy,
         context: PolicyEvaluationContext,
     ) : boolean {
         const evaluator = this.evaluators[policy.type];

@@ -4,16 +4,40 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { Ability } from '@authup/kit';
+import type { Ability, AnyPolicy, GroupPolicy } from '@authup/kit';
+import {
+    BuiltInPolicyType,
+    PolicyDecisionStrategy,
+} from '@authup/kit';
 import type { PermissionRelation } from './entity';
 
-export function buildAbility(entity: PermissionRelation): Ability {
+export function buildAbilityFromPermissionRelation(entity: PermissionRelation): Ability {
     if (typeof entity.permission === 'undefined') {
         throw new SyntaxError('The permission relation attribute is mandatory.');
+    }
+
+    let policy : AnyPolicy | undefined;
+    if (
+        entity.permission.policy &&
+        entity.policy
+    ) {
+        policy = {
+            type: BuiltInPolicyType.GROUP,
+            decisionStrategy: PolicyDecisionStrategy.UNANIMOUS,
+            children: [
+                entity.permission.policy,
+                entity.policy,
+            ],
+        } satisfies GroupPolicy;
+    } else if (entity.policy) {
+        policy = entity.policy;
+    } else if (entity.permission.policy) {
+        policy = entity.policy;
     }
 
     return {
         name: entity.permission.name,
         realmId: entity.permission.realm_id,
-    };
+        policy,
+    } satisfies Ability;
 }

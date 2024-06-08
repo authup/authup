@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { GroupPolicy as BaseGroupPolicy, PolicyType } from '@authup/kit';
+import type { AttributesPolicy as BaseAttributesPolicy, BuiltInPolicyType } from '@authup/kit';
 import type { Policy } from '../entity';
 
-export interface GroupPolicy extends Policy, BaseGroupPolicy {
-    type: `${PolicyType.GROUP}`
+export interface AttributesPolicy extends Policy, Omit<BaseAttributesPolicy, 'invert'> {
+    type: `${BuiltInPolicyType.ATTRIBUTES}`
 }

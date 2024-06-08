@@ -11,7 +11,7 @@ import zod from 'zod';
 import { extractAttributes } from '../../../utils';
 
 const schema = zod.object({
-    condition: zod.any(),
+    conditions: zod.any(),
 });
 
 /**
