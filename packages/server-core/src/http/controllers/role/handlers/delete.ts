@@ -37,12 +37,6 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!ability.satisfy(PermissionName.ROLE_DROP, { target: entity.target })) {
-        throw new ForbiddenError('You are not permitted for the role target.');
-    }
-
-    // ----------------------------------------------
-
     const { id: entityId } = entity;
 
     await repository.remove(entity);

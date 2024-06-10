@@ -15,7 +15,8 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Permission, Realm } from '@authup/core-kit';
+import { Permission, Policy, Realm } from '@authup/core-kit';
+import { PolicyEntity } from '../policy';
 import { RealmEntity } from '../realm';
 
 @Unique(['name', 'realm_id'])
@@ -35,6 +36,15 @@ export class PermissionEntity implements Permission {
 
     @Column({ type: 'varchar', length: 16, nullable: true })
         target: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Column({ type: 'varchar', nullable: true })
+        policy_id: string | null;
+
+    @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'policy_id' })
+        policy: Policy | null;
 
     // ------------------------------------------------------------------
 

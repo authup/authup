@@ -13,7 +13,7 @@ import type {
     Role,
 } from '@authup/core-kit';
 import {
-    buildAbility,
+    buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
 import { RoleEntity } from './entity';
@@ -27,13 +27,15 @@ export class RoleRepository extends Repository<RoleEntity> {
     async getOwnedPermissionsByMany(
         ids: Role['id'][],
     ) : Promise<Ability[]> {
-        const permissions = [];
+        const promises : Promise<Ability[]>[] = [];
 
         for (let i = 0; i < ids.length; i++) {
-            permissions.push(...await this.getOwnedPermissions(ids[i]));
+            promises.push(this.getOwnedPermissions(ids[i]));
         }
 
-        return permissions;
+        const abilities = await Promise.all(promises);
+
+        return abilities.flat();
     }
 
     async getOwnedPermissions(
@@ -46,7 +48,10 @@ export class RoleRepository extends Repository<RoleEntity> {
                 role_id: id,
             },
             relations: {
-                permission: true,
+                policy: true,
+                permission: {
+                    policy: true,
+                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -57,11 +62,6 @@ export class RoleRepository extends Repository<RoleEntity> {
             },
         });
 
-        const result : Ability[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            result.push(buildAbility(entities[i]));
-        }
-
-        return result;
+        return entities.map((entity) => buildAbilityFromPermissionRelation(entity));
     }
 }

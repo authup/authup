@@ -6,12 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { BadRequestError } from '@ebec/http';
+import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { RolePermissionEntity } from '../../../../domains';
-import { PermissionEntity, RoleEntity } from '../../../../domains';
-import { isRequestSubOwner, useRequestEnv } from '../../../utils';
+import { PermissionEntity, PolicyEntity, RoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
@@ -20,7 +20,7 @@ import {
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runRolePermissionValidation(
     req: Request,
@@ -38,19 +38,12 @@ export async function runRolePermissionValidation(
             .exists()
             .isUUID()
             .run(req);
-
-        await check('target')
-            .exists()
-            .isString()
-            .isLength({ min: 3, max: 16 })
-            .optional({ nullable: true })
-            .run(req);
     }
 
-    await check('condition')
-        .exists()
-        .isObject()
-        .optional({ nullable: true })
+    await check('policy_id')
+        .isUUID()
+        .optional({ values: 'null' })
+        .default(null)
         .run(req);
 
     // ----------------------------------------------
@@ -64,30 +57,17 @@ export async function runRolePermissionValidation(
 
     // ----------------------------------------------
 
-    const ability = useRequestEnv(req, 'abilities');
-
     await extendExpressValidationResultWithRelation(result, PermissionEntity, {
         id: 'permission_id',
         entity: 'permission',
     });
 
-    if (result.relation.permission) {
-        if (result.relation.permission.target) {
-            result.data.target = result.relation.permission.target;
-        }
+    // ----------------------------------------------
 
-        if (
-            !isRequestSubOwner(req) &&
-            !ability.has(result.relation.permission.name)
-        ) {
-            throw new ForbiddenError('It is only allowed to assign role permissions, which are also owned.');
-        }
-    }
-
-    const permission = ability.findOne(PermissionName.ROLE_PERMISSION_ADD);
-    if (permission) {
-        result.data.target = permission.target;
-    }
+    await extendExpressValidationResultWithRelation(result, PolicyEntity, {
+        id: 'policy_id',
+        entity: 'policy',
+    });
 
     // ----------------------------------------------
 

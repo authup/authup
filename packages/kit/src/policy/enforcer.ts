@@ -1,0 +1,70 @@
+/*
+ * Copyright (c) 2024.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import {
+    AttributeNamesPolicyEvaluator,
+    AttributesPolicyEvaluator, BuiltInPolicyType, DatePolicyEvaluator,
+    PolicyGroupEvaluator, TimePolicyEvaluator,
+} from './protocol';
+import type {
+    AnyPolicy,
+    PolicyEvaluationContext,
+    PolicyEvaluator,
+} from './types';
+
+export class PolicyEnforcer {
+    protected evaluators : Record<string, PolicyEvaluator>;
+
+    constructor() {
+        this.evaluators = {};
+        this.registerDefaultEvaluators();
+    }
+
+    public registerEvaluator(
+        type: string,
+        evaluator: PolicyEvaluator,
+    ) : void {
+        this.evaluators[type] = evaluator;
+    }
+
+    private registerDefaultEvaluators() {
+        this.registerEvaluator(BuiltInPolicyType.GROUP, new PolicyGroupEvaluator(this.evaluators));
+        this.registerEvaluator(BuiltInPolicyType.ATTRIBUTES, new AttributesPolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
+    }
+
+    execute(
+        policies: AnyPolicy[] | AnyPolicy,
+        context: PolicyEvaluationContext,
+    ) : boolean {
+        if (Array.isArray(policies)) {
+            for (let i = 0; i < policies.length; i++) {
+                if (!this.evaluate(policies[i], context)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return this.execute([policies], context);
+    }
+
+    evaluate(
+        policy: AnyPolicy,
+        context: PolicyEvaluationContext,
+    ) : boolean {
+        const evaluator = this.evaluators[policy.type];
+        if (!evaluator) {
+            throw new Error('');
+        }
+
+        return evaluator.try(policy, context);
+    }
+}

@@ -5,27 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MongoQuery } from '@ucast/mongo2js';
+import type { AnyPolicy, PolicyDecisionStrategy } from '../policy';
 
-export type AbilityCondition<T = any> = MongoQuery<T>;
-
-export type Ability<T extends Record<string, any> = Record<string, any>> = {
+export type Ability = {
     name: string,
-    inverse?: boolean,
-    condition?: AbilityCondition<T> | null,
-    fields?: string[] | null,
-    target?: string | null,
-    power?: number | null,
-    realmId?: string | null
+    realmId?: string | null,
+    decisionStrategy?: `${PolicyDecisionStrategy}`,
+    policy?: AnyPolicy,
 };
 
 export type AbilitiesFilterOptions = {
     realmId?: string | null,
     name?: string,
-    inverse?: boolean,
     object?: Record<string, any>,
-    field?: string | string[],
-    target?: string,
-    power?: number,
     fn?: (input: Ability) => boolean
 };

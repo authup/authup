@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RolePermissionEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 /**
  * Drop a permission by id of a specific user.
@@ -39,12 +39,6 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)) {
         throw new ForbiddenError();
-    }
-
-    // ----------------------------------------------
-
-    if (!ability.satisfy(PermissionName.ROLE_PERMISSION_DROP, { target: entity.target })) {
-        throw new ForbiddenError('You are not permitted for the role-permission target.');
     }
 
     // ----------------------------------------------

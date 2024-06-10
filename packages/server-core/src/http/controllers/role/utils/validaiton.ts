@@ -7,7 +7,7 @@
 
 import { isPropertySet } from '@authup/kit';
 import {
-    PermissionName, isRealmResourceWritable, isValidRoleName,
+    isRealmResourceWritable, isValidRoleName,
 } from '@authup/core-kit';
 import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
@@ -55,13 +55,6 @@ export async function runRoleValidation(
         .optional({ nullable: true })
         .run(req);
 
-    await check('target')
-        .exists()
-        .isString()
-        .isLength({ min: 3, max: 16 })
-        .optional({ nullable: true })
-        .run(req);
-
     if (operation === 'create') {
         await check('realm_id')
             .exists()
@@ -96,22 +89,6 @@ export async function runRoleValidation(
         !isRealmResourceWritable(useRequestEnv(req, 'realm'))
     ) {
         throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-    }
-
-    // ----------------------------------------------
-
-    const ability = useRequestEnv(req, 'abilities');
-
-    if (operation === RequestHandlerOperation.CREATE) {
-        const permissionTarget = ability.findOne(PermissionName.ROLE_ADD);
-        if (permissionTarget) {
-            result.data.target = permissionTarget.target;
-        }
-    } else {
-        const permissionTarget = ability.findOne(PermissionName.ROLE_EDIT);
-        if (permissionTarget) {
-            result.data.target = permissionTarget.target;
-        }
     }
 
     // ----------------------------------------------

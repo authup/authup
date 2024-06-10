@@ -5,22 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AbilityCondition, EventPayload } from '@authup/kit';
+import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
+import type { Policy } from '../policy';
 import type { Realm } from '../realm';
 
 export interface PermissionRelation {
-    power: number;
+    policy_id: Policy['id'] | null;
 
-    condition: AbilityCondition | null;
-
-    fields: string | null;
-
-    negation: boolean;
-
-    target: string | null;
-
-    // ------------------------------------------------------------------
+    policy: Policy | null;
 
     permission_id: Permission['id'];
 
@@ -40,7 +33,11 @@ export interface Permission {
 
     description: string | null;
 
-    target: string | null;
+    // ------------------------------------------------------------------
+
+    policy_id: Policy['id'] | null;
+
+    policy: Policy | null;
 
     // ------------------------------------------------------------------
 

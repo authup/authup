@@ -6,13 +6,16 @@
  */
 
 import { EventEmitter } from '@posva/event-emitter';
-import { guard } from '@ucast/mongo2js';
+import type { PolicyEvaluationContext } from '../policy';
+import { PolicyEnforcer } from '../policy';
 
 import type { AbilitiesFilterOptions, Ability } from './types';
 
 export class Abilities extends EventEmitter<{
     updated: []
 }> {
+    protected policyEnforcer : PolicyEnforcer;
+
     protected items: Ability[];
 
     // ----------------------------------------------
@@ -20,42 +23,20 @@ export class Abilities extends EventEmitter<{
     constructor(input: Ability[] | Ability = []) {
         super();
 
+        this.policyEnforcer = new PolicyEnforcer();
+
         this.set(input);
     }
 
     // ----------------------------------------------
 
     /**
-     * Check if permission is assigned with field and condition restriction.
-     */
-    satisfy(options: AbilitiesFilterOptions) : boolean;
-
-    satisfy(name: string, options?: AbilitiesFilterOptions) : boolean;
-
-    satisfy(name: AbilitiesFilterOptions | string, options: AbilitiesFilterOptions = {}) : boolean {
-        let items : Ability[];
-        if (typeof name === 'string') {
-            options.name = name;
-            if (typeof options.realmId === 'undefined') {
-                options.realmId = null;
-            }
-            items = this.find(options);
-        } else {
-            items = this.find({
-                ...name,
-                ...options,
-            });
-        }
-
-        return items.length > 0;
-    }
-
-    /**
-     * Check if permission is assigned without any restrictions.
+     * Check if permission is assigned without evaluation of any policies.
      *
      * @param name
+     * @param evaluationContext
      */
-    has(name: string | string[]) : boolean {
+    has(name: string | string[], evaluationContext?: PolicyEvaluationContext) : boolean {
         if (Array.isArray(name)) {
             return name.some((item) => this.has(item));
         }
@@ -65,24 +46,30 @@ export class Abilities extends EventEmitter<{
             realmId: null,
         });
 
-        return items.length > 0;
+        if (items.length === 0) {
+            return false;
+        }
+
+        let hasPolicies = false;
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (!item.policy) {
+                continue;
+            }
+
+            hasPolicies = true;
+            const outcome = this.policyEnforcer.execute(item.policy, evaluationContext);
+
+            if (outcome) {
+                return true;
+            }
+        }
+
+        return !hasPolicies;
     }
 
     // ----------------------------------------------
-
-    /**
-     * Find the first matching ability.
-     *
-     * @param input
-     */
-    findOne(input?: string | AbilitiesFilterOptions) : Ability | undefined {
-        const items = this.find(input);
-        if (items.length === 0) {
-            return undefined;
-        }
-
-        return items[0];
-    }
 
     /**
      * Find all matching abilities.
@@ -126,66 +113,10 @@ export class Abilities extends EventEmitter<{
                 continue;
             }
 
-            if (
-                !options.inverse &&
-                this.items[i].inverse
-            ) {
-                continue;
-            }
-
-            if (
-                this.items[i].condition &&
-                options.object
-            ) {
-                const test = guard(this.items[i].condition);
-                if (!test(options.object)) {
-                    continue;
-                }
-            }
-
             if (options.fn) {
                 if (!options.fn(this.items[i])) {
                     continue;
                 }
-            }
-
-            if (
-                options.field &&
-                this.items[i].fields
-            ) {
-                const fields = Array.isArray(options.field) ?
-                    options.field :
-                    [options.field];
-
-                let index : number;
-                let valid : boolean = true;
-                for (let j = 0; j < fields.length; j++) {
-                    index = this.items[i].fields.indexOf(fields[i]);
-                    if (index === -1) {
-                        valid = false;
-                        break;
-                    }
-                }
-
-                if (!valid) {
-                    continue;
-                }
-            }
-
-            if (
-                options.target &&
-                this.items[i].target &&
-                this.items[i].target !== options.target
-            ) {
-                continue;
-            }
-
-            if (
-                typeof options.power === 'number' &&
-                typeof this.items[i].power === 'number' &&
-                options.power > this.items[i].power
-            ) {
-                continue;
             }
 
             output.push(this.items[i]);
@@ -200,7 +131,6 @@ export class Abilities extends EventEmitter<{
 
     addMany(input: Ability[]) {
         this.items.push(...input);
-        this.sort();
         this.emit('updated');
     }
 
@@ -209,23 +139,6 @@ export class Abilities extends EventEmitter<{
             input :
             [input];
 
-        this.sort();
         this.emit('updated');
-    }
-
-    protected sort() {
-        this.items
-            .sort((a, b) => {
-                if (typeof a.target === 'undefined' || a.target === null) {
-                    return -1;
-                }
-
-                if (typeof b.target === 'undefined' || b.target === null) {
-                    return 1;
-                }
-
-                return 0;
-            })
-            .sort((a, b) => b.power - a.power);
     }
 }

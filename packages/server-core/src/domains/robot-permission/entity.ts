@@ -15,15 +15,11 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
-    AbilityCondition,
-    deserialize,
-    serialize,
-} from '@authup/kit';
-import {
-    Permission, Robot,
+    Permission, Policy, Robot,
 } from '@authup/core-kit';
 import type { Realm, RobotPermission } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
+import { PolicyEntity } from '../policy';
 import { RobotEntity } from '../robot/entity';
 import { RealmEntity } from '../realm';
 
@@ -33,34 +29,14 @@ export class RobotPermissionEntity implements RobotPermission {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'int', default: 999 })
-        power: number;
-
-    @Column({
-        type: 'text',
-        nullable: true,
-        default: null,
-        transformer: {
-            to(value: any): any {
-                return serialize(value);
-            },
-            from(value: any): any {
-                return deserialize(value);
-            },
-        },
-    })
-        condition: AbilityCondition | null;
-
-    @Column({ type: 'text', nullable: true, default: null })
-        fields: string | null;
-
-    @Column({ type: 'boolean', default: false })
-        negation: boolean;
-
-    @Column({ type: 'varchar', length: 16, nullable: true })
-        target: string | null;
-
     // ------------------------------------------------------------------
+
+    @Column({ type: 'varchar', nullable: true })
+        policy_id: string | null;
+
+    @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'policy_id' })
+        policy: Policy | null;
 
     @Column()
         robot_id: string;

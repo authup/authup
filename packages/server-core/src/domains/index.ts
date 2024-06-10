@@ -15,6 +15,8 @@ export * from './identity-provider-account';
 export * from './identity-provider-role';
 export * from './refresh-token';
 export * from './permission';
+export * from './policy';
+export * from './policy-attribute';
 export * from './realm';
 export * from './robot';
 export * from './robot-permission';

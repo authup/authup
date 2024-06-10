@@ -6,7 +6,6 @@
  */
 
 import type { UserPermission } from '@authup/core-kit';
-import type { AbilityCondition } from '@authup/kit';
 import { createSuperTestPermission, createSuperTestUser } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -24,11 +23,6 @@ describe('src/http/controllers/user-permission', () => {
     });
 
     const details : Partial<UserPermission> = {};
-    const condition : AbilityCondition = {
-        age: {
-            $gt: 5,
-        },
-    };
 
     it('should create resource', async () => {
         const { body: user } = await createSuperTestUser(superTest);
@@ -39,7 +33,6 @@ describe('src/http/controllers/user-permission', () => {
             .send({
                 user_id: user.id,
                 permission_id: permission.id,
-                condition,
             })
             .auth('admin', 'start123');
 
@@ -69,7 +62,6 @@ describe('src/http/controllers/user-permission', () => {
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
-        expect(response.body.condition).toEqual(condition);
 
         expectPropertiesEqualToSrc(details, response.body);
     });
