@@ -6,7 +6,7 @@
  */
 
 import type {
-    IdentityProviderRole,
+    IdentityProviderRoleMapping,
 } from '@authup/core-kit';
 import {
     DomainEventName,
@@ -28,7 +28,7 @@ import { CachePrefix, IdentityProviderRoleEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
-    data: IdentityProviderRole,
+    data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
         { channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id) },
@@ -70,7 +70,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderRoleMapping);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderRoleEntity>): Promise<any> {
@@ -87,7 +87,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderRoleEntity>): Promise<any> {
@@ -104,6 +104,6 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderRoleMapping);
     }
 }

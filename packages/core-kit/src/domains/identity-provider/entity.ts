@@ -33,6 +33,18 @@ export interface IdentityProvider {
     realm: Realm;
 }
 
+export interface IdentityProviderMappingRelation {
+    synchronisation_mode: string;
+
+    provider_id: IdentityProvider['id'];
+
+    provider: IdentityProvider;
+
+    provider_realm_id: Realm['id'] | null;
+
+    provider_realm: Realm | null;
+}
+
 export type IdentityProviderEventContext = EventPayload & {
     type: `${DomainType.IDENTITY_PROVIDER}`,
     data: IdentityProvider

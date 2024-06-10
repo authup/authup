@@ -7,14 +7,18 @@
 
 import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
-import type { IdentityProvider } from '../identity-provider';
+import type { IdentityProvider, IdentityProviderMappingRelation } from '../identity-provider';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
 
-export interface IdentityProviderRole {
+export interface IdentityProviderRoleMapping extends IdentityProviderMappingRelation {
     id: string;
 
-    external_id: string;
+    key: string | null;
+
+    value: string | null;
+
+    value_is_regex: string | null;
 
     created_at: Date;
 
@@ -41,5 +45,5 @@ export interface IdentityProviderRole {
 
 export type IdentityProviderRoleEventContext = EventPayload & {
     type: `${DomainType.IDENTITY_PROVIDER_ROLE}`,
-    data: IdentityProviderRole
+    data: IdentityProviderRoleMapping
 };

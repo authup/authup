@@ -15,7 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProviderRole, Realm } from '@authup/core-kit';
+import type { IdentityProviderRoleMapping, Realm } from '@authup/core-kit';
 import { Role } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
 import { RoleEntity } from '../role';
@@ -24,12 +24,12 @@ import { RealmEntity } from '../realm';
 @Entity({ name: 'auth_identity_provider_roles' })
 @Index(['provider_id', 'role_id'], { unique: true })
 @Index(['provider_id', 'external_id'], { unique: true })
-export class IdentityProviderRoleEntity implements IdentityProviderRole {
+export class IdentityProviderRoleEntity implements IdentityProviderRoleMapping {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
     @Column({ type: 'varchar', length: 36 })
-        external_id: string;
+        value: string;
 
     @CreateDateColumn()
         created_at: Date;

@@ -12,7 +12,7 @@ import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, defineComponent, h, reactive, ref,
 } from 'vue';
-import type { IdentityProviderRole, Role } from '@authup/core-kit';
+import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import {
     TranslatorTranslationDefaultKey,
@@ -32,7 +32,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProviderRole>(),
+    emits: defineEntityManagerEvents<IdentityProviderRoleMapping>(),
     async setup(props, setup) {
         const display = ref(false);
         const toggleDisplay = () => {

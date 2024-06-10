@@ -11,7 +11,7 @@ import type { DomainType } from './contstants';
 import type { IdentityProvider, IdentityProviderEventContext } from './identity-provider';
 import type { IdentityProviderAccount, IdentityProviderAccountEventContext } from './identity-provider-account';
 import type { IdentityProviderAttribute, IdentityProviderAttributeEventContext } from './identity-provider-attribute';
-import type { IdentityProviderRole, IdentityProviderRoleEventContext } from './identity-provider-role';
+import type { IdentityProviderRoleEventContext, IdentityProviderRoleMapping } from './identity-provider-role-mapping';
 import type { Permission, PermissionEventContext } from './permission';
 import type { Realm, RealmEventContext } from './realm';
 import type { Robot, RobotEventContext } from './robot';
@@ -77,7 +77,7 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                 T extends `${DomainType.IDENTITY_PROVIDER_ATTRIBUTE}` ?
                     IdentityProviderAttribute :
                     T extends `${DomainType.IDENTITY_PROVIDER_ROLE}` ?
-                        IdentityProviderRole :
+                        IdentityProviderRoleMapping :
                         T extends `${DomainType.PERMISSION}` ?
                             Permission :
                             T extends `${DomainType.REALM}` ?
