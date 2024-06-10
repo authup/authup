@@ -8,11 +8,11 @@
 import type { AttributeNamesPolicy } from './attribute-names';
 import type { AttributesPolicy } from './attributes';
 import type { DatePolicy } from './date';
-import type { GroupPolicy } from './group';
+import type { CompositePolicy } from './composite';
 import type { TimePolicy } from './time';
 
 export type BuiltInPolicy<T> = AttributesPolicy<T> |
 AttributeNamesPolicy |
 DatePolicy |
-GroupPolicy |
+CompositePolicy |
 TimePolicy;

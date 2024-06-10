@@ -9,11 +9,11 @@ import { PolicyDecisionStrategy } from '../../constants';
 import type { AnyPolicy, PolicyEvaluator } from '../../types';
 import { invertPolicyOutcome } from '../../utils';
 import { isGroupPolicy } from './helper';
-import type { PolicyGroupOptions } from './types';
+import type { CompositePolicyOptions } from './types';
 
-export class PolicyGroupEvaluator<
+export class CompositePolicyEvaluator<
     C extends Record<string, any> = Record<string, any>,
-> implements PolicyEvaluator<PolicyGroupOptions, C> {
+> implements PolicyEvaluator<CompositePolicyOptions, C> {
     protected evaluators : Record<string, PolicyEvaluator>;
 
     constructor(evaluators: Record<string, PolicyEvaluator>) {
@@ -28,7 +28,7 @@ export class PolicyGroupEvaluator<
         return this.execute(policy, context);
     }
 
-    execute(policy: PolicyGroupOptions, context: C): boolean {
+    execute(policy: CompositePolicyOptions, context: C): boolean {
         let count = 0;
 
         for (let i = 0; i < policy.children.length; i++) {

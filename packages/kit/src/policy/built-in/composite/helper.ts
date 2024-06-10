@@ -7,8 +7,8 @@
 
 import type { AnyPolicy } from '../../types';
 import { BuiltInPolicyType } from '../constants';
-import type { GroupPolicy } from './types';
+import type { CompositePolicy } from './types';
 
-export function isGroupPolicy(input: AnyPolicy) : input is GroupPolicy {
-    return input.type === BuiltInPolicyType.GROUP;
+export function isGroupPolicy(input: AnyPolicy) : input is CompositePolicy {
+    return input.type === BuiltInPolicyType.COMPOSITE;
 }

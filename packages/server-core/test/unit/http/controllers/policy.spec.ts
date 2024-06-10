@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { GroupPolicy, TimePolicy } from '@authup/core-kit';
+import type { CompositePolicy, TimePolicy } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/kit';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -30,9 +30,9 @@ describe('src/http/controllers/policy', () => {
             .post('/policies')
             .send({
                 name: 'group',
-                type: BuiltInPolicyType.GROUP,
+                type: BuiltInPolicyType.COMPOSITE,
                 invert: false,
-            } as Partial<GroupPolicy>)
+            } as Partial<CompositePolicy>)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);

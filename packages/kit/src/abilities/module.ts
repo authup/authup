@@ -36,7 +36,7 @@ export class Abilities extends EventEmitter<{
      * @param name
      * @param evaluationContext
      */
-    has(name: string | string[], evaluationContext?: PolicyEvaluationContext) : boolean {
+    has(name: string | string[], evaluationContext: PolicyEvaluationContext = {}) : boolean {
         if (Array.isArray(name)) {
             return name.some((item) => this.has(item));
         }

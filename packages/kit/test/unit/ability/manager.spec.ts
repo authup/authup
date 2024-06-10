@@ -5,12 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '../../../src';
-import { Abilities } from '../../../src';
+import type { Ability, AttributeNamesPolicy } from '../../../src';
+import { Abilities, BuiltInPolicyType } from '../../../src';
 
 const testPermissions : Ability[] = [
     {
         name: 'user_edit',
+        policy: {
+            type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+            names: ['name'],
+        } satisfies AttributeNamesPolicy,
     },
     {
         name: 'user_add',
@@ -35,6 +39,14 @@ describe('src/ability/manager.ts', () => {
 
         expect(manager.has('user_add')).toBeTruthy();
         expect(manager.has('something_do')).toBeFalsy();
+    });
+
+    it('should work with policy', () => {
+        manager.set(testPermissions);
+
+        expect(manager.has('user_edit')).toBeTruthy();
+        expect(manager.has('user_edit', { target: { name: 'admin' } })).toBeTruthy();
+        expect(manager.has('user_edit', { target: { id: '123' } })).toBeFalsy();
     });
 
     it('clear and check empty permissions', () => {

@@ -41,7 +41,7 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
         if (result.data.parent_id) {
             const parent = await repository.findOneBy({ id: result.data.parent_id });
             if (parent) {
-                if (parent.type !== BuiltInPolicyType.GROUP) {
+                if (parent.type !== BuiltInPolicyType.COMPOSITE) {
                     throw new BadRequestError('The parent policy must be of type group.');
                 }
             }

@@ -6,6 +6,6 @@
  */
 
 export * from './enforcer';
-export * from './protocol';
+export * from './built-in';
 export * from './constants';
 export * from './types';

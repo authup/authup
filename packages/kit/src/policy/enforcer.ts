@@ -7,9 +7,9 @@
 
 import {
     AttributeNamesPolicyEvaluator,
-    AttributesPolicyEvaluator, BuiltInPolicyType, DatePolicyEvaluator,
-    PolicyGroupEvaluator, TimePolicyEvaluator,
-} from './protocol';
+    AttributesPolicyEvaluator, BuiltInPolicyType, CompositePolicyEvaluator,
+    DatePolicyEvaluator, TimePolicyEvaluator,
+} from './built-in';
 import type {
     AnyPolicy,
     PolicyEvaluationContext,
@@ -32,7 +32,7 @@ export class PolicyEnforcer {
     }
 
     private registerDefaultEvaluators() {
-        this.registerEvaluator(BuiltInPolicyType.GROUP, new PolicyGroupEvaluator(this.evaluators));
+        this.registerEvaluator(BuiltInPolicyType.COMPOSITE, new CompositePolicyEvaluator(this.evaluators));
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTES, new AttributesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());

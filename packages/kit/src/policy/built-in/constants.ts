@@ -6,7 +6,13 @@
  */
 
 export enum BuiltInPolicyType {
-    GROUP = 'group',
+    /**
+     * Bundles different policies.
+     */
+    COMPOSITE = 'composite',
+    /**
+     * Date Based Access Control (DBAC)
+     */
     DATE = 'date',
     /**
      * Time Based Access Control (TBAC)

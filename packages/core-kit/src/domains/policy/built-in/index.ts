@@ -8,6 +8,6 @@
 export * from './attribute-names';
 export * from './attributes';
 export * from './date';
-export * from './group';
+export * from './composite';
 export * from './time';
 export * from './types';

@@ -9,8 +9,8 @@ import type { PolicyDecisionStrategy } from '../../constants';
 import type { AnyPolicy, PolicyBase } from '../../types';
 import type { BuiltInPolicyType } from '../constants';
 
-export interface GroupPolicy extends PolicyBase {
-    type: `${BuiltInPolicyType.GROUP}`,
+export interface CompositePolicy extends PolicyBase {
+    type: `${BuiltInPolicyType.COMPOSITE}`,
 
     /**
      * How to decide if a policy evaluates to true.
@@ -22,4 +22,4 @@ export interface GroupPolicy extends PolicyBase {
     children: AnyPolicy[],
 }
 
-export type PolicyGroupOptions = Omit<GroupPolicy, 'type'>;
+export type CompositePolicyOptions = Omit<CompositePolicy, 'type'>;

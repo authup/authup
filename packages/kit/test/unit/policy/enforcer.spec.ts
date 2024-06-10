@@ -34,8 +34,8 @@ describe('src/policy', () => {
             names: ['name'],
         };
 
-        const groupPolicy : BuiltInPolicy<User> = {
-            type: BuiltInPolicyType.GROUP,
+        const compositePolicy : BuiltInPolicy<User> = {
+            type: BuiltInPolicyType.COMPOSITE,
             decisionStrategy: PolicyDecisionStrategy.UNANIMOUS,
             children: [
                 attributePolicy,
@@ -43,14 +43,14 @@ describe('src/policy', () => {
             ],
         };
 
-        let outcome = enforcer.execute(groupPolicy, {
+        let outcome = enforcer.execute(compositePolicy, {
             target: {
                 name: 'admin',
             },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = enforcer.execute(groupPolicy, {
+        outcome = enforcer.execute(compositePolicy, {
             target: {
                 id: 'foo',
                 name: 'admin',
@@ -58,7 +58,7 @@ describe('src/policy', () => {
         });
         expect(outcome).toBeFalsy();
 
-        outcome = enforcer.execute(groupPolicy, {
+        outcome = enforcer.execute(compositePolicy, {
             target: {
                 name: 'foo',
             },
