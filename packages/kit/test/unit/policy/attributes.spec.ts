@@ -17,7 +17,7 @@ describe('src/policy/attributes', () => {
     it('should restrict', () => {
         const policy : AttributesPolicyOptions<User> = {
             invert: false,
-            conditions: {
+            query: {
                 name: {
                     $regex: /t/,
                 },

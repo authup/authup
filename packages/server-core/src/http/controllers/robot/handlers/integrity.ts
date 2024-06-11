@@ -47,7 +47,9 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         query.leftJoinAndSelect('robot.realm', 'realm');
     }
 
-    const entity = await query.getOne();
+    const entity = await query
+        .addSelect('robot.secret')
+        .getOne();
 
     if (!entity) {
         throw new NotFoundError();

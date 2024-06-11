@@ -7,9 +7,13 @@
 
 import {
     AttributeNamesPolicyEvaluator,
-    AttributesPolicyEvaluator, BuiltInPolicyType, CompositePolicyEvaluator,
-    DatePolicyEvaluator, TimePolicyEvaluator,
+    AttributesPolicyEvaluator,
+    BuiltInPolicyType,
+    CompositePolicyEvaluator,
+    DatePolicyEvaluator,
+    TimePolicyEvaluator,
 } from './built-in';
+
 import type {
     AnyPolicy,
     PolicyEvaluationContext,
@@ -39,21 +43,17 @@ export class PolicyEnforcer {
         this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
     }
 
-    execute(
-        policies: AnyPolicy[] | AnyPolicy,
+    evaluateMany(
+        policies: AnyPolicy[],
         context: PolicyEvaluationContext,
     ) : boolean {
-        if (Array.isArray(policies)) {
-            for (let i = 0; i < policies.length; i++) {
-                if (!this.evaluate(policies[i], context)) {
-                    return false;
-                }
+        for (let i = 0; i < policies.length; i++) {
+            if (!this.evaluate(policies[i], context)) {
+                return false;
             }
-
-            return true;
         }
 
-        return this.execute([policies], context);
+        return true;
     }
 
     evaluate(

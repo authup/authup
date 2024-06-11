@@ -21,7 +21,7 @@ const schema = zod.object({
 export function validateAttributesPolicyShaping(body: Record<string, any>) : Partial<AttributesPolicy> {
     let attributes : Record<string, any>;
     if (isObject(body)) {
-        attributes = extractAttributes<keyof AttributesPolicy>(body, ['conditions']);
+        attributes = extractAttributes<keyof AttributesPolicy>(body, ['query']);
     } else {
         attributes = {};
     }

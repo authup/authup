@@ -22,7 +22,7 @@ describe('src/policy', () => {
 
         const attributePolicy : AttributesPolicy<User> = {
             type: BuiltInPolicyType.ATTRIBUTES,
-            conditions: {
+            query: {
                 name: {
                     $eq: 'admin',
                 },
@@ -43,14 +43,14 @@ describe('src/policy', () => {
             ],
         };
 
-        let outcome = enforcer.execute(compositePolicy, {
+        let outcome = enforcer.evaluateMany([compositePolicy], {
             target: {
                 name: 'admin',
             },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = enforcer.execute(compositePolicy, {
+        outcome = enforcer.evaluate(compositePolicy, {
             target: {
                 id: 'foo',
                 name: 'admin',
@@ -58,7 +58,7 @@ describe('src/policy', () => {
         });
         expect(outcome).toBeFalsy();
 
-        outcome = enforcer.execute(compositePolicy, {
+        outcome = enforcer.evaluate(compositePolicy, {
             target: {
                 name: 'foo',
             },

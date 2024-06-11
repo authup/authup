@@ -5,16 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { MongoQuery } from '@ucast/mongo2js';
+import type {
+    MongoQuery, MongoQueryFieldOperators, MongoQueryTopLevelOperators,
+} from '@ucast/mongo2js';
 import type { PolicyBase } from '../../types';
 import type { BuiltInPolicyType } from '../constants';
+
+export type AttributesPolicyQueryFieldOperators<T> = MongoQueryFieldOperators<T>;
+export type AttributesPolicyQueryLogicalOperators<T> = MongoQueryTopLevelOperators<T>;
+
+export type AttributesPolicyQuery<T> = MongoQuery<T>;
 
 export interface AttributesPolicy<
     T extends Record<string, any> = Record<string, any>,
 > extends PolicyBase {
     type: `${BuiltInPolicyType.ATTRIBUTES}`,
 
-    conditions: MongoQuery<T>
+    query: AttributesPolicyQuery<T>
 }
 
 export type AttributesPolicyOptions<

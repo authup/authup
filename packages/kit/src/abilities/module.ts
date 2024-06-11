@@ -59,7 +59,7 @@ export class Abilities extends EventEmitter<{
             }
 
             hasPolicies = true;
-            const outcome = this.policyEnforcer.execute(item.policy, evaluationContext);
+            const outcome = this.policyEnforcer.evaluate(item.policy, evaluationContext);
 
             if (outcome) {
                 return true;

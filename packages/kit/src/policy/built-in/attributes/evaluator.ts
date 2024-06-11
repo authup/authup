@@ -11,21 +11,23 @@ import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
 import type { AttributesPolicyOptions } from './types';
 
-export class AttributesPolicyEvaluator implements PolicyEvaluator<AttributesPolicyOptions> {
+export class AttributesPolicyEvaluator<
+    T extends Record<string, any> = Record<string, any>,
+> implements PolicyEvaluator<AttributesPolicyOptions<T>> {
     try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
         if (!isAttributesPolicy(policy)) {
             return false;
         }
 
-        return this.execute(policy, context);
+        return this.execute(policy as unknown as AttributesPolicyOptions<T>, context);
     }
 
-    execute(policy: AttributesPolicyOptions, context: PolicyEvaluationContext): boolean {
+    execute(policy: AttributesPolicyOptions<T>, context: PolicyEvaluationContext): boolean {
         if (typeof context.target === 'undefined') {
             return invertPolicyOutcome(true, policy.invert);
         }
 
-        const testIt = guard(policy.conditions);
+        const testIt = guard(policy.query);
         return invertPolicyOutcome(testIt(context.target), policy.invert);
     }
 }
