@@ -70,7 +70,7 @@
         "mysql2": "^3.10.0",
         "node-cron": "^3.0.3",
         "nodemailer": "^6.9.13",
-        "pg": "^8.11.5",
+        "pg": "^8.12.0",
         "reflect-metadata": "^0.2.2",
         "routup": "^3.3.0",
         "smob": "^1.5.0",
