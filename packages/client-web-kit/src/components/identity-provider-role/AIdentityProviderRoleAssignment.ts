@@ -7,10 +7,10 @@
 
 import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref,
+    defineComponent, h, reactive, ref,
 } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
@@ -40,14 +40,22 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         };
 
         const form = reactive({
-            external_id: '',
+            name: '',
+            value: '',
+            value_is_regex: false,
         });
 
         const $v = useVuelidate({
-            external_id: {
-                required,
+            name: {
+                minLength: minLength(3),
+                maxLength: maxLength(32),
+            },
+            value: {
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            value_is_regex: {
+
             },
         }, form);
 
@@ -57,10 +65,8 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             key: TranslatorTranslationDefaultKey.EXTERNAL_ID,
         });
 
-        const isExternalIDDefined = computed(() => form.external_id && form.external_id.length > 0);
-
         const manager = createEntityManager({
-            type: `${DomainType.IDENTITY_PROVIDER_ROLE}`,
+            type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {
                 processEvent(event) {
@@ -130,7 +136,6 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                         'btn-primary': !manager.data.value,
                         'btn-dark': !!manager.data.value,
                     }],
-                    disabled: !isExternalIDDefined.value,
                     onClick($event: any) {
                         $event.preventDefault();
 
@@ -187,11 +192,24 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                             label: true,
                             labelContent: translationExternalID.value,
                             validationMessages: validationMessages.value,
-                            validationSeverity: getVuelidateSeverity($v.value.external_id),
+                            validationSeverity: getVuelidateSeverity($v.value.name),
                             content: buildFormInput({
-                                value: $v.value.external_id.$model,
+                                value: $v.value.name.$model,
                                 onChange(input) {
-                                    $v.value.external_id.$model = input;
+                                    $v.value.name.$model = input;
+                                },
+                            }),
+                        }),
+                        buildFormGroup({
+                            label: true,
+                            // todo: change translaiton
+                            labelContent: translationExternalID.value,
+                            validationMessages: validationMessages.value,
+                            validationSeverity: getVuelidateSeverity($v.value.value),
+                            content: buildFormInput({
+                                value: $v.value.value.$model,
+                                onChange(input) {
+                                    $v.value.value.$model = input;
                                 },
                             }),
                         }),

@@ -12,7 +12,7 @@ import type { Realm } from '../realm';
 export interface IdentityProviderPermissionMapping extends IdentityProviderMappingRelation {
     id: string;
 
-    key: string | null;
+    name: string | null;
 
     value: string | null;
 

@@ -36,7 +36,7 @@ export type DomainEventContext<T extends `${DomainType}`> = T extends `${DomainT
                 IdentityProviderAccountEventContext :
                 T extends `${DomainType.IDENTITY_PROVIDER_ATTRIBUTE}` ?
                     IdentityProviderAttributeEventContext :
-                    T extends `${DomainType.IDENTITY_PROVIDER_ROLE}` ?
+                    T extends `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}` ?
                         IdentityProviderRoleEventContext :
                         T extends `${DomainType.PERMISSION}` ?
                             PermissionEventContext :
@@ -76,7 +76,7 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                 IdentityProviderAccount :
                 T extends `${DomainType.IDENTITY_PROVIDER_ATTRIBUTE}` ?
                     IdentityProviderAttribute :
-                    T extends `${DomainType.IDENTITY_PROVIDER_ROLE}` ?
+                    T extends `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}` ?
                         IdentityProviderRoleMapping :
                         T extends `${DomainType.PERMISSION}` ?
                             Permission :

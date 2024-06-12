@@ -10,7 +10,7 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
@@ -25,7 +25,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderRoleEntity);
+    const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
     const entity = await repository.findOneBy({ id });
     if (!entity) {
         throw new NotFoundError();

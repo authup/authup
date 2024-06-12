@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -31,7 +31,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderRoleEntity);
+    const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     let entity = await repository.findOneBy({ id });
     if (!entity) {

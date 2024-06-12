@@ -31,42 +31,72 @@ export class Abilities extends EventEmitter<{
     // ----------------------------------------------
 
     /**
-     * Check if permission is assigned without evaluation of any policies.
+     * Check if permission evaluates to true.
      *
      * @param name
      * @param evaluationContext
      */
-    has(name: string | string[], evaluationContext: PolicyEvaluationContext = {}) : boolean {
-        if (Array.isArray(name)) {
-            return name.some((item) => this.has(item));
+    has(name: string | Ability, evaluationContext: PolicyEvaluationContext = {}) : boolean {
+        return this.hasMany([name], evaluationContext);
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Check if all permissions evaluate to true.
+     *
+     * @param input
+     * @param evaluationContext
+     */
+    hasMany(input: (Ability | string)[], evaluationContext: PolicyEvaluationContext = {}) : boolean {
+        if (input.length === 0) {
+            return true;
         }
 
-        const items = this.find({
-            name,
-            realmId: null,
-        });
+        for (let i = 0; i < input.length; i++) {
+            const inputItem = input[i];
 
-        if (items.length === 0) {
-            return false;
-        }
-
-        let hasPolicies = false;
-
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            if (!item.policy) {
-                continue;
+            let owned : Ability[];
+            if (typeof inputItem === 'string') {
+                owned = this.find({
+                    realmId: null,
+                    name: inputItem,
+                });
+            } else {
+                owned = this.find({
+                    realmId: inputItem.realmId ?? null,
+                    name: inputItem.name,
+                });
             }
 
-            hasPolicies = true;
-            const outcome = this.policyEnforcer.evaluate(item.policy, evaluationContext);
+            if (owned.length === 0) {
+                return false;
+            }
 
-            if (outcome) {
-                return true;
+            let hasPolicies = false;
+            let hasPositiveOutcome = false;
+            for (let j = 0; j < owned.length; j++) {
+                const ownedItem = owned[j];
+                if (!ownedItem.policy) {
+                    continue;
+                }
+
+                hasPolicies = true;
+                const outcome = this.policyEnforcer.evaluate(ownedItem.policy, evaluationContext);
+                if (outcome) {
+                    hasPositiveOutcome = true;
+                    break;
+                }
+            }
+
+            if (hasPolicies) {
+                if (!hasPositiveOutcome) {
+                    return false;
+                }
             }
         }
 
-        return !hasPolicies;
+        return true;
     }
 
     // ----------------------------------------------

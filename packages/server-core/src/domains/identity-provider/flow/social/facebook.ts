@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { OAuth2IdentityProviderFlow } from '../core';
@@ -33,12 +34,15 @@ export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow imp
             token: token.access_token,
         });
 
+        const payload = extractTokenPayload(token.access_token);
+
         return {
             id: userInfo.id,
             name: userInfo.username,
             email: userInfo.email,
             first_name: userInfo.first_name,
             last_name: userInfo.last_name,
+            claims: payload,
         };
     }
 }

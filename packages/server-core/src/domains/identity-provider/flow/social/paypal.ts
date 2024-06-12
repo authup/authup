@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { OAuth2IdentityProviderFlow } from '../core';
@@ -28,6 +29,8 @@ export class PaypalIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
             state: state as string,
         });
 
+        const claims = extractTokenPayload(token.access_token);
+
         const userInfo = await this.client.userInfo.get({
             type: 'Bearer',
             token: token.access_token,
@@ -37,6 +40,7 @@ export class PaypalIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
             id: userInfo.user_id,
             name: userInfo.name,
             email: userInfo.email,
+            claims,
         };
     }
 }

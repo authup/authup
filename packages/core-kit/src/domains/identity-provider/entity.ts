@@ -34,7 +34,7 @@ export interface IdentityProvider {
 }
 
 export interface IdentityProviderMappingRelation {
-    synchronisation_mode: string;
+    synchronization_mode: string | null;
 
     provider_id: IdentityProvider['id'];
 

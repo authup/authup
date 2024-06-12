@@ -14,11 +14,11 @@ import type { Realm } from '../realm';
 export interface IdentityProviderRoleMapping extends IdentityProviderMappingRelation {
     id: string;
 
-    key: string | null;
+    name: string | null;
 
     value: string | null;
 
-    value_is_regex: string | null;
+    value_is_regex: boolean;
 
     created_at: Date;
 
@@ -44,6 +44,6 @@ export interface IdentityProviderRoleMapping extends IdentityProviderMappingRela
 }
 
 export type IdentityProviderRoleEventContext = EventPayload & {
-    type: `${DomainType.IDENTITY_PROVIDER_ROLE}`,
+    type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
     data: IdentityProviderRoleMapping
 };

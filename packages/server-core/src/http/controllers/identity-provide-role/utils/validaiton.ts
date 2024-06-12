@@ -9,7 +9,7 @@ import { check, validationResult } from 'express-validator';
 import { isRealmResourceWritable } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { IdentityProviderRoleEntity } from '../../../../domains';
+import type { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { IdentityProviderEntity, RoleEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 import { useRequestEnv } from '../../../utils';
@@ -25,8 +25,8 @@ import {
 export async function runIdentityProviderRoleValidation(
     req: Request,
     operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<IdentityProviderRoleEntity>> {
-    const result : ExpressValidationResult<IdentityProviderRoleEntity> = initExpressValidationResult();
+) : Promise<ExpressValidationResult<IdentityProviderRoleMappingEntity>> {
+    const result : ExpressValidationResult<IdentityProviderRoleMappingEntity> = initExpressValidationResult();
 
     if (operation === RequestHandlerOperation.CREATE) {
         await check('provider_id')
@@ -40,13 +40,20 @@ export async function runIdentityProviderRoleValidation(
             .run(req);
     }
 
-    const externalPromise = await check('external_id')
-        .exists()
-        .isLength({ min: 3, max: 36 });
+    await check('name')
+        .optional({ values: 'null' })
+        .default(null)
+        .run(req);
 
-    if (operation === RequestHandlerOperation.UPDATE) externalPromise.optional();
+    await check('value')
+        .optional({ values: 'null' })
+        .default(null)
+        .run(req);
 
-    await externalPromise.run(req);
+    await check('value_is_regex')
+        .notEmpty()
+        .isBoolean()
+        .run(req);
 
     // ----------------------------------------------
 
@@ -71,8 +78,6 @@ export async function runIdentityProviderRoleValidation(
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
-
-        // todo: check if req.user has role permissions
 
         result.data.role_realm_id = result.relation.role.realm_id;
     }

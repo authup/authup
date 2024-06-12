@@ -48,6 +48,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
             id: user.dn,
             name: user[this.options.user_name_attribute || 'cn'] || user.dn,
             email: user[this.options.user_mail_attribute || 'mail'],
+            claims: {},
         };
 
         try {

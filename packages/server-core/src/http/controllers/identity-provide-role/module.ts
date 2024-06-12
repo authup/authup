@@ -20,7 +20,7 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @DTags('identity-provider')
-@DController('/identity-provider-roles')
+@DController('/identity-provider-role-mappings')
 export class OAuth2ProviderRoleController {
     @DGet('', [])
     async getProviders(
