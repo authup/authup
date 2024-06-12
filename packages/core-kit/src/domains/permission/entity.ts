@@ -6,6 +6,7 @@
  */
 
 import type { EventPayload } from '@authup/kit';
+import type { Client } from '../client';
 import type { DomainType } from '../contstants';
 import type { Policy } from '../policy';
 import type { Realm } from '../realm';
@@ -38,6 +39,12 @@ export interface Permission {
     policy_id: Policy['id'] | null;
 
     policy: Policy | null;
+
+    // ------------------------------------------------------------------
+
+    client_id: Client['id'] | null;
+
+    client: Client | null;
 
     // ------------------------------------------------------------------
 

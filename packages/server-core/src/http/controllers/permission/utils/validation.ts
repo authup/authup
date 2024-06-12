@@ -45,6 +45,12 @@ export async function runPermissionValidation(
         .optional({ nullable: true })
         .run(req);
 
+    await check('client_id')
+        .isUUID()
+        .optional({ values: 'null' })
+        .default(null)
+        .run(req);
+
     if (operation === 'create') {
         await check('realm_id')
             .isUUID()
@@ -76,6 +82,11 @@ export async function runPermissionValidation(
     });
 
     // ----------------------------------------------
+
+    await extendExpressValidationResultWithRelation(result, RealmEntity, {
+        id: 'client_id',
+        entity: 'client',
+    });
 
     await extendExpressValidationResultWithRelation(result, RealmEntity, {
         id: 'realm_id',
