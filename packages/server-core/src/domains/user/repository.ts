@@ -7,18 +7,17 @@
 
 import type {
     DataSource,
-    EntityManager, FindOptionsWhere,
+    EntityManager,
 } from 'typeorm';
 import {
     In,
-    InstanceChecker,
-    Repository,
 } from 'typeorm';
 import type {
-    Role, User,
-    UserRole,
+    Role,
+    User,
 } from '@authup/core-kit';
 import {
+
     buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
 import type { Ability } from '@authup/kit';
@@ -28,76 +27,79 @@ import {
 } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import { CachePrefix } from '../constants';
+import { ExtraAttributeRepository } from '../core';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
 import { UserEntity } from './entity';
 import { UserAttributeEntity } from '../user-attribute';
-import { appendAttributes, transformAttributesToRecord } from '../utils';
 
-export class UserRepository extends Repository<UserEntity> {
+export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
-        super(UserEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+        super(instance, {
+            entity: UserEntity,
+            entityPrimaryColumn: 'id',
+            attributeEntity: UserAttributeEntity,
+            attributeForeignColumn: 'user_id',
+            cachePrefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+        });
     }
 
-    async appendAttributes(
-        entity: Partial<Omit<User, 'id'> & Pick<User, 'id'>>,
-        names?: string[],
-    ) : Promise<Partial<User>> {
-        const attributeRepository = this.manager.getRepository(UserAttributeEntity);
-        const where : FindOptionsWhere<UserAttributeEntity> = {
-            user_id: entity.id,
-        };
+    async syncPermissions(
+        userId: User['id'],
+        permissionIds: Role['id'][],
+    ) {
+        const repository = this.manager.getRepository(UserPermissionEntity);
 
-        if (names) {
-            where.name = In(names);
+        const entities = await repository.createQueryBuilder('userPermission')
+            .where('userPermission.user_id = :userId', { userId })
+            .getMany();
+
+        const idsToDrop = entities
+            .filter((userRole) => permissionIds.indexOf(userRole.permission_id) === -1)
+            .map((entity) => entity.id);
+
+        if (idsToDrop.length > 0) {
+            await repository.delete({
+                id: In(idsToDrop),
+            });
         }
 
-        const rawAttributes = await attributeRepository.find({
-            where: {
-                user_id: entity.id,
-            },
-            cache: {
-                id: buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                    id: entity.id,
-                }),
-                milliseconds: 60.000,
-            },
-        });
+        const toAdd = permissionIds
+            .filter((roleId) => entities.findIndex((userRole) => userRole.permission_id === roleId) === -1)
+            .map((roleId) => repository.create({ permission_id: roleId, user_id: userId }));
 
-        const attributes = transformAttributesToRecord(rawAttributes);
-        appendAttributes(entity, attributes);
-
-        return entity;
+        if (toAdd.length > 0) {
+            await repository.insert(toAdd);
+        }
     }
 
     async syncRoles(
         userId: User['id'],
-        roleIds: Role['id'][],
+        roleIds: string[],
     ) {
-        const userRoleRepository = this.manager.getRepository(UserRoleEntity);
+        const repository = this.manager.getRepository(UserRoleEntity);
 
-        const userRoles = await userRoleRepository.createQueryBuilder('userRole')
+        const entities = await repository.createQueryBuilder('userRole')
             .where('userRole.user_id = :userId', { userId })
             .getMany();
 
-        const userRoleIdsToDrop : UserRole['id'][] = userRoles
-            .filter((userRole: UserRole) => roleIds.indexOf(userRole.role_id) === -1)
-            .map((userRole: UserRole) => userRole.id);
+        const idsToDrop = entities
+            .filter((userRole) => roleIds.indexOf(userRole.role_id) === -1)
+            .map((userRole) => userRole.id);
 
-        if (userRoleIdsToDrop.length > 0) {
-            await userRoleRepository.delete({
-                id: In(userRoleIdsToDrop),
+        if (idsToDrop.length > 0) {
+            await repository.delete({
+                id: In(idsToDrop),
             });
         }
 
-        const userRolesToAdd : Partial<UserRole>[] = roleIds
-            .filter((roleId) => userRoles.findIndex((userRole: UserRole) => userRole.role_id === roleId) === -1)
-            .map((roleId) => userRoleRepository.create({ role_id: roleId, user_id: userId }));
+        const toAdd = roleIds
+            .filter((roleId) => entities.findIndex((userRole) => userRole.role_id === roleId) === -1)
+            .map((roleId) => repository.create({ role_id: roleId, user_id: userId }));
 
-        if (userRolesToAdd.length > 0) {
-            await userRoleRepository.insert(userRolesToAdd);
+        if (toAdd.length > 0) {
+            await repository.insert(toAdd);
         }
     }
 

@@ -21,6 +21,8 @@ export const TranslatorTranslationDefaultGerman: LinesRecord = {
     [TranslatorTranslationDefaultKey.LOCKED]: 'gesperrt',
     [TranslatorTranslationDefaultKey.NOT_LOCKED]: 'nicht gesperrt',
 
+    [TranslatorTranslationDefaultKey.VALUE_IS_REGEX]: 'Wert ist regex pattern?',
+
     [TranslatorTranslationDefaultKey.CLIENT]: 'Client',
     [TranslatorTranslationDefaultKey.CLIENTS]: 'Clients',
     [TranslatorTranslationDefaultKey.CLIENT_SCOPES]: 'Client-Bereiche',

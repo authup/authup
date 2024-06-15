@@ -114,7 +114,7 @@ async function verifyBasicAuthorizationHeader(
         const userRepository = new UserRepository(dataSource);
         const user = await userRepository.verifyCredentials(header.username, header.password);
         if (user) {
-            await userRepository.appendAttributes(user);
+            await userRepository.findAndAppendExtraAttributesTo(user);
 
             permissions = await userRepository.getOwnedPermissions(user.id);
 

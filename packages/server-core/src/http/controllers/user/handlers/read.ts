@@ -15,7 +15,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import {
-    PermissionName,
+    PermissionName, ScopeName,
 } from '@authup/core-kit';
 import {
     OAuth2SubKind, isUUID,
@@ -23,7 +23,7 @@ import {
 import type { UserEntity } from '../../../../domains';
 import { UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
-import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
+import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
 function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
@@ -92,19 +92,27 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     const dataSource = await useDataSource();
     const userRepository = new UserRepository(dataSource);
-    const query = await userRepository.createQueryBuilder('user');
+    const query = userRepository.createQueryBuilder('user');
 
+    const scopes = useRequestEnv(req, 'scopes');
     let attributes : string[] = [];
 
     if (
         isSelfId(id) &&
         useRequestEnv(req, 'userId')
     ) {
-        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, useRequestEnv(req, 'scopes'));
+        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
 
+        // todo: check if databaseName has prefix
+        const validAttributes = userRepository.metadata.columns.map(
+            (column) => column.databaseName,
+        );
         for (let i = 0; i < attributes.length; i++) {
-            // todo: only select valid entity attributes :)
-            query.addSelect(`user.${attributes[i]}`);
+            const isValid = validAttributes.includes(attributes[i]);
+            if (isValid) {
+                // todo: remove attribute from attributes
+                query.addSelect(`user.${attributes[i]}`);
+            }
         }
 
         query.where('user.id = :id', { id: useRequestEnv(req, 'userId') });
@@ -133,8 +141,11 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (isSelfId(id) && useRequestEnv(req, 'userId')) {
-        await userRepository.appendAttributes(entity, attributes);
+    if (
+        isSelfId(id) &&
+        hasOAuth2Scope(scopes, ScopeName.GLOBAL)
+    ) {
+        await userRepository.findAndAppendExtraAttributesTo(entity);
     }
 
     return send(res, entity);

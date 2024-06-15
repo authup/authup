@@ -108,10 +108,8 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     }
 
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        ability.has(PermissionName.PROVIDER_EDIT)
-    ) {
-        await repository.extendEntity(entity);
+    if (ability.has(PermissionName.PROVIDER_EDIT)) {
+        await repository.findAndAppendExtraAttributesTo(entity);
     }
 
     return send(res, entity);

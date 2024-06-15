@@ -17,25 +17,33 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { sendRedirect, useRequestParam } from 'routup';
+import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository, createIdentityProviderAccount, createOAuth2IdentityProviderFlow } from '../../../../domains';
+import {
+    IdentityProviderAccountManger,
+    IdentityProviderRepository,
+    createOAuth2IdentityProviderFlow,
+} from '../../../../domains';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { EnvironmentName, useConfig } from '../../../../config';
 
-async function resolve(id: string) {
-    const dataSource = await useDataSource();
+async function resolve(dataSource: DataSource, id: string) {
     const repository = new IdentityProviderRepository(dataSource);
-    const entity = await repository.createQueryBuilder('provider')
-        .leftJoinAndSelect('provider.realm', 'realm')
-        .where('provider.id = :id', { id })
-        .getOne();
+    const entity = await repository.findOneWithAttributes({
+        relations: {
+            realm: true,
+        },
+        where: {
+            id,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
     }
 
-    return repository.extendEntity(entity);
+    return entity;
 }
 
 export async function authorizeURLIdentityProviderRouteHandler(
@@ -43,7 +51,9 @@ export async function authorizeURLIdentityProviderRouteHandler(
     res: Response,
 ) : Promise<any> {
     const id = useRequestParam(req, 'id');
-    const entity = await resolve(id);
+
+    const dataSource = await useDataSource();
+    const entity = await resolve(dataSource, id);
 
     if (
         entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
@@ -63,7 +73,9 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     res: Response,
 ) : Promise<any> {
     const id = useRequestParam(req, 'id');
-    const entity = await resolve(id);
+    const dataSource = await useDataSource();
+
+    const entity = await resolve(dataSource, id);
 
     if (
         entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
@@ -75,8 +87,9 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const flow = createOAuth2IdentityProviderFlow(entity);
 
     const identity = await flow.getIdentityForRequest(req);
+    const manager = new IdentityProviderAccountManger(dataSource, entity);
 
-    const account = await createIdentityProviderAccount(entity, identity);
+    const account = await manager.saveByIdentity(identity);
     const grant = new InternalGrantType();
 
     setRequestEnv(req, 'userId', account.user_id);

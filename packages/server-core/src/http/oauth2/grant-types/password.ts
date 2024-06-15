@@ -14,11 +14,19 @@ import {
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP, useRequestParam } from 'routup';
+import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { IdentityProviderEntity, IdentityProviderFlowIdentity } from '../../../domains';
+import type {
+    IdentityProviderEntity,
+    IdentityProviderFlowIdentity,
+    LdapIdentityProviderFlowOptions,
+} from '../../../domains';
 import {
+    IdentityProviderAccountManger,
     IdentityProviderRepository,
-    LdapIdentityProviderFlow, UserEntity, UserRepository, createIdentityProviderAccount,
+    LdapIdentityProviderFlow,
+    UserEntity,
+    UserRepository,
     resolveRealm,
 } from '../../../domains';
 import { buildOAuth2BearerTokenResponse } from '../response';
@@ -86,24 +94,28 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     protected async verifyCredentialsByLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity> {
         const dataSource = await useDataSource();
         const repository = new IdentityProviderRepository(dataSource);
-        let entities : IdentityProviderEntity[] = [];
+
+        const where: FindOptionsWhere<IdentityProviderEntity> = {
+            protocol: IdentityProviderProtocol.LDAP,
+        };
 
         if (realmId) {
-            entities = await repository.createQueryBuilder('provider')
-                .where('provider.realm_id = :realmId', { realmId })
-                .andWhere('provider.protocol = :protocol', { protocol: IdentityProviderProtocol.LDAP })
-                .getMany();
-        } else {
-            entities = await repository.createQueryBuilder('provider')
-                .andWhere('provider.protocol = :protocol', { protocol: IdentityProviderProtocol.LDAP })
-                .getMany();
+            where.realm_id = realmId;
         }
 
+        const entities = await repository.findWithAttributes<LdapIdentityProviderFlowOptions>(
+            {
+                where,
+            },
+        );
+
+        let manager : IdentityProviderAccountManger | undefined;
         let account : IdentityProviderAccount | undefined;
         let identity: IdentityProviderFlowIdentity | undefined;
 
         for (let i = 0; i < entities.length; i++) {
-            const entity = await repository.extendEntity(entities[i]);
+            const entity = entities[i];
+
             if (entity.protocol !== IdentityProviderProtocol.LDAP) {
                 continue;
             }
@@ -118,7 +130,8 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
                 continue;
             }
 
-            account = await createIdentityProviderAccount(entity, identity);
+            manager = new IdentityProviderAccountManger(dataSource, entity);
+            account = await manager.saveByIdentity(identity);
             break;
         }
 

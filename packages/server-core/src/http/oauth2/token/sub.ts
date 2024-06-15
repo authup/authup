@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ScopeName } from '@authup/core-kit';
 import {
     OAuth2SubKind,
     TokenError,
@@ -50,8 +51,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
     let payload : UserEntity | RobotEntity | ClientEntity;
 
     const dataSource = await useDataSource();
-
-    const fields = resolveOAuth2SubAttributesForScope(kind, scope);
+    const attributes = resolveOAuth2SubAttributesForScope(kind, scope);
 
     switch (kind) {
         case OAuth2SubKind.CLIENT: {
@@ -67,8 +67,9 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                     milliseconds: 60.000,
                 });
 
-            for (let i = 0; i < fields.length; i++) {
-                query.addSelect(`client.${fields[i]}`);
+            // todo: check if attributes matches repository.metadata.columns[].databaseName
+            for (let i = 0; i < attributes.length; i++) {
+                query.addSelect(`client.${attributes[i]}`);
             }
 
             const entity = await query.getOne();
@@ -93,8 +94,9 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                     milliseconds: 60.000,
                 });
 
-            for (let i = 0; i < fields.length; i++) {
-                query.addSelect(`user.${fields[i]}`);
+            // todo: check if attributes matches repository.metadata.columns[].databaseName
+            for (let i = 0; i < attributes.length; i++) {
+                query.addSelect(`user.${attributes[i]}`);
             }
 
             const entity = await query.getOne();
@@ -103,7 +105,10 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                 throw new NotFoundError();
             }
 
-            await repository.appendAttributes(entity, fields);
+            // todo: this might also be the case under other conditions :)
+            if (scope === ScopeName.GLOBAL) {
+                await repository.findAndAppendExtraAttributesTo(entity);
+            }
 
             if (!entity.active) {
                 throw TokenError.targetInactive(OAuth2SubKind.USER);
@@ -125,8 +130,9 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                     milliseconds: 60.000,
                 });
 
-            for (let i = 0; i < fields.length; i++) {
-                query.addSelect(`robot.${fields[i]}`);
+            // todo: check if attributes matches repository.metadata.columns[].databaseName
+            for (let i = 0; i < attributes.length; i++) {
+                query.addSelect(`robot.${attributes[i]}`);
             }
 
             const entity = await query.getOne();
