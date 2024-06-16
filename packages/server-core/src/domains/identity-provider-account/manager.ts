@@ -14,7 +14,7 @@ import {
     toArray,
     toArrayElement,
 } from '@authup/kit';
-import { isObject } from 'smob';
+import { clone, isObject } from 'smob';
 import type { DataSource, Repository } from 'typeorm';
 import type { IdentityProviderFlowIdentity } from '../identity-provider';
 import { IdentityProviderAttributeMappingEntity } from '../identity-provider-attribute-mapping';
@@ -51,7 +51,10 @@ export class IdentityProviderAccountManger {
 
     protected providerAccountRepository : Repository<IdentityProviderAccountEntity>;
 
-    constructor(dataSource: DataSource, provider: IdentityProvider) {
+    constructor(
+        dataSource: DataSource,
+        provider: IdentityProvider,
+    ) {
         this.dataSource = dataSource;
         this.provider = provider;
 
@@ -361,6 +364,7 @@ export class IdentityProviderAccountManger {
         // todo: if base.email or base.name is undefined, throw error
 
         try {
+            user.display_name = user.display_name || user.name;
             user.name_locked = nameLocked;
             user.realm_id = this.provider.realm_id;
             user.active = true;
@@ -393,8 +397,15 @@ export class IdentityProviderAccountManger {
         mappingValue?: string,
         mappingValueIsRegex?: boolean,
     ) : string | string[] | undefined {
-        // todo: access value by path
-        const raw = claims[mappingKey];
+        const path = mappingKey.split('\\.');
+        let raw = clone(claims);
+        for (let i = 0; i < path.length; i++) {
+            if (!isObject(raw)) {
+                continue;
+            }
+            raw = raw[path[i]];
+        }
+
         if (!raw) {
             return undefined;
         }

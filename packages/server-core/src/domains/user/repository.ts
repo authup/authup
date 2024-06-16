@@ -37,6 +37,13 @@ import { UserAttributeEntity } from '../user-attribute';
 export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
+            attributeExtraProperties: async (input) => {
+                const output : Partial<UserAttributeEntity> = {};
+                output.user_id = input.id;
+                output.realm_id = input.realm_id;
+
+                return output;
+            },
             entity: UserEntity,
             entityPrimaryColumn: 'id',
             attributeEntity: UserAttributeEntity,
@@ -228,5 +235,12 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
 
     async verifyPassword(password: string, passwordHashed: string) : Promise<boolean> {
         return compare(password, passwordHashed);
+    }
+
+    protected async getExtraAttributesProperties(input: UserEntity): Promise<Partial<UserAttributeEntity>> {
+        return {
+            user_id: input.id,
+            realm_id: input.realm_id,
+        };
     }
 }

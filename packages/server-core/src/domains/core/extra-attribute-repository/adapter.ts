@@ -7,7 +7,6 @@
 
 import { hasOwnProperty } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { clone } from 'smob';
 import type {
     FindManyOptions,
     FindOneOptions,
@@ -17,7 +16,7 @@ import type {
 } from 'typeorm';
 import { In } from 'typeorm';
 import type {
-    BaseExtraAttributeEntity,
+    BaseExtraAttributeEntity, ExtraAttributeRepositoryExtraPropertyFn,
     ExtraAttributesOptions,
     ExtraAttributesRepositoryAdapterContext,
 } from './types';
@@ -28,17 +27,20 @@ export class ExtraAttributesRepositoryAdapter<
 > {
     protected repository : Repository<T>;
 
-    protected primaryColumn : keyof T;
+    public primaryColumn : keyof T;
 
     protected attributeRepository : Repository<A>;
 
-    protected attributeForeignColumn : keyof A;
+    public attributeForeignColumn : keyof A;
 
     protected cachePrefix?: string;
+
+    protected extraPropertiesFn : ExtraAttributeRepositoryExtraPropertyFn<T, A> | undefined;
 
     // ------------------------------------------------------------------------------
 
     constructor(ctx: ExtraAttributesRepositoryAdapterContext<T, A>) {
+        this.extraPropertiesFn = ctx.extraProperties;
         this.repository = ctx.repository;
         this.primaryColumn = ctx.primaryColumn;
         this.attributeRepository = ctx.attributeRepository;
@@ -78,44 +80,37 @@ export class ExtraAttributesRepositoryAdapter<
         input: T & E,
         attributes?: E,
     ) : Promise<T & E> {
-        const cloned = clone(input);
-
         const internalProperties = this.repository.metadata.columns.map(
             (column) => column.propertyName,
         );
 
-        const internal : T = {} as T;
-        const extra : Record<string, any> = {};
-
-        const keys = Object.keys(cloned) as (keyof T)[];
-        for (let i = 0; i < keys.length; i++) {
-            const index = internalProperties.indexOf(keys[i] as string);
-            if (index === -1) {
-                extra[keys[i] as string] = cloned[keys[i]];
-            } else {
-                internal[keys[i]] = cloned[keys[i]];
-            }
-        }
-
-        await this.repository.save(internal);
-
-        const internalKeys = Object.keys(internal);
-        for (let i = 0; i < internalKeys.length; i++) {
-            input[internalKeys[i] as keyof T] = internal[internalKeys[i]];
-        }
-
-        await this.saveExtraAttributes({
-            [this.attributeForeignColumn]: input[this.primaryColumn] as unknown as A[keyof A],
-        } as Partial<A>, {
-            ...extra,
-            ...(attributes || {}),
-        });
-
+        let extra : Record<string, any> = {};
         if (attributes) {
-            const attributeKeys = Object.keys(attributes);
-            for (let i = 0; i < attributeKeys.length; i++) {
-                input[attributeKeys[i] as keyof T] = attributes[attributeKeys[i]];
+            extra = {
+                ...attributes,
+            };
+        }
+
+        const keys = Object.keys(input) as (keyof T)[];
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i] as string;
+            const index = internalProperties.indexOf(key);
+            if (index === -1) {
+                extra[key] = input[key];
+                delete input[key];
             }
+        }
+
+        await this.repository.save(input);
+
+        await this.saveExtraAttributes(
+            input,
+            extra,
+        );
+
+        const extraKeys = Object.keys(extra);
+        for (let i = 0; i < extraKeys.length; i++) {
+            input[extraKeys[i] as keyof T] = extra[extraKeys[i]];
         }
 
         return input;
@@ -196,28 +191,68 @@ export class ExtraAttributesRepositoryAdapter<
     // ------------------------------------------------------------------------------
 
     private async saveExtraAttributes(
-        condition: Partial<A>,
+        parent: T,
         input: Record<string, any>,
     ) {
-        const itemsExist = await this.attributeRepository.findBy(condition);
-        const itemsToDelete : A[] = [];
+        let properties : Partial<A> = {};
+        if (this.extraPropertiesFn) {
+            properties = await this.extraPropertiesFn(parent);
+        }
 
-        for (let i = 0; i < itemsExist.length; i++) {
-            if (hasOwnProperty(input, itemsExist[i].name)) {
-                itemsExist[i].value = input[itemsExist[i].name];
-                delete input[itemsExist[i].name];
+        const key = this.attributeForeignColumn as keyof A;
+
+        properties[key as keyof A] = parent[this.primaryColumn] as any;
+
+        const where : Partial<A> = {};
+        where[key] = parent[this.primaryColumn] as any;
+
+        const items = await this.attributeRepository.findBy(where);
+
+        const itemsToDelete : A[] = [];
+        const itemsToUpdate : A[] = [];
+
+        const keysProcessed : string[] = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            if (hasOwnProperty(input, item.name)) {
+                item.value = input[item.name];
+
+                itemsToUpdate.push({
+                    ...item,
+                    ...properties,
+                });
+
+                keysProcessed.push(item.name);
             } else {
-                itemsToDelete.push(itemsExist[i]);
+                itemsToDelete.push(items[i]);
             }
         }
 
-        await this.attributeRepository.save(itemsExist);
+        if (itemsToUpdate.length > 0) {
+            await this.attributeRepository.save(itemsToUpdate);
+        }
 
         if (itemsToDelete.length > 0) {
             await this.attributeRepository.remove(itemsToDelete);
         }
 
-        const itemsToAdd = this.transformRecordToArray(input, condition);
+        const itemsToAdd : A[] = [];
+
+        const keys = Object.keys(input);
+        let keyIndex : number;
+
+        for (let i = 0; i < keys.length; i++) {
+            keyIndex = keysProcessed.indexOf(keys[i]);
+            if (keyIndex === -1) {
+                itemsToAdd.push({
+                    ...properties,
+                    name: keys[i],
+                    value: input[keys[i]],
+                } as A);
+            }
+        }
+
         if (itemsToAdd.length > 0) {
             await this.attributeRepository.insert(itemsToAdd);
         }
@@ -229,23 +264,5 @@ export class ExtraAttributesRepositoryAdapter<
         }
 
         return entity;
-    }
-
-    private transformRecordToArray(
-        data: Record<string, any>,
-        extra?: Partial<A>,
-    ) : A[] {
-        const entities : A[] = [];
-
-        const keys = Object.keys(data);
-        for (let i = 0; i < keys.length; i++) {
-            entities.push({
-                ...(extra || {}),
-                name: keys[i],
-                value: data[keys[i]],
-            } as A);
-        }
-
-        return entities as A[];
     }
 }

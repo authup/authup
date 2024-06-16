@@ -28,6 +28,7 @@ export class ExtraAttributeRepository<
         );
 
         this.adapter = new ExtraAttributesRepositoryAdapter<T, A>({
+            extraProperties: options.attributeExtraProperties,
             cachePrefix: options.cachePrefix,
             repository: this,
             primaryColumn: options.entityPrimaryColumn,

@@ -17,7 +17,8 @@ export type ExtraAttributeRepositoryOptions<
     entityPrimaryColumn: keyof T,
 
     attributeEntity: EntityTarget<A>,
-    attributeForeignColumn: keyof A
+    attributeForeignColumn: keyof A,
+    attributeExtraProperties?: ExtraAttributeRepositoryExtraPropertyFn<T, A>
 };
 
 export type BaseExtraAttributeEntity = {
@@ -30,6 +31,8 @@ export type ExtraAttributesOptions = {
     attributes?: string[]
 };
 
+export type ExtraAttributeRepositoryExtraPropertyFn<T, A> = (input: T) => Promise<Partial<A>>;
+
 export type ExtraAttributesRepositoryAdapterContext<
     T,
     A extends BaseExtraAttributeEntity,
@@ -41,4 +44,6 @@ export type ExtraAttributesRepositoryAdapterContext<
 
     attributeRepository: Repository<A>;
     attributeForeignColumn: keyof A;
+
+    extraProperties?: ExtraAttributeRepositoryExtraPropertyFn<T, A>
 };
