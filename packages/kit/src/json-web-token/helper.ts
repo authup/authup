@@ -8,13 +8,13 @@
 import { clone, isEqual, isObject } from 'smob';
 import type { JWTClaims } from './types';
 
-export function getJWTClaimValueByMapping(
+export function getJWTClaimValueBy(
     claims: JWTClaims,
-    mappingKey: string,
-    mappingValue?: unknown,
-    mappingValueIsRegex?: boolean,
+    key: string,
+    value?: unknown,
+    valueIsRegex?: boolean,
 ) : unknown | unknown[] | undefined {
-    const path = mappingKey.split('\\.');
+    const path = key.split('\\.');
     let raw = clone(claims);
     for (let i = 0; i < path.length; i++) {
         if (!isObject(raw)) {
@@ -28,30 +28,32 @@ export function getJWTClaimValueByMapping(
         return undefined;
     }
 
-    if (Array.isArray(raw)) {
-        raw = raw.filter(Boolean);
-    }
-
-    if (!mappingValue) {
+    if (!value) {
         return raw;
     }
 
     let regex : RegExp | undefined;
-    if (mappingValueIsRegex && typeof mappingValue === 'string') {
-        regex = new RegExp(mappingValue, 'gi');
-    } else if (mappingValue instanceof RegExp) {
-        regex = mappingValue;
+    if (valueIsRegex && typeof value === 'string') {
+        regex = new RegExp(value, 'gi');
+    } else if (value instanceof RegExp) {
+        regex = value;
     }
 
     if (regex) {
         if (Array.isArray(raw)) {
-            return raw
+            const output = raw
                 .filter((el) => typeof el === 'string' && regex.test(el));
+
+            if (output.length > 0) {
+                return output;
+            }
+
+            return undefined;
         }
 
         if (
             typeof raw === 'string' &&
-                regex.test(raw)
+            regex.test(raw)
         ) {
             return raw;
         }
@@ -60,18 +62,21 @@ export function getJWTClaimValueByMapping(
     }
 
     if (Array.isArray(raw)) {
-        const output : unknown[] = [];
-
-        for (let j = 0; j < raw.length; j++) {
-            if (isEqual(raw[j], mappingValue)) {
-                output.push(raw[j]);
-            }
+        if (Array.isArray(value)) {
+            return isEqual(raw, value) ?
+                raw :
+                undefined;
         }
 
-        return output;
+        const output = raw.filter((r) => isEqual(r, value));
+        if (output.length > 0) {
+            return output;
+        }
+
+        return undefined;
     }
 
-    if (isEqual(raw, mappingValue)) {
+    if (isEqual(raw, value)) {
         return raw;
     }
 

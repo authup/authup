@@ -9,7 +9,7 @@ import type { IdentityProvider, User } from '@authup/core-kit';
 import { MappingSynchronizationMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
 import {
     createNanoID,
-    getJWTClaimValueByMapping,
+    getJWTClaimValueBy,
     hasOwnProperty,
     toArray,
     toArrayElement,
@@ -108,7 +108,7 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = getJWTClaimValueByMapping(
+            const value = getJWTClaimValueBy(
                 identity.claims,
                 entity.name,
                 entity.value,
@@ -154,7 +154,7 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = getJWTClaimValueByMapping(
+            const value = getJWTClaimValueBy(
                 identity.claims,
                 entity.name,
                 entity.value,
@@ -197,7 +197,7 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            const claimValues = getJWTClaimValueByMapping(
+            const claimValues = getJWTClaimValueBy(
                 identity.claims,
                 entity.source_name,
                 entity.source_value,
