@@ -6,46 +6,53 @@
  */
 
 import type { JWTClaims } from '../../../src';
-import { getJWTClaimValueBy } from '../../../src';
+import { getJWTClaimBy } from '../../../src';
 
 const claims : JWTClaims = {
-    iss: 'http://google.de',
+    iss: 'https://google.de',
     realm_access: {
         roles: ['foo', 'bar', 'baz'],
     },
     bool: true,
     num: 5,
+    empty: '',
 };
 
 describe('src/json-web-token', () => {
     it('should get claim value', () => {
-        let value = getJWTClaimValueBy(claims, 'iss');
-        expect(value).toEqual('http://google.de');
+        let value = getJWTClaimBy(claims, 'iss');
+        expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimValueBy(claims, 'iss', /google/);
-        expect(value).toEqual('http://google.de');
+        value = getJWTClaimBy(claims, 'iss', /google/);
+        expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimValueBy(claims, 'iss', 'google', true);
-        expect(value).toEqual('http://google.de');
+        value = getJWTClaimBy(claims, 'iss', 'google', true);
+        expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimValueBy(claims, 'bool');
+        value = getJWTClaimBy(claims, 'bool');
         expect(value).toEqual(true);
 
-        value = getJWTClaimValueBy(claims, 'num');
+        value = getJWTClaimBy(claims, 'num');
         expect(value).toEqual(5);
 
-        value = getJWTClaimValueBy(claims, 'foo');
+        value = getJWTClaimBy(claims, 'foo');
         expect(value).toBeUndefined();
+
+        value = getJWTClaimBy(claims, 'empty');
+        expect(value).toEqual('');
+
+        value = getJWTClaimBy(claims, 'empty', '');
+        expect(value).toEqual('');
     });
 
     it('should get nested claim value', () => {
-        let value = getJWTClaimValueBy(claims, 'realm_access\\.roles');
+        let value = getJWTClaimBy(claims, 'realm_access\\.roles');
         expect(value).toEqual(claims.realm_access.roles);
 
-        value = getJWTClaimValueBy(claims, 'realm_access\\.roles', 'foo');
-        expect(value).toEqual(['foo']);
+        value = getJWTClaimBy(claims, 'realm_access\\.roles', 'foo');
+        expect(value).toEqual(claims.realm_access.roles);
 
-        value = getJWTClaimValueBy(claims, 'realm_access\\.roles', /b/);
-        expect(value).toEqual(['bar', 'baz']);
+        value = getJWTClaimBy(claims, 'realm_access\\.roles', /b/);
+        expect(value).toEqual(claims.realm_access.roles);
     });
 });

@@ -8,7 +8,7 @@
 import { clone, isEqual, isObject } from 'smob';
 import type { JWTClaims } from './types';
 
-export function getJWTClaimValueBy(
+export function getJWTClaimBy(
     claims: JWTClaims,
     key: string,
     value?: unknown,
@@ -24,11 +24,11 @@ export function getJWTClaimValueBy(
         raw = raw[path[i]];
     }
 
-    if (!raw) {
+    if (typeof raw === 'undefined' || raw === null) {
         return undefined;
     }
 
-    if (!value) {
+    if (typeof value === 'undefined' || value === null) {
         return raw;
     }
 
@@ -43,9 +43,8 @@ export function getJWTClaimValueBy(
         if (Array.isArray(raw)) {
             const output = raw
                 .filter((el) => typeof el === 'string' && regex.test(el));
-
             if (output.length > 0) {
-                return output;
+                return raw;
             }
 
             return undefined;
@@ -70,7 +69,7 @@ export function getJWTClaimValueBy(
 
         const output = raw.filter((r) => isEqual(r, value));
         if (output.length > 0) {
-            return output;
+            return raw;
         }
 
         return undefined;

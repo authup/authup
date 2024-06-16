@@ -9,7 +9,7 @@ import type { IdentityProvider, User } from '@authup/core-kit';
 import { MappingSynchronizationMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
 import {
     createNanoID,
-    getJWTClaimValueBy,
+    getJWTClaimBy,
     hasOwnProperty,
     toArray,
     toArrayElement,
@@ -108,21 +108,18 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = getJWTClaimValueBy(
+            const value = getJWTClaimBy(
                 identity.claims,
                 entity.name,
                 entity.value,
                 entity.value_is_regex,
             );
 
-            if (value) {
-                if (Array.isArray(value)) {
-                    if (value.length > 0) {
-                        roleIds.push(entity.role_id);
-                    }
-                } else {
-                    roleIds.push(entity.role_id);
-                }
+            if (
+                typeof value !== 'undefined' &&
+                value !== null
+            ) {
+                roleIds.push(entity.role_id);
 
                 continue;
             }
@@ -154,21 +151,18 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = getJWTClaimValueBy(
+            const value = getJWTClaimBy(
                 identity.claims,
                 entity.name,
                 entity.value,
                 entity.value_is_regex,
             );
 
-            if (value) {
-                if (Array.isArray(value)) {
-                    if (value.length > 0) {
-                        ids.push(entity.permission_id);
-                    }
-                } else {
-                    ids.push(entity.permission_id);
-                }
+            if (
+                typeof value !== 'undefined' &&
+                value !== null
+            ) {
+                ids.push(entity.permission_id);
 
                 continue;
             }
@@ -197,14 +191,17 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            const claimValues = getJWTClaimValueBy(
+            const value = getJWTClaimBy(
                 identity.claims,
                 entity.source_name,
                 entity.source_value,
                 entity.source_value_is_regex,
             );
 
-            if (!claimValues) {
+            if (
+                typeof value !== 'undefined' &&
+                value !== null
+            ) {
                 continue;
             }
 
@@ -215,7 +212,7 @@ export class IdentityProviderAccountManger {
                 };
             } else {
                 attributes[entity.target_name] = {
-                    value: claimValues,
+                    value,
                     mode: entity.synchronization_mode,
                 };
             }
