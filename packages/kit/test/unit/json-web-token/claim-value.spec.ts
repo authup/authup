@@ -47,6 +47,15 @@ describe('src/json-web-token', () => {
 
         value = getJWTClaimBy(claims, 'nu');
         expect(value).toEqual(null);
+
+        value = getJWTClaimBy(claims, 'nu', null);
+        expect(value).toEqual(null);
+
+        value = getJWTClaimBy(claims, 'nu', undefined);
+        expect(value).toEqual(null);
+
+        value = getJWTClaimBy(claims, 'nu', '');
+        expect(value).toEqual(undefined);
     });
 
     it('should get nested claim value', () => {

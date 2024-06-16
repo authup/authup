@@ -8,6 +8,14 @@
 import { clone, isEqual, isObject } from 'smob';
 import type { JWTClaims } from './types';
 
+/**
+ * Get jwt claim by certain conditions.
+ *
+ * @param claims
+ * @param key
+ * @param value
+ * @param valueIsRegex
+ */
 export function getJWTClaimBy(
     claims: JWTClaims,
     key: string,
@@ -18,7 +26,7 @@ export function getJWTClaimBy(
     let raw = clone(claims);
     for (let i = 0; i < path.length; i++) {
         if (!isObject(raw)) {
-            continue;
+            return undefined;
         }
 
         raw = raw[path[i]];
@@ -28,7 +36,7 @@ export function getJWTClaimBy(
         return undefined;
     }
 
-    if (typeof value === 'undefined' || value === null) {
+    if (typeof value === 'undefined') {
         return raw;
     }
 
