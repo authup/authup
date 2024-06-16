@@ -9,6 +9,11 @@ export function toArray<T>(input: T | T[]): T[] {
     return Array.isArray(input) ? input : [input];
 }
 
+export function toStringArray<T>(input: T | T[]) : string[] {
+    return toArray(input)
+        .filter((el) => typeof el === 'string') as string[];
+}
+
 export function toArrayElement<T>(input: T | T[]): T | undefined {
     return Array.isArray(input) ? input[0] : input;
 }

@@ -7,14 +7,15 @@
 
 import type { IdentityProvider, User } from '@authup/core-kit';
 import { MappingSynchronizationMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
-import type { JWTClaims } from '@authup/kit';
 import {
     createNanoID,
+    getJWTClaimValueByMapping,
     hasOwnProperty,
     toArray,
     toArrayElement,
+    toStringArray,
 } from '@authup/kit';
-import { clone, isObject } from 'smob';
+import { isObject } from 'smob';
 import type { DataSource, Repository } from 'typeorm';
 import type { IdentityProviderFlowIdentity } from '../identity-provider';
 import { IdentityProviderAttributeMappingEntity } from '../identity-provider-attribute-mapping';
@@ -30,7 +31,7 @@ type UserCreateContext = {
 };
 
 type ClaimAttribute = {
-    value: string[] | string,
+    value: unknown[] | unknown,
     mode?: `${MappingSynchronizationMode}` | null
 };
 
@@ -107,7 +108,7 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = this.getMappingValueByClaims(
+            const value = getJWTClaimValueByMapping(
                 identity.claims,
                 entity.name,
                 entity.value,
@@ -153,7 +154,7 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const value = this.getMappingValueByClaims(
+            const value = getJWTClaimValueByMapping(
                 identity.claims,
                 entity.name,
                 entity.value,
@@ -196,7 +197,7 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            const claimValues = this.getMappingValueByClaims(
+            const claimValues = getJWTClaimValueByMapping(
                 identity.claims,
                 entity.source_name,
                 entity.source_value,
@@ -302,18 +303,16 @@ export class IdentityProviderAccountManger {
 
                 switch (attributeKey) {
                     case 'name': {
-                        if (Array.isArray(attribute.value)) {
-                            names.push(...attribute.value);
-                        } else {
-                            names.push(attribute.value);
+                        const values = toStringArray(attribute.value);
+                        if (values.length > 0) {
+                            names.push(...values);
                         }
                         break;
                     }
                     case 'email': {
-                        if (Array.isArray(attribute.value)) {
-                            mails.push(...attribute.value);
-                        } else {
-                            mails.push(attribute.value);
+                        const values = toStringArray(attribute.value);
+                        if (values.length > 0) {
+                            mails.push(...values);
                         }
                         break;
                     }
@@ -389,76 +388,5 @@ export class IdentityProviderAccountManger {
 
             throw e;
         }
-    }
-
-    private getMappingValueByClaims(
-        claims: JWTClaims,
-        mappingKey: string,
-        mappingValue?: string,
-        mappingValueIsRegex?: boolean,
-    ) : string | string[] | undefined {
-        const path = mappingKey.split('\\.');
-        let raw = clone(claims);
-        for (let i = 0; i < path.length; i++) {
-            if (!isObject(raw)) {
-                continue;
-            }
-            raw = raw[path[i]];
-        }
-
-        if (!raw) {
-            return undefined;
-        }
-
-        let value : string | string[];
-        if (Array.isArray(raw)) {
-            value = raw.filter(Boolean)
-                .map((r) => `${r}`);
-        } else {
-            value = `${raw}`;
-        }
-
-        if (!mappingValue) {
-            return value;
-        }
-
-        if (mappingValueIsRegex) {
-            const regex = new RegExp(mappingValue);
-            if (Array.isArray(value)) {
-                const output : string[] = [];
-
-                for (let j = 0; j < value.length; j++) {
-                    if (regex.test(value[j])) {
-                        output.push(value[j]);
-                    }
-                }
-
-                return output;
-            }
-
-            if (regex.test(value)) {
-                return value;
-            }
-
-            return undefined;
-        }
-
-        if (Array.isArray(value)) {
-            const output : string[] = [];
-
-            for (let j = 0; j < value.length; j++) {
-                if (value[j] === mappingValue) {
-                    output.push(value[j]);
-                }
-            }
-
-            return output;
-        }
-
-        if (value === mappingValue) {
-            return value;
-        }
-
-        return undefined;
     }
 }
