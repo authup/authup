@@ -24,7 +24,7 @@ export function getJWTClaimBy(
         raw = raw[path[i]];
     }
 
-    if (typeof raw === 'undefined' || raw === null) {
+    if (typeof raw === 'undefined') {
         return undefined;
     }
 

@@ -11,6 +11,7 @@ import {
     createNanoID,
     getJWTClaimBy,
     hasOwnProperty,
+    isScalar,
     toArray,
     toArrayElement,
     toStringArray,
@@ -115,10 +116,7 @@ export class IdentityProviderAccountManger {
                 entity.value_is_regex,
             );
 
-            if (
-                typeof value !== 'undefined' &&
-                value !== null
-            ) {
+            if (typeof value !== 'undefined') {
                 roleIds.push(entity.role_id);
 
                 continue;
@@ -158,10 +156,7 @@ export class IdentityProviderAccountManger {
                 entity.value_is_regex,
             );
 
-            if (
-                typeof value !== 'undefined' &&
-                value !== null
-            ) {
+            if (typeof value !== 'undefined') {
                 ids.push(entity.permission_id);
 
                 continue;
@@ -198,10 +193,7 @@ export class IdentityProviderAccountManger {
                 entity.source_value_is_regex,
             );
 
-            if (
-                typeof value !== 'undefined' &&
-                value !== null
-            ) {
+            if (typeof value === 'undefined') {
                 continue;
             }
 
@@ -221,7 +213,10 @@ export class IdentityProviderAccountManger {
         return attributes;
     }
 
-    protected async updateUserByIdentity(user: UserEntity, identity: IdentityProviderFlowIdentity) : Promise<UserEntity> {
+    protected async updateUserByIdentity(
+        user: UserEntity,
+        identity: IdentityProviderFlowIdentity,
+    ) : Promise<UserEntity> {
         const claimAttributes = await this.getAttributesFromIdentity(identity);
         const extra = await this.userRepository.findExtraAttributesByPrimaryColumn(user.id);
 
@@ -232,34 +227,39 @@ export class IdentityProviderAccountManger {
         const claimAttributeKeys = Object.keys(claimAttributes);
         for (let i = 0; i < claimAttributeKeys.length; i++) {
             const attributeKey = claimAttributeKeys[i];
-            const attribute = claimAttributes[attributeKey];
 
-            const mode = attribute.mode || MappingSynchronizationMode.ALWAYS;
+            const mode = claimAttributes[attributeKey].mode ||
+                MappingSynchronizationMode.ALWAYS;
+
+            const value = toArrayElement(claimAttributes[attributeKey].value);
+            if (!isScalar(value) || typeof value === 'undefined') {
+                continue;
+            }
 
             const index = columnNames.indexOf(attributeKey);
             if (index === -1) {
-                if (extra[attributeKey]) {
+                if (typeof extra[attributeKey] !== 'undefined') {
                     if (mode === MappingSynchronizationMode.ONCE) {
                         continue;
                     }
                 }
 
                 // todo: run validation on attribute value
-                extra[attributeKey] = toArrayElement(attribute.value);
+                extra[attributeKey] = value;
             } else {
                 const isAllowed = this.userAttributes.includes(attributeKey);
                 if (!isAllowed) {
                     continue;
                 }
 
-                if (user[attributeKey]) {
+                if (typeof user[attributeKey] !== 'undefined') {
                     if (mode === MappingSynchronizationMode.ONCE) {
                         continue;
                     }
                 }
 
                 // todo: run validation on attribute value
-                user[attributeKey] = toArrayElement(attribute.value);
+                user[attributeKey] = value;
             }
         }
 
@@ -290,8 +290,13 @@ export class IdentityProviderAccountManger {
 
             const index = columnNames.indexOf(attributeKey);
             if (index === -1) {
+                const value = toArrayElement(attribute.value);
+                if (!isScalar(value) || typeof value === 'undefined') {
+                    continue;
+                }
+
                 // todo: run validation on attribute value
-                extra[attributeKey] = toArrayElement(attribute.value);
+                extra[attributeKey] = value;
             } else {
                 const isAllowed = this.userAttributes.includes(attributeKey);
                 if (!isAllowed) {
@@ -314,8 +319,13 @@ export class IdentityProviderAccountManger {
                         break;
                     }
                     default: {
+                        const value = toArrayElement(attribute.value);
+                        if (!isScalar(value) || typeof value === 'undefined') {
+                            continue;
+                        }
+
                         // todo: run validation on attribute value
-                        user[attributeKey] = toArrayElement(attribute.value);
+                        user[attributeKey] = value;
                         break;
                     }
                 }

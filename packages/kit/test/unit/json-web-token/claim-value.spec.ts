@@ -16,6 +16,7 @@ const claims : JWTClaims = {
     bool: true,
     num: 5,
     empty: '',
+    nu: null,
 };
 
 describe('src/json-web-token', () => {
@@ -43,6 +44,9 @@ describe('src/json-web-token', () => {
 
         value = getJWTClaimBy(claims, 'empty', '');
         expect(value).toEqual('');
+
+        value = getJWTClaimBy(claims, 'nu');
+        expect(value).toEqual(null);
     });
 
     it('should get nested claim value', () => {
