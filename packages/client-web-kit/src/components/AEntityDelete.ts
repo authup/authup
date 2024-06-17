@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasOwnProperty, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 import type {
     Component,
     PropType,
@@ -66,16 +66,15 @@ const AEntityDelete = defineComponent({
         const busy = ref(false);
 
         const submit = wrapFnWithBusyState(busy, async () => {
-            let domainAPI : DomainAPISlim<any> | undefined;
-            if (
-                hasOwnProperty(apiClient, props.entityType) &&
-                isObject(apiClient[props.entityType]) &&
-                hasOwnProperty(apiClient[props.entityType], 'delete')
-            ) {
-                domainAPI = apiClient[props.entityType] as DomainAPISlim<any>;
+            const domainAPI = (
+                apiClient as Record<string, any>
+            )[props.entityType] as DomainAPISlim<any> | undefined;
+
+            if (!isObject(domainAPI)) {
+                return;
             }
 
-            if (!domainAPI) {
+            if (typeof domainAPI.delete !== 'function') {
                 return;
             }
 
