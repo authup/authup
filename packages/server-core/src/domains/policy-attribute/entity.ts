@@ -12,12 +12,13 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Policy, PolicyAttribute } from '@authup/core-kit';
+import type { Policy, PolicyAttribute, Realm } from '@authup/core-kit';
 import {
     deserialize,
     serialize,
 } from '@authup/kit';
 import { PolicyEntity } from '../policy/entity';
+import { RealmEntity } from '../realm';
 
 @Unique(['name', 'policy_id'])
 @Entity({ name: 'auth_policy_attributes' })
@@ -41,6 +42,15 @@ export class PolicyAttributeEntity implements PolicyAttribute {
         },
     })
         value: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Column()
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
+        realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 

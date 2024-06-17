@@ -6,6 +6,7 @@
  */
 
 import type { Policy } from '../policy';
+import type { Realm } from '../realm';
 
 export interface PolicyAttribute {
     id: string;
@@ -13,6 +14,12 @@ export interface PolicyAttribute {
     name: string;
 
     value: string | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Policy['id'] | null;
+
+    realm: Realm | null;
 
     // ------------------------------------------------------------------
 
