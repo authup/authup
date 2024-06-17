@@ -48,7 +48,7 @@ export class PolicyAttributeEntity implements PolicyAttribute {
     @Column()
         realm_id: Realm['id'] | null;
 
-    @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: RealmEntity | null;
 
