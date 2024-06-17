@@ -10,7 +10,9 @@ import type {
 } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { ExtraAttributesRepositoryAdapter } from './adapter';
-import type { BaseExtraAttributeEntity, ExtraAttributeRepositoryOptions, ExtraAttributesOptions } from './types';
+import type {
+    BaseExtraAttributeEntity, ExtraAttributeRepositoryOptions, ExtraAttributesOptions, ExtrasAttributesSaveOptions,
+} from './types';
 
 export class ExtraAttributeRepository<
     T,
@@ -56,8 +58,9 @@ export class ExtraAttributeRepository<
     async saveWithAttributes<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
+        options?: ExtrasAttributesSaveOptions,
     ) : Promise<T & E> {
-        return this.adapter.saveWithAttributes(input, attributes);
+        return this.adapter.saveWithAttributes(input, attributes, options);
     }
 
     async findExtraAttributesByPrimaryColumn<E extends Record<string, any>>(

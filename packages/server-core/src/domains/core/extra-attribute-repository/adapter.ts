@@ -16,9 +16,11 @@ import type {
 } from 'typeorm';
 import { In } from 'typeorm';
 import type {
-    BaseExtraAttributeEntity, ExtraAttributeRepositoryExtraPropertyFn,
+    BaseExtraAttributeEntity,
+    ExtraAttributeRepositoryExtraPropertyFn,
     ExtraAttributesOptions,
     ExtraAttributesRepositoryAdapterContext,
+    ExtrasAttributesSaveOptions,
 } from './types';
 
 export class ExtraAttributesRepositoryAdapter<
@@ -79,6 +81,7 @@ export class ExtraAttributesRepositoryAdapter<
     async saveWithAttributes<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
+        options?: ExtrasAttributesSaveOptions,
     ) : Promise<T & E> {
         const internalProperties = this.repository.metadata.columns.map(
             (column) => column.propertyName,
@@ -106,6 +109,7 @@ export class ExtraAttributesRepositoryAdapter<
         await this.saveExtraAttributes(
             input,
             extra,
+            options,
         );
 
         const extraKeys = Object.keys(extra);
@@ -193,6 +197,7 @@ export class ExtraAttributesRepositoryAdapter<
     private async saveExtraAttributes(
         parent: T,
         input: Record<string, any>,
+        options: ExtrasAttributesSaveOptions = {},
     ) {
         let properties : Partial<A> = {};
         if (this.extraPropertiesFn) {
@@ -224,7 +229,7 @@ export class ExtraAttributesRepositoryAdapter<
                 });
 
                 keysProcessed.push(item.name);
-            } else {
+            } else if (!options.keepAll) {
                 itemsToDelete.push(items[i]);
             }
         }

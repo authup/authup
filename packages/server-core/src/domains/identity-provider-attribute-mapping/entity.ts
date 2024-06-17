@@ -15,7 +15,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { IdentityProviderAttributeMapping, MappingSynchronizationMode, Realm } from '@authup/core-kit';
+import { IdentityProviderAttributeMapping, IdentityProviderMappingSyncMode, Realm } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
 import { RealmEntity } from '../realm';
 
@@ -26,7 +26,7 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
         id: string;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        synchronization_mode: `${MappingSynchronizationMode}` | null;
+        synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
         source_name: string | null;

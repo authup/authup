@@ -33,9 +33,3 @@ export enum DomainEventName {
     DELETED = 'deleted',
     UPDATED = 'updated',
 }
-
-export enum MappingSynchronizationMode {
-    ONCE = 'once',
-    ALWAYS = 'always',
-    INHERIT = 'inherit',
-}

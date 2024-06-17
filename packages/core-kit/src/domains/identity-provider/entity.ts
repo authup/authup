@@ -6,9 +6,9 @@
  */
 
 import type { EventPayload } from '@authup/kit';
-import type { DomainType, MappingSynchronizationMode } from '../contstants';
+import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
-import type { IdentityProviderProtocol } from './constants';
+import type { IdentityProviderMappingSyncMode, IdentityProviderProtocol } from './constants';
 import type { IdentityProviderPreset } from './preset';
 
 export interface IdentityProvider {
@@ -34,7 +34,7 @@ export interface IdentityProvider {
 }
 
 export interface IdentityProviderMappingRelation {
-    synchronization_mode: `${MappingSynchronizationMode}` | null;
+    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     provider_id: IdentityProvider['id'];
 

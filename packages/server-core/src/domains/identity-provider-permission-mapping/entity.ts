@@ -16,7 +16,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
-    IdentityProviderPermissionMapping, MappingSynchronizationMode, Realm, Role,
+    IdentityProviderMappingSyncMode, IdentityProviderPermissionMapping, Realm, Role,
 } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
 import { PermissionEntity } from '../permission';
@@ -29,7 +29,7 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
         id: string;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        synchronization_mode: `${MappingSynchronizationMode}` | null;
+        synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
         name: string | null;

@@ -16,7 +16,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
-    IdentityProviderRoleMapping, MappingSynchronizationMode, Realm, Role,
+    IdentityProviderMappingSyncMode, IdentityProviderRoleMapping, Realm, Role,
 } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
 import { RoleEntity } from '../role';
@@ -29,7 +29,7 @@ export class IdentityProviderRoleMappingEntity implements IdentityProviderRoleMa
         id: string;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        synchronization_mode: `${MappingSynchronizationMode}` | null;
+        synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
         name: string | null;

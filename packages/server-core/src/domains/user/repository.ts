@@ -31,8 +31,10 @@ import { ExtraAttributeRepository } from '../core';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
+import { UserRelationItemSyncOperation } from './constants';
 import { UserEntity } from './entity';
 import { UserAttributeEntity } from '../user-attribute';
+import type { UserRelationItemSyncConfig } from './types';
 
 export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -54,8 +56,17 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
 
     async syncPermissions(
         userId: User['id'],
-        permissionIds: Role['id'][],
+        ids: (string | UserRelationItemSyncConfig)[],
     ) {
+        const options = ids.map((id) => {
+            if (typeof id === 'string') {
+                return {
+                    id,
+                } satisfies UserRelationItemSyncConfig;
+            }
+
+            return id;
+        });
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.createQueryBuilder('userPermission')
@@ -63,7 +74,14 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
             .getMany();
 
         const idsToDrop = entities
-            .filter((userRole) => permissionIds.indexOf(userRole.permission_id) === -1)
+            .filter((entity) => {
+                const index = options.findIndex((o) => o.id === entity.permission_id);
+                if (index === -1) {
+                    return true;
+                }
+
+                return options[index].operation === UserRelationItemSyncOperation.DELETE;
+            })
             .map((entity) => entity.id);
 
         if (idsToDrop.length > 0) {
@@ -72,9 +90,15 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
             });
         }
 
-        const toAdd = permissionIds
-            .filter((roleId) => entities.findIndex((userRole) => userRole.permission_id === roleId) === -1)
-            .map((roleId) => repository.create({ permission_id: roleId, user_id: userId }));
+        const toAdd = options
+            .filter((o) => {
+                if (!o.operation || o.operation === UserRelationItemSyncOperation.CREATE) {
+                    return true;
+                }
+
+                return entities.findIndex((userRole) => userRole.permission_id === o.id) === -1;
+            })
+            .map((o) => repository.create({ permission_id: o.id, user_id: userId }));
 
         if (toAdd.length > 0) {
             await repository.insert(toAdd);
@@ -83,8 +107,18 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
 
     async syncRoles(
         userId: User['id'],
-        roleIds: string[],
+        ids: (string | UserRelationItemSyncConfig)[],
     ) {
+        const options = ids.map((id) => {
+            if (typeof id === 'string') {
+                return {
+                    id,
+                } satisfies UserRelationItemSyncConfig;
+            }
+
+            return id;
+        });
+
         const repository = this.manager.getRepository(UserRoleEntity);
 
         const entities = await repository.createQueryBuilder('userRole')
@@ -92,8 +126,15 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
             .getMany();
 
         const idsToDrop = entities
-            .filter((userRole) => roleIds.indexOf(userRole.role_id) === -1)
-            .map((userRole) => userRole.id);
+            .filter((entity) => {
+                const index = options.findIndex((o) => o.id === entity.role_id);
+                if (index === -1) {
+                    return true;
+                }
+
+                return options[index].operation === UserRelationItemSyncOperation.DELETE;
+            })
+            .map((entity) => entity.id);
 
         if (idsToDrop.length > 0) {
             await repository.delete({
@@ -101,9 +142,19 @@ export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAtt
             });
         }
 
-        const toAdd = roleIds
-            .filter((roleId) => entities.findIndex((userRole) => userRole.role_id === roleId) === -1)
-            .map((roleId) => repository.create({ role_id: roleId, user_id: userId }));
+        const toAdd = options
+            .filter((o) => {
+                if (!o.operation || o.operation === UserRelationItemSyncOperation.CREATE) {
+                    return true;
+                }
+
+                if (o.operation === UserRelationItemSyncOperation.NONE) {
+                    return false;
+                }
+
+                return entities.findIndex((userRole) => userRole.role_id === o.id) === -1;
+            })
+            .map((o) => repository.create({ role_id: o.id, user_id: userId }));
 
         if (toAdd.length > 0) {
             await repository.insert(toAdd);

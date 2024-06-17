@@ -89,7 +89,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const identity = await flow.getIdentityForRequest(req);
     const manager = new IdentityProviderAccountManger(dataSource, entity);
 
-    const account = await manager.saveByIdentity(identity);
+    const account = await manager.save(identity);
     const grant = new InternalGrantType();
 
     setRequestEnv(req, 'userId', account.user_id);

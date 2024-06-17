@@ -16,7 +16,7 @@ import type { JWTClaims } from './types';
  * @param value
  * @param valueIsRegex
  */
-export function getJWTClaimBy(
+export function getJWTClaim(
     claims: JWTClaims,
     key: string,
     value?: unknown,

@@ -47,3 +47,10 @@ export type ExtraAttributesRepositoryAdapterContext<
 
     extraProperties?: ExtraAttributeRepositoryExtraPropertyFn<T, A>
 };
+
+export type ExtrasAttributesSaveOptions = {
+    /**
+     * Don't delete non passed attributes.
+     */
+    keepAll?: boolean
+};

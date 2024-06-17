@@ -6,34 +6,36 @@
  */
 
 import type { IdentityProvider, User } from '@authup/core-kit';
-import { MappingSynchronizationMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
+import { IdentityProviderMappingSyncMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
 import {
     createNanoID,
-    getJWTClaimBy,
-    hasOwnProperty,
+    getJWTClaim,
     isScalar,
     toArray,
     toArrayElement,
     toStringArray,
 } from '@authup/kit';
-import { isObject } from 'smob';
+import { BadRequestError } from '@ebec/http';
 import type { DataSource, Repository } from 'typeorm';
 import type { IdentityProviderFlowIdentity } from '../identity-provider';
 import { IdentityProviderAttributeMappingEntity } from '../identity-provider-attribute-mapping';
 import { IdentityProviderPermissionMappingEntity } from '../identity-provider-permission-mapping';
 import { IdentityProviderRoleMappingEntity } from '../identity-provider-role-mapping';
-import type { UserEntity } from '../user';
-import { UserRepository } from '../user';
+import type { UserEntity, UserRelationItemSyncConfig } from '../user';
+import { UserRelationItemSyncOperation, UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
 
 type UserCreateContext = {
-    names: string[],
-    emails: string[]
+    attempts: number,
+    attributes: UserEntity,
+    attributesExtra: Record<string, any>,
+    attributeNamePool: string[],
+    attributeEmailPool: string[]
 };
 
 type ClaimAttribute = {
     value: unknown[] | unknown,
-    mode?: `${MappingSynchronizationMode}` | null
+    mode?: `${IdentityProviderMappingSyncMode}` | null
 };
 
 export class IdentityProviderAccountManger {
@@ -64,7 +66,7 @@ export class IdentityProviderAccountManger {
         this.providerAccountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
     }
 
-    async saveByIdentity(identity: IdentityProviderFlowIdentity) : Promise<IdentityProviderAccountEntity> {
+    async save(identity: IdentityProviderFlowIdentity) : Promise<IdentityProviderAccountEntity> {
         let account = await this.providerAccountRepository.findOne({
             where: {
                 provider_user_id: identity.id,
@@ -74,11 +76,14 @@ export class IdentityProviderAccountManger {
         });
 
         let user : UserEntity;
+        let userExisted : boolean;
 
         if (account) {
-            user = await this.updateUserByIdentity(account.user, identity);
+            user = await this.updateUser(identity, account.user);
+            userExisted = true;
         } else {
-            user = await this.createUserFromIdentity(identity);
+            user = await this.createUser(identity);
+            userExisted = false;
 
             account = this.providerAccountRepository.create({
                 provider_id: this.provider.id,
@@ -89,93 +94,102 @@ export class IdentityProviderAccountManger {
             });
         }
 
-        await this.saveRoles(user.id, identity);
-        await this.savePermissions(user.id, identity);
+        await this.saveRoles(identity, user.id, userExisted);
+        await this.savePermissions(identity, user.id, userExisted);
 
         return account;
     }
 
-    protected async saveRoles(userId: string, identity: IdentityProviderFlowIdentity) {
+    protected async saveRoles(
+        identity: IdentityProviderFlowIdentity,
+        userId: string,
+        userExisted: boolean,
+    ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const entities = await providerRoleRepository.findBy({
             provider_id: this.provider.id,
         });
 
-        const roleIds : string[] = [];
+        const roles : UserRelationItemSyncConfig[] = [];
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
+
             if (!entity.name || !entity.value) {
-                roleIds.push(entity.role_id);
+                roles.push({
+                    id: entity.role_id,
+                    operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
+                        UserRelationItemSyncOperation.NONE :
+                        undefined,
+                });
                 continue;
             }
 
-            const value = getJWTClaimBy(
+            const value = getJWTClaim(
                 identity.claims,
                 entity.name,
                 entity.value,
                 entity.value_is_regex,
             );
 
-            if (typeof value !== 'undefined') {
-                roleIds.push(entity.role_id);
-
-                continue;
-            }
-
-            if (entity.synchronization_mode === MappingSynchronizationMode.ONCE) {
-                roleIds.push(entity.role_id);
-            }
+            roles.push({
+                id: entity.role_id,
+                operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
+                    UserRelationItemSyncOperation.NONE :
+                    undefined,
+            });
         }
 
-        if (roleIds.length > 0) {
-            await this.userRepository.syncRoles(
-                userId,
-                roleIds,
-            );
-        }
+        await this.userRepository.syncRoles(
+            userId,
+            roles,
+        );
     }
 
-    protected async savePermissions(userId: string, identity: IdentityProviderFlowIdentity) {
+    protected async savePermissions(
+        identity: IdentityProviderFlowIdentity,
+        userId: string,
+        userExisted: boolean,
+    ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
         const entities = await providerRoleRepository.findBy({
             provider_id: this.provider.id,
         });
 
-        const ids : string[] = [];
+        const permissions : UserRelationItemSyncConfig[] = [];
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
             if (!entity.name || !entity.value) {
-                ids.push(entity.permission_id);
+                permissions.push({
+                    id: entity.permission_id,
+                    operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
+                        UserRelationItemSyncOperation.NONE :
+                        undefined,
+                });
                 continue;
             }
 
-            const value = getJWTClaimBy(
+            const value = getJWTClaim(
                 identity.claims,
                 entity.name,
                 entity.value,
                 entity.value_is_regex,
             );
 
-            if (typeof value !== 'undefined') {
-                ids.push(entity.permission_id);
-
-                continue;
-            }
-
-            if (entity.synchronization_mode === MappingSynchronizationMode.ONCE) {
-                ids.push(entity.permission_id);
-            }
+            permissions.push({
+                id: entity.permission_id,
+                operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
+                    UserRelationItemSyncOperation.NONE :
+                    undefined,
+            });
         }
 
-        if (ids.length > 0) {
-            await this.userRepository.syncPermissions(
-                userId,
-                ids,
-            );
-        }
+        await this.userRepository.syncPermissions(
+            userId,
+            permissions,
+        );
     }
 
-    protected async getAttributesFromIdentity(identity: IdentityProviderFlowIdentity) : Promise<Record<string, ClaimAttribute>> {
+    protected async getClaimAttributes(identity: IdentityProviderFlowIdentity) : Promise<Record<string, ClaimAttribute>> {
         const repository = this.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
         const entities = await repository.findBy({
             provider_id: this.provider.id,
@@ -186,7 +200,7 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            const value = getJWTClaimBy(
+            const value = getJWTClaim(
                 identity.claims,
                 entity.source_name,
                 entity.source_value,
@@ -213,11 +227,11 @@ export class IdentityProviderAccountManger {
         return attributes;
     }
 
-    protected async updateUserByIdentity(
-        user: UserEntity,
+    protected async updateUser(
         identity: IdentityProviderFlowIdentity,
+        user: UserEntity,
     ) : Promise<UserEntity> {
-        const claimAttributes = await this.getAttributesFromIdentity(identity);
+        const claimAttributes = await this.getClaimAttributes(identity);
         const extra = await this.userRepository.findExtraAttributesByPrimaryColumn(user.id);
 
         const columnNames = this.userRepository.metadata.columns.map(
@@ -229,7 +243,7 @@ export class IdentityProviderAccountManger {
             const attributeKey = claimAttributeKeys[i];
 
             const mode = claimAttributes[attributeKey].mode ||
-                MappingSynchronizationMode.ALWAYS;
+                IdentityProviderMappingSyncMode.ALWAYS;
 
             const value = toArrayElement(claimAttributes[attributeKey].value);
             if (!isScalar(value) || typeof value === 'undefined') {
@@ -239,7 +253,7 @@ export class IdentityProviderAccountManger {
             const index = columnNames.indexOf(attributeKey);
             if (index === -1) {
                 if (typeof extra[attributeKey] !== 'undefined') {
-                    if (mode === MappingSynchronizationMode.ONCE) {
+                    if (mode === IdentityProviderMappingSyncMode.ONCE) {
                         continue;
                     }
                 }
@@ -253,7 +267,7 @@ export class IdentityProviderAccountManger {
                 }
 
                 if (typeof user[attributeKey] !== 'undefined') {
-                    if (mode === MappingSynchronizationMode.ONCE) {
+                    if (mode === IdentityProviderMappingSyncMode.ONCE) {
                         continue;
                     }
                 }
@@ -268,13 +282,13 @@ export class IdentityProviderAccountManger {
         return user;
     }
 
-    protected async createUserFromIdentity(
+    protected async createUser(
         identity: IdentityProviderFlowIdentity,
     ) : Promise<UserEntity> {
-        const claimAttributes = await this.getAttributesFromIdentity(identity);
+        const claimAttributes = await this.getClaimAttributes(identity);
 
         const names = toArray(identity.name);
-        const mails = toArray(identity.email);
+        const emails = toArray(identity.email);
 
         const columnNames = this.userRepository.metadata.columns.map(
             (column) => column.propertyName,
@@ -314,7 +328,7 @@ export class IdentityProviderAccountManger {
                     case 'email': {
                         const values = toStringArray(attribute.value);
                         if (values.length > 0) {
-                            mails.push(...values);
+                            emails.push(...values);
                         }
                         break;
                     }
@@ -332,68 +346,58 @@ export class IdentityProviderAccountManger {
             }
         }
 
-        return this.tryToCreateUser(user, extra, {
-            names,
-            emails: mails,
+        return this.tryToCreateUser({
+            attributes: user,
+            attributesExtra: extra,
+            attempts: 0,
+            attributeNamePool: names,
+            attributeEmailPool: emails,
         });
     }
 
-    protected async tryToCreateUser(
-        user: UserEntity,
-        extraAttributes: Record<string, any>,
-        context: UserCreateContext,
-    ) {
-        while (!user.name && context.names.length > 0) {
-            if (isValidUserName(context.names[0])) {
-                [user.name] = context.names;
+    protected async tryToCreateUser(context: UserCreateContext) {
+        context.attempts++;
+
+        if (context.attempts >= 5) {
+            throw new BadRequestError('The user could not be created.');
+        }
+
+        while (
+            !context.attributes.name &&
+            context.attributeNamePool.length > 0
+        ) {
+            const name = context.attributeNamePool.shift();
+            if (name && isValidUserName(name)) {
+                context.attributes.name = name;
                 break;
             }
-
-            context.names.shift();
         }
 
-        let nameLocked = true;
-        if (!user.name) {
-            user.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
-            nameLocked = false;
-        }
-
-        while (!user.email && context.emails.length > 0) {
-            if (isValidUserEmail(context.emails[0])) {
-                [user.email] = context.emails;
+        while (
+            !context.attributes.email &&
+            context.attributeEmailPool.length > 0
+        ) {
+            const email = context.attributeEmailPool.shift();
+            if (email && isValidUserEmail(email)) {
+                context.attributes.email = email;
                 break;
             }
-
-            context.emails.shift();
         }
-
-        // todo: if base.email or base.name is undefined, throw error
 
         try {
-            user.display_name = user.display_name || user.name;
-            user.name_locked = nameLocked;
-            user.realm_id = this.provider.realm_id;
-            user.active = true;
+            context.attributes.name = context.attributes.name || createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
+            context.attributes.display_name = context.attributes.display_name || context.attributes.name;
+            context.attributes.name_locked = false;
+            context.attributes.realm_id = this.provider.realm_id;
+            context.attributes.active = true;
 
-            await this.userRepository.saveWithAttributes(user, extraAttributes);
+            await this.userRepository.saveWithAttributes(context.attributes, context.attributesExtra);
 
-            return user;
+            return context.attributes;
         } catch (e) {
-            if (isObject(e)) {
-                const code : string | undefined = hasOwnProperty(e, 'code') && typeof e.code === 'string' ?
-                    e.code :
-                    undefined;
-
-                if (
-                    code === 'ER_DUP_ENTRY' ||
-                    code === 'SQLITE_CONSTRAINT_UNIQUE'
-                ) {
-                    user.name = undefined;
-                    return this.tryToCreateUser(user, extraAttributes, context);
-                }
-            }
-
-            throw e;
+            // the only reason this query should fail, is due unique constraint ^^
+            context.attributes.name = undefined;
+            return this.tryToCreateUser(context);
         }
     }
 }

@@ -6,7 +6,7 @@
  */
 
 import type { JWTClaims } from '../../../src';
-import { getJWTClaimBy } from '../../../src';
+import { getJWTClaim } from '../../../src';
 
 const claims : JWTClaims = {
     iss: 'https://google.de',
@@ -21,51 +21,51 @@ const claims : JWTClaims = {
 
 describe('src/json-web-token', () => {
     it('should get claim value', () => {
-        let value = getJWTClaimBy(claims, 'iss');
+        let value = getJWTClaim(claims, 'iss');
         expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimBy(claims, 'iss', /google/);
+        value = getJWTClaim(claims, 'iss', /google/);
         expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimBy(claims, 'iss', 'google', true);
+        value = getJWTClaim(claims, 'iss', 'google', true);
         expect(value).toEqual('https://google.de');
 
-        value = getJWTClaimBy(claims, 'bool');
+        value = getJWTClaim(claims, 'bool');
         expect(value).toEqual(true);
 
-        value = getJWTClaimBy(claims, 'num');
+        value = getJWTClaim(claims, 'num');
         expect(value).toEqual(5);
 
-        value = getJWTClaimBy(claims, 'foo');
+        value = getJWTClaim(claims, 'foo');
         expect(value).toBeUndefined();
 
-        value = getJWTClaimBy(claims, 'empty');
+        value = getJWTClaim(claims, 'empty');
         expect(value).toEqual('');
 
-        value = getJWTClaimBy(claims, 'empty', '');
+        value = getJWTClaim(claims, 'empty', '');
         expect(value).toEqual('');
 
-        value = getJWTClaimBy(claims, 'nu');
+        value = getJWTClaim(claims, 'nu');
         expect(value).toEqual(null);
 
-        value = getJWTClaimBy(claims, 'nu', null);
+        value = getJWTClaim(claims, 'nu', null);
         expect(value).toEqual(null);
 
-        value = getJWTClaimBy(claims, 'nu', undefined);
+        value = getJWTClaim(claims, 'nu', undefined);
         expect(value).toEqual(null);
 
-        value = getJWTClaimBy(claims, 'nu', '');
+        value = getJWTClaim(claims, 'nu', '');
         expect(value).toEqual(undefined);
     });
 
     it('should get nested claim value', () => {
-        let value = getJWTClaimBy(claims, 'realm_access\\.roles');
+        let value = getJWTClaim(claims, 'realm_access\\.roles');
         expect(value).toEqual(claims.realm_access.roles);
 
-        value = getJWTClaimBy(claims, 'realm_access\\.roles', 'foo');
+        value = getJWTClaim(claims, 'realm_access\\.roles', 'foo');
         expect(value).toEqual(claims.realm_access.roles);
 
-        value = getJWTClaimBy(claims, 'realm_access\\.roles', /b/);
+        value = getJWTClaim(claims, 'realm_access\\.roles', /b/);
         expect(value).toEqual(claims.realm_access.roles);
     });
 });

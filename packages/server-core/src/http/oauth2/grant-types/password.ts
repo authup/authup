@@ -131,7 +131,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             }
 
             manager = new IdentityProviderAccountManger(dataSource, entity);
-            account = await manager.saveByIdentity(identity);
+            account = await manager.save(identity);
             break;
         }
 
