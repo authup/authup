@@ -9,23 +9,17 @@ import type { Client, Robot, User } from '@authup/core-kit';
 import { OAuth2SubKind, hasOwnProperty } from '@authup/kit';
 import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
 
-type ScopeSubFields<
-    I extends Record<string, Record<string, any>>,
-    > = {
-        [T in keyof I]: (keyof I[T])[]
-    };
-
-const userFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, User>>> = {
-    [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'],
-    [ScopeName.EMAIL]: ['email'],
+const userFields = {
+    [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'] satisfies (keyof User)[],
+    [ScopeName.EMAIL]: ['email'] satisfies (keyof User)[],
 };
 
-const robotFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, Robot>>> = {
-    [ScopeName.IDENTITY]: ['name'],
+const robotFields = {
+    [ScopeName.IDENTITY]: ['name'] satisfies (keyof Robot)[],
 };
 
-const clientFields : Partial<ScopeSubFields<Record<ScopeName | `${ScopeName}`, Client>>> = {
-    [ScopeName.IDENTITY]: ['name'],
+const clientFields = {
+    [ScopeName.IDENTITY]: ['name'] satisfies (keyof Client)[],
 };
 
 export function resolveOAuth2SubAttributesForScope(
@@ -43,7 +37,7 @@ export function resolveOAuth2SubAttributesForScope(
                 }
 
                 if (scopes[i] === ScopeName.GLOBAL) {
-                    fields.push(...Object.values(userFields) as string[]);
+                    fields.push(...Object.values(userFields).flat());
                 }
                 break;
             }
@@ -53,7 +47,7 @@ export function resolveOAuth2SubAttributesForScope(
                 }
 
                 if (scopes[i] === ScopeName.GLOBAL) {
-                    fields.push(...Object.values(robotFields) as string[]);
+                    fields.push(...Object.values(robotFields).flat());
                 }
                 break;
             }
@@ -63,7 +57,7 @@ export function resolveOAuth2SubAttributesForScope(
                 }
 
                 if (scopes[i] === ScopeName.GLOBAL) {
-                    fields.push(...Object.values(clientFields) as string[]);
+                    fields.push(...Object.values(clientFields).flat());
                 }
                 break;
             }

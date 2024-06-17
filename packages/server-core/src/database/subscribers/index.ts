@@ -11,7 +11,7 @@ export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-account';
 export * from './identity-provider-attribute';
-export * from './identity-provider-role';
+export * from './identity-provider-role-mapping';
 
 export * from './robot';
 export * from './robot-permission';

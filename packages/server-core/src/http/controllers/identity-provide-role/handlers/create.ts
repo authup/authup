@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity, RoleRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runIdentityProviderRoleValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -29,7 +29,14 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderRoleEntity);
+
+    const roleRepository = new RoleRepository(dataSource);
+    const roleAbilities = await roleRepository.getOwnedPermissions(result.data.role_id);
+    if (!ability.hasMany(roleAbilities)) {
+        throw new ForbiddenError('You don\'t own all role permissions.');
+    }
+
+    const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     const entity = repository.create(result.data);
 

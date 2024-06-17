@@ -13,11 +13,11 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { IdentityProviderRoleEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderRoleEntity);
+    const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     const query = repository.createQueryBuilder('providerRole');
 
@@ -51,7 +51,7 @@ export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: 
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderRoleEntity);
+    const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     const query = repository.createQueryBuilder('providerRole')
         .where('providerRole.id = :id', { id });

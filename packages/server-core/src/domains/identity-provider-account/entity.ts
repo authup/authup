@@ -68,7 +68,7 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
-        user: User;
+        user: UserEntity;
 
     @Column()
         provider_id: IdentityProvider['id'];

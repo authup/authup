@@ -38,6 +38,8 @@ export enum TranslatorTranslationDefaultKey {
     LOCKED = 'locked',
     NOT_LOCKED = 'notLocked',
 
+    VALUE_IS_REGEX = 'valueIsRegex',
+
     CLIENT = 'client',
     CLIENTS = 'clients',
     CLIENT_SCOPES = 'clientScopes',

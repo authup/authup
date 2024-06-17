@@ -8,7 +8,7 @@
 import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
-import type { IdentityProviderProtocol } from './constants';
+import type { IdentityProviderMappingSyncMode, IdentityProviderProtocol } from './constants';
 import type { IdentityProviderPreset } from './preset';
 
 export interface IdentityProvider {
@@ -31,6 +31,18 @@ export interface IdentityProvider {
     realm_id: Realm['id'];
 
     realm: Realm;
+}
+
+export interface IdentityProviderMappingRelation {
+    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+
+    provider_id: IdentityProvider['id'];
+
+    provider: IdentityProvider;
+
+    provider_realm_id: Realm['id'] | null;
+
+    provider_realm: Realm | null;
 }
 
 export type IdentityProviderEventContext = EventPayload & {

@@ -30,10 +30,7 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
 
     const entity = repository.create(result.data);
 
-    await repository.save(entity);
-
-    await repository.saveAttributes(entity.id, result.meta.attributes);
-    repository.appendAttributes(entity, result.meta.attributes);
+    await repository.saveWithAttributes(entity, result.meta.attributes);
 
     return sendCreated(res, entity);
 }

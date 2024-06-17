@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
 import { buildIdentityProviderAuthorizeCallbackPath } from '@authup/core-kit';
-import type { JwtPayload, Options } from '@hapic/oauth2';
+import type { Options } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';
 import { useConfig } from '../../../../config';
@@ -34,39 +33,6 @@ export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProvi
 
     public buildAuthorizeURL() : string {
         return this.client.authorize.buildURL();
-    }
-
-    protected extractRolesFromTokenPayload(payload: JwtPayload) : string[] {
-        const roles : string[] = [];
-
-        if (Array.isArray(payload.roles)) {
-            payload.roles = payload.roles
-                .filter((n) => typeof n === 'string');
-
-            if (
-                payload.roles &&
-                payload.roles.length > 0
-            ) {
-                roles.push(...payload.roles);
-            }
-        }
-
-        if (
-            isObject(payload.realm_access) &&
-            Array.isArray(payload.realm_access.roles)
-        ) {
-            payload.realm_access.roles = payload.realm_access.roles
-                .filter((n) => typeof n === 'string');
-
-            if (
-                payload.realm_access.roles &&
-                payload.realm_access.roles.length > 0
-            ) {
-                roles.push(...payload.realm_access.roles);
-            }
-        }
-
-        return roles;
     }
 
     abstract getIdentityForRequest(request: Request) : Promise<IdentityProviderFlowIdentity>;

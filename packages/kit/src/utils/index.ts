@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './array';
 export * from './has-own-property';
 export * from './nanoid';
 export * from './object';
+export * from './scalar';
 export * from './serialize';
 export * from './template';
 export * from './uuid';

@@ -10,3 +10,18 @@ export enum IdentityProviderProtocol {
     OAUTH2 = 'oauth2',
     OIDC = 'oidc',
 }
+
+export enum IdentityProviderMappingSyncMode {
+    /**
+     * Synchronize on initial user login.
+     */
+    ONCE = 'once',
+    /**
+     * Synchronize on every user login.
+     */
+    ALWAYS = 'always',
+    /**
+     * Synchronize based on idp configuration.
+     */
+    INHERIT = 'inherit',
+}

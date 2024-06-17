@@ -35,8 +35,8 @@ describe('src/http/controllers/identity-provider', () => {
         protocol: IdentityProviderProtocol.OAUTH2,
         client_id: 'client',
         client_secret: 'start123',
-        token_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/token',
-        authorize_url: 'https://keycloak-pht.tada5hi.net/auth/realms/master/protocol/openid-connect/auth',
+        token_url: 'https://keycloak.tada5hi.net/auth/realms/master/protocol/openid-connect/token',
+        authorize_url: 'https://keycloak.tada5hi.net/auth/realms/master/protocol/openid-connect/auth',
     };
 
     it('should create resource', async () => {

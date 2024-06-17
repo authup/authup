@@ -19,7 +19,7 @@ import {
     ClientAPI,
     ClientScopeAPI,
     IdentityProviderAPI,
-    IdentityProviderRoleAPI,
+    IdentityProviderRoleMappingAPI,
     PermissionAPI,
     RealmAPI,
     RobotAPI,
@@ -46,7 +46,7 @@ export class Client extends BaseClient {
 
     public readonly identityProvider : IdentityProviderAPI;
 
-    public readonly identityProviderRole : IdentityProviderRoleAPI;
+    public readonly identityProviderRoleMapping : IdentityProviderRoleMappingAPI;
 
     public readonly permission : PermissionAPI;
 
@@ -102,7 +102,7 @@ export class Client extends BaseClient {
         this.clientScope = new ClientScopeAPI({ client: this });
 
         this.identityProvider = new IdentityProviderAPI({ client: this });
-        this.identityProviderRole = new IdentityProviderRoleAPI({ client: this });
+        this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({ client: this });
 
         this.permission = new PermissionAPI({ client: this });
 

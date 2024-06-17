@@ -23,7 +23,7 @@ import type { IdentityProviderFlowIdentity } from '../identity-provider';
 import type { UserEntity } from '../user';
 import { UserRepository } from '../user';
 import { IdentityProviderAccountEntity } from './entity';
-import { IdentityProviderRoleEntity } from '../identity-provider-role';
+import { IdentityProviderRoleMappingEntity } from '../identity-provider-role-mapping';
 
 export async function createIdentityProviderAccount(
     provider: IdentityProvider,
@@ -78,25 +78,56 @@ export async function createIdentityProviderAccount(
 
     await accountRepository.save(account);
 
-    if (identity.roles && identity.roles.length > 0) {
-        const providerRoleRepository = dataSource.getRepository(IdentityProviderRoleEntity);
+    const providerRoleRepository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
+    const providerRoles = await providerRoleRepository.findBy({
+        provider_id: provider.id,
+    });
 
-        const providerRoles = await providerRoleRepository
-            .createQueryBuilder('providerRole')
-            .leftJoinAndSelect('providerRole.provider', 'provider')
-            .where('providerRole.external_id in (:...id)', { id: identity.roles })
-            .andWhere('provider.realm_id = :realmId', { realmId: provider.realm_id })
-            .getMany();
-
-        if (
-            providerRoles.length > 0
-        ) {
-            const userRepository = new UserRepository(dataSource);
-            await userRepository.syncRoles(
-                account.user.id,
-                providerRoles.map((providerRole) => providerRole.role_id),
-            );
+    const roleIds : string[] = [];
+    for (let i = 0; i < providerRoles.length; i++) {
+        const providerRoleMapping = providerRoles[i];
+        if (!providerRoleMapping.name || !providerRoleMapping.value) {
+            roleIds.push(providerRoleMapping.role_id);
+            continue;
         }
+
+        // todo: also check roles property
+        // todo: think about claim paths ?!
+        const claimValue = identity.claims[providerRoleMapping.name];
+        if (!claimValue) {
+            continue;
+        }
+
+        const claimValues : string[] = [];
+        if (Array.isArray(claimValue)) {
+            // todo: check if string
+            claimValues.push(...claimValue);
+        } else {
+            claimValues.push(`${claimValue}`);
+        }
+
+        if (providerRoleMapping.value_is_regex) {
+            const regex = new RegExp(providerRoleMapping.value);
+            for (let j = 0; j < claimValues.length; j++) {
+                if (regex.test(claimValues[i])) {
+                    roleIds.push(providerRoleMapping.role_id);
+                }
+            }
+        } else {
+            for (let j = 0; j < claimValues.length; j++) {
+                if (claimValues[i] === providerRoleMapping.value) {
+                    roleIds.push(providerRoleMapping.role_id);
+                }
+            }
+        }
+    }
+
+    if (roleIds.length > 0) {
+        const userRepository = new UserRepository(dataSource);
+        await userRepository.syncRoles(
+            account.user.id,
+            roleIds,
+        );
     }
 
     return account;

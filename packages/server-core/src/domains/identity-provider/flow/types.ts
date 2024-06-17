@@ -6,6 +6,7 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
+import type { JWTClaims } from '@authup/kit';
 import type { Request } from 'routup';
 
 export type IdentityProviderFlowIdentity = {
@@ -14,7 +15,8 @@ export type IdentityProviderFlowIdentity = {
     email?: string | string[],
     roles?: string[],
     first_name?: string,
-    last_name?: string
+    last_name?: string,
+    claims: JWTClaims
 };
 
 export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;

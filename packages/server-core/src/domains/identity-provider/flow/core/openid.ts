@@ -47,7 +47,7 @@ export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
                 payload.sub,
             ],
             email: payload.email,
-            roles: this.extractRolesFromTokenPayload(payload),
+            claims: payload,
         };
     }
 }

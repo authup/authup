@@ -9,7 +9,7 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { Request, Response } from 'routup';
-import type { IdentityProviderRole } from '@authup/core-kit';
+import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import {
     createOauth2ProviderRoleRouteHandler,
     deleteOauth2ProvideRoleRouteHandler,
@@ -20,13 +20,13 @@ import {
 import { ForceLoggedInMiddleware } from '../../middleware';
 
 @DTags('identity-provider')
-@DController('/identity-provider-roles')
+@DController('/identity-provider-role-mappings')
 export class OAuth2ProviderRoleController {
     @DGet('', [])
     async getProviders(
         @DRequest() req: Request,
             @DResponse() res: Response,
-    ): Promise<IdentityProviderRole[]> {
+    ): Promise<IdentityProviderRoleMapping[]> {
         return getManyIdentityProviderRoleRouteHandler(req, res);
     }
 
@@ -35,17 +35,17 @@ export class OAuth2ProviderRoleController {
         @DPath('id') id: string,
             @DRequest() req: Request,
             @DResponse() res: Response,
-    ): Promise<IdentityProviderRole> {
+    ): Promise<IdentityProviderRoleMapping> {
         return getOneIdentityProviderRoleRouteHandler(req, res);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProviderRole>,
+            @DBody() user: NonNullable<IdentityProviderRoleMapping>,
             @DRequest() req: Request,
             @DResponse() res: Response,
-    ): Promise<IdentityProviderRole> {
+    ): Promise<IdentityProviderRoleMapping> {
         return updateOauth2ProviderRoleRouteHandler(req, res);
     }
 
@@ -54,16 +54,16 @@ export class OAuth2ProviderRoleController {
         @DPath('id') id: string,
             @DRequest() req: Request,
             @DResponse() res: Response,
-    ): Promise<IdentityProviderRole> {
+    ): Promise<IdentityProviderRoleMapping> {
         return deleteOauth2ProvideRoleRouteHandler(req, res);
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
-        @DBody() user: NonNullable<IdentityProviderRole>,
+        @DBody() user: NonNullable<IdentityProviderRoleMapping>,
             @DRequest() req: Request,
             @DResponse() res: Response,
-    ): Promise<IdentityProviderRole> {
+    ): Promise<IdentityProviderRoleMapping> {
         return createOauth2ProviderRoleRouteHandler(req, res);
     }
 }

@@ -6,7 +6,7 @@
  */
 
 import type {
-    IdentityProviderRole,
+    IdentityProviderRoleMapping,
 } from '@authup/core-kit';
 import {
     DomainEventName,
@@ -24,33 +24,33 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { publishDomainEvent } from '../../core';
-import { CachePrefix, IdentityProviderRoleEntity } from '../../domains';
+import { CachePrefix, IdentityProviderRoleMappingEntity } from '../../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,
-    data: IdentityProviderRole,
+    data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id) },
+        { channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
     ];
 
     if (data.provider_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id),
+            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
             namespace: buildDomainNamespaceName(data.provider_realm_id),
         });
     }
 
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE, id),
+            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
             namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.IDENTITY_PROVIDER_ROLE,
+            type: DomainType.IDENTITY_PROVIDER_ROLE_MAPPING,
             event,
             data,
         },
@@ -59,38 +59,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleEntity> {
+export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleMappingEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return IdentityProviderRoleEntity;
+        return IdentityProviderRoleMappingEntity;
     }
 
-    async afterInsert(event: InsertEvent<IdentityProviderRoleEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderRoleMapping);
     }
 
-    async afterUpdate(event: UpdateEvent<IdentityProviderRoleEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
-                    id: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderRole);
-    }
-
-    async afterRemove(event: RemoveEvent<IdentityProviderRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -104,6 +87,23 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderRole);
+        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
+    }
+
+    async afterRemove(event: RemoveEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
+                    id: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderRoleMapping);
     }
 }

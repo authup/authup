@@ -6,4 +6,5 @@
  */
 
 export * from './entity';
-export * from './utils';
+export * from './manager';
+export * from './module';

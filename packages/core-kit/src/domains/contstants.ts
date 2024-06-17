@@ -11,7 +11,7 @@ export enum DomainType {
     IDENTITY_PROVIDER = 'identityProvider',
     IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',
     IDENTITY_PROVIDER_ATTRIBUTE = 'identityProviderAttribute',
-    IDENTITY_PROVIDER_ROLE = 'identityProviderRole',
+    IDENTITY_PROVIDER_ROLE_MAPPING = 'identityProviderRoleMapping',
     PERMISSION = 'permission',
     REALM = 'realm',
     ROBOT = 'robot',

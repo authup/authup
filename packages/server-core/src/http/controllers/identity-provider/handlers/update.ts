@@ -42,10 +42,7 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
 
     entity = repository.merge(entity, result.data);
 
-    await repository.save(entity);
-
-    await repository.saveAttributes(entity.id, result.meta.attributes);
-    await repository.extendEntity(entity);
+    await repository.saveWithAttributes(entity, result.meta.attributes);
 
     return sendAccepted(res, entity);
 }

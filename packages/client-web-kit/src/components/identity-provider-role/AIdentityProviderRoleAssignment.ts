@@ -7,18 +7,22 @@
 
 import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref,
+    defineComponent, h, reactive, ref,
 } from 'vue';
-import type { IdentityProviderRole, Role } from '@authup/core-kit';
-import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
+import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
+import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    createEntityManager, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
-    useTranslation, useTranslationsForBaseValidation,
+    createEntityManager,
+    defineEntityManagerEvents,
+    getVuelidateSeverity,
+    initFormAttributesFromSource,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
 
 export const AIdentityProviderRoleAssignment = defineComponent({
@@ -32,7 +36,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProviderRole>(),
+    emits: defineEntityManagerEvents<IdentityProviderRoleMapping>(),
     async setup(props, setup) {
         const display = ref(false);
         const toggleDisplay = () => {
@@ -40,27 +44,35 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         };
 
         const form = reactive({
-            external_id: '',
+            name: '',
+            value: '',
+            value_is_regex: false,
         });
 
         const $v = useVuelidate({
-            external_id: {
-                required,
+            name: {
+                minLength: minLength(3),
+                maxLength: maxLength(32),
+            },
+            value: {
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
+            value_is_regex: {
+
+            },
         }, form);
 
-        const validationMessages = useTranslationsForBaseValidation($v.value.external_id);
-        const translationExternalID = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
-            key: TranslatorTranslationDefaultKey.EXTERNAL_ID,
-        });
-
-        const isExternalIDDefined = computed(() => form.external_id && form.external_id.length > 0);
+        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX },
+            ],
+        );
 
         const manager = createEntityManager({
-            type: `${DomainType.IDENTITY_PROVIDER_ROLE}`,
+            type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {
                 processEvent(event) {
@@ -130,7 +142,6 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                         'btn-primary': !manager.data.value,
                         'btn-dark': !!manager.data.value,
                     }],
-                    disabled: !isExternalIDDefined.value,
                     onClick($event: any) {
                         $event.preventDefault();
 
@@ -185,13 +196,39 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                     }, [
                         buildFormGroup({
                             label: true,
-                            labelContent: translationExternalID.value,
-                            validationMessages: validationMessages.value,
-                            validationSeverity: getVuelidateSeverity($v.value.external_id),
+                            labelContent: 'Name',
+                            validationMessages: validationMessages.name.value,
+                            validationSeverity: getVuelidateSeverity($v.value.name),
                             content: buildFormInput({
-                                value: $v.value.external_id.$model,
+                                value: $v.value.name.$model,
                                 onChange(input) {
-                                    $v.value.external_id.$model = input;
+                                    $v.value.name.$model = input;
+                                },
+                            }),
+                        }),
+                        buildFormGroup({
+                            label: true,
+                            labelContent: 'Value',
+                            validationMessages: validationMessages.value.value,
+                            validationSeverity: getVuelidateSeverity($v.value.value),
+                            content: buildFormInput({
+                                value: $v.value.value.$model,
+                                onChange(input) {
+                                    $v.value.value.$model = input;
+                                },
+                            }),
+                        }),
+                        buildFormGroup({
+                            validationMessages: validationMessages.value_is_regex.value,
+                            validationSeverity: getVuelidateSeverity($v.value.value_is_regex),
+                            label: true,
+                            labelContent: 'Regex',
+                            content: buildFormInputCheckbox({
+                                groupClass: 'form-switch',
+                                labelContent: translationsDefault.valueIsRegex.value,
+                                value: $v.value.value_is_regex.$model,
+                                onChange(input) {
+                                    $v.value.value_is_regex.$model = input;
                                 },
                             }),
                         }),

@@ -15,21 +15,33 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProviderRole, Realm } from '@authup/core-kit';
-import { Role } from '@authup/core-kit';
+import { IdentityProviderAttributeMapping, IdentityProviderMappingSyncMode, Realm } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
-import { RoleEntity } from '../role';
 import { RealmEntity } from '../realm';
 
-@Entity({ name: 'auth_identity_provider_roles' })
-@Index(['provider_id', 'role_id'], { unique: true })
-@Index(['provider_id', 'external_id'], { unique: true })
-export class IdentityProviderRoleEntity implements IdentityProviderRole {
+@Entity({ name: 'auth_identity_provider_attribute_mappings' })
+@Index(['provider_id', 'target_name'], { unique: true })
+export class IdentityProviderAttributeMappingEntity implements IdentityProviderAttributeMapping {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({ type: 'varchar', length: 36 })
-        external_id: string;
+    @Column({ type: 'varchar', length: 64, nullable: true })
+        synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+
+    @Column({ type: 'varchar', length: 64, nullable: true })
+        source_name: string | null;
+
+    @Column({ type: 'varchar', length: 128, nullable: true })
+        source_value: string | null;
+
+    @Column({ type: 'boolean', default: false })
+        source_value_is_regex: boolean;
+
+    @Column({ type: 'varchar', length: 64 })
+        target_name: string;
+
+    @Column({ type: 'varchar', length: 128, nullable: true })
+        target_value: string | null;
 
     @CreateDateColumn()
         created_at: Date;
@@ -38,20 +50,6 @@ export class IdentityProviderRoleEntity implements IdentityProviderRole {
         updated_at: Date;
 
     // -----------------------------------------------
-
-    @Column()
-        role_id: string;
-
-    @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'role_id' })
-        role: Role;
-
-    @Column({ nullable: true })
-        role_realm_id: Realm['id'] | null;
-
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'role_realm_id' })
-        role_realm: RealmEntity | null;
 
     @Column()
         provider_id: string;

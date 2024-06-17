@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { AIdentityProviderLdapForm } from '@authup/client-web-kit';
+import { AIdentityProviderForm } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -10,7 +10,7 @@ import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({
     components: {
-        AIdentityProviderLdapForm,
+        AIdentityProviderForm,
     },
     props: {
         entity: {
@@ -47,21 +47,11 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <template v-if="entity.protocol === 'ldap'">
-        <AIdentityProviderLdapForm
-            :entity="entity"
-            :realm-id="entity.realm_id"
-            @updated="handleUpdated"
-            @failed="handleFailed"
-        />
-    </template>
-    <template v-else>
-        <AIdentityProviderOAuth2Form
-            :api-url="apiUrl"
-            :entity="entity"
-            :realm-id="entity.realm_id"
-            @updated="handleUpdated"
-            @failed="handleFailed"
-        />
-    </template>
+    <AIdentityProviderForm
+        :api-url="apiUrl"
+        :entity="entity"
+        :realm-id="entity.realm_id"
+        @updated="handleUpdated"
+        @failed="handleFailed"
+    />
 </template>

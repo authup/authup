@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { OAuth2IdentityProviderFlow } from '../core';
@@ -33,6 +34,8 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
             token: token.access_token,
         });
 
+        const claims = extractTokenPayload(token.access_token);
+
         return {
             id: userInfo.id,
             name: [
@@ -40,6 +43,7 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
                 userInfo.name,
             ],
             email: userInfo.email,
+            claims,
         };
     }
 }
