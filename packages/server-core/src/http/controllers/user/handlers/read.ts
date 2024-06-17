@@ -103,7 +103,6 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     ) {
         attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
 
-        // todo: check if databaseName has prefix
         const validAttributes = userRepository.metadata.columns.map(
             (column) => column.databaseName,
         );

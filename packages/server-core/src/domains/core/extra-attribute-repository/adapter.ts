@@ -83,9 +83,13 @@ export class ExtraAttributesRepositoryAdapter<
         attributes?: E,
         options?: ExtrasAttributesSaveOptions,
     ) : Promise<T & E> {
-        const internalProperties = this.repository.metadata.columns.map(
-            (column) => column.propertyName,
-        );
+        const internalProperties : string[] = [];
+        for (let i = 0; i < this.repository.metadata.columns.length; i++) {
+            internalProperties.push(this.repository.metadata.columns[i].propertyName);
+        }
+        for (let i = 0; i < this.repository.metadata.relations.length; i++) {
+            internalProperties.push(this.repository.metadata.relations[i].propertyName);
+        }
 
         let extra : Record<string, any> = {};
         if (attributes) {

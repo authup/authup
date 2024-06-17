@@ -234,9 +234,8 @@ export class IdentityProviderAccountManger {
         const claimAttributes = await this.getClaimAttributes(identity);
         const extra = await this.userRepository.findExtraAttributesByPrimaryColumn(user.id);
 
-        const columnNames = this.userRepository.metadata.columns.map(
-            (column) => column.propertyName,
-        );
+        const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
+        const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
 
         const claimAttributeKeys = Object.keys(claimAttributes);
         for (let i = 0; i < claimAttributeKeys.length; i++) {
@@ -250,7 +249,12 @@ export class IdentityProviderAccountManger {
                 continue;
             }
 
-            const index = columnNames.indexOf(attributeKey);
+            let index : number = relationPropertyNames.indexOf(attributeKey);
+            if (index !== -1) {
+                continue;
+            }
+
+            index = columnPropertyNames.indexOf(attributeKey);
             if (index === -1) {
                 if (typeof extra[attributeKey] !== 'undefined') {
                     if (mode === IdentityProviderMappingSyncMode.ONCE) {
