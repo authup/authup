@@ -16,16 +16,16 @@ import type {
 } from 'typeorm';
 import { In } from 'typeorm';
 import type {
-    BaseExtraAttributeEntity,
-    ExtraAttributeRepositoryExtraPropertyFn,
-    ExtraAttributesOptions,
-    ExtraAttributesRepositoryAdapterContext,
-    ExtrasAttributesSaveOptions,
+    EARepositoryAdapterOptions,
+    EARepositoryEntityBase,
+    EARepositoryFindOptions,
+    EARepositoryPropertiesModifyFn,
+    EARepositorySaveOptions,
 } from './types';
 
 export class ExtraAttributesRepositoryAdapter<
     T,
-    A extends BaseExtraAttributeEntity,
+    A extends EARepositoryEntityBase,
 > {
     protected repository : Repository<T>;
 
@@ -37,14 +37,21 @@ export class ExtraAttributesRepositoryAdapter<
 
     protected cachePrefix?: string;
 
-    protected extraPropertiesFn : ExtraAttributeRepositoryExtraPropertyFn<T, A> | undefined;
+    protected extra : EARepositoryPropertiesModifyFn<T, A>;
 
     // ------------------------------------------------------------------------------
 
-    constructor(ctx: ExtraAttributesRepositoryAdapterContext<T, A>) {
-        this.extraPropertiesFn = ctx.extraProperties;
+    constructor(ctx: EARepositoryAdapterOptions<T, A>) {
+        let extra : EARepositoryPropertiesModifyFn<T, A>;
+        if (ctx.attributeProperties) {
+            extra = ctx.attributeProperties;
+        } else {
+            extra = (input) => input;
+        }
+        this.extra = extra;
+
         this.repository = ctx.repository;
-        this.primaryColumn = ctx.primaryColumn;
+        this.primaryColumn = ctx.entityPrimaryColumn;
         this.attributeRepository = ctx.attributeRepository;
         this.attributeForeignColumn = ctx.attributeForeignColumn;
         this.cachePrefix = ctx.cachePrefix;
@@ -54,7 +61,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     async findOneWithExtraAttributes(
         options: FindOneOptions<T>,
-        extraOptions: ExtraAttributesOptions = {},
+        extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T | undefined> {
         const entity = await this.repository.findOne(options);
         if (!entity) {
@@ -70,18 +77,17 @@ export class ExtraAttributesRepositoryAdapter<
         E extends Record<string, any>,
     >(
         options: FindManyOptions<T>,
-        extraOptions: ExtraAttributesOptions = {},
+        extraOptions: EARepositoryFindOptions = {},
     ) : Promise<(T & E)[]> {
         const entities = await this.repository.find(options);
 
         return this.findAndAppendExtraAttributesToMany(entities, extraOptions);
     }
 
-    // todo: option to keep removable attributes
     async saveWithAttributes<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
-        options?: ExtrasAttributesSaveOptions,
+        options?: EARepositorySaveOptions,
     ) : Promise<T & E> {
         const internalProperties : string[] = [];
         for (let i = 0; i < this.repository.metadata.columns.length; i++) {
@@ -126,7 +132,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     async findExtraAttributesByPrimaryColumn<E extends Record<string, any>>(
         value: T[keyof T],
-        extraOptions: ExtraAttributesOptions = {},
+        extraOptions: EARepositoryFindOptions = {},
     ) : Promise<E> {
         const where : FindOptionsWhere<A> = {};
         where[this.attributeForeignColumn as keyof FindOptionsWhere<A>] = value as any;
@@ -157,7 +163,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     async findAndAppendExtraAttributesTo<E extends Record<string, any>>(
         entity: T,
-        extraOptions: ExtraAttributesOptions = {},
+        extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T & E> {
         const attributes = await this.findExtraAttributesByPrimaryColumn(
             entity[this.primaryColumn],
@@ -174,7 +180,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     async findAndAppendExtraAttributesToMany<E extends Record<string, any>>(
         entities: T[],
-        extraOptions: ExtraAttributesOptions = {},
+        extraOptions: EARepositoryFindOptions = {},
     ) : Promise<(T & E)[]> {
         const ids = entities.map((entity) => entity[this.primaryColumn]);
 
@@ -201,19 +207,13 @@ export class ExtraAttributesRepositoryAdapter<
     private async saveExtraAttributes(
         parent: T,
         input: Record<string, any>,
-        options: ExtrasAttributesSaveOptions = {},
+        options: EARepositorySaveOptions = {},
     ) {
-        let properties : Partial<A> = {};
-        if (this.extraPropertiesFn) {
-            properties = await this.extraPropertiesFn(parent);
-        }
-
-        const key = this.attributeForeignColumn as keyof A;
-
-        properties[key as keyof A] = parent[this.primaryColumn] as any;
+        const foreignColumn = this.attributeForeignColumn as keyof A;
+        const foreignColumnValue = parent[this.primaryColumn] as unknown as A[keyof A];
 
         const where : Partial<A> = {};
-        where[key] = parent[this.primaryColumn] as any;
+        where[foreignColumn] = foreignColumnValue;
 
         const items = await this.attributeRepository.findBy(where);
 
@@ -226,11 +226,9 @@ export class ExtraAttributesRepositoryAdapter<
 
             if (hasOwnProperty(input, item.name)) {
                 item.value = input[item.name];
+                item[foreignColumn] = foreignColumnValue;
 
-                itemsToUpdate.push({
-                    ...item,
-                    ...properties,
-                });
+                itemsToUpdate.push(this.extra(item, parent));
 
                 keysProcessed.push(item.name);
             } else if (!options.keepAll) {
@@ -254,11 +252,11 @@ export class ExtraAttributesRepositoryAdapter<
         for (let i = 0; i < keys.length; i++) {
             keyIndex = keysProcessed.indexOf(keys[i]);
             if (keyIndex === -1) {
-                itemsToAdd.push({
-                    ...properties,
+                itemsToAdd.push(this.extra({
                     name: keys[i],
                     value: input[keys[i]],
-                } as A);
+                    [foreignColumn]: foreignColumnValue,
+                } as A, parent));
             }
         }
 

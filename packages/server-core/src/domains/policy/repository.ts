@@ -6,18 +6,27 @@
  */
 
 import type { Policy, PolicyBuiltIn } from '@authup/core-kit';
-import {
-    hasOwnProperty,
-} from '@authup/kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import { InstanceChecker, TreeRepository } from 'typeorm';
+import { EATreeRepository } from '../core';
 import { PolicyAttributeEntity } from '../policy-attribute/entity';
 import { PolicyEntity } from './entity';
-import { transformAttributesToEntities, transformAttributesToRecord } from '../utils';
+import { transformAttributesToRecord } from '../utils';
 
-export class PolicyRepository extends TreeRepository<PolicyEntity> {
+export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
-        super(PolicyEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+        super(instance, {
+            attributeProperties: (input, parent) => {
+                input.policy_id = parent.id;
+                // input.policy_realm_id = parent.realm_id;
+
+                return input;
+            },
+            entity: PolicyEntity,
+            entityPrimaryColumn: 'id',
+            attributeEntity: PolicyAttributeEntity,
+            attributeForeignColumn: 'policy_id',
+            // cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
+        });
     }
 
     async getAttributes(id: Policy['id']) : Promise<Record<string, any>> {
@@ -29,48 +38,6 @@ export class PolicyRepository extends TreeRepository<PolicyEntity> {
         });
 
         return transformAttributesToRecord(entities);
-    }
-
-    async saveAttributes(id: Policy['id'], attributes: Record<string, any>) : Promise<void> {
-        const repository = this.manager.getRepository(PolicyAttributeEntity);
-
-        let entities = await repository.find({
-            where: {
-                policy_id: id,
-            },
-        });
-
-        const reamingAttributes : Record<string, any> = {
-            ...attributes,
-        };
-
-        const entitiesToRemove : PolicyAttributeEntity[] = [];
-
-        for (let i = 0; i < entities.length; i++) {
-            if (hasOwnProperty(reamingAttributes, entities[i].name)) {
-                entities[i].value = reamingAttributes[entities[i].name];
-                delete reamingAttributes[entities[i].name];
-            } else {
-                entitiesToRemove.push(entities[i]);
-            }
-        }
-
-        await repository.save(entities);
-
-        if (entitiesToRemove.length > 0) {
-            await repository.remove(entitiesToRemove);
-        }
-
-        entities = transformAttributesToEntities<PolicyAttributeEntity>(
-            reamingAttributes,
-            {
-                policy_id: id,
-            },
-        );
-
-        if (entities.length > 0) {
-            await repository.insert(entities);
-        }
     }
 
     appendAttributes<T extends Policy>(entity: T, attributes: Record<string, any>) : T {

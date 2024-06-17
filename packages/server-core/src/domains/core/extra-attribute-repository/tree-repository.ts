@@ -8,16 +8,20 @@
 import type {
     DataSource, EntityManager, FindManyOptions, FindOneOptions,
 } from 'typeorm';
-import { InstanceChecker, Repository } from 'typeorm';
+import {
+    InstanceChecker,
+    TreeRepository,
+} from 'typeorm';
 import { ExtraAttributesRepositoryAdapter } from './adapter';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions,
 } from './types';
 
-export class EARepository<
+// todo: tree walk children (find, save, ...)
+export class EATreeRepository<
     T,
     A extends EARepositoryEntityBase,
-> extends Repository<T> {
+> extends TreeRepository<T> {
     protected adapter : ExtraAttributesRepositoryAdapter<T, A>;
 
     constructor(

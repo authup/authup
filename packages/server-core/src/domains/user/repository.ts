@@ -27,7 +27,7 @@ import {
 } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import { CachePrefix } from '../constants';
-import { ExtraAttributeRepository } from '../core';
+import { EARepository } from '../core';
 import { RoleRepository } from '../role';
 import { UserRoleEntity } from '../user-role';
 import { UserPermissionEntity } from '../user-permission';
@@ -36,15 +36,14 @@ import { UserEntity } from './entity';
 import { UserAttributeEntity } from '../user-attribute';
 import type { UserRelationItemSyncConfig } from './types';
 
-export class UserRepository extends ExtraAttributeRepository<UserEntity, UserAttributeEntity> {
+export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
-            attributeExtraProperties: async (input) => {
-                const output : Partial<UserAttributeEntity> = {};
-                output.user_id = input.id;
-                output.realm_id = input.realm_id;
+            attributeProperties: (input, parent) => {
+                input.user_id = parent.id;
+                input.realm_id = parent.realm_id;
 
-                return output;
+                return input;
             },
             entity: UserEntity,
             entityPrimaryColumn: 'id',

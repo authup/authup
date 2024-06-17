@@ -14,11 +14,11 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PolicyEntity, PolicyRepository, resolveRealm } from '../../../../domains';
+import { PolicyRepository, resolveRealm } from '../../../../domains';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
-    const repository = dataSource.getTreeRepository(PolicyEntity);
+    const repository = new PolicyRepository(dataSource);
 
     const query = repository.createQueryBuilder('policy');
 
@@ -51,6 +51,8 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
     });
 
     const [entities, total] = await query.getManyAndCount();
+
+    await repository.findAndAppendExtraAttributesToMany(entities);
 
     return send(res, {
         data: entities,
@@ -103,7 +105,7 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
         throw new NotFoundError();
     }
 
-    await repository.extendEntity(entity);
+    await repository.findAndAppendExtraAttributesTo(entity);
 
     return send(res, entity);
 }

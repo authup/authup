@@ -10,11 +10,11 @@ import type {
 } from 'typeorm';
 import { InstanceChecker } from 'typeorm';
 import { CachePrefix } from '../constants';
-import { ExtraAttributeRepository } from '../core';
+import { EARepository } from '../core';
 import { IdentityProviderEntity } from './entity';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute';
 
-export class IdentityProviderRepository extends ExtraAttributeRepository<
+export class IdentityProviderRepository extends EARepository<
 IdentityProviderEntity,
 IdentityProviderAttributeEntity
 > {

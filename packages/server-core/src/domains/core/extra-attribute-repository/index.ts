@@ -7,4 +7,5 @@
 
 export * from './adapter';
 export * from './repository';
+export * from './tree-repository';
 export * from './types';

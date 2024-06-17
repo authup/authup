@@ -35,17 +35,14 @@ export async function createPolicyRouteHandler(req: Request, res: Response) : Pr
         const parent = await repository.findOneBy({ id: result.data.parent_id });
         if (parent) {
             if (parent.type !== BuiltInPolicyType.COMPOSITE) {
-                throw new BadRequestError('The parent policy must be of type group.');
+                throw new BadRequestError('The parent policy must be of type composite.');
             }
         }
 
         result.data.parent = parent;
     }
 
-    await repository.save(entity);
-
-    await repository.saveAttributes(entity.id, result.meta.attributes);
-    repository.appendAttributes(entity, result.meta.attributes);
+    await repository.saveWithAttributes(entity, result.meta.attributes);
 
     return sendCreated(res, entity);
 }
