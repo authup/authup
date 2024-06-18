@@ -54,7 +54,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
         result.data.permission_realm_id = result.relation.permission.realm_id;
 
-        if (result.relation.role.name !== ROLE_ADMIN_NAME) {
+        if (!result.relation.role || result.relation.role.name !== ROLE_ADMIN_NAME) {
             const ability = buildAbilityFromPermission(result.relation.permission);
             if (!abilities.has(ability, policyEvaluationContext)) {
                 throw new ForbiddenError('The target permission is not owned.');

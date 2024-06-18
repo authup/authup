@@ -51,12 +51,7 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!ability.has(PermissionName.ROLE_PERMISSION_DROP, {
-        resource: {
-            role: entity.role,
-            permission: entity.permission,
-        },
-    })) {
+    if (!ability.has(PermissionName.ROLE_PERMISSION_DROP, { resource: entity })) {
         throw new ForbiddenError();
     }
 
