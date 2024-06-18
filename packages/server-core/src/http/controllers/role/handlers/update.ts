@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -50,6 +50,18 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
     await enforceUniquenessForDatabaseEntity(RoleEntity, result.data, {
         id: entity.id,
     });
+
+    // ----------------------------------------------
+
+    if (
+        entity.name === ROLE_ADMIN_NAME &&
+        result.data.name &&
+        result.data.name !== entity.name
+    ) {
+        throw new BadRequestError('The default admin role can not be renamed.');
+    }
+
+    // ----------------------------------------------
 
     entity = repository.merge(entity, result.data);
 

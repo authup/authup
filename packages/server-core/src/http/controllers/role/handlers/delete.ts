@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -27,6 +27,12 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    // ----------------------------------------------
+
+    if (entity.name === ROLE_ADMIN_NAME) {
+        throw new BadRequestError('The default admin role can not be deleted.');
     }
 
     // ----------------------------------------------

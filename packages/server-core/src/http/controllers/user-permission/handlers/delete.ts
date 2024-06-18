@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserPermissionEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 /**
  * Drop a permission by id of a specific user.
@@ -29,7 +29,15 @@ export async function deleteUserPermissionRouteHandler(req: Request, res: Respon
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserPermissionEntity);
-    const entity = await repository.findOneBy({ id });
+    const entity = await repository.findOne({
+        where: {
+            id,
+        },
+        relations: {
+            user: true,
+            permission: true,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
@@ -37,9 +45,13 @@ export async function deleteUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.user_realm_id)
-    ) {
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.user_realm_id)) {
+        throw new ForbiddenError();
+    }
+
+    // ----------------------------------------------
+
+    if (!ability.has(PermissionName.USER_PERMISSION_DROP, { resource: entity })) {
         throw new ForbiddenError();
     }
 

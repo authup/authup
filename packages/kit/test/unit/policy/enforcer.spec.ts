@@ -44,14 +44,14 @@ describe('src/policy', () => {
         };
 
         let outcome = enforcer.evaluateMany([compositePolicy], {
-            target: {
+            resource: {
                 name: 'admin',
             },
         });
         expect(outcome).toBeTruthy();
 
         outcome = enforcer.evaluate(compositePolicy, {
-            target: {
+            resource: {
                 id: 'foo',
                 name: 'admin',
             },
@@ -59,7 +59,7 @@ describe('src/policy', () => {
         expect(outcome).toBeFalsy();
 
         outcome = enforcer.evaluate(compositePolicy, {
-            target: {
+            resource: {
                 name: 'foo',
             },
         });

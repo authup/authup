@@ -6,16 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { RolePermissionEntity } from '../../../../domains';
 import { PermissionEntity, PolicyEntity, RoleEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -75,14 +71,6 @@ export async function runRolePermissionValidation(
         id: 'role_id',
         entity: 'role',
     });
-
-    if (result.relation.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
-        }
-
-        result.data.role_realm_id = result.relation.role.realm_id;
-    }
 
     // ----------------------------------------------
 

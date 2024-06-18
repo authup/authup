@@ -29,7 +29,15 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotPermissionEntity);
-    const entity = await repository.findOneBy({ id });
+    const entity = await repository.findOne({
+        where: {
+            id,
+        },
+        relations: {
+            robot: true,
+            permission: true,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
@@ -38,6 +46,12 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
     // ----------------------------------------------
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.robot_realm_id)) {
+        throw new ForbiddenError();
+    }
+
+    // ----------------------------------------------
+
+    if (!ability.has(PermissionName.ROBOT_PERMISSION_DROP, { resource: entity })) {
         throw new ForbiddenError();
     }
 

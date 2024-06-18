@@ -9,9 +9,21 @@ import {
     BuiltInPolicyType,
     PolicyDecisionStrategy,
 } from '@authup/kit';
-import type { PermissionRelation } from './entity';
+import type { Permission, PermissionRelation } from './entity';
 
-export function buildAbilityFromPermissionRelation(entity: PermissionRelation): Ability {
+type PermissionMinimal = Pick<Permission, 'name'> & Partial<Omit<Permission, 'name'>>;
+
+export function buildAbilityFromPermission(entity: PermissionMinimal) : Ability {
+    return {
+        name: entity.name,
+        realmId: entity.realm_id,
+        policy: entity.policy,
+    } satisfies Ability;
+}
+
+type PermissionRelationMinimal = Pick<PermissionRelation, 'permission'> & Partial<Omit<PermissionRelation, 'permission'>>;
+
+export function buildAbilityFromPermissionRelation(entity: PermissionRelationMinimal): Ability {
     if (typeof entity.permission === 'undefined') {
         throw new SyntaxError('The permission relation attribute is mandatory.');
     }
