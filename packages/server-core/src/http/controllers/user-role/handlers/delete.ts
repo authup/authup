@@ -24,11 +24,21 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
 
-    const entity = await repository.findOneBy({ id });
+    const entity = await repository.findOne({
+        where: {
+            id,
+        },
+        relations: {
+            user: true,
+            role: true,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
     }
+
+    // ----------------------------------------------
 
     if (
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.user_realm_id) ||
@@ -36,6 +46,14 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
     ) {
         throw new ForbiddenError();
     }
+
+    // ----------------------------------------------
+
+    if (!ability.has(PermissionName.USER_ROLE_DROP, { resource: entity })) {
+        throw new ForbiddenError();
+    }
+
+    // ----------------------------------------------
 
     const { id: entityId } = entity;
 

@@ -7,13 +7,13 @@
 
 import { ForbiddenError } from '@ebec/http';
 import {
-    PermissionName,
+    PermissionName, ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { PermissionEntity } from '../../../../domains';
+import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPermissionValidation } from '../utils';
 
@@ -27,11 +27,29 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
 
     await enforceUniquenessForDatabaseEntity(PermissionEntity, data);
 
-    const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(PermissionEntity);
-    const entity = repository.create(data);
+    let entity : PermissionEntity | undefined;
 
-    await repository.save(entity);
+    const dataSource = await useDataSource();
+    await dataSource.transaction(async (entityManager) => {
+        const repository = entityManager.getRepository(PermissionEntity);
+        entity = repository.create(data);
+
+        await repository.save(entity);
+
+        const roleRepository = new RoleRepository(entityManager);
+        const role = await roleRepository.findOneBy({
+            name: ROLE_ADMIN_NAME,
+            realm_id: null,
+        });
+
+        const rolePermissionRepository = entityManager.getRepository(RolePermissionEntity);
+        await rolePermissionRepository.insert({
+            role_id: role.id,
+            role_realm_id: role.realm_id,
+            permission_id: entity.id,
+            permission_realm_id: entity.realm_id,
+        });
+    });
 
     return sendCreated(res, entity);
 }

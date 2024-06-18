@@ -9,14 +9,14 @@ import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../domains';
 import { UserEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError, extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runUserAttributeValidation(
     req: Request,
@@ -35,7 +35,8 @@ export async function runUserAttributeValidation(
         await check('user_id')
             .exists()
             .isUUID()
-            .optional();
+            .optional()
+            .run(req);
     }
 
     await check('value')

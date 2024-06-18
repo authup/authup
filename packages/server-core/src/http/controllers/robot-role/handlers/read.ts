@@ -17,7 +17,7 @@ import { RobotRoleEntity } from '../../../../domains';
 export async function getManyRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
-    const query = await repository.createQueryBuilder('robotRole');
+    const query = repository.createQueryBuilder('robotRole');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robotRole',

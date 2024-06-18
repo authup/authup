@@ -23,7 +23,7 @@ export type AnyPolicy = {
 };
 
 export type PolicyEvaluationContext = {
-    target?: Record<string, any>,
+    resource?: Record<string, any>,
     dateTime?: Date | number | string,
     [key: string]: any
 };

@@ -24,11 +24,21 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
 
-    const entity = await repository.findOneBy({ id });
+    const entity = await repository.findOne({
+        where: {
+            id,
+        },
+        relations: {
+            robot: true,
+            role: true,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
     }
+
+    // ----------------------------------------------
 
     if (
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.robot_realm_id) ||
@@ -36,6 +46,16 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
     ) {
         throw new ForbiddenError();
     }
+
+    // ----------------------------------------------
+
+    if (!ability.has(PermissionName.ROBOT_ROLE_DROP, {
+        resource: entity,
+    })) {
+        throw new ForbiddenError();
+    }
+
+    // ----------------------------------------------
 
     const { id: entityId } = entity;
 

@@ -29,7 +29,15 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RolePermissionEntity);
-    const entity = await repository.findOneBy({ id });
+    const entity = await repository.findOne({
+        where: {
+            id,
+        },
+        relations: {
+            role: true,
+            permission: true,
+        },
+    });
 
     if (!entity) {
         throw new NotFoundError();
@@ -38,6 +46,12 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
     // ----------------------------------------------
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)) {
+        throw new ForbiddenError();
+    }
+
+    // ----------------------------------------------
+
+    if (!ability.has(PermissionName.ROLE_PERMISSION_DROP, { resource: entity })) {
         throw new ForbiddenError();
     }
 

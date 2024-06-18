@@ -6,16 +6,12 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { RobotPermissionEntity } from '../../../../domains';
 import { PermissionEntity, PolicyEntity, RobotEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
@@ -75,16 +71,6 @@ export async function runRobotPermissionValidation(
         id: 'robot_id',
         entity: 'robot',
     });
-
-    if (result.relation.robot) {
-        if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)
-        ) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('robot_id'));
-        }
-
-        result.data.robot_realm_id = result.relation.robot.realm_id;
-    }
 
     // ----------------------------------------------
 

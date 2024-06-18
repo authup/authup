@@ -17,7 +17,7 @@ import { UserRoleEntity } from '../../../../domains';
 export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
-    const query = await repository.createQueryBuilder('userRole');
+    const query = repository.createQueryBuilder('userRole');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userRole',

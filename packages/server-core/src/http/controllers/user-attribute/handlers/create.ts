@@ -14,9 +14,9 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 import { runUserAttributeValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const result = await runUserAttributeValidation(req, RequestHandlerOperation.CREATE);

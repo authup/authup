@@ -34,7 +34,7 @@ describe('src/policy/attributes', () => {
         expect(outcome).toBeTruthy();
 
         outcome = evaluator.execute(policy, {
-            target: {
+            resource: {
                 name: 'Peter',
                 age: 15,
             },
@@ -42,7 +42,7 @@ describe('src/policy/attributes', () => {
         expect(outcome).toBeTruthy();
 
         outcome = evaluator.execute(policy, {
-            target: {
+            resource: {
                 name: 'Peter',
                 age: 28,
             },

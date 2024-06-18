@@ -286,11 +286,4 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
     async verifyPassword(password: string, passwordHashed: string) : Promise<boolean> {
         return compare(password, passwordHashed);
     }
-
-    protected async getExtraAttributesProperties(input: UserEntity): Promise<Partial<UserAttributeEntity>> {
-        return {
-            user_id: input.id,
-            realm_id: input.realm_id,
-        };
-    }
 }

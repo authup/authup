@@ -6,21 +6,17 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { UserRoleEntity } from '../../../../domains';
 import { RoleEntity, UserEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult,
     matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runUserRoleValidation(
     req: Request,
@@ -56,33 +52,10 @@ export async function runUserRoleValidation(
         entity: 'role',
     });
 
-    if (
-        result.relation.role &&
-        result.relation.role.realm_id
-    ) {
-        if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)
-        ) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
-        }
-
-        result.data.role_realm_id = result.relation.role.realm_id;
-    }
-
     await extendExpressValidationResultWithRelation(result, UserEntity, {
         id: 'user_id',
         entity: 'user',
     });
-
-    if (result.relation.user) {
-        if (
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.user.realm_id)
-        ) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('user_id'));
-        }
-
-        result.data.user_realm_id = result.relation.user.realm_id;
-    }
 
     // ----------------------------------------------
 
