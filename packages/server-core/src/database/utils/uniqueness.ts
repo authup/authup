@@ -9,7 +9,6 @@ import { ConflictError } from '@ebec/http';
 import type { EntityMetadata, EntityTarget, WhereExpressionBuilder } from 'typeorm';
 import { Brackets } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { UniqueMetadata } from 'typeorm/metadata/UniqueMetadata';
 
 function transformUndefinedToNull(input: unknown) {
     if (typeof input === 'undefined') {
@@ -105,19 +104,18 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
     const metadata: EntityMetadata = dataSource.entityMetadatas[index];
     const repository = dataSource.getRepository(metadata.target);
 
-    let uniqueMetadata : UniqueMetadata;
     for (let i = 0; i < metadata.ownUniques.length; i++) {
-        uniqueMetadata = metadata.ownUniques[i];
-        const columnNames = uniqueMetadata.columns.map((column) => column.propertyName);
+        const uniqueColumnNames = metadata.ownUniques[i].columns.map((column) => column.propertyName);
 
         const queryBuilder = repository.createQueryBuilder('entity');
         queryBuilder.where(new Brackets((qb) => {
-            buildWhereExpression(qb, pickRecord(target, columnNames), 'target');
+            buildWhereExpression(qb, pickRecord(target, uniqueColumnNames), 'target');
         }));
 
         if (source) {
+            const primaryColumnNames = metadata.primaryColumns.map((c) => c.propertyName);
             queryBuilder.andWhere(new Brackets((qb) => {
-                buildWhereExpression(qb, source, 'source');
+                buildWhereExpression(qb, pickRecord(source, primaryColumnNames), 'source');
             }));
         }
 

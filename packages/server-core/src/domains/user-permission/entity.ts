@@ -62,7 +62,7 @@ export class UserPermissionEntity implements UserPermission {
     @JoinColumn({ name: 'user_realm_id' })
         user_realm: Realm | null;
 
-    @Column({ type: 'varchar' })
+    @Column()
         permission_id: Permission['id'];
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })

@@ -18,7 +18,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { User } from '@authup/core-kit';
+import type { Client, User } from '@authup/core-kit';
 import { Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
@@ -121,6 +121,16 @@ export class UserEntity implements User {
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm;
+
+    // ------------------------------------------------------------------
+
+    @Index()
+    @Column({ nullable: true })
+        client_id: Client['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'client_id' })
+        client: Client | null;
 
     // ------------------------------------------------------------------
 

@@ -9,5 +9,6 @@ import type { UserRelationItemSyncOperation } from './constants';
 
 export type UserRelationItemSyncConfig = {
     id: string,
+    realmId?: string | null,
     operation?: `${UserRelationItemSyncOperation}`
 };

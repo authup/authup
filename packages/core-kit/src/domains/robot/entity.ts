@@ -6,6 +6,7 @@
  */
 
 import type { EventPayload } from '@authup/kit';
+import type { Client } from '../client';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 import type { User } from '../user';
@@ -32,6 +33,14 @@ export interface Robot {
     user_id: User['id'] | null;
 
     user: User | null;
+
+    // ------------------------------------------------------------------
+
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
 
     realm_id: Realm['id'];
 

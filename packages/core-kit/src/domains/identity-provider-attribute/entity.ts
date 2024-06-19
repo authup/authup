@@ -8,6 +8,7 @@
 import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
 import type { IdentityProvider } from '../identity-provider';
+import type { Realm } from '../realm';
 
 export interface IdentityProviderAttribute {
     id: string;
@@ -21,6 +22,12 @@ export interface IdentityProviderAttribute {
     provider_id: IdentityProvider['id'];
 
     provider: IdentityProvider;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
 
     // ------------------------------------------------------------------
 

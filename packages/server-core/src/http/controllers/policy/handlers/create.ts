@@ -13,7 +13,8 @@ import {
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PolicyRepository } from '../../../../domains';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { PolicyEntity, PolicyRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPolicyProviderValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -25,6 +26,8 @@ export async function createPolicyRouteHandler(req: Request, res: Response) : Pr
     }
 
     const result = await runPolicyProviderValidation(req, RequestHandlerOperation.CREATE);
+
+    await enforceUniquenessForDatabaseEntity(PolicyEntity, result.data);
 
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);

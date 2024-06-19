@@ -57,10 +57,10 @@ export class PolicyEntity implements Policy {
     @UpdateDateColumn()
         updated_at: Date;
 
-    @Column()
+    @Column({ nullable: true })
         realm_id: string | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm | null;
 }

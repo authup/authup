@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useLogger } from '@authup/server-kit';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
-import { setupConfig } from '../../config';
+import { setupConfig, setupLogger } from '../../config';
 
 import { buildDataSourceOptions } from '../../database';
 
@@ -29,8 +30,13 @@ export class MigrationStatusCommand implements CommandModule {
     }
 
     async handler(args: MigrationStatusArguments) {
-        await setupConfig({
+        const config = await setupConfig({
             filePath: args.config,
+        });
+
+        setupLogger({
+            directory: config.writableDirectoryPath,
+            env: config.env,
         });
 
         const options = await buildDataSourceOptions();
@@ -38,9 +44,13 @@ export class MigrationStatusCommand implements CommandModule {
         const dataSource = new DataSource(options);
         await dataSource.initialize();
 
+        const logger = useLogger();
+
         try {
             await dataSource.showMigrations();
             // eslint-disable-next-line no-useless-catch
+        } catch (e) {
+            logger.error(e);
         } finally {
             await dataSource.destroy();
         }

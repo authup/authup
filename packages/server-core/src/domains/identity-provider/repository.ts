@@ -22,6 +22,12 @@ IdentityProviderAttributeEntity
         super(
             InstanceChecker.isDataSource(instance) ? instance.manager : instance,
             {
+                attributeProperties: (entity, parent) => {
+                    entity.provider_id = parent.id;
+                    entity.realm_id = parent.realm_id;
+
+                    return entity;
+                },
                 entity: IdentityProviderEntity,
                 entityPrimaryColumn: 'id',
                 attributeEntity: IdentityProviderAttributeEntity,

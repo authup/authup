@@ -15,8 +15,9 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderAccount } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderAccount, Realm } from '@authup/core-kit';
 import { User } from '@authup/core-kit';
+import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 import { IdentityProviderEntity } from '../identity-provider';
 
@@ -70,10 +71,26 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @JoinColumn({ name: 'user_id' })
         user: UserEntity;
 
+    @Column({ nullable: true })
+        user_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'user_realm_id' })
+        user_realm: RealmEntity | null;
+
+    // -----------------------------------------------
+
     @Column()
         provider_id: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
         provider: IdentityProviderEntity;
+
+    @Column({ nullable: true })
+        provider_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'provider_realm_id' })
+        provider_realm: RealmEntity | null;
 }

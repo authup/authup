@@ -8,6 +8,7 @@
 import type { EventPayload } from '@authup/kit';
 import type { Client } from '../client';
 import type { DomainType } from '../contstants';
+import type { Realm } from '../realm';
 import type { Scope } from '../scope';
 
 export interface ClientScope {
@@ -18,8 +19,14 @@ export interface ClientScope {
     client_id: Client['id'];
     client: Client;
 
+    client_realm_id: Realm['id'] | null;
+    client_realm: Realm | null;
+
     scope_id: Scope['id'];
     scope: Scope;
+
+    scope_realm_id: Realm['id'] | null;
+    scope_realm: Realm | null;
 }
 
 export type ClientScopeEventContext = EventPayload & {

@@ -76,7 +76,7 @@ export class OAuth2AuthorizationCodeEntity implements OAuth2AuthorizationCode {
         robot: RobotEntity | null;
 
     @Column()
-        realm_id: Realm['id'] | null;
+        realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })

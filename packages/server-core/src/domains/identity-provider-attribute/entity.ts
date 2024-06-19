@@ -12,12 +12,13 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderAttribute, Realm } from '@authup/core-kit';
 import {
     deserialize,
     serialize,
 } from '@authup/kit';
 import { IdentityProviderEntity } from '../identity-provider/entity';
+import { RealmEntity } from '../realm';
 
 @Unique(['name', 'provider_id'])
 @Entity({ name: 'auth_identity_provider_attributes' })
@@ -50,6 +51,14 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
         provider: IdentityProviderEntity;
+
+    // ------------------------------------------------------------------
+    @Column({ nullable: true })
+        realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'realm_id' })
+        realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 
