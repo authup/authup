@@ -6,22 +6,18 @@
  */
 
 import { check, validationResult } from 'express-validator';
-import { BadRequestError } from '@ebec/http';
-import { isRealmResourceWritable } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { ClientScopeEntity } from '../../../../domains';
 import {
     ClientEntity, ScopeEntity,
 } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import type { ExpressValidationResult } from '../../../validation';
 import {
     RequestValidationError,
-    buildRequestValidationErrorMessage,
     extendExpressValidationResultWithRelation,
     initExpressValidationResult, matchedValidationData,
 } from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function runClientScopeValidation(
     req: Request,
@@ -56,15 +52,6 @@ export async function runClientScopeValidation(
         id: 'client_id',
         entity: 'client',
     });
-
-    if (
-        result.relation.client &&
-        result.relation.client.realm_id
-    ) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.client.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('client_id'));
-        }
-    }
 
     await extendExpressValidationResultWithRelation(result, ScopeEntity, {
         id: 'scope_id',

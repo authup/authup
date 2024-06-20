@@ -11,7 +11,7 @@ import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extensi
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
-import { setupConfig } from '../../config';
+import { setupConfig, setupLogger } from '../../config';
 import { extendDataSourceOptions } from '../../database';
 
 interface MigrationGenerateArguments extends Arguments {
@@ -34,6 +34,11 @@ export class MigrationGenerateCommand implements CommandModule {
     async handler(args: MigrationGenerateArguments) {
         const config = await setupConfig({
             filePath: args.config,
+        });
+
+        setupLogger({
+            directory: config.writableDirectoryPath,
+            env: config.env,
         });
 
         const connections : DataSourceOptions[] = [

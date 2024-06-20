@@ -40,9 +40,9 @@ export interface IdentityProviderMappingRelation {
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'] | null;
+    provider_realm_id: Realm['id'];
 
-    provider_realm: Realm | null;
+    provider_realm: Realm;
 }
 
 export type IdentityProviderEventContext = EventPayload & {

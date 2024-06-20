@@ -69,10 +69,10 @@ export class IdentityProviderPermissionMappingEntity implements IdentityProvider
     @JoinColumn({ name: 'provider_id' })
         provider: IdentityProviderEntity;
 
-    @Column({ nullable: true })
-        provider_realm_id: Realm['id'] | null;
+    @Column()
+        provider_realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_realm_id' })
-        provider_realm: RealmEntity | null;
+        provider_realm: RealmEntity;
 }

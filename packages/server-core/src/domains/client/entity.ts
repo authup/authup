@@ -96,7 +96,7 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
-    @Column({ default: null })
+    @Column({ nullable: true })
         realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })

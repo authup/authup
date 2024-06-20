@@ -89,20 +89,22 @@ export class IdentityProviderAccountManger {
                 provider_id: this.provider.id,
                 provider_user_id: identity.id,
                 provider_user_name: user.name, // todo: parse identity.name
-                user_id: user.id,
+                provider_realm_id: this.provider.realm_id,
                 user,
+                user_id: user.id,
+                user_realm_id: user.realm_id,
             });
         }
 
-        await this.saveRoles(identity, user.id, userExisted);
-        await this.savePermissions(identity, user.id, userExisted);
+        await this.saveRoles(identity, user, userExisted);
+        await this.savePermissions(identity, user, userExisted);
 
         return account;
     }
 
     protected async saveRoles(
         identity: IdentityProviderFlowIdentity,
-        userId: string,
+        user: User,
         userExisted: boolean,
     ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderRoleMappingEntity);
@@ -117,6 +119,7 @@ export class IdentityProviderAccountManger {
             if (!entity.name || !entity.value) {
                 roles.push({
                     id: entity.role_id,
+                    realmId: entity.role_realm_id,
                     operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
                         UserRelationItemSyncOperation.NONE :
                         undefined,
@@ -133,6 +136,7 @@ export class IdentityProviderAccountManger {
 
             roles.push({
                 id: entity.role_id,
+                realmId: entity.role_realm_id,
                 operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
                     UserRelationItemSyncOperation.NONE :
                     undefined,
@@ -140,14 +144,14 @@ export class IdentityProviderAccountManger {
         }
 
         await this.userRepository.syncRoles(
-            userId,
+            user,
             roles,
         );
     }
 
     protected async savePermissions(
         identity: IdentityProviderFlowIdentity,
-        userId: string,
+        user: User,
         userExisted: boolean,
     ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
@@ -161,6 +165,7 @@ export class IdentityProviderAccountManger {
             if (!entity.name || !entity.value) {
                 permissions.push({
                     id: entity.permission_id,
+                    realmId: entity.permission_realm_id,
                     operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
                         UserRelationItemSyncOperation.NONE :
                         undefined,
@@ -177,6 +182,7 @@ export class IdentityProviderAccountManger {
 
             permissions.push({
                 id: entity.permission_id,
+                realmId: entity.permission_realm_id,
                 operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
                     UserRelationItemSyncOperation.NONE :
                     undefined,
@@ -184,7 +190,7 @@ export class IdentityProviderAccountManger {
         }
 
         await this.userRepository.syncPermissions(
-            userId,
+            user,
             permissions,
         );
     }

@@ -6,6 +6,7 @@
  */
 
 import type { EventPayload } from '@authup/kit';
+import type { Client } from '../client';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 
@@ -60,7 +61,13 @@ export interface User {
 
     // ------------------------------------------------------------------
 
-    realm_id: string;
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'];
 
     realm: Realm;
 

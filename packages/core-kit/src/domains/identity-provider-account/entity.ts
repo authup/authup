@@ -7,6 +7,7 @@
 
 import type { EventPayload } from '@authup/kit';
 import type { DomainType } from '../contstants';
+import type { Realm } from '../realm';
 import type { User } from '../user';
 import type { IdentityProvider } from '../identity-provider';
 
@@ -29,9 +30,17 @@ export interface IdentityProviderAccount {
 
     user: User;
 
+    user_realm_id: Realm['id'] | null;
+
+    user_realm: Realm | null;
+
     provider_id: IdentityProvider['id'];
 
     provider: IdentityProvider;
+
+    provider_realm_id: Realm['id'] | null;
+
+    provider_realm: Realm | null;
 }
 
 export type IdentityProviderAccountEventContext = EventPayload & {

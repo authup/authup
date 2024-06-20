@@ -15,12 +15,13 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { ClientScope } from '@authup/core-kit';
+import type { ClientScope, Realm } from '@authup/core-kit';
 import {
     Client,
     Scope,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client';
+import { RealmEntity } from '../realm';
 import { ScopeEntity } from '../scope';
 
 @Entity({ name: 'auth_client_scopes' })
@@ -49,10 +50,26 @@ export class ClientScopeEntity implements ClientScope {
     @JoinColumn({ name: 'client_id' })
         client: Client;
 
+    @Column({ nullable: true })
+        client_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'client_realm_id' })
+        client_realm: RealmEntity | null;
+
+    // ------------------------------------------------------------------
+
     @Column()
         scope_id: Scope['id'];
 
     @ManyToOne(() => ScopeEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'scope_id' })
         scope: Scope;
+
+    @Column({ nullable: true })
+        scope_realm_id: Realm['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'scope_realm_id' })
+        scope_realm: RealmEntity | null;
 }

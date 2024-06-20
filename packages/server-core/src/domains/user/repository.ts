@@ -54,7 +54,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
     }
 
     async syncPermissions(
-        userId: User['id'],
+        user: User,
         ids: (string | UserRelationItemSyncConfig)[],
     ) {
         const options = ids.map((id) => {
@@ -68,9 +68,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         });
         const repository = this.manager.getRepository(UserPermissionEntity);
 
-        const entities = await repository.createQueryBuilder('userPermission')
-            .where('userPermission.user_id = :userId', { userId })
-            .getMany();
+        const entities = await repository.findBy({
+            user_id: user.id,
+        });
 
         const idsToDrop = entities
             .filter((entity) => {
@@ -97,7 +97,12 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
                 return entities.findIndex((userRole) => userRole.permission_id === o.id) === -1;
             })
-            .map((o) => repository.create({ permission_id: o.id, user_id: userId }));
+            .map((o) => repository.create({
+                permission_id: o.id,
+                permission_realm_id: o.realmId,
+                user_id: user.id,
+                user_realm_id: user.realm_id,
+            }));
 
         if (toAdd.length > 0) {
             await repository.insert(toAdd);
@@ -105,7 +110,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
     }
 
     async syncRoles(
-        userId: User['id'],
+        user: User,
         ids: (string | UserRelationItemSyncConfig)[],
     ) {
         const options = ids.map((id) => {
@@ -120,9 +125,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
         const repository = this.manager.getRepository(UserRoleEntity);
 
-        const entities = await repository.createQueryBuilder('userRole')
-            .where('userRole.user_id = :userId', { userId })
-            .getMany();
+        const entities = await repository.findBy({
+            user_id: user.id,
+        });
 
         const idsToDrop = entities
             .filter((entity) => {
@@ -153,7 +158,12 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
                 return entities.findIndex((userRole) => userRole.role_id === o.id) === -1;
             })
-            .map((o) => repository.create({ role_id: o.id, user_id: userId }));
+            .map((o) => repository.create({
+                role_id: o.id,
+                role_realm_id: o.realmId,
+                user_id: user.id,
+                user_realm_id: user.realm_id,
+            }));
 
         if (toAdd.length > 0) {
             await repository.insert(toAdd);

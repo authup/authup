@@ -11,7 +11,8 @@ import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PolicyRepository } from '../../../../domains';
+import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { PolicyEntity, PolicyRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { runPolicyProviderValidation } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -36,6 +37,8 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
     if (!entity) {
         throw new NotFoundError();
     }
+
+    await enforceUniquenessForDatabaseEntity(PolicyEntity, result.data, entity);
 
     if (isPropertySet(result.data, 'parent_id')) {
         if (result.data.parent_id) {
