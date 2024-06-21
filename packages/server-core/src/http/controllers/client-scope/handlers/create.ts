@@ -13,7 +13,7 @@ import { useDataSource } from 'typeorm-extension';
 import { ClientScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runClientScopeValidation } from '../utils';
+import { ClientScopeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -22,23 +22,27 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    const result = await runClientScopeValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new ClientScopeRequestValidator();
 
-    if (result.relation.client) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.client.realm_id)) {
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    if (data.client) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.client.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('client_id'));
         }
 
-        result.data.client_realm_id = result.relation.client.realm_id;
+        data.client_realm_id = data.client.realm_id;
     }
 
-    if (result.relation.scope) {
-        result.data.scope_realm_id = result.relation.scope.realm_id;
+    if (data.scope) {
+        data.scope_realm_id = data.scope.realm_id;
     }
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
-    let entity = repository.create(result.data);
+    let entity = repository.create(data);
 
     entity = await repository.save(entity);
 

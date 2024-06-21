@@ -7,14 +7,15 @@
 
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPropertySet } from '@authup/kit';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runPermissionValidation } from '../utils';
+import { buildRequestValidationErrorMessage } from '../../../validation';
+import { PermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updatePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -25,9 +26,15 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
         throw new ForbiddenError('You are not permitted to edit a permission.');
     }
 
-    const result = await runPermissionValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
+    const validator = new PermissionRequestValidator();
+
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
+    if (isPropertySet(data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        }
     }
 
     const dataSource = await useDataSource();
@@ -40,17 +47,17 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
 
     if (
         entity.built_in &&
-        isPropertySet(result.data, 'name') &&
-        entity.name !== result.data.name
+        isPropertySet(data, 'name') &&
+        entity.name !== data.name
     ) {
         throw new BadRequestError('The name of a built-in permission can not be changed.');
     }
 
-    await enforceUniquenessForDatabaseEntity(PermissionEntity, result.data, {
+    await enforceUniquenessForDatabaseEntity(PermissionEntity, data, {
         id: entity.id,
     });
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

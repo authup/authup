@@ -11,25 +11,35 @@ import {
     isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
+import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runUserAttributeValidation } from '../utils';
+import { UserAttributeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const result = await runUserAttributeValidation(req, RequestHandlerOperation.CREATE);
-    if (!result) {
-        return sendAccepted(res);
+    const validator = new UserAttributeRequestValidator();
+
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    if (data.user) {
+        data.realm_id = data.user.realm_id;
+        data.user_id = data.user.id;
+    } else {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+        data.user_id = useRequestEnv(req, 'userId');
     }
 
     if (
-        result.data.user_id !== useRequestEnv(req, 'userId')
+        data.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
             !useRequestEnv(req, 'abilities').has(PermissionName.USER_EDIT) ||
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)
+            !isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');
         }
@@ -38,7 +48,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
-    const entity = repository.create(result.data);
+    const entity = repository.create(data);
 
     await repository.save(entity);
 

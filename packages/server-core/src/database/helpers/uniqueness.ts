@@ -104,6 +104,8 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
     const metadata: EntityMetadata = dataSource.entityMetadatas[index];
     const repository = dataSource.getRepository(metadata.target);
 
+    const primaryColumnNames = metadata.primaryColumns.map((c) => c.propertyName);
+
     for (let i = 0; i < metadata.ownUniques.length; i++) {
         const uniqueColumnNames = metadata.ownUniques[i].columns.map((column) => column.propertyName);
 
@@ -113,7 +115,6 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
         }));
 
         if (source) {
-            const primaryColumnNames = metadata.primaryColumns.map((c) => c.propertyName);
             queryBuilder.andWhere(new Brackets((qb) => {
                 buildWhereExpression(qb, pickRecord(source, primaryColumnNames), 'source');
             }));

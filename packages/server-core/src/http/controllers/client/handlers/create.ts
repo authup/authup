@@ -18,7 +18,7 @@ import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runOauth2ClientValidation } from '../utils';
+import { ClientRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createClientRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -27,21 +27,24 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ClientValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new ClientRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
-    if (!isPropertySet(result.data, 'realm_id')) {
+    if (!isPropertySet(data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'))) {
             throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
         }
     }
 
-    await enforceUniquenessForDatabaseEntity(ClientEntity, result.data);
+    await enforceUniquenessForDatabaseEntity(ClientEntity, data);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
 
-    result.data.user_id = useRequestEnv(req, 'userId');
-    const provider = repository.create(result.data);
+    data.user_id = useRequestEnv(req, 'userId');
+    const provider = repository.create(data);
 
     await repository.save(provider);
 

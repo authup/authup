@@ -10,12 +10,12 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
+import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
-import { runRealmValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { useRequestEnv } from '../../../utils';
+import { RealmRequestValidator } from '../utils';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -23,15 +23,15 @@ export async function createRealmRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
-    const result = await runRealmValidation(req, RequestHandlerOperation.CREATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new RealmRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
-    const entity = repository.create(result.data);
+    const entity = repository.create(data);
 
     await repository.save(entity);
 

@@ -5,99 +5,48 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
-import { check, validationResult } from 'express-validator';
-import { isRealmResourceWritable } from '@authup/core-kit';
-import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import type { RobotEntity } from '../../../../domains';
-import { RealmEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
-import type { ExpressValidationResult } from '../../../validation';
-import {
-    RequestValidationError,
-    buildRequestValidationErrorMessage,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
+import { RequestDatabaseValidator } from '../../../../core';
+import { RobotEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runRobotValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<RobotEntity>> {
-    const result : ExpressValidationResult<RobotEntity> = initExpressValidationResult();
+export class RobotRequestValidator extends RequestDatabaseValidator<
+RobotEntity
+> {
+    constructor() {
+        super(RobotEntity);
 
-    await check('secret')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 256 })
-        .optional()
-        .run(req);
+        this.mount();
+    }
 
-    await check('active')
-        .isBoolean()
-        .optional()
-        .run(req);
+    mount() {
+        this.add('secret')
+            .exists()
+            .notEmpty()
+            .isLength({ min: 3, max: 256 })
+            .optional();
 
-    await check('name')
-        .notEmpty()
-        .isLength({ min: 3, max: 256 })
-        .optional({ nullable: true })
-        .run(req);
+        this.add('active')
+            .isBoolean()
+            .optional();
 
-    await check('description')
-        .notEmpty()
-        .isLength({ min: 3, max: 4096 })
-        .optional({ nullable: true })
-        .run(req);
+        this.add('name')
+            .notEmpty()
+            .isLength({ min: 3, max: 256 })
+            .optional({ nullable: true });
 
-    await check('user_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
+        this.add('description')
+            .notEmpty()
+            .isLength({ min: 3, max: 4096 })
+            .optional({ nullable: true });
 
-    if (operation === RequestHandlerOperation.CREATE) {
-        await check('realm_id')
+        this.add('user_id')
             .exists()
             .isUUID()
-            .optional()
-            .run(req);
+            .optional({ nullable: true });
+
+        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+            .exists()
+            .isUUID()
+            .optional();
     }
-
-    // ----------------------------------------------
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RealmEntity, {
-        id: 'realm_id',
-        entity: 'realm',
-    });
-
-    if (
-        operation === RequestHandlerOperation.CREATE &&
-        !result.data.realm_id
-    ) {
-        const { id: realmId } = useRequestEnv(req, 'realm');
-        result.data.realm_id = realmId;
-    }
-
-    if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-        }
-    }
-
-    // ----------------------------------------------
-
-    return result;
 }

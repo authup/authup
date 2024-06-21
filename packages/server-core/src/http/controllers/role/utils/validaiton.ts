@@ -5,93 +5,69 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
 import {
-    isRealmResourceWritable, isValidRoleName,
+    isValidRoleName,
 } from '@authup/core-kit';
-import { check, validationResult } from 'express-validator';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RoleEntity } from '../../../../domains';
-import { RealmEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
-import type { ExpressValidationResult } from '../../../validation';
+import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
+import { RoleEntity } from '../../../../domains';
 import {
-    RequestValidationError,
     buildRequestValidationErrorMessage,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
 } from '../../../validation';
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runRoleValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<RoleEntity>> {
-    const result : ExpressValidationResult<RoleEntity> = initExpressValidationResult();
+export class RoleRequestValidator extends RequestDatabaseValidator<
+RoleEntity
+> {
+    constructor() {
+        super(RoleEntity);
 
-    const nameChain = check('name')
-        .exists()
-        .notEmpty()
-        .custom((value) => {
-            const isValid = isValidRoleName(value);
-            if (!isValid) {
-                throw new BadRequestError('Only the characters [A-Za-z0-9-_]+ are allowed.');
-            }
+        this.mount();
+    }
 
-            return isValid;
-        });
+    mount() {
+        this.add('name')
+            .exists()
+            .notEmpty()
+            .isString()
+            .isLength({
+                min: 3,
+                max: 256, // todo: verify this
+            })
+            .custom((value) => {
+                const isValid = isValidRoleName(value);
+                if (!isValid) {
+                    throw new BadRequestError('Only the characters [A-Za-z0-9-_]+ are allowed.');
+                }
 
-    if (operation === RequestHandlerOperation.UPDATE) nameChain.optional();
+                return isValid;
+            })
+            .optional({ nullable: true });
 
-    await nameChain.run(req);
+        this.add('description')
+            .optional({ nullable: true })
+            .notEmpty()
+            .isString()
+            .isLength({
+                min: 5,
+                max: 4096,
+            });
 
-    await check('description')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 4096 })
-        .optional({ nullable: true })
-        .run(req);
-
-    if (operation === 'create') {
-        await check('realm_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
             .exists()
             .isUUID()
             .optional({ nullable: true })
-            .default(null)
-            .run(req);
+            .default(null);
     }
 
-    // ----------------------------------------------
+    async execute(req: Request, options: RequestValidatorExecuteOptions<RoleEntity> = {}): Promise<RoleEntity> {
+        const data = await super.execute(req, options);
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RealmEntity, {
-        id: 'realm_id',
-        entity: 'realm',
-    });
-
-    if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        if (options.group === RequestHandlerOperation.CREATE && !data.name) {
+            throw new BadRequestError(buildRequestValidationErrorMessage('name'));
         }
-    } else if (
-        operation === RequestHandlerOperation.CREATE &&
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
-    ) {
-        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+
+        return data;
     }
-
-    // ----------------------------------------------
-
-    return result;
 }

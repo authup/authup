@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { UserPermissionEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runUserPermissionValidation } from '../utils';
+import { UserPermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 /**
@@ -33,26 +33,25 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    const result = await runUserPermissionValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new UserPermissionRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: {
-            ...result.data,
-            user: result.relation.user,
-            permission: result.relation.permission,
-        } satisfies Partial<UserPermissionEntity>,
+        resource: data satisfies Partial<UserPermissionEntity>,
     };
 
     // ----------------------------------------------
 
-    if (result.relation.permission) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.permission.realm_id)) {
+    if (data.permission) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('permission_id'));
         }
 
-        result.data.permission_realm_id = result.relation.permission.realm_id;
+        data.permission_realm_id = data.permission.realm_id;
 
-        const ability = buildAbilityFromPermission(result.relation.permission);
+        const ability = buildAbilityFromPermission(data.permission);
         if (!abilities.has(ability, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
@@ -60,12 +59,12 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (result.relation.user) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.user.realm_id)) {
+    if (data.user) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.user.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('user_id'));
         }
 
-        result.data.user_realm_id = result.relation.user.realm_id;
+        data.user_realm_id = data.user.realm_id;
     }
 
     // ----------------------------------------------
@@ -78,7 +77,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserPermissionEntity);
-    let entity = repository.create(result.data);
+    let entity = repository.create(data);
 
     entity = await repository.save(entity);
 

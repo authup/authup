@@ -14,7 +14,7 @@ import { useDataSource } from 'typeorm-extension';
 import { RobotRoleEntity, RoleRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runRobotRoleValidation } from '../utils';
+import { RobotRoleRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,15 +23,15 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
         throw new NotFoundError();
     }
 
-    const result = await runRobotRoleValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new RobotRoleRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
     // ----------------------------------------------
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: {
-            ...result.data,
-            robot: result.relation.robot,
-            role: result.relation.role,
-        } satisfies Partial<RobotRoleEntity>,
+        resource: data satisfies Partial<RobotRoleEntity>,
     };
 
     // ----------------------------------------------
@@ -40,15 +40,15 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (result.relation.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
+    if (data.role) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
 
-        result.data.role_realm_id = result.relation.role.realm_id;
+        data.role_realm_id = data.role.realm_id;
 
         const roleRepository = new RoleRepository(dataSource);
-        const roleAbilities = await roleRepository.getOwnedPermissions(result.data.role_id);
+        const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
         if (!abilities.hasMany(roleAbilities, policyEvaluationContext)) {
             throw new ForbiddenError('The role permissions are not owned.');
         }
@@ -56,12 +56,12 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (result.relation.robot) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)) {
+    if (data.robot) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.robot.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('robot_id'));
         }
 
-        result.data.robot_realm_id = result.relation.robot.realm_id;
+        data.robot_realm_id = data.robot.realm_id;
     }
 
     // ----------------------------------------------
@@ -73,7 +73,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
     // ----------------------------------------------
 
     const repository = dataSource.getRepository(RobotRoleEntity);
-    let entity = repository.create(result.data);
+    let entity = repository.create(data);
 
     entity = await repository.save(entity);
 

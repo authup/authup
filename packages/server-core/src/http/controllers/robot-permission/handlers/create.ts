@@ -14,9 +14,10 @@ import { useDataSource } from 'typeorm-extension';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
+import { RequestHandlerOperation } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runRobotPermissionValidation } from '../utils';
+import { RobotPermissionRequestValidator } from '../utils';
 
 /**
  * Add an permission by id to a specific user.
@@ -32,26 +33,25 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    const result = await runRobotPermissionValidation(req, 'create');
+    const validator = new RobotPermissionRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: {
-            ...result.data,
-            robot: result.relation.robot,
-            permission: result.relation.permission,
-        } satisfies Partial<RobotPermissionEntity>,
+        resource: data satisfies Partial<RobotPermissionEntity>,
     };
 
     // ----------------------------------------------
 
-    if (result.relation.permission) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.permission.realm_id)) {
+    if (data.permission) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('permission_id'));
         }
 
-        result.data.permission_realm_id = result.relation.permission.realm_id;
+        data.permission_realm_id = data.permission.realm_id;
 
-        const ability = buildAbilityFromPermission(result.relation.permission);
+        const ability = buildAbilityFromPermission(data.permission);
         if (!abilities.has(ability, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
@@ -59,12 +59,12 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (result.relation.robot) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.robot.realm_id)) {
+    if (data.robot) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.robot.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('user_id'));
         }
 
-        result.data.robot_realm_id = result.relation.robot.realm_id;
+        data.robot_realm_id = data.robot.realm_id;
     }
 
     // ----------------------------------------------
@@ -77,7 +77,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotPermissionEntity);
-    let entity = repository.create(result.data);
+    let entity = repository.create(data);
 
     entity = await repository.save(entity);
 

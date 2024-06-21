@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -13,7 +14,8 @@ import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { RoleEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runRoleValidation } from '../utils';
+import { buildRequestValidationErrorMessage } from '../../../validation';
+import { RoleRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -24,9 +26,15 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    const result = await runRoleValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
+    const validator = new RoleRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
+
+    if (isPropertySet(data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        }
     }
 
     // ----------------------------------------------
@@ -47,7 +55,7 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    await enforceUniquenessForDatabaseEntity(RoleEntity, result.data, {
+    await enforceUniquenessForDatabaseEntity(RoleEntity, data, {
         id: entity.id,
     });
 
@@ -55,15 +63,15 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     if (
         entity.name === ROLE_ADMIN_NAME &&
-        result.data.name &&
-        result.data.name !== entity.name
+        data.name &&
+        data.name !== entity.name
     ) {
         throw new BadRequestError('The default admin role can not be renamed.');
     }
 
     // ----------------------------------------------
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

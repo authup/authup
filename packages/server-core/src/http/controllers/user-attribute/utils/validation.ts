@@ -5,72 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
-import type { Request } from 'routup';
-import type { UserAttributeEntity } from '../../../../domains';
-import { UserEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
-import type { ExpressValidationResult } from '../../../validation';
-import {
-    RequestValidationError, extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
+import { RequestDatabaseValidator } from '../../../../core';
+import { UserAttributeEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runUserAttributeValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<UserAttributeEntity>> {
-    const result : ExpressValidationResult<UserAttributeEntity> = initExpressValidationResult();
+export class UserAttributeRequestValidator extends RequestDatabaseValidator<
+UserAttributeEntity
+> {
+    constructor() {
+        super(UserAttributeEntity);
 
-    if (operation === RequestHandlerOperation.CREATE) {
-        await check('name')
+        this.mount();
+    }
+
+    mount() {
+        this.addTo(RequestHandlerOperation.CREATE, 'name')
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 3, max: 255 })
-            .run(req);
+            .isLength({ min: 3, max: 255 });
 
-        await check('user_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'user_id')
             .exists()
-            .isUUID()
-            .optional()
-            .run(req);
+            .isUUID();
+
+        this.add('value')
+            .exists()
+            .notEmpty()
+            .isString()
+            .isLength({ min: 3, max: 512 })
+            .optional({ nullable: true });
     }
-
-    await check('value')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 512 })
-        .optional({ nullable: true })
-        .run(req);
-
-    // ----------------------------------------------
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    if (operation === RequestHandlerOperation.CREATE) {
-        await extendExpressValidationResultWithRelation(result, UserEntity, {
-            id: 'user_id',
-            entity: 'user',
-        });
-
-        if (result.relation.user) {
-            result.data.realm_id = result.relation.user.realm_id;
-            result.data.user_id = result.relation.user.id;
-        } else {
-            const { id } = useRequestEnv(req, 'realm');
-            result.data.realm_id = id;
-            result.data.user_id = useRequestEnv(req, 'userId');
-        }
-    }
-
-    return result;
 }

@@ -7,19 +7,16 @@
 
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { RequestValidatorExecuteOptions } from '../../../../core';
-import { RequestDatabaseValidator } from '../../../../core';
-import { PermissionEntity } from '../../../../domains';
+import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
+import { ScopeEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
-import {
-    buildRequestValidationErrorMessage,
-} from '../../../validation';
+import { buildRequestValidationErrorMessage } from '../../../validation';
 
-export class PermissionRequestValidator extends RequestDatabaseValidator<
-PermissionEntity
+export class ScopeRequestValidator extends RequestDatabaseValidator<
+ScopeEntity
 > {
     constructor() {
-        super(PermissionEntity);
+        super(ScopeEntity);
 
         this.mount();
     }
@@ -29,7 +26,6 @@ PermissionEntity
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 3, max: 128 })
             .optional({ nullable: true });
 
         this.add('description')
@@ -38,20 +34,15 @@ PermissionEntity
             .isString()
             .isLength({ min: 5, max: 4096 });
 
-        this.add('client_id')
-            .isUUID()
-            .optional({ values: 'null' });
-
         this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
             .isUUID()
             .optional({ values: 'null' });
-
-        this.add('policy_id')
-            .optional({ values: 'null' })
-            .isUUID();
     }
 
-    async execute(req: Request, options: RequestValidatorExecuteOptions<PermissionEntity> = {}): Promise<PermissionEntity> {
+    async execute(
+        req: Request,
+        options: RequestValidatorExecuteOptions<ScopeEntity> = {},
+    ): Promise<ScopeEntity> {
         const data = await super.execute(req, options);
 
         if (options.group === RequestHandlerOperation.CREATE && !data.name) {

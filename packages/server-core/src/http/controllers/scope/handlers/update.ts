@@ -13,7 +13,7 @@ import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runScopeValidation } from '../utils';
+import { ScopeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateScopeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -24,10 +24,10 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    const result = await runScopeValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new ScopeRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     // ----------------------------------------------
 
@@ -47,13 +47,13 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
 
     // ----------------------------------------------
 
-    await enforceUniquenessForDatabaseEntity(ScopeEntity, result.data, {
+    await enforceUniquenessForDatabaseEntity(ScopeEntity, data, {
         id: entity.id,
     });
 
     // ----------------------------------------------
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

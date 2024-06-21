@@ -12,7 +12,7 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runOauth2ProviderValidation } from '../utils';
+import { IdentityProviderRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,10 +23,10 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ProviderValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new IdentityProviderRequestValidator();
+    const [data, attributes] = await validator.executeWithAttributes(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
@@ -40,9 +40,9 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
-    await repository.saveWithAttributes(entity, result.meta.attributes);
+    await repository.saveWithAttributes(entity, attributes);
 
     return sendAccepted(res, entity);
 }

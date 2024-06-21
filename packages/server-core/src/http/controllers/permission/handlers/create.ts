@@ -5,17 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    PermissionName, ROLE_ADMIN_NAME,
+    PermissionName,
+    ROLE_ADMIN_NAME, isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
+import { RequestHandlerOperation } from '../../../request';
 import { useRequestEnv } from '../../../utils';
-import { runPermissionValidation } from '../utils';
+import { buildRequestValidationErrorMessage } from '../../../validation';
+import { PermissionRequestValidator } from '../utils';
 
 export async function createOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -23,7 +26,14 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
         throw new ForbiddenError();
     }
 
-    const { data } = await runPermissionValidation(req, 'create');
+    const validator = new PermissionRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+    }
 
     await enforceUniquenessForDatabaseEntity(PermissionEntity, data);
 

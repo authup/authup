@@ -7,26 +7,23 @@
 
 import { RequestDatabaseValidator } from '../../../../core';
 import {
-    UserRoleEntity,
+    ClientScopeEntity,
 } from '../../../../domains';
-
 import { RequestHandlerOperation } from '../../../request';
 
-export class UserRoleRequestValidator extends RequestDatabaseValidator<
-UserRoleEntity
-> {
+export class ClientScopeRequestValidator extends RequestDatabaseValidator<ClientScopeEntity> {
     constructor() {
-        super(UserRoleEntity);
+        super(ClientScopeEntity);
 
         this.mount();
     }
 
     mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'user_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'client_id')
             .exists()
             .isUUID();
 
-        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'scope_id')
             .exists()
             .isUUID();
     }

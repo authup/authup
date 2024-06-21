@@ -5,14 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runUserValidation } from '../utils';
+import { buildRequestValidationErrorMessage } from '../../../validation';
+import { UserRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -21,11 +22,30 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
-    const result = await runUserValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new UserRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    if (!ability.has(PermissionName.USER_ADD)) {
+        delete data.name_locked;
+        delete data.active;
+        delete data.status;
+        delete data.status_message;
+    }
+
+    if (!data.realm_id) {
+        const { id: realmId } = useRequestEnv(req, 'realm');
+        data.realm_id = realmId;
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+    }
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
-    const { entity } = await repository.createWithPassword(result.data);
+    const { entity } = await repository.createWithPassword(data);
 
     await repository.save(entity);
 

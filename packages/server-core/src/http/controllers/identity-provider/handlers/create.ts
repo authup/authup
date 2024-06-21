@@ -5,16 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
+import { isPropertySet } from '@authup/kit';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
+    isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runOauth2ProviderValidation } from '../utils';
+import { buildRequestValidationErrorMessage } from '../../../validation';
+import { IdentityProviderRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,14 +26,28 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ProviderValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new IdentityProviderRequestValidator();
+    const [data, attributes] = await validator.executeWithAttributes(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    if (isPropertySet(data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        }
+    }
+
+    if (!data.realm_id) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+    }
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
 
-    const entity = repository.create(result.data);
+    const entity = repository.create(data);
 
-    await repository.saveWithAttributes(entity, result.meta.attributes);
+    await repository.saveWithAttributes(entity, attributes);
 
     return sendCreated(res, entity);
 }

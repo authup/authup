@@ -18,7 +18,7 @@ import {
 } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runRolePermissionValidation } from '../utils';
+import { RolePermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 /**
@@ -35,27 +35,26 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    const result = await runRolePermissionValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new RolePermissionRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: {
-            ...result.data,
-            role: result.relation.role,
-            permission: result.relation.permission,
-        } satisfies Partial<RolePermissionEntity>,
+        resource: data satisfies Partial<RolePermissionEntity>,
     };
 
     // ----------------------------------------------
 
-    if (result.relation.permission) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.permission.realm_id)) {
+    if (data.permission) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('permission_id'));
         }
 
-        result.data.permission_realm_id = result.relation.permission.realm_id;
+        data.permission_realm_id = data.permission.realm_id;
 
-        if (!result.relation.role || result.relation.role.name !== ROLE_ADMIN_NAME) {
-            const ability = buildAbilityFromPermission(result.relation.permission);
+        if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
+            const ability = buildAbilityFromPermission(data.permission);
             if (!abilities.has(ability, policyEvaluationContext)) {
                 throw new ForbiddenError('The target permission is not owned.');
             }
@@ -64,12 +63,12 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (result.relation.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.relation.role.realm_id)) {
+    if (data.role) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
             throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
         }
 
-        result.data.role_realm_id = result.relation.role.realm_id;
+        data.role_realm_id = data.role.realm_id;
     }
 
     // ----------------------------------------------
@@ -82,7 +81,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RolePermissionEntity);
-    let entity = repository.create(result.data);
+    let entity = repository.create(data);
 
     entity = await repository.save(entity);
 

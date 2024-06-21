@@ -7,27 +7,37 @@
 
 import { RequestDatabaseValidator } from '../../../../core';
 import {
-    UserRoleEntity,
+    IdentityProviderRoleMappingEntity,
 } from '../../../../domains';
-
 import { RequestHandlerOperation } from '../../../request';
 
-export class UserRoleRequestValidator extends RequestDatabaseValidator<
-UserRoleEntity
+export class IdentityProviderRoleMappingRequestValidator extends RequestDatabaseValidator<
+IdentityProviderRoleMappingEntity
 > {
     constructor() {
-        super(UserRoleEntity);
+        super(IdentityProviderRoleMappingEntity);
 
         this.mount();
     }
 
     mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'user_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'provider_id')
             .exists()
             .isUUID();
 
         this.addTo(RequestHandlerOperation.CREATE, 'role_id')
             .exists()
             .isUUID();
+
+        this.add('name')
+            .optional({ values: 'null' });
+
+        this.add('value')
+            .optional({ values: 'null' })
+            .default(null);
+
+        this.add('value_is_regex')
+            .notEmpty()
+            .isBoolean();
     }
 }
