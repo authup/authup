@@ -8,7 +8,8 @@
 import { BadRequestError } from '@ebec/http';
 import type { EntityTarget } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { buildRequestValidationErrorMessage } from '../../../http/validation';
+
+import { buildErrorMessageForAttribute } from '../../../utils';
 
 export type EntityRelationKeys<T extends Record<string, any>> = ({
     [K in keyof T]?: T[K] extends Record<string, any> ?
@@ -56,7 +57,7 @@ export async function lookupRepositoryEntityRelations<T>(
         });
 
         if (!entity) {
-            throw new BadRequestError(buildRequestValidationErrorMessage(column));
+            throw new BadRequestError(buildErrorMessageForAttribute(column));
         }
 
         output[relation.propertyName] = entity;

@@ -14,9 +14,9 @@ import { useDataSource } from 'typeorm-extension';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { RobotPermissionRequestValidator } from '../utils';
 
 /**
@@ -46,7 +46,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     if (data.permission) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('permission_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('permission_id'));
         }
 
         data.permission_realm_id = data.permission.realm_id;
@@ -61,7 +61,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     if (data.robot) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.robot.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('user_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
         }
 
         data.robot_realm_id = data.robot.realm_id;

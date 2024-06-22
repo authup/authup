@@ -10,10 +10,8 @@ import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
 import { RealmEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
-import {
-    buildRequestValidationErrorMessage,
-} from '../../../validation';
 
 export class RealmRequestValidator extends RequestDatabaseValidator<
 RealmEntity
@@ -56,7 +54,7 @@ RealmEntity
             options.group === RequestHandlerOperation.CREATE &&
             !data.name
         ) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('name'));
+            throw new BadRequestError(buildErrorMessageForAttribute('name'));
         }
 
         return data;

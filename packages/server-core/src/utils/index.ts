@@ -6,4 +6,5 @@
  */
 
 export * from './attributes-extract';
+export * from './error';
 export * from './self-id';

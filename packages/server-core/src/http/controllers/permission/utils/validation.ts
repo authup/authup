@@ -10,10 +10,8 @@ import type { Request } from 'routup';
 import type { RequestValidatorExecuteOptions } from '../../../../core';
 import { RequestDatabaseValidator } from '../../../../core';
 import { PermissionEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
-import {
-    buildRequestValidationErrorMessage,
-} from '../../../validation';
 
 export class PermissionRequestValidator extends RequestDatabaseValidator<
 PermissionEntity
@@ -55,7 +53,7 @@ PermissionEntity
         const data = await super.execute(req, options);
 
         if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('name'));
+            throw new BadRequestError(buildErrorMessageForAttribute('name'));
         }
 
         return data;

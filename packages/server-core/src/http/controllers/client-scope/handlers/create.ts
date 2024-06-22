@@ -11,8 +11,8 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientScopeEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { ClientScopeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -30,7 +30,7 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
 
     if (data.client) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.client.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('client_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('client_id'));
         }
 
         data.client_realm_id = data.client.realm_id;

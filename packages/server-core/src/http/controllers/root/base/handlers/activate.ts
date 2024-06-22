@@ -5,27 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import { RequestValidator } from '../../../../../core';
 import { UserRepository } from '../../../../../domains';
-import { RequestValidationError, matchedValidationData } from '../../../../validation';
+
+export class AuthActiveRequestValidator extends RequestValidator<{ token: string}> {
+    constructor() {
+        super();
+
+        this.add('token')
+            .exists()
+            .notEmpty()
+            .isLength({ min: 3, max: 256 });
+    }
+}
 
 export async function createAuthActivateRouteHandler(req: Request, res: Response) : Promise<any> {
-    await check('token')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 256 })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    const data = matchedValidationData(req, { includeOptionals: true });
+    const validator = new AuthActiveRequestValidator();
+    const data = await validator.execute(req);
 
     // todo: log attempt ( token, ip_address, user_agent, created_at)
 

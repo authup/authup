@@ -12,8 +12,8 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleRepository, UserRoleEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { UserRoleRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -40,7 +40,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     if (data.role) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
         }
 
         data.role_realm_id = data.role.realm_id;
@@ -56,7 +56,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     if (data.user) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.user.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('user_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
         }
 
         data.user_realm_id = data.user.realm_id;

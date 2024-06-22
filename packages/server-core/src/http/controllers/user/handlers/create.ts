@@ -11,8 +11,8 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { UserRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -40,7 +40,7 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
     const dataSource = await useDataSource();

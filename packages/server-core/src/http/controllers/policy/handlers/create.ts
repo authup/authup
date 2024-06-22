@@ -16,8 +16,8 @@ import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PolicyEntity, PolicyRepository } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { PolicyRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -35,7 +35,7 @@ export async function createPolicyRouteHandler(req: Request, res: Response) : Pr
 
     if (isPropertySet(data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
     }
 

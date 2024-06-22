@@ -9,9 +9,7 @@ import { BadRequestError } from '@ebec/http';
 import zod from 'zod';
 import { RequestDatabaseValidator } from '../../../../core';
 import { ClientEntity } from '../../../../domains';
-import {
-    buildRequestValidationErrorMessage,
-} from '../../../validation';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export class ClientRequestValidator extends RequestDatabaseValidator<ClientEntity> {
@@ -45,7 +43,7 @@ export class ClientRequestValidator extends RequestDatabaseValidator<ClientEntit
                 for (let i = 0; i < urls.length; i++) {
                     const output = validator.safeParse(urls[i]);
                     if (!output.success) {
-                        throw new BadRequestError(buildRequestValidationErrorMessage('redirect_uri'));
+                        throw new BadRequestError(buildErrorMessageForAttribute('redirect_uri'));
                     }
                 }
 

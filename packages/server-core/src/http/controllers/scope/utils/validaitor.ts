@@ -9,8 +9,8 @@ import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
 import { ScopeEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 
 export class ScopeRequestValidator extends RequestDatabaseValidator<
 ScopeEntity
@@ -46,7 +46,7 @@ ScopeEntity
         const data = await super.execute(req, options);
 
         if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('name'));
+            throw new BadRequestError(buildErrorMessageForAttribute('name'));
         }
 
         return data;

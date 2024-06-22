@@ -18,9 +18,7 @@ import {
     validateDatePolicyShaping,
     validateTimePolicyShaping,
 } from '../../../../domains';
-import {
-    buildRequestValidationErrorMessageForZodError,
-} from '../../../validation';
+import { buildErrorMessageForZodError } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 type PolicyValidationResult = PolicyEntity & {
@@ -93,7 +91,7 @@ export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValid
             }
         } catch (e: any) {
             if (e instanceof ZodError) {
-                throw new BadRequestError(buildRequestValidationErrorMessageForZodError(e));
+                throw new BadRequestError(buildErrorMessageForZodError(e));
             }
 
             if (e instanceof Error) {

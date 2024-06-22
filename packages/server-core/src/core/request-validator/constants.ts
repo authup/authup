@@ -7,4 +7,8 @@
 
 export enum RequestValidatorFieldSource {
     BODY = 'body',
+    COOKIES = 'cookies',
+    HEADERS = 'headers',
+    PARAMS = 'params',
+    QUERY = 'query',
 }

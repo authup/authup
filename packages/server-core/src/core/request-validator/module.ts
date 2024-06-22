@@ -11,11 +11,15 @@ import type { ValidationError } from 'express-validator';
 import {
     body,
     check,
+    cookie, header,
     oneOf,
+    param,
+    query,
 } from 'express-validator';
 import type { FieldInstance } from 'express-validator/lib/base';
 import type { ReadonlyContext } from 'express-validator/lib/context';
 import type { Request } from 'routup';
+import { buildErrorMessageForAttributes } from '../../utils';
 import { RequestValidatorFieldSource } from './constants';
 import type {
     RequestValidationChain,
@@ -23,7 +27,6 @@ import type {
     RequestValidatorAddOptions,
     RequestValidatorExecuteOptions,
 } from './types';
-import { buildValidatorParameterErrorMessage } from './utils';
 
 interface FieldInstanceBag {
     instance: FieldInstance;
@@ -46,6 +49,22 @@ export class RequestValidator<
     createFor(field: keyof T, src?: `${RequestValidatorFieldSource}`) {
         if (src === RequestValidatorFieldSource.BODY) {
             return body(field as string);
+        }
+
+        if (src === RequestValidatorFieldSource.COOKIES) {
+            return cookie(field as string);
+        }
+
+        if (src === RequestValidatorFieldSource.HEADERS) {
+            return header(field as string);
+        }
+
+        if (src === RequestValidatorFieldSource.PARAMS) {
+            return param(field as string);
+        }
+
+        if (src === RequestValidatorFieldSource.QUERY) {
+            return query(field as string);
         }
 
         return check(field as string);
@@ -74,7 +93,9 @@ export class RequestValidator<
         chains: RequestValidationChain[],
         options: RequestValidatorAddOptions = {},
     ) : RequestValidationGroup {
-        const chain = oneOf(chains);
+        const chain = oneOf(chains, {
+            errorType: 'flat',
+        });
 
         const group = options.group || '*';
         if (!this.items[group]) {
@@ -208,16 +229,8 @@ export class RequestValidator<
             }
         }
 
-        let message: string;
-
-        if (parameterNames.size > 0) {
-            message = buildValidatorParameterErrorMessage(Array.from(parameterNames));
-        } else {
-            message = 'An unexpected validation error occurred.';
-        }
-
         throw new BadRequestError({
-            message,
+            message: buildErrorMessageForAttributes(Array.from(parameterNames)),
             data: {
                 errors,
             },

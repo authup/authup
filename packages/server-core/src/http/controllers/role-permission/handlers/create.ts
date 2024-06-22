@@ -16,8 +16,8 @@ import { useDataSource } from 'typeorm-extension';
 import {
     RolePermissionEntity,
 } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { RolePermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -48,7 +48,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     if (data.permission) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('permission_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('permission_id'));
         }
 
         data.permission_realm_id = data.permission.realm_id;
@@ -65,7 +65,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     if (data.role) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('role_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
         }
 
         data.role_realm_id = data.role.realm_id;

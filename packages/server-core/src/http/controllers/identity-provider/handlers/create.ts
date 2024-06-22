@@ -15,8 +15,8 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRepository } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { IdentityProviderRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -33,7 +33,7 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
 
     if (isPropertySet(data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
     }
 

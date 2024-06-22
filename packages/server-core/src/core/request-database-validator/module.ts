@@ -9,8 +9,9 @@ import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import type { EntityTarget } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
+import { buildErrorMessageForAttribute } from '../../utils';
 import type { RequestValidatorExecuteOptions } from '../request-validator';
-import { RequestValidator, buildValidatorParameterErrorMessage } from '../request-validator';
+import { RequestValidator } from '../request-validator';
 
 export class RequestDatabaseValidator<
     T extends Record<string, any> = Record<string, any>,
@@ -73,7 +74,7 @@ export class RequestDatabaseValidator<
             });
 
             if (!entity) {
-                throw new BadRequestError(buildValidatorParameterErrorMessage(column));
+                throw new BadRequestError(buildErrorMessageForAttribute(column));
             }
 
             output[relation.propertyName] = entity;

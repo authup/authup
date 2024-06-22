@@ -12,9 +12,7 @@ import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
 import { RoleEntity } from '../../../../domains';
-import {
-    buildRequestValidationErrorMessage,
-} from '../../../validation';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RoleRequestValidator extends RequestDatabaseValidator<
@@ -65,7 +63,7 @@ RoleEntity
         const data = await super.execute(req, options);
 
         if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('name'));
+            throw new BadRequestError(buildErrorMessageForAttribute('name'));
         }
 
         return data;

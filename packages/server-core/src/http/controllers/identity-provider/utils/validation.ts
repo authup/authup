@@ -21,9 +21,7 @@ import {
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol,
 } from '../../../../domains';
-import {
-    buildRequestValidationErrorMessageForZodError,
-} from '../../../validation';
+import { buildErrorMessageForZodError } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export class IdentityProviderRequestValidator extends RequestDatabaseValidator<IdentityProviderEntity> {
@@ -111,7 +109,7 @@ export class IdentityProviderRequestValidator extends RequestDatabaseValidator<I
             }
         } catch (e: any) {
             if (e instanceof ZodError) {
-                throw new BadRequestError(buildRequestValidationErrorMessageForZodError(e));
+                throw new BadRequestError(buildErrorMessageForZodError(e));
             }
 
             if (e instanceof Error) {

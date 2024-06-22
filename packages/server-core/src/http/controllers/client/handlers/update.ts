@@ -13,8 +13,8 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
 import { ClientRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
@@ -33,7 +33,7 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
 
     if (isPropertySet(data, 'realm_id')) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
     }
 
