@@ -91,7 +91,10 @@ export class RequestValidator<
         options?: RequestValidatorAddOptions
     ): RequestValidationChain;
 
-    add(chain: RequestValidationChain): RequestValidationChain;
+    add(
+        chain: RequestValidationChain,
+        options?: RequestValidatorAddOptions
+    ): RequestValidationChain;
 
     add(
         input: any | RequestValidationChain,
@@ -121,9 +124,14 @@ export class RequestValidator<
         const data: Record<string, any> = {};
         const errors: ValidationError[] = [];
 
-        // todo: run options.group + *
-        const group = options.group || '*';
-        const items = this.items[group] || [];
+        const items = this.items['*'] || [];
+        if (
+            options.group &&
+            options.group !== '*'
+        ) {
+            items.push(...this.items[options.group] || []);
+        }
+
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
 
