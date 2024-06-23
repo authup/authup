@@ -1,5 +1,48 @@
 # Change Log
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.17...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* allow passing pinia instance to client-web-kit package ([e664b37](https://github.com/authup/authup/commit/e664b373eb1aca54cb5b4104d2a8c106e98e22ca))
+* enable local/global permissions & unqiueness by name + realm_id ([#1985](https://github.com/authup/authup/issues/1985)) ([56b366a](https://github.com/authup/authup/commit/56b366af26b63e41c75080800e8c8cf638f2813b))
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+* implemented ilingo v4 with reactive form rules translations ([#1913](https://github.com/authup/authup/issues/1913)) ([75aaa16](https://github.com/authup/authup/commit/75aaa169a0ea1db0ea7543a8baca434ad4154634))
+* optimized pinia based store + renamed ability manager ([f309e99](https://github.com/authup/authup/commit/f309e99c93c73e5b5a217e207e706768106f9442))
+* reenable defining pinia option for web-kit installation ([ca62249](https://github.com/authup/authup/commit/ca622491a2e03330d0377f6ae236f62564d04737))
+* reimplemented store,http-client,... installation & usage ([#1986](https://github.com/authup/authup/issues/1986)) ([ca5fc93](https://github.com/authup/authup/commit/ca5fc9395628a2a2bf1ea9b81265346ae6c603a2))
+* remove socket-client implementation ([#1915](https://github.com/authup/authup/issues/1915)) ([28f1cce](https://github.com/authup/authup/commit/28f1cce4190de8c429cee1f785300aa2868abfcd))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+* simplified client socket manager interaction ([d31ccf5](https://github.com/authup/authup/commit/d31ccf5e3ca87c68f0edc52b7335ddf5ef73f39a))
+* simplified role-,permission-,scope-form ([7b5cb4a](https://github.com/authup/authup/commit/7b5cb4af8420f50a2cb4b84f83fd5acd1d64f59d))
+* translations for components ([#1914](https://github.com/authup/authup/issues/1914)) ([e713752](https://github.com/authup/authup/commit/e71375241c01b66626dced01021bc974d9166fa4))
+* validaiton severity implementation ([0e4d0a0](https://github.com/authup/authup/commit/0e4d0a0fd75847754a9b769121ef0f6703913cfa))
+
+
+### Bug Fixes
+
+* accessing domain api in entity delete component ([67b830e](https://github.com/authup/authup/commit/67b830ec228224445d5f6054cd6469557f765432))
+* define key for action of relational resource assignments ([a7c3872](https://github.com/authup/authup/commit/a7c3872f8e1ed44a0d02a8a0f4162d201942b514))
+* **deps:** bump @vueuse/integrations from 10.10.0 to 10.11.0 ([#2061](https://github.com/authup/authup/issues/2061)) ([95fa23b](https://github.com/authup/authup/commit/95fa23b02d08539f7e1e83d9387c815c6d8e7c61))
+* **deps:** bump @vueuse/integrations from 10.9.0 to 10.10.0 ([#2017](https://github.com/authup/authup/issues/2017)) ([0c618b3](https://github.com/authup/authup/commit/0c618b3139a8becb14e8a9fe3e4ae274818ec5b2))
+* don't bundle pinia in client-web-kit dist ([ba12cef](https://github.com/authup/authup/commit/ba12cef41dbe89c50572573a8422e13c6ad061fe))
+* minor enhancement for vue installer ([166b912](https://github.com/authup/authup/commit/166b9121041c3cb2968475c92a0057c0a04022ad))
+* only log non 400/500 status code in dev and test env ([cff84e0](https://github.com/authup/authup/commit/cff84e0cc1900d827d3df5a80002851aa2a6a7f6))
+* remove osbolete translatorLocale component property ([4ef5be9](https://github.com/authup/authup/commit/4ef5be998f7799c6daff4e1426352591d39ca521))
+* remove unnecessary pinia option parameter ([e2b9124](https://github.com/authup/authup/commit/e2b9124768c1077a816c47a93a3cb2b5843ff991))
+* typings in translator + updated vuelidate ([0e1a8e8](https://github.com/authup/authup/commit/0e1a8e8e0418324db43dc0e437c8b69af253f8bb))
+* use consts for custom vuelidate rules ([4f1bb7c](https://github.com/authup/authup/commit/4f1bb7c3181827cd5c564cac8c5021e6f252e838))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.1-beta.13 to ^1.0.0-beta.17
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.1-beta.13 to ^1.0.0-beta.17
+
 ## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.16...v1.0.0-beta.17) (2024-06-23)
 
 
