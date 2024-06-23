@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-23)
+
+
+### Features
+
+* add client_id column to permission entity ([47d2d63](https://github.com/authup/authup/commit/47d2d636707e910cd62485e368decabda2d5467c))
+* add realm_id property to policy-attribute entity ([09ff4de](https://github.com/authup/authup/commit/09ff4ded550540e2a22838c4b19711df0bc2539e))
+* allow defining custom policies ([#2088](https://github.com/authup/authup/issues/2088)) ([45496cf](https://github.com/authup/authup/commit/45496cfac3a9300ac1cf7fa587105dcc808158fd))
+* enable local/global permissions & unqiueness by name + realm_id ([#1985](https://github.com/authup/authup/issues/1985)) ([56b366a](https://github.com/authup/authup/commit/56b366af26b63e41c75080800e8c8cf638f2813b))
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+* improve errror handling ([#1951](https://github.com/authup/authup/issues/1951)) ([607585e](https://github.com/authup/authup/commit/607585ee733b42b3a2cccf8d2812dafd7299cda3))
+* initial policy implementation ([#2038](https://github.com/authup/authup/issues/2038)) ([deeaffc](https://github.com/authup/authup/commit/deeaffcf0b4a72d9e1d6cf99dbf70d582b98c257))
+* refactored domain entities properties and controllers ([#2075](https://github.com/authup/authup/issues/2075)) ([9a237d8](https://github.com/authup/authup/commit/9a237d8fa8b8cd7eabeecb534906510d31cd28b8))
+* remove socket-client implementation ([#1915](https://github.com/authup/authup/issues/1915)) ([28f1cce](https://github.com/authup/authup/commit/28f1cce4190de8c429cee1f785300aa2868abfcd))
+* renamed group-policy to composite-policy ([42e9702](https://github.com/authup/authup/commit/42e9702419824e459cb3311ae0766d0871a2d92a))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+* restrictions for role,permission-assignemnts ([#2071](https://github.com/authup/authup/issues/2071)) ([c851f76](https://github.com/authup/authup/commit/c851f76777cf0018d55f62511536b5f73a080868))
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.17...v1.0.0-beta.18) (2024-06-23)
 
 

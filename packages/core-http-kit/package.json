@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-http-kit",
-    "version": "1.0.1-beta.17",
+    "version": "1.0.2-beta.17",
     "description": "Package containing global constants, types & interfaces.",
     "exports": {
         "./package.json": "./package.json",

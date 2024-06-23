@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-realtime-kit",
-    "version": "1.0.1-beta.17",
+    "version": "1.0.2-beta.17",
     "description": "Package containing a toolkit for the core realtime service.",
     "exports": {
         "./package.json": "./package.json",
