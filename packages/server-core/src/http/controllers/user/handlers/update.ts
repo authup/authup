@@ -13,31 +13,39 @@ import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runUserValidation } from '../utils';
+import { UserRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
+    const ability = useRequestEnv(req, 'abilities');
     const env = useRequestEnv(req);
 
     if (
-        !env.abilities.has(PermissionName.USER_EDIT) &&
+        !ability.has(PermissionName.USER_EDIT) &&
         env.userId !== id
     ) {
         throw new ForbiddenError('You are not authorized to modify a user.');
     }
 
-    const result = await runUserValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
+    const validator = new UserRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
+
+    if (!ability.has(PermissionName.USER_EDIT)) {
+        delete data.name_locked;
+        delete data.active;
+        delete data.status;
+        delete data.status_message;
     }
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
 
-    if (result.data.password) {
-        result.data.password = await repository.hashPassword(result.data.password);
+    if (data.password) {
+        data.password = await repository.hashPassword(data.password);
     }
 
     const query = repository.createQueryBuilder('user')
@@ -54,15 +62,15 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     if (
-        result.data.name &&
-        result.data.name !== entity.name
+        data.name &&
+        data.name !== entity.name
     ) {
-        if (result.data.name_locked) {
-            entity.name_locked = result.data.name_locked;
+        if (data.name_locked) {
+            entity.name_locked = data.name_locked;
         }
 
         if (entity.name_locked) {
-            delete result.data.name;
+            delete data.name;
         }
 
         const config = useConfig();
@@ -72,7 +80,7 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
         }
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

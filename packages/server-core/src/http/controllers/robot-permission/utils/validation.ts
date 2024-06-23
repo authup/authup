@@ -5,74 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
-import type { Request } from 'routup';
-import type { RobotPermissionEntity } from '../../../../domains';
-import { PermissionEntity, PolicyEntity, RobotEntity } from '../../../../domains';
-import type { ExpressValidationResult } from '../../../validation';
+import { RequestDatabaseValidator } from '../../../../core';
 import {
-    RequestValidationError,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
+    RobotPermissionEntity,
+} from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runRobotPermissionValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<RobotPermissionEntity>> {
-    const result : ExpressValidationResult<RobotPermissionEntity> = initExpressValidationResult();
+export class RobotPermissionRequestValidator extends RequestDatabaseValidator<
+RobotPermissionEntity
+> {
+    constructor() {
+        super(RobotPermissionEntity);
 
-    if (operation === RequestHandlerOperation.CREATE) {
-        await check('robot_id')
-            .exists()
-            .isUUID()
-            .run(req);
-
-        await check('permission_id')
-            .exists()
-            .isUUID()
-            .run(req);
+        this.mount();
     }
 
-    await check('policy_id')
-        .isUUID()
-        .optional({ values: 'null' })
-        .default(null)
-        .run(req);
+    mount() {
+        this.addTo(RequestHandlerOperation.CREATE, 'robot_id')
+            .exists()
+            .isUUID();
 
-    // ----------------------------------------------
+        this.addTo(RequestHandlerOperation.CREATE, 'permission_id')
+            .exists()
+            .isUUID();
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
+        this.add('policy_id')
+            .isUUID()
+            .optional({ values: 'null' })
+            .default(null);
     }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, PermissionEntity, {
-        id: 'permission_id',
-        entity: 'permission',
-    });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, PolicyEntity, {
-        id: 'policy_id',
-        entity: 'policy',
-    });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RobotEntity, {
-        id: 'robot_id',
-        entity: 'robot',
-    });
-
-    // ----------------------------------------------
-
-    return result;
 }

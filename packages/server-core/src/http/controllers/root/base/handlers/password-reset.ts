@@ -5,53 +5,50 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, oneOf, validationResult } from 'express-validator';
 import type { User } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
+import { RequestValidator } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
-import { RequestValidationError, matchedValidationData } from '../../../../validation';
+
+export class AuthPasswordResetRequestValidator extends RequestValidator<User & { token: string }> {
+    constructor() {
+        super();
+
+        this.addOneOf([
+            this.create('email')
+                .exists()
+                .notEmpty()
+                .isEmail(),
+            this.create('name')
+                .exists()
+                .notEmpty()
+                .isString(),
+        ]);
+
+        this.add('realm_id')
+            .exists()
+            .isUUID()
+            .optional({ nullable: true });
+
+        this.add('token')
+            .exists()
+            .notEmpty()
+            .isLength({ min: 3, max: 256 });
+
+        this.add('password')
+            .exists()
+            .notEmpty()
+            .isLength({ min: 5, max: 512 });
+    }
+}
 
 export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {
-    await oneOf([
-        check('email')
-            .exists()
-            .notEmpty()
-            .isEmail(),
-        check('name')
-            .exists()
-            .notEmpty()
-            .isString(),
-    ])
-        .run(req);
-
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('token')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 3, max: 256 })
-        .run(req);
-
-    await check('password')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 5, max: 512 })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    const data = matchedValidationData(req, { includeOptionals: true }) as Partial<User> & { token: string };
+    const validator = new AuthPasswordResetRequestValidator();
+    const data = await validator.execute(req);
 
     // todo: log attempt (email, token, ip_address, user_agent)
 

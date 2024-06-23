@@ -11,23 +11,26 @@ import {
     isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
+import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
-import { runRoleAttributeValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { useRequestEnv } from '../../../utils';
+import { RoleAttributeRequestValidator } from '../utils';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const result = await runRoleAttributeValidation(req, RequestHandlerOperation.CREATE);
-    if (!result) {
-        return sendAccepted(res);
-    }
+    const validator = new RoleAttributeRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
+
+    data.realm_id = data.role.realm_id;
 
     const ability = useRequestEnv(req, 'abilities');
+
     if (
         !ability.has(PermissionName.ROLE_EDIT) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)
+        !isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to set an attribute for this role...');
     }
@@ -35,7 +38,7 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
-    const entity = repository.create(result.data);
+    const entity = repository.create(data);
 
     await repository.save(entity);
 

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
@@ -16,10 +15,10 @@ import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { buildRequestValidationErrorMessage } from '../../../validation';
-import { runOauth2ClientValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { ClientRequestValidator } from '../utils';
+import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request';
 
 export async function createClientRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -27,21 +26,27 @@ export async function createClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ClientValidation(req, RequestHandlerOperation.CREATE);
+    const validator = new ClientRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
-    if (!isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'))) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-        }
+    if (!data.realm_id && !isRequestMasterRealm(req)) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
     }
 
-    await enforceUniquenessForDatabaseEntity(ClientEntity, result.data);
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+    }
+
+    await enforceUniquenessForDatabaseEntity(ClientEntity, data);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
 
-    result.data.user_id = useRequestEnv(req, 'userId');
-    const provider = repository.create(result.data);
+    data.user_id = useRequestEnv(req, 'userId');
+    const provider = repository.create(data);
 
     await repository.save(provider);
 

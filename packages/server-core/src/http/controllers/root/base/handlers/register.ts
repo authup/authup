@@ -6,7 +6,6 @@
  */
 
 import { randomBytes } from 'node:crypto';
-import { check, validationResult } from 'express-validator';
 import type { User } from '@authup/core-kit';
 import { isValidUserName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
@@ -14,12 +13,44 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
-import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
+import { RequestValidator, isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
-import { RequestValidationError, matchedValidationData } from '../../../../validation';
 import {
     EnvironmentName, useConfig,
 } from '../../../../../config';
+
+export class AuthRegisterRequestValidator extends RequestValidator<User> {
+    constructor() {
+        super();
+
+        this.add('email')
+            .exists()
+            .notEmpty()
+            .isEmail();
+
+        this.add('name')
+            .exists()
+            .custom((value) => {
+                const isValid = isValidUserName(value);
+                if (!isValid) {
+                    throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                }
+
+                return isValid;
+            })
+            .optional({ nullable: true });
+
+        this.add('password')
+            .exists()
+            .notEmpty()
+            .isLength({ min: 5, max: 512 });
+
+        this.add('realm_id')
+            .exists()
+            .isUUID()
+            .optional({ nullable: true });
+    }
+}
 
 export async function createAuthRegisterRouteHandler(req: Request, res: Response) : Promise<any> {
     const config = useConfig();
@@ -36,43 +67,9 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
         throw new BadRequestError('SMTP options are not defined.');
     }
 
-    await check('email')
-        .exists()
-        .notEmpty()
-        .isEmail()
-        .run(req);
+    const validator = new AuthRegisterRequestValidator();
 
-    await check('name')
-        .exists()
-        .custom((value) => {
-            const isValid = isValidUserName(value);
-            if (!isValid) {
-                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
-            }
-
-            return isValid;
-        })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('password')
-        .exists()
-        .notEmpty()
-        .isLength({ min: 5, max: 512 })
-        .run(req);
-
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    const data : Partial<User> = matchedValidationData(req, { includeOptionals: true });
+    const data : Partial<User> = await validator.execute(req);
 
     data.name ??= data.email;
 

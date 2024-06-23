@@ -13,16 +13,16 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runRoleAttributeValidation } from '../utils';
+import { RoleAttributeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const result = await runRoleAttributeValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result) {
-        return sendAccepted(res);
-    }
+    const validator = new RoleAttributeRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
@@ -32,7 +32,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     const ability = useRequestEnv(req, 'abilities');
     if (

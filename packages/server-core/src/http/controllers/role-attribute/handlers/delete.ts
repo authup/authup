@@ -12,7 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');

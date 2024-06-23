@@ -40,13 +40,13 @@ export async function runOAuth2Authorization(
     const authorizationCodeMaxAge = options.authorizationCodeMaxAge || 300;
     const idTokenMaxAge = options.idTokenMaxAge || 7200;
 
-    const result = await validateAuthorizeRequest(req);
+    const data = await validateAuthorizeRequest(req);
 
     const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
 
     const output : AuthorizeRequestResult = {
-        redirectUri: result.data.redirect_uri,
-        ...(result.data.state ? { state: result.data.state } : {}),
+        redirectUri: data.redirect_uri,
+        ...(data.state ? { state: data.state } : {}),
     };
 
     const { id: realmId, name: realmName } = useRequestEnv(req, 'realm');
@@ -57,11 +57,11 @@ export async function runOAuth2Authorization(
     const entity = repository.create({
         content: randomBytes(10).toString('hex'),
         expires: new Date(Date.now() + (1000 * authorizationCodeMaxAge)).toISOString(),
-        redirect_uri: result.data.redirect_uri,
-        client_id: result.data.client_id,
+        redirect_uri: data.redirect_uri,
+        client_id: data.client_id,
         user_id: useRequestEnv(req, 'userId'),
         realm_id: realmId,
-        scope: result.data.scope,
+        scope: data.scope,
     });
 
     const key = await useKey({ realm_id: realmId });
@@ -73,8 +73,8 @@ export async function runOAuth2Authorization(
         subKind: OAuth2SubKind.USER,
         realmId,
         realmName,
-        clientId: result.data.client_id,
-        ...(result.data.scope ? { scope: result.data.scope } : {}),
+        clientId: data.client_id,
+        ...(data.scope ? { scope: data.scope } : {}),
     };
 
     if (

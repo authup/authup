@@ -13,8 +13,8 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runRealmValidation } from '../utils';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RealmRequestValidator } from '../utils';
+import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
@@ -24,10 +24,11 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
-    const result = await runRealmValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new RealmRequestValidator();
+
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
@@ -39,13 +40,13 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
 
     if (
         entity.name === REALM_MASTER_NAME &&
-        isPropertySet(result.data, 'name') &&
-        entity.name !== result.data.name
+        isPropertySet(data, 'name') &&
+        entity.name !== data.name
     ) {
         throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

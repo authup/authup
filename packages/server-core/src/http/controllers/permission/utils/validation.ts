@@ -5,104 +5,55 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isRealmResourceWritable } from '@authup/core-kit';
-import { isPropertySet } from '@authup/kit';
 import { BadRequestError } from '@ebec/http';
-import { check, validationResult } from 'express-validator';
 import type { Request } from 'routup';
-import type { PermissionEntity } from '../../../../domains';
-import { PolicyEntity, RealmEntity } from '../../../../domains';
+import type { RequestValidatorExecuteOptions } from '../../../../core';
+import { RequestDatabaseValidator } from '../../../../core';
+import { PermissionEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
-import { useRequestEnv } from '../../../utils';
-import type { ExpressValidationResult } from '../../../validation';
-import {
-    RequestValidationError, buildRequestValidationErrorMessage,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult, matchedValidationData,
-} from '../../../validation';
 
-export async function runPermissionValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<PermissionEntity>> {
-    const result : ExpressValidationResult<PermissionEntity> = initExpressValidationResult();
+export class PermissionRequestValidator extends RequestDatabaseValidator<
+PermissionEntity
+> {
+    constructor() {
+        super(PermissionEntity);
 
-    const nameChain = check('name')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 128 });
+        this.mount();
+    }
 
-    if (operation === RequestHandlerOperation.UPDATE) nameChain.optional({ nullable: true });
+    mount() {
+        this.add('name')
+            .exists()
+            .isString()
+            .isLength({ min: 3, max: 128 })
+            .optional({ values: 'null' });
 
-    await nameChain.run(req);
+        this.add('description')
+            .isString()
+            .isLength({ min: 5, max: 4096 })
+            .optional({ values: 'null' });
 
-    await check('description')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 4096 })
-        .optional({ nullable: true })
-        .run(req);
-
-    await check('client_id')
-        .isUUID()
-        .optional({ values: 'null' })
-        .default(null)
-        .run(req);
-
-    if (operation === 'create') {
-        await check('realm_id')
+        this.add('client_id')
             .isUUID()
+            .optional({ values: 'null' });
+
+        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+            .isUUID()
+            .optional({ values: 'null' });
+
+        this.add('policy_id')
             .optional({ values: 'null' })
-            .default(null)
-            .run(req);
+            .isUUID();
     }
 
-    await check('policy_id')
-        .isUUID()
-        .optional({ values: 'null' })
-        .default(null)
-        .run(req);
+    async execute(req: Request, options: RequestValidatorExecuteOptions<PermissionEntity> = {}): Promise<PermissionEntity> {
+        const data = await super.execute(req, options);
 
-    // ----------------------------------------------
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, PolicyEntity, {
-        id: 'policy_id',
-        entity: 'policy',
-    });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RealmEntity, {
-        id: 'client_id',
-        entity: 'client',
-    });
-
-    await extendExpressValidationResultWithRelation(result, RealmEntity, {
-        id: 'realm_id',
-        entity: 'realm',
-    });
-
-    if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
+        if (options.group === RequestHandlerOperation.CREATE && !data.name) {
+            throw new BadRequestError(buildErrorMessageForAttribute('name'));
         }
-    } else if (
-        operation === RequestHandlerOperation.CREATE &&
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'))
-    ) {
-        throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-    }
 
-    return result;
+        return data;
+    }
 }

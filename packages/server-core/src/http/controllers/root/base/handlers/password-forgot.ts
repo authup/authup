@@ -7,18 +7,38 @@
 
 import { randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { check, oneOf, validationResult } from 'express-validator';
 import type { User } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
+import { RequestValidator, isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
     EnvironmentName, useConfig,
 } from '../../../../../config';
-import { RequestValidationError, matchedValidationData } from '../../../../validation';
+
+export class AuthPasswordForgotRequestValidator extends RequestValidator<User> {
+    constructor() {
+        super();
+
+        this.addOneOf([
+            this.create('email')
+                .exists()
+                .notEmpty()
+                .isEmail(),
+            this.create('name')
+                .exists()
+                .notEmpty()
+                .isString(),
+        ]);
+
+        this.add('realm_id')
+            .exists()
+            .isUUID()
+            .optional({ nullable: true });
+    }
+}
 
 export async function createAuthPasswordForgotRouteHandler(req: Request, res: Response) : Promise<any> {
     const config = useConfig();
@@ -38,30 +58,8 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         throw new BadRequestError('SMTP modul is not configured.');
     }
 
-    await oneOf([
-        check('email')
-            .exists()
-            .notEmpty()
-            .isEmail(),
-        check('name')
-            .exists()
-            .notEmpty()
-            .isString(),
-    ])
-        .run(req);
-
-    await check('realm_id')
-        .exists()
-        .isUUID()
-        .optional({ nullable: true })
-        .run(req);
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    const data : Partial<User> = matchedValidationData(req, { includeOptionals: true });
+    const validator = new AuthPasswordForgotRequestValidator();
+    const data = await validator.execute(req);
 
     const where : FindOptionsWhere<User> = {
         ...(data.name ? { name: data.name } : {}),

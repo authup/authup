@@ -9,6 +9,7 @@ export * from './array';
 export * from './has-own-property';
 export * from './nanoid';
 export * from './object';
+export * from './pick';
 export * from './scalar';
 export * from './serialize';
 export * from './template';

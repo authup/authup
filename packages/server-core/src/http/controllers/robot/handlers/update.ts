@@ -8,7 +8,8 @@
 import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionName, REALM_MASTER_NAME,
+    PermissionName,
+    REALM_MASTER_NAME, isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
@@ -16,16 +17,16 @@ import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { RobotRepository, resolveRealm, saveRobotCredentialsToVault } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runRobotValidation } from '../utils';
+import { RobotRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
-    const result = await runRobotValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new RobotRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = new RobotRepository(dataSource);
@@ -33,6 +34,10 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+        throw new ForbiddenError();
     }
 
     const ability = useRequestEnv(req, 'abilities');
@@ -52,8 +57,8 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     const config = useConfig();
 
     if (
-        isPropertySet(result.data, 'name') &&
-        entity.name.toLowerCase() !== result.data.name.toLowerCase() &&
+        isPropertySet(data, 'name') &&
+        entity.name.toLowerCase() !== data.name.toLowerCase() &&
         entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
     ) {
         const realm = await resolveRealm(entity.realm_id);
@@ -62,24 +67,24 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
-    if (result.data.secret) {
-        entity.secret = await repository.hashSecret(result.data.secret);
+    if (data.secret) {
+        entity.secret = await repository.hashSecret(data.secret);
     }
 
     entity = await repository.save(entity);
 
     // ----------------------------------------------
 
-    if (result.data.secret) {
+    if (data.secret) {
         // todo: this should be executed through a message broker
         await saveRobotCredentialsToVault({
             ...entity,
-            secret: result.data.secret,
+            secret: data.secret,
         });
 
-        entity.secret = result.data.secret;
+        entity.secret = data.secret;
     }
 
     // ----------------------------------------------

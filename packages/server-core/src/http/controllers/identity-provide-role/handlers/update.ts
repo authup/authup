@@ -14,7 +14,7 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { runIdentityProviderRoleValidation } from '../utils';
+import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -25,10 +25,10 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new ForbiddenError();
     }
 
-    const result = await runIdentityProviderRoleValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
-    }
+    const validator = new IdentityProviderRoleMappingRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
@@ -42,7 +42,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new ForbiddenError();
     }
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

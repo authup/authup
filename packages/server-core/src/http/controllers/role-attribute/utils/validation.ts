@@ -5,65 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
-import type { Request } from 'routup';
-import type { RoleAttributeEntity } from '../../../../domains';
-import { RoleEntity } from '../../../../domains';
-import type { ExpressValidationResult } from '../../../validation';
-import {
-    RequestValidationError, extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
-import { RequestHandlerOperation } from '../../../request/constants';
+import { RequestDatabaseValidator } from '../../../../core';
+import { RoleAttributeEntity } from '../../../../domains';
+import { RequestHandlerOperation } from '../../../request';
 
-export async function runRoleAttributeValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<RoleAttributeEntity>> {
-    const result : ExpressValidationResult<RoleAttributeEntity> = initExpressValidationResult();
+export class RoleAttributeRequestValidator extends RequestDatabaseValidator<
+RoleAttributeEntity
+> {
+    constructor() {
+        super(RoleAttributeEntity);
 
-    if (operation === RequestHandlerOperation.CREATE) {
-        await check('name')
+        this.mount();
+    }
+
+    mount() {
+        this.addTo(RequestHandlerOperation.CREATE, 'name')
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 3, max: 255 })
-            .run(req);
+            .isLength({ min: 3, max: 255 });
 
-        await check('role_id')
+        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
             .exists()
             .isUUID();
+
+        this.add('value')
+            .exists()
+            .notEmpty()
+            .isString()
+            .isLength({ min: 3, max: 512 })
+            .optional({ nullable: true });
     }
-
-    await check('value')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 512 })
-        .optional({ nullable: true })
-        .run(req);
-
-    // ----------------------------------------------
-
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RoleEntity, {
-        id: 'role_id',
-        entity: 'role',
-    });
-
-    if (operation === RequestHandlerOperation.CREATE) {
-        result.data.realm_id = result.relation.role.realm_id;
-        result.data.role_id = result.relation.role.id;
-    }
-
-    return result;
 }

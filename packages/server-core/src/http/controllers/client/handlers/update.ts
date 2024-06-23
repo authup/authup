@@ -5,15 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { isPropertySet } from '@authup/kit';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { runOauth2ClientValidation } from '../utils';
+import { ClientRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function updateClientRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -24,9 +26,15 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const result = await runOauth2ClientValidation(req, RequestHandlerOperation.UPDATE);
-    if (!result.data) {
-        return sendAccepted(res);
+    const validator = new ClientRequestValidator();
+    const data = await validator.execute(req, {
+        group: RequestHandlerOperation.UPDATE,
+    });
+
+    if (isPropertySet(data, 'realm_id')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+        }
     }
 
     const dataSource = await useDataSource();
@@ -41,11 +49,11 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    await enforceUniquenessForDatabaseEntity(ClientEntity, result.data, {
+    await enforceUniquenessForDatabaseEntity(ClientEntity, data, {
         id: entity.id,
     });
 
-    entity = repository.merge(entity, result.data);
+    entity = repository.merge(entity, data);
 
     await repository.save(entity);
 

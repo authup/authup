@@ -5,59 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { check, validationResult } from 'express-validator';
-import type { Request } from 'routup';
-import type { UserRoleEntity } from '../../../../domains';
-import { RoleEntity, UserEntity } from '../../../../domains';
-import type { ExpressValidationResult } from '../../../validation';
+import { RequestDatabaseValidator } from '../../../../core';
 import {
-    RequestValidationError,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
+    UserRoleEntity,
+} from '../../../../domains';
+
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runUserRoleValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<UserRoleEntity>> {
-    const result : ExpressValidationResult<UserRoleEntity> = initExpressValidationResult();
+export class UserRoleRequestValidator extends RequestDatabaseValidator<
+UserRoleEntity
+> {
+    constructor() {
+        super(UserRoleEntity);
 
-    if (operation === RequestHandlerOperation.CREATE) {
-        await check('user_id')
-            .exists()
-            .isUUID()
-            .run(req);
-
-        await check('role_id')
-            .exists()
-            .isUUID()
-            .run(req);
+        this.mount();
     }
 
-    // ----------------------------------------------
+    mount() {
+        this.addTo(RequestHandlerOperation.CREATE, 'user_id')
+            .exists()
+            .isUUID();
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
+        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
+            .exists()
+            .isUUID();
     }
-
-    result.data = matchedValidationData(req, { includeOptionals: true });
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RoleEntity, {
-        id: 'role_id',
-        entity: 'role',
-    });
-
-    await extendExpressValidationResultWithRelation(result, UserEntity, {
-        id: 'user_id',
-        entity: 'user',
-    });
-
-    // ----------------------------------------------
-
-    return result;
 }

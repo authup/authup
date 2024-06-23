@@ -5,159 +5,122 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
-import { check, oneOf, validationResult } from 'express-validator';
 import {
     IdentityProviderPreset,
     IdentityProviderProtocol,
     getIdentityProviderProtocolForPreset,
-    isRealmResourceWritable,
     isValidIdentityProviderSub,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
 import { ZodError } from 'zod';
-import type { IdentityProviderEntity } from '../../../../domains';
+import type { RequestValidatorExecuteOptions } from '../../../../core';
+import { RequestDatabaseValidator } from '../../../../core';
 import {
-    RealmEntity,
+    IdentityProviderEntity,
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol,
 } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
-import type { ExpressValidationResult } from '../../../validation';
-import {
-    RequestValidationError,
-    buildRequestValidationErrorMessage,
-    buildRequestValidationErrorMessageForZodError,
-    extendExpressValidationResultWithRelation,
-    initExpressValidationResult,
-    matchedValidationData,
-} from '../../../validation';
+import { buildErrorMessageForZodError } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
-export async function runOauth2ProviderValidation(
-    req: Request,
-    operation: `${RequestHandlerOperation.CREATE}` | `${RequestHandlerOperation.UPDATE}`,
-) : Promise<ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}>> {
-    const result : ExpressValidationResult<IdentityProviderEntity, {attributes: Record<string, any>}> = initExpressValidationResult();
+export class IdentityProviderRequestValidator extends RequestDatabaseValidator<IdentityProviderEntity> {
+    constructor() {
+        super(IdentityProviderEntity);
 
-    await check('slug')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 3, max: 36 })
-        .custom((value) => {
-            const isValid = isValidIdentityProviderSub(value);
-            if (!isValid) {
-                throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
-            }
+        this.mount();
+    }
 
-            return isValid;
-        })
-        .run(req);
-
-    await check('name')
-        .exists()
-        .notEmpty()
-        .isString()
-        .isLength({ min: 5, max: 128 })
-        .run(req);
-
-    await oneOf([
-        check('protocol')
+    mount() {
+        this.add('slug')
             .exists()
             .notEmpty()
-            .isIn(Object.values(IdentityProviderProtocol)),
-        check('preset')
+            .isString()
+            .isLength({ min: 3, max: 36 })
+            .custom((value) => {
+                const isValid = isValidIdentityProviderSub(value);
+                if (!isValid) {
+                    throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
+                }
+
+                return isValid;
+            });
+
+        this.add('name')
             .exists()
             .notEmpty()
-            .isIn(Object.values(IdentityProviderPreset)),
-    ]).run(req);
+            .isString()
+            .isLength({ min: 5, max: 128 });
 
-    await check('enabled')
-        .exists()
-        .notEmpty()
-        .isBoolean()
-        .run(req);
+        this.addOneOf(
+            [
+                this.create('protocol')
+                    .exists()
+                    .notEmpty()
+                    .isIn(Object.values(IdentityProviderProtocol)),
+                this.create('preset')
+                    .exists()
+                    .notEmpty()
+                    .isIn(Object.values(IdentityProviderPreset)),
+            ],
+        );
 
-    if (operation === 'create') {
-        await check('realm_id')
+        this.add('enabled')
+            .exists()
+            .notEmpty()
+            .isBoolean();
+
+        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
             .exists()
             .isUUID()
-            .optional({ nullable: true })
-            .run(req);
+            .optional({ nullable: true });
     }
 
-    // ----------------------------------------------
+    async executeWithAttributes(
+        req: Request,
+        options: RequestValidatorExecuteOptions<IdentityProviderEntity> = {},
+    ) : Promise<[IdentityProviderEntity, Record<string, any>]> {
+        const data = await this.execute(req, options);
 
-    const validation = validationResult(req);
-    if (!validation.isEmpty()) {
-        throw new RequestValidationError(validation);
-    }
+        let protocol : `${IdentityProviderProtocol}` | undefined;
+        if (data.preset) {
+            protocol = getIdentityProviderProtocolForPreset(data.preset);
+        } else {
+            protocol = data.protocol;
+        }
 
-    result.data = matchedValidationData(req, { includeOptionals: true });
+        if (!protocol) {
+            throw new BadRequestError('A protocol could not be determined.');
+        }
 
-    // ----------------------------------------------
+        let attributes : Record<string, any> = {};
 
-    let protocol : `${IdentityProviderProtocol}` | undefined;
-    if (result.data.preset) {
-        protocol = getIdentityProviderProtocolForPreset(result.data.preset);
-    } else {
-        protocol = result.data.protocol;
-    }
-
-    if (!protocol) {
-        throw new BadRequestError('A protocol could not be determined.');
-    }
-
-    try {
-        switch (protocol) {
-            case IdentityProviderProtocol.OAUTH2:
-            case IdentityProviderProtocol.OIDC: {
-                result.meta.attributes = validateOAuth2IdentityProviderProtocol(req, result.data.preset);
-                break;
+        try {
+            switch (protocol) {
+                case IdentityProviderProtocol.OAUTH2:
+                case IdentityProviderProtocol.OIDC: {
+                    attributes = validateOAuth2IdentityProviderProtocol(req, data.preset);
+                    break;
+                }
+                case IdentityProviderProtocol.LDAP: {
+                    attributes = validateLdapIdentityProviderProtocol(req);
+                    break;
+                }
             }
-            case IdentityProviderProtocol.LDAP: {
-                result.meta.attributes = validateLdapIdentityProviderProtocol(req);
-                break;
+        } catch (e: any) {
+            if (e instanceof ZodError) {
+                throw new BadRequestError(buildErrorMessageForZodError(e));
             }
-        }
-    } catch (e: any) {
-        if (e instanceof ZodError) {
-            throw new BadRequestError(buildRequestValidationErrorMessageForZodError(e));
+
+            if (e instanceof Error) {
+                throw new BadRequestError(e.message, {
+                    cause: e,
+                });
+            }
+
+            throw e;
         }
 
-        if (e instanceof Error) {
-            throw new BadRequestError(e.message, {
-                cause: e,
-            });
-        }
-
-        throw e;
+        return [data, attributes];
     }
-
-    // ----------------------------------------------
-
-    await extendExpressValidationResultWithRelation(result, RealmEntity, {
-        id: 'realm_id',
-        entity: 'realm',
-    });
-
-    if (isPropertySet(result.data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), result.data.realm_id)) {
-            throw new BadRequestError(buildRequestValidationErrorMessage('realm_id'));
-        }
-    }
-
-    if (
-        operation === RequestHandlerOperation.CREATE &&
-        !result.data.realm_id
-    ) {
-        const { id } = useRequestEnv(req, 'realm');
-        result.data.realm_id = id;
-    }
-
-    // ----------------------------------------------
-
-    return result;
 }
