@@ -160,7 +160,9 @@ export class RequestValidator<
             const bags = this.extractField(outcome.context);
 
             for (let i = 0; i < bags.length; i++) {
-                if (this.hasErrors(bags[i])) {
+                const itemErrors = this.getErrors(bags[i]);
+                if (itemErrors.length > 0) {
+                    errors.push(...itemErrors);
                     continue;
                 }
 
@@ -201,8 +203,8 @@ export class RequestValidator<
         }));
     }
 
-    protected hasErrors(bag: FieldInstanceBag) {
-        return bag.context.errors.some(
+    protected getErrors(bag: FieldInstanceBag) {
+        return bag.context.errors.filter(
             (error) => error.type === 'field' &&
                 error.location === bag.instance.location &&
                 error.path === bag.instance.path,

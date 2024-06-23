@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CompositePolicy, TimePolicy } from '@authup/core-kit';
+import type { CompositePolicy, Policy, TimePolicy } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/kit';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -60,6 +60,23 @@ describe('src/http/controllers/policy', () => {
         ids.push(response.body.id);
     });
 
+    it('should create custom policy', async () => {
+        const response = await superTest
+            .post('/policies')
+            .send({
+                name: 'foo',
+                type: 'foo',
+                bar: 'baz',
+                parent_id: ids[0],
+            } as Partial<Policy>)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.bar).toEqual('baz');
+        ids.push(response.body.id);
+    });
+
     it('should read collection', async () => {
         const response = await superTest
             .get('/policies')
@@ -68,7 +85,7 @@ describe('src/http/controllers/policy', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(2);
+        expect(response.body.data.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should read time policy', async () => {

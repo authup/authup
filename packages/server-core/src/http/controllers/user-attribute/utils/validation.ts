@@ -26,8 +26,8 @@ UserAttributeEntity
             .isLength({ min: 3, max: 255 });
 
         this.addTo(RequestHandlerOperation.CREATE, 'user_id')
-            .exists()
-            .isUUID();
+            .isUUID()
+            .optional({ values: 'null' });
 
         this.add('value')
             .exists()

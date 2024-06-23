@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/kit';
+import { BuiltInPolicyType, omitRecord } from '@authup/kit';
 import { useRequestBody } from '@routup/basic/body';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
@@ -34,20 +34,17 @@ export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValid
 
     mount() {
         this.add('name')
-            .exists()
-            .notEmpty()
             .isString()
             .isLength({ min: 3, max: 128 });
 
         this.add('invert')
-            .exists()
-            .notEmpty()
-            .isBoolean();
+            .isBoolean()
+            .optional({ values: 'undefined' });
 
         this.add('type')
             .exists()
-            .notEmpty()
-            .isIn(Object.values(BuiltInPolicyType));
+            .isString()
+            .isLength({ min: 3, max: 128 });
 
         this.add('parent_id')
             .exists()
@@ -87,6 +84,11 @@ export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValid
                 case BuiltInPolicyType.TIME: {
                     attributes = validateTimePolicyShaping(body);
                     break;
+                }
+                default: {
+                    const internal = await this.getFields();
+                    attributes = omitRecord(body, internal);
+                    // todo: maybe limit attributes size
                 }
             }
         } catch (e: any) {
