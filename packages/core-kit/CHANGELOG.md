@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* add client_id column to permission entity ([47d2d63](https://github.com/authup/authup/commit/47d2d636707e910cd62485e368decabda2d5467c))
+* add realm_id property to policy-attribute entity ([09ff4de](https://github.com/authup/authup/commit/09ff4ded550540e2a22838c4b19711df0bc2539e))
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+* initial policy implementation ([#2038](https://github.com/authup/authup/issues/2038)) ([deeaffc](https://github.com/authup/authup/commit/deeaffcf0b4a72d9e1d6cf99dbf70d582b98c257))
+* refactored domain entities properties and controllers ([#2075](https://github.com/authup/authup/issues/2075)) ([9a237d8](https://github.com/authup/authup/commit/9a237d8fa8b8cd7eabeecb534906510d31cd28b8))
+* renamed group-policy to composite-policy ([42e9702](https://github.com/authup/authup/commit/42e9702419824e459cb3311ae0766d0871a2d92a))
+* restrictions for role,permission-assignemnts ([#2071](https://github.com/authup/authup/issues/2071)) ([c851f76](https://github.com/authup/authup/commit/c851f76777cf0018d55f62511536b5f73a080868))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.17
+
 ## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
 
 
