@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.17
+    * @authup/core-kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.17
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.17
+    * @authup/core-kit bumped from ^1.0.0-beta.13 to ^1.0.0-beta.17
+
 ## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
 
 

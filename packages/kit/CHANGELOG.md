@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* better naming for policy evaluator methods ([1801bb9](https://github.com/authup/authup/commit/1801bb940dd2893286fde3c5a1ac9b932e3fd4e5))
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+* initial policy implementation ([#2038](https://github.com/authup/authup/issues/2038)) ([deeaffc](https://github.com/authup/authup/commit/deeaffcf0b4a72d9e1d6cf99dbf70d582b98c257))
+* refacotring of http controller request validation ([#2082](https://github.com/authup/authup/issues/2082)) ([6be6ff8](https://github.com/authup/authup/commit/6be6ff858db9527651f8abacabe99280ce9a2a08))
+* renamed group-policy to composite-policy ([42e9702](https://github.com/authup/authup/commit/42e9702419824e459cb3311ae0766d0871a2d92a))
+* restrictions for role,permission-assignemnts ([#2071](https://github.com/authup/authup/issues/2071)) ([c851f76](https://github.com/authup/authup/commit/c851f76777cf0018d55f62511536b5f73a080868))
+
 ## [1.0.0-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-13)
 
 
