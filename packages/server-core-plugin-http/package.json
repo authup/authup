@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core-plugin-http",
-    "version": "1.0.2-beta.13",
+    "version": "1.0.0-beta.17",
     "description": "A http plugin for the server core service.",
     "exports": {
         "./package.json": "./package.json",

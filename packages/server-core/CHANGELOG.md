@@ -1,5 +1,48 @@
 # Change Log
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.17...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* add client_id column to permission entity ([47d2d63](https://github.com/authup/authup/commit/47d2d636707e910cd62485e368decabda2d5467c))
+* add realm_id property to policy-attribute entity ([09ff4de](https://github.com/authup/authup/commit/09ff4ded550540e2a22838c4b19711df0bc2539e))
+* allow filtering permissions by built_in attribute ([2ad788a](https://github.com/authup/authup/commit/2ad788aaa53c7d9f9ab4f68351750f389cb38c8b))
+* better naming for policy evaluator methods ([1801bb9](https://github.com/authup/authup/commit/1801bb940dd2893286fde3c5a1ac9b932e3fd4e5))
+* enable local/global permissions & unqiueness by name + realm_id ([#1985](https://github.com/authup/authup/issues/1985)) ([56b366a](https://github.com/authup/authup/commit/56b366af26b63e41c75080800e8c8cf638f2813b))
+* identity-provider-{attribute,role,permission}-mapping ([#2058](https://github.com/authup/authup/issues/2058)) ([b5c5f15](https://github.com/authup/authup/commit/b5c5f15a22242152a3a573e7cbf8a01b9a719773))
+* initial policy implementation ([#2038](https://github.com/authup/authup/issues/2038)) ([deeaffc](https://github.com/authup/authup/commit/deeaffcf0b4a72d9e1d6cf99dbf70d582b98c257))
+* optimized pinia based store + renamed ability manager ([f309e99](https://github.com/authup/authup/commit/f309e99c93c73e5b5a217e207e706768106f9442))
+* refacotring of http controller request validation ([#2082](https://github.com/authup/authup/issues/2082)) ([6be6ff8](https://github.com/authup/authup/commit/6be6ff858db9527651f8abacabe99280ce9a2a08))
+* refactored domain entities properties and controllers ([#2075](https://github.com/authup/authup/issues/2075)) ([9a237d8](https://github.com/authup/authup/commit/9a237d8fa8b8cd7eabeecb534906510d31cd28b8))
+* refactored domain event publishing + fixed cache invalidation ([#1928](https://github.com/authup/authup/issues/1928)) ([53f2fba](https://github.com/authup/authup/commit/53f2fbaeeb4190a48bb920bc4595fef27a4cf2d5))
+* refactored ea-repo implementation + use ea-repo for policy entity ([abd9cdb](https://github.com/authup/authup/commit/abd9cdb529e1d6ebab315abc1f2d2eae60dd7339))
+* refactored service singleton usage ([#1933](https://github.com/authup/authup/issues/1933)) ([cbf2f58](https://github.com/authup/authup/commit/cbf2f5836d5f3bf4cd26ab0add44e78222d54602))
+* renamed group-policy to composite-policy ([42e9702](https://github.com/authup/authup/commit/42e9702419824e459cb3311ae0766d0871a2d92a))
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+* restrictions for role,permission-assignemnts ([#2071](https://github.com/authup/authup/issues/2071)) ([c851f76](https://github.com/authup/authup/commit/c851f76777cf0018d55f62511536b5f73a080868))
+
+
+### Bug Fixes
+
+* **deps:** bump @types/jsonwebtoken from 9.0.4 to 9.0.5 ([#1507](https://github.com/authup/authup/issues/1507)) ([598b9af](https://github.com/authup/authup/commit/598b9af61e739e74ace804941dc05f1cc79e6e14))
+* **deps:** bump @types/nodemailer from 6.4.13 to 6.4.14 ([#1543](https://github.com/authup/authup/issues/1543)) ([b67c556](https://github.com/authup/authup/commit/b67c556bd5ef799d97456b67de5cfcb57ddeca1d))
+* **deps:** bump better-sqlite3 from 10.0.0 to 11.0.0 ([#2030](https://github.com/authup/authup/issues/2030)) ([0b65564](https://github.com/authup/authup/commit/0b65564c53357061e3f333ed906c13092e2a4d70))
+* **deps:** bump better-sqlite3 from 9.5.0 to 9.6.0 ([#1935](https://github.com/authup/authup/issues/1935)) ([e835eff](https://github.com/authup/authup/commit/e835eff9e5de0a919cbb7117d7f5ce8cdc686916))
+* **deps:** bump better-sqlite3 from 9.6.0 to 10.0.0 ([#2000](https://github.com/authup/authup/issues/2000)) ([776509c](https://github.com/authup/authup/commit/776509c702854326b9a75d43699503019530d247))
+* **deps:** bump mysql2 from 3.9.5 to 3.9.6 ([#1905](https://github.com/authup/authup/issues/1905)) ([5d9cbd3](https://github.com/authup/authup/commit/5d9cbd3219a32cd09284be62265b73396a5325e8))
+* **deps:** bump mysql2 from 3.9.7 to 3.10.0 ([#2026](https://github.com/authup/authup/issues/2026)) ([168b9a2](https://github.com/authup/authup/commit/168b9a2a5a32922738b872e700362f8c13800abf))
+* **deps:** bump pg from 8.11.5 to 8.12.0 ([#2036](https://github.com/authup/authup/issues/2036)) ([db4f668](https://github.com/authup/authup/commit/db4f6686cc8893e75cf9bba150ffd9238fc6801d))
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+* **deps:** bump zod from 3.23.7 to 3.23.8 ([#1962](https://github.com/authup/authup/issues/1962)) ([25f63cb](https://github.com/authup/authup/commit/25f63cb29e9bcd1f3e5a8eb0cfdd27f95f4912fc))
+* encforcing entity unique constraints on create/update operation ([a9680df](https://github.com/authup/authup/commit/a9680df90c7f24bc463051068f8afba3493c36b7))
+* only log non 400/500 status code in dev and test env ([cff84e0](https://github.com/authup/authup/commit/cff84e0cc1900d827d3df5a80002851aa2a6a7f6))
+* realm target in policy attribute entity ([03c5ec1](https://github.com/authup/authup/commit/03c5ec1a9b78d2ce918a0f4cac0619a26c544b0f))
+* throwing error on token decoding issue ([1617abe](https://github.com/authup/authup/commit/1617abe754d0dec9ad93867ffa0271a33f7c05dd))
+* throwing token error ([35663eb](https://github.com/authup/authup/commit/35663eb994ee18980298b173afb31c2983a9c91d))
+* zod construct for attribute built-in policy ([2e964ec](https://github.com/authup/authup/commit/2e964ecaf859dfdf2565fc1be08c88739121b00b))
+
 ## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.16...v1.0.0-beta.17) (2024-06-23)
 
 

@@ -44,7 +44,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/client-web": "^1.0.0-beta.17",
-        "@authup/client-web-config": "^1.0.1-beta.13",
+        "@authup/client-web-config": "^1.0.0-beta.17",
         "@authup/config": "^1.0.0-beta.13",
         "@authup/kit": "^1.0.0-beta.17",
         "@authup/core-kit": "^1.0.0-beta.17",

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.1-beta.13...v1.0.0-beta.17) (2024-06-23)
+
+
+### Features
+
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+
 ## [1.0.1-beta.13](https://github.com/authup/authup/compare/v1.0.0-beta.13...v1.0.1-beta.13) (2024-06-23)
 
 
