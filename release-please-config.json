@@ -1,53 +1,23 @@
 {
     "include-component-in-tag": false,
     "release-type": "node",
-    "release-as": "1.0.0-beta.16",
+    "release-as": "1.0.0-beta.17",
     "packages": {
-        ".": {
-            "component": "root"
-        },
-        "packages/authup": {
-            "component": "authup"
-        },
-        "packages/client-web": {
-            "component": "client-web"
-        },
-        "packages/client-web-config": {
-            "component": "client-web-config"
-        },
-        "packages/client-web-kit": {
-            "component": "client-web-kit"
-        },
-        "packages/config": {
-            "component": "config"
-        },
-        "packages/core-http-kit": {
-            "component": "core-http-kit"
-        },
-        "packages/core-kit": {
-            "component": "core-kit"
-        },
-        "packages/core-realtime-kit": {
-            "component": "core-realtime-kit"
-        },
-        "packages/kit": {
-            "component": "kit"
-        },
-        "packages/server-core": {
-            "component": "server-core"
-        },
-        "packages/server-core-plugin-http": {
-            "component": "server-core-plugin-http"
-        },
-        "packages/server-core-plugin-kit": {
-            "component": "server-core-plugin-kit"
-        },
-        "packages/server-core-plugin-socket-io": {
-            "component": "server-core-plugin-socket-io"
-        },
-        "packages/server-kit": {
-            "component": "server-kit"
-        }
+        ".": {"component": "root"},
+        "packages/authup": {"component": "authup"},
+        "packages/client-web": {"component": "client-web"},
+        "packages/client-web-config": {"component": "client-web-config"},
+        "packages/client-web-kit": {"component": "client-web-kit"},
+        "packages/config": {"component": "config"},
+        "packages/core-http-kit": {"component": "core-http-kit"},
+        "packages/core-kit": {"component": "core-kit"},
+        "packages/core-realtime-kit": {"component": "core-realtime-kit"},
+        "packages/kit": {"component": "kit"},
+        "packages/server-core": {"component": "server-core"},
+        "packages/server-core-plugin-http": {"component": "server-core-plugin-http"},
+        "packages/server-core-plugin-kit": {"component": "server-core-plugin-kit"},
+        "packages/server-core-plugin-socket-io": {"component": "server-core-plugin-socket-io"},
+        "packages/server-kit": {"component": "server-kit"}
     },
     "plugins": [
         {
