@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.17...v1.0.0-beta.18) (2024-06-23)
+
+
+### Features
+
+* allow defining custom policies ([#2088](https://github.com/authup/authup/issues/2088)) ([45496cf](https://github.com/authup/authup/commit/45496cfac3a9300ac1cf7fa587105dcc808158fd))
+
 ## [1.0.0-beta.17](https://github.com/authup/authup/compare/v1.0.0-beta.17...v1.0.0-beta.17) (2024-06-23)
 
 
