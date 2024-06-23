@@ -7,7 +7,7 @@
 
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
-import type { EntityTarget } from 'typeorm';
+import type { DataSource, EntityMetadata, EntityTarget } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { buildErrorMessageForAttribute } from '../../utils';
 import type { RequestValidatorExecuteOptions } from '../request-validator';
@@ -41,16 +41,21 @@ export class RequestDatabaseValidator<
         return result;
     }
 
-    protected async lookupRelations(where: Partial<T>) : Promise<Partial<T>> {
+    protected async getFields() {
         const dataSource = await useDataSource();
-        const index = dataSource.entityMetadatas.findIndex(
-            (entityMetadata) => entityMetadata.target === this.target,
-        );
-        if (index === -1) {
-            throw new Error(`The entity ${this.target} is not registered.`);
+        const entityMetadata = await this.getEntityMetadata(dataSource);
+
+        const fields : string[] = entityMetadata.columns.map((c) => c.propertyName);
+        for (let i = 0; i < entityMetadata.relations.length; i++) {
+            fields.push(entityMetadata.relations[i].propertyName);
         }
 
-        const entityMetadata = dataSource.entityMetadatas[index];
+        return fields;
+    }
+
+    protected async lookupRelations(where: Partial<T>) : Promise<Partial<T>> {
+        const dataSource = await useDataSource();
+        const entityMetadata = await this.getEntityMetadata(dataSource);
 
         const output : Record<string, any> = {};
         for (let i = 0; i < entityMetadata.relations.length; i++) {
@@ -81,5 +86,16 @@ export class RequestDatabaseValidator<
         }
 
         return output as Partial<T>;
+    }
+
+    protected async getEntityMetadata(dataSource: DataSource) : Promise<EntityMetadata> {
+        const index = dataSource.entityMetadatas.findIndex(
+            (entityMetadata) => entityMetadata.target === this.target,
+        );
+        if (index === -1) {
+            throw new Error(`The entity ${this.target} is not registered.`);
+        }
+
+        return dataSource.entityMetadatas[index];
     }
 }
