@@ -6,6 +6,7 @@
  */
 
 import { BadRequestError } from '@ebec/http';
+import type { ValidationChain } from 'express-validator';
 import zod from 'zod';
 import { RequestDatabaseValidator } from '../../../../core';
 import { ClientEntity } from '../../../../domains';
@@ -20,11 +21,7 @@ export class ClientRequestValidator extends RequestDatabaseValidator<ClientEntit
     }
 
     mount() {
-        this.add('name')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 256 });
+        this.mountName();
 
         this.add('secret')
             .exists()
@@ -89,5 +86,24 @@ export class ClientRequestValidator extends RequestDatabaseValidator<ClientEntit
             .isUUID()
             .optional({ nullable: true })
             .default(null);
+    }
+
+    mountName() {
+        const extendNameChain = (chain: ValidationChain) => {
+            chain
+                .isString()
+                .isLength({ min: 3, max: 256 });
+        };
+
+        // on creation, it must be defined
+        const nameCreate = this.add('name');
+        extendNameChain(nameCreate);
+        this.addTo(RequestHandlerOperation.CREATE, nameCreate);
+
+        // on update, it can be missing
+        const nameUpdate = this.add('name')
+            .optional({ values: 'undefined' });
+        extendNameChain(nameUpdate);
+        this.addTo(RequestHandlerOperation.UPDATE, nameUpdate);
     }
 }

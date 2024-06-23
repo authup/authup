@@ -33,11 +33,10 @@ IdentityProviderRoleMappingEntity
             .optional({ values: 'null' });
 
         this.add('value')
-            .optional({ values: 'null' })
-            .default(null);
+            .optional({ values: 'null' });
 
         this.add('value_is_regex')
-            .notEmpty()
-            .isBoolean();
+            .isBoolean()
+            .optional({ values: 'null' });
     }
 }

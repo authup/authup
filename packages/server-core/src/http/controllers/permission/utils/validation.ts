@@ -25,16 +25,14 @@ PermissionEntity
     mount() {
         this.add('name')
             .exists()
-            .notEmpty()
             .isString()
             .isLength({ min: 3, max: 128 })
-            .optional({ nullable: true });
+            .optional({ values: 'null' });
 
         this.add('description')
-            .optional({ nullable: true })
-            .notEmpty()
             .isString()
-            .isLength({ min: 5, max: 4096 });
+            .isLength({ min: 5, max: 4096 })
+            .optional({ values: 'null' });
 
         this.add('client_id')
             .isUUID()
