@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core-plugin-kit",
-    "version": "1.0.0-beta.16",
+    "version": "1.0.0-beta.17",
     "description": "A package containing a toolkit for the server core plugins.",
     "exports": {
         "./package.json": "./package.json",
@@ -55,17 +55,17 @@
         "jose": "^5.4.0"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.13",
-        "@authup/core-kit": "^1.0.0-beta.13",
-        "@authup/core-http-kit": "^1.0.0-beta.13",
-        "@authup/server-kit": "^1.0.0-beta.16",
+        "@authup/kit": "^1.0.0-beta.17",
+        "@authup/core-kit": "^1.0.0-beta.17",
+        "@authup/core-http-kit": "^1.0.0-beta.17",
+        "@authup/server-kit": "^1.0.0-beta.17",
         "@hapic/oauth2": "^2.4.2"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.13",
-        "@authup/core-kit": "^1.0.0-beta.13",
-        "@authup/core-http-kit": "^1.0.0-beta.13",
-        "@authup/server-kit": "^1.0.0-beta.16"
+        "@authup/kit": "^1.0.0-beta.17",
+        "@authup/core-kit": "^1.0.0-beta.17",
+        "@authup/core-http-kit": "^1.0.0-beta.17",
+        "@authup/server-kit": "^1.0.0-beta.17"
     },
     "publishConfig": {
         "access": "public"
