@@ -9,7 +9,6 @@ import {
     PermissionName,
     isRealmResourceWritable,
 } from '@authup/core-kit';
-import { isPropertySet } from '@authup/kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -29,15 +28,13 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
         group: RequestHandlerOperation.CREATE,
     });
 
-    if (isPropertySet(data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-    }
-
     if (!data.realm_id) {
         const { id: realmId } = useRequestEnv(req, 'realm');
         data.realm_id = realmId;
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
     const ability = useRequestEnv(req, 'abilities');

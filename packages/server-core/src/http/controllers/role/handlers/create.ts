@@ -18,7 +18,7 @@ import { RoleEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { RoleRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request';
 
 export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -30,6 +30,11 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
     const data = await validator.execute(req, {
         group: RequestHandlerOperation.CREATE,
     });
+
+    if (!data.realm_id && !isRequestMasterRealm(req)) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+    }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));

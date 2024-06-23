@@ -16,7 +16,7 @@ import { useDataSource } from 'typeorm-extension';
 import { enforceUniquenessForDatabaseEntity } from '../../../../database';
 import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 import { PermissionRequestValidator } from '../utils';
 
@@ -30,6 +30,11 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
     const data = await validator.execute(req, {
         group: RequestHandlerOperation.CREATE,
     });
+
+    if (!data.realm_id && !isRequestMasterRealm(req)) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+    }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));

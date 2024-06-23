@@ -47,6 +47,6 @@ RobotEntity
         this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
             .exists()
             .isUUID()
-            .optional();
+            .optional({ values: 'null' });
     }
 }

@@ -18,7 +18,7 @@ import { ScopeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { ScopeRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request';
 
 export async function createScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -30,6 +30,12 @@ export async function createScopeRouteHandler(req: Request, res: Response) : Pro
     const data = await validator.execute(req, {
         group: RequestHandlerOperation.CREATE,
     });
+
+    if (!data.realm_id && !isRequestMasterRealm(req)) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+    }
+
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }

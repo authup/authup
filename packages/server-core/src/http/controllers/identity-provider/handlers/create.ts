@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
@@ -31,15 +30,13 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
         group: RequestHandlerOperation.CREATE,
     });
 
-    if (isPropertySet(data, 'realm_id')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-    }
-
     if (!data.realm_id) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
     const dataSource = await useDataSource();

@@ -8,7 +8,8 @@
 import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
-    PermissionName, REALM_MASTER_NAME,
+    PermissionName,
+    REALM_MASTER_NAME, isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
@@ -33,6 +34,10 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+        throw new ForbiddenError();
     }
 
     const ability = useRequestEnv(req, 'abilities');
