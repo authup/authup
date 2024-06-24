@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web-config",
-    "version": "1.0.0-beta.17",
+    "version": "1.0.0-beta.18",
     "description": "This package contains the config module for the client web app.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -39,10 +39,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.17"
+        "@authup/kit": "^1.0.0-beta.18"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.17"
+        "@authup/kit": "^1.0.0-beta.18"
     },
     "dependencies": {
         "dycraft": "^1.1.0",
