@@ -9,6 +9,7 @@ export * from './client';
 export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-role-mapping';
+export * from './policy';
 export * from './permission';
 export * from './realm';
 export * from './robot';

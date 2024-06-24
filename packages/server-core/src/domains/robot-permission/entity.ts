@@ -31,7 +31,7 @@ export class RobotPermissionEntity implements RobotPermission {
 
     // ------------------------------------------------------------------
 
-    @Column({ type: 'varchar', nullable: true })
+    @Column({ nullable: true })
         policy_id: string | null;
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })

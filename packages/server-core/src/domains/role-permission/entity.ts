@@ -41,7 +41,7 @@ export class RolePermissionEntity implements RolePermission {
 
     // ------------------------------------------------------------------
 
-    @Column({ type: 'varchar', nullable: true })
+    @Column({ nullable: true })
         policy_id: string | null;
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })

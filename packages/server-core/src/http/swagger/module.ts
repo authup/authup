@@ -21,6 +21,7 @@ export async function generateSwaggerDocumentation(
         version: Version.V2,
         options: {
             metadata: {
+                cache: false,
                 entryPoint,
                 ignore: [
                     '**/node_modules/**',
