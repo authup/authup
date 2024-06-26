@@ -15,11 +15,16 @@ import {
     IdentityProviderRoleSubscriber,
 
     IdentityProviderSubscriber,
+    PermissionSubscriber,
+    PolicyAttributeSubscriber,
+    PolicySubscriber,
     RobotPermissionSubscriber,
     RobotRoleSubscriber,
-    RobotSubscriber, RoleAttributeSubscriber,
+    RobotSubscriber,
+    RoleAttributeSubscriber,
     RolePermissionSubscriber,
-    RoleSubscriber, ScopeSubscriber,
+    RoleSubscriber,
+    ScopeSubscriber,
 
     UserAttributeSubscriber,
     UserPermissionSubscriber,
@@ -39,6 +44,10 @@ export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
             IdentityProviderAccountSubscriber,
             IdentityProviderAttributeSubscriber,
             IdentityProviderRoleSubscriber,
+
+            PermissionSubscriber,
+            PolicySubscriber,
+            PolicyAttributeSubscriber,
 
             RealmSubscriber,
 

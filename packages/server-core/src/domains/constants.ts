@@ -24,6 +24,9 @@ export enum CachePrefix {
 
     KEY = 'key',
 
+    POLICY = 'policy',
+    PERMISSION = 'permission',
+
     REALM = 'realm',
 
     POLICY_OWNED_ATTRIBUTES = 'policy_owned_attributes',

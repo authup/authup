@@ -13,6 +13,7 @@ import type { IdentityProviderAccount, IdentityProviderAccountEventContext } fro
 import type { IdentityProviderAttribute, IdentityProviderAttributeEventContext } from './identity-provider-attribute';
 import type { IdentityProviderRoleEventContext, IdentityProviderRoleMapping } from './identity-provider-role-mapping';
 import type { Permission, PermissionEventContext } from './permission';
+import type { Policy, PolicyEventContext } from './policy';
 import type { Realm, RealmEventContext } from './realm';
 import type { Robot, RobotEventContext } from './robot';
 import type { RobotPermission, RobotPermissionEventContext } from './robot-permission';
@@ -38,33 +39,35 @@ export type DomainEventContext<T extends `${DomainType}`> = T extends `${DomainT
                     IdentityProviderAttributeEventContext :
                     T extends `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}` ?
                         IdentityProviderRoleEventContext :
-                        T extends `${DomainType.PERMISSION}` ?
-                            PermissionEventContext :
-                            T extends `${DomainType.REALM}` ?
-                                RealmEventContext :
-                                T extends `${DomainType.ROBOT}` ?
-                                    RobotEventContext :
-                                    T extends `${DomainType.ROBOT_PERMISSION}` ?
-                                        RobotPermissionEventContext :
-                                        T extends `${DomainType.ROBOT_ROLE}` ?
-                                            RobotRoleEventContext :
-                                            T extends `${DomainType.ROLE}` ?
-                                                RoleEventContext :
-                                                T extends `${DomainType.ROLE_ATTRIBUTE}` ?
-                                                    RoleAttributeEventContext :
-                                                    T extends `${DomainType.ROLE_PERMISSION}` ?
-                                                        RolePermissionEventContext :
-                                                        T extends `${DomainType.SCOPE}` ?
-                                                            ScopeEventContext :
-                                                            T extends `${DomainType.USER}` ?
-                                                                UserEventContext :
-                                                                T extends `${DomainType.USER_ATTRIBUTE}` ?
-                                                                    UserAttributeEventContext :
-                                                                    T extends `${DomainType.USER_PERMISSION}` ?
-                                                                        UserPermissionEventContext :
-                                                                        T extends `${DomainType.USER_ROLE}` ?
-                                                                            UserRoleEventContext :
-                                                                            never;
+                        T extends `${DomainType.POLICY}` ?
+                            PolicyEventContext :
+                            T extends `${DomainType.PERMISSION}` ?
+                                PermissionEventContext :
+                                T extends `${DomainType.REALM}` ?
+                                    RealmEventContext :
+                                    T extends `${DomainType.ROBOT}` ?
+                                        RobotEventContext :
+                                        T extends `${DomainType.ROBOT_PERMISSION}` ?
+                                            RobotPermissionEventContext :
+                                            T extends `${DomainType.ROBOT_ROLE}` ?
+                                                RobotRoleEventContext :
+                                                T extends `${DomainType.ROLE}` ?
+                                                    RoleEventContext :
+                                                    T extends `${DomainType.ROLE_ATTRIBUTE}` ?
+                                                        RoleAttributeEventContext :
+                                                        T extends `${DomainType.ROLE_PERMISSION}` ?
+                                                            RolePermissionEventContext :
+                                                            T extends `${DomainType.SCOPE}` ?
+                                                                ScopeEventContext :
+                                                                T extends `${DomainType.USER}` ?
+                                                                    UserEventContext :
+                                                                    T extends `${DomainType.USER_ATTRIBUTE}` ?
+                                                                        UserAttributeEventContext :
+                                                                        T extends `${DomainType.USER_PERMISSION}` ?
+                                                                            UserPermissionEventContext :
+                                                                            T extends `${DomainType.USER_ROLE}` ?
+                                                                                UserRoleEventContext :
+                                                                                never;
 
 export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CLIENT}` ?
     Client :
@@ -78,33 +81,35 @@ export type DomainEntity<T extends `${DomainType}`> = T extends `${DomainType.CL
                     IdentityProviderAttribute :
                     T extends `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}` ?
                         IdentityProviderRoleMapping :
-                        T extends `${DomainType.PERMISSION}` ?
-                            Permission :
-                            T extends `${DomainType.REALM}` ?
-                                Realm :
-                                T extends `${DomainType.ROBOT}` ?
-                                    Robot :
-                                    T extends `${DomainType.ROBOT_PERMISSION}` ?
-                                        RobotPermission :
-                                        T extends `${DomainType.ROBOT_ROLE}` ?
-                                            RobotRole :
-                                            T extends `${DomainType.ROLE}` ?
-                                                Role :
-                                                T extends `${DomainType.ROLE_ATTRIBUTE}` ?
-                                                    RoleAttribute :
-                                                    T extends `${DomainType.ROLE_PERMISSION}` ?
-                                                        RolePermission :
-                                                        T extends `${DomainType.SCOPE}` ?
-                                                            Scope :
-                                                            T extends `${DomainType.USER}` ?
-                                                                User :
-                                                                T extends `${DomainType.USER_ATTRIBUTE}` ?
-                                                                    UserAttribute :
-                                                                    T extends `${DomainType.USER_PERMISSION}` ?
-                                                                        UserPermission :
-                                                                        T extends `${DomainType.USER_ROLE}` ?
-                                                                            UserRole :
-                                                                            never;
+                        T extends `${DomainType.POLICY}` ?
+                            Policy :
+                            T extends `${DomainType.PERMISSION}` ?
+                                Permission :
+                                T extends `${DomainType.REALM}` ?
+                                    Realm :
+                                    T extends `${DomainType.ROBOT}` ?
+                                        Robot :
+                                        T extends `${DomainType.ROBOT_PERMISSION}` ?
+                                            RobotPermission :
+                                            T extends `${DomainType.ROBOT_ROLE}` ?
+                                                RobotRole :
+                                                T extends `${DomainType.ROLE}` ?
+                                                    Role :
+                                                    T extends `${DomainType.ROLE_ATTRIBUTE}` ?
+                                                        RoleAttribute :
+                                                        T extends `${DomainType.ROLE_PERMISSION}` ?
+                                                            RolePermission :
+                                                            T extends `${DomainType.SCOPE}` ?
+                                                                Scope :
+                                                                T extends `${DomainType.USER}` ?
+                                                                    User :
+                                                                    T extends `${DomainType.USER_ATTRIBUTE}` ?
+                                                                        UserAttribute :
+                                                                        T extends `${DomainType.USER_PERMISSION}` ?
+                                                                            UserPermission :
+                                                                            T extends `${DomainType.USER_ROLE}` ?
+                                                                                UserRole :
+                                                                                never;
 export type SingleResourceResponse<R> = R;
 export type CollectionResourceResponse<R> = {
     data: R[],

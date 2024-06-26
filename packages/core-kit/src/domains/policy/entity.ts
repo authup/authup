@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy } from '@authup/kit';
+import type { AnyPolicy, EventPayload } from '@authup/kit';
+import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 
 export interface Policy {
@@ -35,3 +36,8 @@ export interface Policy {
 
     updated_at: Date;
 }
+
+export type PolicyEventContext = EventPayload & {
+    type: `${DomainType.POLICY}`,
+    data: Policy
+};

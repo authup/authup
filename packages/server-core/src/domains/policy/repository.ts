@@ -6,8 +6,9 @@
  */
 
 import type { DataSource, EntityManager } from 'typeorm';
+import { CachePrefix } from '../constants';
 import { EATreeRepository } from '../core';
-import { PolicyAttributeEntity } from '../policy-attribute/entity';
+import { PolicyAttributeEntity } from '../policy-attribute';
 import { PolicyEntity } from './entity';
 
 export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttributeEntity> {
@@ -23,7 +24,7 @@ export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttri
             entityPrimaryColumn: 'id',
             attributeEntity: PolicyAttributeEntity,
             attributeForeignColumn: 'policy_id',
-            // cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
+            cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
         });
     }
 }

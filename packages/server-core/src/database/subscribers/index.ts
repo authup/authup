@@ -13,6 +13,10 @@ export * from './identity-provider-account';
 export * from './identity-provider-attribute';
 export * from './identity-provider-role-mapping';
 
+export * from './permission';
+export * from './policy';
+export * from './policy-attribute';
+
 export * from './robot';
 export * from './robot-permission';
 export * from './robot-role';
