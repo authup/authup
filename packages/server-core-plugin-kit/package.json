@@ -52,7 +52,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "jose": "^5.4.1"
+        "jose": "^5.6.2"
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.18",
