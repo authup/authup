@@ -5,16 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PermissionName } from '@authup/core-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotRoleEntity } from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROBOT_READ) &&
+        !ability.has(PermissionName.ROBOT_UPDATE) &&
+        !ability.has(PermissionName.ROBOT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
     const query = repository.createQueryBuilder('robotRole');
@@ -41,6 +52,15 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
 }
 
 export async function getOneRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROBOT_READ) &&
+        !ability.has(PermissionName.ROBOT_UPDATE) &&
+        !ability.has(PermissionName.ROBOT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();

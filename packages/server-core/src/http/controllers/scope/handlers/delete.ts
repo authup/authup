@@ -17,7 +17,7 @@ export async function deleteScopeRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.SCOPE_DROP)) {
+    if (!ability.has(PermissionName.SCOPE_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -27,6 +27,10 @@ export async function deleteScopeRouteHandler(req: Request, res: Response) : Pro
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!ability.can(PermissionName.SCOPE_DELETE, { attributes: entity })) {
+        throw new ForbiddenError();
     }
 
     // ----------------------------------------------

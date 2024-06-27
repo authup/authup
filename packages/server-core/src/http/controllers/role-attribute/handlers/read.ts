@@ -12,7 +12,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isRealmResourceReadable } from '@authup/core-kit';
+import { PermissionName, isRealmResourceReadable } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
     onlyRealmWritableQueryResources,
@@ -20,6 +20,15 @@ import {
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROLE_READ) &&
+        !ability.has(PermissionName.ROLE_UPDATE) &&
+        !ability.has(PermissionName.ROLE_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
@@ -55,6 +64,15 @@ export async function getOneRoleAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROLE_READ) &&
+        !ability.has(PermissionName.ROLE_UPDATE) &&
+        !ability.has(PermissionName.ROLE_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParam(req, 'id');
 
     if (typeof id !== 'string') {

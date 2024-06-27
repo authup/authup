@@ -27,7 +27,7 @@ import { RobotPermissionRequestValidator } from '../utils';
  */
 export async function createRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
-    if (!abilities.has(PermissionName.ROBOT_PERMISSION_ADD)) {
+    if (!abilities.has(PermissionName.ROBOT_PERMISSION_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -39,7 +39,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
     });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: data satisfies Partial<RobotPermissionEntity>,
+        attributes: data satisfies Partial<RobotPermissionEntity>,
     };
 
     // ----------------------------------------------
@@ -52,7 +52,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         data.permission_realm_id = data.permission.realm_id;
 
         const ability = buildAbilityFromPermission(data.permission);
-        if (!abilities.has(ability, policyEvaluationContext)) {
+        if (!abilities.can(ability, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
     }
@@ -69,7 +69,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!abilities.has(PermissionName.ROBOT_PERMISSION_ADD, policyEvaluationContext)) {
+    if (!abilities.can(PermissionName.ROBOT_PERMISSION_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

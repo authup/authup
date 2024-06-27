@@ -20,7 +20,7 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.SCOPE_EDIT)) {
+    if (!ability.has(PermissionName.SCOPE_UPDATE)) {
         throw new NotFoundError();
     }
 
@@ -54,6 +54,10 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
     // ----------------------------------------------
 
     entity = repository.merge(entity, data);
+
+    if (!ability.can(PermissionName.SCOPE_UPDATE, { attributes: data })) {
+        throw new ForbiddenError();
+    }
 
     await repository.save(entity);
 

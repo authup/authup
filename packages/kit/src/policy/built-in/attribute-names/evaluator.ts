@@ -20,13 +20,13 @@ export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeN
     }
 
     execute(policy: AttributeNamesPolicyOptions, context: PolicyEvaluationContext): boolean {
-        if (typeof context.resource === 'undefined') {
+        if (typeof context.attributes === 'undefined') {
             return invertPolicyOutcome(true, policy.invert);
         }
 
         // todo: target maybe depth 2 (e.g. user.name, role.name)
 
-        const keys = Object.keys(context.resource);
+        const keys = Object.keys(context.attributes);
         for (let i = 0; i < keys.length; i++) {
             const index = policy.names.indexOf(keys[i]);
             if (index === -1) {

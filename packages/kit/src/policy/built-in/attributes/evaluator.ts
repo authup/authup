@@ -23,11 +23,11 @@ export class AttributesPolicyEvaluator<
     }
 
     execute(policy: AttributesPolicyOptions<T>, context: PolicyEvaluationContext): boolean {
-        if (typeof context.resource === 'undefined') {
+        if (typeof context.attributes === 'undefined') {
             return invertPolicyOutcome(true, policy.invert);
         }
 
         const testIt = guard(policy.query);
-        return invertPolicyOutcome(testIt(context.resource), policy.invert);
+        return invertPolicyOutcome(testIt(context.attributes), policy.invert);
     }
 }

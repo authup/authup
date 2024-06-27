@@ -25,6 +25,15 @@ import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROBOT_READ) &&
+        !ability.has(PermissionName.ROBOT_UPDATE) &&
+        !ability.has(PermissionName.ROBOT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
@@ -63,8 +72,8 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const env = useRequestEnv(req);
 
     if (
-        !env.abilities.has(PermissionName.ROBOT_EDIT) &&
-        !env.abilities.has(PermissionName.ROBOT_DROP)
+        !env.abilities.has(PermissionName.ROBOT_UPDATE) &&
+        !env.abilities.has(PermissionName.ROBOT_DELETE)
     ) {
         if (env.userId) {
             query.andWhere('robot.user_id = :userId', { userId: env.userId });
@@ -91,6 +100,15 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 }
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.ROBOT_READ) &&
+        !ability.has(PermissionName.ROBOT_UPDATE) &&
+        !ability.has(PermissionName.ROBOT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
@@ -148,12 +166,10 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (
         env.robotId !== entity.id &&
-        !env.abilities.has(PermissionName.ROBOT_DROP) &&
-        !env.abilities.has(PermissionName.ROBOT_EDIT)
+        !env.abilities.has(PermissionName.ROBOT_DELETE) &&
+        !env.abilities.has(PermissionName.ROBOT_UPDATE)
     ) {
-        if (
-            !entity.user_id
-        ) {
+        if (!entity.user_id) {
             throw new ForbiddenError();
         }
 

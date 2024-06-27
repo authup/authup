@@ -19,7 +19,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
-    if (!abilities.has(PermissionName.ROBOT_ROLE_ADD)) {
+    if (!abilities.has(PermissionName.ROBOT_ROLE_CREATE)) {
         throw new NotFoundError();
     }
 
@@ -31,7 +31,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
     // ----------------------------------------------
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: data satisfies Partial<RobotRoleEntity>,
+        attributes: data satisfies Partial<RobotRoleEntity>,
     };
 
     // ----------------------------------------------
@@ -49,7 +49,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
         const roleRepository = new RoleRepository(dataSource);
         const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
-        if (!abilities.hasMany(roleAbilities, policyEvaluationContext)) {
+        if (!abilities.can(roleAbilities, policyEvaluationContext)) {
             throw new ForbiddenError('The role permissions are not owned.');
         }
     }
@@ -66,7 +66,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (!abilities.has(PermissionName.ROBOT_ROLE_ADD, policyEvaluationContext)) {
+    if (!abilities.can(PermissionName.ROBOT_ROLE_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

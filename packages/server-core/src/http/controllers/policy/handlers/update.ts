@@ -21,7 +21,7 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.PERMISSION_EDIT)) {
+    if (!ability.has(PermissionName.PERMISSION_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -61,6 +61,10 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
     }
 
     entity = repository.merge(entity, data);
+
+    if (!ability.can(PermissionName.PERMISSION_UPDATE, { attributes: { ...entity, ...attributes } })) {
+        throw new ForbiddenError();
+    }
 
     await repository.saveWithAttributes(entity, attributes);
 

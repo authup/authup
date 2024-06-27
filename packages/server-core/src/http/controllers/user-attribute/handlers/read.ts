@@ -31,7 +31,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     query.where(new Brackets((qb) => {
         onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
-        if (!ability.has(PermissionName.USER_EDIT)) {
+        if (!ability.has(PermissionName.USER_UPDATE)) {
             qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
         }
     }));

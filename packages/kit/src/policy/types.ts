@@ -22,8 +22,20 @@ export type AnyPolicy = {
     [key: string]: any
 };
 
+export type PolicyEvaluationIdentity = {
+    type: string,
+    id: string
+};
+
 export type PolicyEvaluationContext = {
-    resource?: Record<string, any>,
+    /**
+     * Identity of the executing party.
+     */
+    identity?: PolicyEvaluationIdentity,
+    /**
+     * Attributes
+     */
+    attributes?: Record<string, any>,
     dateTime?: Date | number | string,
     [key: string]: any
 };

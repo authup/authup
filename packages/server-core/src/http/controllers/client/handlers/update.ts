@@ -22,7 +22,7 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.CLIENT_EDIT)) {
+    if (!ability.has(PermissionName.CLIENT_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -54,6 +54,10 @@ export async function updateClientRouteHandler(req: Request, res: Response) : Pr
     });
 
     entity = repository.merge(entity, data);
+
+    if (!ability.can(PermissionName.CLIENT_UPDATE, { attributes: data })) {
+        throw new ForbiddenError();
+    }
 
     await repository.save(entity);
 

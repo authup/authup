@@ -14,9 +14,7 @@ export type Ability = {
     policy?: AnyPolicy,
 };
 
-export type AbilitiesFilterOptions = {
+export type AbilitiesFindOptions = {
     realmId?: string | null,
-    name?: string,
-    object?: Record<string, any>,
-    fn?: (input: Ability) => boolean
+    name?: string
 };

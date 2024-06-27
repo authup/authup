@@ -21,7 +21,7 @@ describe('src/policy/attribute-names', () => {
         expect(outcome).toBeTruthy();
 
         outcome = evaluator.execute(policy, {
-            resource: {
+            attributes: {
                 foo: 'bar',
                 bar: 'baz',
             },
@@ -29,7 +29,7 @@ describe('src/policy/attribute-names', () => {
         expect(outcome).toBeTruthy();
 
         outcome = evaluator.execute(policy, {
-            resource: {
+            attributes: {
                 foo: 'bar',
                 bar: 'baz',
                 baz: 'boz',

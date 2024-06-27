@@ -39,8 +39,8 @@ export default defineNuxtComponent({
             resource: Client,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = useAbilityCheck(PermissionName.CLIENT_EDIT);
-        const hasDropPermission = useAbilityCheck(PermissionName.CLIENT_DROP);
+        const hasEditPermission = useAbilityCheck(PermissionName.CLIENT_UPDATE);
+        const hasDropPermission = useAbilityCheck(PermissionName.CLIENT_DELETE);
 
         const fields = [
             {

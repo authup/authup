@@ -19,7 +19,7 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.PROVIDER_EDIT)) {
+    if (!ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -34,6 +34,10 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
     let entity = await repository.findOneBy({ id });
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+        throw new ForbiddenError();
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {

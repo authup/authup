@@ -27,7 +27,7 @@ import { RequestHandlerOperation } from '../../../request';
  */
 export async function createUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
-    if (!abilities.has(PermissionName.USER_PERMISSION_ADD)) {
+    if (!abilities.has(PermissionName.USER_PERMISSION_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -39,7 +39,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
     });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
-        resource: data satisfies Partial<UserPermissionEntity>,
+        attributes: data satisfies Partial<UserPermissionEntity>,
     };
 
     // ----------------------------------------------
@@ -52,7 +52,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
         data.permission_realm_id = data.permission.realm_id;
 
         const ability = buildAbilityFromPermission(data.permission);
-        if (!abilities.has(ability, policyEvaluationContext)) {
+        if (!abilities.can(ability, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
     }
@@ -69,7 +69,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!abilities.has(PermissionName.USER_PERMISSION_ADD, policyEvaluationContext)) {
+    if (!abilities.can(PermissionName.USER_PERMISSION_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

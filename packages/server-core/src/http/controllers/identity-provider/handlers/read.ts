@@ -13,12 +13,21 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
+        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
+        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderEntity);
 
@@ -65,6 +74,15 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
 }
 
 export async function getOneIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
+        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
+        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
@@ -107,8 +125,10 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (ability.has(PermissionName.PROVIDER_EDIT)) {
+    if (
+        ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) ||
+        ability.has(PermissionName.IDENTITY_PROVIDER_READ)
+    ) {
         await repository.findAndAppendExtraAttributesTo(entity);
     }
 

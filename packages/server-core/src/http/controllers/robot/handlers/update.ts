@@ -41,15 +41,9 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROBOT_EDIT)) {
-        if (!entity.user_id) {
-            throw new ForbiddenError();
-        }
-
-        if (
-            entity.user_id &&
-            entity.user_id !== useRequestEnv(req, 'userId')
-        ) {
+    const userId = useRequestEnv(req, 'userId');
+    if (!entity.user_id || !userId || entity.user_id !== userId) {
+        if (!ability.can(PermissionName.ROBOT_UPDATE, { attributes: entity })) {
             throw new ForbiddenError();
         }
     }

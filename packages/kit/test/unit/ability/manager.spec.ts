@@ -45,8 +45,8 @@ describe('src/ability/manager.ts', () => {
         manager.set(testPermissions);
 
         expect(manager.has('user_edit')).toBeTruthy();
-        expect(manager.has('user_edit', { resource: { name: 'admin' } })).toBeTruthy();
-        expect(manager.has('user_edit', { resource: { id: '123' } })).toBeFalsy();
+        expect(manager.can('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
+        expect(manager.can('user_edit', { attributes: { id: '123' } })).toBeFalsy();
     });
 
     it('clear and check empty permissions', () => {

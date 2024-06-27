@@ -11,9 +11,9 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROBOT_EDIT,
-                PermissionName.ROBOT_DROP,
-                PermissionName.ROBOT_ADD,
+                PermissionName.ROBOT_UPDATE,
+                PermissionName.ROBOT_DELETE,
+                PermissionName.ROBOT_CREATE,
             ],
         });
 

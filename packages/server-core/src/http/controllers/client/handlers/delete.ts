@@ -20,7 +20,7 @@ export async function deleteClientRouteHandler(
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.CLIENT_DROP)) {
+    if (!ability.has(PermissionName.CLIENT_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -30,6 +30,10 @@ export async function deleteClientRouteHandler(
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!ability.can(PermissionName.CLIENT_DELETE, { attributes: entity })) {
+        throw new ForbiddenError();
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {

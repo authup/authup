@@ -13,7 +13,7 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName, ScopeName,
 } from '@authup/core-kit';
@@ -45,7 +45,7 @@ function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
         ],
     };
 
-    if (useRequestEnv(req, 'abilities').has(PermissionName.USER_EDIT)) {
+    if (useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE)) {
         options.allowed = ['email'];
     }
 
@@ -94,14 +94,36 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     const userRepository = new UserRepository(dataSource);
     const query = userRepository.createQueryBuilder('user');
 
-    const scopes = useRequestEnv(req, 'scopes');
-    let attributes : string[] = [];
+    const userId = useRequestEnv(req, 'userId');
 
-    if (
-        isSelfId(id) &&
-        useRequestEnv(req, 'userId')
-    ) {
-        attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
+    let isMe = false;
+
+    if (isSelfId(id) && userId) {
+        isMe = true;
+        query.where('user.id = :id', { id: userId });
+    } else if (isUUID(id)) {
+        if (id === userId) {
+            isMe = true;
+        }
+        query.where('user.id = :id', { id });
+    } else {
+        query.where('user.name LIKE :name', { name: id });
+
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
+    }
+
+    const ability = useRequestEnv(req, 'abilities');
+    const hasAbility = ability.has(PermissionName.USER_READ) ||
+        ability.has(PermissionName.USER_UPDATE) ||
+        ability.has(PermissionName.USER_DELETE);
+    if (!isMe && !hasAbility) {
+        throw new ForbiddenError();
+    }
+
+    const scopes = useRequestEnv(req, 'scopes');
+    if (isMe) {
+        const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
 
         const validAttributes = userRepository.metadata.columns.map(
             (column) => column.databaseName,
@@ -109,19 +131,9 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         for (let i = 0; i < attributes.length; i++) {
             const isValid = validAttributes.includes(attributes[i]);
             if (isValid) {
-                // todo: remove attribute from attributes
                 query.addSelect(`user.${attributes[i]}`);
             }
         }
-
-        query.where('user.id = :id', { id: useRequestEnv(req, 'userId') });
-    } else if (isUUID(id)) {
-        query.where('user.id = :id', { id });
-    } else {
-        query.where('user.name LIKE :name', { name: id });
-
-        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
-        query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
     }
 
     onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
@@ -140,10 +152,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (
-        isSelfId(id) &&
-        hasOAuth2Scope(scopes, ScopeName.GLOBAL)
-    ) {
+    if ((isMe && hasOAuth2Scope(scopes, ScopeName.GLOBAL)) || hasAbility) {
         await userRepository.findAndAppendExtraAttributesTo(entity);
     }
 

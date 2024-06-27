@@ -19,7 +19,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createRealmRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.REALM_ADD)) {
+    if (!ability.has(PermissionName.REALM_CREATE)) {
         throw new ForbiddenError('You are not permitted to add a realm.');
     }
 
@@ -30,6 +30,10 @@ export async function createRealmRouteHandler(req: Request, res: Response) : Pro
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
+
+    if (!ability.can(PermissionName.REALM_CREATE, { attributes: data })) {
+        throw new ForbiddenError();
+    }
 
     const entity = repository.create(data);
 

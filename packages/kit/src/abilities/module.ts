@@ -9,7 +9,7 @@ import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
 import { PolicyEnforcer } from '../policy';
 
-import type { AbilitiesFilterOptions, Ability } from './types';
+import type { AbilitiesFindOptions, Ability } from './types';
 
 export class Abilities extends EventEmitter<{
     updated: []
@@ -31,41 +31,83 @@ export class Abilities extends EventEmitter<{
     // ----------------------------------------------
 
     /**
-     * Check if permission evaluates to true.
+     * Check if a permission exists without any restriction.
      *
      * @param name
-     * @param evaluationContext
      */
-    has(name: string | Ability, evaluationContext: PolicyEvaluationContext = {}) : boolean {
-        return this.hasMany([name], evaluationContext);
+    has(name: string | Ability) : boolean {
+        return this.hasMany([name]);
     }
 
     // ----------------------------------------------
 
     /**
-     * Check if all permissions evaluate to true.
+     * Check if all permissions exist without any restriction.
      *
-     * @param input
-     * @param evaluationContext
+     * @param items
      */
-    hasMany(input: (Ability | string)[], evaluationContext: PolicyEvaluationContext = {}) : boolean {
-        if (input.length === 0) {
-            return true;
-        }
+    hasMany(items: (Ability | string)[]) : boolean {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
 
-        for (let i = 0; i < input.length; i++) {
-            const inputItem = input[i];
-
-            let owned : Ability[];
-            if (typeof inputItem === 'string') {
+            let owned: Ability[];
+            if (typeof item === 'string') {
                 owned = this.find({
                     realmId: null,
-                    name: inputItem,
+                    name: item,
                 });
             } else {
                 owned = this.find({
-                    realmId: inputItem.realmId ?? null,
-                    name: inputItem.name,
+                    realmId: item.realmId ?? null,
+                    name: item.name,
+                });
+            }
+
+            if (owned.length === 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    can(
+        input: Ability | string,
+        context?: PolicyEvaluationContext
+    ) : boolean;
+
+    can(
+        input: (Ability | string)[],
+        context?: PolicyEvaluationContext
+    ) : boolean;
+
+    /**
+     * Check if the owned abilities, satisfy the conditions for a given ability.
+     *
+     * @param input
+     * @param context
+     */
+    can(
+        input: Ability | string | (Ability | string)[],
+        context: PolicyEvaluationContext = {},
+    ) : boolean {
+        if (!Array.isArray(input)) {
+            return this.can([input], context);
+        }
+
+        for (let i = 0; i < input.length; i++) {
+            const item = input[i];
+
+            let owned : Ability[];
+            if (typeof item === 'string') {
+                owned = this.find({
+                    realmId: null,
+                    name: item,
+                });
+            } else {
+                owned = this.find({
+                    realmId: item.realmId ?? null,
+                    name: item.name,
                 });
             }
 
@@ -82,7 +124,7 @@ export class Abilities extends EventEmitter<{
                 }
 
                 hasPolicies = true;
-                const outcome = this.policyEnforcer.evaluate(ownedItem.policy, evaluationContext);
+                const outcome = this.policyEnforcer.evaluate(ownedItem.policy, context);
                 if (outcome) {
                     hasPositiveOutcome = true;
                     break;
@@ -104,18 +146,11 @@ export class Abilities extends EventEmitter<{
     /**
      * Find all matching abilities.
      *
-     * @param input
+     * @param options
      */
-    find(input?: string | AbilitiesFilterOptions) : Ability[] {
-        if (typeof input === 'undefined') {
+    find(options: AbilitiesFindOptions = {}) : Ability[] {
+        if (typeof options === 'undefined') {
             return this.items;
-        }
-
-        let options : AbilitiesFilterOptions;
-        if (typeof input === 'string') {
-            options = { name: input };
-        } else {
-            options = input;
         }
 
         const output : Ability[] = [];
@@ -141,12 +176,6 @@ export class Abilities extends EventEmitter<{
                 this.items[i].name !== options.name
             ) {
                 continue;
-            }
-
-            if (options.fn) {
-                if (!options.fn(this.items[i])) {
-                    continue;
-                }
             }
 
             output.push(this.items[i]);

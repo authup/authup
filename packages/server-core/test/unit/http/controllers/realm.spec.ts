@@ -41,7 +41,8 @@ describe('src/http/controllers/realm', () => {
 
     it('should read collection', async () => {
         const response = await superTest
-            .get('/realms');
+            .get('/realms')
+            .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();

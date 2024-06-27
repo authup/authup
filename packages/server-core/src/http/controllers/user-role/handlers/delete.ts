@@ -17,7 +17,7 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.USER_ROLE_DROP)) {
+    if (!ability.has(PermissionName.USER_ROLE_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -49,7 +49,7 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    if (!ability.has(PermissionName.USER_ROLE_DROP, { resource: entity })) {
+    if (!ability.can(PermissionName.USER_ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 
