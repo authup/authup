@@ -18,7 +18,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.CLIENT_EDIT)) {
+    if (!ability.has(PermissionName.CLIENT_UPDATE)) {
         throw new NotFoundError();
     }
 
@@ -38,6 +38,10 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
 
     if (data.scope) {
         data.scope_realm_id = data.scope.realm_id;
+    }
+
+    if (!ability.can(PermissionName.CLIENT_UPDATE, { attributes: data })) {
+        throw new NotFoundError();
     }
 
     const dataSource = await useDataSource();

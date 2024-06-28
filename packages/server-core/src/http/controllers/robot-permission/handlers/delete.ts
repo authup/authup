@@ -23,7 +23,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROBOT_PERMISSION_DROP)) {
+    if (!ability.has(PermissionName.ROBOT_PERMISSION_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -51,7 +51,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!ability.has(PermissionName.ROBOT_PERMISSION_DROP, { resource: entity })) {
+    if (!ability.can(PermissionName.ROBOT_PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

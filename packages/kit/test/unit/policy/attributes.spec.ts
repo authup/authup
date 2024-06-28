@@ -15,7 +15,7 @@ type User = {
 
 describe('src/policy/attributes', () => {
     it('should restrict', () => {
-        const policy : AttributesPolicyOptions<User> = {
+        const options : AttributesPolicyOptions<User> = {
             invert: false,
             query: {
                 name: {
@@ -28,23 +28,30 @@ describe('src/policy/attributes', () => {
             },
         };
 
-        const evaluator = new AttributesPolicyEvaluator();
+        const evaluator = new AttributesPolicyEvaluator<User>();
 
-        let outcome = evaluator.execute(policy, {});
-        expect(outcome).toBeTruthy();
+        expect(() => {
+            evaluator.evaluate({ options });
+        }).toThrow();
 
-        outcome = evaluator.execute(policy, {
-            resource: {
-                name: 'Peter',
-                age: 15,
+        let outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    name: 'Peter',
+                    age: 15,
+                },
             },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evaluator.execute(policy, {
-            resource: {
-                name: 'Peter',
-                age: 28,
+        outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    name: 'Peter',
+                    age: 28,
+                },
             },
         });
         expect(outcome).toBeFalsy();

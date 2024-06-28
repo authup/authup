@@ -22,17 +22,20 @@ export type AnyPolicy = {
     [key: string]: any
 };
 
+export type PolicyEvaluationIdentity = {
+    type: string,
+    id: string
+};
+
 export type PolicyEvaluationContext = {
-    resource?: Record<string, any>,
+    /**
+     * Identity of the executing party.
+     */
+    identity?: PolicyEvaluationIdentity,
+    /**
+     * Attributes
+     */
+    attributes?: Record<string, any>,
     dateTime?: Date | number | string,
     [key: string]: any
 };
-
-export interface PolicyEvaluator<
-    P extends Record<string, any> = Record<string, any>,
-    C extends Record<string, any> = Record<string, any>,
-> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean;
-
-    execute(policy: P, context: C): boolean;
-}

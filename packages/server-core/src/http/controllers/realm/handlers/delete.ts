@@ -18,7 +18,7 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.REALM_DROP)) {
+    if (!ability.has(PermissionName.REALM_DELETE)) {
         throw new ForbiddenError('You are not allowed to drop a realm.');
     }
 
@@ -33,6 +33,10 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
 
     if (!entity.built_in) {
         throw new BadRequestError('The realm can not be deleted in general.');
+    }
+
+    if (!ability.can(PermissionName.REALM_DELETE, { attributes: entity })) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;

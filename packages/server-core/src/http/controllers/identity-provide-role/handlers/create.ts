@@ -21,7 +21,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.PROVIDER_EDIT)) {
+    if (!ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -53,6 +53,10 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         data.role_realm_id !== data.provider_realm_id
     ) {
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
+    }
+
+    if (!ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
+        throw new ForbiddenError();
     }
 
     const dataSource = await useDataSource();

@@ -9,7 +9,7 @@ import {
     PermissionName,
     isRealmResourceWritable,
 } from '@authup/core-kit';
-import { BadRequestError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -37,16 +37,12 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
-    const ability = useRequestEnv(req, 'abilities');
     const userId = useRequestEnv(req, 'userId');
-
-    if (!ability.has(PermissionName.ROBOT_ADD)) {
-        data.user_id = userId;
-    } else if (
-        data.user_id &&
-        data.user_id !== userId
-    ) {
-        data.user_id = userId;
+    if (!data.user_id || !userId || data.user_id !== userId) {
+        const ability = useRequestEnv(req, 'abilities');
+        if (!ability.can(PermissionName.ROBOT_CREATE, { attributes: data })) {
+            throw new ForbiddenError();
+        }
     }
 
     const dataSource = await useDataSource();

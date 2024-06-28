@@ -22,7 +22,7 @@ import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request'
 
 export async function createRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROLE_ADD)) {
+    if (!ability.has(PermissionName.ROLE_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -34,6 +34,10 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
     if (!data.realm_id && !isRequestMasterRealm(req)) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
+    }
+
+    if (!ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
+        throw new ForbiddenError();
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {

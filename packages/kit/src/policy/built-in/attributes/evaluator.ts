@@ -6,7 +6,9 @@
  */
 
 import { guard } from '@ucast/mongo2js';
-import type { AnyPolicy, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
+import { isObject } from '../../../utils';
+import { PolicyError } from '../../error';
+import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
 import type { AttributesPolicyOptions } from './types';
@@ -14,20 +16,18 @@ import type { AttributesPolicyOptions } from './types';
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
 > implements PolicyEvaluator<AttributesPolicyOptions<T>> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
-        if (!isAttributesPolicy(policy)) {
-            return false;
-        }
-
-        return this.execute(policy as unknown as AttributesPolicyOptions<T>, context);
+    canEvaluate(
+        ctx: PolicyEvaluatorContext<any, any>,
+    ): ctx is PolicyEvaluatorContext<AttributesPolicyOptions<T>> {
+        return isAttributesPolicy(ctx.options);
     }
 
-    execute(policy: AttributesPolicyOptions<T>, context: PolicyEvaluationContext): boolean {
-        if (typeof context.resource === 'undefined') {
-            return invertPolicyOutcome(true, policy.invert);
+    evaluate(ctx: PolicyEvaluatorContext<AttributesPolicyOptions<T>>): boolean {
+        if (!isObject(ctx.data) || !isObject(ctx.data.attributes)) {
+            throw PolicyError.evaluatorContextInvalid();
         }
 
-        const testIt = guard(policy.query);
-        return invertPolicyOutcome(testIt(context.resource), policy.invert);
+        const testIt = guard(ctx.options.query);
+        return invertPolicyOutcome(testIt(ctx.data.attributes), ctx.options.invert);
     }
 }

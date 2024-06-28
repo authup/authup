@@ -5,18 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy, PolicyDecisionStrategy } from '../policy';
+import type { AnyPolicy } from '../policy';
 
 export type Ability = {
     name: string,
     realmId?: string | null,
-    decisionStrategy?: `${PolicyDecisionStrategy}`,
     policy?: AnyPolicy,
-};
-
-export type AbilitiesFilterOptions = {
-    realmId?: string | null,
-    name?: string,
-    object?: Record<string, any>,
-    fn?: (input: Ability) => boolean
 };

@@ -38,7 +38,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
         data.user_id !== useRequestEnv(req, 'userId')
     ) {
         if (
-            !useRequestEnv(req, 'abilities').has(PermissionName.USER_EDIT) ||
+            !useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');

@@ -8,7 +8,7 @@
 import type { AttributeNamesPolicy, AttributesPolicy, BuiltInPolicy } from '../../../src';
 import {
     BuiltInPolicyType,
-    PolicyDecisionStrategy, PolicyEnforcer,
+    PolicyDecisionStrategy, PolicyEngine,
 } from '../../../src';
 
 type User = {
@@ -18,7 +18,7 @@ type User = {
 
 describe('src/policy', () => {
     it('should work with default evaluators', () => {
-        const enforcer = new PolicyEnforcer();
+        const enforcer = new PolicyEngine();
 
         const attributePolicy : AttributesPolicy<User> = {
             type: BuiltInPolicyType.ATTRIBUTES,
@@ -44,14 +44,14 @@ describe('src/policy', () => {
         };
 
         let outcome = enforcer.evaluateMany([compositePolicy], {
-            resource: {
+            attributes: {
                 name: 'admin',
             },
         });
         expect(outcome).toBeTruthy();
 
         outcome = enforcer.evaluate(compositePolicy, {
-            resource: {
+            attributes: {
                 id: 'foo',
                 name: 'admin',
             },
@@ -59,7 +59,7 @@ describe('src/policy', () => {
         expect(outcome).toBeFalsy();
 
         outcome = enforcer.evaluate(compositePolicy, {
-            resource: {
+            attributes: {
                 name: 'foo',
             },
         });

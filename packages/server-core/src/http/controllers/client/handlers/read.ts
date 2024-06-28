@@ -13,7 +13,7 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
 } from '@authup/core-kit';
@@ -26,6 +26,15 @@ import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.CLIENT_READ) &&
+        !ability.has(PermissionName.CLIENT_UPDATE) &&
+        !ability.has(PermissionName.CLIENT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
 
@@ -50,8 +59,10 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         ],
     };
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (ability.has(PermissionName.CLIENT_EDIT)) {
+    if (
+        ability.has(PermissionName.CLIENT_READ) ||
+        ability.has(PermissionName.CLIENT_UPDATE)
+    ) {
         options.allowed = ['secret'];
     }
 
@@ -84,6 +95,15 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 }
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
+    const ability = useRequestEnv(req, 'abilities');
+    if (
+        !ability.has(PermissionName.CLIENT_READ) &&
+        !ability.has(PermissionName.CLIENT_UPDATE) &&
+        !ability.has(PermissionName.CLIENT_DELETE)
+    ) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParam(req, 'id');
 
     const dataSource = await useDataSource();
@@ -129,8 +149,10 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         ],
     };
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (ability.has(PermissionName.CLIENT_EDIT)) {
+    if (
+        ability.has(PermissionName.CLIENT_UPDATE) ||
+        ability.has(PermissionName.CLIENT_READ)
+    ) {
         options.allowed = ['secret'];
     }
 

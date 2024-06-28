@@ -11,13 +11,13 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRoleEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROBOT_ROLE_DROP)) {
+    if (!ability.has(PermissionName.ROBOT_ROLE_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -49,9 +49,7 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (!ability.has(PermissionName.ROBOT_ROLE_DROP, {
-        resource: entity,
-    })) {
+    if (!ability.can(PermissionName.ROBOT_ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

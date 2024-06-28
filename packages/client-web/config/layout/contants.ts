@@ -9,7 +9,7 @@ import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
 
 export enum LayoutKey {
-    // todo: renmae to NAVIGATION_TOP_ID
+    // todo: rename to NAVIGATION_TOP_ID
     NAVIGATION_ID = 'navigationTopId',
     NAVIGATION_SIDE_ID = 'navigationSideId',
 
@@ -88,9 +88,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fas fa-building',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.REALM_ADD,
-            PermissionName.REALM_EDIT,
-            PermissionName.REALM_DROP,
+            PermissionName.REALM_READ,
+            PermissionName.REALM_CREATE,
+            PermissionName.REALM_UPDATE,
+            PermissionName.REALM_DELETE,
         ],
     },
     {
@@ -100,9 +101,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fa-solid fa-ghost',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.CLIENT_ADD,
-            PermissionName.CLIENT_EDIT,
-            PermissionName.CLIENT_DROP,
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_CREATE,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
         ],
     },
     {
@@ -112,9 +114,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fa-solid fa-meteor',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.SCOPE_ADD,
-            PermissionName.SCOPE_EDIT,
-            PermissionName.SCOPE_DROP,
+            PermissionName.SCOPE_READ,
+            PermissionName.SCOPE_CREATE,
+            PermissionName.SCOPE_UPDATE,
+            PermissionName.SCOPE_DELETE,
         ],
     },
     {
@@ -124,9 +127,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fa-solid fa-atom',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.PROVIDER_ADD,
-            PermissionName.PROVIDER_EDIT,
-            PermissionName.PROVIDER_DROP,
+            PermissionName.IDENTITY_PROVIDER_READ,
+            PermissionName.IDENTITY_PROVIDER_CREATE,
+            PermissionName.IDENTITY_PROVIDER_UPDATE,
+            PermissionName.IDENTITY_PROVIDER_DELETE,
         ],
     },
     {
@@ -136,9 +140,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fas fa-robot',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.ROBOT_ADD,
-            PermissionName.ROBOT_EDIT,
-            PermissionName.ROBOT_DROP,
+            PermissionName.ROBOT_READ,
+            PermissionName.ROBOT_CREATE,
+            PermissionName.ROBOT_UPDATE,
+            PermissionName.ROBOT_DELETE,
         ],
     },
     {
@@ -148,9 +153,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fas fa-user',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.USER_ADD,
-            PermissionName.USER_EDIT,
-            PermissionName.USER_DROP,
+            PermissionName.USER_READ,
+            PermissionName.USER_CREATE,
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_DELETE,
         ],
     },
     {
@@ -160,11 +166,13 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fa-solid fa-theater-masks',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.ROLE_ADD,
-            PermissionName.ROLE_EDIT,
-            PermissionName.ROLE_DROP,
-            PermissionName.ROLE_PERMISSION_ADD,
-            PermissionName.ROLE_PERMISSION_DROP,
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_CREATE,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+            PermissionName.ROLE_PERMISSION_READ,
+            PermissionName.ROLE_PERMISSION_CREATE,
+            PermissionName.ROLE_PERMISSION_DELETE,
         ],
     },
     {
@@ -174,9 +182,10 @@ export const LayoutSideAdminNavigation : NavigationItem[] = [
         icon: 'fas fa-key',
         [LayoutKey.REQUIRED_LOGGED_IN]: true,
         [LayoutKey.REQUIRED_PERMISSIONS]: [
-            PermissionName.PERMISSION_ADD,
-            PermissionName.PERMISSION_EDIT,
-            PermissionName.PERMISSION_DROP,
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_CREATE,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
         ],
     },
 ];

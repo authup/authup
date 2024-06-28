@@ -34,7 +34,8 @@ export async function createSuperTestClientWithScope(
     const client = await createSuperTestClient(superTest, entity);
 
     const { body: scope } = await superTest
-        .get(`/scopes/${ScopeName.GLOBAL}`);
+        .get(`/scopes/${ScopeName.GLOBAL}`)
+        .auth('admin', 'start123');
 
     await superTest
         .post('/client-scopes')

@@ -10,29 +10,81 @@ import { AttributeNamesPolicyEvaluator } from '../../../src';
 
 describe('src/policy/attribute-names', () => {
     it('should restrict', () => {
-        const policy : AttributeNamesPolicyOptions = {
+        const options : AttributeNamesPolicyOptions = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
         const evaluator = new AttributeNamesPolicyEvaluator();
 
-        let outcome = evaluator.execute(policy, {});
-        expect(outcome).toBeTruthy();
+        expect(() => {
+            evaluator.evaluate({ options });
+        }).toThrow();
 
-        outcome = evaluator.execute(policy, {
-            resource: {
-                foo: 'bar',
-                bar: 'baz',
+        let outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    foo: 'bar',
+                    bar: 'baz',
+                },
             },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evaluator.execute(policy, {
-            resource: {
-                foo: 'bar',
-                bar: 'baz',
-                baz: 'boz',
+        outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    foo: 'bar',
+                    bar: 'baz',
+                    baz: 'boz',
+                },
+            },
+        });
+        expect(outcome).toBeFalsy();
+    });
+
+    it('should restrict nested attributes', () => {
+        const options : AttributeNamesPolicyOptions = {
+            names: [
+                'user.name',
+                'age',
+            ],
+        };
+
+        const evaluator = new AttributeNamesPolicyEvaluator();
+        let outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    name: 'admin',
+                },
+            },
+        });
+        expect(outcome).toBeFalsy();
+
+        outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    user: {
+                        name: 'admin',
+                    },
+                },
+            },
+        });
+        expect(outcome).toBeTruthy();
+
+        outcome = evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    user: {
+                        name: 'admin',
+                        id: 'xxx',
+                    },
+                },
             },
         });
         expect(outcome).toBeFalsy();

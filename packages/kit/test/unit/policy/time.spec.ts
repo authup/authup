@@ -12,7 +12,7 @@ import {
 
 describe('src/policy/time', () => {
     it('should restrict', () => {
-        const policy : TimePolicy = {
+        const options : TimePolicy = {
             type: BuiltInPolicyType.TIME,
             start: '08:00',
             end: '16:00',
@@ -22,14 +22,20 @@ describe('src/policy/time', () => {
         const dateTime = new Date();
         dateTime.setHours(12, 0);
 
-        let outcome = evaluator.execute(policy, {
-            dateTime,
+        let outcome = evaluator.evaluate({
+            options,
+            data: {
+                dateTime,
+            },
         });
         expect(outcome).toBeTruthy();
 
         dateTime.setHours(6, 0);
-        outcome = evaluator.execute(policy, {
-            dateTime,
+        outcome = evaluator.evaluate({
+            options,
+            data: {
+                dateTime,
+            },
         });
         expect(outcome).toBeFalsy();
     });

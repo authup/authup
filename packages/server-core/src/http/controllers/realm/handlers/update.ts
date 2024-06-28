@@ -20,7 +20,7 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParam(req, 'id');
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.REALM_EDIT)) {
+    if (!ability.has(PermissionName.REALM_UPDATE)) {
         throw new ForbiddenError('You are not permitted to edit a realm.');
     }
 
@@ -47,6 +47,10 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     }
 
     entity = repository.merge(entity, data);
+
+    if (!ability.can(PermissionName.REALM_UPDATE, { attributes: data })) {
+        throw new ForbiddenError();
+    }
 
     await repository.save(entity);
 

@@ -40,8 +40,8 @@ export default defineNuxtComponent({
             resource: IdentityProvider,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = useAbilityCheck(PermissionName.PROVIDER_EDIT);
-        const hasDropPermission = useAbilityCheck(PermissionName.PROVIDER_DROP);
+        const hasEditPermission = useAbilityCheck(PermissionName.IDENTITY_PROVIDER_UPDATE);
+        const hasDropPermission = useAbilityCheck(PermissionName.IDENTITY_PROVIDER_DELETE);
 
         const fields = [
             {

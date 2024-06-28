@@ -5,35 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
+import { flattenObject, isObject } from '../../../utils';
+import { PolicyError } from '../../error';
+import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributeNamesPolicy } from './helper';
 import type { AttributeNamesPolicyOptions } from './types';
 
 export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeNamesPolicyOptions> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
-        if (!isAttributeNamesPolicy(policy)) {
-            throw new Error('');
-        }
-
-        return this.execute(policy, context);
+    canEvaluate(
+        ctx: PolicyEvaluatorContext<any, any>,
+    ): ctx is PolicyEvaluatorContext<AttributeNamesPolicyOptions> {
+        return isAttributeNamesPolicy(ctx.options);
     }
 
-    execute(policy: AttributeNamesPolicyOptions, context: PolicyEvaluationContext): boolean {
-        if (typeof context.resource === 'undefined') {
-            return invertPolicyOutcome(true, policy.invert);
+    evaluate(ctx: PolicyEvaluatorContext<AttributeNamesPolicyOptions>): boolean {
+        if (!isObject(ctx.data.attributes)) {
+            throw PolicyError.evaluatorContextInvalid();
         }
 
-        // todo: target maybe depth 2 (e.g. user.name, role.name)
-
-        const keys = Object.keys(context.resource);
+        const attributes = flattenObject(ctx.data.attributes);
+        const keys = Object.keys(attributes);
         for (let i = 0; i < keys.length; i++) {
-            const index = policy.names.indexOf(keys[i]);
+            const index = ctx.options.names.indexOf(keys[i]);
             if (index === -1) {
-                return invertPolicyOutcome(false, policy.invert);
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, policy.invert);
+        return invertPolicyOutcome(true, ctx.options.invert);
     }
 }

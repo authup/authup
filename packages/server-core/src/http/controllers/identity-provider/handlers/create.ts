@@ -21,7 +21,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.PROVIDER_ADD)) {
+    if (!ability.has(PermissionName.IDENTITY_PROVIDER_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -33,6 +33,10 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
     if (!data.realm_id) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
+    }
+
+    if (!ability.can(PermissionName.IDENTITY_PROVIDER_CREATE, { attributes: data })) {
+        throw new ForbiddenError();
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
