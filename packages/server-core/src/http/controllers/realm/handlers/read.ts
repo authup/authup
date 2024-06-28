@@ -27,9 +27,6 @@ export async function getManyRealmRouteHandler(
         !ability.has(PermissionName.REALM_UPDATE) &&
         !ability.has(PermissionName.REALM_DELETE)
     ) {
-        console.log(
-            ability.find(),
-        );
         throw new ForbiddenError();
     }
 
