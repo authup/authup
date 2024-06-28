@@ -17,13 +17,13 @@ import type { CompositePolicyOptions } from './types';
 export class CompositePolicyEvaluator<
     C extends Record<string, any> = Record<string, any>,
 > implements PolicyEvaluator<CompositePolicyOptions, C> {
-    verify(
+    canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
     ): ctx is PolicyEvaluatorContext<CompositePolicyOptions, C> {
         return ctx.options.type === BuiltInPolicyType.COMPOSITE;
     }
 
-    execute(ctx: PolicyEvaluatorContext<CompositePolicyOptions, C>): boolean {
+    evaluate(ctx: PolicyEvaluatorContext<CompositePolicyOptions, C>): boolean {
         let count = 0;
 
         for (let i = 0; i < ctx.options.children.length; i++) {
@@ -31,7 +31,7 @@ export class CompositePolicyEvaluator<
             let outcome : boolean;
 
             if (isCompositePolicy(childPolicy)) {
-                outcome = this.execute({
+                outcome = this.evaluate({
                     ...ctx,
                     options: childPolicy,
                 });

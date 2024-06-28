@@ -21,7 +21,7 @@ describe('src/policy/date', () => {
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = evaluator.execute({
+        let outcome = evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -31,7 +31,7 @@ describe('src/policy/date', () => {
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -41,7 +41,7 @@ describe('src/policy/date', () => {
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 dateTime,

@@ -30,8 +30,8 @@ export function evaluatePolicy(
             evaluators,
         };
 
-        if (evaluator.verify(executionContext)) {
-            return evaluator.execute(executionContext);
+        if (evaluator.canEvaluate(executionContext)) {
+            return evaluator.evaluate(executionContext);
         }
     } catch (e) {
         if (e instanceof PolicyError) {

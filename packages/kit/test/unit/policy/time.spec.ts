@@ -22,7 +22,7 @@ describe('src/policy/time', () => {
         const dateTime = new Date();
         dateTime.setHours(12, 0);
 
-        let outcome = evaluator.execute({
+        let outcome = evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -31,7 +31,7 @@ describe('src/policy/time', () => {
         expect(outcome).toBeTruthy();
 
         dateTime.setHours(6, 0);
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 dateTime,

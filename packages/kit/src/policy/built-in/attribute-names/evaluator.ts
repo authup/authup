@@ -13,13 +13,13 @@ import { isAttributeNamesPolicy } from './helper';
 import type { AttributeNamesPolicyOptions } from './types';
 
 export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeNamesPolicyOptions> {
-    verify(
+    canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
     ): ctx is PolicyEvaluatorContext<AttributeNamesPolicyOptions> {
         return isAttributeNamesPolicy(ctx.options);
     }
 
-    execute(ctx: PolicyEvaluatorContext<AttributeNamesPolicyOptions>): boolean {
+    evaluate(ctx: PolicyEvaluatorContext<AttributeNamesPolicyOptions>): boolean {
         if (!isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }

@@ -27,7 +27,7 @@ export interface PolicyEvaluator<
      * @throws PolicyError
      * @param ctx
      */
-    execute(ctx: PolicyEvaluatorContext<OPTIONS, DATA>): boolean;
+    evaluate(ctx: PolicyEvaluatorContext<OPTIONS, DATA>): boolean;
 
     /**
      * Verify if the evaluator (might) can hande the provided
@@ -35,7 +35,7 @@ export interface PolicyEvaluator<
      *
      * @param ctx
      */
-    verify(
+    canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>
     ): ctx is PolicyEvaluatorContext<OPTIONS, DATA>;
 }

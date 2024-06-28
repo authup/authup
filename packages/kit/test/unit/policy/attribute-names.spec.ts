@@ -18,10 +18,10 @@ describe('src/policy/attribute-names', () => {
         const evaluator = new AttributeNamesPolicyEvaluator();
 
         expect(() => {
-            evaluator.execute({ options });
+            evaluator.evaluate({ options });
         }).toThrow();
 
-        let outcome = evaluator.execute({
+        let outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -32,7 +32,7 @@ describe('src/policy/attribute-names', () => {
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -54,7 +54,7 @@ describe('src/policy/attribute-names', () => {
         };
 
         const evaluator = new AttributeNamesPolicyEvaluator();
-        let outcome = evaluator.execute({
+        let outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -64,7 +64,7 @@ describe('src/policy/attribute-names', () => {
         });
         expect(outcome).toBeFalsy();
 
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -76,7 +76,7 @@ describe('src/policy/attribute-names', () => {
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {

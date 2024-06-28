@@ -42,13 +42,13 @@ function toDate(
 }
 
 export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
-    verify(
+    canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
     ): ctx is PolicyEvaluatorContext<TimePolicyOptions> {
         return isAttributesPolicy(ctx.options);
     }
 
-    execute(ctx: PolicyEvaluatorContext<TimePolicyOptions>): boolean {
+    evaluate(ctx: PolicyEvaluatorContext<TimePolicyOptions>): boolean {
         let now : Date;
         if (ctx.data.dateTime) {
             now = toDate(ctx.data.dateTime);

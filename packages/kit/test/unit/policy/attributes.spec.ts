@@ -31,10 +31,10 @@ describe('src/policy/attributes', () => {
         const evaluator = new AttributesPolicyEvaluator<User>();
 
         expect(() => {
-            evaluator.execute({ options });
+            evaluator.evaluate({ options });
         }).toThrow();
 
-        let outcome = evaluator.execute({
+        let outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -45,7 +45,7 @@ describe('src/policy/attributes', () => {
         });
         expect(outcome).toBeTruthy();
 
-        outcome = evaluator.execute({
+        outcome = evaluator.evaluate({
             options,
             data: {
                 attributes: {
