@@ -9,6 +9,6 @@ import type { AnyPolicy } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { CompositePolicy } from './types';
 
-export function isGroupPolicy(input: AnyPolicy) : input is CompositePolicy {
+export function isCompositePolicy(input: AnyPolicy) : input is CompositePolicy {
     return input.type === BuiltInPolicyType.COMPOSITE;
 }

@@ -13,7 +13,7 @@ import {
 
 describe('src/policy/date', () => {
     it('should restrict', () => {
-        const policy : DatePolicy = {
+        const options : DatePolicy = {
             type: BuiltInPolicyType.DATE,
             start: '2024-04-01',
             end: '2024-05-01',
@@ -21,22 +21,31 @@ describe('src/policy/date', () => {
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = evaluator.execute(policy, {
-            dateTime,
+        let outcome = evaluator.execute({
+            options,
+            data: {
+                dateTime,
+            },
         });
         expect(outcome).toBeTruthy();
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = evaluator.execute(policy, {
-            dateTime,
+        outcome = evaluator.execute({
+            options,
+            data: {
+                dateTime,
+            },
         });
         expect(outcome).toBeFalsy();
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = evaluator.execute(policy, {
-            dateTime,
+        outcome = evaluator.execute({
+            options,
+            data: {
+                dateTime,
+            },
         });
         expect(outcome).toBeFalsy();
     });

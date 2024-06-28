@@ -39,12 +39,3 @@ export type PolicyEvaluationContext = {
     dateTime?: Date | number | string,
     [key: string]: any
 };
-
-export interface PolicyEvaluator<
-    P extends Record<string, any> = Record<string, any>,
-    C extends Record<string, any> = Record<string, any>,
-> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean;
-
-    execute(policy: P, context: C): boolean;
-}

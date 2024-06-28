@@ -6,61 +6,58 @@
  */
 
 import { PolicyDecisionStrategy } from '../../constants';
-import type { AnyPolicy, PolicyEvaluator } from '../../types';
+import { PolicyError } from '../../error';
+import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import { evaluatePolicy } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
-import { isGroupPolicy } from './helper';
+import { BuiltInPolicyType } from '../constants';
+import { isCompositePolicy } from './helper';
 import type { CompositePolicyOptions } from './types';
 
 export class CompositePolicyEvaluator<
     C extends Record<string, any> = Record<string, any>,
 > implements PolicyEvaluator<CompositePolicyOptions, C> {
-    protected evaluators : Record<string, PolicyEvaluator>;
-
-    constructor(evaluators: Record<string, PolicyEvaluator>) {
-        this.evaluators = evaluators;
+    verify(
+        ctx: PolicyEvaluatorContext<any, any>,
+    ): ctx is PolicyEvaluatorContext<CompositePolicyOptions, C> {
+        return ctx.options.type === BuiltInPolicyType.COMPOSITE;
     }
 
-    try(policy: AnyPolicy, context: C): boolean {
-        if (!isGroupPolicy(policy)) {
-            throw new Error('');
-        }
-
-        return this.execute(policy, context);
-    }
-
-    execute(policy: CompositePolicyOptions, context: C): boolean {
+    execute(ctx: PolicyEvaluatorContext<CompositePolicyOptions, C>): boolean {
         let count = 0;
 
-        for (let i = 0; i < policy.children.length; i++) {
-            const childPolicy = policy.children[i];
+        for (let i = 0; i < ctx.options.children.length; i++) {
+            const childPolicy = ctx.options.children[i];
             let outcome : boolean;
 
-            if (isGroupPolicy(childPolicy)) {
-                outcome = this.try(childPolicy, context);
+            if (isCompositePolicy(childPolicy)) {
+                outcome = this.execute({
+                    ...ctx,
+                    options: childPolicy,
+                });
             } else {
-                const evaluator = this.evaluators[policy.children[i].type];
-                if (!evaluator) {
-                    throw new Error('');
+                if (typeof ctx.evaluators === 'undefined') {
+                    throw PolicyError.evaluatorNotFound(childPolicy.type);
                 }
 
-                outcome = evaluator.try(policy.children[i], context);
+                outcome = evaluatePolicy(childPolicy, ctx.data, ctx.evaluators);
             }
 
             if (outcome) {
-                if (policy.decisionStrategy === PolicyDecisionStrategy.AFFIRMATIVE) {
-                    return invertPolicyOutcome(true, policy.invert);
+                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.AFFIRMATIVE) {
+                    return invertPolicyOutcome(true, ctx.options.invert);
                 }
 
                 count++;
             } else {
-                if (policy.decisionStrategy === PolicyDecisionStrategy.UNANIMOUS) {
-                    return invertPolicyOutcome(false, policy.invert);
+                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.UNANIMOUS) {
+                    return invertPolicyOutcome(false, ctx.options.invert);
                 }
 
                 count--;
             }
         }
 
-        return invertPolicyOutcome(count >= 0, policy.invert);
+        return invertPolicyOutcome(count >= 0, ctx.options.invert);
     }
 }

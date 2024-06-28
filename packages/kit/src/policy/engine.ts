@@ -13,15 +13,21 @@ import {
     DatePolicyEvaluator,
     TimePolicyEvaluator,
 } from './built-in';
+import type { PolicyEvaluator, PolicyEvaluators } from './evaluator';
+import { evaluatePolicy } from './evaluator';
 
 import type {
     AnyPolicy,
     PolicyEvaluationContext,
-    PolicyEvaluator,
+
 } from './types';
 
-export class PolicyEnforcer {
-    protected evaluators : Record<string, PolicyEvaluator>;
+/**
+ * The policy engine is a component that interprets defined policies and makes decisions
+ * on whether to allow or deny a particular access.
+ */
+export class PolicyEngine {
+    protected evaluators : PolicyEvaluators;
 
     constructor() {
         this.evaluators = {};
@@ -36,7 +42,7 @@ export class PolicyEnforcer {
     }
 
     private registerDefaultEvaluators() {
-        this.registerEvaluator(BuiltInPolicyType.COMPOSITE, new CompositePolicyEvaluator(this.evaluators));
+        this.registerEvaluator(BuiltInPolicyType.COMPOSITE, new CompositePolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTES, new AttributesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());
@@ -56,15 +62,16 @@ export class PolicyEnforcer {
         return true;
     }
 
+    /**
+     * @throws PolicyError
+     *
+     * @param policy
+     * @param context
+     */
     evaluate(
         policy: AnyPolicy,
         context: PolicyEvaluationContext,
     ) : boolean {
-        const evaluator = this.evaluators[policy.type];
-        if (!evaluator) {
-            throw new Error('');
-        }
-
-        return evaluator.try(policy, context);
+        return evaluatePolicy(policy, context, this.evaluators);
     }
 }

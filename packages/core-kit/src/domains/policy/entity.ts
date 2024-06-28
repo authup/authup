@@ -37,6 +37,10 @@ export interface Policy {
     updated_at: Date;
 }
 
+export type ExtendedPolicy = Policy & {
+    [key: string]: any
+};
+
 export type PolicyEventContext = EventPayload & {
     type: `${DomainType.POLICY}`,
     data: Policy

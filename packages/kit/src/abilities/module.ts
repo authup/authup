@@ -7,25 +7,37 @@
 
 import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
-import { PolicyEnforcer } from '../policy';
+import { PolicyEngine } from '../policy';
 
-import type { AbilitiesFindOptions, Ability } from './types';
+import type { Ability } from './types';
 
 export class Abilities extends EventEmitter<{
     updated: []
 }> {
-    protected policyEnforcer : PolicyEnforcer;
+    protected policyEnforcer : PolicyEngine;
 
-    protected items: Ability[];
+    protected items : Record<string, Ability[]>;
 
     // ----------------------------------------------
 
-    constructor(input: Ability[] | Ability = []) {
+    constructor(input: Ability[] = []) {
         super();
 
-        this.policyEnforcer = new PolicyEnforcer();
+        this.policyEnforcer = new PolicyEngine();
+        this.items = {};
 
         this.set(input);
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Check custom abilities of a specific realm.
+     *
+     * @param realmId
+     */
+    of(realmId?: string): Abilities {
+        return new Abilities(this.items[realmId]);
     }
 
     // ----------------------------------------------
@@ -52,15 +64,9 @@ export class Abilities extends EventEmitter<{
 
             let owned: Ability[];
             if (typeof item === 'string') {
-                owned = this.find({
-                    realmId: null,
-                    name: item,
-                });
+                owned = this.find(item);
             } else {
-                owned = this.find({
-                    realmId: item.realmId ?? null,
-                    name: item.name,
-                });
+                owned = this.find(item.name);
             }
 
             if (owned.length === 0) {
@@ -100,15 +106,9 @@ export class Abilities extends EventEmitter<{
 
             let owned : Ability[];
             if (typeof item === 'string') {
-                owned = this.find({
-                    realmId: null,
-                    name: item,
-                });
+                owned = this.find(item);
             } else {
-                owned = this.find({
-                    realmId: item.realmId ?? null,
-                    name: item.name,
-                });
+                owned = this.find(item.name);
             }
 
             if (owned.length === 0) {
@@ -146,58 +146,50 @@ export class Abilities extends EventEmitter<{
     /**
      * Find all matching abilities.
      *
-     * @param options
+     * @param name
      */
-    find(options: AbilitiesFindOptions = {}) : Ability[] {
-        if (typeof options === 'undefined') {
-            return this.items;
+    find(name?: string) : Ability[] {
+        const nsp = this.items['/'];
+        if (!Array.isArray(nsp)) {
+            return [];
         }
 
-        const output : Ability[] = [];
-
-        for (let i = 0; i < this.items.length; i++) {
-            if (
-                options.realmId === null &&
-                typeof this.items[i].realmId !== 'undefined' &&
-                this.items[i].realmId !== null
-            ) {
-                continue;
-            }
-
-            if (
-                options.realmId &&
-                this.items[i].realmId !== options.realmId
-            ) {
-                continue;
-            }
-
-            if (
-                options.name &&
-                this.items[i].name !== options.name
-            ) {
-                continue;
-            }
-
-            output.push(this.items[i]);
+        if (name) {
+            return nsp.filter((nsp) => nsp.name === name);
         }
 
-        return output;
+        return nsp;
     }
+
+    // ----------------------------------------------
 
     add(input: Ability) {
         this.addMany([input]);
     }
 
     addMany(input: Ability[]) {
-        this.items.push(...input);
+        for (let i = 0; i < input.length; i++) {
+            const ability = input[i];
+            const namespace = ability.realmId || '/';
+
+            if (!Array.isArray(this.items[namespace])) {
+                this.items[namespace] = [];
+            }
+
+            this.items[namespace].push(ability);
+        }
+
         this.emit('updated');
     }
 
     set(input: Ability[] | Ability) {
-        this.items = Array.isArray(input) ?
-            input :
-            [input];
+        this.items = {};
 
-        this.emit('updated');
+        if (Array.isArray(input)) {
+            this.addMany(input);
+            return;
+        }
+
+        this.add(input);
     }
 }

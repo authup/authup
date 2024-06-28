@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy, PolicyEvaluationContext, PolicyEvaluator } from '../../types';
+import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
-import { isDatePolicy } from './helper';
+import { isAttributesPolicy } from '../attributes';
 import type { DatePolicyOptions } from './types';
 
 function normalizeDate(input: Date) {
@@ -27,36 +27,34 @@ function toDate(input: Date | string | number) : Date {
 }
 
 export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
-        if (!isDatePolicy(policy)) {
-            return false;
-        }
-
-        return this.execute(policy, context);
+    verify(
+        ctx: PolicyEvaluatorContext<any, any>,
+    ): ctx is PolicyEvaluatorContext<DatePolicyOptions> {
+        return isAttributesPolicy(ctx.options);
     }
 
-    execute(policy: DatePolicyOptions, context: PolicyEvaluationContext): boolean {
+    execute(ctx: PolicyEvaluatorContext<DatePolicyOptions>): boolean {
         let now : Date;
-        if (context.dateTime) {
-            now = normalizeDate(toDate(context.dateTime));
+        if (ctx.data.dateTime) {
+            now = normalizeDate(toDate(ctx.data.dateTime));
         } else {
             now = normalizeDate(new Date());
         }
 
-        if (policy.start) {
-            const start = normalizeDate(toDate(policy.start));
+        if (ctx.options.start) {
+            const start = normalizeDate(toDate(ctx.options.start));
             if (now < start) {
-                return invertPolicyOutcome(false, policy.invert);
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        if (policy.end) {
-            const end = normalizeDate(toDate(policy.end));
+        if (ctx.options.end) {
+            const end = normalizeDate(toDate(ctx.options.end));
             if (now > end) {
-                return invertPolicyOutcome(false, policy.invert);
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, policy.invert);
+        return invertPolicyOutcome(true, ctx.options.invert);
     }
 }

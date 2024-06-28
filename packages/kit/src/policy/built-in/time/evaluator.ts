@@ -5,11 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    AnyPolicy, PolicyEvaluationContext, PolicyEvaluator,
-} from '../../types';
+import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
-import { isTimePolicy } from './helper';
+import { isAttributesPolicy } from '../attributes';
 import type { TimePolicyOptions } from './types';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
@@ -44,50 +42,48 @@ function toDate(
 }
 
 export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
-    try(policy: AnyPolicy, context: PolicyEvaluationContext): boolean {
-        if (!isTimePolicy(policy)) {
-            return false;
-        }
-
-        return this.execute(policy, context);
+    verify(
+        ctx: PolicyEvaluatorContext<any, any>,
+    ): ctx is PolicyEvaluatorContext<TimePolicyOptions> {
+        return isAttributesPolicy(ctx.options);
     }
 
-    execute(policy: TimePolicyOptions, context: PolicyEvaluationContext): boolean {
+    execute(ctx: PolicyEvaluatorContext<TimePolicyOptions>): boolean {
         let now : Date;
-        if (context.dateTime) {
-            now = toDate(context.dateTime);
+        if (ctx.data.dateTime) {
+            now = toDate(ctx.data.dateTime);
         } else {
             now = new Date();
         }
 
-        if (policy.start) {
-            const start = normalizeDate(toDate(policy.start, now), now);
+        if (ctx.options.start) {
+            const start = normalizeDate(toDate(ctx.options.start, now), now);
 
             if (now < start) {
-                return invertPolicyOutcome(false, policy.invert);
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        if (policy.end) {
-            const end = normalizeDate(toDate(policy.end, now), now);
+        if (ctx.options.end) {
+            const end = normalizeDate(toDate(ctx.options.end, now), now);
             if (now > end) {
-                return invertPolicyOutcome(false, policy.invert);
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        if (policy.dayOfWeek) {
-            if (now.getDay() !== policy.dayOfWeek) {
-                return invertPolicyOutcome(false, policy.invert);
+        if (ctx.options.dayOfWeek) {
+            if (now.getDay() !== ctx.options.dayOfWeek) {
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        if (policy.dayOfMonth) {
-            if (now.getDate() !== policy.dayOfMonth) {
-                return invertPolicyOutcome(false, policy.invert);
+        if (ctx.options.dayOfMonth) {
+            if (now.getDate() !== ctx.options.dayOfMonth) {
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        if (policy.dayOfYear) {
+        if (ctx.options.dayOfYear) {
             const start = new Date(now.getFullYear(), 0, 0);
             const diff = (now.getTime() - start.getTime()) +
                 ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
@@ -95,11 +91,11 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
             const oneDay = 1000 * 60 * 60 * 24;
             const dayOfYear = Math.floor(diff / oneDay);
 
-            if (dayOfYear !== policy.dayOfYear) {
-                return invertPolicyOutcome(false, policy.invert);
+            if (dayOfYear !== ctx.options.dayOfYear) {
+                return invertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, policy.invert);
+        return invertPolicyOutcome(true, ctx.options.invert);
     }
 }
