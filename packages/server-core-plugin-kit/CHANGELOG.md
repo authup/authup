@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.4.0 to 5.4.1 ([#2073](https://github.com/authup/authup/issues/2073)) ([ab4498a](https://github.com/authup/authup/commit/ab4498a26c29b7c9824a4c120770e5faea721da3))
+* **deps:** bump jose from 5.4.1 to 5.6.2 ([#2103](https://github.com/authup/authup/issues/2103)) ([e60dd06](https://github.com/authup/authup/commit/e60dd06aadac1fc945a6f984950b71910cdcdb61))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 

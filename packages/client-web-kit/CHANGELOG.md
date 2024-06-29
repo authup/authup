@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump nuxt to v3.12.2 ([86e9be4](https://github.com/authup/authup/commit/86e9be4d77128680cca58cb25be94f49ba0b9a7a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 
