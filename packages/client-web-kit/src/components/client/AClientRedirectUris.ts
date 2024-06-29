@@ -53,11 +53,11 @@ export const AClientRedirectUris = defineComponent({
                     disabled: items.value.length <= 1,
                     class: 'mb-2',
                     uri: item,
-                    onUpdated(input) {
+                    onUpdated: (input) => {
                         items.value[index] = input;
                         handleChange();
                     },
-                    onDeleted() {
+                    onDeleted: () => {
                         items.value.splice(index, 1);
                         handleChange();
                     },

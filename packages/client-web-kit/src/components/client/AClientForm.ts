@@ -229,7 +229,7 @@ export const AClientForm = defineComponent({
                 ]),
                 h(AClientRedirectUris, {
                     uri: form.redirect_uri,
-                    onUpdated(value: string) {
+                    onUpdated: (value) => {
                         form.redirect_uri = value;
                     },
                 }),

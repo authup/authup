@@ -96,12 +96,12 @@ export const AIdentityProviderForm = defineComponent({
                             protocol: protocol.value,
                             preset: preset.value,
                             apiUrl: props.apiUrl,
-                            onCreated(el: IdentityProvider) {
+                            onCreated: (el: IdentityProvider) => {
                                 entity.value = el;
 
                                 setup.emit('created', el);
                             },
-                            onUpdated(el: IdentityProvider) {
+                            onUpdated: (el: IdentityProvider) => {
                                 entity.value = el;
 
                                 setup.emit('updated', el);
@@ -112,12 +112,12 @@ export const AIdentityProviderForm = defineComponent({
                         return render(h(AIdentityProviderLdapForm, {
                             entity: entity.value,
                             realmId: props.realmId,
-                            onCreated(el: IdentityProvider) {
+                            onCreated: (el: IdentityProvider) => {
                                 entity.value = el;
 
                                 setup.emit('created', el);
                             },
-                            onUpdated(el: IdentityProvider) {
+                            onUpdated: (el: IdentityProvider) => {
                                 entity.value = el;
 
                                 setup.emit('updated', el);

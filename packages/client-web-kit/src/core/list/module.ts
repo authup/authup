@@ -22,7 +22,7 @@ import {
 } from 'vue';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../utils';
-import { injectHTTPClient } from '../http-client/singleton';
+import { injectHTTPClient } from '../http-client';
 import { createEntitySocket } from '../entity-socket';
 import type { EntitySocketContext } from '../entity-socket';
 import { isQuerySortedDescByDate } from '../query';
@@ -215,17 +215,17 @@ export function createList<
             busy: busy.value,
             data: data.value as Entity<T>[],
             meta: meta.value,
-            onCreated(value: T) {
+            onCreated: (value: T) => {
                 if (context.setup.emit) {
                     context.setup.emit('created', value);
                 }
             },
-            onDeleted(value: T) {
+            onDeleted: (value: T) => {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
                 }
             },
-            onUpdated(value: T) {
+            onUpdated: (value: T) => {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
                 }
