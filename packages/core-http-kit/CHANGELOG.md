@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* add http api client for policy entity ([bee1f3a](https://github.com/authup/authup/commit/bee1f3a9d0acbf600f4f1b1f6b7dd89a3d9288fa))
+* reworked ability management and access ([#2102](https://github.com/authup/authup/issues/2102)) ([b3dc45c](https://github.com/authup/authup/commit/b3dc45c2a1d0cd403e8ab545bd87ce4e49738758))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 

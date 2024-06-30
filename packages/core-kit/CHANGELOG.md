@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* add policy (event context, domain type, subscriber, ...) ([42fbbb3](https://github.com/authup/authup/commit/42fbbb30211db0ad867a290d7571f2bcdd2118e6))
+* reworked ability management and access ([#2102](https://github.com/authup/authup/issues/2102)) ([b3dc45c](https://github.com/authup/authup/commit/b3dc45c2a1d0cd403e8ab545bd87ce4e49738758))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 

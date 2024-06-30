@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* reworked ability management and access ([#2102](https://github.com/authup/authup/issues/2102)) ([b3dc45c](https://github.com/authup/authup/commit/b3dc45c2a1d0cd403e8ab545bd87ce4e49738758))
+
+
+### Bug Fixes
+
+* **deps:** bump nuxt to v3.12.2 ([86e9be4](https://github.com/authup/authup/commit/86e9be4d77128680cca58cb25be94f49ba0b9a7a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/client-web-config bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 
