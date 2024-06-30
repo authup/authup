@@ -23,29 +23,8 @@
         {
             "updateAllPackages": true,
             "type": "node-workspace",
-            "updatePeerDependencies": false,
+            "updatePeerDependencies": true,
             "merge": true
-        },
-        {
-            "type": "linked-versions",
-            "groupName": "main",
-            "components": [
-                "root",
-                "authup",
-                "client-web",
-                "client-web-config",
-                "client-web-kit",
-                "config",
-                "core-http-kit",
-                "core-kit",
-                "core-realtime-kit",
-                "kit",
-                "server-core",
-                "server-core-plugin-http",
-                "server-core-plugin-kit",
-                "server-core-plugin-socket-io",
-                "server-kit"
-            ]
         }
     ],
     "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
