@@ -21,6 +21,7 @@
     },
     "plugins": [
         {
+            "updateAllPackages": true,
             "type": "node-workspace",
             "updatePeerDependencies": true,
             "merge": false
