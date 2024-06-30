@@ -13,24 +13,15 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
-import { IdentityProviderEntity, IdentityProviderRepository, resolveRealm } from '../../../../domains';
+import { IdentityProviderRepository, resolveRealm } from '../../../../domains';
 import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
-    ) {
-        throw new ForbiddenError();
-    }
-
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(IdentityProviderEntity);
+    const repository = new IdentityProviderRepository(dataSource);
 
     const query = repository.createQueryBuilder('provider');
 
@@ -65,6 +56,18 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
 
     const [entities, total] = await query.getManyAndCount();
 
+    const ability = useRequestEnv(req, 'abilities');
+    if (ability.can(PermissionName.IDENTITY_PROVIDER_READ)) {
+        await repository.findAndAppendExtraAttributesToMany(
+            entities.filter(
+                (entity) => ability.can(
+                    PermissionName.IDENTITY_PROVIDER_READ,
+                    { attributes: entity },
+                ),
+            ),
+        );
+    }
+
     return send(res, {
         data: entities,
         meta: {
@@ -75,15 +78,6 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
 }
 
 export async function getOneIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
-    ) {
-        throw new ForbiddenError();
-    }
-
     const id = useRequestIDParam(req, {
         strict: false,
     });
@@ -128,10 +122,8 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         throw new NotFoundError();
     }
 
-    if (
-        ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) ||
-        ability.has(PermissionName.IDENTITY_PROVIDER_READ)
-    ) {
+    const ability = useRequestEnv(req, 'abilities');
+    if (ability.can(PermissionName.IDENTITY_PROVIDER_READ, { attributes: entity })) {
         await repository.findAndAppendExtraAttributesTo(entity);
     }
 

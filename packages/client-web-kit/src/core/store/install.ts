@@ -26,12 +26,11 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     );
     const store = storeCreator(options.pinia);
 
-    const cookies = useCookies();
-
     let cookieGet : CookieGetFn;
     if (options.cookieGet) {
         cookieGet = options.cookieGet;
     } else {
+        const cookies = useCookies();
         cookieGet = cookies.get;
     }
 
@@ -39,6 +38,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     if (options.cookieSet) {
         cookieSet = options.cookieSet;
     } else {
+        const cookies = useCookies();
         cookieSet = cookies.set;
     }
 
@@ -50,6 +50,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             (options.cookieSet as CookieSetFn)(key, null);
         };
     } else {
+        const cookies = useCookies();
         cookieUnset = cookies.remove;
     }
 

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
@@ -13,24 +12,14 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { RealmEntity } from '../../../../domains';
 import { useRequestIDParam } from '../../../request';
-import { useRequestEnv } from '../../../utils';
 
 export async function getManyRealmRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.REALM_READ) &&
-        !ability.has(PermissionName.REALM_UPDATE) &&
-        !ability.has(PermissionName.REALM_DELETE)
-    ) {
-        throw new ForbiddenError();
-    }
-
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
@@ -67,22 +56,9 @@ export async function getOneRealmRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.REALM_READ) &&
-        !ability.has(PermissionName.REALM_UPDATE) &&
-        !ability.has(PermissionName.REALM_DELETE)
-    ) {
-        throw new ForbiddenError();
-    }
-
     const id = useRequestIDParam(req, {
         strict: false,
     });
-
-    if (typeof id !== 'string') {
-        throw new BadRequestError();
-    }
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
