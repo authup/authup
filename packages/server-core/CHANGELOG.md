@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* add http api client for policy entity ([bee1f3a](https://github.com/authup/authup/commit/bee1f3a9d0acbf600f4f1b1f6b7dd89a3d9288fa))
+* add policy (event context, domain type, subscriber, ...) ([42fbbb3](https://github.com/authup/authup/commit/42fbbb30211db0ad867a290d7571f2bcdd2118e6))
+* reworked ability management and access ([#2102](https://github.com/authup/authup/issues/2102)) ([b3dc45c](https://github.com/authup/authup/commit/b3dc45c2a1d0cd403e8ab545bd87ce4e49738758))
+* validate req id param + adjusted role repository ([#2109](https://github.com/authup/authup/issues/2109)) ([a05f1ad](https://github.com/authup/authup/commit/a05f1ad81b10f2b59b99d3e0b1d9a659a16fda6c))
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 11.0.0 to 11.1.1 ([#2104](https://github.com/authup/authup/issues/2104)) ([6df6aee](https://github.com/authup/authup/commit/6df6aeef481a21d338d7e2e751e8864b08096229))
+* remove console.log statement ([8ffda96](https://github.com/authup/authup/commit/8ffda96a625ec810fcea2190de2a06cfd00e1000))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.18
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* add http api client for policy entity ([bee1f3a](https://github.com/authup/authup/commit/bee1f3a9d0acbf600f4f1b1f6b7dd89a3d9288fa))
+* add policy (event context, domain type, subscriber, ...) ([42fbbb3](https://github.com/authup/authup/commit/42fbbb30211db0ad867a290d7571f2bcdd2118e6))
+* reworked ability management and access ([#2102](https://github.com/authup/authup/issues/2102)) ([b3dc45c](https://github.com/authup/authup/commit/b3dc45c2a1d0cd403e8ab545bd87ce4e49738758))
+* validate req id param + adjusted role repository ([#2109](https://github.com/authup/authup/issues/2109)) ([a05f1ad](https://github.com/authup/authup/commit/a05f1ad81b10f2b59b99d3e0b1d9a659a16fda6c))
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 11.0.0 to 11.1.1 ([#2104](https://github.com/authup/authup/issues/2104)) ([6df6aee](https://github.com/authup/authup/commit/6df6aeef481a21d338d7e2e751e8864b08096229))
+* **deps:** bump jose from 5.4.0 to 5.4.1 ([#2073](https://github.com/authup/authup/issues/2073)) ([ab4498a](https://github.com/authup/authup/commit/ab4498a26c29b7c9824a4c120770e5faea721da3))
+* **deps:** bump jose from 5.4.1 to 5.6.2 ([#2103](https://github.com/authup/authup/issues/2103)) ([e60dd06](https://github.com/authup/authup/commit/e60dd06aadac1fc945a6f984950b71910cdcdb61))
+* **deps:** bump nuxt to v3.12.2 ([86e9be4](https://github.com/authup/authup/commit/86e9be4d77128680cca58cb25be94f49ba0b9a7a))
+* remove console.log statement ([8ffda96](https://github.com/authup/authup/commit/8ffda96a625ec810fcea2190de2a06cfd00e1000))
+
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)
 
 

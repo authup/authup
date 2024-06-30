@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core-plugin-socket-io",
-    "version": "1.0.0-beta.18",
+    "version": "1.0.1-beta.18",
     "description": "A socket.io plugin for the server core service.",
     "exports": {
         "./package.json": "./package.json",
@@ -42,14 +42,14 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.18",
-        "@authup/server-kit": "^1.0.0-beta.18",
-        "@authup/server-core-plugin-kit": "^1.0.0-beta.18"
+        "@authup/core-kit": "^1.0.0-beta.19",
+        "@authup/server-kit": "^1.0.1-beta.18",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.19"
     },
     "peerDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.18",
-        "@authup/server-kit": "^1.0.0-beta.18",
-        "@authup/server-core-plugin-kit": "^1.0.0-beta.18"
+        "@authup/core-kit": "^1.0.0-beta.19",
+        "@authup/server-kit": "^1.0.1-beta.18",
+        "@authup/server-core-plugin-kit": "^1.0.0-beta.19"
     },
     "publishConfig": {
         "access": "public"
