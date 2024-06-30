@@ -11,14 +11,15 @@ import {
     REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);

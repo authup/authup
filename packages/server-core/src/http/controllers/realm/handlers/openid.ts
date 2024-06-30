@@ -9,13 +9,14 @@ import type { OAuth2OpenIDProviderMetadata } from '@authup/kit';
 import { OAuth2AuthorizationResponseType } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
-import { send, useRequestParam } from 'routup';
+import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../../../../domains';
 import { useConfig } from '../../../../config';
+import { useRequestIDParam } from '../../../request';
 
 export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);

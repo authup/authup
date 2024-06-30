@@ -8,9 +8,10 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotPermissionEntity } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 /**
@@ -20,7 +21,9 @@ import { useRequestEnv } from '../../../utils';
  * @param res
  */
 export async function deleteRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
 
     const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.ROBOT_PERMISSION_DELETE)) {

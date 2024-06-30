@@ -23,6 +23,7 @@ import {
 import { ClientEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
@@ -104,7 +105,9 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         throw new ForbiddenError();
     }
 
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);

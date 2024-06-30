@@ -7,32 +7,38 @@
 
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
-import { send, useRequestParam } from 'routup';
+import { send } from 'routup';
 import { Brackets } from 'typeorm';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceReadable } from '@authup/core-kit';
 import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,
 } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const userId = useRequestEnv(req, 'userId');
+    const ability = useRequestEnv(req, 'abilities');
+
+    if (!userId && !ability.has(PermissionName.USER_READ)) {
+        throw new ForbiddenError();
+    }
+
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const query = repository.createQueryBuilder('userAttribute');
 
-    const ability = useRequestEnv(req, 'abilities');
-
     query.where(new Brackets((qb) => {
         onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
 
-        if (!ability.has(PermissionName.USER_UPDATE)) {
-            qb.orWhere('userAttribute.user_id = :userId', { userId: useRequestEnv(req, 'userId') });
+        if (!ability.has(PermissionName.USER_READ)) {
+            qb.orWhere('userAttribute.user_id = :userId', { userId });
         }
     }));
 
@@ -65,27 +71,33 @@ export async function getOneUserAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
-    if (typeof id !== 'string') {
-        throw new BadRequestError();
+    const userId = useRequestEnv(req, 'userId');
+    const ability = useRequestEnv(req, 'abilities');
+
+    if (!userId && !ability.has(PermissionName.USER_READ)) {
+        throw new ForbiddenError();
     }
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
-    const result = await repository.findOneBy({ id });
-
-    if (!result) {
+    const entity = await repository.findOneBy({ id });
+    if (!entity) {
         throw new NotFoundError();
     }
 
-    if (
-        !isRealmResourceReadable(useRequestEnv(req, 'realm'), result.realm_id) &&
-        useRequestEnv(req, 'userId') !== result.user_id
-    ) {
-        throw new ForbiddenError('You are not authorized to read this user attribute...');
+    if (!isRealmResourceReadable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+        throw new ForbiddenError('You are not permitted for the resource realm.');
     }
 
-    return send(res, result);
+    if (
+        userId !== entity.user_id &&
+        !ability.can(PermissionName.USER_READ, { attributes: entity })
+    ) {
+        throw new ForbiddenError();
+    }
+
+    return send(res, entity);
 }

@@ -15,6 +15,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionEntity, resolveRealm } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
@@ -65,7 +66,9 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
         throw new ForbiddenError();
     }
 
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);

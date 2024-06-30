@@ -8,16 +8,16 @@
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { UserRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
     const env = useRequestEnv(req);

@@ -7,16 +7,17 @@
 
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
-import { send, useRequestParam } from 'routup';
+import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceReadable } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
     onlyRealmWritableQueryResources,
 } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -73,11 +74,7 @@ export async function getOneRoleAttributeRouteHandler(
         throw new ForbiddenError();
     }
 
-    const id = useRequestParam(req, 'id');
-
-    if (typeof id !== 'string') {
-        throw new BadRequestError();
-    }
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);

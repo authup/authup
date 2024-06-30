@@ -16,7 +16,7 @@ import {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
-import { sendRedirect, useRequestParam } from 'routup';
+import { sendRedirect } from 'routup';
 import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import {
@@ -24,6 +24,7 @@ import {
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { EnvironmentName, useConfig } from '../../../../config';
@@ -50,7 +51,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const entity = await resolve(dataSource, id);
@@ -72,7 +73,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
     const dataSource = await useDataSource();
 
     const entity = await resolve(dataSource, id);

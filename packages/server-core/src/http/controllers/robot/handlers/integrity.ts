@@ -24,9 +24,10 @@ import {
     resolveRealm,
     saveRobotCredentialsToVault,
 } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = new RobotRepository(dataSource);
