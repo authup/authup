@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.1-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.19
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 

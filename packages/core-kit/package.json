@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-kit",
-    "version": "1.0.0-beta.19",
+    "version": "1.0.1-beta.19",
     "description": "Package containing global constants, types & interfaces.",
     "exports": {
         "./package.json": "./package.json",
@@ -54,7 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.19"
+        "@authup/kit": "^1.0.1-beta.19"
     },
     "devDependencies": {
         "@hapic/oauth2": "^2.4.2",

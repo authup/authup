@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.1-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.22.4 to 3.22.5 ([#1912](https://github.com/authup/authup/issues/1912)) ([366b48e](https://github.com/authup/authup/commit/366b48e952f10b98ffe4f4885bf0b03bba185884))
+* **deps:** bump zod from 3.23.0 to 3.23.7 ([#1958](https://github.com/authup/authup/issues/1958)) ([0cf64ca](https://github.com/authup/authup/commit/0cf64ca8f9a63e253e32c011c050e5c45b260f88))
+* **deps:** bump zod from 3.23.7 to 3.23.8 ([#1962](https://github.com/authup/authup/issues/1962)) ([25f63cb](https://github.com/authup/authup/commit/25f63cb29e9bcd1f3e5a8eb0cfdd27f95f4912fc))
+* import utils form kit package ([15465b3](https://github.com/authup/authup/commit/15465b3a766cf66a9a5614aac181a307f1794025))
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/client-web-config bumped from ^1.0.1-beta.18 to ^1.0.0-beta.19
+    * @authup/config bumped from ^1.0.1-beta.18 to ^1.0.0-beta.19
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/server-core bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 

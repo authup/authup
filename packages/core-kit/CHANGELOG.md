@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.0.1-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.1-beta.19) (2024-06-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 

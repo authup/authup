@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.1-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Bug Fixes
+
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 ## [1.0.0-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.18) (2024-06-24)

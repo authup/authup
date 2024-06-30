@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web-kit",
-    "version": "1.0.0-beta.19",
+    "version": "1.0.1-beta.19",
     "description": "This package contains vue components.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -56,10 +56,10 @@
         "universal-cookie": "^7.1.4"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.19",
-        "@authup/core-kit": "^1.0.0-beta.19",
-        "@authup/core-http-kit": "^1.0.0-beta.19",
-        "@authup/core-realtime-kit": "^1.0.1-beta.18",
+        "@authup/kit": "^1.0.1-beta.19",
+        "@authup/core-kit": "^1.0.1-beta.19",
+        "@authup/core-http-kit": "^1.0.1-beta.19",
+        "@authup/core-realtime-kit": "^1.0.0-beta.19",
         "@ilingo/vuelidate": "^5.0.2",
         "@types/node": "^20.12.7",
         "@vitejs/plugin-vue": "^5.0.4",
@@ -77,10 +77,10 @@
         "vue-tsc": "^2.0.21"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.18",
-        "@authup/core-kit": "^1.0.0-beta.18",
-        "@authup/core-http-kit": "^1.0.0-beta.18",
-        "@authup/core-realtime-kit": "^1.0.0-beta.18",
+        "@authup/kit": "^1.0.1-beta.19",
+        "@authup/core-kit": "^1.0.1-beta.19",
+        "@authup/core-http-kit": "^1.0.1-beta.19",
+        "@authup/core-realtime-kit": "^1.0.0-beta.19",
         "@vuecs/form-controls": "^2.3.0",
         "@vuecs/list-controls": "^1.1.1",
         "@vuecs/pagination": "^1.1.1",

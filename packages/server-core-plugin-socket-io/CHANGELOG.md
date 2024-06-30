@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.1-beta.18...v1.0.0-beta.19) (2024-06-30)
+
+
+### Features
+
+* reorganized code ([#1945](https://github.com/authup/authup/issues/1945)) ([f5622d3](https://github.com/authup/authup/commit/f5622d3d75c83bdbb5e89ef82ae5ce2aa56416e6))
+
+
+### Bug Fixes
+
+* minor changes to include package as release-candidate ([7b2da27](https://github.com/authup/authup/commit/7b2da274054c9ee2f722771739654ccc54c2001d))
+* package name of plugin packages ([2c8a5ca](https://github.com/authup/authup/commit/2c8a5cab37b9483af57f94151e9a43b9d4decb10))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/server-kit bumped from ^1.0.1-beta.18 to ^1.0.0-beta.19
+    * @authup/server-core-plugin-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+  * peerDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.19
+    * @authup/server-core-plugin-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.19
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 
