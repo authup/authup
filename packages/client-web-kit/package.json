@@ -59,7 +59,7 @@
         "@authup/kit": "^1.0.0-beta.19",
         "@authup/core-kit": "^1.0.0-beta.19",
         "@authup/core-http-kit": "^1.0.0-beta.19",
-        "@authup/core-realtime-kit": "^1.0.1-beta.18",
+        "@authup/core-realtime-kit": "^1.0.0-beta.19",
         "@ilingo/vuelidate": "^5.0.2",
         "@types/node": "^20.12.7",
         "@vitejs/plugin-vue": "^5.0.4",
