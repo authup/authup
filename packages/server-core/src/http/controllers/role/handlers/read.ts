@@ -79,7 +79,9 @@ export async function getOneRoleRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req);
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
     const fields = useRequestQuery(req, 'fields');
 
     const dataSource = await useDataSource();

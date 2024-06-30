@@ -110,7 +110,9 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req);
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);

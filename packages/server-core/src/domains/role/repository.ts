@@ -33,7 +33,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             entityPrimaryColumn: 'id',
             attributeEntity: RoleAttributeEntity,
             attributeForeignColumn: 'role_id',
-            cachePrefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+            cachePrefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
         });
     }
 
