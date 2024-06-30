@@ -8,7 +8,6 @@
 import type { Ability } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import { InstanceChecker, Repository } from 'typeorm';
 import type {
     Role,
 } from '@authup/core-kit';
@@ -16,12 +15,26 @@ import {
     buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
+import { EARepository } from '../core';
+import { RoleAttributeEntity } from '../role-attribute/entity';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';
 
-export class RoleRepository extends Repository<RoleEntity> {
+export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
-        super(RoleEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+        super(instance, {
+            attributeProperties: (input, parent) => {
+                input.role_id = parent.id;
+                input.realm_id = parent.realm_id;
+
+                return input;
+            },
+            entity: RoleEntity,
+            entityPrimaryColumn: 'id',
+            attributeEntity: RoleAttributeEntity,
+            attributeForeignColumn: 'role_id',
+            cachePrefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+        });
     }
 
     async getOwnedPermissionsByMany(

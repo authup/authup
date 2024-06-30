@@ -9,15 +9,15 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const validator = new RoleAttributeRequestValidator();
     const data = await validator.execute(req, {

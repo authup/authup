@@ -9,12 +9,13 @@ import { PermissionName } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
-import { send, useRequestParam } from 'routup';
+import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RealmEntity } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRealmRouteHandler(
@@ -75,7 +76,9 @@ export async function getOneRealmRouteHandler(
         throw new ForbiddenError();
     }
 
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req, {
+        strict: false,
+    });
 
     if (typeof id !== 'string') {
         throw new BadRequestError();

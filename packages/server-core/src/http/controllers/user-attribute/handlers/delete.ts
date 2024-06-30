@@ -9,13 +9,14 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils/env';
+import { useRequestIDParam } from '../../../request';
+import { useRequestEnv } from '../../../utils';
 
 export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
@@ -26,14 +27,13 @@ export async function deleteUserAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    if (
-        entity.user_id !== useRequestEnv(req, 'userId')
-    ) {
-        if (
-            !useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE) ||
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
-        ) {
-            throw new ForbiddenError('You are not permitted to drop an attribute for the given user...');
+    if (entity.user_id !== useRequestEnv(req, 'userId')) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+            throw new ForbiddenError('You are not permitted for the resource realm.');
+        }
+
+        if (!useRequestEnv(req, 'abilities').can(PermissionName.USER_UPDATE, { attributes: entity })) {
+            throw new ForbiddenError();
         }
     }
 

@@ -9,15 +9,15 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { isPropertySet } from '@authup/kit';
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RealmRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
 
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.REALM_UPDATE)) {

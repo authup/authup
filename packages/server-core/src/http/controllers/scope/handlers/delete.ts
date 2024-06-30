@@ -8,13 +8,14 @@
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
-import { sendAccepted, useRequestParam } from 'routup';
+import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ScopeEntity } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!ability.has(PermissionName.SCOPE_DELETE)) {

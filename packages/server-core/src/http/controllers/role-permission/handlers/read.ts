@@ -8,12 +8,13 @@
 import { PermissionName } from '@authup/core-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
-import { send, useRequestParam } from 'routup';
+import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RolePermissionEntity } from '../../../../domains';
+import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 /**
@@ -75,7 +76,7 @@ export async function getOneRolePermissionRouteHandler(req: Request, res: Respon
         throw new ForbiddenError();
     }
 
-    const id = useRequestParam(req, 'id');
+    const id = useRequestIDParam(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RolePermissionEntity);

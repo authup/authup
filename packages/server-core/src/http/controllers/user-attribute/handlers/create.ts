@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
     isRealmResourceWritable,
@@ -14,6 +14,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
+import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -25,20 +26,25 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
         group: RequestHandlerOperation.CREATE,
     });
 
+    const userId = useRequestEnv(req, 'userId');
     if (data.user) {
         data.realm_id = data.user.realm_id;
         data.user_id = data.user.id;
     } else {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
-        data.user_id = useRequestEnv(req, 'userId');
+        if (userId) {
+            data.user_id = userId;
+        } else {
+            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
+        }
     }
 
-    if (
-        data.user_id !== useRequestEnv(req, 'userId')
-    ) {
+    const abilities = useRequestEnv(req, 'abilities');
+
+    if (data.user_id !== userId) {
         if (
-            !useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE) ||
+            !abilities.has(PermissionName.USER_UPDATE) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');
@@ -49,6 +55,13 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const entity = repository.create(data);
+
+    if (
+        data.user_id !== userId &&
+        !abilities.can(PermissionName.USER_UPDATE, { attributes: entity })
+    ) {
+        throw new ForbiddenError();
+    }
 
     await repository.save(entity);
 
