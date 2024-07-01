@@ -28,11 +28,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.CLIENT_READ) &&
-        !ability.has(PermissionName.CLIENT_UPDATE) &&
-        !ability.has(PermissionName.CLIENT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.CLIENT_READ,
+        PermissionName.CLIENT_UPDATE,
+        PermissionName.CLIENT_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -60,10 +61,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         ],
     };
 
-    if (
-        ability.has(PermissionName.CLIENT_READ) ||
-        ability.has(PermissionName.CLIENT_UPDATE)
-    ) {
+    if (hasAbility) {
         options.allowed = ['secret'];
     }
 
@@ -97,11 +95,12 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.CLIENT_READ) &&
-        !ability.has(PermissionName.CLIENT_UPDATE) &&
-        !ability.has(PermissionName.CLIENT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.CLIENT_READ,
+        PermissionName.CLIENT_UPDATE,
+        PermissionName.CLIENT_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -152,10 +151,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         ],
     };
 
-    if (
-        ability.has(PermissionName.CLIENT_UPDATE) ||
-        ability.has(PermissionName.CLIENT_READ)
-    ) {
+    if (hasAbility) {
         options.allowed = ['secret'];
     }
 

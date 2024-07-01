@@ -11,7 +11,7 @@ import {
 } from '../../../src';
 
 describe('src/policy/time', () => {
-    it('should restrict', () => {
+    it('should restrict', async () => {
         const options : TimePolicy = {
             type: BuiltInPolicyType.TIME,
             start: '08:00',
@@ -22,7 +22,7 @@ describe('src/policy/time', () => {
         const dateTime = new Date();
         dateTime.setHours(12, 0);
 
-        let outcome = evaluator.evaluate({
+        let outcome = await evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -31,7 +31,7 @@ describe('src/policy/time', () => {
         expect(outcome).toBeTruthy();
 
         dateTime.setHours(6, 0);
-        outcome = evaluator.evaluate({
+        outcome = await evaluator.evaluate({
             options,
             data: {
                 dateTime,

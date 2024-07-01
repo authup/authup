@@ -21,7 +21,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
+    if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -44,7 +44,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     entity = repository.merge(entity, data);
 
-    if (!ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

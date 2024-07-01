@@ -47,8 +47,34 @@ export class Abilities extends EventEmitter<{
      *
      * @param name
      */
-    has(name: string | Ability) : boolean {
+    async has(name: string | Ability) : Promise<boolean> {
         return this.hasMany([name]);
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Check if one of the following permission exists without any restriction.
+     *
+     * @param items
+     */
+    async hasOneOf(items: (string | Ability)[]) : Promise<boolean> {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            let owned: Ability[];
+            if (typeof item === 'string') {
+                owned = await this.find(item);
+            } else {
+                owned = await this.find(item.name);
+            }
+
+            if (owned.length > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ----------------------------------------------
@@ -58,15 +84,15 @@ export class Abilities extends EventEmitter<{
      *
      * @param items
      */
-    hasMany(items: (Ability | string)[]) : boolean {
+    async hasMany(items: (Ability | string)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
 
             let owned: Ability[];
             if (typeof item === 'string') {
-                owned = this.find(item);
+                owned = await this.find(item);
             } else {
-                owned = this.find(item.name);
+                owned = await this.find(item.name);
             }
 
             if (owned.length === 0) {
@@ -77,15 +103,15 @@ export class Abilities extends EventEmitter<{
         return true;
     }
 
-    can(
+    async can(
         input: Ability | string,
         context?: PolicyEvaluationContext
-    ) : boolean;
+    ) : Promise<boolean>;
 
-    can(
+    async can(
         input: (Ability | string)[],
         context?: PolicyEvaluationContext
-    ) : boolean;
+    ) : Promise<boolean>;
 
     /**
      * Check if the owned abilities, satisfy the conditions for a given ability.
@@ -93,10 +119,10 @@ export class Abilities extends EventEmitter<{
      * @param input
      * @param context
      */
-    can(
+    async can(
         input: Ability | string | (Ability | string)[],
         context: PolicyEvaluationContext = {},
-    ) : boolean {
+    ) : Promise<boolean> {
         if (!Array.isArray(input)) {
             return this.can([input], context);
         }
@@ -106,9 +132,9 @@ export class Abilities extends EventEmitter<{
 
             let owned : Ability[];
             if (typeof item === 'string') {
-                owned = this.find(item);
+                owned = await this.find(item);
             } else {
-                owned = this.find(item.name);
+                owned = await this.find(item.name);
             }
 
             if (owned.length === 0) {
@@ -124,7 +150,7 @@ export class Abilities extends EventEmitter<{
                 }
 
                 hasPolicies = true;
-                const outcome = this.policyEnforcer.evaluate(ownedItem.policy, context);
+                const outcome = await this.policyEnforcer.evaluate(ownedItem.policy, context);
                 if (outcome) {
                     hasPositiveOutcome = true;
                     break;
@@ -148,7 +174,7 @@ export class Abilities extends EventEmitter<{
      *
      * @param name
      */
-    find(name?: string) : Ability[] {
+    async find(name?: string) : Promise<Ability[]> {
         const nsp = this.items['/'];
         if (!Array.isArray(nsp)) {
             return [];

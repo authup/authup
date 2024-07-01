@@ -13,11 +13,11 @@ import type {
 } from '../types';
 import type { PolicyEvaluatorContext, PolicyEvaluators } from './types';
 
-export function evaluatePolicy(
+export async function evaluatePolicy(
     policy: AnyPolicy,
     context: PolicyEvaluationContext,
     evaluators: PolicyEvaluators,
-) {
+) : Promise<boolean> {
     const evaluator = evaluators[policy.type];
     if (!evaluator) {
         throw PolicyError.evaluatorNotFound(policy.type);
@@ -30,8 +30,9 @@ export function evaluatePolicy(
             evaluators,
         };
 
-        if (evaluator.canEvaluate(executionContext)) {
-            return evaluator.evaluate(executionContext);
+        const canEvaluate = await evaluator.canEvaluate(executionContext);
+        if (canEvaluate) {
+            return await evaluator.evaluate(executionContext);
         }
     } catch (e) {
         if (e instanceof PolicyError) {

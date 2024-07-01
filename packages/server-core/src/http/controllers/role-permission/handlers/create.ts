@@ -29,7 +29,7 @@ import { RequestHandlerOperation } from '../../../request';
  */
 export async function createRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
-    if (!abilities.has(PermissionName.ROLE_PERMISSION_CREATE)) {
+    if (!await abilities.has(PermissionName.ROLE_PERMISSION_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -55,7 +55,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
         if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
             const ability = buildAbilityFromPermission(data.permission);
-            if (!abilities.can(ability, policyEvaluationContext)) {
+            if (!await abilities.can(ability, policyEvaluationContext)) {
                 throw new ForbiddenError('The target permission is not owned.');
             }
         }
@@ -73,7 +73,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!abilities.can(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
+    if (!await abilities.can(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

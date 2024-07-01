@@ -40,7 +40,7 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
     const userId = useRequestEnv(req, 'userId');
     if (!data.user_id || !userId || data.user_id !== userId) {
         const ability = useRequestEnv(req, 'abilities');
-        if (!ability.can(PermissionName.ROBOT_CREATE, { attributes: data })) {
+        if (!await ability.can(PermissionName.ROBOT_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

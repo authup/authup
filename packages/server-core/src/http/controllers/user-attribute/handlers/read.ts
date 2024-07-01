@@ -8,7 +8,6 @@
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
-import { Brackets } from 'typeorm';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
@@ -24,8 +23,8 @@ import { useRequestEnv } from '../../../utils';
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const userId = useRequestEnv(req, 'userId');
     const ability = useRequestEnv(req, 'abilities');
-
-    if (!userId && !ability.has(PermissionName.USER_READ)) {
+    const hasAbility = await ability.has(PermissionName.USER_READ);
+    if (!userId && !hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -34,13 +33,11 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('userAttribute');
 
-    query.where(new Brackets((qb) => {
+    if (!hasAbility) {
+        query.orWhere('userAttribute.user_id = :userId', { userId });
+    } else {
         onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
-
-        if (!ability.has(PermissionName.USER_READ)) {
-            qb.orWhere('userAttribute.user_id = :userId', { userId });
-        }
-    }));
+    }
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userAttribute',
@@ -75,8 +72,8 @@ export async function getOneUserAttributeRouteHandler(
 
     const userId = useRequestEnv(req, 'userId');
     const ability = useRequestEnv(req, 'abilities');
-
-    if (!userId && !ability.has(PermissionName.USER_READ)) {
+    const hasAbility = await ability.has(PermissionName.USER_READ);
+    if (!userId && !hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -94,7 +91,7 @@ export async function getOneUserAttributeRouteHandler(
 
     if (
         userId !== entity.user_id &&
-        !ability.can(PermissionName.USER_READ, { attributes: entity })
+        !await ability.can(PermissionName.USER_READ, { attributes: entity })
     ) {
         throw new ForbiddenError();
     }

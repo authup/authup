@@ -17,7 +17,7 @@ type User = {
 };
 
 describe('src/policy', () => {
-    it('should work with default evaluators', () => {
+    it('should work with default evaluators', async () => {
         const enforcer = new PolicyEngine();
 
         const attributePolicy : AttributesPolicy<User> = {
@@ -43,14 +43,14 @@ describe('src/policy', () => {
             ],
         };
 
-        let outcome = enforcer.evaluateMany([compositePolicy], {
+        let outcome = await enforcer.evaluateMany([compositePolicy], {
             attributes: {
                 name: 'admin',
             },
         });
         expect(outcome).toBeTruthy();
 
-        outcome = enforcer.evaluate(compositePolicy, {
+        outcome = await enforcer.evaluate(compositePolicy, {
             attributes: {
                 id: 'foo',
                 name: 'admin',
@@ -58,7 +58,7 @@ describe('src/policy', () => {
         });
         expect(outcome).toBeFalsy();
 
-        outcome = enforcer.evaluate(compositePolicy, {
+        outcome = await enforcer.evaluate(compositePolicy, {
             attributes: {
                 name: 'foo',
             },

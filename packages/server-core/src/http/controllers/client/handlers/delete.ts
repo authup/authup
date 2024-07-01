@@ -21,7 +21,7 @@ export async function deleteClientRouteHandler(
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.CLIENT_DELETE)) {
+    if (!await ability.has(PermissionName.CLIENT_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -33,7 +33,7 @@ export async function deleteClientRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!ability.can(PermissionName.CLIENT_DELETE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.CLIENT_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

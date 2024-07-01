@@ -19,11 +19,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.ROBOT_READ) &&
-        !ability.has(PermissionName.ROBOT_UPDATE) &&
-        !ability.has(PermissionName.ROBOT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.ROBOT_ROLE_READ,
+        PermissionName.ROBOT_ROLE_UPDATE,
+        PermissionName.ROBOT_ROLE_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -54,11 +55,12 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
 
 export async function getOneRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.ROBOT_READ) &&
-        !ability.has(PermissionName.ROBOT_UPDATE) &&
-        !ability.has(PermissionName.ROBOT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.ROBOT_ROLE_READ,
+        PermissionName.ROBOT_ROLE_UPDATE,
+        PermissionName.ROBOT_ROLE_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 

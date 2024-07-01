@@ -21,11 +21,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.PERMISSION_READ) &&
-        !ability.has(PermissionName.PERMISSION_UPDATE) &&
-        !ability.has(PermissionName.PERMISSION_DELETE)
-    ) {
+    const hasAbility = ability.hasOneOf([
+        PermissionName.PERMISSION_READ,
+        PermissionName.PERMISSION_UPDATE,
+        PermissionName.PERMISSION_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -77,11 +78,12 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
 export async function getOnePolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.PERMISSION_READ) &&
-        !ability.has(PermissionName.PERMISSION_UPDATE) &&
-        !ability.has(PermissionName.PERMISSION_DELETE)
-    ) {
+    const hasAbility = ability.hasOneOf([
+        PermissionName.PERMISSION_READ,
+        PermissionName.PERMISSION_UPDATE,
+        PermissionName.PERMISSION_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 

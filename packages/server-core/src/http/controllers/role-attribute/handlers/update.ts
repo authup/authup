@@ -36,7 +36,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     const ability = useRequestEnv(req, 'abilities');
     if (
-        !ability.has(PermissionName.ROLE_UPDATE) ||
+        !await ability.has(PermissionName.ROLE_UPDATE) ||
         !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
     ) {
         throw new ForbiddenError('You are not permitted to update an attribute for this role...');

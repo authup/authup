@@ -20,7 +20,7 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.SCOPE_UPDATE)) {
+    if (!await ability.has(PermissionName.SCOPE_UPDATE)) {
         throw new NotFoundError();
     }
 
@@ -55,7 +55,7 @@ export async function updateScopeRouteHandler(req: Request, res: Response) : Pro
 
     entity = repository.merge(entity, data);
 
-    if (!ability.can(PermissionName.SCOPE_UPDATE, { attributes: data })) {
+    if (!await ability.can(PermissionName.SCOPE_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

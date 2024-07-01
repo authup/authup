@@ -43,7 +43,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     const ability = useRequestEnv(req, 'abilities');
     const userId = useRequestEnv(req, 'userId');
     if (!entity.user_id || !userId || entity.user_id !== userId) {
-        if (!ability.can(PermissionName.ROBOT_UPDATE, { attributes: entity })) {
+        if (!await ability.can(PermissionName.ROBOT_UPDATE, { attributes: entity })) {
             throw new ForbiddenError();
         }
     }

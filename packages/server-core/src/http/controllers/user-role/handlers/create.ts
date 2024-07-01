@@ -19,7 +19,7 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
-    if (!abilities.has(PermissionName.USER_ROLE_CREATE)) {
+    if (!await abilities.has(PermissionName.USER_ROLE_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -47,7 +47,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
         const roleRepository = new RoleRepository(dataSource);
         const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
-        if (!abilities.can(roleAbilities, policyEvaluationContext)) {
+        if (!await abilities.can(roleAbilities, policyEvaluationContext)) {
             throw new ForbiddenError('The role permissions are not owned.');
         }
     }
@@ -64,7 +64,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    if (!abilities.can(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
+    if (!await abilities.can(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

@@ -38,7 +38,7 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
 
     if (entity.user_id !== userId) {
         if (
-            !abilities.can(PermissionName.USER_UPDATE, { attributes: entity }) ||
+            !await abilities.can(PermissionName.USER_UPDATE, { attributes: entity }) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to update an attribute for the given user...');

@@ -18,7 +18,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROLE_DELETE)) {
+    if (!await ability.has(PermissionName.ROLE_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -38,7 +38,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!ability.can(PermissionName.ROLE_DELETE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

@@ -18,7 +18,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.USER_DELETE)) {
+    if (!await ability.has(PermissionName.USER_DELETE)) {
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 
@@ -34,7 +34,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (!ability.can(PermissionName.USER_DELETE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.USER_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 
