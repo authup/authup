@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-07-01)
+
+
+### Features
+
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/client-web-config bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 
