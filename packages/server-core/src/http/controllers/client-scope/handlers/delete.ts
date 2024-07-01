@@ -18,7 +18,7 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.CLIENT_UPDATE)) {
+    if (!await ability.has(PermissionName.CLIENT_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -36,7 +36,7 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    if (!ability.can(PermissionName.CLIENT_UPDATE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.CLIENT_UPDATE, { attributes: entity })) {
         throw new NotFoundError();
     }
 

@@ -18,7 +18,8 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.USER_CREATE)) {
+    const hasAbility = await ability.has(PermissionName.USER_CREATE);
+    if (!hasAbility) {
         throw new ForbiddenError('You are not permitted to add a user.');
     }
 
@@ -27,19 +28,12 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
         group: RequestHandlerOperation.CREATE,
     });
 
-    if (!ability.has(PermissionName.USER_CREATE)) {
-        delete data.name_locked;
-        delete data.active;
-        delete data.status;
-        delete data.status_message;
-    }
-
     if (!data.realm_id) {
         const { id: realmId } = useRequestEnv(req, 'realm');
         data.realm_id = realmId;
     }
 
-    if (!ability.can(PermissionName.USER_CREATE, { attributes: data })) {
+    if (!await ability.can(PermissionName.USER_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

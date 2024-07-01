@@ -13,28 +13,24 @@ type User = {
     age: number
 };
 
+const options : AttributesPolicyOptions<User> = {
+    invert: false,
+    query: {
+        name: {
+            $regex: /t/,
+        },
+        age: {
+            $lt: 18,
+            $gt: 12,
+        },
+    },
+};
+
+const evaluator = new AttributesPolicyEvaluator<User>();
+
 describe('src/policy/attributes', () => {
-    it('should restrict', () => {
-        const options : AttributesPolicyOptions<User> = {
-            invert: false,
-            query: {
-                name: {
-                    $regex: /t/,
-                },
-                age: {
-                    $lt: 18,
-                    $gt: 12,
-                },
-            },
-        };
-
-        const evaluator = new AttributesPolicyEvaluator<User>();
-
-        expect(() => {
-            evaluator.evaluate({ options });
-        }).toThrow();
-
-        let outcome = evaluator.evaluate({
+    it('should succeed with successful predicates', async () => {
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -44,8 +40,14 @@ describe('src/policy/attributes', () => {
             },
         });
         expect(outcome).toBeTruthy();
+    });
 
-        outcome = evaluator.evaluate({
+    it('should fail with missing context', async () => {
+        await expect(evaluator.evaluate({ options })).rejects.toThrow();
+    });
+
+    it('should fail with invalid predicate value', async () => {
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {

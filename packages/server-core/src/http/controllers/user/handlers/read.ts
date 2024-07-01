@@ -27,7 +27,7 @@ import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oau
 import { useRequestIDParam } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
-function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
+async function buildFieldsOption(req: Request) : Promise<QueryFieldsApplyOptions<UserEntity>> {
     const options : QueryFieldsApplyOptions<UserEntity> = {
         defaultAlias: 'user',
         default: [
@@ -46,7 +46,7 @@ function buildFieldsOption(req: Request) : QueryFieldsApplyOptions<UserEntity> {
         ],
     };
 
-    if (useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE)) {
+    if (await useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE)) {
         options.allowed = ['email'];
     }
 
@@ -60,7 +60,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
-        fields: buildFieldsOption(req),
+        fields: await buildFieldsOption(req),
         filters: {
             allowed: ['id', 'name', 'realm_id'],
         },
@@ -117,9 +117,11 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = ability.has(PermissionName.USER_READ) ||
-        ability.has(PermissionName.USER_UPDATE) ||
-        ability.has(PermissionName.USER_DELETE);
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.USER_READ,
+        PermissionName.USER_UPDATE,
+        PermissionName.USER_DELETE,
+    ]);
     if (!isMe && !hasAbility) {
         throw new ForbiddenError();
     }
@@ -143,7 +145,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
-        fields: buildFieldsOption(req),
+        fields: await buildFieldsOption(req),
         relations: {
             allowed: ['realm'],
         },

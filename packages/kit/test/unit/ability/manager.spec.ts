@@ -27,42 +27,42 @@ const testPermissions : Ability[] = [
 const manager = new Abilities();
 
 describe('src/ability/manager.ts', () => {
-    it('should set permissions', () => {
+    it('should set permissions', async () => {
         manager.set(testPermissions);
 
-        const items = manager.find();
+        const items = await manager.find();
         expect(items.length).toBe(testPermissions.length);
     });
 
-    it('has permission', () => {
+    it('has permission', async () => {
         manager.set(testPermissions);
 
-        expect(manager.has('user_add')).toBeTruthy();
-        expect(manager.has('something_do')).toBeFalsy();
+        expect(await manager.has('user_add')).toBeTruthy();
+        expect(await manager.has('something_do')).toBeFalsy();
     });
 
-    it('should work with policy', () => {
+    it('should work with policy', async () => {
         manager.set(testPermissions);
 
-        expect(manager.has('user_edit')).toBeTruthy();
-        expect(manager.can('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
-        expect(manager.can('user_edit', { attributes: { id: '123' } })).toBeFalsy();
+        expect(await manager.has('user_edit')).toBeTruthy();
+        expect(await manager.can('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
+        expect(await manager.can('user_edit', { attributes: { id: '123' } })).toBeFalsy();
     });
 
-    it('clear and check empty permissions', () => {
+    it('clear and check empty permissions', async () => {
         manager.set(testPermissions);
-        let items = manager.find();
+        let items = await manager.find();
         expect(items.length).toEqual(testPermissions.length);
 
         manager.set([]);
-        items = manager.find();
+        items = await manager.find();
         expect(items.length).toEqual(0);
     });
 
-    it('should init with permissions', () => {
+    it('should init with permissions', async () => {
         const abilities = new Abilities(testPermissions);
 
-        const items = abilities.find();
+        const items = await abilities.find();
         expect(items.length).toEqual(testPermissions.length);
     });
 });

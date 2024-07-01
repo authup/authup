@@ -20,11 +20,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
-    ) {
+    const hasAbility = ability.hasOneOf([
+        PermissionName.IDENTITY_PROVIDER_READ,
+        PermissionName.IDENTITY_PROVIDER_UPDATE,
+        PermissionName.IDENTITY_PROVIDER_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -61,11 +62,12 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
 
 export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.IDENTITY_PROVIDER_READ) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE) &&
-        !ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)
-    ) {
+    const hasAbility = ability.hasOneOf([
+        PermissionName.IDENTITY_PROVIDER_READ,
+        PermissionName.IDENTITY_PROVIDER_UPDATE,
+        PermissionName.IDENTITY_PROVIDER_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 

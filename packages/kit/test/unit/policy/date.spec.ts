@@ -12,7 +12,7 @@ import {
 } from '../../../src';
 
 describe('src/policy/date', () => {
-    it('should restrict', () => {
+    it('should restrict', async () => {
         const options : DatePolicy = {
             type: BuiltInPolicyType.DATE,
             start: '2024-04-01',
@@ -21,7 +21,7 @@ describe('src/policy/date', () => {
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = evaluator.evaluate({
+        let outcome = await evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -31,7 +31,7 @@ describe('src/policy/date', () => {
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = evaluator.evaluate({
+        outcome = await evaluator.evaluate({
             options,
             data: {
                 dateTime,
@@ -41,7 +41,7 @@ describe('src/policy/date', () => {
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = evaluator.evaluate({
+        outcome = await evaluator.evaluate({
             options,
             data: {
                 dateTime,

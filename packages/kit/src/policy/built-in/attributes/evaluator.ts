@@ -16,13 +16,13 @@ import type { AttributesPolicyOptions } from './types';
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
 > implements PolicyEvaluator<AttributesPolicyOptions<T>> {
-    canEvaluate(
+    async canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
-    ): ctx is PolicyEvaluatorContext<AttributesPolicyOptions<T>> {
+    ) : Promise<boolean> {
         return isAttributesPolicy(ctx.options);
     }
 
-    evaluate(ctx: PolicyEvaluatorContext<AttributesPolicyOptions<T>>): boolean {
+    async evaluate(ctx: PolicyEvaluatorContext<AttributesPolicyOptions<T>>): Promise<boolean> {
         if (!isObject(ctx.data) || !isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }

@@ -22,11 +22,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.SCOPE_READ) &&
-        !ability.has(PermissionName.SCOPE_UPDATE) &&
-        !ability.has(PermissionName.SCOPE_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.SCOPE_READ,
+        PermissionName.SCOPE_UPDATE,
+        PermissionName.SCOPE_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -71,11 +72,12 @@ export async function getManyScopeRouteHandler(req: Request, res: Response) : Pr
 
 export async function getOneScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.SCOPE_READ) &&
-        !ability.has(PermissionName.SCOPE_UPDATE) &&
-        !ability.has(PermissionName.SCOPE_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.SCOPE_READ,
+        PermissionName.SCOPE_UPDATE,
+        PermissionName.SCOPE_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 

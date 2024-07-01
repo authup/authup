@@ -22,7 +22,7 @@ import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request'
 
 export async function createScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.SCOPE_CREATE)) {
+    if (!await ability.has(PermissionName.SCOPE_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -36,7 +36,7 @@ export async function createScopeRouteHandler(req: Request, res: Response) : Pro
         data.realm_id = id;
     }
 
-    if (!ability.can(PermissionName.SCOPE_CREATE, { attributes: data })) {
+    if (!await ability.can(PermissionName.SCOPE_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

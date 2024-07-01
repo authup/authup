@@ -22,7 +22,7 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.PERMISSION_UPDATE)) {
+    if (!await ability.has(PermissionName.PERMISSION_UPDATE)) {
         throw new ForbiddenError('You are not permitted to edit a permission.');
     }
 
@@ -59,7 +59,7 @@ export async function updatePermissionRouteHandler(req: Request, res: Response) 
 
     entity = repository.merge(entity, data);
 
-    if (!ability.can(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
+    if (!await ability.can(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

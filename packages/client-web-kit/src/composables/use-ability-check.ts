@@ -13,12 +13,19 @@ export function useAbilityCheck(name: string) : Ref<boolean> {
     const { abilities } = useStore();
 
     const data = ref(false);
-    data.value = abilities.has(name);
+
+    abilities.has(name)
+        .then((outcome) => {
+            data.value = outcome;
+        });
 
     let removeListener : undefined | CallableFunction;
     onMounted(() => {
         removeListener = abilities.on('updated', () => {
-            data.value = abilities.has(name);
+            abilities.has(name)
+                .then((outcome) => {
+                    data.value = outcome;
+                });
         });
     });
 

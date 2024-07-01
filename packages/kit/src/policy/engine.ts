@@ -49,17 +49,19 @@ export class PolicyEngine {
         this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
     }
 
-    evaluateMany(
+    async evaluateMany(
         policies: AnyPolicy[],
         context: PolicyEvaluationContext,
-    ) : boolean {
+    ) : Promise<boolean> {
+        let outcome : boolean = true;
         for (let i = 0; i < policies.length; i++) {
-            if (!this.evaluate(policies[i], context)) {
-                return false;
+            outcome = await this.evaluate(policies[i], context);
+            if (!outcome) {
+                return outcome;
             }
         }
 
-        return true;
+        return outcome;
     }
 
     /**
@@ -68,10 +70,10 @@ export class PolicyEngine {
      * @param policy
      * @param context
      */
-    evaluate(
+    async evaluate(
         policy: AnyPolicy,
         context: PolicyEvaluationContext,
-    ) : boolean {
+    ) : Promise<boolean> {
         return evaluatePolicy(policy, context, this.evaluators);
     }
 }

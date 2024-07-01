@@ -13,7 +13,7 @@ import {
 } from '#app';
 import { LayoutKey } from '../config/layout';
 
-function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: string) => boolean) {
+async function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: string) => Promise<boolean>) {
     const layoutKeys : string[] = [
         LayoutKey.REQUIRED_PERMISSIONS,
     ];
@@ -32,7 +32,15 @@ function checkAbilityOrPermission(route: RouteLocationNormalized, has: (name: st
 
             const value = matchedRecord.meta[layoutKey];
             if (Array.isArray(value)) {
-                isAllowed = value.some((val) => has(val));
+                let passed = false;
+                for (let k = 0; k < value.length; k++) {
+                    const outcome = await has(value[k]);
+                    if (outcome) {
+                        passed = true;
+                        break;
+                    }
+                }
+                isAllowed = passed;
             }
 
             if (isAllowed) {
@@ -106,7 +114,7 @@ export default defineNuxtRouteMiddleware(async (
         }
 
         try {
-            checkAbilityOrPermission(to, (name) => store.abilities.has(name));
+            await checkAbilityOrPermission(to, (name) => store.abilities.has(name));
         } catch (e) {
             return navigateTo({
                 path: redirectPath,

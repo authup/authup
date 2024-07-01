@@ -8,14 +8,14 @@
 import type { NavigationItem } from '@vuecs/navigation';
 
 type ComponentRestrictionContext = {
-    hasPermission: (name: string) => boolean;
+    hasPermission: (name: string) => Promise<boolean>;
     isLoggedIn: () => boolean
 };
 
-export function reduceNavigationElementsByRestriction<T extends NavigationItem>(
+export async function reduceNavigationElementsByRestriction<T extends NavigationItem>(
     items: T[],
     context: ComponentRestrictionContext,
-) : T[] {
+) : Promise<T[]> {
     const result : T[] = [];
 
     for (let i = 0; i < items.length; i++) {
@@ -43,17 +43,25 @@ export function reduceNavigationElementsByRestriction<T extends NavigationItem>(
         ) {
             let checks = items[i].requirePermissions;
             if (typeof checks === 'function') {
-                if (!checks(context.hasPermission)) {
-                    canPass = false;
-                }
+                // if (!checks(context.hasPermission)) {
+                //    canPass = false;
+                // }
+                canPass = false;
             } else if (Array.isArray(checks)) {
                 checks = checks.filter((item) => item);
+                if (checks.length > 0) {
+                    let checkPassed = false;
+                    for (let j = 0; j < checks.length; j++) {
+                        const outcome = await context.hasPermission(checks[j]);
+                        if (outcome) {
+                            checkPassed = true;
+                            break;
+                        }
+                    }
 
-                if (
-                    checks.length > 0 &&
-                    !checks.some((item: any) => context.hasPermission(item))
-                ) {
-                    canPass = false;
+                    if (!checkPassed) {
+                        canPass = false;
+                    }
                 }
             }
         }
@@ -61,7 +69,7 @@ export function reduceNavigationElementsByRestriction<T extends NavigationItem>(
         if (canPass) {
             const { children } = items[i];
             if (children) {
-                items[i].children = reduceNavigationElementsByRestriction(children, context);
+                items[i].children = await reduceNavigationElementsByRestriction(children, context);
             }
 
             result.push(items[i]);

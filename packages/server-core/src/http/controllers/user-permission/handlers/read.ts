@@ -25,11 +25,12 @@ import { useRequestEnv } from '../../../utils';
  */
 export async function getManyUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.USER_PERMISSION_READ) &&
-        !ability.has(PermissionName.USER_PERMISSION_CREATE) &&
-        !ability.has(PermissionName.USER_PERMISSION_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.USER_PERMISSION_CREATE,
+        PermissionName.USER_PERMISSION_DELETE,
+        PermissionName.USER_PERMISSION_READ,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -68,11 +69,12 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
  */
 export async function getOneUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.USER_PERMISSION_READ) &&
-        !ability.has(PermissionName.USER_PERMISSION_CREATE) &&
-        !ability.has(PermissionName.USER_PERMISSION_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.USER_PERMISSION_CREATE,
+        PermissionName.USER_PERMISSION_DELETE,
+        PermissionName.USER_PERMISSION_READ,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 

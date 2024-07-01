@@ -27,13 +27,13 @@ function toDate(input: Date | string | number) : Date {
 }
 
 export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
-    canEvaluate(
+    async canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
-    ): ctx is PolicyEvaluatorContext<DatePolicyOptions> {
+    ) : Promise<boolean> {
         return isAttributesPolicy(ctx.options);
     }
 
-    evaluate(ctx: PolicyEvaluatorContext<DatePolicyOptions>): boolean {
+    async evaluate(ctx: PolicyEvaluatorContext<DatePolicyOptions>) : Promise<boolean> {
         let now : Date;
         if (ctx.data.dateTime) {
             now = normalizeDate(toDate(ctx.data.dateTime));

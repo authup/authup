@@ -32,7 +32,7 @@ export async function deleteUserAttributeRouteHandler(req: Request, res: Respons
             throw new ForbiddenError('You are not permitted for the resource realm.');
         }
 
-        if (!useRequestEnv(req, 'abilities').can(PermissionName.USER_UPDATE, { attributes: entity })) {
+        if (!await useRequestEnv(req, 'abilities').can(PermissionName.USER_UPDATE, { attributes: entity })) {
             throw new ForbiddenError();
         }
     }

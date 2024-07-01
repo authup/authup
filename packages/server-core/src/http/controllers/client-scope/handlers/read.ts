@@ -19,11 +19,13 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.CLIENT_READ) &&
-        !ability.has(PermissionName.CLIENT_UPDATE) &&
-        !ability.has(PermissionName.CLIENT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.CLIENT_READ,
+        PermissionName.CLIENT_UPDATE,
+        PermissionName.CLIENT_DELETE,
+    ]);
+
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -58,9 +60,9 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
 export async function getOneClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
     if (
-        !ability.has(PermissionName.CLIENT_READ) &&
-        !ability.has(PermissionName.CLIENT_UPDATE) &&
-        !ability.has(PermissionName.CLIENT_DELETE)
+        !await ability.has(PermissionName.CLIENT_READ) &&
+        !await ability.has(PermissionName.CLIENT_UPDATE) &&
+        !await ability.has(PermissionName.CLIENT_DELETE)
     ) {
         throw new ForbiddenError();
     }

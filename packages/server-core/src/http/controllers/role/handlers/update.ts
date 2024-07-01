@@ -22,7 +22,7 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.ROLE_UPDATE)) {
+    if (!await ability.has(PermissionName.ROLE_UPDATE)) {
         throw new NotFoundError();
     }
 
@@ -73,7 +73,7 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     entity = repository.merge(entity, data);
 
-    if (!ability.can(PermissionName.ROLE_UPDATE, { attributes: data })) {
+    if (!await ability.can(PermissionName.ROLE_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

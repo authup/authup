@@ -44,7 +44,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
 
     if (data.user_id !== userId) {
         if (
-            !abilities.has(PermissionName.USER_UPDATE) ||
+            !await abilities.has(PermissionName.USER_UPDATE) ||
             !isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)
         ) {
             throw new ForbiddenError('You are not permitted to set an attribute for the given user...');
@@ -58,7 +58,7 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
 
     if (
         data.user_id !== userId &&
-        !abilities.can(PermissionName.USER_UPDATE, { attributes: entity })
+        !await abilities.can(PermissionName.USER_UPDATE, { attributes: entity })
     ) {
         throw new ForbiddenError();
     }

@@ -27,11 +27,12 @@ import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.ROBOT_READ) &&
-        !ability.has(PermissionName.ROBOT_UPDATE) &&
-        !ability.has(PermissionName.ROBOT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.ROBOT_READ,
+        PermissionName.ROBOT_UPDATE,
+        PermissionName.ROBOT_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -72,10 +73,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 
     const env = useRequestEnv(req);
 
-    if (
-        !env.abilities.has(PermissionName.ROBOT_UPDATE) &&
-        !env.abilities.has(PermissionName.ROBOT_DELETE)
-    ) {
+    if (!hasAbility) {
         if (env.userId) {
             query.andWhere('robot.user_id = :userId', { userId: env.userId });
         }
@@ -102,11 +100,12 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
-    if (
-        !ability.has(PermissionName.ROBOT_READ) &&
-        !ability.has(PermissionName.ROBOT_UPDATE) &&
-        !ability.has(PermissionName.ROBOT_DELETE)
-    ) {
+    const hasAbility = await ability.hasOneOf([
+        PermissionName.ROBOT_READ,
+        PermissionName.ROBOT_UPDATE,
+        PermissionName.ROBOT_DELETE,
+    ]);
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -169,8 +168,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
 
     if (
         env.robotId !== entity.id &&
-        !env.abilities.has(PermissionName.ROBOT_DELETE) &&
-        !env.abilities.has(PermissionName.ROBOT_UPDATE)
+        !hasAbility
     ) {
         if (!entity.user_id) {
             throw new ForbiddenError();

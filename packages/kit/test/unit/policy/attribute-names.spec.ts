@@ -8,20 +8,16 @@
 import type { AttributeNamesPolicyOptions } from '../../../src';
 import { AttributeNamesPolicyEvaluator } from '../../../src';
 
+const evaluator = new AttributeNamesPolicyEvaluator();
+
 describe('src/policy/attribute-names', () => {
-    it('should restrict', () => {
+    it('should succeed with known attributes', async () => {
         const options : AttributeNamesPolicyOptions = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const evaluator = new AttributeNamesPolicyEvaluator();
-
-        expect(() => {
-            evaluator.evaluate({ options });
-        }).toThrow();
-
-        let outcome = evaluator.evaluate({
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -30,9 +26,26 @@ describe('src/policy/attribute-names', () => {
                 },
             },
         });
-        expect(outcome).toBeTruthy();
+        expect(outcome)
+            .toBeTruthy();
+    });
 
-        outcome = evaluator.evaluate({
+    it('should fail with missing context', async () => {
+        const options : AttributeNamesPolicyOptions = {
+            invert: false,
+            names: ['foo', 'bar'],
+        };
+
+        await expect(evaluator.evaluate({ options })).rejects.toThrow();
+    });
+
+    it('should fail with unknown attributes', async () => {
+        const options : AttributeNamesPolicyOptions = {
+            invert: false,
+            names: ['foo', 'bar'],
+        };
+
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -45,26 +58,15 @@ describe('src/policy/attribute-names', () => {
         expect(outcome).toBeFalsy();
     });
 
-    it('should restrict nested attributes', () => {
-        const options : AttributeNamesPolicyOptions = {
+    it('should succeed with known nested attributes', async () => {
+        const options: AttributeNamesPolicyOptions = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const evaluator = new AttributeNamesPolicyEvaluator();
-        let outcome = evaluator.evaluate({
-            options,
-            data: {
-                attributes: {
-                    name: 'admin',
-                },
-            },
-        });
-        expect(outcome).toBeFalsy();
-
-        outcome = evaluator.evaluate({
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {
@@ -74,9 +76,41 @@ describe('src/policy/attribute-names', () => {
                 },
             },
         });
-        expect(outcome).toBeTruthy();
+        expect(outcome)
+            .toBeTruthy();
+    });
 
-        outcome = evaluator.evaluate({
+    it('should fail with unknown nested attributes', async () => {
+        const options: AttributeNamesPolicyOptions = {
+            names: [
+                'user.name',
+                'age',
+            ],
+        };
+
+        const outcome = await evaluator.evaluate({
+            options,
+            data: {
+                attributes: {
+                    user: {
+                        display_name: 'admin',
+                    },
+                },
+            },
+        });
+        expect(outcome)
+            .toBeFalsy();
+    });
+
+    it('should fail with partially known nested attributes', async () => {
+        const options: AttributeNamesPolicyOptions = {
+            names: [
+                'user.name',
+                'age',
+            ],
+        };
+
+        const outcome = await evaluator.evaluate({
             options,
             data: {
                 attributes: {

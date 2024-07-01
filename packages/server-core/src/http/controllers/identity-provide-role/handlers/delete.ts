@@ -21,7 +21,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     const id = useRequestIDParam(req);
 
     const ability = useRequestEnv(req, 'abilities');
-    if (!ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
+    if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -32,7 +32,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

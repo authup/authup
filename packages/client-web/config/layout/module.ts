@@ -23,7 +23,7 @@ import {
 import { reduceNavigationElementsByRestriction } from './utils';
 
 type NavigationProviderContext = {
-    hasPermission: (name: string) => boolean,
+    hasPermission: (name: string) => Promise<boolean>,
     isLoggedIn: () => boolean
 };
 
