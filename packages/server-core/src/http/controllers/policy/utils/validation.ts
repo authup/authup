@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, omitRecord } from '@authup/kit';
+import {
+    BuiltInPolicyType,
+    omitRecord,
+    parseAttributeNamesOptions,
+    parseAttributesOptions,
+    parseDatePolicyOptions,
+    parseTimePolicyOptions,
+} from '@authup/kit';
 import { useRequestBody } from '@routup/basic/body';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';
@@ -13,10 +20,6 @@ import { ZodError } from 'zod';
 import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
 import {
     PolicyEntity,
-    validateAttributeNamesPolicyShaping,
-    validateAttributesPolicyShaping,
-    validateDatePolicyShaping,
-    validateTimePolicyShaping,
 } from '../../../../domains';
 import { buildErrorMessageForZodError } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
@@ -70,19 +73,19 @@ export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValid
 
             switch (data.type) {
                 case BuiltInPolicyType.ATTRIBUTES: {
-                    attributes = validateAttributesPolicyShaping(body);
+                    attributes = parseAttributesOptions(body);
                     break;
                 }
                 case BuiltInPolicyType.ATTRIBUTE_NAMES: {
-                    attributes = validateAttributeNamesPolicyShaping(body);
+                    attributes = parseAttributeNamesOptions(body);
                     break;
                 }
                 case BuiltInPolicyType.DATE: {
-                    attributes = validateDatePolicyShaping(body);
+                    attributes = parseDatePolicyOptions(body);
                     break;
                 }
                 case BuiltInPolicyType.TIME: {
-                    attributes = validateTimePolicyShaping(body);
+                    attributes = parseTimePolicyOptions(body);
                     break;
                 }
                 default: {

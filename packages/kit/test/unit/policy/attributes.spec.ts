@@ -6,7 +6,9 @@
  */
 
 import type { AttributesPolicyOptions } from '../../../src';
-import { AttributesPolicyEvaluator } from '../../../src';
+import {
+    AttributesPolicyEvaluator, deserialize, parseAttributesOptions, serialize,
+} from '../../../src';
 
 type User = {
     name: string,
@@ -40,6 +42,46 @@ describe('src/policy/attributes', () => {
             },
         });
         expect(outcome).toBeTruthy();
+    });
+
+    it('should succeed with serialized/deserialized predicates', async () => {
+        const value = deserialize(serialize(options));
+        const outcome = await evaluator.evaluate({
+            options: value,
+            data: {
+                attributes: {
+                    name: 'Peter',
+                    age: 15,
+                },
+            },
+        });
+        expect(outcome).toBeTruthy();
+    });
+
+    it('should parse options', () => {
+        const output = parseAttributesOptions({
+            query: {
+                name: {
+                    $eq: 'admin',
+                },
+            },
+        } satisfies AttributesPolicyOptions);
+
+        expect(output.query).toBeDefined();
+    });
+
+    it('should parse options with unknown', () => {
+        const output = parseAttributesOptions({
+            query: {
+                name: {
+                    $eq: 'admin',
+                },
+            },
+            foo: 'bar',
+        } satisfies AttributesPolicyOptions & { foo?: string }) as Partial<AttributesPolicyOptions> & { foo?: string };
+
+        expect(output.query).toBeDefined();
+        expect(output.foo).toBeUndefined();
     });
 
     it('should fail with missing context', async () => {

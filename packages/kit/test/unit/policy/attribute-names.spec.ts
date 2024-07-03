@@ -6,7 +6,10 @@
  */
 
 import type { AttributeNamesPolicyOptions } from '../../../src';
-import { AttributeNamesPolicyEvaluator } from '../../../src';
+import {
+    AttributeNamesPolicyEvaluator,
+    parseAttributeNamesOptions,
+} from '../../../src';
 
 const evaluator = new AttributeNamesPolicyEvaluator();
 
@@ -28,6 +31,24 @@ describe('src/policy/attribute-names', () => {
         });
         expect(outcome)
             .toBeTruthy();
+    });
+
+    it('should parse options', () => {
+        const output = parseAttributeNamesOptions({
+            names: ['foo', 'bar'],
+        } satisfies AttributeNamesPolicyOptions);
+
+        expect(output.names).toEqual(['foo', 'bar']);
+    });
+
+    it('should parse options with unknown', () => {
+        const output = parseAttributeNamesOptions({
+            names: ['foo', 'bar'],
+            foo: 'bar',
+        } satisfies AttributeNamesPolicyOptions & { foo?: string }) as Partial<AttributeNamesPolicyOptions> & { foo?: string };
+
+        expect(output.names).toBeDefined();
+        expect(output.foo).toBeUndefined();
     });
 
     it('should fail with missing context', async () => {

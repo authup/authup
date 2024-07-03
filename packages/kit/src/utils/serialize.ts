@@ -28,7 +28,13 @@ export function serialize(input: unknown) : string {
         return input;
     }
 
-    return JSON.stringify(input);
+    return JSON.stringify(input, (key, value) => {
+        if (value instanceof RegExp) {
+            return value.toString();
+        }
+
+        return value;
+    });
 }
 
 export function deserialize<T = any>(input: any) : T {

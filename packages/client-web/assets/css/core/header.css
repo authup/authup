@@ -19,10 +19,11 @@
 }
 
 .page-header .header-title {
+    align-items: center;
+    display: flex;
     flex: none;
     min-height: 50px;
-    display: flex;
-    align-items: center;
+    text-align: center;
 }
 
 .page-header .header-title > div {
@@ -31,15 +32,16 @@
 
 .page-header .toggle-box {
     color: #aeb2b7;
-    margin:0px 10px 0px 10px;
 }
 
 .page-header .toggle-box .toggle-trigger {
     cursor: pointer;
-    padding: 9px 10px;
     background-color: transparent;
     border: 1px solid #333;
     border-radius: .25rem;
+    margin: 0 10px;
+    padding: 10px;
+    box-shadow: 0 4px 25px 0 rgba(0, 0, 0, .4);
 }
 
 .page-header .toggle-box .toggle-trigger .icon-bar {
@@ -54,7 +56,8 @@
 .page-header .logo {
     font-size: 24px;
     color: #f2f2f2;
-    flex: none;
+    flex: auto;
+    font-weight: 600;
 }
 
 .page-header .logo span:not(.info-text) {
@@ -73,5 +76,9 @@
 @media (min-width: 768px) {
     .toggle-box .toggle-trigger {
         display: none;
+    }
+
+    .page-header .header-title {
+        min-width: 240px;
     }
 }

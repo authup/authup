@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DatePolicy } from '../../../src';
+import type { DatePolicy, DatePolicyOptions } from '../../../src';
 import {
     BuiltInPolicyType,
     DatePolicyEvaluator,
+    parseDatePolicyOptions,
 } from '../../../src';
 
 describe('src/policy/date', () => {
@@ -48,5 +49,27 @@ describe('src/policy/date', () => {
             },
         });
         expect(outcome).toBeFalsy();
+    });
+
+    it('should parse options', () => {
+        const output = parseDatePolicyOptions({
+            start: '2024-01-01',
+            end: '2024-05-01',
+        } satisfies DatePolicyOptions);
+
+        expect(output.start).toEqual('2024-01-01');
+        expect(output.end).toEqual('2024-05-01');
+    });
+
+    it('should parse options with unknown', () => {
+        const output = parseDatePolicyOptions({
+            start: '2024-01-01',
+            end: '2024-05-01',
+            foo: 'bar',
+        } satisfies DatePolicyOptions & { foo?: string }) as Partial<DatePolicyOptions> & { foo?: string };
+
+        expect(output.start).toEqual('2024-01-01');
+        expect(output.end).toEqual('2024-05-01');
+        expect(output.foo).toBeUndefined();
     });
 });

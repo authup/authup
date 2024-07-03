@@ -25,7 +25,7 @@ export interface TimePolicy extends PolicyBase {
     /**
      * Interval: daily, weekly, monthly, yearly
      */
-    interval?: TimePolicyInterval,
+    interval?: `${TimePolicyInterval}`,
 
     /**
      *  0 (Sunday) - 6 (Saturday)

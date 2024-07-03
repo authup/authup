@@ -11,7 +11,7 @@ import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
-import type { AttributesPolicyOptions } from './types';
+import type { AttributesPolicyOptions, AttributesPolicyQuery } from './types';
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
@@ -27,7 +27,32 @@ export class AttributesPolicyEvaluator<
             throw PolicyError.evaluatorContextInvalid();
         }
 
+        this.fixQuery(ctx.options.query);
+
         const testIt = guard(ctx.options.query);
         return invertPolicyOutcome(testIt(ctx.data.attributes), ctx.options.invert);
+    }
+
+    protected fixQuery<T>(query: AttributesPolicyQuery<T>) {
+        const keys = Object.keys(query);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const value = query[key];
+
+            if (isObject(value) || Array.isArray(value)) {
+                this.fixQuery(value);
+                continue;
+            }
+
+            if (
+                key === '$regex' &&
+                typeof value === 'string'
+            ) {
+                const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
+                if (fragments) {
+                    query[keys[i]] = new RegExp(fragments[1], fragments[2]);
+                }
+            }
+        }
     }
 }

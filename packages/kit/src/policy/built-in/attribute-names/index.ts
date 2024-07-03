@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './types';
 export * from './evaluator';
 export * from './helper';
+export * from './parse';
+export * from './types';

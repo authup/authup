@@ -14,7 +14,7 @@ import type { Ability } from './types';
 export class Abilities extends EventEmitter<{
     updated: []
 }> {
-    protected policyEnforcer : PolicyEngine;
+    protected policyEngine : PolicyEngine;
 
     protected items : Record<string, Ability[]>;
 
@@ -23,7 +23,7 @@ export class Abilities extends EventEmitter<{
     constructor(input: Ability[] = []) {
         super();
 
-        this.policyEnforcer = new PolicyEngine();
+        this.policyEngine = new PolicyEngine();
         this.items = {};
 
         this.set(input);
@@ -150,7 +150,7 @@ export class Abilities extends EventEmitter<{
                 }
 
                 hasPolicies = true;
-                const outcome = await this.policyEnforcer.evaluate(ownedItem.policy, context);
+                const outcome = await this.policyEngine.evaluate(ownedItem.policy, context);
                 if (outcome) {
                     hasPositiveOutcome = true;
                     break;
