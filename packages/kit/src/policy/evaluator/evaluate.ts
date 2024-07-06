@@ -39,9 +39,13 @@ export async function evaluatePolicy(
             throw e;
         }
 
-        const error = new PolicyError(e.message);
-        error.stack = e.stack;
-        throw error;
+        if (e instanceof Error) {
+            const error = new PolicyError(e.message);
+            error.stack = e.stack;
+            throw error;
+        }
+
+        throw new PolicyError();
     }
 
     throw PolicyError.evaluatorNotProcessable();

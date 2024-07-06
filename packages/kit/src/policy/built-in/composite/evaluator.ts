@@ -40,7 +40,7 @@ export class CompositePolicyEvaluator<
                     throw PolicyError.evaluatorNotFound(childPolicy.type);
                 }
 
-                outcome = await evaluatePolicy(childPolicy, ctx.data, ctx.evaluators);
+                outcome = await evaluatePolicy(childPolicy, ctx.data || {}, ctx.evaluators);
             }
 
             if (outcome) {

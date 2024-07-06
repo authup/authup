@@ -11,7 +11,9 @@ import type { DatePolicy } from './date';
 import type { CompositePolicy } from './composite';
 import type { TimePolicy } from './time';
 
-export type BuiltInPolicy<T> = AttributesPolicy<T> |
+export type BuiltInPolicy<
+    T extends Record<string, any> = Record<string, any>,
+> = AttributesPolicy<T> |
 AttributeNamesPolicy |
 DatePolicy |
 CompositePolicy |

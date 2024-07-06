@@ -9,14 +9,10 @@ import zod from 'zod';
 import type { AttributesPolicyOptions } from './types';
 
 const schema = zod.object({
-    query: zod.any(),
+    invert: zod.boolean().optional(),
+    query: zod.object({}).passthrough(),
 });
 
-export function parseAttributesOptions(input: unknown) : Partial<AttributesPolicyOptions> {
-    const result = schema.safeParse(input);
-    if (result.success === false) {
-        throw result.error;
-    }
-
-    return result.data;
+export function parseAttributesOptions(input: unknown) : AttributesPolicyOptions {
+    return schema.parse(input);
 }

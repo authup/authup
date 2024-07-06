@@ -20,7 +20,7 @@ export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeN
     }
 
     async evaluate(ctx: PolicyEvaluatorContext<AttributeNamesPolicyOptions>): Promise<boolean> {
-        if (!isObject(ctx.data.attributes)) {
+        if (!isObject(ctx.data) || !isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 

@@ -36,7 +36,7 @@ export class Abilities extends EventEmitter<{
      *
      * @param realmId
      */
-    of(realmId?: string): Abilities {
+    of(realmId: string): Abilities {
         return new Abilities(this.items[realmId]);
     }
 

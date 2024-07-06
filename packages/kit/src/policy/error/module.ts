@@ -9,7 +9,7 @@ import { AuthupError } from '../../error';
 import { PolicyErrorCode } from './constants';
 
 export class PolicyError extends AuthupError {
-    constructor(message: string, code?: PolicyErrorCode) {
+    constructor(message?: string, code?: PolicyErrorCode) {
         super({
             message,
             code,

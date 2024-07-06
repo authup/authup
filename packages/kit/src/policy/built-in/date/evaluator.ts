@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '../../../utils';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from '../attributes';
@@ -35,7 +36,10 @@ export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
 
     async evaluate(ctx: PolicyEvaluatorContext<DatePolicyOptions>) : Promise<boolean> {
         let now : Date;
-        if (ctx.data.dateTime) {
+        if (
+            isObject(ctx.data) &&
+            ctx.data.dateTime
+        ) {
             now = normalizeDate(toDate(ctx.data.dateTime));
         } else {
             now = normalizeDate(new Date());

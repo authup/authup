@@ -10,5 +10,10 @@ export function getOAuth2SubByEntity<T extends {
     user_id: string | null,
     client_id: string | null
 }>(entity: T) : string {
-    return entity.robot_id || entity.user_id || entity.client_id;
+    const id = entity.robot_id || entity.user_id || entity.client_id;
+    if (typeof id !== 'string') {
+        throw new SyntaxError('Subject could not be extracted from token entity.');
+    }
+
+    return id;
 }

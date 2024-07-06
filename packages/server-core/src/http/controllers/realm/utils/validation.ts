@@ -31,7 +31,7 @@ RealmEntity
             .custom((value) => {
                 const isValid = isRealmNameValid(value);
                 if (!isValid) {
-                    throw new BadRequestError('Only the characters [a-zA-Z0-9-_]+ are allowed.');
+                    throw new BadRequestError('Only the characters [a-zA-Z0-9_]+ are allowed.');
                 }
 
                 return isValid;

@@ -10,6 +10,7 @@ import type { TimePolicyOptions } from './types';
 import { TimePolicyInterval } from './constants';
 
 const schema = zod.object({
+    invert: zod.boolean().optional(),
     start: zod.date().or(zod.string()).or(zod.number()).optional(),
     end: zod.date().or(zod.string()).or(zod.number()).optional(),
     interval: zod.nativeEnum(TimePolicyInterval).optional(),
@@ -18,11 +19,6 @@ const schema = zod.object({
     dayOfYear: zod.number().min(1).max(366).optional(),
 });
 
-export function parseTimePolicyOptions(input: unknown) : Partial<TimePolicyOptions> {
-    const result = schema.safeParse(input);
-    if (result.success === false) {
-        throw result.error;
-    }
-
-    return result.data;
+export function parseTimePolicyOptions(input: unknown) : TimePolicyOptions {
+    return schema.parse(input);
 }

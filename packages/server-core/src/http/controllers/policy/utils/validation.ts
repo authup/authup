@@ -8,7 +8,7 @@
 import {
     BuiltInPolicyType,
     omitRecord,
-    parseAttributeNamesOptions,
+    parseAttributeNamesPolicyOptions,
     parseAttributesOptions,
     parseDatePolicyOptions,
     parseTimePolicyOptions,
@@ -77,7 +77,7 @@ export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValid
                     break;
                 }
                 case BuiltInPolicyType.ATTRIBUTE_NAMES: {
-                    attributes = parseAttributeNamesOptions(body);
+                    attributes = parseAttributeNamesPolicyOptions(body);
                     break;
                 }
                 case BuiltInPolicyType.DATE: {

@@ -8,7 +8,7 @@
 import type { AttributeNamesPolicyOptions } from '../../../src';
 import {
     AttributeNamesPolicyEvaluator,
-    parseAttributeNamesOptions,
+    parseAttributeNamesPolicyOptions,
 } from '../../../src';
 
 const evaluator = new AttributeNamesPolicyEvaluator();
@@ -34,7 +34,7 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should parse options', () => {
-        const output = parseAttributeNamesOptions({
+        const output = parseAttributeNamesPolicyOptions({
             names: ['foo', 'bar'],
         } satisfies AttributeNamesPolicyOptions);
 
@@ -42,7 +42,7 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should parse options with unknown', () => {
-        const output = parseAttributeNamesOptions({
+        const output = parseAttributeNamesPolicyOptions({
             names: ['foo', 'bar'],
             foo: 'bar',
         } satisfies AttributeNamesPolicyOptions & { foo?: string }) as Partial<AttributeNamesPolicyOptions> & { foo?: string };

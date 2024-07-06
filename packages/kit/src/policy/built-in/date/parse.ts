@@ -9,15 +9,11 @@ import zod from 'zod';
 import type { DatePolicyOptions } from './types';
 
 const schema = zod.object({
+    invert: zod.boolean().optional(),
     start: zod.date().or(zod.string()).or(zod.number()).optional(),
     end: zod.date().or(zod.string()).or(zod.number()).optional(),
 });
 
-export function parseDatePolicyOptions(input: unknown) : Partial<DatePolicyOptions> {
-    const result = schema.safeParse(input);
-    if (result.success === false) {
-        throw result.error;
-    }
-
-    return result.data;
+export function parseDatePolicyOptions(input: unknown) : DatePolicyOptions {
+    return schema.parse(input);
 }

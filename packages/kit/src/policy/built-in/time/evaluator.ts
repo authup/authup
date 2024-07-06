@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '../../../utils';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from '../attributes';
@@ -13,7 +14,7 @@ import type { TimePolicyOptions } from './types';
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 function normalizeDate(input: Date, dateRef?: Date) {
-    const date = new Date(dateRef);
+    const date = dateRef ? new Date(dateRef) : new Date();
     date.setHours(input.getHours(), input.getMinutes());
 
     return date;
@@ -26,7 +27,7 @@ function toDate(
     if (typeof input === 'string') {
         if (timeRegex.test(input)) {
             const [startHours, startMinutes] = input.split(':').map(Number);
-            const date = new Date(dateRef);
+            const date = dateRef ? new Date(dateRef) : new Date();
             date.setHours(startHours, startMinutes);
             return date;
         }
@@ -50,7 +51,10 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
 
     async evaluate(ctx: PolicyEvaluatorContext<TimePolicyOptions>): Promise<boolean> {
         let now : Date;
-        if (ctx.data.dateTime) {
+        if (
+            isObject(ctx.data) &&
+            ctx.data.dateTime
+        ) {
             now = toDate(ctx.data.dateTime);
         } else {
             now = new Date();

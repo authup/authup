@@ -8,7 +8,8 @@
 
         "importHelpers": true,
         "allowSyntheticDefaultImports": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "strict": true
     },
 
     "include": [

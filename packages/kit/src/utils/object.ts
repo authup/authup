@@ -17,7 +17,7 @@ export function extendObject<T extends Record<string, any>>(
 ) : T {
     const keys = Object.keys(source);
     for (let i = 0; i < keys.length; i++) {
-        target[keys[i] as keyof T] = source[keys[i]];
+        target[keys[i] as keyof T] = source[keys[i]] as T[keyof T];
     }
 
     return target;

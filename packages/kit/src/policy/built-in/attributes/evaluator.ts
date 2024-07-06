@@ -11,7 +11,7 @@ import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
-import type { AttributesPolicyOptions, AttributesPolicyQuery } from './types';
+import type { AttributesPolicyOptions } from './types';
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
@@ -29,11 +29,11 @@ export class AttributesPolicyEvaluator<
 
         this.fixQuery(ctx.options.query);
 
-        const testIt = guard(ctx.options.query);
-        return invertPolicyOutcome(testIt(ctx.data.attributes), ctx.options.invert);
+        const testIt = guard<T>(ctx.options.query);
+        return invertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.options.invert);
     }
 
-    protected fixQuery<T>(query: AttributesPolicyQuery<T>) {
+    protected fixQuery(query: Record<string, any>) {
         const keys = Object.keys(query);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
@@ -50,7 +50,7 @@ export class AttributesPolicyEvaluator<
             ) {
                 const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
                 if (fragments) {
-                    query[keys[i]] = new RegExp(fragments[1], fragments[2]);
+                    query[key] = new RegExp(fragments[1], fragments[2]);
                 }
             }
         }
