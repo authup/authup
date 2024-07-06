@@ -6,25 +6,23 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/kit';
-import {
-    OAuth2TokenKind, TokenError, getOAuth2SubByEntity, getOAuth2SubKindByEntity,
-} from '@authup/kit';
+import { OAuth2SubKind, OAuth2TokenKind, TokenError } from '@authup/kit';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
-import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import type { Grant } from './type';
 import { readOAuth2TokenPayload } from '../token';
+import { AbstractGrant } from './abstract';
+import type { Grant } from './type';
 
 export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const token = await this.validate(request);
 
-        const subKind = getOAuth2SubKindByEntity(token);
-        const sub = getOAuth2SubByEntity(token);
+        const subKind = this.getSubjectKind(token);
+        const sub = this.getSubject(token);
 
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
@@ -71,5 +69,37 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         await repository.remove(entity);
 
         return entity;
+    }
+
+    protected getSubject(entity: OAuth2RefreshTokenEntity) {
+        if (entity.robot_id) {
+            return entity.robot_id;
+        }
+
+        if (entity.user_id) {
+            return entity.user_id;
+        }
+
+        if (entity.client_id) {
+            return entity.client_id;
+        }
+
+        throw new SyntaxError('The subject could not be extracted from token entity.');
+    }
+
+    protected getSubjectKind(entity: OAuth2RefreshTokenEntity) : OAuth2SubKind {
+        if (entity.robot_id) {
+            return OAuth2SubKind.ROBOT;
+        }
+
+        if (entity.user_id) {
+            return OAuth2SubKind.USER;
+        }
+
+        if (entity.client_id) {
+            return OAuth2SubKind.CLIENT;
+        }
+
+        throw new SyntaxError('The subject kind could not be extracted from the token entity.');
     }
 }
