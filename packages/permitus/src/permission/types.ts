@@ -7,8 +7,9 @@
 
 import type { AnyPolicy } from '../policy';
 
-export type Ability = {
+// todo: move this to store.
+export type PermissionItem = {
     name: string,
-    realmId?: string | null,
+    realm_id?: string | null,
     policy?: AnyPolicy,
 };

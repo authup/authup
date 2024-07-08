@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CompositePolicy, Policy, TimePolicy } from '@authup/core-kit';
-import { BuiltInPolicyType } from '@authup/kit';
+import type { Policy } from '@authup/core-kit';
+import type { CompositePolicyOptions, TimePolicyOptions } from '@authup/permitus';
+import { BuiltInPolicyType } from '@authup/permitus';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -32,7 +33,7 @@ describe('src/http/controllers/policy', () => {
                 name: 'group',
                 type: BuiltInPolicyType.COMPOSITE,
                 invert: false,
-            } as Partial<CompositePolicy>)
+            } as Partial<CompositePolicyOptions>)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
@@ -51,7 +52,7 @@ describe('src/http/controllers/policy', () => {
                 end: Date.now(),
                 invert: false,
                 parent_id: ids[0],
-            } as Partial<TimePolicy>)
+            } as Partial<TimePolicyOptions>)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
@@ -106,7 +107,7 @@ describe('src/http/controllers/policy', () => {
                 start: Date.now(),
                 end: Date.now(),
                 invert: false,
-            } satisfies Partial<TimePolicy>)
+            } satisfies Partial<TimePolicyOptions> & { [key: string]: any })
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);

@@ -6,7 +6,7 @@
  */
 
 import { guard } from '@ucast/mongo2js';
-import { isObject } from '../../../utils';
+import { isObject } from 'smob';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';

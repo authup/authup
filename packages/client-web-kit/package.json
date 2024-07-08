@@ -52,11 +52,11 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@vueuse/integrations": "^10.11.0",
-        "universal-cookie": "^7.1.4"
+        "@vueuse/integrations": "^10.11.0"
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.19",
+        "@authup/permitus": "^1.0.0-beta.19",
         "@authup/core-kit": "^1.0.0-beta.19",
         "@authup/core-http-kit": "^1.0.0-beta.19",
         "@authup/core-realtime-kit": "^1.0.0-beta.19",
@@ -73,6 +73,7 @@
         "rapiq": "^0.9.0",
         "smob": "^1.5.0",
         "socket.io-client": "^4.7.5",
+        "universal-cookie": "^7.1.4",
         "vue": "^3.4.31",
         "vue-tsc": "^2.0.21"
     },
@@ -91,6 +92,7 @@
         "rapiq": ">=0.8.0 <1.0.0",
         "smob": "^1.4.x",
         "socket.io-client": "^4.7.5",
+        "universal-cookie": "^7.1.4",
         "vue": "^3.3.x"
     },
     "publishConfig": {

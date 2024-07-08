@@ -6,13 +6,10 @@
  */
 
 import type {
-    MongoQuery, MongoQueryFieldOperators, MongoQueryTopLevelOperators,
+    MongoQuery,
 } from '@ucast/mongo2js';
 import type { PolicyBase } from '../../types';
 import type { BuiltInPolicyType } from '../constants';
-
-export type AttributesPolicyQueryFieldOperators<T> = MongoQueryFieldOperators<T>;
-export type AttributesPolicyQueryLogicalOperators<T> = MongoQueryTopLevelOperators<T>;
 
 export type AttributesPolicyQuery<T> = MongoQuery<T>;
 

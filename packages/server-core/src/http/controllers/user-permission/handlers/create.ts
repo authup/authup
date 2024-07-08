@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '@authup/kit';
+import type { PolicyEvaluationContext } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
-    PermissionName, buildAbilityFromPermission, isRealmResourceWritable,
+    PermissionName, isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -50,9 +50,8 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
         }
 
         data.permission_realm_id = data.permission.realm_id;
-
-        const ability = buildAbilityFromPermission(data.permission);
-        if (!await abilities.can(ability, policyEvaluationContext)) {
+        // todo: pass realm id
+        if (!await abilities.can(data.permission.name, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
     }

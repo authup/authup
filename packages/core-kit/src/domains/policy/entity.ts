@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy, EventPayload } from '@authup/kit';
+import type { EventPayload } from '@authup/kit';
+import type { AnyPolicy } from '@authup/permitus';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 

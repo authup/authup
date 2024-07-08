@@ -6,8 +6,7 @@
  */
 
 import type {
-    Ability,
-    OAuth2TokenPayload,
+    OAuth2TokenPayload, OAuth2TokenPermission,
 } from '@authup/kit';
 import type {
     TokenCreator,
@@ -22,9 +21,9 @@ export type TokenVerifierOptions = {
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {
-    permissions: Ability[]
+    permissions: OAuth2TokenPermission[]
 };
 
 export type TokenVerificationDataInput = OAuth2TokenPayload & {
-    permissions?: Ability[]
+    permissions?: OAuth2TokenPermission[]
 };

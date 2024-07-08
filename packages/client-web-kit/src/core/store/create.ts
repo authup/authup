@@ -19,8 +19,8 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import {
-    Abilities,
-} from '@authup/kit';
+    PermissionEngine,
+} from '@authup/permitus';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
 export function createStore(context: StoreCreateContext = {}) {
@@ -133,7 +133,7 @@ export function createStore(context: StoreCreateContext = {}) {
         realmManagement.value = entity;
     };
 
-    const abilities = new Abilities();
+    const abilities = new PermissionEngine();
 
     const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
     const tokenResolved = ref(false);

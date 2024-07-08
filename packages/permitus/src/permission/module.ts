@@ -9,18 +9,18 @@ import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
 import { PolicyEngine } from '../policy';
 
-import type { Ability } from './types';
+import type { PermissionItem } from './types';
 
-export class Abilities extends EventEmitter<{
+export class PermissionEngine extends EventEmitter<{
     updated: []
 }> {
     protected policyEngine : PolicyEngine;
 
-    protected items : Record<string, Ability[]>;
+    protected items : Record<string, PermissionItem[]>;
 
     // ----------------------------------------------
 
-    constructor(input: Ability[] = []) {
+    constructor(input: PermissionItem[] = []) {
         super();
 
         this.policyEngine = new PolicyEngine();
@@ -36,8 +36,8 @@ export class Abilities extends EventEmitter<{
      *
      * @param realmId
      */
-    of(realmId: string): Abilities {
-        return new Abilities(this.items[realmId]);
+    of(realmId: string): PermissionEngine {
+        return new PermissionEngine(this.items[realmId]);
     }
 
     // ----------------------------------------------
@@ -47,7 +47,7 @@ export class Abilities extends EventEmitter<{
      *
      * @param name
      */
-    async has(name: string | Ability) : Promise<boolean> {
+    async has(name: string | PermissionItem) : Promise<boolean> {
         return this.hasMany([name]);
     }
 
@@ -58,11 +58,11 @@ export class Abilities extends EventEmitter<{
      *
      * @param items
      */
-    async hasOneOf(items: (string | Ability)[]) : Promise<boolean> {
+    async hasOneOf(items: (string | PermissionItem)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
 
-            let owned: Ability[];
+            let owned: PermissionItem[];
             if (typeof item === 'string') {
                 owned = await this.find(item);
             } else {
@@ -84,11 +84,11 @@ export class Abilities extends EventEmitter<{
      *
      * @param items
      */
-    async hasMany(items: (Ability | string)[]) : Promise<boolean> {
+    async hasMany(items: (PermissionItem | string)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
 
-            let owned: Ability[];
+            let owned: PermissionItem[];
             if (typeof item === 'string') {
                 owned = await this.find(item);
             } else {
@@ -104,12 +104,12 @@ export class Abilities extends EventEmitter<{
     }
 
     async can(
-        input: Ability | string,
+        input: PermissionItem | string,
         context?: PolicyEvaluationContext
     ) : Promise<boolean>;
 
     async can(
-        input: (Ability | string)[],
+        input: (PermissionItem | string)[],
         context?: PolicyEvaluationContext
     ) : Promise<boolean>;
 
@@ -120,7 +120,7 @@ export class Abilities extends EventEmitter<{
      * @param context
      */
     async can(
-        input: Ability | string | (Ability | string)[],
+        input: PermissionItem | string | (PermissionItem | string)[],
         context: PolicyEvaluationContext = {},
     ) : Promise<boolean> {
         if (!Array.isArray(input)) {
@@ -130,7 +130,7 @@ export class Abilities extends EventEmitter<{
         for (let i = 0; i < input.length; i++) {
             const item = input[i];
 
-            let owned : Ability[];
+            let owned : PermissionItem[];
             if (typeof item === 'string') {
                 owned = await this.find(item);
             } else {
@@ -174,7 +174,7 @@ export class Abilities extends EventEmitter<{
      *
      * @param name
      */
-    async find(name?: string) : Promise<Ability[]> {
+    async find(name?: string) : Promise<PermissionItem[]> {
         const nsp = this.items['/'];
         if (!Array.isArray(nsp)) {
             return [];
@@ -189,14 +189,14 @@ export class Abilities extends EventEmitter<{
 
     // ----------------------------------------------
 
-    add(input: Ability) {
+    add(input: PermissionItem) {
         this.addMany([input]);
     }
 
-    addMany(input: Ability[]) {
+    addMany(input: PermissionItem[]) {
         for (let i = 0; i < input.length; i++) {
             const ability = input[i];
-            const namespace = ability.realmId || '/';
+            const namespace = ability.realm_id || '/';
 
             if (!Array.isArray(this.items[namespace])) {
                 this.items[namespace] = [];
@@ -208,7 +208,7 @@ export class Abilities extends EventEmitter<{
         this.emit('updated');
     }
 
-    set(input: Ability[] | Ability) {
+    set(input: PermissionItem[] | PermissionItem) {
         this.items = {};
 
         if (Array.isArray(input)) {
