@@ -12,7 +12,7 @@ import type {
 import {
     buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
-import type { Ability } from '@authup/kit';
+import type { PermissionItem } from '@authup/kit';
 import {
     createNanoID,
     isUUID,
@@ -33,7 +33,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getOwnedPermissions(
         id: Robot['id'],
-    ) : Promise<Ability[]> {
+    ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
@@ -63,7 +63,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<Ability[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({

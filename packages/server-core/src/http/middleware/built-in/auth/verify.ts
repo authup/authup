@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '@authup/kit';
+import type { PermissionItem } from '@authup/kit';
 import {
-    Abilities,
     HeaderError,
     OAuth2SubKind,
     OAuth2TokenKind,
+    PermissionEngine,
     TokenError,
 } from '@authup/kit';
 import {
@@ -80,7 +80,7 @@ async function verifyBearerAuthorizationHeader(
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    setRequestEnv(request, 'abilities', new Abilities(permissions));
+    setRequestEnv(request, 'abilities', new PermissionEngine(permissions));
 
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
@@ -105,7 +105,7 @@ async function verifyBasicAuthorizationHeader(
     request: Request,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : Ability[] = [];
+    let permissions : PermissionItem[] = [];
 
     const config = useConfig();
     const dataSource = await useDataSource();
@@ -118,7 +118,7 @@ async function verifyBasicAuthorizationHeader(
 
             permissions = await userRepository.getOwnedPermissions(user.id);
 
-            setRequestEnv(request, 'abilities', new Abilities(permissions));
+            setRequestEnv(request, 'abilities', new PermissionEngine(permissions));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'user', user);
@@ -135,7 +135,7 @@ async function verifyBasicAuthorizationHeader(
         if (robot) {
             permissions = await robotRepository.getOwnedPermissions(robot.id);
 
-            setRequestEnv(request, 'abilities', new Abilities(permissions));
+            setRequestEnv(request, 'abilities', new PermissionEngine(permissions));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'robot', robot);
@@ -148,7 +148,7 @@ async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
-            setRequestEnv(request, 'abilities', new Abilities());
+            setRequestEnv(request, 'abilities', new PermissionEngine());
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'client', oauth2Client);

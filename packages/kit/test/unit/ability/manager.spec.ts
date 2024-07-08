@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability, AttributeNamesPolicy } from '../../../src';
-import { Abilities, BuiltInPolicyType } from '../../../src';
+import type { AttributeNamesPolicy, PermissionItem } from '../../../src';
+import { BuiltInPolicyType, PermissionEngine } from '../../../src';
 
-const testPermissions : Ability[] = [
+const testPermissions : PermissionItem[] = [
     {
         name: 'user_edit',
         policy: {
@@ -24,7 +24,7 @@ const testPermissions : Ability[] = [
     },
 ];
 
-const manager = new Abilities();
+const manager = new PermissionEngine();
 
 describe('src/ability/manager.ts', () => {
     it('should set permissions', async () => {
@@ -60,7 +60,7 @@ describe('src/ability/manager.ts', () => {
     });
 
     it('should init with permissions', async () => {
-        const abilities = new Abilities(testPermissions);
+        const abilities = new PermissionEngine(testPermissions);
 
         const items = await abilities.find();
         expect(items.length).toEqual(testPermissions.length);

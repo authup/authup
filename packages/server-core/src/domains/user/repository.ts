@@ -20,7 +20,7 @@ import {
 
     buildAbilityFromPermissionRelation,
 } from '@authup/core-kit';
-import type { Ability } from '@authup/kit';
+import type { PermissionItem } from '@authup/kit';
 import {
     createNanoID,
     isUUID,
@@ -174,7 +174,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getOwnedPermissions(
         id: User['id'],
-    ) : Promise<Ability[]> {
+    ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
@@ -204,7 +204,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<Ability[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({

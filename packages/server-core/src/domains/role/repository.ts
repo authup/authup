@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Ability } from '@authup/kit';
+import type { PermissionItem } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import type {
@@ -39,8 +39,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getOwnedPermissionsByMany(
         ids: Role['id'][],
-    ) : Promise<Ability[]> {
-        const promises : Promise<Ability[]>[] = [];
+    ) : Promise<PermissionItem[]> {
+        const promises : Promise<PermissionItem[]>[] = [];
 
         for (let i = 0; i < ids.length; i++) {
             promises.push(this.getOwnedPermissions(ids[i]));
@@ -53,7 +53,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getOwnedPermissions(
         id: Role['id'],
-    ) : Promise<Ability[]> {
+    ) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
 
         const entities = await repository.find({

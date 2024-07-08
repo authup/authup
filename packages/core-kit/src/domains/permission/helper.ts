@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { Ability, AnyPolicy, CompositePolicy } from '@authup/kit';
+import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/kit';
 import {
     BuiltInPolicyType,
     PolicyDecisionStrategy,
@@ -13,17 +13,17 @@ import type { Permission, PermissionRelation } from './entity';
 
 type PermissionMinimal = Pick<Permission, 'name'> & Partial<Omit<Permission, 'name'>>;
 
-export function buildAbilityFromPermission(entity: PermissionMinimal) : Ability {
+export function buildAbilityFromPermission(entity: PermissionMinimal) : PermissionItem {
     return {
         name: entity.name,
         realmId: entity.realm_id,
         policy: entity.policy,
-    } satisfies Ability;
+    } satisfies PermissionItem;
 }
 
 type PermissionRelationMinimal = Pick<PermissionRelation, 'permission'> & Partial<Omit<PermissionRelation, 'permission'>>;
 
-export function buildAbilityFromPermissionRelation(entity: PermissionRelationMinimal): Ability {
+export function buildAbilityFromPermissionRelation(entity: PermissionRelationMinimal): PermissionItem {
     if (typeof entity.permission === 'undefined') {
         throw new SyntaxError('The permission relation attribute is mandatory.');
     }
@@ -51,5 +51,5 @@ export function buildAbilityFromPermissionRelation(entity: PermissionRelationMin
         name: entity.permission.name,
         realmId: entity.permission.realm_id,
         policy,
-    } satisfies Ability;
+    } satisfies PermissionItem;
 }
