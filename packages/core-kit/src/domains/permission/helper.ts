@@ -4,11 +4,11 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/kit';
+import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/permitus';
 import {
     BuiltInPolicyType,
     PolicyDecisionStrategy,
-} from '@authup/kit';
+} from '@authup/permitus';
 import type { Permission, PermissionRelation } from './entity';
 
 type PermissionMinimal = Pick<Permission, 'name'> & Partial<Omit<Permission, 'name'>>;

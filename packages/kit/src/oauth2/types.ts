@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../permission';
 import type { JWTClaims } from '../json-web-token';
 import type { OAuth2SubKind, OAuth2TokenKind } from './constants';
 
@@ -106,6 +105,13 @@ export type OAuth2TokenPayload = JWTClaims & {
      * Additional parameters
      */
     [key: string]: any
+};
+
+// todo: this should be removed.
+type PermissionItem = {
+    name: string,
+    policy?: Record<string, any>,
+    realmId?: string
 };
 
 export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & {

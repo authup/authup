@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { flattenObject, isObject } from '../../../utils';
+import { isObject } from 'smob';
+import { flattenObject } from '../../../utils';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { invertPolicyOutcome } from '../../utils';

@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '../../error';
 import { PolicyErrorCode } from './constants';
 
-export class PolicyError extends AuthupError {
+export class PolicyError extends Error {
+    public code : null | string;
+
     constructor(message?: string, code?: PolicyErrorCode) {
-        super({
-            message,
-            code,
-        });
+        super(message);
+
+        this.code = code ?? null;
     }
 
     static evaluatorNotFound(type: string) {
