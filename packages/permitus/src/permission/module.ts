@@ -196,7 +196,7 @@ export class PermissionEngine extends EventEmitter<{
     addMany(input: PermissionItem[]) {
         for (let i = 0; i < input.length; i++) {
             const ability = input[i];
-            const namespace = ability.realmId || '/';
+            const namespace = ability.realm_id || '/';
 
             if (!Array.isArray(this.items[namespace])) {
                 this.items[namespace] = [];

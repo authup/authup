@@ -10,6 +10,6 @@ import type { AnyPolicy } from '../policy';
 // todo: move this to store.
 export type PermissionItem = {
     name: string,
-    realmId?: string | null,
+    realm_id?: string | null,
     policy?: AnyPolicy,
 };
