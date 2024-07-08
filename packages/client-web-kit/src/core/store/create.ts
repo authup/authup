@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PermissionMemoryRepository } from '@authup/permitus/src';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
@@ -19,7 +20,7 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import {
-    PermissionEngine,
+    PermissionManager,
 } from '@authup/permitus';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
@@ -133,7 +134,10 @@ export function createStore(context: StoreCreateContext = {}) {
         realmManagement.value = entity;
     };
 
-    const abilities = new PermissionEngine();
+    const permissionRepository = new PermissionMemoryRepository();
+    const permissionManager = new PermissionManager({
+        repository: permissionRepository,
+    });
 
     const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
     const tokenResolved = ref(false);
@@ -145,7 +149,7 @@ export function createStore(context: StoreCreateContext = {}) {
         if (!entity) {
             setRealm(undefined);
             setRealmManagement(undefined);
-            abilities.set([]);
+            permissionRepository.setMany([]);
             return;
         }
 
@@ -169,7 +173,7 @@ export function createStore(context: StoreCreateContext = {}) {
         }
 
         if (entity.permissions) {
-            abilities.set(entity.permissions);
+            permissionRepository.setMany(entity.permissions);
         }
     };
 
@@ -246,7 +250,7 @@ export function createStore(context: StoreCreateContext = {}) {
         initialized,
         setInitialized,
 
-        abilities,
+        permissionManager,
 
         login,
         logout,

@@ -63,7 +63,7 @@ export default defineNuxtPlugin((ctx) => {
     ctx.vueApp.use(installNavigation, {
         provider: new Navigation({
             isLoggedIn: () => loggedIn.value,
-            hasPermission: (name) => store.abilities.has(name),
+            hasPermission: (name) => store.permissionManager.has(name),
         }),
     });
 

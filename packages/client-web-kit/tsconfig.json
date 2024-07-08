@@ -10,6 +10,7 @@
         "strict": true,
         "paths": {
             "@authup/kit": ["./packages/kit/src"],
+            "@authup/permitus": ["./packages/permitus/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
             "@authup/core-realtime-kit": ["./packages/core-realtime-kit/src"],

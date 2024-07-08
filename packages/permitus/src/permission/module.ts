@@ -8,36 +8,25 @@
 import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
 import { PolicyEngine } from '../policy';
+import type { PermissionRepository } from './repository';
+import { PermissionMemoryRepository } from './repository';
 
-import type { PermissionItem } from './types';
+import type { PermissionEngineOptions, PermissionItem } from './types';
 
-export class PermissionEngine extends EventEmitter<{
+export class PermissionManager extends EventEmitter<{
     updated: []
 }> {
+    protected store : PermissionRepository;
+
     protected policyEngine : PolicyEngine;
 
-    protected items : Record<string, PermissionItem[]>;
-
     // ----------------------------------------------
 
-    constructor(input: PermissionItem[] = []) {
+    constructor(options: PermissionEngineOptions = {}) {
         super();
 
-        this.policyEngine = new PolicyEngine();
-        this.items = {};
-
-        this.set(input);
-    }
-
-    // ----------------------------------------------
-
-    /**
-     * Check custom abilities of a specific realm.
-     *
-     * @param realmId
-     */
-    of(realmId: string): PermissionEngine {
-        return new PermissionEngine(this.items[realmId]);
+        this.store = options.repository || new PermissionMemoryRepository();
+        this.policyEngine = options.policyEngine || new PolicyEngine();
     }
 
     // ----------------------------------------------
@@ -64,9 +53,9 @@ export class PermissionEngine extends EventEmitter<{
 
             let owned: PermissionItem[];
             if (typeof item === 'string') {
-                owned = await this.find(item);
+                owned = await this.store.getMany(item);
             } else {
-                owned = await this.find(item.name);
+                owned = await this.store.getMany(item.name);
             }
 
             if (owned.length > 0) {
@@ -90,9 +79,9 @@ export class PermissionEngine extends EventEmitter<{
 
             let owned: PermissionItem[];
             if (typeof item === 'string') {
-                owned = await this.find(item);
+                owned = await this.store.getMany(item);
             } else {
-                owned = await this.find(item.name);
+                owned = await this.store.getMany(item.name);
             }
 
             if (owned.length === 0) {
@@ -132,9 +121,9 @@ export class PermissionEngine extends EventEmitter<{
 
             let owned : PermissionItem[];
             if (typeof item === 'string') {
-                owned = await this.find(item);
+                owned = await this.store.getMany(item);
             } else {
-                owned = await this.find(item.name);
+                owned = await this.store.getMany(item.name);
             }
 
             if (owned.length === 0) {
@@ -165,57 +154,5 @@ export class PermissionEngine extends EventEmitter<{
         }
 
         return true;
-    }
-
-    // ----------------------------------------------
-
-    /**
-     * Find all matching abilities.
-     *
-     * @param name
-     */
-    async find(name?: string) : Promise<PermissionItem[]> {
-        const nsp = this.items['/'];
-        if (!Array.isArray(nsp)) {
-            return [];
-        }
-
-        if (name) {
-            return nsp.filter((nsp) => nsp.name === name);
-        }
-
-        return nsp;
-    }
-
-    // ----------------------------------------------
-
-    add(input: PermissionItem) {
-        this.addMany([input]);
-    }
-
-    addMany(input: PermissionItem[]) {
-        for (let i = 0; i < input.length; i++) {
-            const ability = input[i];
-            const namespace = ability.realm_id || '/';
-
-            if (!Array.isArray(this.items[namespace])) {
-                this.items[namespace] = [];
-            }
-
-            this.items[namespace].push(ability);
-        }
-
-        this.emit('updated');
-    }
-
-    set(input: PermissionItem[] | PermissionItem) {
-        this.items = {};
-
-        if (Array.isArray(input)) {
-            this.addMany(input);
-            return;
-        }
-
-        this.add(input);
     }
 }
