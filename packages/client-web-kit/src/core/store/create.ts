@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionMemoryRepository } from '@authup/permitus/src';
+import {
+    PermissionManager,
+    PermissionMemoryRepository,
+} from '@authup/permitus';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
@@ -19,9 +22,6 @@ import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
-import {
-    PermissionManager,
-} from '@authup/permitus';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
 export function createStore(context: StoreCreateContext = {}) {

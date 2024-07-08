@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionManager } from '@authup/permitus';
+import { PermissionManager, PermissionMemoryRepository } from '@authup/permitus';
 import {
     HeaderError,
     OAuth2SubKind,
@@ -17,7 +17,6 @@ import {
     ScopeName,
     transformOAuth2ScopeToArray,
 } from '@authup/core-kit';
-import { PermissionMemoryRepository } from '@authup/permitus/src';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     AuthorizationHeader,

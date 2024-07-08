@@ -11,7 +11,7 @@ import { PolicyEngine } from '../policy';
 import type { PermissionRepository } from './repository';
 import { PermissionMemoryRepository } from './repository';
 
-import type { PermissionEngineOptions, PermissionItem } from './types';
+import type { PermissionItem, PermissionManagerOptions } from './types';
 
 export class PermissionManager extends EventEmitter<{
     updated: []
@@ -22,7 +22,7 @@ export class PermissionManager extends EventEmitter<{
 
     // ----------------------------------------------
 
-    constructor(options: PermissionEngineOptions = {}) {
+    constructor(options: PermissionManagerOptions = {}) {
         super();
 
         this.store = options.repository || new PermissionMemoryRepository();

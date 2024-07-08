@@ -15,7 +15,7 @@ export type PermissionItem = {
     policy?: AnyPolicy,
 };
 
-export type PermissionEngineOptions = {
+export type PermissionManagerOptions = {
     policyEngine?: PolicyEngine,
     repository?: PermissionRepository
 };
