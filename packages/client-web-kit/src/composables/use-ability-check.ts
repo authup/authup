@@ -10,19 +10,19 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useStore } from '../core';
 
 export function useAbilityCheck(name: string) : Ref<boolean> {
-    const { abilities } = useStore();
+    const { permissionManager } = useStore();
 
     const data = ref(false);
 
-    abilities.has(name)
+    permissionManager.has(name)
         .then((outcome) => {
             data.value = outcome;
         });
 
     let removeListener : undefined | CallableFunction;
     onMounted(() => {
-        removeListener = abilities.on('updated', () => {
-            abilities.has(name)
+        removeListener = permissionManager.on('updated', () => {
+            permissionManager.has(name)
                 .then((outcome) => {
                     data.value = outcome;
                 });
