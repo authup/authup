@@ -4,31 +4,22 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/permitus';
+import type { AnyPolicy, CompositePolicy } from '@authup/permitus';
 import {
     BuiltInPolicyType,
     PolicyDecisionStrategy,
 } from '@authup/permitus';
+import type { Policy } from '../policy';
 import type { Permission, PermissionRelation } from './entity';
 
-type PermissionMinimal = Pick<Permission, 'name'> & Partial<Omit<Permission, 'name'>>;
-
-export function buildAbilityFromPermission(entity: PermissionMinimal) : PermissionItem {
-    return {
-        name: entity.name,
-        realmId: entity.realm_id,
-        policy: entity.policy,
-    } satisfies PermissionItem;
-}
-
-type PermissionRelationMinimal = Pick<PermissionRelation, 'permission'> & Partial<Omit<PermissionRelation, 'permission'>>;
-
-export function buildAbilityFromPermissionRelation(entity: PermissionRelationMinimal): PermissionItem {
+type PermissionRelationInput = Pick<PermissionRelation, 'permission'> & Partial<Omit<PermissionRelation, 'permission'>>;
+export function transformPermissionRelationToPermission(entity: PermissionRelationInput): Permission {
     if (typeof entity.permission === 'undefined') {
-        throw new SyntaxError('The permission relation attribute is mandatory.');
+        throw new SyntaxError('The permission relation attribute is required.');
     }
 
     let policy : AnyPolicy | undefined;
+
     if (
         entity.permission.policy &&
         entity.policy
@@ -48,8 +39,7 @@ export function buildAbilityFromPermissionRelation(entity: PermissionRelationMin
     }
 
     return {
-        name: entity.permission.name,
-        realmId: entity.permission.realm_id,
-        policy,
-    } satisfies PermissionItem;
+        ...entity.permission,
+        policy: policy as Policy,
+    } satisfies Permission;
 }

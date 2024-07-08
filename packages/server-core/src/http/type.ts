@@ -8,7 +8,7 @@
 import type {
     Client, Realm, Robot, User,
 } from '@authup/core-kit';
-import type { PermissionEngine } from '@authup/kit';
+import type { PermissionEngine } from '@authup/permitus';
 
 export type RequestEnv = {
     user?: User,

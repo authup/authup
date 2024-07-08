@@ -20,7 +20,7 @@ import {
 } from '@authup/core-http-kit';
 import {
     PermissionEngine,
-} from '@authup/kit';
+} from '@authup/permitus';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
 export function createStore(context: StoreCreateContext = {}) {

@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { omitRecord } from '@authup/kit';
 import {
     BuiltInPolicyType,
-    omitRecord,
     parseAttributeNamesPolicyOptions,
     parseAttributesOptions,
     parseDatePolicyOptions,
     parseTimePolicyOptions,
-} from '@authup/kit';
+} from '@authup/permitus';
 import { useRequestBody } from '@routup/basic/body';
 import { BadRequestError } from '@ebec/http';
 import type { Request } from 'routup';

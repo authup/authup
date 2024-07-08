@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,

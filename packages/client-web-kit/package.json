@@ -57,6 +57,7 @@
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.19",
+        "@authup/permitus": "^1.0.0-beta.19",
         "@authup/core-kit": "^1.0.0-beta.19",
         "@authup/core-http-kit": "^1.0.0-beta.19",
         "@authup/core-realtime-kit": "^1.0.0-beta.19",

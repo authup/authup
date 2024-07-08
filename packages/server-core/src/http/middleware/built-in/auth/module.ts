@@ -14,7 +14,7 @@ import type {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { PermissionEngine } from '@authup/kit';
+import { PermissionEngine } from '@authup/permitus';
 import { EnvironmentName, useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../utils';
 import { verifyAuthorizationHeader } from './verify';

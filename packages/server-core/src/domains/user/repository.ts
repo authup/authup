@@ -13,14 +13,14 @@ import {
     In,
 } from 'typeorm';
 import type {
+    Permission,
     Role,
     User,
 } from '@authup/core-kit';
 import {
 
-    buildAbilityFromPermissionRelation,
+    transformPermissionRelationToPermission,
 } from '@authup/core-kit';
-import type { PermissionItem } from '@authup/kit';
 import {
     createNanoID,
     isUUID,
@@ -174,7 +174,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getOwnedPermissions(
         id: User['id'],
-    ) : Promise<PermissionItem[]> {
+    ) : Promise<Permission[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
@@ -204,7 +204,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         return permissions;
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<Permission[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
@@ -226,7 +226,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((entity) => buildAbilityFromPermissionRelation(entity));
+        return entities.map((entity) => transformPermissionRelationToPermission(entity));
     }
 
     // ------------------------------------------------------------------
