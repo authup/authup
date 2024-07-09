@@ -8,7 +8,7 @@
 import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
 import { PolicyEngine } from '../policy';
-import type { PermissionRepository } from './repository';
+import type { PermissionFindOneOptions, PermissionRepository } from './repository';
 import { PermissionMemoryRepository } from './repository';
 
 import type { PermissionItem, PermissionManagerOptions } from './types';
@@ -16,17 +16,28 @@ import type { PermissionItem, PermissionManagerOptions } from './types';
 export class PermissionManager extends EventEmitter<{
     updated: []
 }> {
-    protected store : PermissionRepository;
+    protected repository : PermissionRepository;
 
     protected policyEngine : PolicyEngine;
+
+    protected realmId?: string;
 
     // ----------------------------------------------
 
     constructor(options: PermissionManagerOptions = {}) {
         super();
 
-        this.store = options.repository || new PermissionMemoryRepository();
-        this.policyEngine = options.policyEngine || new PolicyEngine();
+        if (options.repository) {
+            this.repository = options.repository;
+        } else {
+            this.repository = new PermissionMemoryRepository();
+        }
+
+        if (options.realmId) {
+            this.realmId = options.realmId;
+        }
+
+        this.policyEngine = new PolicyEngine();
     }
 
     // ----------------------------------------------
@@ -36,8 +47,30 @@ export class PermissionManager extends EventEmitter<{
      *
      * @param name
      */
-    async has(name: string | PermissionItem) : Promise<boolean> {
-        return this.hasMany([name]);
+    async has(name: string | PermissionFindOneOptions) : Promise<boolean> {
+        const entity = await this.get(name);
+        return !!entity;
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Get a permission.
+     *
+     * @param name
+     */
+    async get(name: string | PermissionFindOneOptions) : Promise<PermissionItem | undefined> {
+        let options : PermissionFindOneOptions;
+        if (typeof name === 'string') {
+            options = {
+                name,
+                realm_id: this.realmId,
+            };
+        } else {
+            options = name;
+        }
+
+        return this.repository.findOne(options);
     }
 
     // ----------------------------------------------
@@ -45,20 +78,12 @@ export class PermissionManager extends EventEmitter<{
     /**
      * Check if one of the following permission exists without any restriction.
      *
-     * @param items
+     * @param input
      */
-    async hasOneOf(items: (string | PermissionItem)[]) : Promise<boolean> {
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-
-            let owned: PermissionItem[];
-            if (typeof item === 'string') {
-                owned = await this.store.getMany(item);
-            } else {
-                owned = await this.store.getMany(item.name);
-            }
-
-            if (owned.length > 0) {
+    async hasOneOf(input: (string | PermissionFindOneOptions)[]) : Promise<boolean> {
+        for (let i = 0; i < input.length; i++) {
+            const entity = await this.has(input[i]);
+            if (entity) {
                 return true;
             }
         }
@@ -73,18 +98,10 @@ export class PermissionManager extends EventEmitter<{
      *
      * @param items
      */
-    async hasMany(items: (PermissionItem | string)[]) : Promise<boolean> {
+    async hasMany(items: (PermissionFindOneOptions | string)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-
-            let owned: PermissionItem[];
-            if (typeof item === 'string') {
-                owned = await this.store.getMany(item);
-            } else {
-                owned = await this.store.getMany(item.name);
-            }
-
-            if (owned.length === 0) {
+            const entity = await this.has(items[i]);
+            if (!entity) {
                 return false;
             }
         }
@@ -93,12 +110,12 @@ export class PermissionManager extends EventEmitter<{
     }
 
     async can(
-        input: PermissionItem | string,
+        input: PermissionFindOneOptions | string,
         context?: PolicyEvaluationContext
     ) : Promise<boolean>;
 
     async can(
-        input: (PermissionItem | string)[],
+        input: (PermissionFindOneOptions | string)[],
         context?: PolicyEvaluationContext
     ) : Promise<boolean>;
 
@@ -109,7 +126,7 @@ export class PermissionManager extends EventEmitter<{
      * @param context
      */
     async can(
-        input: PermissionItem | string | (PermissionItem | string)[],
+        input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
         context: PolicyEvaluationContext = {},
     ) : Promise<boolean> {
         if (!Array.isArray(input)) {
@@ -117,39 +134,22 @@ export class PermissionManager extends EventEmitter<{
         }
 
         for (let i = 0; i < input.length; i++) {
-            const item = input[i];
-
-            let owned : PermissionItem[];
-            if (typeof item === 'string') {
-                owned = await this.store.getMany(item);
-            } else {
-                owned = await this.store.getMany(item.name);
-            }
-
-            if (owned.length === 0) {
+            const entity = await this.get(input[i]);
+            if (!entity) {
                 return false;
             }
 
-            let hasPolicies = false;
-            let hasPositiveOutcome = false;
-            for (let j = 0; j < owned.length; j++) {
-                const ownedItem = owned[j];
-                if (!ownedItem.policy) {
-                    continue;
-                }
-
-                hasPolicies = true;
-                const outcome = await this.policyEngine.evaluate(ownedItem.policy, context);
-                if (outcome) {
-                    hasPositiveOutcome = true;
-                    break;
-                }
+            if (!entity.policy) {
+                continue;
             }
 
-            if (hasPolicies) {
-                if (!hasPositiveOutcome) {
+            try {
+                const outcome = await this.policyEngine.evaluate(entity.policy, context);
+                if (!outcome) {
                     return false;
                 }
+            } catch (e) {
+                return false;
             }
         }
 

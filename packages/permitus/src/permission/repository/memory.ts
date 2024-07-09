@@ -6,7 +6,7 @@
  */
 
 import type { PermissionItem } from '../types';
-import type { PermissionRepository } from './types';
+import type { PermissionFindManyOptions, PermissionFindOneOptions, PermissionRepository } from './types';
 
 export class PermissionMemoryRepository implements PermissionRepository {
     protected items : PermissionItem[];
@@ -15,8 +15,35 @@ export class PermissionMemoryRepository implements PermissionRepository {
         this.items = items;
     }
 
-    async getMany(name: string): Promise<PermissionItem[]> {
-        return this.items.filter((item) => item.name === name);
+    async findOne(options: PermissionFindOneOptions): Promise<PermissionItem | undefined> {
+        const items = await this.findMany({
+            ...options,
+            names: [options.name],
+        });
+
+        if (items.length > 0) {
+            return items[0];
+        }
+
+        return undefined;
+    }
+
+    async findMany(options: PermissionFindManyOptions): Promise<PermissionItem[]> {
+        return this.items.filter((item) => {
+            if (options.names.indexOf(item.name) === -1) {
+                return false;
+            }
+
+            if (options.realm_id) {
+                if (options.realm_id !== item.realm_id) {
+                    return false;
+                }
+            } else if (item.realm_id) {
+                return false;
+            }
+
+            return true;
+        });
     }
 
     setMany(items: PermissionItem[]) {
