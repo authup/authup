@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy, PolicyEngine } from '../policy';
+import type { AnyPolicy } from '../policy';
 import type { PermissionRepository } from './repository';
 
 // todo: move this to store.
@@ -16,6 +16,6 @@ export type PermissionItem = {
 };
 
 export type PermissionManagerOptions = {
-    policyEngine?: PolicyEngine,
-    repository?: PermissionRepository
+    repository?: PermissionRepository,
+    realmId?: string
 };

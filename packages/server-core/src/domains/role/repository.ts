@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionItem } from '@authup/permitus';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import type {
-    Permission,
     Role,
 } from '@authup/core-kit';
 import {
-    transformPermissionRelationToPermission,
+    transformPermissionRelationToPermissionItem,
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
 import { EARepository } from '../core';
@@ -39,8 +39,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getOwnedPermissionsByMany(
         ids: Role['id'][],
-    ) : Promise<Permission[]> {
-        const promises : Promise<Permission[]>[] = [];
+    ) : Promise<PermissionItem[]> {
+        const promises : Promise<PermissionItem[]>[] = [];
 
         for (let i = 0; i < ids.length; i++) {
             promises.push(this.getOwnedPermissions(ids[i]));
@@ -53,7 +53,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getOwnedPermissions(
         id: Role['id'],
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
 
         const entities = await repository.find({
@@ -75,6 +75,6 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermission(entity));
+        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
     }
 }

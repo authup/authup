@@ -7,6 +7,17 @@
 
 import type { PermissionItem } from '../types';
 
+export type PermissionFindOneOptions = {
+    name: string,
+    realm_id?: string
+};
+
+export type PermissionFindManyOptions = {
+    names: string[],
+    realm_id?: string
+};
+
 export interface PermissionRepository {
-    getMany(name: string) : Promise<PermissionItem[]>;
+    findOne(options: PermissionFindOneOptions) : Promise<PermissionItem | undefined>;
+    findMany(options: PermissionFindManyOptions): Promise<PermissionItem[]>;
 }

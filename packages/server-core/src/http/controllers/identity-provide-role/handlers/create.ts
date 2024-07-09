@@ -62,8 +62,8 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const dataSource = await useDataSource();
 
     const roleRepository = new RoleRepository(dataSource);
-    const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
-    if (!await ability.hasMany(roleAbilities)) {
+    const permissions = await roleRepository.getOwnedPermissions(data.role_id);
+    if (!await ability.hasMany(permissions)) {
         throw new ForbiddenError('You don\'t own all role permissions.');
     }
 

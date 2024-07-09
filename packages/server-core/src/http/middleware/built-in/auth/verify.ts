@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionItem } from '@authup/permitus';
 import { PermissionManager, PermissionMemoryRepository } from '@authup/permitus';
 import {
     HeaderError,
@@ -12,7 +13,6 @@ import {
     OAuth2TokenKind,
     TokenError,
 } from '@authup/kit';
-import type { Permission } from '@authup/core-kit';
 import {
     ScopeName,
     transformOAuth2ScopeToArray,
@@ -107,7 +107,7 @@ async function verifyBasicAuthorizationHeader(
     request: Request,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : Permission[] = [];
+    let permissions : PermissionItem[] = [];
 
     const config = useConfig();
     const dataSource = await useDataSource();

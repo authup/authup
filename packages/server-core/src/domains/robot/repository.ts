@@ -6,17 +6,18 @@
  */
 
 import type {
-    Permission,
     Robot,
     Role,
 } from '@authup/core-kit';
 import {
-    transformPermissionRelationToPermission,
+    mergePermissionItems,
+    transformPermissionRelationToPermissionItem,
 } from '@authup/core-kit';
 import {
     createNanoID,
     isUUID,
 } from '@authup/kit';
+import type { PermissionItem } from '@authup/permitus';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -33,7 +34,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getOwnedPermissions(
         id: Robot['id'],
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
@@ -60,10 +61,10 @@ export class RobotRepository extends Repository<RobotEntity> {
         const roleRepository = new RoleRepository(this.manager);
         permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
 
-        return permissions;
+        return mergePermissionItems(permissions);
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<Permission[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
@@ -85,7 +86,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermission(entity));
+        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
     }
 
     /**

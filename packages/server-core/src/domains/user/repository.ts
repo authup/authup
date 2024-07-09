@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionItem } from '@authup/permitus';
 import type {
     DataSource,
     EntityManager,
@@ -13,13 +14,12 @@ import {
     In,
 } from 'typeorm';
 import type {
-    Permission,
     Role,
     User,
 } from '@authup/core-kit';
 import {
-
-    transformPermissionRelationToPermission,
+    mergePermissionItems,
+    transformPermissionRelationToPermissionItem,
 } from '@authup/core-kit';
 import {
     createNanoID,
@@ -174,7 +174,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getOwnedPermissions(
         id: User['id'],
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
 
         const roles = await this.manager
@@ -201,10 +201,10 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         const roleRepository = new RoleRepository(this.manager);
         permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
 
-        return permissions;
+        return mergePermissionItems(permissions);
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<Permission[]> {
+    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
@@ -226,7 +226,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermission(entity));
+        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
     }
 
     // ------------------------------------------------------------------
