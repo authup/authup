@@ -75,7 +75,9 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
             }
         }
 
-        permission.policy = policy;
+        if (policy.children.length > 0) {
+            permission.policy = policy;
+        }
 
         output.push(permission);
     }

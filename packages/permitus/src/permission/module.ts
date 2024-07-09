@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EventEmitter } from '@posva/event-emitter';
 import type { PolicyEvaluationContext } from '../policy';
 import { PolicyEngine } from '../policy';
 import type { PermissionFindOneOptions, PermissionRepository } from './repository';
@@ -13,9 +12,7 @@ import { PermissionMemoryRepository } from './repository';
 
 import type { PermissionItem, PermissionManagerOptions } from './types';
 
-export class PermissionManager extends EventEmitter<{
-    updated: []
-}> {
+export class PermissionManager {
     protected repository : PermissionRepository;
 
     protected policyEngine : PolicyEngine;
@@ -25,8 +22,6 @@ export class PermissionManager extends EventEmitter<{
     // ----------------------------------------------
 
     constructor(options: PermissionManagerOptions = {}) {
-        super();
-
         if (options.repository) {
             this.repository = options.repository;
         } else {

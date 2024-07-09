@@ -6,27 +6,43 @@
  */
 
 import type { Ref } from 'vue';
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useStore } from '../core';
+import {
+    onMounted, onUnmounted, ref, watch,
+} from 'vue';
+import { storeToRefs, useStore } from '../core';
 
 export function useAbilityCheck(name: string) : Ref<boolean> {
-    const { permissionManager } = useStore();
+    const store = useStore();
+    const refs = storeToRefs(store);
 
     const data = ref(false);
 
-    permissionManager.has(name)
-        .then((outcome) => {
-            data.value = outcome;
-        });
+    let computePromise : Promise<boolean> | undefined;
+    const compute = async () => {
+        if (computePromise) {
+            return computePromise;
+        }
+
+        let outcome : boolean;
+
+        try {
+            computePromise = store.permissionManager.has(name);
+            outcome = await computePromise;
+        } catch (e) {
+            outcome = false;
+        } finally {
+            computePromise = undefined;
+        }
+
+        return outcome;
+    };
+
+    Promise.resolve()
+        .then(() => compute());
 
     let removeListener : undefined | CallableFunction;
     onMounted(() => {
-        removeListener = permissionManager.on('updated', () => {
-            permissionManager.has(name)
-                .then((outcome) => {
-                    data.value = outcome;
-                });
-        });
+        removeListener = watch(refs.loggedIn, () => compute());
     });
 
     onUnmounted(() => {
