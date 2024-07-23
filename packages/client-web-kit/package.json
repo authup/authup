@@ -62,7 +62,7 @@
         "@authup/core-realtime-kit": "^1.0.0-beta.19",
         "@ilingo/vuelidate": "^5.0.2",
         "@types/node": "^20.12.7",
-        "@vitejs/plugin-vue": "^5.0.4",
+        "@vitejs/plugin-vue": "^5.1.0",
         "@vuecs/form-controls": "^2.3.0",
         "@vuecs/list-controls": "^1.1.1",
         "@vuecs/pagination": "^1.1.1",
