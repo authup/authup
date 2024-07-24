@@ -86,13 +86,6 @@ export async function enforceUniquenessForDatabaseEntity<T = any>(
 ) : Promise<void> {
     const dataSource = await useDataSource();
 
-    if (
-        dataSource.options.type !== 'sqlite' &&
-        dataSource.options.type !== 'better-sqlite3'
-    ) {
-        return;
-    }
-
     const index = dataSource.entityMetadatas.findIndex(
         (entityMetadata) => entityMetadata.target === clazz,
     );

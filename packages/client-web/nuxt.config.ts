@@ -10,7 +10,8 @@ export default defineNuxtConfig({
         ],
     },
     experimental: {
-        writeEarlyHints: false,
+        // todo: enable after v3.12.4
+        scanPageMeta: false,
     },
     css: [
         '@fortawesome/fontawesome-free/css/all.css',

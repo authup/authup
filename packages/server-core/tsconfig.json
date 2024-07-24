@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
+        "module": "CommonJS",
         "paths": {
             "@authup/server-kit": ["./packages/server-kit/src"],
             "@authup/config": ["./packages/config/src"],
