@@ -31,14 +31,16 @@ export function registerErrorMiddleware(router: Router) {
         }
 
         if (error.cause instanceof EntityRelationLookupError) {
+            error.expose = true;
             error.statusCode = 400;
         }
 
-        if (error instanceof ValidupNestedError) {
+        if (error.cause instanceof ValidupNestedError) {
+            error.expose = true;
             error.statusCode = 400;
             error.data = {
-                children: error.children,
-                attributes: error.children.map((child) => child.pathAbsolute),
+                children: error.cause.children,
+                attributes: error.cause.children.map((child) => child.pathAbsolute),
             };
         }
 

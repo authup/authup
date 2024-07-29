@@ -33,6 +33,8 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
         group: RequestHandlerOperation.CREATE,
     });
 
+    console.log(data);
+
     const dataSource = await useDataSource();
     await validateEntityJoinColumns(data, {
         dataSource,
