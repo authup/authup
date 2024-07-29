@@ -11,11 +11,14 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import {
+    getEntityPropertyNames, isEntityUnique, useDataSource, validateEntityJoinColumns,
+} from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { DatabaseConflictError } from '../../../../database';
 import { PolicyEntity, PolicyRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { PolicyRequestValidator } from '../utils';
+import { PolicyAttributesValidator, PolicyValidator } from '../utils';
 import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
 
 export async function updatePolicyRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -26,13 +29,22 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
         throw new ForbiddenError();
     }
 
-    const validator = new PolicyRequestValidator();
-
-    const [data, attributes] = await validator.executeWithAttributes(req, {
+    const validator = new RoutupContainerAdapter(new PolicyValidator());
+    const data = await validator.run(req, {
         group: RequestHandlerOperation.UPDATE,
     });
 
     const dataSource = await useDataSource();
+    const attributesValidator = new RoutupContainerAdapter(new PolicyAttributesValidator({
+        attributeNames: await getEntityPropertyNames(PolicyEntity, dataSource),
+    }));
+    const attributes = await attributesValidator.run(req);
+
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: PolicyEntity,
+    });
+
     const repository = new PolicyRepository(dataSource);
 
     let entity = await repository.findOneBy({ id });
@@ -40,7 +52,20 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
         throw new NotFoundError();
     }
 
-    await enforceUniquenessForDatabaseEntity(PolicyEntity, data, entity);
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: PolicyEntity,
+        entity: data,
+        entityExisting: {
+            id: entity.id,
+        },
+    });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
+    }
+
+    entity = repository.merge(entity, data);
 
     if (isPropertySet(data, 'parent_id')) {
         if (data.parent_id) {
@@ -51,17 +76,15 @@ export async function updatePolicyRouteHandler(req: Request, res: Response) : Pr
                 }
             }
 
-            data.parent = parent;
+            entity.parent = parent;
         } else {
-            data.parent = null;
+            entity.parent = null;
         }
     }
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
         throw new ForbiddenError();
     }
-
-    entity = repository.merge(entity, data);
 
     if (!await ability.can(PermissionName.PERMISSION_UPDATE, { attributes: { ...entity, ...attributes } })) {
         throw new ForbiddenError();

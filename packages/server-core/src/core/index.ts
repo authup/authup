@@ -8,5 +8,3 @@
 export * from './domain-event-publisher';
 export * from './ldap';
 export * from './smtp';
-export * from './request-validator';
-export * from './request-database-validator';

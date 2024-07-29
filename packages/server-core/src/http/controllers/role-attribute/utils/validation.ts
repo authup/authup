@@ -5,35 +5,45 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import { RoleAttributeEntity } from '../../../../domains';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { RoleAttributeEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class RoleAttributeRequestValidator extends RequestDatabaseValidator<
+export class RoleAttributeRequestValidator extends Container<
 RoleAttributeEntity
 > {
-    constructor() {
-        super(RoleAttributeEntity);
+    constructor(options: ContainerOptions<RoleAttributeEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'name')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 255 });
+    mountAll() {
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .notEmpty()
+                .isString()
+                .isLength({ min: 3, max: 255 })),
+        );
 
-        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
-            .exists()
-            .isUUID();
+        this.mount(
+            'role_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.add('value')
+        this.mount('value', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
             .isLength({ min: 3, max: 512 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
     }
 }

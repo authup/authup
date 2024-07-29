@@ -5,55 +5,57 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import type { RequestValidatorExecuteOptions } from '../../../../core';
-import { RequestDatabaseValidator } from '../../../../core';
-import { PermissionEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions, Validator } from 'validup';
+import { Container } from 'validup';
+import type { PermissionEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class PermissionRequestValidator extends RequestDatabaseValidator<
+export class PermissionRequestValidator extends Container<
 PermissionEntity
 > {
-    constructor() {
-        super(PermissionEntity);
+    constructor(options: ContainerOptions<PermissionEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('name')
-            .exists()
-            .isString()
-            .isLength({ min: 3, max: 128 })
-            .optional({ values: 'null' });
+    mountAll() {
+        const nameChain = (optional?: boolean) : Validator => createValidator((chain) => {
+            const output = chain
+                .exists()
+                .notEmpty()
+                .isString()
+                .isLength({
+                    min: 3,
+                    max: 128,
+                });
 
-        this.add('description')
+            if (optional) {
+                return output.optional({ values: 'null' });
+            }
+
+            return output;
+        });
+
+        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameChain());
+        this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameChain(true));
+
+        this.mount('description', createValidator((chain) => chain
             .isString()
             .isLength({ min: 5, max: 4096 })
-            .optional({ values: 'null' });
+            .optional({ values: 'null' })));
 
-        this.add('client_id')
+        this.mount('client_id', createValidator((chain) => chain
             .isUUID()
-            .optional({ values: 'null' });
+            .optional({ values: 'null' })));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
             .isUUID()
-            .optional({ values: 'null' });
+            .optional({ values: 'null' })));
 
-        this.add('policy_id')
+        this.mount('policy_id', createValidator((chain) => chain
             .optional({ values: 'null' })
-            .isUUID();
-    }
-
-    async execute(req: Request, options: RequestValidatorExecuteOptions<PermissionEntity> = {}): Promise<PermissionEntity> {
-        const data = await super.execute(req, options);
-
-        if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildErrorMessageForAttribute('name'));
-        }
-
-        return data;
+            .isUUID()));
     }
 }

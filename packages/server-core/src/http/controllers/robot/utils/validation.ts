@@ -5,48 +5,54 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import { RobotEntity } from '../../../../domains';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { RobotEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class RobotRequestValidator extends RequestDatabaseValidator<
+export class RobotRequestValidator extends Container<
 RobotEntity
 > {
-    constructor() {
-        super(RobotEntity);
+    constructor(options: ContainerOptions<RobotEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('secret')
+    mountAll() {
+        this.mount('secret', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isLength({ min: 3, max: 256 })
-            .optional();
+            .optional()));
 
-        this.add('active')
+        this.mount('active', createValidator((chain) => chain
             .isBoolean()
-            .optional();
+            .optional()));
 
-        this.add('name')
+        this.mount('name', createValidator((chain) => chain
             .notEmpty()
             .isLength({ min: 3, max: 256 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('description')
+        this.mount('description', createValidator((chain) => chain
             .notEmpty()
             .isLength({ min: 3, max: 4096 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('user_id')
+        this.mount('user_id', createValidator((chain) => chain
             .exists()
             .isUUID()
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
-            .exists()
-            .isUUID()
-            .optional({ values: 'null' });
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()
+                .optional({ values: 'null' })),
+        );
     }
 }

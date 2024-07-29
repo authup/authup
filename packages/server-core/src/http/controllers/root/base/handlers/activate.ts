@@ -6,26 +6,28 @@
  */
 
 import { NotFoundError } from '@ebec/http';
+import { createValidator } from '@validup/adapter-validator';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RequestValidator } from '../../../../../core';
+import { Container } from 'validup';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserRepository } from '../../../../../domains';
 
-export class AuthActiveRequestValidator extends RequestValidator<{ token: string}> {
+export class AuthActiveRequestValidator extends Container<{ token: string}> {
     constructor() {
         super();
 
-        this.add('token')
-            .exists()
+        this.mount('token', createValidator((chain) => chain.exists()
             .notEmpty()
-            .isLength({ min: 3, max: 256 });
+            .isLength({ min: 3, max: 256 })));
     }
 }
 
 export async function createAuthActivateRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new AuthActiveRequestValidator();
-    const data = await validator.execute(req);
+    const validatorWrapper = new RoutupContainerAdapter(validator);
+    const data = await validatorWrapper.run(req);
 
     // todo: log attempt ( token, ip_address, user_agent, created_at)
 

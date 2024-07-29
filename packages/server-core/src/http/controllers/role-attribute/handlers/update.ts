@@ -10,7 +10,8 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RoleAttributeRequestValidator } from '../utils';
@@ -20,11 +21,17 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
     const id = useRequestIDParam(req);
 
     const validator = new RoleAttributeRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
     });
 
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RoleAttributeEntity,
+    });
+
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
     let entity = await repository.findOneBy({ id });

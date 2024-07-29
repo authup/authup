@@ -8,31 +8,24 @@
 import {
     IdentityProviderPreset,
     IdentityProviderProtocol,
-    getIdentityProviderProtocolForPreset,
     isValidIdentityProviderSub,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import { ZodError } from 'zod';
-import type { RequestValidatorExecuteOptions } from '../../../../core';
-import { RequestDatabaseValidator } from '../../../../core';
-import {
-    IdentityProviderEntity,
-    validateLdapIdentityProviderProtocol,
-    validateOAuth2IdentityProviderProtocol,
-} from '../../../../domains';
-import { buildErrorMessageForZodError } from '../../../../utils';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { IdentityProviderEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class IdentityProviderRequestValidator extends RequestDatabaseValidator<IdentityProviderEntity> {
-    constructor() {
-        super(IdentityProviderEntity);
+export class IdentityProviderValidator extends Container<IdentityProviderEntity> {
+    constructor(options: ContainerOptions<IdentityProviderEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('slug')
+    mountAll() {
+        this.mount('slug', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
@@ -44,83 +37,33 @@ export class IdentityProviderRequestValidator extends RequestDatabaseValidator<I
                 }
 
                 return isValid;
-            });
+            })));
 
-        this.add('name')
+        this.mount('name', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 5, max: 128 });
+            .isLength({ min: 5, max: 128 })));
 
-        this.addOneOf(
-            [
-                this.create('protocol')
-                    .exists()
-                    .notEmpty()
-                    .isIn(Object.values(IdentityProviderProtocol)),
-                this.create('preset')
-                    .exists()
-                    .notEmpty()
-                    .isIn(Object.values(IdentityProviderPreset)),
-            ],
-        );
+        const container = new Container({ oneOf: true });
+        container.mount('protocol', createValidator((chain) => chain.exists()
+            .notEmpty()
+            .isIn(Object.values(IdentityProviderProtocol))));
 
-        this.add('enabled')
+        container.mount('preset', createValidator((chain) => chain.exists()
+            .notEmpty()
+            .isIn(Object.values(IdentityProviderPreset))));
+
+        this.mount(container);
+
+        this.mount('enabled', createValidator((chain) => chain
             .exists()
             .notEmpty()
-            .isBoolean();
+            .isBoolean()));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
             .exists()
             .isUUID()
-            .optional({ nullable: true });
-    }
-
-    async executeWithAttributes(
-        req: Request,
-        options: RequestValidatorExecuteOptions<IdentityProviderEntity> = {},
-    ) : Promise<[IdentityProviderEntity, Record<string, any>]> {
-        const data = await this.execute(req, options);
-
-        let protocol : `${IdentityProviderProtocol}` | undefined;
-        if (data.preset) {
-            protocol = getIdentityProviderProtocolForPreset(data.preset);
-        } else {
-            protocol = data.protocol;
-        }
-
-        if (!protocol) {
-            throw new BadRequestError('A protocol could not be determined.');
-        }
-
-        let attributes : Record<string, any> = {};
-
-        try {
-            switch (protocol) {
-                case IdentityProviderProtocol.OAUTH2:
-                case IdentityProviderProtocol.OIDC: {
-                    attributes = validateOAuth2IdentityProviderProtocol(req, data.preset);
-                    break;
-                }
-                case IdentityProviderProtocol.LDAP: {
-                    attributes = validateLdapIdentityProviderProtocol(req);
-                    break;
-                }
-            }
-        } catch (e: any) {
-            if (e instanceof ZodError) {
-                throw new BadRequestError(buildErrorMessageForZodError(e));
-            }
-
-            if (e instanceof Error) {
-                throw new BadRequestError(e.message, {
-                    cause: e,
-                });
-            }
-
-            throw e;
-        }
-
-        return [data, attributes];
+            .optional({ nullable: true })));
     }
 }

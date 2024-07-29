@@ -10,7 +10,8 @@ import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
@@ -34,8 +35,15 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
     // ----------------------------------------------
 
     const validator = new RobotPermissionRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RobotPermissionEntity,
     });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
@@ -75,7 +83,6 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotPermissionEntity);
     let entity = repository.create(data);
 

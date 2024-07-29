@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { createValidator } from '@validup/adapter-validator';
 import { randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { User } from '@authup/core-kit';
@@ -12,31 +14,42 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { RequestValidator, isSMTPClientUsable, useSMTPClient } from '../../../../../core';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import {
+    isSMTPClientUsable, useSMTPClient,
+} from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
 import {
     EnvironmentName, useConfig,
 } from '../../../../../config';
 
-export class AuthPasswordForgotRequestValidator extends RequestValidator<User> {
-    constructor() {
-        super();
+export class AuthPasswordForgotRequestValidator extends Container<User> {
+    constructor(options: ContainerOptions<User> = {}) {
+        super(options);
 
-        this.addOneOf([
-            this.create('email')
-                .exists()
-                .notEmpty()
-                .isEmail(),
-            this.create('name')
-                .exists()
-                .notEmpty()
-                .isString(),
-        ]);
+        const container = new Container({
+            oneOf: true,
+        });
 
-        this.add('realm_id')
+        container.mount('email', createValidator((chain) => chain
             .exists()
-            .isUUID()
-            .optional({ nullable: true });
+            .notEmpty()
+            .isEmail()));
+
+        container.mount('name', createValidator((chain) => chain
+            .exists()
+            .notEmpty()
+            .isString()));
+
+        this.mount(container);
+
+        this.mount(
+            'realm_id',
+            createValidator((chain) => chain.exists()
+                .isUUID()
+                .optional({ nullable: true })),
+        );
     }
 }
 
@@ -55,11 +68,12 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         !isSMTPClientUsable() &&
         config.env !== 'test'
     ) {
-        throw new BadRequestError('SMTP modul is not configured.');
+        throw new BadRequestError('SMTP module is not configured.');
     }
 
     const validator = new AuthPasswordForgotRequestValidator();
-    const data = await validator.execute(req);
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req);
 
     const where : FindOptionsWhere<User> = {
         ...(data.name ? { name: data.name } : {}),

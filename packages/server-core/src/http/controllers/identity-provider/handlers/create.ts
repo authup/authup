@@ -12,11 +12,12 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository } from '../../../../domains';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { IdentityProviderRequestValidator } from '../utils';
+import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export async function createIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -25,9 +26,18 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    const validator = new IdentityProviderRequestValidator();
-    const [data, attributes] = await validator.executeWithAttributes(req, {
+    const validator = new RoutupContainerAdapter(new IdentityProviderValidator());
+    const data = await validator.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const attributesValidator = new RoutupContainerAdapter(new IdentityProviderAttributesValidator());
+    const attributes = await attributesValidator.run(req);
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: IdentityProviderEntity,
     });
 
     if (!data.realm_id) {
@@ -43,7 +53,6 @@ export async function createIdentityProviderRouteHandler(req: Request, res: Resp
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
-    const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
 
     const entity = repository.create(data);

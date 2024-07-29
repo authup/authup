@@ -9,21 +9,23 @@ import {
     isValidUserName,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import { RequestDatabaseValidator } from '../../../../core';
-import { UserEntity } from '../../../../domains';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { UserEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class UserRequestValidator extends RequestDatabaseValidator<
+export class UserRequestValidator extends Container<
 UserEntity
 > {
-    constructor() {
-        super(UserEntity);
+    constructor(options: ContainerOptions<UserEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('name')
+    mountAll() {
+        this.mount('name', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .custom((value) => {
@@ -34,69 +36,73 @@ UserEntity
 
                 return isValid;
             })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('name_locked')
+        this.mount('name_locked', createValidator((chain) => chain
             .isBoolean()
-            .optional();
+            .optional()));
 
         // ----------------------------------------------
 
-        this.add('first_name')
+        this.mount('first_name', createValidator((chain) => chain
             .notEmpty()
             .isLength({ min: 3, max: 128 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('last_name')
+        this.mount('last_name', createValidator((chain) => chain
             .notEmpty()
             .isLength({ min: 3, max: 128 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
         // ----------------------------------------------
 
-        this.add('display_name')
+        this.mount('display_name', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isLength({ min: 3, max: 128 })
-            .optional();
+            .optional()));
 
         // ----------------------------------------------
 
-        this.add('email')
+        this.mount('email', createValidator((chain) => chain
             .exists()
             .isEmail()
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
         // ----------------------------------------------
 
-        this.add('password')
+        this.mount('password', createValidator((chain) => chain
             .exists()
             .isLength({ min: 5, max: 512 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
         // ----------------------------------------------
 
-        this.add('active')
+        this.mount('active', createValidator((chain) => chain
             .isBoolean()
-            .optional();
+            .optional()));
 
-        this.add('name_locked')
+        this.mount('name_locked', createValidator((chain) => chain
             .isBoolean()
-            .optional();
+            .optional()));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
-            .exists()
-            .isUUID()
-            .optional();
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()
+                .optional()),
+        );
 
-        this.add('status')
+        this.mount('status', createValidator((chain) => chain
             .exists()
             .isLength({ min: 5, max: 256 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('status_message')
+        this.mount('status_message', createValidator((chain) => chain
             .exists()
             .isLength({ min: 5, max: 256 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
     }
 }

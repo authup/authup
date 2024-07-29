@@ -14,20 +14,22 @@ import {
     isOAuth2ScopeAllowed,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
+import { createValidator } from '@validup/adapter-validator';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RequestValidator } from '../../../core';
+import { Container } from 'validup';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ClientEntity, ClientScopeEntity } from '../../../domains';
 
 type AuthorizeValidationResult = OAuth2AuthorizationCodeRequest & {
     client_id: string
 };
 
-export class AuthorizeRequestValidator extends RequestValidator<AuthorizeValidationResult> {
+export class AuthorizeRequestValidator extends Container<AuthorizeValidationResult> {
     constructor() {
         super();
 
-        this.add('response_type')
+        this.mount('response_type', createValidator((chain) => chain
             .exists()
             .isString()
             .notEmpty()
@@ -42,32 +44,32 @@ export class AuthorizeRequestValidator extends RequestValidator<AuthorizeValidat
                 }
 
                 return true;
-            });
+            })));
 
-        this.add('redirect_uri')
+        this.mount('redirect_uri', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isURL()
-            .isLength({ min: 3, max: 2000 });
+            .isLength({ min: 3, max: 2000 })));
 
-        this.add('scope')
+        this.mount('scope', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 3, max: 512 });
+            .isLength({ min: 3, max: 512 })));
 
-        this.add('state')
+        this.mount('state', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
             .isLength({ min: 5, max: 2048 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('client_id')
+        this.mount('client_id', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
-            .isUUID();
+            .isUUID()));
     }
 }
 
@@ -75,7 +77,8 @@ export async function validateAuthorizeRequest(
     req: Request,
 ) : Promise<AuthorizeValidationResult> {
     const validator = new AuthorizeRequestValidator();
-    const data = await validator.execute(req);
+    const validatorWrapper = new RoutupContainerAdapter(validator);
+    const data = await validatorWrapper.run(req);
 
     const dataSource = await useDataSource();
     const clientRepository = dataSource.getRepository(ClientEntity);

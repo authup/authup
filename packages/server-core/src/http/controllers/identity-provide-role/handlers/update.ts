@@ -11,7 +11,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
@@ -26,11 +27,17 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
     });
 
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: IdentityProviderRoleMappingEntity,
+    });
+
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     let entity = await repository.findOneBy({ id });

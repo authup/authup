@@ -9,8 +9,9 @@ import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '../../../../domains';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { UserEntity, UserRepository } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { UserRequestValidator } from '../utils';
@@ -24,8 +25,15 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     const validator = new UserRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserEntity,
     });
 
     if (!data.realm_id) {
@@ -41,7 +49,6 @@ export async function createUserRouteHandler(req: Request, res: Response) : Prom
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
-    const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
     const { entity } = await repository.createWithPassword(data);
 

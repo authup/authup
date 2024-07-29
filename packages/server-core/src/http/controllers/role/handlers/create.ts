@@ -12,8 +12,9 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { DatabaseConflictError } from '../../../../database';
 import { RoleEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -27,8 +28,15 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
     }
 
     const validator = new RoleRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RoleEntity,
     });
 
     if (!data.realm_id && !isRequestMasterRealm(req)) {
@@ -44,11 +52,18 @@ export async function createRoleRouteHandler(req: Request, res: Response) : Prom
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
-    await enforceUniquenessForDatabaseEntity(RoleEntity, data);
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: RoleEntity,
+        entity: data,
+    });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
+    }
 
     // ----------------------------------------------
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
     const entity = repository.create(data);
 

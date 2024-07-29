@@ -5,26 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import { RobotRoleEntity } from '../../../../domains';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { RobotRoleEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class RobotRoleRequestValidator extends RequestDatabaseValidator<
+export class RobotRoleRequestValidator extends Container<
 RobotRoleEntity
 > {
-    constructor() {
-        super(RobotRoleEntity);
+    constructor(options: ContainerOptions<RobotRoleEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'robot_id')
-            .exists()
-            .isUUID();
+    mountAll() {
+        this.mount(
+            'robot_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
-            .exists()
-            .isUUID();
+        this.mount(
+            'role_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
     }
 }

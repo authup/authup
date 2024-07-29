@@ -6,8 +6,6 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core-kit';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
 import zod from 'zod';
 import { extractLdapIdentityProviderProtocolAttributes } from './extract';
 
@@ -35,12 +33,11 @@ const schema = zod.object({
 
 /**
  * @throws ZodError
- * @param req
+ * @param body
  */
 export function validateLdapIdentityProviderProtocol(
-    req: Request,
+    body: Record<string, any>,
 ) : Partial<LdapIdentityProvider> {
-    const body = useRequestBody(req);
     const attributes = extractLdapIdentityProviderProtocolAttributes(body);
     const result = schema.safeParse(attributes);
     if (result.success === false) {

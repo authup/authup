@@ -5,33 +5,47 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import {
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type {
     RolePermissionEntity,
 } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class RolePermissionRequestValidator extends RequestDatabaseValidator<
+export class RolePermissionRequestValidator extends Container<
 RolePermissionEntity
 > {
-    constructor() {
-        super(RolePermissionEntity);
+    constructor(options: ContainerOptions<RolePermissionEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
-            .exists()
-            .isUUID();
+    mountAll() {
+        this.mount(
+            'role_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.addTo(RequestHandlerOperation.CREATE, 'permission_id')
-            .exists()
-            .isUUID();
+        this.mount(
+            'permission_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.add('policy_id')
-            .isUUID()
-            .optional({ values: 'null' })
-            .default(null);
+        this.mount(
+            'policy_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .isUUID()
+                .optional({ values: 'null' })
+                .default(null)),
+        );
     }
 }

@@ -6,8 +6,6 @@
  */
 
 import type { IdentityProviderPreset, OAuth2IdentityProvider } from '@authup/core-kit';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
 import zod from 'zod';
 import { extractOAuth2IdentityProviderProtocolAttributes } from './extract';
 
@@ -31,11 +29,9 @@ const schema = zod.object({
 });
 
 export function validateOAuth2IdentityProviderProtocol(
-    req: Request,
+    body: Record<string, any>,
     protocolConfig: `${IdentityProviderPreset}`,
 ) : Partial<OAuth2IdentityProvider> {
-    const body = useRequestBody(req);
-
     const attributes = extractOAuth2IdentityProviderProtocolAttributes(body);
 
     if (protocolConfig) {
