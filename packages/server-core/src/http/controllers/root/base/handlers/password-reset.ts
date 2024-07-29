@@ -6,49 +6,62 @@
  */
 
 import type { User } from '@authup/core-kit';
+import { createValidator } from '@validup/adapter-validator';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
-import { useDataSource } from 'typeorm-extension';
-import { RequestValidator } from '../../../../../core';
-import { UserRepository, resolveRealm } from '../../../../../domains';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { Container } from 'validup';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { UserEntity, UserRepository, resolveRealm } from '../../../../../domains';
 
-export class AuthPasswordResetRequestValidator extends RequestValidator<User & { token: string }> {
+export class AuthPasswordResetRequestValidator extends Container<User & { token: string }> {
     constructor() {
         super();
 
-        this.addOneOf([
-            this.create('email')
-                .exists()
-                .notEmpty()
-                .isEmail(),
-            this.create('name')
-                .exists()
-                .notEmpty()
-                .isString(),
-        ]);
+        // todo: extract email + name mount
+        const container = new Container({
+            oneOf: true,
+        });
+        container.mount('email', createValidator((chain) => chain
+            .exists()
+            .notEmpty()
+            .isEmail()));
+        container.mount('name', createValidator((chain) => chain
+            .exists()
+            .notEmpty()
+            .isString()));
 
-        this.add('realm_id')
+        this.mount(container);
+
+        this.mount('realm_id', createValidator((chain) => chain
             .exists()
             .isUUID()
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.add('token')
+        this.mount('token', createValidator((chain) => chain
             .exists()
             .notEmpty()
-            .isLength({ min: 3, max: 256 });
+            .isLength({ min: 3, max: 256 })));
 
-        this.add('password')
+        this.mount('password', createValidator((chain) => chain
             .exists()
             .notEmpty()
-            .isLength({ min: 5, max: 512 });
+            .isLength({ min: 5, max: 512 })));
     }
 }
 
 export async function createAuthPasswordResetRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new AuthPasswordResetRequestValidator();
-    const data = await validator.execute(req);
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req);
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserEntity,
+    });
 
     // todo: log attempt (email, token, ip_address, user_agent)
 
@@ -61,7 +74,6 @@ export async function createAuthPasswordResetRouteHandler(req: Request, res: Res
     const realm = await resolveRealm(data.realm_id, true);
     where.realm_id = realm.id;
 
-    const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
 
     const entity = await repository.findOneBy(where);

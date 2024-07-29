@@ -10,7 +10,8 @@ import { isPropertySet } from '@authup/kit';
 import { PermissionName, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RealmRequestValidator } from '../utils';
@@ -25,12 +26,18 @@ export async function updateRealmRouteHandler(req: Request, res: Response) : Pro
     }
 
     const validator = new RealmRequestValidator();
+    const validatorAdapter = new RoutupContainerAdapter(validator);
 
-    const data = await validator.execute(req, {
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
     });
 
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RealmEntity,
+    });
+
     const repository = dataSource.getRepository(RealmEntity);
 
     let entity = await repository.findOneBy({ id });

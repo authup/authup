@@ -9,9 +9,10 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
-import { UserRepository } from '../../../../domains';
+import { UserEntity, UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { UserRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
@@ -30,8 +31,15 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     const validator = new UserRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserEntity,
     });
 
     if (!hasAbility) {
@@ -41,7 +49,6 @@ export async function updateUserRouteHandler(req: Request, res: Response) : Prom
         delete data.status_message;
     }
 
-    const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
 
     if (data.password) {

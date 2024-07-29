@@ -12,7 +12,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderRoleMappingEntity, RoleRepository } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -26,9 +27,16 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     }
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
+    const validatorAdapter = new RoutupContainerAdapter(validator);
 
-    const data = await validator.execute(req, {
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: IdentityProviderRoleMappingEntity,
     });
 
     if (data.provider) {
@@ -58,8 +66,6 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
-
-    const dataSource = await useDataSource();
 
     const roleRepository = new RoleRepository(dataSource);
     const permissions = await roleRepository.getOwnedPermissions(data.role_id);

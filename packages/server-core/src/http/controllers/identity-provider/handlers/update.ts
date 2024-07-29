@@ -9,10 +9,11 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRepository } from '../../../../domains';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
-import { IdentityProviderRequestValidator } from '../utils';
+import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
 
 export async function updateIdentityProviderRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -23,12 +24,20 @@ export async function updateIdentityProviderRouteHandler(req: Request, res: Resp
         throw new ForbiddenError();
     }
 
-    const validator = new IdentityProviderRequestValidator();
-    const [data, attributes] = await validator.executeWithAttributes(req, {
-        group: RequestHandlerOperation.UPDATE,
+    const validator = new RoutupContainerAdapter(new IdentityProviderValidator());
+    const data = await validator.run(req, {
+        group: RequestHandlerOperation.CREATE,
     });
 
+    const attributesValidator = new RoutupContainerAdapter(new IdentityProviderAttributesValidator());
+    const attributes = await attributesValidator.run(req);
+
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: IdentityProviderEntity,
+    });
+
     const repository = new IdentityProviderRepository(dataSource);
 
     let entity = await repository.findOneBy({ id });

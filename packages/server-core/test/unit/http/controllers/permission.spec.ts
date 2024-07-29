@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission } from '@authup/core-kit';
+import type { Permission, Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
@@ -38,6 +38,17 @@ describe('src/http/controllers/permission', () => {
         expect(response.body).toBeDefined();
 
         details.id = response.body.id;
+    });
+
+    it('should not create same resource', async () => {
+        const response = await superTest
+            .post('/permissions')
+            .send({
+                name: details.name,
+            } satisfies Partial<Role>)
+            .auth('admin', 'start123');
+
+        expect(response.statusCode).toEqual(409);
     });
 
     it('should read collection', async () => {

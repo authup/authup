@@ -5,109 +5,47 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { omitRecord } from '@authup/kit';
-import {
-    BuiltInPolicyType,
-    parseAttributeNamesPolicyOptions,
-    parseAttributesOptions,
-    parseDatePolicyOptions,
-    parseTimePolicyOptions,
-} from '@authup/permitus';
-import { useRequestBody } from '@routup/basic/body';
-import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import { ZodError } from 'zod';
-import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
-import {
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type {
     PolicyEntity,
 } from '../../../../domains';
-import { buildErrorMessageForZodError } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
-type PolicyValidationResult = PolicyEntity & {
+type PolicyValidationResult = Omit<PolicyEntity, 'children' | 'parent'> & {
     parent_id?: string
 };
 
-export class PolicyRequestValidator extends RequestDatabaseValidator<PolicyValidationResult> {
-    constructor() {
-        super(PolicyEntity);
+export class PolicyValidator extends Container<PolicyValidationResult> {
+    constructor(options: ContainerOptions<PolicyValidationResult> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('name')
+    mountAll() {
+        this.mount('name', createValidator((chain) => chain
             .isString()
-            .isLength({ min: 3, max: 128 });
+            .isLength({ min: 3, max: 128 })));
 
-        this.add('invert')
+        this.mount('invert', createValidator((chain) => chain
             .isBoolean()
-            .optional({ values: 'undefined' });
+            .optional({ values: 'undefined' })));
 
-        this.add('type')
+        this.mount('type', createValidator((chain) => chain
             .exists()
             .isString()
-            .isLength({ min: 3, max: 128 });
+            .isLength({ min: 3, max: 128 })));
 
-        this.add('parent_id')
+        this.mount('parent_id', createValidator((chain) => chain
             .exists()
             .isUUID()
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
             .exists()
             .isUUID()
-            .optional({ nullable: true });
-    }
-
-    async executeWithAttributes(
-        req: Request,
-        options: RequestValidatorExecuteOptions<PolicyValidationResult> = {},
-    ) : Promise<[PolicyValidationResult, Record<string, any>]> {
-        const data = await this.execute(req, options);
-
-        let attributes : Record<string, any> = {};
-
-        try {
-            const body = useRequestBody(req);
-
-            switch (data.type) {
-                case BuiltInPolicyType.ATTRIBUTES: {
-                    attributes = parseAttributesOptions(body);
-                    break;
-                }
-                case BuiltInPolicyType.ATTRIBUTE_NAMES: {
-                    attributes = parseAttributeNamesPolicyOptions(body);
-                    break;
-                }
-                case BuiltInPolicyType.DATE: {
-                    attributes = parseDatePolicyOptions(body);
-                    break;
-                }
-                case BuiltInPolicyType.TIME: {
-                    attributes = parseTimePolicyOptions(body);
-                    break;
-                }
-                default: {
-                    const internal = await this.getFields();
-                    attributes = omitRecord(body, internal);
-                    // todo: maybe limit attributes size
-                }
-            }
-        } catch (e: any) {
-            if (e instanceof ZodError) {
-                throw new BadRequestError(buildErrorMessageForZodError(e));
-            }
-
-            if (e instanceof Error) {
-                throw new BadRequestError(e.message, {
-                    cause: e,
-                });
-            }
-
-            throw e;
-        }
-
-        return [data, attributes];
+            .optional({ nullable: true })));
     }
 }

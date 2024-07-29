@@ -12,7 +12,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -21,9 +22,16 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new UserAttributeRequestValidator();
+    const validatorAdapter = new RoutupContainerAdapter(validator);
 
-    const data = await validator.execute(req, {
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserAttributeEntity,
     });
 
     const userId = useRequestEnv(req, 'userId');
@@ -51,7 +59,6 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
         }
     }
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const entity = repository.create(data);

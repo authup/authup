@@ -5,38 +5,48 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import {
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type {
     IdentityProviderRoleMappingEntity,
 } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class IdentityProviderRoleMappingRequestValidator extends RequestDatabaseValidator<
+export class IdentityProviderRoleMappingRequestValidator extends Container<
 IdentityProviderRoleMappingEntity
 > {
-    constructor() {
-        super(IdentityProviderRoleMappingEntity);
+    constructor(options: ContainerOptions<IdentityProviderRoleMappingEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'provider_id')
-            .exists()
-            .isUUID();
+    mountAll() {
+        this.mount(
+            'provider_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.addTo(RequestHandlerOperation.CREATE, 'role_id')
-            .exists()
-            .isUUID();
+        this.mount(
+            'role_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()),
+        );
 
-        this.add('name')
-            .optional({ values: 'null' });
+        this.mount('name', createValidator((chain) => chain
+            .optional({ values: 'null' })));
 
-        this.add('value')
-            .optional({ values: 'null' });
+        this.mount('value', createValidator((chain) => chain
+            .optional({ values: 'null' })));
 
-        this.add('value_is_regex')
+        this.mount('value_is_regex', createValidator((chain) => chain
             .isBoolean()
-            .optional({ values: 'null' });
+            .optional({ values: 'null' })));
     }
 }

@@ -9,63 +9,67 @@ import {
     isValidRoleName,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
-import { RoleEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { RoleEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class RoleRequestValidator extends RequestDatabaseValidator<
+export class RoleRequestValidator extends Container<
 RoleEntity
 > {
-    constructor() {
-        super(RoleEntity);
+    constructor(options: ContainerOptions<RoleEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('name')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({
-                min: 3,
-                max: 256, // todo: verify this
-            })
-            .custom((value) => {
-                const isValid = isValidRoleName(value);
-                if (!isValid) {
-                    throw new BadRequestError('Only the characters [A-Za-z0-9-_]+ are allowed.');
-                }
+    mountAll() {
+        const nameChain = (optional?: boolean) => createValidator((chain) => {
+            const output = chain
+                .exists()
+                .notEmpty()
+                .isString()
+                .isLength({
+                    min: 3,
+                    max: 256, // todo: verify this
+                })
+                .custom((value) => {
+                    const isValid = isValidRoleName(value);
+                    if (!isValid) {
+                        throw new BadRequestError('Only the characters [A-Za-z0-9-_]+ are allowed.');
+                    }
 
-                return isValid;
-            })
-            .optional({ nullable: true });
+                    return isValid;
+                });
 
-        this.add('description')
+            if (optional) {
+                return output.optional({ values: 'null' });
+            }
+
+            return output;
+        });
+
+        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameChain());
+        this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameChain(true));
+
+        this.mount('description', createValidator((chain) => chain
             .optional({ nullable: true })
             .notEmpty()
             .isString()
             .isLength({
                 min: 5,
                 max: 4096,
-            });
+            })));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
-            .exists()
-            .isUUID()
-            .optional({ nullable: true })
-            .default(null);
-    }
-
-    async execute(req: Request, options: RequestValidatorExecuteOptions<RoleEntity> = {}): Promise<RoleEntity> {
-        const data = await super.execute(req, options);
-
-        if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildErrorMessageForAttribute('name'));
-        }
-
-        return data;
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()
+                .optional({ nullable: true })
+                .default(null)),
+        );
     }
 }

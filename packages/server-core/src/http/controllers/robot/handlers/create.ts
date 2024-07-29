@@ -12,8 +12,10 @@ import {
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
+    RobotEntity,
     RobotRepository,
     saveRobotCredentialsToVault,
 } from '../../../../domains';
@@ -24,8 +26,15 @@ import { RobotRequestValidator } from '../utils';
 
 export async function createRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new RobotRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RobotEntity,
     });
 
     if (!data.realm_id) {
@@ -45,7 +54,6 @@ export async function createRobotRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
-    const dataSource = await useDataSource();
     const repository = new RobotRepository(dataSource);
     const { entity, secret } = await repository.createWithSecret(data);
 

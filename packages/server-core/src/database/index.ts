@@ -6,6 +6,7 @@
  */
 
 export * from './cache';
+export * from './errors';
 export * from './seeds';
 export * from './subscribers';
 export * from './helpers';

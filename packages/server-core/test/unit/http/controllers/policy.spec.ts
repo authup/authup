@@ -26,6 +26,15 @@ describe('src/http/controllers/policy', () => {
 
     const ids : string[] = [];
 
+    const timePolicyPayload = () => ({
+        name: 'time',
+        type: BuiltInPolicyType.TIME,
+        start: Date.now(),
+        end: Date.now(),
+        invert: false,
+        parent_id: ids[0],
+    } as Partial<TimePolicyOptions>);
+
     it('should create group policy', async () => {
         const response = await superTest
             .post('/policies')
@@ -45,20 +54,22 @@ describe('src/http/controllers/policy', () => {
     it('should create time policy', async () => {
         const response = await superTest
             .post('/policies')
-            .send({
-                name: 'time',
-                type: BuiltInPolicyType.TIME,
-                start: Date.now(),
-                end: Date.now(),
-                invert: false,
-                parent_id: ids[0],
-            } as Partial<TimePolicyOptions>)
+            .send(timePolicyPayload())
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         ids.push(response.body.id);
+    });
+
+    it('should not create time policy twice', async () => {
+        const response = await superTest
+            .post('/policies')
+            .send(timePolicyPayload())
+            .auth('admin', 'start123');
+
+        expect(response.statusCode).toEqual(409);
     });
 
     it('should create custom policy', async () => {
@@ -115,7 +126,7 @@ describe('src/http/controllers/policy', () => {
     });
 
     it('should delete resource', async () => {
-        for (let i = 0; i < ids.length; i++) {
+        for (let i = ids.length - 1; i >= 0; i--) {
             const response = await superTest
                 .delete(`/policies/${ids[i]}`)
                 .auth('admin', 'start123');

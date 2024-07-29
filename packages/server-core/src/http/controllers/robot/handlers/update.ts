@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isPropertySet } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -13,9 +12,12 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
-import { RobotRepository, resolveRealm, saveRobotCredentialsToVault } from '../../../../domains';
+import {
+    RobotEntity, RobotRepository, resolveRealm, saveRobotCredentialsToVault,
+} from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RobotRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
@@ -24,11 +26,17 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestIDParam(req);
 
     const validator = new RobotRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
     });
 
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RobotEntity,
+    });
+
     const repository = new RobotRepository(dataSource);
     let entity = await repository.findOneBy({ id });
 
@@ -51,7 +59,7 @@ export async function updateRobotRouteHandler(req: Request, res: Response) : Pro
     const config = useConfig();
 
     if (
-        isPropertySet(data, 'name') &&
+        typeof data.name === 'string' &&
         entity.name.toLowerCase() !== data.name.toLowerCase() &&
         entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
     ) {

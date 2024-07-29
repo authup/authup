@@ -6,32 +6,26 @@
  */
 
 import type { OAuth2TokenIntrospectionResponse } from '@authup/kit';
+import { createValidator } from '@validup/adapter-validator';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
-import type { RequestValidationChain } from '../../../../../core';
-import { RequestValidator, RequestValidatorFieldSource } from '../../../../../core';
+import { Container } from 'validup';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     loadOAuth2SubEntity, loadOAuth2SubPermissions,
     readOAuth2TokenPayload, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
 import { useRequestEnv } from '../../../../utils';
 
-export class TokenIntrospectRequestValidator extends RequestValidator<{ token: string }> {
+export class TokenIntrospectRequestValidator extends Container<{ token: string }> {
     constructor() {
         super();
 
-        const chains : RequestValidationChain[] = [
-            this.createFor('token', RequestValidatorFieldSource.BODY),
-            this.createFor('token', RequestValidatorFieldSource.QUERY),
-            this.createFor('token', RequestValidatorFieldSource.PARAMS),
-            // todo: this might not work due routup context
-        ].map((chain) => chain
+        this.mount('token', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
-            .isLength({ min: 16, max: 2048 }));
-
-        this.addOneOf(chains);
+            .isLength({ min: 16, max: 2048 })));
     }
 }
 
@@ -40,7 +34,11 @@ export async function introspectTokenRouteHandler(
     res: Response,
 ) : Promise<any> {
     const validator = new TokenIntrospectRequestValidator();
-    const data = await validator.execute(req);
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
+        locations: ['body', 'query', 'params'],
+    });
+
     if (!data.token) {
         data.token = useRequestEnv(req, 'token');
     }

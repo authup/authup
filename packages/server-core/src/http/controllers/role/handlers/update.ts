@@ -10,8 +10,9 @@ import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
+import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { DatabaseConflictError } from '../../../../database';
 import { RoleEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -27,8 +28,15 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
     }
 
     const validator = new RoleRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.UPDATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RoleEntity,
     });
 
     if (isPropertySet(data, 'realm_id')) {
@@ -39,7 +47,6 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
     let entity = await repository.findOneBy({ id });
 
@@ -55,9 +62,18 @@ export async function updateRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    await enforceUniquenessForDatabaseEntity(RoleEntity, data, {
-        id: entity.id,
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: RoleEntity,
+        entity: data,
+        entityExisting: {
+            id: entity.id,
+        },
     });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
+    }
 
     // ----------------------------------------------
 

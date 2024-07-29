@@ -9,8 +9,12 @@ import { isObject } from '@authup/kit';
 import type {
     Router,
 } from 'routup';
-import { errorHandler, send } from 'routup';
+import {
+    errorHandler, send,
+} from 'routup';
 import { useLogger } from '@authup/server-kit';
+import { EntityRelationLookupError } from 'typeorm-extension';
+import { ValidupNestedError } from 'validup';
 
 export function registerErrorMiddleware(router: Router) {
     router.use(errorHandler((
@@ -18,6 +22,26 @@ export function registerErrorMiddleware(router: Router) {
         request,
         response,
     ) => {
+        if (error.statusCode >= 500 && error.statusCode < 600) {
+            useLogger().error(error);
+
+            if (error.cause) {
+                useLogger().error(error.cause);
+            }
+        }
+
+        if (error.cause instanceof EntityRelationLookupError) {
+            error.statusCode = 400;
+        }
+
+        if (error instanceof ValidupNestedError) {
+            error.statusCode = 400;
+            error.data = {
+                children: error.children,
+                attributes: error.children.map((child) => child.pathAbsolute),
+            };
+        }
+
         // catch and decorate some db errors :)
         switch (error.code) {
             case 'ER_DUP_ENTRY':
@@ -37,27 +61,17 @@ export function registerErrorMiddleware(router: Router) {
         const isServerError = (typeof error.expose !== 'undefined' && !error.expose) ||
             (error.statusCode >= 500 && error.statusCode < 600);
 
-        if (isServerError || error.logMessage) {
-            useLogger().error(error);
-
-            if (error.cause) {
-                useLogger().error(error.cause);
-            }
-        }
-
         if (isServerError) {
             error.message = 'An internal server error occurred.';
         }
 
-        const data = {
+        response.statusCode = error.statusCode;
+
+        return send(response, {
             statusCode: error.statusCode,
             code: `${error.code}`,
             message: error.message,
             ...(isObject(error.data) && !isServerError ? error.data : {}),
-        };
-
-        response.statusCode = data.statusCode;
-
-        return send(response, data);
+        });
     }));
 }

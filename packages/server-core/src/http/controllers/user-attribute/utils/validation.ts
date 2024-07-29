@@ -5,35 +5,46 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestDatabaseValidator } from '../../../../core';
-import { UserAttributeEntity } from '../../../../domains';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { UserAttributeEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class UserAttributeRequestValidator extends RequestDatabaseValidator<
+export class UserAttributeRequestValidator extends Container<
 UserAttributeEntity
 > {
-    constructor() {
-        super(UserAttributeEntity);
+    constructor(options: ContainerOptions<UserAttributeEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.addTo(RequestHandlerOperation.CREATE, 'name')
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 255 });
+    mountAll() {
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .notEmpty()
+                .isString()
+                .isLength({ min: 3, max: 255 })),
+        );
 
-        this.addTo(RequestHandlerOperation.CREATE, 'user_id')
-            .isUUID()
-            .optional({ values: 'null' });
+        this.mount(
+            'user_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .exists()
+                .isUUID()
+                .optional({ values: 'null' })),
+        );
 
-        this.add('value')
+        this.mount('value', createValidator((chain) => chain
             .exists()
             .notEmpty()
             .isString()
             .isLength({ min: 3, max: 512 })
-            .optional({ nullable: true });
+            .optional({ nullable: true })));
     }
 }

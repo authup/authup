@@ -37,6 +37,17 @@ describe('src/http/controllers/role', () => {
         details.id = response.body.id;
     });
 
+    it('should not create same resource', async () => {
+        const response = await superTest
+            .post('/roles')
+            .send({
+                name: details.name,
+            } satisfies Partial<Role>)
+            .auth('admin', 'start123');
+
+        expect(response.statusCode).toEqual(409);
+    });
+
     it('should read collection', async () => {
         const response = await superTest
             .get('/roles')

@@ -12,7 +12,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RoleAttributeRequestValidator } from '../utils';
@@ -20,8 +21,15 @@ import { RequestHandlerOperation } from '../../../request';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new RoleAttributeRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RoleAttributeEntity,
     });
 
     data.realm_id = data.role.realm_id;
@@ -35,7 +43,6 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
         throw new ForbiddenError('You are not permitted to set an attribute for this role...');
     }
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
     const entity = repository.create(data);

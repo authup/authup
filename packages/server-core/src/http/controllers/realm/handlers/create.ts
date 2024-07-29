@@ -11,7 +11,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RealmRequestValidator } from '../utils';
@@ -24,11 +25,17 @@ export async function createRealmRouteHandler(req: Request, res: Response) : Pro
     }
 
     const validator = new RealmRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
     });
 
     const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: RealmEntity,
+    });
+
     const repository = dataSource.getRepository(RealmEntity);
 
     if (!await ability.can(PermissionName.REALM_CREATE, { attributes: data })) {

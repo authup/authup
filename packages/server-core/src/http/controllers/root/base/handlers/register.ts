@@ -5,50 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { User } from '@authup/core-kit';
-import { isValidUserName } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
-import { RequestValidator, isSMTPClientUsable, useSMTPClient } from '../../../../../core';
-import { UserRepository, resolveRealm } from '../../../../../domains';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
+import { UserEntity, UserRepository, resolveRealm } from '../../../../../domains';
 import {
     EnvironmentName, useConfig,
 } from '../../../../../config';
+import { UserRequestValidator } from '../../../user';
 
-export class AuthRegisterRequestValidator extends RequestValidator<User> {
-    constructor() {
-        super();
+export class AuthRegisterRequestValidator extends Container<User> {
+    constructor(options: ContainerOptions<User> = {}) {
+        super(options);
 
-        this.add('email')
-            .exists()
-            .notEmpty()
-            .isEmail();
-
-        this.add('name')
-            .exists()
-            .custom((value) => {
-                const isValid = isValidUserName(value);
-                if (!isValid) {
-                    throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
-                }
-
-                return isValid;
-            })
-            .optional({ nullable: true });
-
-        this.add('password')
-            .exists()
-            .notEmpty()
-            .isLength({ min: 5, max: 512 });
-
-        this.add('realm_id')
-            .exists()
-            .isUUID()
-            .optional({ nullable: true });
+        this.mount(new UserRequestValidator({
+            pathsToInclude: ['email', 'name', 'password', 'realm_id'],
+        }));
     }
 }
 
@@ -68,8 +48,14 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     }
 
     const validator = new AuthRegisterRequestValidator();
+    const validatorWrapper = new RoutupContainerAdapter(validator);
+    const data = await validatorWrapper.run(req);
 
-    const data : Partial<User> = await validator.execute(req);
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserEntity,
+    });
 
     data.name ??= data.email;
 
@@ -78,7 +64,6 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
         data.activate_hash = randomBytes(32).toString('hex'); // todo: create random bytes to hex
     }
 
-    const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
 
     const { entity } = await repository.createWithPassword(data);

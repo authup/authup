@@ -9,7 +9,8 @@ import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ClientScopeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -23,9 +24,16 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
     }
 
     const validator = new ClientScopeRequestValidator();
+    const validatorAdapter = new RoutupContainerAdapter(validator);
 
-    const data = await validator.execute(req, {
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: ClientScopeEntity,
     });
 
     if (data.client) {
@@ -44,7 +52,6 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
     let entity = repository.create(data);
 

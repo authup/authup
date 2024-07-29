@@ -12,7 +12,8 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserPermissionEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
@@ -34,8 +35,15 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
     // ----------------------------------------------
 
     const validator = new UserPermissionRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: UserPermissionEntity,
     });
 
     const policyEvaluationContext : PolicyEvaluationContext = {
@@ -74,7 +82,6 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserPermissionEntity);
     let entity = repository.create(data);
 

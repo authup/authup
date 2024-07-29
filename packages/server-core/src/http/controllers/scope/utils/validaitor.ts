@@ -5,50 +5,47 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@ebec/http';
-import type { Request } from 'routup';
-import { RequestDatabaseValidator, type RequestValidatorExecuteOptions } from '../../../../core';
-import { ScopeEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
+import { createValidator } from '@validup/adapter-validator';
+import type { ContainerOptions } from 'validup';
+import { Container } from 'validup';
+import type { ScopeEntity } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-export class ScopeRequestValidator extends RequestDatabaseValidator<
+export class ScopeRequestValidator extends Container<
 ScopeEntity
 > {
-    constructor() {
-        super(ScopeEntity);
+    constructor(options: ContainerOptions<ScopeEntity> = {}) {
+        super(options);
 
-        this.mount();
+        this.mountAll();
     }
 
-    mount() {
-        this.add('name')
-            .exists()
-            .notEmpty()
-            .isString()
-            .optional({ nullable: true });
+    mountAll() {
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.UPDATE },
+            createValidator((chain) => chain
+                .isString()
+                .isLength({ min: 3, max: 256 })
+                .optional({ values: 'undefined' })),
+        );
 
-        this.add('description')
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator((chain) => chain
+                .isString()
+                .isLength({ min: 3, max: 256 })),
+        );
+
+        this.mount('description', createValidator((chain) => chain
             .optional({ nullable: true })
             .notEmpty()
             .isString()
-            .isLength({ min: 5, max: 4096 });
+            .isLength({ min: 5, max: 4096 })));
 
-        this.addTo(RequestHandlerOperation.CREATE, 'realm_id')
+        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
             .isUUID()
-            .optional({ values: 'null' });
-    }
-
-    async execute(
-        req: Request,
-        options: RequestValidatorExecuteOptions<ScopeEntity> = {},
-    ): Promise<ScopeEntity> {
-        const data = await super.execute(req, options);
-
-        if (options.group === RequestHandlerOperation.CREATE && !data.name) {
-            throw new BadRequestError(buildErrorMessageForAttribute('name'));
-        }
-
-        return data;
+            .optional({ values: 'null' })));
     }
 }

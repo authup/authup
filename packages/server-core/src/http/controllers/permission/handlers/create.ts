@@ -12,9 +12,14 @@ import {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { enforceUniquenessForDatabaseEntity } from '../../../../database';
-import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
+import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { DatabaseConflictError } from '../../../../database';
+import {
+    PermissionEntity,
+    RolePermissionEntity,
+    RoleRepository,
+} from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation, isRequestMasterRealm } from '../../../request';
 import { useRequestEnv } from '../../../utils';
@@ -27,8 +32,15 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
     }
 
     const validator = new PermissionRequestValidator();
-    const data = await validator.execute(req, {
+    const validatorAdapter = new RoutupContainerAdapter(validator);
+    const data = await validatorAdapter.run(req, {
         group: RequestHandlerOperation.CREATE,
+    });
+
+    const dataSource = await useDataSource();
+    await validateEntityJoinColumns(data, {
+        dataSource,
+        entityTarget: PermissionEntity,
     });
 
     if (!data.realm_id && !isRequestMasterRealm(req)) {
@@ -44,11 +56,18 @@ export async function createOnePermissionRouteHandler(req: Request, res: Respons
         throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
     }
 
-    await enforceUniquenessForDatabaseEntity(PermissionEntity, data);
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: PermissionEntity,
+        entity: data,
+    });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
+    }
 
     let entity : PermissionEntity | undefined;
 
-    const dataSource = await useDataSource();
     await dataSource.transaction(async (entityManager) => {
         const repository = entityManager.getRepository(PermissionEntity);
         entity = repository.create(data);
