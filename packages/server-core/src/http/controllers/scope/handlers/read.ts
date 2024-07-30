@@ -17,7 +17,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ScopeEntity, resolveRealm } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -81,8 +81,8 @@ export async function getOneScopeRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
     const fields = useRequestQuery(req, 'fields');
 

@@ -22,7 +22,7 @@ import {
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -109,8 +109,8 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
 
     const dataSource = await useDataSource();

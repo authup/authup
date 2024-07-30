@@ -17,10 +17,10 @@ import { ClientEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { ClientRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateClientRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!await ability.has(PermissionName.CLIENT_UPDATE)) {

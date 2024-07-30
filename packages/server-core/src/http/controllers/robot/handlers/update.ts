@@ -20,10 +20,10 @@ import {
 } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RobotRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const validator = new RobotRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);

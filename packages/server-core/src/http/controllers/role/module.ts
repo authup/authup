@@ -6,15 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Role } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createRoleRouteHandler, deleteRoleRouteHandler,
+    deleteRoleRouteHandler,
     getManyRoleRouteHandler,
     getOneRoleRouteHandler,
-    updateRoleRouteHandler,
+    writeRoleRouteHandler,
 } from './handlers';
 
 @DTags('role')
@@ -34,7 +34,7 @@ export class RoleController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Role> {
-        return createRoleRouteHandler(req, res);
+        return writeRoleRouteHandler(req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -53,7 +53,19 @@ export class RoleController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Role> {
-        return updateRoleRouteHandler(req, res);
+        return writeRoleRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() data: Pick<Role, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<Role> {
+        return writeRoleRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

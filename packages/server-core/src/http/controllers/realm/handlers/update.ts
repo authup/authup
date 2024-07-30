@@ -15,10 +15,10 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RealmRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateRealmRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!await ability.has(PermissionName.REALM_UPDATE)) {

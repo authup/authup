@@ -14,10 +14,10 @@ import { In } from 'typeorm';
 import { wrapPublicKeyPem } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 
 export async function getRealmJwksRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);

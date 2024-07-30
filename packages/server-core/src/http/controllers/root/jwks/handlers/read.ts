@@ -15,7 +15,7 @@ import { wrapPublicKeyPem } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../domains';
-import { useRequestIDParam } from '../../../../request';
+import { useRequestParamID } from '../../../../request';
 
 export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
@@ -50,7 +50,7 @@ export async function getJwksRouteHandler(req: Request, res: Response) : Promise
 }
 
 export async function getJwkRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);

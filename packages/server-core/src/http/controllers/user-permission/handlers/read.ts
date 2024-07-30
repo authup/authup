@@ -14,7 +14,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { UserPermissionEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 /**
@@ -78,7 +78,7 @@ export async function getOneUserPermissionRouteHandler(req: Request, res: Respon
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);

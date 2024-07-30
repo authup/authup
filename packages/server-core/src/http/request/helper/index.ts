@@ -5,5 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './id-param';
+export * from './body-realm-id';
+export * from './param-id';
 export * from './master-realm';

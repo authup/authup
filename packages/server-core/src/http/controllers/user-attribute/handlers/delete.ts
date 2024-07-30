@@ -12,11 +12,11 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);

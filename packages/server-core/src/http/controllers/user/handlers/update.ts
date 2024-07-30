@@ -15,10 +15,10 @@ import { useConfig } from '../../../../config';
 import { UserEntity, UserRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { UserRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     const env = useRequestEnv(req);

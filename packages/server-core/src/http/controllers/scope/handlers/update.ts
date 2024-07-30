@@ -15,10 +15,10 @@ import { DatabaseConflictError } from '../../../../database';
 import { ScopeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { ScopeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!await ability.has(PermissionName.SCOPE_UPDATE)) {

@@ -15,10 +15,10 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const validator = new RoleAttributeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);

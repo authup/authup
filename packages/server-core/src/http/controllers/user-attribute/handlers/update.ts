@@ -14,10 +14,10 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const validator = new UserAttributeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);

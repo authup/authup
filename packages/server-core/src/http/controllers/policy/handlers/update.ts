@@ -19,10 +19,10 @@ import { DatabaseConflictError } from '../../../../database';
 import { PolicyEntity, PolicyRepository } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { PolicyAttributesValidator, PolicyValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updatePolicyRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!await ability.has(PermissionName.PERMISSION_UPDATE)) {

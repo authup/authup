@@ -24,7 +24,7 @@ import {
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { setRequestEnv } from '../../../utils';
 import { InternalGrantType } from '../../../oauth2';
 import { EnvironmentName, useConfig } from '../../../../config';
@@ -51,7 +51,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const entity = await resolve(dataSource, id);
@@ -73,7 +73,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
     const dataSource = await useDataSource();
 
     const entity = await resolve(dataSource, id);

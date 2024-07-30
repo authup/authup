@@ -16,10 +16,10 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv } from '../../../utils';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestIDParam } from '../../../request';
+import { RequestHandlerOperation, useRequestParamID } from '../../../request';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const ability = useRequestEnv(req, 'abilities');
     if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {

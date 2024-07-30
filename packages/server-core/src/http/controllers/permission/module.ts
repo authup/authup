@@ -6,16 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Permission } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createOnePermissionRouteHandler,
     deletePermissionRouteHandler,
     getManyPermissionRouteHandler,
     getOnePermissionRouteHandler,
-    updatePermissionRouteHandler,
+    writePermissionRouteHandler,
 } from './handlers';
 
 @DTags('permission')
@@ -44,7 +43,7 @@ export class PermissionController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Permission[]> {
-        return createOnePermissionRouteHandler(req, res);
+        return writePermissionRouteHandler(req, res);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -54,7 +53,19 @@ export class PermissionController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Permission> {
-        return updatePermissionRouteHandler(req, res);
+        return writePermissionRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: NonNullable<Permission>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<Permission> {
+        return writePermissionRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

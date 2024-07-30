@@ -82,16 +82,36 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should update resource', async () => {
-        details.name = 'TestA';
-
         const response = await superTest
             .post(`/roles/${details.id}`)
-            .send(details)
+            .send({
+                ...details,
+                name: 'TestA',
+            })
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('TestA');
 
+        details.name = 'TestA';
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should update resource by name', async () => {
+        const response = await superTest
+            .post(`/roles/${details.name}`)
+            .send({
+                ...details,
+                name: 'TestB',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('TestB');
+
+        details.name = 'TestB';
         expectPropertiesEqualToSrc(details, response.body);
     });
 

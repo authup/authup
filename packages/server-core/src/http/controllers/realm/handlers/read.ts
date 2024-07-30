@@ -14,7 +14,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { RealmEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 
 export async function getManyRealmRouteHandler(
     req: Request,
@@ -56,8 +56,8 @@ export async function getOneRealmRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
 
     const dataSource = await useDataSource();
