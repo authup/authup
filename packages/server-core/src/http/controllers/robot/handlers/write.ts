@@ -9,23 +9,24 @@ import { isUUID } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
-    isRealmResourceWritable,
+    REALM_MASTER_NAME, isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { DatabaseConflictError } from '../../../../database';
-import { RoleEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
-import { RoleRequestValidator } from '../utils';
+import { useConfig } from '../../../../config';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm,
+    RobotEntity, RobotRepository, resolveRealm, saveRobotCredentialsToVault,
+} from '../../../../domains';
+import { useRequestEnv } from '../../../utils';
+import { RobotRequestValidator } from '../utils';
+import {
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID,
 } from '../../../request';
 
-export async function writeRoleRouteHandler(
+export async function writeRobotRouteHandler(
     req: Request,
     res: Response,
     options: {
@@ -37,10 +38,10 @@ export async function writeRoleRouteHandler(
     const realmId = getRequestBodyRealmID(req);
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(RoleEntity);
-    let entity : RoleEntity | undefined;
+    const repository = new RobotRepository(dataSource);
+    let entity : RobotEntity | undefined;
     if (id) {
-        const where: FindOptionsWhere<RoleEntity> = {};
+        const where: FindOptionsWhere<RobotEntity> = {};
         if (isUUID(id)) {
             where.id = id;
         } else {
@@ -74,7 +75,7 @@ export async function writeRoleRouteHandler(
         group = RequestHandlerOperation.CREATE;
     }
 
-    const validator = new RoleRequestValidator();
+    const validator = new RobotRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,
@@ -82,58 +83,70 @@ export async function writeRoleRouteHandler(
 
     await validateEntityJoinColumns(data, {
         dataSource,
-        entityTarget: RoleEntity,
+        entityTarget: RobotEntity,
     });
-
-    // ----------------------------------------------
 
     if (entity) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+            throw new ForbiddenError();
         }
 
         if (!await ability.can(PermissionName.ROLE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
-    } else {
-        if (!data.realm_id && !isRequestMasterRealm(req)) {
-            const { id } = useRequestEnv(req, 'realm');
-            data.realm_id = id;
+
+        const config = useConfig();
+        if (
+            typeof data.name === 'string' &&
+            entity.name.toLowerCase() !== data.name.toLowerCase() &&
+            entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
+        ) {
+            const realm = await resolveRealm(entity.realm_id);
+            if (realm.name === REALM_MASTER_NAME) {
+                throw new BadRequestError('The system robot name can not be changed.');
+            }
         }
 
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        if (!await ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
-    }
-
-    // ----------------------------------------------
-
-    const isUnique = await isEntityUnique({
-        dataSource,
-        entityTarget: RoleEntity,
-        entity: data,
-        entityExisting: entity,
-    });
-
-    if (!isUnique) {
-        throw new DatabaseConflictError();
-    }
-
-    // ----------------------------------------------
-
-    if (entity) {
         entity = repository.merge(entity, data);
+        if (data.secret) {
+            entity.secret = await repository.hashSecret(data.secret);
+        }
+
         await repository.save(entity);
+
+        if (data.secret) {
+            entity.secret = data.secret;
+            // todo: this should be executed through a message broker
+            await saveRobotCredentialsToVault(entity);
+        }
 
         return sendAccepted(res, entity);
     }
 
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new ForbiddenError();
+    }
+
+    if (!data.realm_id) {
+        const { id } = useRequestEnv(req, 'realm');
+        data.realm_id = id;
+    }
+
+    if (!await ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
+        throw new ForbiddenError();
+    }
+
     entity = repository.create(data);
+    if (data.secret) {
+        entity.secret = await repository.hashSecret(data.secret);
+    }
     await repository.save(entity);
+
+    if (data.secret) {
+        entity.secret = data.secret;
+        // todo: this should be executed through a message broker
+        await saveRobotCredentialsToVault(entity);
+    }
 
     return sendCreated(res, entity);
 }

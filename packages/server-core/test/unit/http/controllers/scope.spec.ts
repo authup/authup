@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission, Role } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
+import type { Scope } from '@authup/core-kit';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
-describe('src/http/controllers/permission', () => {
-    let superTest = useSuperTest();
+describe('src/http/controllers/scope', () => {
+    const superTest = useSuperTest();
 
     beforeAll(async () => {
         await useTestDatabase();
@@ -20,17 +19,15 @@ describe('src/http/controllers/permission', () => {
 
     afterAll(async () => {
         await dropTestDatabase();
-
-        superTest = undefined;
     });
 
-    const details : Partial<Permission> = {
+    const details : Partial<Scope> = {
         name: 'Test',
     };
 
-    it('should create collection', async () => {
+    it('should create resource', async () => {
         const response = await superTest
-            .post('/permissions')
+            .post('/scopes')
             .send(details)
             .auth('admin', 'start123');
 
@@ -42,10 +39,10 @@ describe('src/http/controllers/permission', () => {
 
     it('should not create same resource', async () => {
         const response = await superTest
-            .post('/permissions')
+            .post('/scopes')
             .send({
                 name: details.name,
-            } satisfies Partial<Role>)
+            } satisfies Partial<Scope>)
             .auth('admin', 'start123');
 
         expect(response.statusCode).toEqual(409);
@@ -53,18 +50,18 @@ describe('src/http/controllers/permission', () => {
 
     it('should read collection', async () => {
         const response = await superTest
-            .get('/permissions')
+            .get('/scopes')
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(Object.values(PermissionName).length + 1);
+        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
         const response = await superTest
-            .get(`/permissions/${details.id}`)
+            .get(`/scopes/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -75,7 +72,7 @@ describe('src/http/controllers/permission', () => {
 
     it('should read resource by name', async () => {
         const response = await superTest
-            .get(`/permissions/${details.name}`)
+            .get(`/scopes/${details.name}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
@@ -86,7 +83,7 @@ describe('src/http/controllers/permission', () => {
 
     it('should update resource', async () => {
         const response = await superTest
-            .post(`/permissions/${details.id}`)
+            .post(`/scopes/${details.id}`)
             .send({
                 ...details,
                 name: 'TestA',
@@ -96,14 +93,14 @@ describe('src/http/controllers/permission', () => {
         expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
         expect(response.body.name).toEqual('TestA');
-        details.name = 'TestA';
 
+        details.name = 'TestA';
         expectPropertiesEqualToSrc(details, response.body);
     });
 
     it('should update resource by name', async () => {
         const response = await superTest
-            .post(`/permissions/${details.name}`)
+            .post(`/scopes/${details.name}`)
             .send({
                 ...details,
                 name: 'TestB',
@@ -120,17 +117,16 @@ describe('src/http/controllers/permission', () => {
 
     it('should delete resource', async () => {
         const response = await superTest
-            .delete(`/permissions/${details.id}`)
+            .delete(`/scopes/${details.id}`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const name : string = 'PutA';
         let response = await superTest
-            .put(`/permissions/${name}`)
+            .put(`/scopes/${name}`)
             .send({
                 name,
             })
@@ -143,7 +139,7 @@ describe('src/http/controllers/permission', () => {
         const { id } = response.body;
 
         response = await superTest
-            .put(`/permissions/${name}`)
+            .put(`/scopes/${name}`)
             .send({
                 name: 'PutB',
             })

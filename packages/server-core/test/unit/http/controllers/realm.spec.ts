@@ -91,4 +91,32 @@ describe('src/http/controllers/realm', () => {
 
         expect(response.status).toEqual(202);
     });
+
+    it('should create and update resource with put', async () => {
+        const name : string = 'PutA';
+        let response = await superTest
+            .put(`/realms/${name}`)
+            .send({
+                name,
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutA');
+
+        const { id } = response.body;
+
+        response = await superTest
+            .put(`/realms/${name}`)
+            .send({
+                name: 'PutB',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutB');
+        expect(response.body.id).toEqual(id);
+    });
 });

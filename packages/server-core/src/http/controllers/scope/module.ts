@@ -6,16 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Scope } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createScopeRouteHandler,
     deleteScopeRouteHandler,
     getManyScopeRouteHandler,
     getOneScopeRouteHandler,
-    updateScopeRouteHandler,
+    writeScopeRouteHandler,
 } from './handlers';
 
 @DTags('scope')
@@ -35,7 +34,7 @@ export class ScopeController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Scope> {
-        return createScopeRouteHandler(req, res);
+        return writeScopeRouteHandler(req, res);
     }
 
     @DGet('/:id', [])
@@ -54,7 +53,19 @@ export class ScopeController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Scope> {
-        return updateScopeRouteHandler(req, res);
+        return writeScopeRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() data: Pick<Scope, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<Scope> {
+        return writeScopeRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

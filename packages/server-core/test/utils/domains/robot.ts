@@ -11,6 +11,7 @@ import type { Robot } from '@authup/core-kit';
 
 export const TEST_DEFAULT_ROBOT : Partial<Robot> = {
     name: 'test',
+    secret: 'start123',
     active: true,
 };
 

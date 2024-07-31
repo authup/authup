@@ -5,22 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/kit';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { isPropertySet, isUUID } from '@authup/kit';
-import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
-import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
+import { ScopeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
-import { PermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID } from '../../../request';
+import { ScopeRequestValidator } from '../utils';
+import {
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm,
+} from '../../../request';
 
-export async function writePermissionRouteHandler(
+export async function writeScopeRouteHandler(
     req: Request,
     res: Response,
     options: {
@@ -32,10 +34,10 @@ export async function writePermissionRouteHandler(
     const realmId = getRequestBodyRealmID(req);
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(PermissionEntity);
-    let entity : PermissionEntity | undefined;
+    const repository = dataSource.getRepository(ScopeEntity);
+    let entity : ScopeEntity | undefined;
     if (id) {
-        const where: FindOptionsWhere<PermissionEntity> = {};
+        const where: FindOptionsWhere<ScopeEntity> = {};
         if (isUUID(id)) {
             where.id = id;
         } else {
@@ -56,20 +58,20 @@ export async function writePermissionRouteHandler(
 
     const ability = useRequestEnv(req, 'abilities');
     if (entity) {
-        if (!await ability.has(PermissionName.PERMISSION_UPDATE)) {
+        if (!await ability.has(PermissionName.SCOPE_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.PERMISSION_CREATE)) {
+        if (!await ability.has(PermissionName.SCOPE_CREATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.CREATE;
     }
 
-    const validator = new PermissionRequestValidator();
+    const validator = new ScopeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,
@@ -77,28 +79,39 @@ export async function writePermissionRouteHandler(
 
     await validateEntityJoinColumns(data, {
         dataSource,
-        entityTarget: PermissionEntity,
+        entityTarget: ScopeEntity,
     });
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-    }
+    // ----------------------------------------------
 
     if (entity) {
-        if (entity.built_in && isPropertySet(data, 'name') && entity.name !== data.name) {
-            throw new BadRequestError('The name of a built-in permission can not be changed.');
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
+        if (!await ability.can(PermissionName.SCOPE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
-    } else if (!await ability.can(PermissionName.PERMISSION_CREATE, { attributes: data })) {
-        throw new ForbiddenError();
+    } else {
+        if (!data.realm_id && !isRequestMasterRealm(req)) {
+            const { id } = useRequestEnv(req, 'realm');
+            data.realm_id = id;
+        }
+
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+        }
+
+        if (!await ability.can(PermissionName.SCOPE_CREATE, { attributes: data })) {
+            throw new ForbiddenError();
+        }
     }
+
+    // ----------------------------------------------
 
     const isUnique = await isEntityUnique({
         dataSource,
-        entityTarget: PermissionEntity,
+        entityTarget: ScopeEntity,
         entity: data,
         entityExisting: entity,
     });
@@ -106,6 +119,8 @@ export async function writePermissionRouteHandler(
     if (!isUnique) {
         throw new DatabaseConflictError();
     }
+
+    // ----------------------------------------------
 
     if (entity) {
         entity = repository.merge(entity, data);
@@ -115,25 +130,7 @@ export async function writePermissionRouteHandler(
     }
 
     entity = repository.create(data);
-
-    await dataSource.transaction(async (entityManager) => {
-        const transactionRepository = entityManager.getRepository(PermissionEntity);
-        await transactionRepository.save(entity);
-
-        const roleRepository = new RoleRepository(entityManager);
-        const role = await roleRepository.findOneBy({
-            name: ROLE_ADMIN_NAME,
-            realm_id: null,
-        });
-
-        const rolePermissionRepository = entityManager.getRepository(RolePermissionEntity);
-        await rolePermissionRepository.insert({
-            role_id: role.id,
-            role_realm_id: role.realm_id,
-            permission_id: entity.id,
-            permission_realm_id: entity.realm_id,
-        });
-    });
+    await repository.save(entity);
 
     return sendCreated(res, entity);
 }

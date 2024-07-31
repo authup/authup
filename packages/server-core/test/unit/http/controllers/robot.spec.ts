@@ -23,6 +23,7 @@ describe('src/http/controllers/robot', () => {
 
     const details : Partial<Robot> = {
         name: 'foo',
+        secret: 'start123',
     };
 
     it('should create resource', async () => {
@@ -58,7 +59,7 @@ describe('src/http/controllers/robot', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response.body, ['secret']);
     });
 
     it('should read resource by name', async () => {
@@ -69,7 +70,7 @@ describe('src/http/controllers/robot', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response.body, ['secret']);
     });
 
     it('should update resource', async () => {
@@ -93,5 +94,34 @@ describe('src/http/controllers/robot', () => {
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
+    });
+
+    it('should create and update resource with put', async () => {
+        const name : string = 'PutA';
+        let response = await superTest
+            .put(`/robots/${name}`)
+            .send({
+                name,
+                secret: 'start123',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutA');
+
+        const { id } = response.body;
+
+        response = await superTest
+            .put(`/robots/${name}`)
+            .send({
+                name: 'PutB',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutB');
+        expect(response.body.id).toEqual(id);
     });
 });

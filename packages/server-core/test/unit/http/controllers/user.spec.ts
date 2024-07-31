@@ -6,11 +6,10 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { hash } from '@authup/server-kit';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
-import { TEST_DEFAULT_USER, createSuperTestUser } from '../../../utils/domains';
+import { createFakeUser } from '../../../utils/domains';
 
 describe('src/http/controllers/user', () => {
     const superTest = useSuperTest();
@@ -23,15 +22,13 @@ describe('src/http/controllers/user', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<User> = {
-        ...TEST_DEFAULT_USER,
-    };
+    const details : Partial<User> = createFakeUser();
 
     it('should create resource', async () => {
-        const response = await createSuperTestUser(superTest, {
-            ...details,
-            password: await hash('start123'),
-        });
+        const response = await superTest
+            .post('/users')
+            .send(details)
+            .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
@@ -54,24 +51,24 @@ describe('src/http/controllers/user', () => {
 
     it('should read resource', async () => {
         const response = await superTest
-            .get(`/users/${details.id}`)
+            .get(`/users/${details.id}?fields=%2Bemail`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response.body, ['password']);
     });
 
     it('should read resource by name', async () => {
         const response = await superTest
-            .get(`/users/${details.name}`)
+            .get(`/users/${details.name}?fields=%2Bemail`)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response.body, ['password']);
     });
 
     it('should update resource', async () => {
@@ -96,5 +93,34 @@ describe('src/http/controllers/user', () => {
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
+    });
+
+    it('should create and update resource with put', async () => {
+        const entity = createFakeUser();
+        let response = await superTest
+            .put(`/users/${entity.name}`)
+            .send(entity)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(entity.name);
+
+        const { id } = response.body;
+
+        const { name } = createFakeUser();
+
+        response = await superTest
+            .put(`/users/${entity.name}`)
+            .send({
+                ...entity,
+                name,
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(name);
+        expect(response.body.id).toEqual(id);
     });
 });

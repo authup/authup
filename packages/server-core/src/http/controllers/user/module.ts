@@ -6,16 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { User } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createUserRouteHandler,
     deleteUserRouteHandler,
     getManyUserRouteHandler,
     getOneUserRouteHandler,
-    updateUserRouteHandler,
+    writeUserRouteHandler,
 } from './handlers';
 
 @DTags('user')
@@ -35,7 +34,7 @@ export class UserController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<User | undefined> {
-        return createUserRouteHandler(req, res);
+        return writeUserRouteHandler(req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -54,7 +53,19 @@ export class UserController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<User | undefined> {
-        return updateUserRouteHandler(req, res);
+        return writeUserRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: User,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<User | undefined> {
+        return writeUserRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

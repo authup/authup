@@ -6,18 +6,17 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/kit';
 import type { Realm } from '@authup/core-kit';
 import {
-    createRealmRouteHandler,
     deleteRealmRouteHandler,
     getManyRealmRouteHandler,
     getOneRealmRouteHandler,
     getRealmJwksRouteHandler,
     getRealmOpenIdConfigurationRouteHandler,
-    updateRealmRouteHandler,
+    writeRealmRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
@@ -38,7 +37,9 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Realm> {
-        return createRealmRouteHandler(req, res);
+        return writeRealmRouteHandler(req, res, {
+            updateOnly: true,
+        });
     }
 
     @DGet('/:id', [])
@@ -75,7 +76,17 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Realm> {
-        return updateRealmRouteHandler(req, res);
+        return writeRealmRouteHandler(req, res, { updateOnly: true });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: NonNullable<Realm>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<Realm> {
+        return writeRealmRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
