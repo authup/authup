@@ -5,22 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { faker } from '@faker-js/faker';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import type { Robot } from '@authup/core-kit';
 
-export const TEST_DEFAULT_ROBOT : Partial<Robot> = {
-    name: 'test',
-    active: true,
-};
+export function createFakeRobot(data: Partial<Robot> = {}) {
+    return {
+        name: faker.string.alpha({ casing: 'lower', length: 10 }),
+        secret: faker.string.alphanumeric({ length: 64 }),
+        active: true,
+        ...data,
+    } satisfies Partial<Robot>;
+}
 
 export async function createSuperTestRobot(superTest: SuperTest<Test>, entity?: Partial<Robot>) {
     return superTest
         .post('/robots')
-        .send({
-            ...TEST_DEFAULT_ROBOT,
-            ...(entity || {}),
-        })
+        .send(createFakeRobot(entity))
         .auth('admin', 'start123');
 }
 

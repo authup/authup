@@ -5,25 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { faker } from '@faker-js/faker';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import type { Client } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 
-export const TEST_DEFAULT_CLIENT : Partial<Client> = {
-    name: 'test',
-    secret: 'foo',
-    redirect_uri: 'https://example.com/*',
-    is_confidential: true,
-};
+export function createFakeClient(data: Partial<Client> = {}) {
+    return {
+        name: faker.internet.userName(),
+        secret: faker.string.alpha({ length: 10 }),
+        redirect_uri: faker.internet.url(),
+        is_confidential: true,
+        ...data,
+    } satisfies Partial<Client>;
+}
 
 export async function createSuperTestClient(superTest: SuperTest<Test>, entity?: Partial<Client>) {
     return superTest
         .post('/clients')
-        .send({
-            ...TEST_DEFAULT_CLIENT,
-            ...(entity || {}),
-        })
+        .send(createFakeClient(entity))
         .auth('admin', 'start123');
 }
 

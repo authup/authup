@@ -6,8 +6,7 @@
  */
 
 export * from './jwks';
-export * from './create';
 export * from './delete';
 export * from './openid';
 export * from './read';
-export * from './update';
+export * from './write';

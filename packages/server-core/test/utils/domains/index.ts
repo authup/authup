@@ -6,6 +6,7 @@
  */
 
 export * from './client';
+export * from './identity-provider';
 export * from './permission';
 export * from './robot';
 export * from './role';

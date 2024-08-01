@@ -6,7 +6,6 @@
  */
 
 export * from './integrity';
-export * from './create';
 export * from './delete';
 export * from './read';
-export * from './update';
+export * from './write';

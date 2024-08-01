@@ -104,7 +104,12 @@ describe('src/http/controllers/token', () => {
         expect(response.status).toEqual(400);
         expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
 
-        const entity = await createSuperTestUser(superTest, { password: 'foo-bar-baz', active: false });
+        const entity = await createSuperTestUser(superTest, {
+            password: 'foo-bar-baz',
+            active: false,
+        });
+
+        credentials.username = entity.body.name;
 
         response = await superTest
             .post('/token')
@@ -141,7 +146,9 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should not grant with robot-credentials (inactive)', async () => {
-        await updateSuperTestRobot(superTest, seederResponse.robot.id, { active: false });
+        await updateSuperTestRobot(superTest, seederResponse.robot.id, {
+            active: false,
+        });
 
         const response = await superTest
             .post('/token')

@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotPermissionEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 /**
@@ -21,8 +21,8 @@ import { useRequestEnv } from '../../../utils';
  * @param res
  */
 export async function deleteRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
 
     const ability = useRequestEnv(req, 'abilities');

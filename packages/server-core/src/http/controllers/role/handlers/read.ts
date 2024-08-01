@@ -17,7 +17,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleEntity, resolveRealm } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -81,8 +81,8 @@ export async function getOneRoleRouteHandler(req: Request, res: Response) : Prom
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
     const fields = useRequestQuery(req, 'fields');
 

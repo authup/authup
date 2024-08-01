@@ -24,7 +24,7 @@ import type { UserEntity } from '../../../../domains';
 import { UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 async function buildFieldsOption(req: Request) : Promise<QueryFieldsApplyOptions<UserEntity>> {
@@ -89,8 +89,8 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 }
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req, {
-        strict: false,
+    const id = useRequestParamID(req, {
+        isUUID: false,
     });
 
     const dataSource = await useDataSource();

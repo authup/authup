@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider } from '@authup/core-kit';
 import {
-    IdentityProviderProtocol,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
 import { createOAuth2IdentityProviderFlow } from '../../../../../src';
+import { createFakeOAuth2IdentityProvider } from '../../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
 import { useSuperTest } from '../../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
@@ -28,16 +28,7 @@ describe('src/http/controllers/identity-provider', () => {
         superTest = undefined;
     });
 
-    const details : Partial<OAuth2IdentityProvider> = {
-        name: 'keycloak',
-        slug: 'keycloak',
-        enabled: true,
-        protocol: IdentityProviderProtocol.OAUTH2,
-        client_id: 'client',
-        client_secret: 'start123',
-        token_url: 'https://keycloak.tada5hi.net/auth/realms/master/protocol/openid-connect/token',
-        authorize_url: 'https://keycloak.tada5hi.net/auth/realms/master/protocol/openid-connect/auth',
-    };
+    const details = createFakeOAuth2IdentityProvider();
 
     it('should create resource', async () => {
         const response = await superTest
@@ -120,5 +111,34 @@ describe('src/http/controllers/identity-provider', () => {
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
+    });
+
+    it('should create and update resource with put', async () => {
+        const entity = createFakeOAuth2IdentityProvider();
+        let response = await superTest
+            .put(`/identity-providers/${entity.name}`)
+            .send(entity)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(entity.name);
+
+        const { id } = response.body;
+
+        const { name } = createFakeOAuth2IdentityProvider();
+
+        response = await superTest
+            .put(`/identity-providers/${entity.name}`)
+            .send({
+                ...entity,
+                name,
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(name);
+        expect(response.body.id).toEqual(id);
     });
 });

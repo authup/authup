@@ -6,25 +6,33 @@
  */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
+import { faker } from '@faker-js/faker';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import type { User } from '@authup/core-kit';
 
-export const TEST_DEFAULT_USER : Partial<User> = {
-    name: 'test',
-    name_locked: false,
-    display_name: 'TestUser',
-    first_name: 'foo',
-    last_name: 'bar',
-    active: true,
-};
+export function createFakeUser(data: Partial<User> = {}) {
+    return {
+        name: faker.internet.userName()
+            .replaceAll('.', ''),
+        email: faker.internet.email(),
+        display_name: faker.internet.displayName(),
+        name_locked: false,
+        active: true,
+        first_name: faker.person.firstName(),
+        last_name: faker.person.lastName(),
+        password: faker.string.alphanumeric({ length: 64 }),
+        ...data,
+    } satisfies Partial<User>;
+}
 
-export async function createSuperTestUser(superTest: SuperTest<Test>, entity?: Partial<User>) {
+export async function createSuperTestUser(
+    superTest: SuperTest<Test>,
+    entity?: Partial<User>,
+) {
     return superTest
         .post('/users')
-        .send({
-            ...TEST_DEFAULT_USER,
-            ...(entity || {}),
-        })
+        .send(createFakeUser(entity))
         .auth('admin', 'start123');
 }
 

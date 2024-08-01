@@ -10,11 +10,18 @@ export function isValidUserName(input: string) : boolean {
         return false;
     }
 
-    return /^[A-Za-z0-9-_.]{3,36}$/.test(input) &&
-        input.toLowerCase().indexOf('bot') === -1 &&
-        input.toLowerCase().indexOf('system') === -1 &&
-        input.toLowerCase() !== 'everyone' &&
-        input.toLowerCase() !== 'here';
+    if (!(/^[A-Za-z0-9-_.]{3,36}$/.test(input))) {
+        return false;
+    }
+
+    input = input.toLowerCase();
+
+    return ![
+        'bot',
+        'system',
+        'everyone',
+        'here',
+    ].some((el) => input.startsWith(el));
 }
 
 export function isValidUserEmail(input: string) {

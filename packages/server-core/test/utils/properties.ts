@@ -5,12 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function expectPropertiesEqualToSrc(
-    src: Record<string, any>,
+export function expectPropertiesEqualToSrc<T extends Record<string, any>>(
+    src: T,
     dest: Record<string, any>,
+    ignore?: (keyof T)[],
 ) {
     const keys = Object.keys(src);
     for (let i = 0; i < keys.length; i++) {
+        if (ignore && ignore.indexOf(keys[i]) !== -1) {
+            continue;
+        }
+
         expect(dest[keys[i]]).toEqual(src[keys[i]]);
     }
 }

@@ -15,7 +15,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { useRequestEnv } from '../../../utils';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -71,7 +71,7 @@ export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: 
         throw new ForbiddenError();
     }
 
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);

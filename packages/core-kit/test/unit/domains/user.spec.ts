@@ -8,6 +8,10 @@
 import { isValidUserName } from '../../../src';
 
 describe('src/domains/user/**', () => {
+    it('should validate', () => {
+        const name = 'Demario_Botsford25';
+        expect(isValidUserName(name)).toBeTruthy();
+    });
     it('should validate user name', () => {
         let name = 'foo';
         expect(isValidUserName(name)).toBeTruthy();

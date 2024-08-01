@@ -25,7 +25,7 @@ describe('src/http/controllers/permission', () => {
     });
 
     const details : Partial<Permission> = {
-        name: 'testAdd999',
+        name: 'Test',
     };
 
     it('should create collection', async () => {
@@ -85,16 +85,36 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should update resource', async () => {
-        details.name = 'foo_add';
-
         const response = await superTest
             .post(`/permissions/${details.id}`)
-            .send(details)
+            .send({
+                ...details,
+                name: 'TestA',
+            })
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('TestA');
+        details.name = 'TestA';
 
+        expectPropertiesEqualToSrc(details, response.body);
+    });
+
+    it('should update resource by name', async () => {
+        const response = await superTest
+            .post(`/permissions/${details.name}`)
+            .send({
+                ...details,
+                name: 'TestB',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('TestB');
+
+        details.name = 'TestB';
         expectPropertiesEqualToSrc(details, response.body);
     });
 
@@ -105,5 +125,33 @@ describe('src/http/controllers/permission', () => {
 
         expect(response.status).toEqual(202);
         expect(response.body).toBeDefined();
+    });
+
+    it('should create and update resource with put', async () => {
+        const name : string = 'PutA';
+        let response = await superTest
+            .put(`/permissions/${name}`)
+            .send({
+                name,
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutA');
+
+        const { id } = response.body;
+
+        response = await superTest
+            .put(`/permissions/${name}`)
+            .send({
+                name: 'PutB',
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual('PutB');
+        expect(response.body.id).toEqual(id);
     });
 });

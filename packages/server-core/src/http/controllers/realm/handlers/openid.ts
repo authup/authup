@@ -13,10 +13,10 @@ import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../../../../domains';
 import { useConfig } from '../../../../config';
-import { useRequestIDParam } from '../../../request';
+import { useRequestParamID } from '../../../request';
 
 export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestIDParam(req);
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);

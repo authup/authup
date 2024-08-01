@@ -6,17 +6,16 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { Robot } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
-    createRobotRouteHandler,
     deleteRobotRouteHandler,
     getManyRobotRouteHandler,
     getOneRobotRouteHandler,
     handleRobotIntegrityRouteHandler,
-    updateRobotRouteHandler,
+    writeRobotRouteHandler,
 } from './handlers';
 
 @DTags('robot')
@@ -36,7 +35,7 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Robot> {
-        return createRobotRouteHandler(req, res);
+        return writeRobotRouteHandler(req, res);
     }
 
     @DGet('/:id/integrity', [])
@@ -64,7 +63,19 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Robot> {
-        return updateRobotRouteHandler(req, res);
+        return writeRobotRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() data: Pick<Robot, 'name'>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<Robot> {
+        return writeRobotRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])

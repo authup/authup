@@ -5,20 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { faker } from '@faker-js/faker';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import type { SuperTest, Test } from 'supertest';
 import type { Role } from '@authup/core-kit';
 
-export const TEST_DEFAULT_ROLE : Partial<Role> = {
-    name: 'test',
-};
+export function createFakeRole(data: Partial<Role> = {}) {
+    return {
+        name: faker.string.alpha({ casing: 'lower', length: 10 }),
+        description: faker.string.alpha({ length: 256 }),
+        ...data,
+    } satisfies Partial<Role>;
+}
 
 export async function createSuperTestRole(superTest: SuperTest<Test>, entity?: Partial<Role>) {
     return superTest
         .post('/roles')
-        .send({
-            ...TEST_DEFAULT_ROLE,
-            ...(entity || {}),
-        })
+        .send(createFakeRole(entity))
         .auth('admin', 'start123');
 }
