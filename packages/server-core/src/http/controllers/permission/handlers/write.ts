@@ -18,7 +18,9 @@ import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../..
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { useRequestEnv } from '../../../utils';
 import { PermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID } from '../../../request';
+import {
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm,
+} from '../../../request';
 
 export async function writePermissionRouteHandler(
     req: Request,
@@ -80,11 +82,11 @@ export async function writePermissionRouteHandler(
         entityTarget: PermissionEntity,
     });
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-    }
-
     if (entity) {
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+        }
+
         if (entity.built_in && isPropertySet(data, 'name') && entity.name !== data.name) {
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
@@ -92,8 +94,19 @@ export async function writePermissionRouteHandler(
         if (!await ability.can(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
-    } else if (!await ability.can(PermissionName.PERMISSION_CREATE, { attributes: data })) {
-        throw new ForbiddenError();
+    } else {
+        if (!data.realm_id && !isRequestMasterRealm(req)) {
+            const { id } = useRequestEnv(req, 'realm');
+            data.realm_id = id;
+        }
+
+        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
+        }
+
+        if (!await ability.can(PermissionName.PERMISSION_CREATE, { attributes: data })) {
+            throw new ForbiddenError();
+        }
     }
 
     const isUnique = await isEntityUnique({
