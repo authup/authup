@@ -6,17 +6,16 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type {
     Client,
 } from '@authup/core-kit';
 import {
-    createClientRouteHandler,
     deleteClientRouteHandler,
     getManyClientRouteHandler,
     getOneClientRouteHandler,
-    updateClientRouteHandler,
+    writeClientRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
@@ -47,7 +46,19 @@ export class ClientController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Client> {
-        return updateClientRouteHandler(req, res);
+        return writeClientRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: NonNullable<Client>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<Client> {
+        return writeClientRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -65,6 +76,6 @@ export class ClientController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<Client> {
-        return createClientRouteHandler(req, res);
+        return writeClientRouteHandler(req, res);
     }
 }

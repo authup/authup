@@ -8,6 +8,7 @@
 import type { Policy } from '@authup/core-kit';
 import type { CompositePolicyOptions, TimePolicyOptions } from '@authup/permitus';
 import { BuiltInPolicyType } from '@authup/permitus';
+import { createFakeTimePolicy } from '../../../utils/domains/policy';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -26,14 +27,9 @@ describe('src/http/controllers/policy', () => {
 
     const ids : string[] = [];
 
-    const timePolicyPayload = () => ({
-        name: 'time',
-        type: BuiltInPolicyType.TIME,
-        start: Date.now(),
-        end: Date.now(),
-        invert: false,
+    const timePolicyWithParent = () => (createFakeTimePolicy({
         parent_id: ids[0],
-    } as Partial<TimePolicyOptions>);
+    }));
 
     it('should create group policy', async () => {
         const response = await superTest
@@ -54,22 +50,13 @@ describe('src/http/controllers/policy', () => {
     it('should create time policy', async () => {
         const response = await superTest
             .post('/policies')
-            .send(timePolicyPayload())
+            .send(timePolicyWithParent())
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
         expect(response.body).toBeDefined();
 
         ids.push(response.body.id);
-    });
-
-    it('should not create time policy twice', async () => {
-        const response = await superTest
-            .post('/policies')
-            .send(timePolicyPayload())
-            .auth('admin', 'start123');
-
-        expect(response.statusCode).toEqual(409);
     });
 
     it('should create custom policy', async () => {
@@ -136,5 +123,34 @@ describe('src/http/controllers/policy', () => {
             expect(response.body)
                 .toBeDefined();
         }
+    });
+
+    it('should create and update resource with put', async () => {
+        const entity = createFakeTimePolicy();
+        let response = await superTest
+            .put(`/policies/${entity.name}`)
+            .send(entity)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(entity.name);
+
+        const { id } = response.body;
+
+        const { name } = createFakeTimePolicy();
+
+        response = await superTest
+            .put(`/policies/${entity.name}`)
+            .send({
+                ...entity,
+                name,
+            })
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(202);
+        expect(response.body).toBeDefined();
+        expect(response.body.name).toEqual(name);
+        expect(response.body.id).toEqual(id);
     });
 });

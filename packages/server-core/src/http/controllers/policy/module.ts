@@ -6,15 +6,14 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { IdentityProvider } from '@authup/core-kit';
 import {
-    createPolicyRouteHandler,
     deletePolicyRouteHandler,
     getManyPolicyRouteHandler,
     getOnePolicyRouteHandler,
-    updatePolicyRouteHandler,
+    writePolicyRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
@@ -45,7 +44,19 @@ export class PolicyController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<IdentityProvider> {
-        return updatePolicyRouteHandler(req, res);
+        return writePolicyRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: NonNullable<IdentityProvider>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<IdentityProvider> {
+        return writePolicyRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -63,6 +74,6 @@ export class PolicyController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<IdentityProvider> {
-        return createPolicyRouteHandler(req, res);
+        return writePolicyRouteHandler(req, res);
     }
 }

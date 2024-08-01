@@ -6,7 +6,7 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { coreHandler } from 'routup';
 import type {
@@ -20,11 +20,10 @@ import {
 import {
     authorizeCallbackIdentityProviderRouteHandler,
     authorizeURLIdentityProviderRouteHandler,
-    createIdentityProviderRouteHandler,
     deleteIdentityProviderRouteHandler,
     getManyIdentityProviderRouteHandler,
     getOneIdentityProviderRouteHandler,
-    updateIdentityProviderRouteHandler,
+    writeIdentityProviderRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
 
@@ -55,7 +54,19 @@ export class IdentityProviderController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<IdentityProvider> {
-        return updateIdentityProviderRouteHandler(req, res);
+        return writeIdentityProviderRouteHandler(req, res, {
+            updateOnly: true,
+        });
+    }
+
+    @DPut('/:id', [ForceLoggedInMiddleware])
+    async put(
+        @DPath('id') id: string,
+            @DBody() user: NonNullable<IdentityProvider>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<IdentityProvider> {
+        return writeIdentityProviderRouteHandler(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -73,7 +84,7 @@ export class IdentityProviderController {
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<IdentityProvider> {
-        return createIdentityProviderRouteHandler(req, res);
+        return writeIdentityProviderRouteHandler(req, res);
     }
 }
 

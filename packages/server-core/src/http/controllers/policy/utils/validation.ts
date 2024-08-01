@@ -13,7 +13,7 @@ import type {
 } from '../../../../domains';
 import { RequestHandlerOperation } from '../../../request';
 
-type PolicyValidationResult = Omit<PolicyEntity, 'children' | 'parent'> & {
+type PolicyValidationResult = Omit<PolicyEntity, 'children'> & {
     parent_id?: string
 };
 
@@ -25,9 +25,27 @@ export class PolicyValidator extends Container<PolicyValidationResult> {
     }
 
     mountAll() {
-        this.mount('name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 128 })));
+        const nameValidator = (
+            optional?: boolean,
+        ) => createValidator((chain) => {
+            const output = chain
+                .exists()
+                .notEmpty()
+                .isString()
+                .isLength({
+                    min: 3,
+                    max: 128,
+                });
+
+            if (optional) {
+                return output.optional({ values: 'null' });
+            }
+
+            return output;
+        });
+
+        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator());
+        this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameValidator(true));
 
         this.mount('invert', createValidator((chain) => chain
             .isBoolean()
