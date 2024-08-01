@@ -123,13 +123,13 @@ export async function writeRobotRouteHandler(
         return sendAccepted(res, entity);
     }
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new ForbiddenError();
-    }
-
     if (!data.realm_id) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new ForbiddenError();
     }
 
     if (!await ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
