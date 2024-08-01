@@ -102,7 +102,7 @@ export async function writeUserRouteHandler(
         }
 
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new ForbiddenError(`You are not allowed to edit users of the realm ${entity.realm_id}`);
+            throw new ForbiddenError();
         }
 
         if (
@@ -135,6 +135,10 @@ export async function writeUserRouteHandler(
     if (!data.realm_id) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
+    }
+
+    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
+        throw new ForbiddenError();
     }
 
     entity = repository.create(data);
