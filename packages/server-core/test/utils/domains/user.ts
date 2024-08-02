@@ -13,10 +13,9 @@ import type { User } from '@authup/core-kit';
 
 export function createFakeUser(data: Partial<User> = {}) {
     return {
-        name: faker.internet.userName()
-            .replaceAll('.', ''),
-        email: faker.internet.email(),
+        name: faker.internet.userName(),
         display_name: faker.internet.displayName(),
+        email: faker.internet.email(),
         name_locked: false,
         active: true,
         first_name: faker.person.firstName(),

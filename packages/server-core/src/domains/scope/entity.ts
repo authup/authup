@@ -30,6 +30,9 @@ export class ScopeEntity implements Scope {
     @Column({ type: 'varchar', length: 128 })
         name: string;
 
+    @Column({ type: 'varchar', length: 256, nullable: true })
+        display_name: string | null;
+
     @Column({ type: 'text', nullable: true })
         description: string | null;
 

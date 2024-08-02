@@ -18,6 +18,8 @@ export interface Robot {
 
     name: string;
 
+    display_name: string | null;
+
     description: string;
 
     active: boolean;

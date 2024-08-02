@@ -13,9 +13,13 @@ import type { Realm } from '../realm';
 export interface Policy {
     id: string;
 
+    built_in: boolean;
+
     type: string;
 
     name: string;
+
+    display_name: string | null;
 
     description: string | null;
 

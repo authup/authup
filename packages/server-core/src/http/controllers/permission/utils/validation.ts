@@ -41,6 +41,11 @@ PermissionEntity
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameChain());
         this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameChain(true));
 
+        this.mount('display_name', createValidator((chain) => chain
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
+
         this.mount('description', createValidator((chain) => chain
             .isString()
             .isLength({ min: 5, max: 4096 })

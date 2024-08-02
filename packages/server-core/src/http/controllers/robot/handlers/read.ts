@@ -49,6 +49,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             default: [
                 'id',
                 'name',
+                'display_name',
                 'description',
                 'active',
                 'user_id',
@@ -145,6 +146,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
             default: [
                 'id',
                 'name',
+                'display_name',
                 'description',
                 'active',
                 'user_id',

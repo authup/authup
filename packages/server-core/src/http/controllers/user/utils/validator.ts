@@ -57,10 +57,9 @@ UserEntity
         // ----------------------------------------------
 
         this.mount('display_name', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isLength({ min: 3, max: 128 })
-            .optional()));
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
 
         // ----------------------------------------------
 

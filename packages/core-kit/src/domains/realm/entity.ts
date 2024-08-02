@@ -13,6 +13,8 @@ export interface Realm {
 
     name: string;
 
+    display_name: string | null;
+
     description: string | null;
 
     built_in: boolean;

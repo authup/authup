@@ -129,10 +129,12 @@ export class DatabaseSeeder implements Seeder {
         const roleRepository = dataSource.getRepository(RoleEntity);
         let role = await roleRepository.findOneBy({
             name: ROLE_ADMIN_NAME,
+            realm_id: null,
         });
         if (!role) {
             role = roleRepository.create({
                 name: ROLE_ADMIN_NAME,
+                built_in: true,
             });
         }
 
@@ -146,6 +148,7 @@ export class DatabaseSeeder implements Seeder {
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
             name: this.getOption('userAdminName'),
+            realm_id: realm.id,
         });
 
         const userPassword = this.getOption('userAdminPassword');

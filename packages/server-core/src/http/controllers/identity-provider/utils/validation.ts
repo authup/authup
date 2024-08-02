@@ -45,6 +45,11 @@ export class IdentityProviderValidator extends Container<IdentityProviderEntity>
             .isString()
             .isLength({ min: 5, max: 128 })));
 
+        this.mount('display_name', createValidator((chain) => chain
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
+
         const container = new Container({ oneOf: true });
         container.mount('protocol', createValidator((chain) => chain.exists()
             .notEmpty()

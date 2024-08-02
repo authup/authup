@@ -41,7 +41,7 @@ export class UserEntity implements User {
     @Column({ type: 'varchar', length: 128, nullable: true })
         last_name: string | null;
 
-    @Column({ type: 'varchar', length: 128 })
+    @Column({ type: 'varchar', length: 256 })
         display_name: string;
 
     @Index()

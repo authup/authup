@@ -25,14 +25,23 @@ export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    @Column({
+        type: 'boolean',
+        default: false,
+    })
+        built_in: boolean;
+
     @Column({ type: 'varchar', length: 64 })
         name: string;
 
-    @Column({ type: 'varchar', length: 16, nullable: true })
-        target: string | null;
+    @Column({ type: 'varchar', length: 256, nullable: true })
+        display_name: string | null;
 
     @Column({ type: 'text', nullable: true })
         description: string | null;
+
+    @Column({ type: 'varchar', length: 16, nullable: true })
+        target: string | null;
 
     // ------------------------------------------------------------------
 
