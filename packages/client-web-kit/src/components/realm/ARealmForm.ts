@@ -45,6 +45,7 @@ export const ARealmForm = defineComponent({
         const busy = ref(false);
         const form = reactive({
             name: '',
+            display_name: '',
             description: '',
         });
 
@@ -53,6 +54,10 @@ export const ARealmForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            display_name: {
+                minLength: minLength(3),
+                maxLength: maxLength(256),
             },
             description: {
                 minLength: minLength(5),
@@ -108,12 +113,14 @@ export const ARealmForm = defineComponent({
             [
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
             ],
         );
 
         const render = () => {
-            const id = buildFormGroup({
+            const children : VNodeArrayChildren = [];
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.name.value,
                 validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
@@ -128,12 +135,10 @@ export const ARealmForm = defineComponent({
                             manager.data.value.name === REALM_MASTER_NAME,
                     },
                 }),
-            });
-
-            let idHint : VNodeArrayChildren = [];
+            }));
 
             if (!manager.data.value || !manager.data.value.id) {
-                idHint = [
+                children.push([
                     h('div', {
                         class: 'mb-3',
                     }, [
@@ -153,10 +158,23 @@ export const ARealmForm = defineComponent({
                             translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                         ]),
                     ]),
-                ];
+                ]);
             }
 
-            const description = buildFormGroup({
+            children.push(buildFormGroup({
+                validationMessages: translationsValidation.display_name.value,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                content: buildFormInput({
+                    value: $v.value.display_name.$model,
+                    onChange(input) {
+                        $v.value.display_name.$model = input;
+                    },
+                }),
+            }));
+
+            children.push(buildFormGroup({
                 validationMessages: translationsValidation.description.value,
                 validationSeverity: getVuelidateSeverity($v.value.description),
                 label: true,
@@ -170,14 +188,14 @@ export const ARealmForm = defineComponent({
                         rows: 4,
                     },
                 }),
-            });
+            }));
 
-            const submitButton = buildFormSubmitWithTranslations({
+            children.push(buildFormSubmitWithTranslations({
                 submit,
                 busy: busy.value,
                 isEditing: isEditing.value,
                 invalid: $v.value.$invalid,
-            }, translationsSubmit);
+            }, translationsSubmit));
 
             return h('form', {
                 onSubmit($event: any) {
@@ -185,14 +203,7 @@ export const ARealmForm = defineComponent({
 
                     return submit.apply(null);
                 },
-            }, [
-                id,
-                idHint,
-                h('hr'),
-                description,
-                h('hr'),
-                submitButton,
-            ]);
+            }, children);
         };
 
         return () => render();

@@ -48,7 +48,6 @@ export const AUserForm = defineComponent({
     emits: defineEntityManagerEvents<User>(),
     async setup(props, ctx) {
         const busy = ref(false);
-        const displayNameChanged = ref(false);
         const form = reactive({
             active: true,
             name: '',
@@ -71,7 +70,6 @@ export const AUserForm = defineComponent({
 
             },
             display_name: {
-                required,
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
@@ -128,16 +126,6 @@ export const AUserForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const updateDisplayName = (value: string) => {
-            if (!displayNameChanged.value) {
-                form.display_name = value;
-            }
-        };
-
-        const handleDisplayNameChanged = (value: string) => {
-            displayNameChanged.value = value.length !== 0;
-        };
-
         const translationsValidation = useTranslationsForNestedValidation($v.value);
         const translationsSubmit = createFormSubmitTranslations();
 
@@ -165,7 +153,6 @@ export const AUserForm = defineComponent({
                     value: $v.value.name.$model,
                     onChange(input) {
                         $v.value.name.$model = input;
-                        updateDisplayName.call(null, input);
                     },
                     props: {
                         disabled: form.name_locked,
@@ -182,7 +169,6 @@ export const AUserForm = defineComponent({
                     value: $v.value.display_name.$model,
                     onChange(input) {
                         $v.value.display_name.$model = input;
-                        handleDisplayNameChanged.call(null, input);
                     },
                 }),
             });

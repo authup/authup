@@ -46,6 +46,7 @@ export const APermissionForm = defineComponent({
 
         const form = reactive({
             name: '',
+            display_name: '',
             description: '',
             realm_id: '',
         });
@@ -55,6 +56,10 @@ export const APermissionForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            display_name: {
+                minLength: minLength(3),
+                maxLength: maxLength(256),
             },
             description: {
                 minLength: minLength(5),
@@ -116,6 +121,7 @@ export const APermissionForm = defineComponent({
             TranslatorTranslationGroup.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
             ],
         );
@@ -136,6 +142,19 @@ export const APermissionForm = defineComponent({
                     props: {
                         disabled: manager.data.value &&
                             manager.data.value.built_in,
+                    },
+                }),
+            }));
+
+            children.push(buildFormGroup({
+                validationMessages: translationsValidation.display_name.value,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                content: buildFormInput({
+                    value: $v.value.display_name.$model,
+                    onChange(input) {
+                        $v.value.display_name.$model = input;
                     },
                 }),
             }));
