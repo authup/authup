@@ -47,6 +47,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         default: [
             'id',
             'name',
+            'display_name',
             'description',
             'base_url',
             'root_url',
@@ -137,6 +138,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         default: [
             'id',
             'name',
+            'display_name',
             'description',
             'base_url',
             'root_url',

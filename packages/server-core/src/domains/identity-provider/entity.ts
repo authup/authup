@@ -31,6 +31,9 @@ export class IdentityProviderEntity implements IdentityProvider {
     @Column({ type: 'varchar', length: 128 })
         name: string;
 
+    @Column({ type: 'varchar', length: 256, nullable: true })
+        display_name: string | null;
+
     @Column({ type: 'varchar', length: 64, nullable: true })
         protocol: `${IdentityProviderProtocol}` | null;
 

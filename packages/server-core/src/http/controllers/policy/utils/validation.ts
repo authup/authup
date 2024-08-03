@@ -47,6 +47,11 @@ export class PolicyValidator extends Container<PolicyValidationResult> {
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator());
         this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameValidator(true));
 
+        this.mount('display_name', createValidator((chain) => chain
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
+
         this.mount('invert', createValidator((chain) => chain
             .isBoolean()
             .optional({ values: 'undefined' })));

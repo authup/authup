@@ -43,7 +43,9 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
         fields: {
             default: [
                 'id',
+                'built_in',
                 'type',
+                'display_name',
                 'name',
                 'description',
                 'invert',
@@ -110,8 +112,10 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
         fields: {
             default: [
                 'id',
+                'built_in',
                 'type',
                 'name',
+                'display_name',
                 'description',
                 'invert',
                 'realm_id',

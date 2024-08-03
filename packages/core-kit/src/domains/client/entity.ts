@@ -15,7 +15,11 @@ import type { Realm } from '../realm';
 export interface Client {
     id: string,
 
+    built_in: boolean;
+
     name: string,
+
+    display_name: string | null;
 
     description: string | null,
 
@@ -46,9 +50,9 @@ export interface Client {
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'],
+    realm_id: Realm['id'] | null,
 
-    realm: Realm,
+    realm: Realm | null,
 
     user_id: User['id'] | null,
 

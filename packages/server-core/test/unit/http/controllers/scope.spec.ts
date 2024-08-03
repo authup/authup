@@ -6,6 +6,7 @@
  */
 
 import type { Scope } from '@authup/core-kit';
+import { createFakeScope } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -21,9 +22,7 @@ describe('src/http/controllers/scope', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Scope> = {
-        name: 'Test',
-    };
+    const details = createFakeScope();
 
     it('should create resource', async () => {
         const response = await superTest

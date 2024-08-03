@@ -7,21 +7,13 @@
 
 import { faker } from '@faker-js/faker';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
-import type { Role } from '@authup/core-kit';
+import type { Realm } from '@authup/core-kit';
 
-export function createFakeRole(data: Partial<Role> = {}) {
+export function createFakeRealm(data: Partial<Realm> = {}) {
     return {
         name: faker.string.alpha({ casing: 'lower', length: 10 }),
         display_name: faker.internet.displayName(),
         description: faker.string.alpha({ length: 256 }),
         ...data,
-    } satisfies Partial<Role>;
-}
-
-export async function createSuperTestRole(superTest: SuperTest<Test>, entity?: Partial<Role>) {
-    return superTest
-        .post('/roles')
-        .send(createFakeRole(entity))
-        .auth('admin', 'start123');
+    } satisfies Partial<Realm>;
 }

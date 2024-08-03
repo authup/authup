@@ -64,6 +64,7 @@ export const AScopeForm = defineComponent({
         const busy = ref(false);
         const form = reactive({
             name: '',
+            display_name: '',
             description: '',
             realm_id: '',
         });
@@ -74,6 +75,10 @@ export const AScopeForm = defineComponent({
                 [
                 VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
                 ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
+                minLength: minLength(3),
+                maxLength: maxLength(256),
+            },
+            display_name: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
@@ -148,6 +153,7 @@ export const AScopeForm = defineComponent({
             TranslatorTranslationGroup.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
                 { key: TranslatorTranslationDefaultKey.REALM },
             ],
@@ -167,6 +173,18 @@ export const AScopeForm = defineComponent({
                         },
                         props: {
                             disabled: isNameFixed.value,
+                        },
+                    }),
+                }),
+                buildFormGroup({
+                    validationMessages: translationsValidation.display_name.value,
+                    validationSeverity: getVuelidateSeverity($v.value.display_name),
+                    label: true,
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                    content: buildFormInput({
+                        value: $v.value.display_name.$model,
+                        onChange(input) {
+                            $v.value.display_name.$model = input;
                         },
                     }),
                 }),

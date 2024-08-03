@@ -71,6 +71,7 @@ export const AClientForm = defineComponent({
         const busy = ref(false);
         const form = reactive({
             name: '',
+            display_name: '',
             description: '',
             realm_id: '',
             redirect_uri: '',
@@ -86,6 +87,10 @@ export const AClientForm = defineComponent({
                 [
                 VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
                 ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
+                minLength: minLength(3),
+                maxLength: maxLength(256),
+            },
+            display_name: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
@@ -177,6 +182,7 @@ export const AClientForm = defineComponent({
             [
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
                 { key: TranslatorTranslationDefaultKey.REALM },
                 { key: TranslatorTranslationDefaultKey.REDIRECT_URIS },
@@ -204,36 +210,53 @@ export const AClientForm = defineComponent({
                 h('small', translationsClient[TranslatorTranslationClientKey.NAME_HINT].value),
             ];
 
-            const description : VNodeChild = [
-                buildFormGroup({
-                    validationMessages: translationsValidation.description.value,
-                    validationSeverity: getVuelidateSeverity($v.value.description),
-                    label: true,
-                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
-                    content: buildFormTextarea({
-                        value: $v.value.description.$model,
-                        onChange(input) {
-                            $v.value.description.$model = input;
-                        },
-                        props: {
-                            rows: 7,
-                        },
-                    }),
+            const displayName = buildFormGroup({
+                validationMessages: translationsValidation.display_name.value,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                content: buildFormInput({
+                    value: $v.value.display_name.$model,
+                    onChange(input) {
+                        $v.value.display_name.$model = input;
+                    },
                 }),
-                h('small', translationsClient[TranslatorTranslationClientKey.DESCRIPTION_HINT].value),
+            });
+
+            const description : VNodeChild = [
+                h('div', [
+                    buildFormGroup({
+                        validationMessages: translationsValidation.description.value,
+                        validationSeverity: getVuelidateSeverity($v.value.description),
+                        label: true,
+                        labelContent: translationsDefault[TranslatorTranslationDefaultKey.DESCRIPTION].value,
+                        content: buildFormTextarea({
+                            value: $v.value.description.$model,
+                            onChange(input) {
+                                $v.value.description.$model = input;
+                            },
+                            props: {
+                                rows: 7,
+                            },
+                        }),
+                    }),
+                    h('small', translationsClient[TranslatorTranslationClientKey.DESCRIPTION_HINT].value),
+                ]),
             ];
 
             const redirectUri = [
-                h('label', { class: 'form-label' }, [
-                    translationsDefault[TranslatorTranslationDefaultKey.REDIRECT_URIS].value,
+                h('div', [
+                    h('label', { class: 'form-label' }, [
+                        translationsDefault[TranslatorTranslationDefaultKey.REDIRECT_URIS].value,
+                    ]),
+                    h(AClientRedirectUris, {
+                        uri: form.redirect_uri,
+                        onUpdated: (value) => {
+                            form.redirect_uri = value;
+                        },
+                    }),
+                    h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
                 ]),
-                h(AClientRedirectUris, {
-                    uri: form.redirect_uri,
-                    onUpdated: (value) => {
-                        form.redirect_uri = value;
-                    },
-                }),
-                h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
             ];
 
             const isConfidential = buildFormGroup({
@@ -263,6 +286,7 @@ export const AClientForm = defineComponent({
                             },
                         }),
                     }),
+                    h('hr'),
                 ];
             }
 
@@ -333,8 +357,9 @@ export const AClientForm = defineComponent({
 
             const leftColumn = h('div', { class: 'col' }, [
                 id,
-                h('hr'),
                 name,
+                h('hr'),
+                displayName,
                 h('hr'),
                 secret,
                 realm,
@@ -344,11 +369,11 @@ export const AClientForm = defineComponent({
                 h('div', {
                     class: 'col',
                 }, [
-                    description,
+                    isConfidential,
                     h('hr'),
                     redirectUri,
                     h('hr'),
-                    isConfidential,
+                    description,
                     submitForm,
                 ]),
             ];

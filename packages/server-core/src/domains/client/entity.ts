@@ -26,10 +26,19 @@ export class ClientEntity implements Client {
         id: string;
 
     @Column({
+        type: 'boolean',
+        default: false,
+    })
+        built_in: boolean;
+
+    @Column({
         type: 'varchar',
         length: 256,
     })
         name: string;
+
+    @Column({ type: 'varchar', length: 256, nullable: true })
+        display_name: string | null;
 
     @Column({
         type: 'text',

@@ -22,10 +22,13 @@ export class RealmEntity implements Realm {
     @Column({ type: 'varchar', length: 128, unique: true })
         name: string;
 
+    @Column({ type: 'varchar', length: 256, nullable: true })
+        display_name: string | null;
+
     @Column({ type: 'text', nullable: true, default: null })
         description: string | null;
 
-    @Column({ default: true })
+    @Column({ type: 'boolean', default: false })
         built_in: boolean;
 
     @CreateDateColumn()

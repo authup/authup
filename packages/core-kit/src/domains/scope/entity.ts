@@ -16,6 +16,8 @@ export interface Scope {
 
     name: string;
 
+    display_name: string | null;
+
     description: string | null;
 
     realm_id: Realm['id'] | null;

@@ -39,6 +39,11 @@ export class ClientRequestValidator extends Container<ClientEntity> {
                 .isLength({ min: 3, max: 256 })),
         );
 
+        this.mount('display_name', createValidator((chain) => chain
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
+
         this.mount('secret', createValidator((chain) => chain
             .exists()
             .notEmpty()

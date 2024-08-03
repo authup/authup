@@ -66,6 +66,7 @@ export const ARobotForm = defineComponent({
         const busy = ref(false);
         const form = reactive({
             name: '',
+            display_name: '',
             realm_id: '',
             secret: '',
         });
@@ -77,6 +78,10 @@ export const ARobotForm = defineComponent({
                 ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+            },
+            display_name: {
+                minLength: minLength(3),
+                maxLength: maxLength(256),
             },
             realm_id: {
                 required,
@@ -103,7 +108,7 @@ export const ARobotForm = defineComponent({
         );
 
         const generateSecret = () => {
-            form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
+            form.secret = createNanoID(64);
         };
 
         function initForm() {
@@ -152,6 +157,7 @@ export const ARobotForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.HASHED },
                 { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
                 { key: TranslatorTranslationDefaultKey.SECRET },
             ],
@@ -170,6 +176,19 @@ export const ARobotForm = defineComponent({
                     },
                     props: {
                         disabled: isNameFixed.value,
+                    },
+                }),
+            });
+
+            const displayName = buildFormGroup({
+                validationMessages: translationsValidation.display_name.value,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                content: buildFormInput({
+                    value: $v.value.display_name.$model,
+                    onChange(input) {
+                        $v.value.display_name.$model = input;
                     },
                 }),
             });
@@ -238,6 +257,7 @@ export const ARobotForm = defineComponent({
             const leftColumn = h('div', { class: 'col' }, [
                 id,
                 name,
+                displayName,
                 secret,
                 secretInfo,
                 h('hr'),

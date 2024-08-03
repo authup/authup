@@ -41,6 +41,7 @@ export async function getManyRoleRouteHandler(req: Request, res: Response) : Pro
             allowed: [
                 'id',
                 'name',
+                'display_name',
                 'target',
                 'description',
                 'realm_id',
@@ -106,7 +107,9 @@ export async function getOneRoleRouteHandler(req: Request, res: Response) : Prom
         allowed: [
             'id',
             'name',
+            'display_name',
             'target',
+            'display_name',
             'description',
             'realm_id',
             'created_at',

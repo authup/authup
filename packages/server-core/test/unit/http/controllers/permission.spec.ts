@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission, Role } from '@authup/core-kit';
+import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { createFakePermission } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -24,9 +25,7 @@ describe('src/http/controllers/permission', () => {
         superTest = undefined;
     });
 
-    const details : Partial<Permission> = {
-        name: 'Test',
-    };
+    const details = createFakePermission();
 
     it('should create collection', async () => {
         const response = await superTest

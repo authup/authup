@@ -18,10 +18,10 @@ import {
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
     VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    extendObjectProperties,
-    getVuelidateSeverity, useTranslationsForNestedValidation,
+    VuelidateCustomRuleKey, extendObjectProperties, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
@@ -34,6 +34,7 @@ export const AIdentityProviderBasicFields = defineComponent({
     setup(props, setup) {
         const form = reactive({
             name: '',
+            display_name: '',
             slug: '',
             enabled: true,
         });
@@ -43,6 +44,10 @@ export const AIdentityProviderBasicFields = defineComponent({
                 required,
                 minLength: minLength(5),
                 maxLength: maxLength(128),
+            },
+            display_name: {
+                minLength: minLength(3),
+                maxLength: maxLength(256),
             },
             slug: {
                 required,
@@ -77,7 +82,7 @@ export const AIdentityProviderBasicFields = defineComponent({
             });
         };
 
-        function assign(data?: Partial<IdentityProvider>) {
+        function assign(data: Partial<IdentityProvider> = {}) {
             extendObjectProperties(form, data);
 
             if (isSlugEmpty.value) {
@@ -94,14 +99,22 @@ export const AIdentityProviderBasicFields = defineComponent({
 
         assign(props.entity);
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
+        const translationsDefault = useTranslationsForGroup(
+            TranslatorTranslationGroup.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+            ],
+        );
+        const translationsValidation = useTranslationsForNestedValidation($v.value);
 
         return () => {
             const name = buildFormGroup({
-                validationMessages: validationMessages.name.value,
+                validationMessages: translationsValidation.name.value,
                 validationSeverity: getVuelidateSeverity($v.value.name),
                 label: true,
-                labelContent: 'Name',
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.NAME].value,
                 content: buildFormInput({
                     value: $v.value.name.$model,
                     onChange(input) {
@@ -110,8 +123,21 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
+            const displayName = buildFormGroup({
+                validationMessages: translationsValidation.display_name.value,
+                validationSeverity: getVuelidateSeverity($v.value.display_name),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DISPLAY_NAME].value,
+                content: buildFormInput({
+                    value: $v.value.display_name.$model,
+                    onChange(input) {
+                        $v.value.display_name.$model = input;
+                    },
+                }),
+            });
+
             const slug = buildFormGroup({
-                validationMessages: validationMessages.slug.value,
+                validationMessages: translationsValidation.slug.value,
                 validationSeverity: getVuelidateSeverity($v.value.slug),
                 label: true,
                 labelContent: 'Slug',
@@ -154,6 +180,7 @@ export const AIdentityProviderBasicFields = defineComponent({
 
             return [
                 name,
+                displayName,
                 slug,
                 slugGenerator,
                 enabled,

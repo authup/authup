@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot } from '@authup/core-kit';
+import { createFakeRobot } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -21,10 +21,7 @@ describe('src/http/controllers/robot', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Robot> = {
-        name: 'foo',
-        secret: 'start123',
-    };
+    const details = createFakeRobot();
 
     it('should create resource', async () => {
         const response = await superTest

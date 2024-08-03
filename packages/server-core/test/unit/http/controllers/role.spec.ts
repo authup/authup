@@ -6,6 +6,7 @@
  */
 
 import type { Role } from '@authup/core-kit';
+import { createFakeRole } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -21,9 +22,7 @@ describe('src/http/controllers/role', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Role> = {
-        name: 'Test',
-    };
+    const details = createFakeRole();
 
     it('should create resource', async () => {
         const response = await superTest

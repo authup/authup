@@ -12,7 +12,11 @@ import type { Realm } from '../realm';
 export interface Role {
     id: string;
 
+    built_in: boolean;
+
     name: string;
+
+    display_name: string | null;
 
     target: string | null;
 

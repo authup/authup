@@ -48,6 +48,11 @@ RobotEntity
             .isLength({ min: 3, max: 256 })
             .optional({ nullable: true })));
 
+        this.mount('display_name', createValidator((chain) => chain
+            .isString()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
+
         this.mount('description', createValidator((chain) => chain
             .notEmpty()
             .isLength({ min: 3, max: 4096 })

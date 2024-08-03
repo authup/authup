@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
+import { createFakeRealm } from '../../../utils/domains';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -21,9 +21,7 @@ describe('src/http/controllers/realm', () => {
         await dropTestDatabase();
     });
 
-    const details : Partial<Realm> = {
-        name: 'Test',
-    };
+    const details = createFakeRealm();
 
     it('should create resource', async () => {
         const response = await superTest

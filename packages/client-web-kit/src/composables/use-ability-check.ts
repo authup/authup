@@ -38,11 +38,20 @@ export function useAbilityCheck(name: string) : Ref<boolean> {
     };
 
     Promise.resolve()
-        .then(() => compute());
+        .then(() => compute())
+        .then((outcome) => {
+            data.value = outcome;
+        });
 
     let removeListener : undefined | CallableFunction;
     onMounted(() => {
-        removeListener = watch(refs.loggedIn, () => compute());
+        removeListener = watch(refs.loggedIn, () => {
+            Promise.resolve()
+                .then(() => compute())
+                .then((outcome) => {
+                    data.value = outcome;
+                });
+        });
     });
 
     onUnmounted(() => {
