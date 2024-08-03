@@ -9,7 +9,7 @@ import { isObject } from '@authup/kit';
 import type { DisconnectDescription } from '../../types';
 import type { ClientManagerTokenFn } from './types';
 
-export function toClientManagerTokenFn(input?: string | ClientManagerTokenFn) {
+export function toClientManagerTokenAsyncFn(input?: string | ClientManagerTokenFn) {
     if (typeof input === 'undefined') {
         return () => undefined;
     }

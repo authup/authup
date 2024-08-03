@@ -18,6 +18,13 @@ describe('src/manager', () => {
     beforeAll((done) => {
         const httpServer = createServer();
         server = new Server(httpServer);
+        server.use((socket, next) => {
+            setTimeout(() => {
+                socket.emit('token', socket.handshake.auth.token);
+            });
+
+            next();
+        });
         httpServer.listen(() => {
             port = (httpServer.address() as AddressInfo).port;
             done();
@@ -64,5 +71,25 @@ describe('src/manager', () => {
 
         expect(socket.connected).toBeTruthy();
         socket.disconnect();
+    });
+
+    it('should connect with token', (done) => {
+        const manager = new ClientManager({
+            url: `http://localhost:${port}`,
+            token: () => Promise.resolve('foo-bar-baz'),
+        });
+
+        expect.assertions(1);
+
+        Promise.resolve()
+            .then(() => manager.connect())
+            .then((socket) => {
+                socket.on('token', (token) => {
+                    expect(token).toEqual('foo-bar-baz');
+                    socket.disconnect();
+
+                    done();
+                });
+            });
     });
 });

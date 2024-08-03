@@ -7,7 +7,9 @@
 
 import type { ManagerOptions } from 'socket.io-client';
 
-export type ClientManagerTokenFn = () => string | undefined;
+export type ClientManagerTokenSyncFn = () => string | undefined;
+export type ClientManagerTokenAsyncFn = () => Promise<string | undefined>;
+export type ClientManagerTokenFn = ClientManagerTokenSyncFn | ClientManagerTokenAsyncFn;
 
 export type ClientManagerContext = {
     url: string,

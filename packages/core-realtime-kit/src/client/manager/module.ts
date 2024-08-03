@@ -9,7 +9,7 @@ import type { Socket } from 'socket.io-client';
 import { Manager } from 'socket.io-client';
 import type { CTSEvents, DefaultEvents, STCEvents } from '../../types';
 import type { ClientManagerContext, ClientManagerTokenFn } from './types';
-import { isDisconnectDescription, toClientManagerTokenFn } from './utils';
+import { isDisconnectDescription, toClientManagerTokenAsyncFn } from './utils';
 
 export class ClientManager<
     ListenEvents extends DefaultEvents = STCEvents,
@@ -30,7 +30,7 @@ export class ClientManager<
             ...ctx.options,
         });
 
-        this.tokenFn = toClientManagerTokenFn(ctx.token);
+        this.tokenFn = toClientManagerTokenAsyncFn(ctx.token);
     }
 
     async connect(namespace = '/') : Promise<Socket<ListenEvents, EmitEvents>> {
@@ -114,13 +114,12 @@ export class ClientManager<
 
         const socket = this.manager.socket(namespace, {
             auth: (cb: CallableFunction) => {
-                const token = this.tokenFn();
-                if (token) {
-                    cb({ token });
-                    return;
-                }
-
-                cb();
+                Promise.resolve()
+                    .then(() => this.tokenFn())
+                    .then((token) => {
+                        cb({ token });
+                    })
+                    .catch(() => cb());
             },
         });
 
