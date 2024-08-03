@@ -73,7 +73,7 @@ export const AUserForm = defineComponent({
             display_name: {
                 required,
                 minLength: minLength(3),
-                maxLength: maxLength(128),
+                maxLength: maxLength(256),
             },
             email: {
                 minLength: minLength(5),
