@@ -30,16 +30,20 @@ export class TokenVerifierRedisCache implements TokenVerifierCache {
     }
 
     get(token: string): Promise<TokenVerificationData | undefined> {
-        return this.instance.get(token);
+        return this.instance.get(this.buildKey(token));
     }
 
     set(token: string, data: TokenVerificationData, seconds?: number): Promise<void> {
         return this.instance.set(
-            token,
+            this.buildKey(token),
             data,
             {
                 seconds,
             },
         );
+    }
+
+    protected buildKey(key: string) {
+        return `token:${key}`;
     }
 }
