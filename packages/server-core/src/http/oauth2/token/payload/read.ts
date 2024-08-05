@@ -6,9 +6,8 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import { ErrorCode, TokenError } from '@authup/kit';
+import { TokenError } from '@authup/kit';
 import { buildRedisKeyPath, extractTokenHeader } from '@authup/server-kit';
-import { isHTTPError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';
 
@@ -36,26 +35,16 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
             cache: {
                 id: buildRedisKeyPath({
                     prefix: 'realm_key',
-                    id: header.kid,
+                    key: header.kid,
                 }),
-                milliseconds: 60.000,
+                milliseconds: 60_000,
             },
         });
 
         if (entity) {
-            try {
-                return await verifyOAuth2TokenWithKey(token, entity);
-            } catch (e) {
-                if (isHTTPError(e)) {
-                    if (e.code === ErrorCode.TOKEN_EXPIRED) {
-                        throw TokenError.expired();
-                    }
-                }
-
-                throw e;
-            }
+            return verifyOAuth2TokenWithKey(token, entity);
         }
     }
 
-    throw TokenError.payloadInvalid('The jwt key id is invalid or not present.');
+    throw TokenError.payloadInvalid('The jwt key id (kid) is invalid or not present.');
 }

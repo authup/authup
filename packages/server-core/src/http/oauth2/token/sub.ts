@@ -62,7 +62,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                 .cache({
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.CLIENT,
-                        id,
+                        key: id,
                     }),
                     milliseconds: 60.000,
                 });
@@ -89,7 +89,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                 .cache({
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.USER,
-                        id,
+                        key: id,
                     }),
                     milliseconds: 60.000,
                 });
@@ -125,7 +125,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
                 .cache({
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT,
-                        id,
+                        key: id,
                     }),
                     milliseconds: 60.000,
                 });

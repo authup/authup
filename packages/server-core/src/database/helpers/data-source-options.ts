@@ -7,8 +7,8 @@
 import type { DataSourceOptions } from 'typeorm';
 import { adjustFilePath } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import { isRedisClientUsable } from '@authup/server-kit';
-import { isDatabaseTypeSupported, useConfig } from '../../config';
+import { isRedisClientUsable, useRedisClient } from '@authup/server-kit';
+import { EnvironmentName, isDatabaseTypeSupported, useConfig } from '../../config';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
@@ -25,6 +25,8 @@ export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
 }
 
 export async function extendDataSourceOptions(options: DataSourceOptions) {
+    const config = useConfig();
+
     const migrations : string[] = [];
     const migration = await adjustFilePath(
         `src/database/migrations/${options.type}/*.{ts,js}`,
@@ -39,12 +41,14 @@ export async function extendDataSourceOptions(options: DataSourceOptions) {
     } satisfies Partial<DataSourceOptions>);
 
     if (isRedisClientUsable()) {
+        const client = useRedisClient();
+
         Object.assign(options, {
             cache: {
                 provider() {
-                    return new DatabaseQueryResultCache();
+                    return new DatabaseQueryResultCache(client);
                 },
-                ignoreErrors: true,
+                ignoreErrors: config.env === EnvironmentName.PRODUCTION,
             },
         } as Partial<DataSourceOptions>);
     }

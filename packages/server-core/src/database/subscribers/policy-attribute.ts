@@ -59,7 +59,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
-                    id: event.entity.policy_id,
+                    key: event.entity.policy_id,
                 }),
             ]);
         }
@@ -76,7 +76,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
-                    id: event.entity.policy_id,
+                    key: event.entity.policy_id,
                 }),
             ]);
         }
@@ -93,7 +93,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
-                    id: event.entity.policy_id,
+                    key: event.entity.policy_id,
                 }),
             ]);
         }

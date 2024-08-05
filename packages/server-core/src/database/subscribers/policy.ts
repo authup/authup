@@ -67,7 +67,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.REALM,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
@@ -84,7 +84,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.POLICY,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }

@@ -67,7 +67,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.REALM,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
@@ -84,7 +84,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.REALM,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }

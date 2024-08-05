@@ -6,12 +6,12 @@
  */
 
 import type { RedisClient } from '@authup/server-kit';
-import { RedisCache, createRedisClient } from '@authup/server-kit';
+import { RedisJsonAdapter, createRedisClient } from '@authup/server-kit';
 import type { TokenVerificationData } from '../type';
 import type { TokenVerifierCache } from './type';
 
 export class TokenVerifierRedisCache implements TokenVerifierCache {
-    protected instance : RedisCache<string>;
+    protected instance : RedisJsonAdapter;
 
     constructor(input?: RedisClient | string) {
         let client: RedisClient;
@@ -26,11 +26,7 @@ export class TokenVerifierRedisCache implements TokenVerifierCache {
             client = input;
         }
 
-        this.instance = new RedisCache<string>({
-            redis: client,
-        }, {
-            prefix: 'token',
-        });
+        this.instance = new RedisJsonAdapter(client);
     }
 
     get(token: string): Promise<TokenVerificationData | undefined> {

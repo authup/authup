@@ -186,9 +186,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ROLES,
-                        id,
+                        key: id,
                     }),
-                    milliseconds: 60.000,
+                    milliseconds: 60_000,
                 },
             });
 
@@ -220,9 +220,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    id,
+                    key: id,
                 }),
-                milliseconds: 60.000,
+                milliseconds: 60_000,
             },
         });
 

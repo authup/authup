@@ -61,7 +61,7 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.IDENTITY_PROVIDER_ACCOUNT,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
@@ -78,7 +78,7 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.IDENTITY_PROVIDER_ACCOUNT,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }

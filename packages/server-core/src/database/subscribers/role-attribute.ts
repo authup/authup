@@ -59,7 +59,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    id: event.entity.role_id,
+                    key: event.entity.role_id,
                 }),
             ]);
         }
@@ -76,7 +76,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    id: event.entity.role_id,
+                    key: event.entity.role_id,
                 }),
             ]);
         }
@@ -93,7 +93,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    id: event.entity.role_id,
+                    key: event.entity.role_id,
                 }),
             ]);
         }

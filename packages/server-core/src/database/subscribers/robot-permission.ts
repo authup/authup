@@ -67,7 +67,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
@@ -86,7 +86,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
@@ -103,7 +103,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }

@@ -63,7 +63,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.CLIENT_SCOPE,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
@@ -80,7 +80,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.CLIENT_SCOPE,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
