@@ -70,7 +70,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }
@@ -89,7 +89,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }
@@ -106,7 +106,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }

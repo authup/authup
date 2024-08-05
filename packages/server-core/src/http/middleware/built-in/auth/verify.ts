@@ -70,9 +70,9 @@ async function verifyBearerAuthorizationHeader(
         cache: {
             id: buildRedisKeyPath({
                 prefix: CachePrefix.REALM,
-                id: payload.realm_id,
+                key: payload.realm_id,
             }),
-            milliseconds: 60.000,
+            milliseconds: 60_000,
         },
     });
     setRequestEnv(request, 'realm', realm);

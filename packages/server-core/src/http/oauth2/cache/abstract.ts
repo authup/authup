@@ -6,15 +6,19 @@
  */
 
 import { TokenError, hasOwnProperty } from '@authup/kit';
-import type { RedisKeyPathID } from '@authup/server-kit';
-import { RedisCache, isRedisClientUsable, useRedisClient } from '@authup/server-kit';
+import type { RedisClient } from '@authup/server-kit';
+import {
+    RedisJsonAdapter, buildRedisKeyPath, isRedisClientUsable, useRedisClient,
+} from '@authup/server-kit';
 
 export abstract class OAuth2AbstractCache<
     T extends Record<string, any> & { id: string, expires?: Date | string | number },
 > {
     protected prefix: string;
 
-    protected driver : RedisCache<T['id'], T> | undefined;
+    protected client : RedisClient | undefined;
+
+    protected clientJsonAdapter : RedisJsonAdapter | undefined;
 
     protected constructor(prefix: string) {
         this.prefix = prefix;
@@ -28,11 +32,10 @@ export abstract class OAuth2AbstractCache<
 
         const date = this.toDate(entity.expires);
 
-        const seconds = Math.ceil((date.getTime() - Date.now()) / 1000);
         await driver.set(
-            { id: entity.id } as RedisKeyPathID<T['id'], T>,
+            this.buildKeyPath(entity.id),
             entity,
-            { seconds },
+            { milliseconds: date.getTime() - Date.now() },
         );
     }
 
@@ -43,7 +46,7 @@ export abstract class OAuth2AbstractCache<
             return;
         }
 
-        await driver.drop({ id } as RedisKeyPathID<T['id'], T>);
+        await driver.drop(this.buildKeyPath(id));
         await this.deleteDBEntity(id);
     }
 
@@ -61,9 +64,7 @@ export abstract class OAuth2AbstractCache<
             return entity;
         }
 
-        entity = await driver.get({
-            id,
-        } as RedisKeyPathID<T['id'], T>);
+        entity = await driver.get(this.buildKeyPath(id));
 
         if (!entity) {
             entity = await this.loadDBEntity(id);
@@ -84,7 +85,7 @@ export abstract class OAuth2AbstractCache<
         ) {
             const driver = await this.useDriver();
             if (driver) {
-                await driver.drop(entity.id as RedisKeyPathID<T['id'], T>);
+                await driver.drop(this.buildKeyPath(entity.id));
             }
 
             await this.deleteDBEntity(entity.id);
@@ -95,20 +96,19 @@ export abstract class OAuth2AbstractCache<
         return false;
     }
 
-    protected async useDriver() : Promise<RedisCache<T['id'], T> | undefined> {
-        if (this.driver) {
-            return this.driver;
+    protected async useDriver() : Promise<RedisJsonAdapter | undefined> {
+        if (this.clientJsonAdapter) {
+            return this.clientJsonAdapter;
         }
 
         if (!isRedisClientUsable()) {
             return undefined;
         }
 
-        this.driver = new RedisCache<T['id'], T>({
-            redis: useRedisClient(),
-        }, { prefix: this.prefix });
+        this.client = useRedisClient();
+        this.clientJsonAdapter = new RedisJsonAdapter(this.client);
 
-        return this.driver;
+        return this.clientJsonAdapter;
     }
 
     protected toDate(input: string | number | Date) : Date {
@@ -117,6 +117,13 @@ export abstract class OAuth2AbstractCache<
         }
 
         return new Date(input);
+    }
+
+    protected buildKeyPath(key: string) {
+        return buildRedisKeyPath({
+            key,
+            prefix: this.prefix,
+        });
     }
 
     abstract loadDBEntity(id: T['id']) : Promise<T>;

@@ -60,7 +60,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }
@@ -79,7 +79,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }
@@ -96,7 +96,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
-                    id: event.entity.user_id,
+                    key: event.entity.user_id,
                 }),
             ]);
         }

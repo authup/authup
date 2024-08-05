@@ -57,7 +57,7 @@
         "test": "npx nx run-many -t test",
         "lint": "eslint --ext .ts ./packages",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "husky install"
+        "prepare": "husky"
     },
     "lint-staged": {
         "*.ts": "eslint --fix"

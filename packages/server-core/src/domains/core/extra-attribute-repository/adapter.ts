@@ -145,7 +145,7 @@ export class ExtraAttributesRepositoryAdapter<
             cache = {
                 id: buildRedisKeyPath({
                     prefix: this.cachePrefix,
-                    id: value as string,
+                    key: value as string,
                 }),
                 milliseconds: 60.000,
             };

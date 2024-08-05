@@ -69,9 +69,9 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    id,
+                    key: id,
                 }),
-                milliseconds: 60.000,
+                milliseconds: 60_000,
             },
         });
 

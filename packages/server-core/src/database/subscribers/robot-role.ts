@@ -71,7 +71,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
@@ -88,7 +88,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
@@ -105,7 +105,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                    id: event.entity.robot_id,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }

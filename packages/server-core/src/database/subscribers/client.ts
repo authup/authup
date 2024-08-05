@@ -69,7 +69,7 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }
@@ -86,7 +86,7 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT,
-                    id: event.entity.id,
+                    key: event.entity.id,
                 }),
             ]);
         }

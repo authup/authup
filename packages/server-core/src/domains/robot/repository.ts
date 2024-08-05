@@ -46,9 +46,9 @@ export class RobotRepository extends Repository<RobotEntity> {
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT_OWNED_ROLES,
-                        id,
+                        key: id,
                     }),
-                    milliseconds: 60.000,
+                    milliseconds: 60_000,
                 },
             });
 
@@ -80,9 +80,9 @@ export class RobotRepository extends Repository<RobotEntity> {
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                    id,
+                    key: id,
                 }),
-                milliseconds: 60.000,
+                milliseconds: 60_000,
             },
         });
 
