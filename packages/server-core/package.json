@@ -90,7 +90,7 @@
         "@types/morgan": "^1.9.9",
         "@types/node-cron": "^3.0.11",
         "@types/supertest": "^6.0.2",
-        "@types/yargs": "^17.0.32",
+        "@types/yargs": "^17.0.33",
         "@faker-js/faker": "^8.4.1",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.0.0",
