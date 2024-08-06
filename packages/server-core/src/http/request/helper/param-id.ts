@@ -19,7 +19,7 @@ type RequestIDParamOptions = {
 export function useRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string {
     const id = getRequestParamID(req, options);
     if (typeof id === 'undefined') {
-        throw new ValidupNestedError('The request id param is not valid.');
+        throw new ValidupNestedError({ message: 'The request id param is not valid.' });
     }
 
     return id;

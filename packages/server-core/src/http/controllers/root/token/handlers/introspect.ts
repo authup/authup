@@ -9,7 +9,7 @@ import type { OAuth2TokenIntrospectionResponse } from '@authup/kit';
 import { createValidator } from '@validup/adapter-validator';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
-import { Container } from 'validup';
+import { Container, ValidupNestedError, ValidupValidatorError } from 'validup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     loadOAuth2SubEntity, loadOAuth2SubPermissions,
@@ -35,15 +35,29 @@ export async function introspectTokenRouteHandler(
 ) : Promise<any> {
     const validator = new TokenIntrospectRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
-    const data = await validatorAdapter.run(req, {
-        locations: ['body', 'query', 'params'],
-    });
+    let token : string | undefined;
+    try {
+        const data = await validatorAdapter.run(req, {
+            locations: ['body', 'query', 'params'],
+        });
 
-    if (!data.token) {
-        data.token = useRequestEnv(req, 'token');
+        token = data.token;
+    } catch (e) {
+        token = useRequestEnv(req, 'token');
     }
 
-    const payload = await readOAuth2TokenPayload(data.token);
+    if (!token) {
+        const validatorError = new ValidupValidatorError({
+            path: 'token',
+            pathAbsolute: 'token',
+        });
+
+        throw new ValidupNestedError({
+            children: [validatorError],
+        });
+    }
+
+    const payload = await readOAuth2TokenPayload(token);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
     const output : OAuth2TokenIntrospectionResponse = {
