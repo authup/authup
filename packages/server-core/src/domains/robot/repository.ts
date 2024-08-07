@@ -132,19 +132,8 @@ export class RobotRepository extends Repository<RobotEntity> {
         return undefined;
     }
 
-    async createWithSecret(data: Partial<Robot>) : Promise<{
-        entity: RobotEntity,
-        secret: string
-    }> {
-        const entity = this.create(data);
-
-        const secret = entity.secret || createNanoID(64);
-        entity.secret = await this.hashSecret(secret);
-
-        return {
-            entity,
-            secret,
-        };
+    createSecret() {
+        return createNanoID(64);
     }
 
     async hashSecret(secret: string) : Promise<string> {

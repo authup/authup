@@ -37,6 +37,22 @@ describe('src/http/controllers/robot', () => {
         details.id = response.body.id;
     });
 
+    it('should create resource with no initial secret', async () => {
+        const data = createFakeRobot();
+        delete data.secret;
+
+        const response = await superTest
+            .post('/robots')
+            .send(data)
+            .auth('admin', 'start123');
+
+        expect(response.status).toEqual(201);
+        expect(response.body).toBeDefined();
+        expect(response.body.secret).toBeDefined();
+
+        expectPropertiesEqualToSrc(data, response.body, ['secret']);
+    });
+
     it('should read collection', async () => {
         const response = await superTest
             .get('/robots')
@@ -45,7 +61,7 @@ describe('src/http/controllers/robot', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toBeDefined();
         expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(2);
+        expect(response.body.data.length).toBeGreaterThanOrEqual(3);
     });
 
     it('should read resource', async () => {

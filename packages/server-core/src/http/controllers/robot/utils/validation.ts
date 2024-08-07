@@ -21,23 +21,11 @@ RobotEntity
     }
 
     mountAll() {
-        const createSecretValidator = (
-            optional?: boolean,
-        ) => createValidator((chain) => {
-            const output = chain
-                .exists()
-                .notEmpty()
-                .isLength({ min: 3, max: 256 });
-
-            if (optional) {
-                return output.optional();
-            }
-
-            return output;
-        });
-
-        this.mount('secret', { group: RequestHandlerOperation.CREATE }, createSecretValidator());
-        this.mount('secret', { group: RequestHandlerOperation.UPDATE }, createSecretValidator(true));
+        this.mount('secret', createValidator((chain) => chain
+            .exists()
+            .notEmpty()
+            .isLength({ min: 3, max: 256 })
+            .optional({ values: 'null' })));
 
         this.mount('active', createValidator((chain) => chain
             .isBoolean()

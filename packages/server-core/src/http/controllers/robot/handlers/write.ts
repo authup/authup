@@ -136,17 +136,18 @@ export async function writeRobotRouteHandler(
         throw new ForbiddenError();
     }
 
-    entity = repository.create(data);
-    if (data.secret) {
-        entity.secret = await repository.hashSecret(data.secret);
+    if (!data.secret) {
+        data.secret = repository.createSecret();
     }
+
+    entity = repository.create(data);
+
+    entity.secret = await repository.hashSecret(data.secret);
     await repository.save(entity);
 
-    if (data.secret) {
-        entity.secret = data.secret;
-        // todo: this should be executed through a message broker
-        await saveRobotCredentialsToVault(entity);
-    }
+    entity.secret = data.secret;
+    // todo: this should be executed through a message broker
+    await saveRobotCredentialsToVault(entity);
 
     return sendCreated(res, entity);
 }
