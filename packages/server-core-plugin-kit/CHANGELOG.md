@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-08-07)
+
+
+### Features
+
+* move permission & policy logic to new package ([#2128](https://github.com/authup/authup/issues/2128)) ([53f9b33](https://github.com/authup/authup/commit/53f9b33b15e08d6a2def0f7d4659129a03a51252))
+* refactored db-cache, aggregators & bump redis-extension ([#2198](https://github.com/authup/authup/issues/2198)) ([5736d5a](https://github.com/authup/authup/commit/5736d5ab0d52332ced1b92e60f7b109c706ca920))
+
+
+### Bug Fixes
+
+* **deps:** bump jose from 5.6.2 to 5.6.3 ([#2125](https://github.com/authup/authup/issues/2125)) ([c3ec178](https://github.com/authup/authup/commit/c3ec1780e842406aa88ba39cb6c22ba0aaac5988))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.1-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 

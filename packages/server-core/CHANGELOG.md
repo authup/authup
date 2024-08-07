@@ -1,5 +1,43 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-08-07)
+
+
+### Features
+
+* add built_in & display_name attribute to few entities ([#2193](https://github.com/authup/authup/issues/2193)) ([42d062f](https://github.com/authup/authup/commit/42d062f3e600aed43f69164b2f6297851d402070))
+* fix policy parserFn names + strict mode ([120bdea](https://github.com/authup/authup/commit/120bdea866fcadb45c8096c9f0b855d73b7603c9))
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+* move permission & policy logic to new package ([#2128](https://github.com/authup/authup/issues/2128)) ([53f9b33](https://github.com/authup/authup/commit/53f9b33b15e08d6a2def0f7d4659129a03a51252))
+* moved built-in policy parser, attributes query fixer, ... ([0599b54](https://github.com/authup/authup/commit/0599b5423d203583845782c74cd1755ef06bd7c6))
+* permission repository for permission manager ([#2129](https://github.com/authup/authup/issues/2129)) ([afe3700](https://github.com/authup/authup/commit/afe3700e9822e3983b8867cad927ea74b9747133))
+* refactor http controller validation ([#2177](https://github.com/authup/authup/issues/2177)) ([bea9db9](https://github.com/authup/authup/commit/bea9db902b7f1ed8f8b01e7342198d454cd6917c))
+* refactored db-cache, aggregators & bump redis-extension ([#2198](https://github.com/authup/authup/issues/2198)) ([5736d5a](https://github.com/authup/authup/commit/5736d5ab0d52332ced1b92e60f7b109c706ca920))
+* relocate subject & subject-kind helper fns ([e7a6ee0](https://github.com/authup/authup/commit/e7a6ee070728a37de6393b78e8d60acfec972072))
+* simplify permission manager & merge permissions of same realm ([#2133](https://github.com/authup/authup/issues/2133)) ([08c5cf7](https://github.com/authup/authup/commit/08c5cf7697f140663b6ffc396ec8028a3057c2e2))
+* write handlers for controllers ([#2185](https://github.com/authup/authup/issues/2185)) ([ae8997a](https://github.com/authup/authup/commit/ae8997aae542ccb75dff03f7656c74d20f128e33))
+
+
+### Bug Fixes
+
+* auto generate robot secret if not defined via payload ([7bf3135](https://github.com/authup/authup/commit/7bf31354be4ea3a8ccb1312dcc40f4480678503b))
+* **deps:** bump mysql2 from 3.10.0 to 3.10.1 ([#2065](https://github.com/authup/authup/issues/2065)) ([a9c7d44](https://github.com/authup/authup/commit/a9c7d44c8f3d4119f763d97ab5b59318923565df))
+* **deps:** bump mysql2 from 3.10.2 to 3.11.0 ([#2184](https://github.com/authup/authup/issues/2184)) ([c6ea31e](https://github.com/authup/authup/commit/c6ea31e7be3de6c51a2d929e529d855a164b4290))
+* enforce uniqueness for all database types ([48cd4a7](https://github.com/authup/authup/commit/48cd4a70b62993ee99864aa68babbc29eacfa0a1))
+* fallback to authorization header in token introspect endpoint handler ([4d08cc5](https://github.com/authup/authup/commit/4d08cc57c038cd5fccf5af482911f6b29ebffb52))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/config bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/permitus bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.19 to ^1.0.1-beta.19
+    * @authup/server-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 
