@@ -8,14 +8,14 @@
 import { PolicyError } from '../error';
 import type {
     AnyPolicy,
-    PolicyEvaluationContext,
+    PolicyEvaluationData,
 
 } from '../types';
 import type { PolicyEvaluatorContext, PolicyEvaluators } from './types';
 
 export async function evaluatePolicy(
     policy: AnyPolicy,
-    context: PolicyEvaluationContext,
+    context: PolicyEvaluationData,
     evaluators: PolicyEvaluators,
 ) : Promise<boolean> {
     const evaluator = evaluators[policy.type];
@@ -29,6 +29,8 @@ export async function evaluatePolicy(
             options: policy,
             evaluators,
         };
+
+        // todo: check if policy evaluator context is valid.
 
         const canEvaluate = await evaluator.canEvaluate(executionContext);
         if (canEvaluate) {

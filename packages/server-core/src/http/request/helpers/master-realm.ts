@@ -7,7 +7,8 @@
 
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Request } from 'routup';
-import { useRequestEnv } from '../../utils';
+
+import { useRequestEnv } from './env';
 
 export function isRequestMasterRealm(req: Request) : boolean {
     const realm = useRequestEnv(req, 'realm');

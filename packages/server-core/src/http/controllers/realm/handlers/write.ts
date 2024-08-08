@@ -16,9 +16,8 @@ import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import { RealmRequestValidator } from '../utils';
-import { RequestHandlerOperation, getRequestParamID } from '../../../request';
+import { RequestHandlerOperation, getRequestParamID, useRequestEnv } from '../../../request';
 
 export async function writeRealmRouteHandler(req: Request, res: Response, options: {
     updateOnly?: boolean

@@ -11,8 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserPermissionEntity } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 /**
  * Drop a permission by id of a specific user.

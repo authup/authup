@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2022.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -9,8 +9,8 @@ import type { Request } from 'routup';
 import { setRequestEnv as setEnv, useRequestEnv as useEnv } from 'routup';
 import type { RequestEnv } from '../type';
 
-export function useRequestEnv(req: Request) : RequestEnv;
-export function useRequestEnv<T extends keyof RequestEnv>(req: Request, key: T) : RequestEnv[T];
+export function useRequestEnv(req: Request): RequestEnv;
+export function useRequestEnv<T extends keyof RequestEnv>(req: Request, key: T): RequestEnv[T];
 export function useRequestEnv<T extends keyof RequestEnv>(req: Request, key?: T) {
     if (typeof key === 'string') {
         return useEnv(req, key) as RequestEnv[T];

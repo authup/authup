@@ -16,8 +16,7 @@ import {
 import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import { IdentityProviderRepository, resolveRealm } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();

@@ -17,13 +17,12 @@ import {
     OAuth2SubKind, isUUID,
 } from '@authup/kit';
 import {
-    PermissionName, REALM_MASTER_NAME,
+    PermissionName,
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -72,28 +71,40 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
         },
     });
 
-    const env = useRequestEnv(req);
+    const queryOutput = await query.getManyAndCount();
 
-    if (!hasAbility) {
-        if (env.userId) {
-            query.andWhere('robot.user_id = :userId', { userId: env.userId });
+    const requestRobot = useRequestEnv(req, 'robot');
+
+    const data : RobotEntity[] = [];
+    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+    for (let i = 0; i < queryOutput[0].length; i++) {
+        if (
+            requestRobot &&
+            requestRobot.id === queryOutput[0][i].id
+        ) {
+            data.push(queryOutput[0][i]);
+            continue;
         }
 
-        if (env.robotId) {
-            query.andWhere('robot.id = :id', { id: env.robotId });
+        const hasAbility = await ability.canOneOf(
+            [
+                PermissionName.ROBOT_READ,
+                PermissionName.ROBOT_UPDATE,
+                PermissionName.ROBOT_DELETE,
+            ],
+            { ...policyEvaluationData, attributes: queryOutput[0][i] },
+        );
+        if (hasAbility) {
+            data.push(queryOutput[0][i]);
+        } else {
+            queryOutput[1] -= 1;
         }
     }
-
-    if (env.realm.name !== REALM_MASTER_NAME) {
-        query.andWhere('robot.realm_id = :realmId', { realmId: env.realm.id });
-    }
-
-    const [entities, total] = await query.getManyAndCount();
 
     return send(res, {
-        data: entities,
+        data,
         meta: {
-            total,
+            total: queryOutput[1],
             ...pagination,
         },
     });
@@ -118,23 +129,55 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
 
+    const requestRobot = useRequestEnv(req, 'robot');
+    const requestRealm = useRequestEnv(req, 'realm');
+
+    let isMe = false;
+
     if (
         isSelfId(id) &&
-        useRequestEnv(req, 'robotId')
+        requestRobot
     ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, useRequestEnv(req, 'scopes'));
-        for (let i = 0; i < attributes.length; i++) {
-            query.addSelect(`robot.${attributes[i]}`);
+        isMe = true;
+        query.where('robot.id = :id', { id: requestRobot.id });
+    } else if (isUUID(id)) {
+        if (
+            requestRobot &&
+            id === requestRobot.id
+        ) {
+            isMe = true;
         }
 
         query.where('robot.id = :id', { id });
-    } else if (isUUID(id)) {
-        query.where('robot.id = :id', { id });
     } else {
-        query.where('robot.name LIKE :name', { name: id });
+        query.where('robot.name = :name', { name: id });
 
         const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
+
+        if (
+            requestRobot &&
+            requestRealm &&
+            id === requestRobot.name &&
+            realm.id === requestRealm.id
+        ) {
+            isMe = true;
+        }
+    }
+
+    const scopes = useRequestEnv(req, 'scopes');
+    if (isMe) {
+        const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, scopes);
+
+        const validAttributes = repository.metadata.columns.map(
+            (column) => column.databaseName,
+        );
+        for (let i = 0; i < attributes.length; i++) {
+            const isValid = validAttributes.includes(attributes[i]);
+            if (isValid) {
+                query.addSelect(`robot.${attributes[i]}`);
+            }
+        }
     }
 
     applyQuery(query, useRequestQuery(req), {
@@ -161,25 +204,21 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     });
 
     const entity = await query.getOne();
-
     if (!entity) {
         throw new NotFoundError();
     }
 
-    const env = useRequestEnv(req);
+    if (!isMe) {
+        const hasAbility = await ability.canOneOf(
+            [
+                PermissionName.ROBOT_READ,
+                PermissionName.ROBOT_UPDATE,
+                PermissionName.ROBOT_DELETE,
+            ],
+            buildPolicyEvaluationDataByRequest(req, { attributes: entity }),
+        );
 
-    if (
-        env.robotId !== entity.id &&
-        !hasAbility
-    ) {
-        if (!entity.user_id) {
-            throw new ForbiddenError();
-        }
-
-        if (
-            entity.user_id &&
-            entity.user_id !== env.userId
-        ) {
+        if (!hasAbility) {
             throw new ForbiddenError();
         }
     }

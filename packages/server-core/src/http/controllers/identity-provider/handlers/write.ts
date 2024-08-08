@@ -15,10 +15,9 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
 import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
 } from '../../../request';
 
 export async function writeIdentityProviderRouteHandler(

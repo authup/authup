@@ -15,8 +15,7 @@ import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

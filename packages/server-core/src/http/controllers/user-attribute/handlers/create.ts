@@ -16,9 +16,8 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const validator = new UserAttributeRequestValidator();

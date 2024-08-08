@@ -23,8 +23,7 @@ import {
 import { ClientEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const ability = useRequestEnv(req, 'abilities');

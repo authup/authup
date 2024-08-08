@@ -15,7 +15,7 @@ import {
     loadOAuth2SubEntity, loadOAuth2SubPermissions,
     readOAuth2TokenPayload, resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
-import { useRequestEnv } from '../../../../utils';
+import { useRequestEnv } from '../../../../request';
 
 export class TokenIntrospectRequestValidator extends Container<{ token: string }> {
     constructor() {

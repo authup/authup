@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '@authup/permitus';
+import type { PolicyEvaluationData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable,
@@ -18,9 +18,8 @@ import {
     RolePermissionEntity,
 } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
 import { RolePermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 /**
  * Add an permission by id to a specific user.
@@ -48,7 +47,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
         entityTarget: RolePermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyEvaluationContext = {
+    const policyEvaluationContext : PolicyEvaluationData = {
         attributes: data satisfies Partial<RolePermissionEntity>,
     };
 

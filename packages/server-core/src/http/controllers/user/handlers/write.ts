@@ -15,10 +15,9 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
 import { UserEntity, UserRepository } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import { UserRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
 } from '../../../request';
 
 export async function writeUserRouteHandler(

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '@authup/permitus';
+import type { PolicyEvaluationData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -16,8 +16,7 @@ import {
     RobotPermissionEntity,
 } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { RequestHandlerOperation } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 import { RobotPermissionRequestValidator } from '../utils';
 
 /**
@@ -46,7 +45,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         entityTarget: RobotPermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyEvaluationContext = {
+    const policyEvaluationContext : PolicyEvaluationData = {
         attributes: data satisfies Partial<RobotPermissionEntity>,
     };
 

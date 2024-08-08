@@ -24,10 +24,12 @@ export type AnyPolicy = {
 
 export type PolicyEvaluationIdentity = {
     type: string,
-    id: string
+    id: string,
+    realmId?: string,
+    realmName?: string
 };
 
-export type PolicyEvaluationContext = {
+export type PolicyEvaluationData = {
     /**
      * Identity of the executing party.
      */
@@ -36,6 +38,9 @@ export type PolicyEvaluationContext = {
      * Attributes
      */
     attributes?: Record<string, any>,
+    /**
+     * The dateTime to use for time & date policy.
+     */
     dateTime?: Date | number | string,
     [key: string]: any
 };

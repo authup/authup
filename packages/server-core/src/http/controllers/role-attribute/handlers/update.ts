@@ -13,9 +13,8 @@ import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestParamID } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

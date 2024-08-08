@@ -10,7 +10,7 @@ import {
     AttributesPolicyEvaluator,
     BuiltInPolicyType,
     CompositePolicyEvaluator,
-    DatePolicyEvaluator,
+    DatePolicyEvaluator, RealmMatchPolicyEvaluator,
     TimePolicyEvaluator,
 } from './built-in';
 import type { PolicyEvaluator, PolicyEvaluators } from './evaluator';
@@ -18,7 +18,7 @@ import { evaluatePolicy } from './evaluator';
 
 import type {
     AnyPolicy,
-    PolicyEvaluationContext,
+    PolicyEvaluationData,
 
 } from './types';
 
@@ -46,16 +46,17 @@ export class PolicyEngine {
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTES, new AttributesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.REALM_MATCH, new RealmMatchPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
     }
 
     async evaluateMany(
         policies: AnyPolicy[],
-        context: PolicyEvaluationContext,
+        data: PolicyEvaluationData,
     ) : Promise<boolean> {
         let outcome : boolean = true;
         for (let i = 0; i < policies.length; i++) {
-            outcome = await this.evaluate(policies[i], context);
+            outcome = await this.evaluate(policies[i], data);
             if (!outcome) {
                 return outcome;
             }
@@ -68,12 +69,12 @@ export class PolicyEngine {
      * @throws PolicyError
      *
      * @param policy
-     * @param context
+     * @param data
      */
     async evaluate(
         policy: AnyPolicy,
-        context: PolicyEvaluationContext,
+        data: PolicyEvaluationData,
     ) : Promise<boolean> {
-        return evaluatePolicy(policy, context, this.evaluators);
+        return evaluatePolicy(policy, data, this.evaluators);
     }
 }

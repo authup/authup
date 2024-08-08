@@ -11,7 +11,7 @@ import { OAuth2SubKind } from '@authup/kit';
 import { ScopeName } from '@authup/core-kit';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { useRequestEnv } from '../../utils';
+import { useRequestEnv } from '../../request';
 import { AbstractGrant } from './abstract';
 import type {
     Grant,

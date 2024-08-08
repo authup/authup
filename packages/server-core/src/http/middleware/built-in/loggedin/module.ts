@@ -10,7 +10,7 @@ import type { HandlerInterface } from '@routup/decorators';
 import type {
     Next, Request, Response,
 } from 'routup';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv } from '../../../request';
 
 export function isRequestAuthenticated(req: Request) {
     return typeof useRequestEnv(req, 'userId') !== 'undefined' ||

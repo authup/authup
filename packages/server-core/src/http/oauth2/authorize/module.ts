@@ -17,7 +17,7 @@ import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
-import { useRequestEnv } from '../../utils';
+import { useRequestEnv } from '../../request';
 import type {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
