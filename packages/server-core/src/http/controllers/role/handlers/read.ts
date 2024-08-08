@@ -17,8 +17,7 @@ import {
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleEntity, resolveRealm } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');

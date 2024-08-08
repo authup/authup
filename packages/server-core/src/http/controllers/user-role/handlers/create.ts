@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '@authup/permitus';
+import type { PolicyEvaluationData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -14,9 +14,8 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleRepository, UserRoleEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
 import { UserRoleRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const abilities = useRequestEnv(req, 'abilities');
@@ -38,7 +37,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    const policyEvaluationContext : PolicyEvaluationContext = {
+    const policyEvaluationContext : PolicyEvaluationData = {
         attributes: data satisfies Partial<UserRoleEntity>,
     };
 

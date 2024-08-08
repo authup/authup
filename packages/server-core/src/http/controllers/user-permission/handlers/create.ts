@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '@authup/permitus';
+import type { PolicyEvaluationData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName, isRealmResourceWritable,
@@ -16,9 +16,8 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserPermissionEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
-import { useRequestEnv } from '../../../utils';
 import { UserPermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 /**
  * Add a permission by id to a specific user.
@@ -46,7 +45,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
         entityTarget: UserPermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyEvaluationContext = {
+    const policyEvaluationContext : PolicyEvaluationData = {
         attributes: data satisfies Partial<UserPermissionEntity>,
     };
 

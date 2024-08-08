@@ -20,10 +20,9 @@ import { useConfig } from '../../../../config';
 import {
     RobotEntity, RobotRepository, resolveRealm, saveRobotCredentialsToVault,
 } from '../../../../domains';
-import { useRequestEnv } from '../../../utils';
 import { RobotRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
 } from '../../../request';
 
 export async function writeRobotRouteHandler(

@@ -17,8 +17,7 @@ import {
     UserAttributeEntity,
     onlyRealmReadableQueryResources,
 } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const userId = useRequestEnv(req, 'userId');

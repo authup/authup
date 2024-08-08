@@ -47,7 +47,7 @@ import {
     loadOAuth2SubPermissions,
     readOAuth2TokenPayload,
 } from '../../../oauth2';
-import { setRequestEnv } from '../../../utils';
+import { setRequestEnv } from '../../../request';
 
 async function verifyBearerAuthorizationHeader(
     request: Request,
@@ -76,6 +76,8 @@ async function verifyBearerAuthorizationHeader(
         },
     });
     setRequestEnv(request, 'realm', realm);
+    setRequestEnv(request, 'realmId', realm.id);
+    setRequestEnv(request, 'realmName', realm.name);
 
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
@@ -131,6 +133,10 @@ async function verifyBasicAuthorizationHeader(
             setRequestEnv(request, 'user', user);
             setRequestEnv(request, 'userId', user.id);
             setRequestEnv(request, 'realm', user.realm);
+            if (user.realm) {
+                setRequestEnv(request, 'realmId', user.realm.id);
+                setRequestEnv(request, 'realmName', user.realm.name);
+            }
 
             return;
         }
@@ -152,6 +158,10 @@ async function verifyBasicAuthorizationHeader(
             setRequestEnv(request, 'robot', robot);
             setRequestEnv(request, 'robotId', robot.id);
             setRequestEnv(request, 'realm', robot.realm);
+            if (robot.realm) {
+                setRequestEnv(request, 'realmId', robot.realm.id);
+                setRequestEnv(request, 'realmName', robot.realm.name);
+            }
         }
     }
 
@@ -165,6 +175,10 @@ async function verifyBasicAuthorizationHeader(
             setRequestEnv(request, 'client', oauth2Client);
             setRequestEnv(request, 'clientId', oauth2Client.id);
             setRequestEnv(request, 'realm', oauth2Client.realm);
+            if (oauth2Client.realm) {
+                setRequestEnv(request, 'realmId', oauth2Client.realm.id);
+                setRequestEnv(request, 'realmName', oauth2Client.realm.name);
+            }
         }
     }
 }

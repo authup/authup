@@ -9,6 +9,7 @@ export * from './attribute-names';
 export * from './attributes';
 export * from './date';
 export * from './composite';
+export * from './realm-match';
 export * from './time';
 
 export * from './constants';
