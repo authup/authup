@@ -7,7 +7,7 @@
 
 type InvertFn = (input: boolean) => boolean;
 
-export function invertPolicyOutcome(
+export function maybeInvertPolicyOutcome(
     outcome: boolean,
     invert?: boolean | InvertFn,
 ) {

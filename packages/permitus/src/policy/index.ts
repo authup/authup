@@ -9,5 +9,4 @@ export * from './engine';
 export * from './evaluator';
 export * from './error';
 export * from './built-in';
-export * from './constants';
 export * from './types';

@@ -6,11 +6,11 @@
  */
 
 import { hasOwnProperty, isObject } from 'smob';
-import { DecisionStrategy } from '../../constants';
+import { DecisionStrategy } from '../../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import type { PolicyEvaluationData } from '../../types';
-import { invertPolicyOutcome } from '../../utils';
+import { maybeInvertPolicyOutcome } from '../../utils';
 import { isRealmMatchPolicy } from './helper';
 import type { RealmMatchPolicyOptions } from './types';
 
@@ -38,7 +38,7 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
             ctx.data.identity.realmName &&
             ctx.data.identity.realmName === 'master'
         ) {
-            return invertPolicyOutcome(true, ctx.options.invert);
+            return maybeInvertPolicyOutcome(true, ctx.options.invert);
         }
 
         let keys : string[];
@@ -83,19 +83,19 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
 
             if (outcome) {
                 if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return invertPolicyOutcome(true, ctx.options.invert);
+                    return maybeInvertPolicyOutcome(true, ctx.options.invert);
                 }
 
                 count++;
             } else {
                 if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return invertPolicyOutcome(false, ctx.options.invert);
+                    return maybeInvertPolicyOutcome(false, ctx.options.invert);
                 }
 
                 count--;
             }
         }
 
-        return invertPolicyOutcome(count > 0, ctx.options.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.options.invert);
     }
 }

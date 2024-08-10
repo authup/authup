@@ -9,7 +9,7 @@ import { guard } from '@ucast/mongo2js';
 import { isObject } from 'smob';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { invertPolicyOutcome } from '../../utils';
+import { maybeInvertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from './helper';
 import type { AttributesPolicyOptions } from './types';
 
@@ -30,7 +30,7 @@ export class AttributesPolicyEvaluator<
         this.fixQuery(ctx.options.query);
 
         const testIt = guard<T>(ctx.options.query);
-        return invertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.options.invert);
+        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.options.invert);
     }
 
     protected fixQuery(query: Record<string, any>) {

@@ -7,8 +7,8 @@
 
 import { isObject } from 'smob';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { invertPolicyOutcome } from '../../utils';
-import { isAttributesPolicy } from '../attributes';
+import { maybeInvertPolicyOutcome } from '../../utils';
+import { isDatePolicy } from './helper';
 import type { DatePolicyOptions } from './types';
 
 function normalizeDate(input: Date) {
@@ -31,7 +31,7 @@ export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
     async canEvaluate(
         ctx: PolicyEvaluatorContext<any, any>,
     ) : Promise<boolean> {
-        return isAttributesPolicy(ctx.options);
+        return isDatePolicy(ctx.options);
     }
 
     async evaluate(ctx: PolicyEvaluatorContext<DatePolicyOptions>) : Promise<boolean> {
@@ -48,17 +48,17 @@ export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
         if (ctx.options.start) {
             const start = normalizeDate(toDate(ctx.options.start));
             if (now < start) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
         if (ctx.options.end) {
             const end = normalizeDate(toDate(ctx.options.end));
             if (now > end) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, ctx.options.invert);
+        return maybeInvertPolicyOutcome(true, ctx.options.invert);
     }
 }

@@ -9,7 +9,7 @@ import { isObject } from 'smob';
 import { flattenObject } from '../../../utils';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { invertPolicyOutcome } from '../../utils';
+import { maybeInvertPolicyOutcome } from '../../utils';
 import { isAttributeNamesPolicy } from './helper';
 import type { AttributeNamesPolicyOptions } from './types';
 
@@ -30,10 +30,10 @@ export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeN
         for (let i = 0; i < keys.length; i++) {
             const index = ctx.options.names.indexOf(keys[i]);
             if (index === -1) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, ctx.options.invert);
+        return maybeInvertPolicyOutcome(true, ctx.options.invert);
     }
 }

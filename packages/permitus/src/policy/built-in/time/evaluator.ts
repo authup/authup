@@ -7,7 +7,7 @@
 
 import { isObject } from 'smob';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { invertPolicyOutcome } from '../../utils';
+import { maybeInvertPolicyOutcome } from '../../utils';
 import { isAttributesPolicy } from '../attributes';
 import type { TimePolicyOptions } from './types';
 
@@ -64,26 +64,26 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
             const start = normalizeDate(toDate(ctx.options.start, now), now);
 
             if (now < start) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
         if (ctx.options.end) {
             const end = normalizeDate(toDate(ctx.options.end, now), now);
             if (now > end) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
         if (ctx.options.dayOfWeek) {
             if (now.getDay() !== ctx.options.dayOfWeek) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
         if (ctx.options.dayOfMonth) {
             if (now.getDate() !== ctx.options.dayOfMonth) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
@@ -96,10 +96,10 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicyOptions> {
             const dayOfYear = Math.floor(diff / oneDay);
 
             if (dayOfYear !== ctx.options.dayOfYear) {
-                return invertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.options.invert);
             }
         }
 
-        return invertPolicyOutcome(true, ctx.options.invert);
+        return maybeInvertPolicyOutcome(true, ctx.options.invert);
     }
 }

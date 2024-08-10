@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DecisionStrategy } from '../../constants';
+import type { DecisionStrategy } from '../../../constants';
 import type { PolicyBase } from '../../types';
 import type { BuiltInPolicyType } from '../constants';
 
