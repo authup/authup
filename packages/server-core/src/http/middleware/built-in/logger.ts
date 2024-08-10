@@ -12,7 +12,7 @@ import type {
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import { EnvironmentName, useConfig } from '../../../config';
-import { useRequestEnv } from '../../utils';
+import { useRequestEnv } from '../../request';
 
 export function registerLoggerMiddleware(router: Router) {
     router.use(coreHandler((

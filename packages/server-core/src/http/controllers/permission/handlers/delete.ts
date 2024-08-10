@@ -12,8 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { PermissionEntity } from '../../../../domains';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deletePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

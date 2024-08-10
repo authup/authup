@@ -16,7 +16,7 @@ import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionManager } from '@authup/permitus';
 import { EnvironmentName, useConfig } from '../../../../config';
-import { setRequestEnv } from '../../../utils';
+import { setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
 function parseRequestAccessTokenCookie(request: Request): string | undefined {

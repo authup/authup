@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyDecisionStrategy } from '../../constants';
+import { DecisionStrategy } from '../../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { evaluatePolicy } from '../../evaluator';
-import { invertPolicyOutcome } from '../../utils';
+import { maybeInvertPolicyOutcome } from '../../utils';
 import { BuiltInPolicyType } from '../constants';
 import { isCompositePolicy } from './helper';
 import type { CompositePolicyOptions } from './types';
@@ -44,20 +44,20 @@ export class CompositePolicyEvaluator<
             }
 
             if (outcome) {
-                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.AFFIRMATIVE) {
-                    return invertPolicyOutcome(true, ctx.options.invert);
+                if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return maybeInvertPolicyOutcome(true, ctx.options.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.UNANIMOUS) {
-                    return invertPolicyOutcome(false, ctx.options.invert);
+                if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return maybeInvertPolicyOutcome(false, ctx.options.invert);
                 }
 
                 count--;
             }
         }
 
-        return invertPolicyOutcome(count >= 0, ctx.options.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.options.invert);
     }
 }

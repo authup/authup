@@ -11,7 +11,7 @@ import { rateLimit } from '@routup/rate-limit';
 import type { Request, Router } from 'routup';
 import { merge } from 'smob';
 import { useConfig } from '../../../config';
-import { useRequestEnv } from '../../utils';
+import { useRequestEnv } from '../../request';
 
 export function registerRateLimitMiddleware(router: Router, input?: OptionsInput) {
     const config = useConfig();

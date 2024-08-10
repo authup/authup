@@ -8,7 +8,7 @@
 import type { AttributeNamesPolicy, AttributesPolicy, BuiltInPolicy } from '../../../src';
 import {
     BuiltInPolicyType,
-    PolicyDecisionStrategy, PolicyEngine,
+    DecisionStrategy, PolicyEngine,
 } from '../../../src';
 
 type User = {
@@ -36,7 +36,7 @@ describe('src/policy', () => {
 
         const compositePolicy : BuiltInPolicy<User> = {
             type: BuiltInPolicyType.COMPOSITE,
-            decisionStrategy: PolicyDecisionStrategy.UNANIMOUS,
+            decisionStrategy: DecisionStrategy.UNANIMOUS,
             children: [
                 attributePolicy,
                 attributeNamesPolicy,

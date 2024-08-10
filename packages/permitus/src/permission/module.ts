@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationContext } from '../policy';
+import type { PolicyEvaluationData } from '../policy';
 import { PolicyEngine } from '../policy';
 import type { PermissionFindOneOptions, PermissionRepository } from './repository';
 import { PermissionMemoryRepository } from './repository';
@@ -106,12 +106,12 @@ export class PermissionManager {
 
     async can(
         input: PermissionFindOneOptions | string,
-        context?: PolicyEvaluationContext
+        context?: PolicyEvaluationData
     ) : Promise<boolean>;
 
     async can(
         input: (PermissionFindOneOptions | string)[],
-        context?: PolicyEvaluationContext
+        context?: PolicyEvaluationData
     ) : Promise<boolean>;
 
     /**
@@ -122,7 +122,7 @@ export class PermissionManager {
      */
     async can(
         input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
-        context: PolicyEvaluationContext = {},
+        context: PolicyEvaluationData = {},
     ) : Promise<boolean> {
         if (!Array.isArray(input)) {
             return this.can([input], context);
@@ -149,5 +149,19 @@ export class PermissionManager {
         }
 
         return true;
+    }
+
+    async canOneOf(
+        input: (PermissionFindOneOptions | string)[],
+        context?: PolicyEvaluationData,
+    ) : Promise<boolean> {
+        for (let i = 0; i < input.length; i++) {
+            const entity = await this.can(input[i], context);
+            if (entity) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

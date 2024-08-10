@@ -5,30 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PermissionName, ScopeName } from '@authup/core-kit';
+import { OAuth2SubKind, isUUID } from '@authup/kit';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import type { QueryFieldsApplyOptions } from 'typeorm-extension';
-import {
-    applyQuery,
-    useDataSource,
-} from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import {
-    PermissionName, ScopeName,
-} from '@authup/core-kit';
-import {
-    OAuth2SubKind, isUUID,
-} from '@authup/kit';
+import { applyQuery, useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../../../../domains';
-import { UserRepository, onlyRealmReadableQueryResources, resolveRealm } from '../../../../domains';
+import { UserRepository, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestParamID } from '../../../request';
-import { useRequestEnv } from '../../../utils';
+import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
-async function buildFieldsOption(req: Request) : Promise<QueryFieldsApplyOptions<UserEntity>> {
-    const options : QueryFieldsApplyOptions<UserEntity> = {
+function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
+    return {
         defaultAlias: 'user',
         default: [
             'id',
@@ -44,13 +36,8 @@ async function buildFieldsOption(req: Request) : Promise<QueryFieldsApplyOptions
             'updated_at',
             'realm_id',
         ],
+        allowed: ['email'],
     };
-
-    if (await useRequestEnv(req, 'abilities').has(PermissionName.USER_UPDATE)) {
-        options.allowed = ['email'];
-    }
-
-    return options;
 }
 
 export async function getManyUserRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -60,7 +47,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
-        fields: await buildFieldsOption(req),
+        fields: buildFieldsOption(),
         filters: {
             allowed: ['id', 'name', 'realm_id'],
         },
@@ -75,62 +62,103 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
         },
     });
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
+    const queryOutput = await query.getManyAndCount();
 
-    const [entities, total] = await query.getManyAndCount();
+    const abilities = useRequestEnv(req, 'abilities');
+
+    const requestUser = useRequestEnv(req, 'user');
+
+    const data : UserEntity[] = [];
+    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+    for (let i = 0; i < queryOutput[0].length; i++) {
+        if (
+            requestUser &&
+            requestUser.id === queryOutput[0][i].id
+        ) {
+            data.push(queryOutput[0][i]);
+            continue;
+        }
+
+        const hasAbility = await abilities.canOneOf(
+            [
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+            { ...policyEvaluationData, attributes: queryOutput[0][i] },
+        );
+        if (hasAbility) {
+            data.push(queryOutput[0][i]);
+        } else {
+            queryOutput[1] -= 1;
+        }
+    }
 
     return send(res, {
-        data: entities,
+        data,
         meta: {
-            total,
+            total: queryOutput[1],
             ...pagination,
         },
     });
 }
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParamID(req, {
-        isUUID: false,
-    });
-
-    const dataSource = await useDataSource();
-    const userRepository = new UserRepository(dataSource);
-    const query = userRepository.createQueryBuilder('user');
-
-    const userId = useRequestEnv(req, 'userId');
-
-    let isMe = false;
-
-    if (isSelfId(id) && userId) {
-        isMe = true;
-        query.where('user.id = :id', { id: userId });
-    } else if (isUUID(id)) {
-        if (id === userId) {
-            isMe = true;
-        }
-        query.where('user.id = :id', { id });
-    } else {
-        query.where('user.name LIKE :name', { name: id });
-
-        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
-        query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
-    }
-
     const ability = useRequestEnv(req, 'abilities');
     const hasAbility = await ability.hasOneOf([
         PermissionName.USER_READ,
         PermissionName.USER_UPDATE,
         PermissionName.USER_DELETE,
     ]);
-    if (!isMe && !hasAbility) {
+    if (!hasAbility) {
         throw new ForbiddenError();
+    }
+
+    const id = useRequestParamID(req, {
+        isUUID: false,
+    });
+
+    const dataSource = await useDataSource();
+    const repository = new UserRepository(dataSource);
+    const query = repository.createQueryBuilder('user');
+
+    const requestUser = useRequestEnv(req, 'user');
+    const requestRealm = useRequestEnv(req, 'realm');
+
+    let isMe = false;
+
+    if (
+        isSelfId(id) &&
+        requestUser
+    ) {
+        isMe = true;
+        query.where('user.id = :id', { id: requestUser.id });
+    } else if (isUUID(id)) {
+        if (requestUser && id === requestUser.id) {
+            isMe = true;
+        }
+        query.where('user.id = :id', { id });
+    } else {
+        query.where('user.name = :name', { name: id });
+
+        const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+        query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
+
+        if (
+            requestUser &&
+            requestRealm &&
+            id === requestUser.name &&
+            realm.id === requestRealm.id
+        ) {
+            isMe = true;
+        }
     }
 
     const scopes = useRequestEnv(req, 'scopes');
     if (isMe) {
         const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
 
-        const validAttributes = userRepository.metadata.columns.map(
+        const validAttributes = repository.metadata.columns.map(
             (column) => column.databaseName,
         );
         for (let i = 0; i < attributes.length; i++) {
@@ -141,24 +169,38 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         }
     }
 
-    onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
-
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
-        fields: await buildFieldsOption(req),
+        fields: buildFieldsOption(),
         relations: {
             allowed: ['realm'],
         },
     });
 
     const entity = await query.getOne();
-
     if (!entity) {
         throw new NotFoundError();
     }
 
-    if ((isMe && hasOAuth2Scope(scopes, ScopeName.GLOBAL)) || hasAbility) {
-        await userRepository.findAndAppendExtraAttributesTo(entity);
+    if (isMe) {
+        if (hasOAuth2Scope(scopes, ScopeName.GLOBAL)) {
+            await repository.findAndAppendExtraAttributesTo(entity);
+        }
+    } else {
+        const hasAbility = await ability.canOneOf(
+            [
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+            buildPolicyEvaluationDataByRequest(req, { attributes: entity }),
+        );
+
+        if (!hasAbility) {
+            throw new ForbiddenError();
+        }
+
+        await repository.findAndAppendExtraAttributesTo(entity);
     }
 
     return send(res, entity);

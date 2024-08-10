@@ -23,6 +23,10 @@ export enum BuiltInPolicyType {
      * Attribute Based Access Control (ABAC)
      */
     ATTRIBUTES = 'attributes',
+    /**
+     * Realm of Identity is for attribute realm.
+     */
+    REALM_MATCH = 'realmMatch',
 
     // Location (LBAC)
     // Device (DBAC)
