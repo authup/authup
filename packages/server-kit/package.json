@@ -60,7 +60,7 @@
         "redis-extension": "^2.0.0",
         "smob": "^1.5.0",
         "singa": "^1.0.0",
-        "winston": "^3.13.0"
+        "winston": "^3.14.1"
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.19"
