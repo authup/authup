@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyDecisionStrategy } from '../../constants';
+import { DecisionStrategy } from '../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { evaluatePolicy } from '../../evaluator';
@@ -44,13 +44,13 @@ export class CompositePolicyEvaluator<
             }
 
             if (outcome) {
-                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.AFFIRMATIVE) {
+                if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return invertPolicyOutcome(true, ctx.options.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.options.decisionStrategy === PolicyDecisionStrategy.UNANIMOUS) {
+                if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return invertPolicyOutcome(false, ctx.options.invert);
                 }
 
@@ -58,6 +58,6 @@ export class CompositePolicyEvaluator<
             }
         }
 
-        return invertPolicyOutcome(count >= 0, ctx.options.invert);
+        return invertPolicyOutcome(count > 0, ctx.options.invert);
     }
 }

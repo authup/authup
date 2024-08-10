@@ -6,6 +6,7 @@
  */
 
 import { hasOwnProperty, isObject } from 'smob';
+import { DecisionStrategy } from '../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import type { PolicyEvaluationData } from '../../types';
@@ -33,34 +34,68 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
         }
 
         if (
-            ctx.options.masterMatchAll &&
+            ctx.options.identityMasterMatchAll &&
             ctx.data.identity.realmName &&
             ctx.data.identity.realmName === 'master'
         ) {
             return invertPolicyOutcome(true, ctx.options.invert);
         }
 
-        const idAttributes : string[] = [];
+        let keys : string[];
         if (ctx.options.attributeName) {
             if (Array.isArray(ctx.options.attributeName)) {
-                idAttributes.push(...ctx.options.attributeName);
+                keys = ctx.options.attributeName;
             } else {
-                idAttributes.push(ctx.options.attributeName);
+                keys = [ctx.options.attributeName];
             }
         } else {
-            idAttributes.push('realm_id');
+            keys = [
+                'realm_id',
+                'realm_name',
+                'realmId',
+                'realmName',
+            ];
+            ctx.options.decisionStrategy = DecisionStrategy.CONSENSUS;
         }
 
-        for (let i = 0; i < idAttributes.length; i++) {
-            if (!hasOwnProperty(ctx.data.attributes, idAttributes[i])) {
+        let count = 0;
+
+        for (let i = 0; i < keys.length; i++) {
+            if (!hasOwnProperty(ctx.data.attributes, keys[i])) {
                 continue;
             }
 
-            if (ctx.data.attributes[idAttributes[i]] === ctx.data.identity.realmId) {
-                return invertPolicyOutcome(true, ctx.options.invert);
+            let outcome : boolean = false;
+
+            const attributeValue = ctx.data.attributes[keys[i]];
+
+            if (
+                attributeValue === null &&
+                ctx.options.attributeNullMatchAll
+            ) {
+                outcome = true;
+            } else if (
+                attributeValue === ctx.data.identity.realmId ||
+                attributeValue === ctx.data.identity.realmName
+            ) {
+                outcome = true;
+            }
+
+            if (outcome) {
+                if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return invertPolicyOutcome(true, ctx.options.invert);
+                }
+
+                count++;
+            } else {
+                if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return invertPolicyOutcome(false, ctx.options.invert);
+                }
+
+                count--;
             }
         }
 
-        return invertPolicyOutcome(false, ctx.options.invert);
+        return invertPolicyOutcome(count > 0, ctx.options.invert);
     }
 }

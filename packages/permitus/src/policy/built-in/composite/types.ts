@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyDecisionStrategy } from '../../constants';
+import type { DecisionStrategy } from '../../constants';
 import type { AnyPolicy, PolicyBase } from '../../types';
 import type { BuiltInPolicyType } from '../constants';
 
@@ -15,7 +15,7 @@ export interface CompositePolicy extends PolicyBase {
     /**
      * How to decide if a policy evaluates to true.
      */
-    decisionStrategy?: `${PolicyDecisionStrategy}`,
+    decisionStrategy?: `${DecisionStrategy}`,
     /**
      * Child policies.
      */

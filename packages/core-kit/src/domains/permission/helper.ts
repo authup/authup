@@ -7,7 +7,7 @@
 import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/permitus';
 import {
     BuiltInPolicyType,
-    PolicyDecisionStrategy,
+    DecisionStrategy,
 } from '@authup/permitus';
 import type { Policy } from '../policy';
 import type { PermissionRelation } from './entity';
@@ -26,7 +26,7 @@ export function transformPermissionRelationToPermissionItem(entity: PermissionRe
     ) {
         policy = {
             type: BuiltInPolicyType.COMPOSITE,
-            decisionStrategy: PolicyDecisionStrategy.UNANIMOUS,
+            decisionStrategy: DecisionStrategy.UNANIMOUS,
             children: [
                 entity.permission.policy,
                 entity.policy,
@@ -65,7 +65,7 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
 
         const policy : CompositePolicy = {
             type: BuiltInPolicyType.COMPOSITE,
-            decisionStrategy: PolicyDecisionStrategy.AFFIRMATIVE,
+            decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             children: [],
         };
 

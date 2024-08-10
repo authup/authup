@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum PolicyDecisionStrategy {
+export enum DecisionStrategy {
     /**
      * One or more positive
      */

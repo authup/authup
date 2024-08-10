@@ -19,7 +19,6 @@ import { evaluatePolicy } from './evaluator';
 import type {
     AnyPolicy,
     PolicyEvaluationData,
-
 } from './types';
 
 /**

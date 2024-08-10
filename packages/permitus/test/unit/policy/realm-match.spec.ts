@@ -38,7 +38,7 @@ describe('src/policy/attribute-realm', () => {
     it('should permit by matching master realm', async () => {
         const options : RealmMatchPolicy = {
             type: BuiltInPolicyType.REALM_MATCH,
-            masterMatchAll: true,
+            identityMasterMatchAll: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
