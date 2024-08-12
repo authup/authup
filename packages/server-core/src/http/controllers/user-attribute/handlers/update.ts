@@ -6,16 +6,29 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { UserAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestParamID } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestEnv, useRequestParamID,
+} from '../../../request';
+import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.hasOneOf([
+        PermissionName.USER_UPDATE,
+        PermissionName.USER_SELF_MANAGE,
+    ]);
+
+    if (!hasAbility) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParamID(req);
 
     const validator = new UserAttributeRequestValidator();
@@ -31,7 +44,6 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
     });
 
     const repository = dataSource.getRepository(UserAttributeEntity);
-
     let entity = await repository.findOneBy({ id });
     if (!entity) {
         throw new NotFoundError();
@@ -39,16 +51,9 @@ export async function updateUserAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, data);
 
-    const userId = useRequestEnv(req, 'userId');
-    const abilities = useRequestEnv(req, 'abilities');
-
-    if (entity.user_id !== userId) {
-        if (
-            !await abilities.can(PermissionName.USER_UPDATE, { attributes: entity }) ||
-            !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
-        ) {
-            throw new ForbiddenError('You are not permitted to update an attribute for the given user...');
-        }
+    const canAbility = await canRequestManageUserAttribute(req, entity);
+    if (!canAbility) {
+        throw new ForbiddenError();
     }
 
     await repository.save(entity);

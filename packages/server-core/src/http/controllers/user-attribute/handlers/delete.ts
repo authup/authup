@@ -6,15 +6,25 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
+import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.hasOneOf([
+        PermissionName.USER_UPDATE,
+        PermissionName.USER_SELF_MANAGE,
+    ]);
+
+    if (!hasAbility) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
@@ -26,14 +36,9 @@ export async function deleteUserAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    if (entity.user_id !== useRequestEnv(req, 'userId')) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new ForbiddenError('You are not permitted for the resource realm.');
-        }
-
-        if (!await useRequestEnv(req, 'abilities').can(PermissionName.USER_UPDATE, { attributes: entity })) {
-            throw new ForbiddenError();
-        }
+    const canAbility = await canRequestManageUserAttribute(req, entity);
+    if (!canAbility) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;

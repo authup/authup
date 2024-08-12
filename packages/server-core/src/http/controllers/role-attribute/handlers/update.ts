@@ -6,17 +6,26 @@
  */
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestParamID } from '../../../request';
+import {
+    RequestHandlerOperation, buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID,
+} from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.has(
+        PermissionName.ROLE_UPDATE,
+    );
+    if (!hasAbility) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParamID(req);
 
     const validator = new RoleAttributeRequestValidator();
@@ -40,12 +49,15 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, data);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !await ability.has(PermissionName.ROLE_UPDATE) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
-    ) {
-        throw new ForbiddenError('You are not permitted to update an attribute for this role...');
+    const canAbility = await abilities.can(
+        PermissionName.ROLE_UPDATE,
+        buildPolicyEvaluationDataByRequest(req, {
+            attributes: entity,
+        }),
+    );
+
+    if (!canAbility) {
+        throw new ForbiddenError();
     }
 
     await repository.save(entity);

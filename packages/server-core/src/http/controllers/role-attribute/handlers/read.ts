@@ -12,12 +12,11 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceReadable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
-    onlyRealmWritableQueryResources,
 } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const ability = useRequestEnv(req, 'abilities');
@@ -35,8 +34,6 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
 
     const query = repository.createQueryBuilder('roleAttribute');
 
-    onlyRealmWritableQueryResources(query, useRequestEnv(req, 'realm'));
-
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',
         filters: {
@@ -50,10 +47,32 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
         },
     });
 
-    const [entities, total] = await query.getManyAndCount();
+    const queryOutput = await query.getManyAndCount();
+
+    const [entities] = queryOutput;
+    let [, total] = queryOutput;
+
+    const data : RoleAttributeEntity[] = [];
+    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+
+    for (let i = 0; i < entities.length; i++) {
+        const canAbility = await ability.canOneOf(
+            [
+                PermissionName.ROLE_READ,
+                PermissionName.ROLE_UPDATE,
+                PermissionName.ROLE_DELETE,
+            ],
+            { ...policyEvaluationData, attributes: queryOutput[0][i] },
+        );
+        if (canAbility) {
+            data.push(entities[i]);
+        } else {
+            total--;
+        }
+    }
 
     return send(res, {
-        data: entities,
+        data,
         meta: {
             total,
             ...pagination,
@@ -65,8 +84,8 @@ export async function getOneRoleAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.hasOneOf([
         PermissionName.ROLE_READ,
         PermissionName.ROLE_UPDATE,
         PermissionName.ROLE_DELETE,
@@ -80,17 +99,26 @@ export async function getOneRoleAttributeRouteHandler(
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
-    const result = await repository.findOneBy({ id });
+    const entity = await repository.findOneBy({ id });
 
-    if (!result) {
+    if (!entity) {
         throw new NotFoundError();
     }
 
-    if (
-        !isRealmResourceReadable(useRequestEnv(req, 'realm'), result.realm_id)
-    ) {
-        throw new ForbiddenError('You are not authorized to read this role attribute...');
+    const canAbility = await abilities.canOneOf(
+        [
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+        ],
+        buildPolicyEvaluationDataByRequest(req, {
+            attributes: entity,
+        }),
+    );
+
+    if (!canAbility) {
+        throw new ForbiddenError();
     }
 
-    return send(res, result);
+    return send(res, entity);
 }

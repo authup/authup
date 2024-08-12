@@ -42,8 +42,8 @@ function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
 
 export async function getManyUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const dataSource = await useDataSource();
-    const userRepository = new UserRepository(dataSource);
-    const query = userRepository.createQueryBuilder('user');
+    const repository = new UserRepository(dataSource);
+    const query = repository.createQueryBuilder('user');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
@@ -63,41 +63,42 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     });
 
     const queryOutput = await query.getManyAndCount();
+    const [entities] = queryOutput;
+    let [, total] = queryOutput;
 
     const abilities = useRequestEnv(req, 'abilities');
 
-    const requestUser = useRequestEnv(req, 'user');
+    const userId = useRequestEnv(req, 'userId');
 
     const data : UserEntity[] = [];
     const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
-    for (let i = 0; i < queryOutput[0].length; i++) {
-        if (
-            requestUser &&
-            requestUser.id === queryOutput[0][i].id
-        ) {
-            data.push(queryOutput[0][i]);
+    for (let i = 0; i < entities.length; i++) {
+        if (userId === entities[i].id) {
+            data.push(entities[i]);
             continue;
         }
 
-        const hasAbility = await abilities.canOneOf(
+        const canAbility = await abilities.canOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_DELETE,
             ],
-            { ...policyEvaluationData, attributes: queryOutput[0][i] },
+            { ...policyEvaluationData, attributes: entities[i] },
         );
-        if (hasAbility) {
-            data.push(queryOutput[0][i]);
+        if (canAbility) {
+            data.push(entities[i]);
         } else {
-            queryOutput[1] -= 1;
+            total -= 1;
         }
     }
+
+    await repository.findAndAppendExtraAttributesToMany(data);
 
     return send(res, {
         data,
         meta: {
-            total: queryOutput[1],
+            total,
             ...pagination,
         },
     });
