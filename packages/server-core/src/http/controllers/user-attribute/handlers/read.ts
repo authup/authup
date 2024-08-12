@@ -12,18 +12,21 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceReadable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
-    onlyRealmReadableQueryResources,
 } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const userId = useRequestEnv(req, 'userId');
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.has(PermissionName.USER_READ);
-    if (!userId && !hasAbility) {
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.hasOneOf([
+        PermissionName.USER_UPDATE,
+        PermissionName.USER_SELF_MANAGE,
+    ]);
+
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
 
@@ -31,12 +34,6 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const query = repository.createQueryBuilder('userAttribute');
-
-    if (!hasAbility) {
-        query.orWhere('userAttribute.user_id = :userId', { userId });
-    } else {
-        onlyRealmReadableQueryResources(query, useRequestEnv(req, 'realm'));
-    }
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userAttribute',
@@ -51,15 +48,29 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
         },
     });
 
-    const [entities, total] = await query.getManyAndCount();
+    const queryOutput = await query.getManyAndCount();
+    const [entities] = queryOutput;
+    let [, total] = queryOutput;
+
+    const data : UserAttributeEntity[] = [];
+    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+
+    for (let i = 0; i < entities.length; i++) {
+        const canAbility = await canRequestManageUserAttribute(req, entities[i], policyEvaluationData);
+
+        if (canAbility) {
+            data.push(entities[i]);
+        } else {
+            total--;
+        }
+    }
 
     return send(res, {
-        data: entities,
+        data,
         meta: {
             total,
             ...pagination,
         },
-
     });
 }
 
@@ -67,14 +78,17 @@ export async function getOneUserAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const id = useRequestParamID(req);
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.hasOneOf([
+        PermissionName.USER_UPDATE,
+        PermissionName.USER_SELF_MANAGE,
+    ]);
 
-    const userId = useRequestEnv(req, 'userId');
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.has(PermissionName.USER_READ);
-    if (!userId && !hasAbility) {
+    if (!hasAbility) {
         throw new ForbiddenError();
     }
+
+    const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
@@ -84,14 +98,8 @@ export async function getOneUserAttributeRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!isRealmResourceReadable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-        throw new ForbiddenError('You are not permitted for the resource realm.');
-    }
-
-    if (
-        userId !== entity.user_id &&
-        !await ability.can(PermissionName.USER_READ, { attributes: entity })
-    ) {
+    const canAbility = await canRequestManageUserAttribute(req, entity);
+    if (!canAbility) {
         throw new ForbiddenError();
     }
 

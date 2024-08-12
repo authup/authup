@@ -10,6 +10,7 @@ export enum PermissionName {
     CLIENT_DELETE = 'client_delete',
     CLIENT_UPDATE = 'client_update',
     CLIENT_READ = 'client_read',
+    CLIENT_SELF_MANAGE = 'client_self_manage',
 
     IDENTITY_PROVIDER_CREATE = 'provider_create',
     IDENTITY_PROVIDER_DELETE = 'provider_delete',
@@ -30,6 +31,7 @@ export enum PermissionName {
     ROBOT_DELETE = 'robot_delete',
     ROBOT_UPDATE = 'robot_update',
     ROBOT_READ = 'robot_read',
+    ROBOT_SELF_MANAGE = 'robot_self_manage',
 
     ROBOT_PERMISSION_CREATE = 'robot_permission_create',
     ROBOT_PERMISSION_DELETE = 'robot_permission_delete',
@@ -58,6 +60,7 @@ export enum PermissionName {
     USER_DELETE = 'user_delete',
     USER_UPDATE = 'user_update',
     USER_READ = 'user_read',
+    USER_SELF_MANAGE = 'user_self_update',
 
     USER_PERMISSION_CREATE = 'user_permission_create',
     USER_PERMISSION_DELETE = 'user_permission_delete',

@@ -7,14 +7,22 @@
 
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deleteRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
+    const abilities = useRequestEnv(req, 'abilities');
+    const hasAbility = await abilities.has(
+        PermissionName.ROLE_UPDATE,
+    );
+    if (!hasAbility) {
+        throw new ForbiddenError();
+    }
+
     const id = useRequestParamID(req);
 
     const dataSource = await useDataSource();
@@ -26,12 +34,15 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !await ability.has(PermissionName.ROLE_UPDATE) ||
-        !isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)
-    ) {
-        throw new ForbiddenError('You are not permitted to drop an attribute of this role...');
+    const canAbility = await abilities.can(
+        PermissionName.ROLE_UPDATE,
+        buildPolicyEvaluationDataByRequest(req, {
+            attributes: entity,
+        }),
+    );
+
+    if (!canAbility) {
+        throw new ForbiddenError();
     }
 
     const { id: entityId } = entity;
