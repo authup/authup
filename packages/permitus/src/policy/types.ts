@@ -42,10 +42,3 @@ export type PolicyData = {
     dateTime?: Date | number | string,
     [key: string]: any
 };
-
-export type PolicyEngineEvaluateOptions = {
-    /**
-     * Do not throw error if policy fails.
-     */
-    safe?: boolean
-};
