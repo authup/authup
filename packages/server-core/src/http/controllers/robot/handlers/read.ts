@@ -86,7 +86,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             continue;
         }
 
-        const hasAbility = await ability.canOneOf(
+        const hasAbility = await ability.safeCheckOneOf(
             [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
@@ -209,7 +209,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (!isMe) {
-        const hasAbility = await ability.canOneOf(
+        const hasAbility = await ability.checkOneOf(
             [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,

@@ -7,15 +7,15 @@
 
 import { PolicyError } from '../error';
 import type {
-    AnyPolicy,
-    PolicyEvaluationData,
+    PolicyData,
+    PolicyWithType,
 
 } from '../types';
 import type { PolicyEvaluatorContext, PolicyEvaluators } from './types';
 
 export async function evaluatePolicy(
-    policy: AnyPolicy,
-    context: PolicyEvaluationData,
+    policy: PolicyWithType,
+    data: PolicyData,
     evaluators: PolicyEvaluators,
 ) : Promise<boolean> {
     const evaluator = evaluators[policy.type];
@@ -24,17 +24,15 @@ export async function evaluatePolicy(
     }
 
     try {
-        const executionContext : PolicyEvaluatorContext<any, any> = {
-            data: context,
-            options: policy,
+        const executionContext : PolicyEvaluatorContext<PolicyWithType> = {
+            data,
+            policy,
             evaluators,
         };
 
-        // todo: check if policy evaluator context is valid.
-
         const canEvaluate = await evaluator.canEvaluate(executionContext);
         if (canEvaluate) {
-            return await evaluator.evaluate(executionContext);
+            return await evaluator.safeEvaluate(executionContext);
         }
     } catch (e) {
         if (e instanceof PolicyError) {

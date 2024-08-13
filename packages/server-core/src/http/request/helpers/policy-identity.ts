@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationIdentity } from '@authup/permitus';
+import type { PolicyIdentity } from '@authup/permitus';
 import type { Request } from 'routup';
 
 import { useRequestEnv } from './env';
 
-export function generatePolicyIdentityByRequest(req: Request) : PolicyEvaluationIdentity | undefined {
+export function generatePolicyIdentityByRequest(req: Request) : PolicyIdentity | undefined {
     const env = useRequestEnv(req);
     if (env.userId) {
         return {

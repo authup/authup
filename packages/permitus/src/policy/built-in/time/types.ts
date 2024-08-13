@@ -6,12 +6,9 @@
  */
 
 import type { PolicyBase } from '../../types';
-import type { BuiltInPolicyType } from '../constants';
 import type { TimePolicyInterval } from './constants';
 
 export interface TimePolicy extends PolicyBase {
-    type: `${BuiltInPolicyType.TIME}`,
-
     /**
      * Format: HH:MM
      */
@@ -42,7 +39,3 @@ export interface TimePolicy extends PolicyBase {
      */
     dayOfYear?: number,
 }
-
-export type TimePolicyOptions = Omit<TimePolicy, 'type'>;
-
-// date policy: startDate, endDate, ...

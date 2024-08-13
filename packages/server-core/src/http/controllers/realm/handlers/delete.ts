@@ -35,7 +35,7 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
         throw new BadRequestError('A built-in realm can not be deleted.');
     }
 
-    if (!await ability.can(PermissionName.REALM_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.REALM_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

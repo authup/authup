@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DatePolicy, DatePolicyOptions } from '../../../src';
+import type { DatePolicy } from '../../../src';
 import {
-    BuiltInPolicyType,
     DatePolicyEvaluator,
-    parseDatePolicyOptions,
+    DatePolicyValidator,
 } from '../../../src';
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {
-        const options : DatePolicy = {
-            type: BuiltInPolicyType.DATE,
+        const policy : DatePolicy = {
             start: '2024-04-01',
             end: '2024-05-01',
         };
@@ -23,7 +21,7 @@ describe('src/policy/date', () => {
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
         let outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 dateTime,
             },
@@ -33,7 +31,7 @@ describe('src/policy/date', () => {
         // march
         dateTime.setMonth(2, 1);
         outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 dateTime,
             },
@@ -43,7 +41,7 @@ describe('src/policy/date', () => {
         // june
         dateTime.setMonth(5, 1);
         outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 dateTime,
             },
@@ -51,22 +49,24 @@ describe('src/policy/date', () => {
         expect(outcome).toBeFalsy();
     });
 
-    it('should parse options', () => {
-        const output = parseDatePolicyOptions({
+    it('should parse options', async () => {
+        const validator = new DatePolicyValidator();
+        const output = await validator.run({
             start: '2024-01-01',
             end: '2024-05-01',
-        } satisfies DatePolicyOptions);
+        } satisfies DatePolicy);
 
         expect(output.start).toEqual('2024-01-01');
         expect(output.end).toEqual('2024-05-01');
     });
 
-    it('should parse options with unknown', () => {
-        const output = parseDatePolicyOptions({
+    it('should parse options with unknown', async () => {
+        const validator = new DatePolicyValidator();
+        const output = await validator.run({
             start: '2024-01-01',
             end: '2024-05-01',
             foo: 'bar',
-        } satisfies DatePolicyOptions & { foo?: string }) as Partial<DatePolicyOptions> & { foo?: string };
+        } satisfies DatePolicy & { foo?: string }) as Partial<DatePolicy> & { foo?: string };
 
         expect(output.start).toEqual('2024-01-01');
         expect(output.end).toEqual('2024-05-01');

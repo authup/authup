@@ -43,7 +43,7 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
     const repository = dataSource.getRepository(RoleAttributeEntity);
     const entity = repository.create(data);
 
-    const canAbility = await abilities.can(
+    const canAbility = await abilities.safeCheck(
         PermissionName.ROLE_UPDATE,
         buildPolicyEvaluationDataByRequest(req, {
             attributes: entity,

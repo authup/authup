@@ -9,28 +9,49 @@ import { guard } from '@ucast/mongo2js';
 import { isObject } from 'smob';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { maybeInvertPolicyOutcome } from '../../utils';
-import { isAttributesPolicy } from './helper';
-import type { AttributesPolicyOptions } from './types';
+import { maybeInvertPolicyOutcome } from '../../helpers';
+import type { PolicyWithType } from '../../types';
+import { BuiltInPolicyType } from '../constants';
+import type { AttributesPolicy } from './types';
+import { AttributesPolicyValidator } from './validator';
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
-> implements PolicyEvaluator<AttributesPolicyOptions<T>> {
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<any, any>,
-    ) : Promise<boolean> {
-        return isAttributesPolicy(ctx.options);
+> implements PolicyEvaluator<AttributesPolicy<T>> {
+    protected validator : AttributesPolicyValidator<T>;
+
+    constructor() {
+        this.validator = new AttributesPolicyValidator<T>();
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<AttributesPolicyOptions<T>>): Promise<boolean> {
-        if (!isObject(ctx.data) || !isObject(ctx.data.attributes)) {
+    async canEvaluate(
+        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    ) : Promise<boolean> {
+        return ctx.policy.type === BuiltInPolicyType.ATTRIBUTES;
+    }
+
+    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
+        if (!isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        this.fixQuery(ctx.options.query);
+        const policy = await this.validator.run(ctx.policy);
 
-        const testIt = guard<T>(ctx.options.query);
-        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.options.invert);
+        return this.evaluate({
+            ...ctx,
+            policy,
+        });
+    }
+
+    async evaluate(ctx: PolicyEvaluatorContext<AttributesPolicy<T>>): Promise<boolean> {
+        if (!ctx.data.attributes) {
+            throw PolicyError.evaluatorContextInvalid();
+        }
+
+        this.fixQuery(ctx.policy.query);
+
+        const testIt = guard<T>(ctx.policy.query);
+        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.policy.invert);
     }
 
     protected fixQuery(query: Record<string, any>) {

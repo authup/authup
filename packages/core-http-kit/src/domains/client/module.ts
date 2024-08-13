@@ -58,4 +58,13 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Client>,
+    ): Promise<SingleResourceResponse<Client>> {
+        const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

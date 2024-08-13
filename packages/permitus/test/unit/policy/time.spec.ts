@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TimePolicy, TimePolicyOptions } from '../../../src';
+import type { TimePolicy } from '../../../src';
 import {
-    BuiltInPolicyType,
-    TimePolicyEvaluator, parseTimePolicyOptions,
+    TimePolicyEvaluator,
+    TimePolicyValidator,
 } from '../../../src';
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {
-        const options : TimePolicy = {
-            type: BuiltInPolicyType.TIME,
+        const policy : TimePolicy = {
             start: '08:00',
             end: '16:00',
         };
@@ -24,7 +23,7 @@ describe('src/policy/time', () => {
         dateTime.setHours(12, 0);
 
         let outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 dateTime,
             },
@@ -33,7 +32,7 @@ describe('src/policy/time', () => {
 
         dateTime.setHours(6, 0);
         outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 dateTime,
             },
@@ -41,15 +40,16 @@ describe('src/policy/time', () => {
         expect(outcome).toBeFalsy();
     });
 
-    it('should parse options', () => {
-        const output = parseTimePolicyOptions({
+    it('should parse options', async () => {
+        const validator = new TimePolicyValidator();
+        const output = await validator.run({
             start: '08:00',
             end: '16:00',
             interval: 'daily',
             dayOfWeek: 0,
             dayOfMonth: 1,
             dayOfYear: 1,
-        } satisfies TimePolicyOptions);
+        } satisfies TimePolicy);
 
         expect(output.start).toEqual('08:00');
         expect(output.end).toEqual('16:00');
@@ -59,11 +59,12 @@ describe('src/policy/time', () => {
         expect(output.dayOfYear).toEqual(1);
     });
 
-    it('should parse options with unknown', () => {
-        const output = parseTimePolicyOptions({
+    it('should parse options with unknown', async () => {
+        const validator = new TimePolicyValidator();
+        const output = await validator.run({
             start: '08:00',
             foo: 'bar',
-        } satisfies TimePolicyOptions & { foo?: string }) as Partial<TimePolicyOptions> & { foo?: string };
+        } satisfies TimePolicy & { foo?: string }) as Partial<TimePolicy> & { foo?: string };
 
         expect(output.start).toEqual('08:00');
         expect(output.foo).toBeUndefined();

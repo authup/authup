@@ -7,11 +7,8 @@
 
 import type { DecisionStrategy } from '../../../constants';
 import type { PolicyBase } from '../../types';
-import type { BuiltInPolicyType } from '../constants';
 
 export interface RealmMatchPolicy extends PolicyBase {
-    type: `${BuiltInPolicyType.REALM_MATCH}`,
-
     /**
      * Determines how realm-id/name matches are handled.
      */
@@ -35,5 +32,3 @@ export interface RealmMatchPolicy extends PolicyBase {
      */
     identityMasterMatchAll?: boolean
 }
-
-export type RealmMatchPolicyOptions = Omit<RealmMatchPolicy, 'type'>;

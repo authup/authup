@@ -35,7 +35,7 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
         throw new BadRequestError('A built-in permission can not be deleted.');
     }
 
-    if (!await ability.can(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

@@ -32,7 +32,7 @@ export async function deleteIdentityProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

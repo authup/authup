@@ -6,12 +6,9 @@
  */
 
 import type { DecisionStrategy } from '../../../constants';
-import type { AnyPolicy, PolicyBase } from '../../types';
-import type { BuiltInPolicyType } from '../constants';
+import type { PolicyBase, PolicyWithType } from '../../types';
 
 export interface CompositePolicy extends PolicyBase {
-    type: `${BuiltInPolicyType.COMPOSITE}`,
-
     /**
      * How to decide if a policy evaluates to true.
      */
@@ -19,7 +16,5 @@ export interface CompositePolicy extends PolicyBase {
     /**
      * Child policies.
      */
-    children: AnyPolicy[],
+    children: PolicyWithType[],
 }
-
-export type CompositePolicyOptions = Omit<CompositePolicy, 'type'>;

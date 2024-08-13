@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from 'smob';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import { maybeInvertPolicyOutcome } from '../../utils';
-import { isDatePolicy } from './helper';
-import type { DatePolicyOptions } from './types';
+import { maybeInvertPolicyOutcome } from '../../helpers';
+import type { PolicyData, PolicyWithType } from '../../types';
+import { BuiltInPolicyType } from '../constants';
+import type { DatePolicy } from './types';
+import { DatePolicyValidator } from './validator';
 
 function normalizeDate(input: Date) {
     return new Date(input.getFullYear(), input.getMonth(), input.getDate());
@@ -27,38 +28,50 @@ function toDate(input: Date | string | number) : Date {
     return input;
 }
 
-export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicyOptions> {
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<any, any>,
-    ) : Promise<boolean> {
-        return isDatePolicy(ctx.options);
+export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicy> {
+    protected validator : DatePolicyValidator;
+
+    constructor() {
+        this.validator = new DatePolicyValidator();
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<DatePolicyOptions>) : Promise<boolean> {
+    async canEvaluate(
+        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    ) : Promise<boolean> {
+        return ctx.policy.type === BuiltInPolicyType.DATE;
+    }
+
+    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
+        const policy = await this.validator.run(ctx.policy);
+
+        return this.evaluate({
+            ...ctx,
+            policy,
+        });
+    }
+
+    async evaluate(ctx: PolicyEvaluatorContext<DatePolicy, PolicyData>) : Promise<boolean> {
         let now : Date;
-        if (
-            isObject(ctx.data) &&
-            ctx.data.dateTime
-        ) {
+        if (ctx.data.dateTime) {
             now = normalizeDate(toDate(ctx.data.dateTime));
         } else {
             now = normalizeDate(new Date());
         }
 
-        if (ctx.options.start) {
-            const start = normalizeDate(toDate(ctx.options.start));
+        if (ctx.policy.start) {
+            const start = normalizeDate(toDate(ctx.policy.start));
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
             }
         }
 
-        if (ctx.options.end) {
-            const end = normalizeDate(toDate(ctx.options.end));
+        if (ctx.policy.end) {
+            const end = normalizeDate(toDate(ctx.policy.end));
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, ctx.options.invert);
+                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.options.invert);
+        return maybeInvertPolicyOutcome(true, ctx.policy.invert);
     }
 }

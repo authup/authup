@@ -35,7 +35,7 @@ describe('src/ability/manager.ts', () => {
 
     it('should work with policy', async () => {
         expect(await manager.has('user_edit')).toBeTruthy();
-        expect(await manager.can('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
-        expect(await manager.can('user_edit', { attributes: { id: '123' } })).toBeFalsy();
+        expect(await manager.check('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
+        expect(await manager.check('user_edit', { attributes: { id: '123' } })).toBeFalsy();
     });
 });

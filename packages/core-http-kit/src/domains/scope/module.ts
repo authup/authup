@@ -44,4 +44,13 @@ export class ScopeAPI extends BaseAPI implements DomainAPI<Scope> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Scope>,
+    ): Promise<SingleResourceResponse<Scope>> {
+        const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

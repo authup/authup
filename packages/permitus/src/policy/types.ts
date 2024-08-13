@@ -7,37 +7,35 @@
 
 export interface PolicyBase {
     /**
-     * The policy type.
-     */
-    type: string,
-
-    /**
      * Invert evaluation result of policy (true->false and false->true)
      */
     invert?: boolean,
 }
 
-export type AnyPolicy = {
-    type: string,
-    [key: string]: any
+export type PolicyWithType<
+    T extends Record<string, any> = Record<string, any>,
+> = T & {
+    type: string
 };
 
-export type PolicyEvaluationIdentity = {
+export type PolicyIdentity = {
     type: string,
     id: string,
     realmId?: string,
     realmName?: string
 };
 
-export type PolicyEvaluationData = {
+export type PolicyData = {
     /**
      * Identity of the executing party.
      */
-    identity?: PolicyEvaluationIdentity,
+    identity?: PolicyIdentity,
+
     /**
      * Attributes
      */
     attributes?: Record<string, any>,
+
     /**
      * The dateTime to use for time & date policy.
      */

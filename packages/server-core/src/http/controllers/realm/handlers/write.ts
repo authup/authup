@@ -69,14 +69,14 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
     });
 
     if (entity) {
-        if (!await ability.can(PermissionName.REALM_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.REALM_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
 
         if (entity.name === REALM_MASTER_NAME && isPropertySet(data, 'name') && entity.name !== data.name) {
             throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
         }
-    } else if (!await ability.can(PermissionName.REALM_CREATE, { attributes: data })) {
+    } else if (!await ability.safeCheck(PermissionName.REALM_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

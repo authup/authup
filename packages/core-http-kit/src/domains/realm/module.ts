@@ -42,4 +42,13 @@ export class RealmAPI extends BaseAPI implements DomainAPI<Realm> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Realm>,
+    ): Promise<SingleResourceResponse<Realm>> {
+        const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

@@ -88,7 +88,7 @@ export async function writeScopeRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.SCOPE_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.SCOPE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -101,7 +101,7 @@ export async function writeScopeRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.SCOPE_CREATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.SCOPE_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

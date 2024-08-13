@@ -35,7 +35,7 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.CLIENT_UPDATE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: entity })) {
         throw new NotFoundError();
     }
 

@@ -78,7 +78,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
             continue;
         }
 
-        const canAbility = await abilities.canOneOf(
+        const canAbility = await abilities.checkOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
@@ -188,7 +188,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             await repository.findAndAppendExtraAttributesTo(entity);
         }
     } else {
-        const hasAbility = await ability.canOneOf(
+        const hasAbility = await ability.checkOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,

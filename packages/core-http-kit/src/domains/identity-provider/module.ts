@@ -51,4 +51,13 @@ export class IdentityProviderAPI extends BaseAPI implements DomainAPI<IdentityPr
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<IdentityProvider>,
+    ): Promise<SingleResourceResponse<IdentityProvider>> {
+        const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

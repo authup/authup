@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationData } from '../policy';
+import type { PolicyData } from '../policy';
 import { PolicyEngine } from '../policy';
 import type { PermissionFindOneOptions, PermissionRepository } from './repository';
 import { PermissionMemoryRepository } from './repository';
@@ -104,28 +104,30 @@ export class PermissionManager {
         return true;
     }
 
-    async can(
+    // ----------------------------------------------
+
+    async check(
         input: PermissionFindOneOptions | string,
-        context?: PolicyEvaluationData
+        context?: PolicyData
     ) : Promise<boolean>;
 
-    async can(
+    async check(
         input: (PermissionFindOneOptions | string)[],
-        context?: PolicyEvaluationData
+        context?: PolicyData
     ) : Promise<boolean>;
 
     /**
      * Check if the owned abilities, satisfy the conditions for a given ability.
      *
      * @param input
-     * @param context
+     * @param data
      */
-    async can(
+    async check(
         input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
-        context: PolicyEvaluationData = {},
+        data: PolicyData = {},
     ) : Promise<boolean> {
         if (!Array.isArray(input)) {
-            return this.can([input], context);
+            return this.check([input], data);
         }
 
         for (let i = 0; i < input.length; i++) {
@@ -138,12 +140,8 @@ export class PermissionManager {
                 continue;
             }
 
-            try {
-                const outcome = await this.policyEngine.evaluate(entity.policy, context);
-                if (!outcome) {
-                    return false;
-                }
-            } catch (e) {
+            const outcome = await this.policyEngine.evaluate(entity.policy, data);
+            if (!outcome) {
                 return false;
             }
         }
@@ -151,12 +149,67 @@ export class PermissionManager {
         return true;
     }
 
-    async canOneOf(
+    async safeCheck(
+        input: PermissionFindOneOptions | string,
+        context?: PolicyData
+    ) : Promise<boolean>;
+
+    async safeCheck(
         input: (PermissionFindOneOptions | string)[],
-        context?: PolicyEvaluationData,
+        context?: PolicyData
+    ) : Promise<boolean>;
+
+    /**
+     * Check if the owned abilities, satisfy the conditions for a given ability.
+     *
+     * @param input
+     * @param data
+     */
+    async safeCheck(
+        input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
+        data: PolicyData = {},
+    ) : Promise<boolean> {
+        try {
+            return await this.check(input as any, data);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ----------------------------------------------
+
+    /**
+     * Check if one of the permissions evaluates to true.
+     *
+     * @param input
+     * @param data
+     */
+    async checkOneOf(
+        input: (PermissionFindOneOptions | string)[],
+        data: PolicyData = {},
     ) : Promise<boolean> {
         for (let i = 0; i < input.length; i++) {
-            const entity = await this.can(input[i], context);
+            const entity = await this.check(input[i], data);
+            if (entity) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Safe (no throw) check if one of the permissions evaluates to true.
+     *
+     * @param input
+     * @param data
+     */
+    async safeCheckOneOf(
+        input: (PermissionFindOneOptions | string)[],
+        data: PolicyData = {},
+    ) : Promise<boolean> {
+        for (let i = 0; i < input.length; i++) {
+            const entity = await this.safeCheck(input[i], data);
             if (entity) {
                 return true;
             }

@@ -50,7 +50,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     entity = repository.merge(entity, data);
 
-    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 
