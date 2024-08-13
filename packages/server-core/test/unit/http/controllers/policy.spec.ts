@@ -6,7 +6,7 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { CompositePolicyOptions, TimePolicyOptions } from '@authup/permitus';
+import type { CompositePolicy, TimePolicy } from '@authup/permitus';
 import { BuiltInPolicyType } from '@authup/permitus';
 import { createFakeTimePolicy } from '../../../utils/domains/policy';
 import { useSuperTest } from '../../../utils/supertest';
@@ -38,7 +38,7 @@ describe('src/http/controllers/policy', () => {
                 name: 'group',
                 type: BuiltInPolicyType.COMPOSITE,
                 invert: false,
-            } as Partial<CompositePolicyOptions>)
+            } as Partial<CompositePolicy>)
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(201);
@@ -105,7 +105,7 @@ describe('src/http/controllers/policy', () => {
                 start: Date.now(),
                 end: Date.now(),
                 invert: false,
-            } satisfies Partial<TimePolicyOptions> & { [key: string]: any })
+            } satisfies Partial<TimePolicy> & { [key: string]: any })
             .auth('admin', 'start123');
 
         expect(response.status).toEqual(202);

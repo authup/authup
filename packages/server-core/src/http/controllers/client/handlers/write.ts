@@ -86,7 +86,7 @@ export async function writeClientRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.CLIENT_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -99,7 +99,7 @@ export async function writeClientRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.CLIENT_CREATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.CLIENT_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

@@ -31,7 +31,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

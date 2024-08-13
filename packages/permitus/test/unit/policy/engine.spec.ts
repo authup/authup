@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributeNamesPolicy, AttributesPolicy, BuiltInPolicy } from '../../../src';
+import type {
+    AttributeNamesPolicy, AttributesPolicy, BuiltInPolicy, PolicyWithType,
+} from '../../../src';
 import {
     BuiltInPolicyType,
     DecisionStrategy, PolicyEngine,
@@ -20,7 +22,7 @@ describe('src/policy', () => {
     it('should work with default evaluators', async () => {
         const enforcer = new PolicyEngine();
 
-        const attributePolicy : AttributesPolicy<User> = {
+        const attributePolicy : PolicyWithType<AttributesPolicy<User>> = {
             type: BuiltInPolicyType.ATTRIBUTES,
             query: {
                 name: {
@@ -29,12 +31,12 @@ describe('src/policy', () => {
             },
         };
 
-        const attributeNamesPolicy : AttributeNamesPolicy = {
+        const attributeNamesPolicy : PolicyWithType<AttributeNamesPolicy> = {
             type: BuiltInPolicyType.ATTRIBUTE_NAMES,
             names: ['name'],
         };
 
-        const compositePolicy : BuiltInPolicy<User> = {
+        const compositePolicy : PolicyWithType<BuiltInPolicy<User>> = {
             type: BuiltInPolicyType.COMPOSITE,
             decisionStrategy: DecisionStrategy.UNANIMOUS,
             children: [
@@ -43,7 +45,7 @@ describe('src/policy', () => {
             ],
         };
 
-        let outcome = await enforcer.evaluateMany([compositePolicy], {
+        let outcome = await enforcer.evaluate(compositePolicy, {
             attributes: {
                 name: 'admin',
             },

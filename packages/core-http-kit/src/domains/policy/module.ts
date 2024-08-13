@@ -41,4 +41,13 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<ExtendedPolicy>,
+    ): Promise<SingleResourceResponse<ExtendedPolicy>> {
+        const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

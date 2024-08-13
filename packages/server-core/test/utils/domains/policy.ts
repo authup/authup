@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TimePolicyOptions } from '@authup/permitus';
+import type { TimePolicy } from '@authup/permitus';
 import { BuiltInPolicyType } from '@authup/permitus';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { faker } from '@faker-js/faker';
 import type { PolicyEntity } from '../../../src';
 
-type TimePolicy = TimePolicyOptions & PolicyEntity & {
+type TimePolicyExtended = TimePolicy & PolicyEntity & {
     parent_id?: string
 };
 
-export function createFakeTimePolicy(data: Partial<TimePolicy> = {}) {
+export function createFakeTimePolicy(data: Partial<TimePolicyExtended> = {}) {
     return {
         name: faker.internet.userName(),
         display_name: faker.internet.displayName(),
@@ -24,5 +24,5 @@ export function createFakeTimePolicy(data: Partial<TimePolicy> = {}) {
         end: '16:00',
         invert: false,
         ...data,
-    } satisfies Partial<TimePolicy>;
+    } satisfies Partial<TimePolicyExtended>;
 }

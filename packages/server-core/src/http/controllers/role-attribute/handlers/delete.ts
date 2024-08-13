@@ -34,7 +34,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    const canAbility = await abilities.can(
+    const canAbility = await abilities.safeCheck(
         PermissionName.ROLE_UPDATE,
         buildPolicyEvaluationDataByRequest(req, {
             attributes: entity,

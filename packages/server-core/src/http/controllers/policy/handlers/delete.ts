@@ -32,7 +32,7 @@ export async function deletePolicyRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

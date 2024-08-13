@@ -4,7 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { AnyPolicy, CompositePolicy, PermissionItem } from '@authup/permitus';
+import type {
+    CompositePolicy, PermissionItem, PolicyWithType,
+} from '@authup/permitus';
 import {
     BuiltInPolicyType,
     DecisionStrategy,
@@ -18,7 +20,7 @@ export function transformPermissionRelationToPermissionItem(entity: PermissionRe
         throw new SyntaxError('The permission relation attribute is required.');
     }
 
-    let policy : AnyPolicy | undefined;
+    let policy : PolicyWithType | undefined;
 
     if (
         entity.permission.policy &&
@@ -31,7 +33,7 @@ export function transformPermissionRelationToPermissionItem(entity: PermissionRe
                 entity.permission.policy,
                 entity.policy,
             ],
-        } satisfies CompositePolicy;
+        } satisfies PolicyWithType<CompositePolicy>;
     } else if (entity.policy) {
         policy = entity.policy;
     } else if (entity.permission.policy) {
@@ -63,7 +65,7 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
     for (let i = 0; i < keys.length; i++) {
         const [permission, ...permissions] = grouped[keys[i]];
 
-        const policy : CompositePolicy = {
+        const policy : PolicyWithType<CompositePolicy> = {
             type: BuiltInPolicyType.COMPOSITE,
             decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             children: [],

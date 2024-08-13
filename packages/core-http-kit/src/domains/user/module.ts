@@ -58,4 +58,13 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<User> & { password_repeat?: User['password'] },
+    ): Promise<SingleResourceResponse<User>> {
+        const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

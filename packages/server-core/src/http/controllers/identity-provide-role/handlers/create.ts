@@ -62,7 +62,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
-    if (!await ability.can(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
+    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

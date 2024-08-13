@@ -7,9 +7,10 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { deserialize, serialize } from '@authup/kit';
-import type { AttributesPolicyOptions } from '../../../src';
+import type { AttributesPolicy } from '../../../src';
 import {
-    AttributesPolicyEvaluator, parseAttributesOptions,
+    AttributesPolicyEvaluator,
+    AttributesPolicyValidator,
 } from '../../../src';
 
 type User = {
@@ -17,7 +18,7 @@ type User = {
     age: number
 };
 
-const options : AttributesPolicyOptions<User> = {
+const policy : AttributesPolicy<User> = {
     invert: false,
     query: {
         name: {
@@ -35,7 +36,7 @@ const evaluator = new AttributesPolicyEvaluator<User>();
 describe('src/policy/attributes', () => {
     it('should succeed with successful predicates', async () => {
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 attributes: {
                     name: 'Peter',
@@ -47,9 +48,9 @@ describe('src/policy/attributes', () => {
     });
 
     it('should succeed with serialized/deserialized predicates', async () => {
-        const value = deserialize(serialize(options));
+        const value = deserialize(serialize(policy));
         const outcome = await evaluator.evaluate({
-            options: value,
+            policy: value,
             data: {
                 attributes: {
                     name: 'Peter',
@@ -60,39 +61,41 @@ describe('src/policy/attributes', () => {
         expect(outcome).toBeTruthy();
     });
 
-    it('should parse options', () => {
-        const output = parseAttributesOptions({
+    it('should parse options', async () => {
+        const validator = new AttributesPolicyValidator();
+        const output = await validator.run({
             query: {
                 name: {
                     $eq: 'admin',
                 },
             },
-        } satisfies AttributesPolicyOptions);
+        } satisfies AttributesPolicy);
 
         expect(output.query).toBeDefined();
     });
 
-    it('should parse options with unknown', () => {
-        const output = parseAttributesOptions({
+    it('should parse options with unknown', async () => {
+        const validator = new AttributesPolicyValidator();
+        const output = await validator.run({
             query: {
                 name: {
                     $eq: 'admin',
                 },
             },
             foo: 'bar',
-        } satisfies AttributesPolicyOptions & { foo?: string }) as Partial<AttributesPolicyOptions> & { foo?: string };
+        } satisfies AttributesPolicy & { foo?: string }) as Partial<AttributesPolicy> & { foo?: string };
 
         expect(output.query).toBeDefined();
         expect(output.foo).toBeUndefined();
     });
 
     it('should fail with missing context', async () => {
-        await expect(evaluator.evaluate({ options })).rejects.toThrow();
+        await expect(evaluator.evaluate({ policy, data: {} })).rejects.toThrow();
     });
 
     it('should fail with invalid predicate value', async () => {
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 attributes: {
                     name: 'Peter',

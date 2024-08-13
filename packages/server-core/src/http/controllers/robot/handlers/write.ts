@@ -90,7 +90,7 @@ export async function writeRobotRouteHandler(
             throw new ForbiddenError();
         }
 
-        if (!await ability.can(PermissionName.ROLE_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
 
@@ -131,7 +131,7 @@ export async function writeRobotRouteHandler(
         throw new ForbiddenError();
     }
 
-    if (!await ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
+    if (!await ability.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

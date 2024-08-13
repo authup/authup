@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationData } from '@authup/permitus';
+import type { PolicyData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -45,7 +45,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         entityTarget: RobotPermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyEvaluationData = {
+    const policyEvaluationContext : PolicyData = {
         attributes: data satisfies Partial<RobotPermissionEntity>,
     };
 
@@ -59,7 +59,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         data.permission_realm_id = data.permission.realm_id;
 
         // todo: pass realm id
-        if (!await abilities.can(data.permission.name, policyEvaluationContext)) {
+        if (!await abilities.safeCheck(data.permission.name, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
     }
@@ -76,7 +76,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!await abilities.can(PermissionName.ROBOT_PERMISSION_CREATE, policyEvaluationContext)) {
+    if (!await abilities.safeCheck(PermissionName.ROBOT_PERMISSION_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

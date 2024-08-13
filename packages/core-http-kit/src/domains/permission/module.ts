@@ -41,4 +41,13 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Permission>,
+    ): Promise<SingleResourceResponse<Permission>> {
+        const response = await this.client.post(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

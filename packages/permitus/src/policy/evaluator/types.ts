@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PolicyWithType } from '../types';
+
 export type PolicyEvaluatorContext<
-    OPTIONS extends Record<string, any> = Record<string, any>,
+    POLICY extends Record<string, any> = Record<string, any>,
     DATA extends Record<string, any> = Record<string, any>,
 > = {
-    options: OPTIONS,
-    data?: DATA,
+    policy: POLICY,
+    data: DATA,
     evaluators?: PolicyEvaluators
 };
 
@@ -22,7 +24,7 @@ export interface PolicyEvaluator<
 > {
     /**
      * Execute the evaluator with a given
-     * evaluator context
+     * evaluator context.
      *
      * @throws PolicyError
      * @param ctx
@@ -30,12 +32,18 @@ export interface PolicyEvaluator<
     evaluate(ctx: PolicyEvaluatorContext<OPTIONS, DATA>): Promise<boolean>;
 
     /**
+     * Safe execute the evaluator with an unknown context.
+     *
+     * @throws PolicyError
+     * @param ctx
+     */
+    safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean>;
+
+    /**
      * Verify if the evaluator (might) can hande the provided
-     * evaluator context
+     * evaluator context.
      *
      * @param ctx
      */
-    canEvaluate(
-        ctx: PolicyEvaluatorContext<any, any>
-    ): Promise<boolean>;
+    canEvaluate(ctx: PolicyEvaluatorContext<PolicyWithType>): Promise<boolean>;
 }

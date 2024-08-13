@@ -7,28 +7,25 @@
 
 import type { RealmMatchPolicy } from '../../../src';
 import {
-    BuiltInPolicyType,
     RealmMatchPolicyEvaluator,
 } from '../../../src';
 
 describe('src/policy/attribute-realm', () => {
     it('should permit by matching realm', async () => {
-        const options : RealmMatchPolicy = {
-            type: BuiltInPolicyType.REALM_MATCH,
-        };
+        const policy : RealmMatchPolicy = {};
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 identity: {
                     type: 'user',
-                    id: 'xxx',
-                    realmId: 'foo-bar',
+                    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
+                    realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
                 attributes: {
-                    realm_id: 'foo-bar',
+                    realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
         });
@@ -36,23 +33,22 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should permit by matching master realm', async () => {
-        const options : RealmMatchPolicy = {
-            type: BuiltInPolicyType.REALM_MATCH,
+        const policy : RealmMatchPolicy = {
             identityMasterMatchAll: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 identity: {
                     type: 'user',
-                    id: 'xxx',
+                    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
                 attributes: {
-                    realm_id: 'foo-bar',
+                    realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
         });
@@ -60,22 +56,20 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should restrict due non matching realm', async () => {
-        const options : RealmMatchPolicy = {
-            type: BuiltInPolicyType.REALM_MATCH,
-        };
+        const policy : RealmMatchPolicy = { };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 identity: {
                     type: 'user',
-                    id: 'xxx',
-                    realmId: 'bar-baz',
+                    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
+                    realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
                 attributes: {
-                    realm_id: 'foo-bar',
+                    realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
                 },
             },
         });
@@ -83,22 +77,20 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
-        const options : RealmMatchPolicy = {
-            type: BuiltInPolicyType.REALM_MATCH,
-        };
+        const policy : RealmMatchPolicy = {};
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
         const outcome = await evaluator.evaluate({
-            options,
+            policy,
             data: {
                 identity: {
                     type: 'user',
-                    id: 'xxx',
+                    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
                 attributes: {
-                    realm_id: 'foo-bar',
+                    realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
                 },
             },
         });

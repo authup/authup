@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -47,8 +47,8 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         data.scope_realm_id = data.scope.realm_id;
     }
 
-    if (!await ability.can(PermissionName.CLIENT_UPDATE, { attributes: data })) {
-        throw new NotFoundError();
+    if (!await ability.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: data })) {
+        throw new ForbiddenError();
     }
 
     const repository = dataSource.getRepository(ClientScopeEntity);

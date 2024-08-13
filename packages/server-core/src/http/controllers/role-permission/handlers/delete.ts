@@ -51,7 +51,7 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!await ability.can(PermissionName.ROLE_PERMISSION_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.ROLE_PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

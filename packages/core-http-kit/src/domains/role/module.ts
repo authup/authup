@@ -44,4 +44,13 @@ export class RoleAPI extends BaseAPI implements DomainAPI<Role> {
 
         return response.data;
     }
+
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Role>,
+    ): Promise<SingleResourceResponse<Role>> {
+        const response = await this.client.put(`roles/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
 }

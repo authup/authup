@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy } from '../../types';
+import type { PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { CompositePolicy } from './types';
 
-export function isCompositePolicy(input: AnyPolicy) : input is CompositePolicy {
+export function isCompositePolicy(
+    input: PolicyWithType,
+) : input is PolicyWithType<CompositePolicy> {
     return input.type === BuiltInPolicyType.COMPOSITE;
 }

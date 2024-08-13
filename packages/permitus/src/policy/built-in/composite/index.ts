@@ -8,3 +8,4 @@
 export * from './evaluator';
 export * from './types';
 export * from './helper';
+export * from './validator';

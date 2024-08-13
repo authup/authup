@@ -33,7 +33,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.USER_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.USER_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

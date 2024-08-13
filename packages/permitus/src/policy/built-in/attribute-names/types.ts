@@ -6,12 +6,7 @@
  */
 
 import type { PolicyBase } from '../../types';
-import type { BuiltInPolicyType } from '../constants';
 
 export interface AttributeNamesPolicy extends PolicyBase {
-    type: `${BuiltInPolicyType.ATTRIBUTE_NAMES}`,
-
     names: string[],
 }
-
-export type AttributeNamesPolicyOptions = Omit<AttributeNamesPolicy, 'type'>;

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationData } from '@authup/permitus';
+import type { PolicyData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable,
@@ -47,7 +47,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
         entityTarget: RolePermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyEvaluationData = {
+    const policyEvaluationContext : PolicyData = {
         attributes: data satisfies Partial<RolePermissionEntity>,
     };
 
@@ -62,7 +62,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
         if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
             // todo: pass realm_id
-            if (!await abilities.can(data.permission.name, policyEvaluationContext)) {
+            if (!await abilities.safeCheck(data.permission.name, policyEvaluationContext)) {
                 throw new ForbiddenError('The target permission is not owned.');
             }
         }
@@ -80,7 +80,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!await abilities.can(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
+    if (!await abilities.safeCheck(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

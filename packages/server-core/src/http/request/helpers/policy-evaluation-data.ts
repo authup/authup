@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationData } from '@authup/permitus';
+import type { PolicyData } from '@authup/permitus';
 import type { Request } from 'routup';
 import { generatePolicyIdentityByRequest } from './policy-identity';
 
 export function buildPolicyEvaluationDataByRequest(
     req: Request,
-    input: Partial<PolicyEvaluationData> = {},
-) : PolicyEvaluationData {
+    input: Partial<PolicyData> = {},
+) : PolicyData {
     return {
         ...input,
         identity: generatePolicyIdentityByRequest(req),

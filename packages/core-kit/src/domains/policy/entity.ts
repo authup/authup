@@ -6,7 +6,7 @@
  */
 
 import type { EventPayload } from '@authup/kit';
-import type { AnyPolicy } from '@authup/permitus';
+import type { PolicyWithType } from '@authup/permitus';
 import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 
@@ -25,7 +25,7 @@ export interface Policy {
 
     invert: boolean;
 
-    children: AnyPolicy[];
+    children: PolicyWithType[];
 
     parent_id?: string,
 

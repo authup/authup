@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluationData } from '@authup/permitus';
+import type { PolicyData } from '@authup/permitus';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -37,7 +37,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    const policyEvaluationContext : PolicyEvaluationData = {
+    const policyEvaluationContext : PolicyData = {
         attributes: data satisfies Partial<RobotRoleEntity>,
     };
 
@@ -52,7 +52,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
         const roleRepository = new RoleRepository(dataSource);
         const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
-        if (!await abilities.can(roleAbilities, policyEvaluationContext)) {
+        if (!await abilities.safeCheck(roleAbilities, policyEvaluationContext)) {
             throw new ForbiddenError('The role permissions are not owned.');
         }
     }
@@ -69,7 +69,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (!await abilities.can(PermissionName.ROBOT_ROLE_CREATE, policyEvaluationContext)) {
+    if (!await abilities.safeCheck(PermissionName.ROBOT_ROLE_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

@@ -53,7 +53,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!await ability.can(PermissionName.ROBOT_PERMISSION_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.ROBOT_PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

@@ -59,6 +59,15 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
         return response.data;
     }
 
+    async createOrUpdate(
+        idOrName: string,
+        data: Partial<Robot>,
+    ): Promise<SingleResourceResponse<Robot>> {
+        const response = await this.client.put(`robots/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
     async integrity(
         id: Robot['id'] | Robot['name'],
     ): Promise<SingleResourceResponse<Robot>> {

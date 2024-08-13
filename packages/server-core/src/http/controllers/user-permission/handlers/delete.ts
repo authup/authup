@@ -51,7 +51,7 @@ export async function deleteUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!await ability.can(PermissionName.USER_PERMISSION_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.USER_PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

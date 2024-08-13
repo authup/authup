@@ -29,7 +29,7 @@ export async function deleteScopeRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    if (!await ability.can(PermissionName.SCOPE_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.SCOPE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

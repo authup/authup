@@ -9,55 +9,69 @@ import { DecisionStrategy } from '../../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
 import { evaluatePolicy } from '../../evaluator';
-import { maybeInvertPolicyOutcome } from '../../utils';
-import { BuiltInPolicyType } from '../constants';
+import { maybeInvertPolicyOutcome } from '../../helpers';
+import type { PolicyData, PolicyWithType } from '../../types';
 import { isCompositePolicy } from './helper';
-import type { CompositePolicyOptions } from './types';
+import type { CompositePolicy } from './types';
+import { CompositePolicyValidator } from './validator';
 
-export class CompositePolicyEvaluator<
-    C extends Record<string, any> = Record<string, any>,
-> implements PolicyEvaluator<CompositePolicyOptions, C> {
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<any, any>,
-    ) : Promise<boolean> {
-        return ctx.options.type === BuiltInPolicyType.COMPOSITE;
+export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy> {
+    protected validator : CompositePolicyValidator;
+
+    constructor() {
+        this.validator = new CompositePolicyValidator();
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<CompositePolicyOptions, C>): Promise<boolean> {
+    async canEvaluate(
+        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    ) : Promise<boolean> {
+        return isCompositePolicy(ctx.policy);
+    }
+
+    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
+        const policy = await this.validator.run(ctx.policy);
+
+        return this.evaluate({
+            ...ctx,
+            policy,
+        });
+    }
+
+    async evaluate(ctx: PolicyEvaluatorContext<CompositePolicy, PolicyData>): Promise<boolean> {
         let count = 0;
 
-        for (let i = 0; i < ctx.options.children.length; i++) {
-            const childPolicy = ctx.options.children[i];
+        for (let i = 0; i < ctx.policy.children.length; i++) {
+            const childPolicy = ctx.policy.children[i];
             let outcome : boolean;
 
             if (isCompositePolicy(childPolicy)) {
                 outcome = await this.evaluate({
                     ...ctx,
-                    options: childPolicy,
+                    policy: childPolicy,
                 });
             } else {
                 if (typeof ctx.evaluators === 'undefined') {
                     throw PolicyError.evaluatorNotFound(childPolicy.type);
                 }
 
-                outcome = await evaluatePolicy(childPolicy, ctx.data || {}, ctx.evaluators);
+                outcome = await evaluatePolicy(childPolicy, ctx.data, ctx.evaluators);
             }
 
             if (outcome) {
-                if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.options.invert);
+                if (ctx.policy.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return maybeInvertPolicyOutcome(true, ctx.policy.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.options.invert);
+                if (ctx.policy.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return maybeInvertPolicyOutcome(false, ctx.policy.invert);
                 }
 
                 count--;
             }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.options.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.policy.invert);
     }
 }

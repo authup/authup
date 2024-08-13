@@ -91,7 +91,7 @@ export async function writeRoleRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.ROLE_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -104,7 +104,7 @@ export async function writeRoleRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.ROLE_CREATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

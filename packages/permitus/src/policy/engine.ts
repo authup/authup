@@ -10,16 +10,14 @@ import {
     AttributesPolicyEvaluator,
     BuiltInPolicyType,
     CompositePolicyEvaluator,
-    DatePolicyEvaluator, RealmMatchPolicyEvaluator,
+    DatePolicyEvaluator,
+    RealmMatchPolicyEvaluator,
     TimePolicyEvaluator,
 } from './built-in';
 import type { PolicyEvaluator, PolicyEvaluators } from './evaluator';
 import { evaluatePolicy } from './evaluator';
 
-import type {
-    AnyPolicy,
-    PolicyEvaluationData,
-} from './types';
+import type { PolicyData, PolicyWithType } from './types';
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -49,19 +47,17 @@ export class PolicyEngine {
         this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
     }
 
-    async evaluateMany(
-        policies: AnyPolicy[],
-        data: PolicyEvaluationData,
+    /**
+     * @throws PolicyError
+     *
+     * @param policy
+     * @param data
+     */
+    async evaluate(
+        policy: PolicyWithType,
+        data: PolicyData,
     ) : Promise<boolean> {
-        let outcome : boolean = true;
-        for (let i = 0; i < policies.length; i++) {
-            outcome = await this.evaluate(policies[i], data);
-            if (!outcome) {
-                return outcome;
-            }
-        }
-
-        return outcome;
+        return evaluatePolicy(policy, data, this.evaluators);
     }
 
     /**
@@ -70,10 +66,14 @@ export class PolicyEngine {
      * @param policy
      * @param data
      */
-    async evaluate(
-        policy: AnyPolicy,
-        data: PolicyEvaluationData,
+    async safeEvaluate(
+        policy: PolicyWithType,
+        data: PolicyData,
     ) : Promise<boolean> {
-        return evaluatePolicy(policy, data, this.evaluators);
+        try {
+            return await this.evaluate(policy, data);
+        } catch (e) {
+            return false;
+        }
     }
 }

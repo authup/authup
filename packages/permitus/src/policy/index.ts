@@ -8,5 +8,6 @@
 export * from './engine';
 export * from './evaluator';
 export * from './error';
+export * from './helpers';
 export * from './built-in';
 export * from './types';

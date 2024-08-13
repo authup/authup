@@ -49,7 +49,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, data);
 
-    const canAbility = await abilities.can(
+    const canAbility = await abilities.safeCheck(
         PermissionName.ROLE_UPDATE,
         buildPolicyEvaluationDataByRequest(req, {
             attributes: entity,

@@ -7,17 +7,14 @@
 
 import { omitRecord } from '@authup/kit';
 import {
+    AttributeNamesPolicyValidator,
+    AttributesPolicyValidator,
     BuiltInPolicyType,
-    parseAttributeNamesPolicyOptions,
-    parseAttributesOptions,
-    parseDatePolicyOptions,
-    parseTimePolicyOptions,
+    DatePolicyValidator,
+    TimePolicyValidator,
 } from '@authup/permitus';
-import { BadRequestError } from '@ebec/http';
-import { buildError } from '@validup/adapter-zod';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import { ZodError } from 'zod';
 
 type PolicyContainerRunOptions<T> = ContainerOptions<T> & {
     attributeNames?: string[]
@@ -26,10 +23,23 @@ type PolicyContainerRunOptions<T> = ContainerOptions<T> & {
 export class PolicyAttributesValidator extends Container<Record<string, any>> {
     protected attributeNames : string[];
 
+    protected attributesOptionsValidator : AttributesPolicyValidator;
+
+    protected attributeNamesOptionsValidator : AttributeNamesPolicyValidator;
+
+    protected dateOptionsValidator : DatePolicyValidator;
+
+    protected timeOptionsValidator : TimePolicyValidator;
+
     constructor(options: PolicyContainerRunOptions<Record<string, any>>) {
         super(options);
 
         this.attributeNames = options.attributeNames || [];
+
+        this.attributesOptionsValidator = new AttributesPolicyValidator();
+        this.attributeNamesOptionsValidator = new AttributeNamesPolicyValidator();
+        this.dateOptionsValidator = new DatePolicyValidator();
+        this.timeOptionsValidator = new TimePolicyValidator();
     }
 
     override async run(
@@ -37,43 +47,29 @@ export class PolicyAttributesValidator extends Container<Record<string, any>> {
     ) : Promise<Record<string, any>> {
         let attributes : Record<string, any> = {};
 
-        try {
-            switch (data.type) {
-                case BuiltInPolicyType.ATTRIBUTES: {
-                    attributes = parseAttributesOptions(data);
-                    break;
-                }
-                case BuiltInPolicyType.ATTRIBUTE_NAMES: {
-                    attributes = parseAttributeNamesPolicyOptions(data);
-                    break;
-                }
-                case BuiltInPolicyType.DATE: {
-                    attributes = parseDatePolicyOptions(data);
-                    break;
-                }
-                case BuiltInPolicyType.TIME: {
-                    attributes = parseTimePolicyOptions(data);
-                    break;
-                }
-                default: {
-                    if (typeof this.attributeNames !== 'undefined') {
-                        attributes = omitRecord(data, this.attributeNames);
-                        // todo: maybe limit attributes size
-                    }
+        switch (data.type) {
+            case BuiltInPolicyType.ATTRIBUTES: {
+                attributes = await this.attributesOptionsValidator.run(data);
+                break;
+            }
+            case BuiltInPolicyType.ATTRIBUTE_NAMES: {
+                attributes = await this.attributeNamesOptionsValidator.run(data);
+                break;
+            }
+            case BuiltInPolicyType.DATE: {
+                attributes = await this.dateOptionsValidator.run(data);
+                break;
+            }
+            case BuiltInPolicyType.TIME: {
+                attributes = await this.timeOptionsValidator.run(data);
+                break;
+            }
+            default: {
+                if (typeof this.attributeNames !== 'undefined') {
+                    attributes = omitRecord(data, this.attributeNames);
+                    // todo: maybe limit attributes size
                 }
             }
-        } catch (e: any) {
-            if (e instanceof ZodError) {
-                throw buildError(e, { path: 'type' });
-            }
-
-            if (e instanceof Error) {
-                throw new BadRequestError(e.message, {
-                    cause: e,
-                });
-            }
-
-            throw e;
         }
 
         return attributes;

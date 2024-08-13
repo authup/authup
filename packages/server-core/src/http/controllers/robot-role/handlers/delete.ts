@@ -49,7 +49,7 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (!await ability.can(PermissionName.ROBOT_ROLE_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.ROBOT_ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

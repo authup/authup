@@ -31,7 +31,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     const ability = useRequestEnv(req, 'abilities');
     const userId = useRequestEnv(req, 'userId');
     if (!entity.user_id || !userId || entity.user_id !== userId) {
-        if (!await ability.can(PermissionName.ROBOT_DELETE, { attributes: entity })) {
+        if (!await ability.safeCheck(PermissionName.ROBOT_DELETE, { attributes: entity })) {
             throw new ForbiddenError();
         }
     }

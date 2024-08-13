@@ -56,7 +56,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
     const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
 
     for (let i = 0; i < entities.length; i++) {
-        const canAbility = await ability.canOneOf(
+        const canAbility = await ability.checkOneOf(
             [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -105,7 +105,7 @@ export async function getOneRoleAttributeRouteHandler(
         throw new NotFoundError();
     }
 
-    const canAbility = await abilities.canOneOf(
+    const canAbility = await abilities.checkOneOf(
         [
             PermissionName.ROLE_READ,
             PermissionName.ROLE_UPDATE,

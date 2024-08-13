@@ -9,44 +9,63 @@ import { hasOwnProperty, isObject } from 'smob';
 import { DecisionStrategy } from '../../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
-import type { PolicyEvaluationData } from '../../types';
-import { maybeInvertPolicyOutcome } from '../../utils';
-import { isRealmMatchPolicy } from './helper';
-import type { RealmMatchPolicyOptions } from './types';
+import type { PolicyData, PolicyWithType } from '../../types';
+import { maybeInvertPolicyOutcome } from '../../helpers';
+import { BuiltInPolicyType } from '../constants';
+import type { RealmMatchPolicy } from './types';
+import { RealmMatchPolicyValidator } from './validator';
 
-export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPolicyOptions> {
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<any, any>,
-    ) : Promise<boolean> {
-        return isRealmMatchPolicy(ctx.options);
+export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPolicy> {
+    protected validator : RealmMatchPolicyValidator;
+
+    constructor() {
+        this.validator = new RealmMatchPolicyValidator();
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<
-    RealmMatchPolicyOptions,
-    PolicyEvaluationData
-    >): Promise<boolean> {
+    async canEvaluate(
+        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    ) : Promise<boolean> {
+        return ctx.policy.type === BuiltInPolicyType.REALM_MATCH;
+    }
+
+    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
         if (
-            !isObject(ctx.data) ||
             !isObject(ctx.data.attributes) ||
             !isObject(ctx.data.identity)
         ) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
+        const policy = await this.validator.run(ctx.policy);
+
+        return this.evaluate({
+            ...ctx,
+            policy,
+        });
+    }
+
+    async evaluate(ctx: PolicyEvaluatorContext<
+    RealmMatchPolicy,
+    PolicyData
+    >): Promise<boolean> {
+        if (!ctx.data.attributes || !ctx.data.identity) {
+            throw PolicyError.evaluatorContextInvalid();
+        }
+
         if (
-            ctx.options.identityMasterMatchAll &&
+            ctx.policy.identityMasterMatchAll &&
             ctx.data.identity.realmName &&
             ctx.data.identity.realmName === 'master'
         ) {
-            return maybeInvertPolicyOutcome(true, ctx.options.invert);
+            return maybeInvertPolicyOutcome(true, ctx.policy.invert);
         }
 
         let keys : string[];
-        if (ctx.options.attributeName) {
-            if (Array.isArray(ctx.options.attributeName)) {
-                keys = ctx.options.attributeName;
+        if (ctx.policy.attributeName) {
+            if (Array.isArray(ctx.policy.attributeName)) {
+                keys = ctx.policy.attributeName;
             } else {
-                keys = [ctx.options.attributeName];
+                keys = [ctx.policy.attributeName];
             }
         } else {
             keys = [
@@ -55,7 +74,7 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
                 'realmId',
                 'realmName',
             ];
-            ctx.options.decisionStrategy = DecisionStrategy.CONSENSUS;
+            ctx.policy.decisionStrategy = DecisionStrategy.CONSENSUS;
         }
 
         let count = 0;
@@ -71,7 +90,7 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
 
             if (
                 attributeValue === null &&
-                ctx.options.attributeNullMatchAll
+                ctx.policy.attributeNullMatchAll
             ) {
                 outcome = true;
             } else if (
@@ -82,20 +101,20 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
             }
 
             if (outcome) {
-                if (ctx.options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.options.invert);
+                if (ctx.policy.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return maybeInvertPolicyOutcome(true, ctx.policy.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.options.invert);
+                if (ctx.policy.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return maybeInvertPolicyOutcome(false, ctx.policy.invert);
                 }
 
                 count--;
             }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.options.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.policy.invert);
     }
 }

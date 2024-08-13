@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AnyPolicy } from '../policy';
+import type { PolicyWithType } from '../policy';
 import type { PermissionRepository } from './repository';
 
 // todo: move this to store.
 export type PermissionItem = {
     name: string,
     realm_id?: string | null,
-    policy?: AnyPolicy,
+    policy?: PolicyWithType,
 };
 
 export type PermissionManagerOptions = {

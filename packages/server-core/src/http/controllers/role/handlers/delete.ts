@@ -37,7 +37,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!await ability.can(PermissionName.ROLE_DELETE, { attributes: entity })) {
+    if (!await ability.safeCheck(PermissionName.ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

@@ -90,7 +90,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
 
-        if (!await ability.can(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -103,7 +103,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.can(PermissionName.PERMISSION_CREATE, { attributes: data })) {
+        if (!await ability.safeCheck(PermissionName.PERMISSION_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }
