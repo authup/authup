@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -13,9 +13,9 @@ import {
     readInt,
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
-import { EnvironmentVariableName } from '../constants';
+import { EnvironmentVariableName } from './constants';
 import type { ConfigInput } from '../types';
-import { isDatabaseConnectionConfigurationSupported } from './database';
+import { isDatabaseConnectionConfigurationSupported } from '../utils';
 
 export function readConfigFromEnv() : ConfigInput {
     const options : ConfigInput = {};
@@ -81,6 +81,11 @@ export function readConfigFromEnv() : ConfigInput {
     const publicURL = read(EnvironmentVariableName.PUBLIC_URL);
     if (publicURL) {
         options.publicUrl = publicURL;
+    }
+
+    const cookieDomain = read(EnvironmentVariableName.COOKIE_DOMAIN);
+    if (cookieDomain) {
+        options.cookieDomain = cookieDomain;
     }
 
     const authorizeRedirectURL = read(EnvironmentVariableName.AUTHORIZE_REDIRECT_URL);

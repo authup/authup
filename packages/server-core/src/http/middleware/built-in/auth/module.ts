@@ -6,8 +6,7 @@
  */
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
-import { URL } from 'node:url';
-import { coreHandler } from 'routup';
+import { coreHandler, getRequestHostName } from 'routup';
 import type {
     Request, Response, Router,
 } from 'routup';
@@ -15,7 +14,7 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionManager } from '@authup/permitus';
-import { EnvironmentName, useConfig } from '../../../../config';
+import { useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
@@ -27,8 +26,12 @@ function unsetCookies(res: Response) {
     const config = useConfig();
     const cookieOptions : SerializeOptions = {};
 
-    if (config.env === EnvironmentName.PRODUCTION) {
-        cookieOptions.domain = new URL(config.publicUrl).hostname;
+    if (config.cookieDomain) {
+        cookieOptions.domain = config.cookieDomain;
+    } else {
+        cookieOptions.domain = getRequestHostName(res.req, {
+            trustProxy: true,
+        });
     }
 
     unsetResponseCookie(res, CookieName.ACCESS_TOKEN, cookieOptions);

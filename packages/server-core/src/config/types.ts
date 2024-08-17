@@ -72,6 +72,12 @@ export type Config = {
      * default: http://127.0.0.1:3001
      */
     publicUrl: string,
+
+    /**
+     * default: undefined
+     */
+    cookieDomain?: string,
+
     /**
      * default: http://127.0.0.1:3000
      */

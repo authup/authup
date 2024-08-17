@@ -5,18 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { CookieName } from '@authup/core-http-kit';
 /* istanbul ignore next */
 import type { OAuth2TokenGrantResponse } from '@authup/kit';
-import { CookieName } from '@authup/core-http-kit';
-import {
-    OAuth2TokenGrant, TokenError,
-} from '@authup/kit';
+import { OAuth2TokenGrant, TokenError } from '@authup/kit';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
-import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
-import { send } from 'routup';
-import { EnvironmentName, useConfig } from '../../../../../config';
+import { getRequestHostName, send } from 'routup';
+import { useConfig } from '../../../../../config';
 import type { Grant } from '../../../../oauth2';
 import {
     AuthorizeGrantType,
@@ -73,8 +70,12 @@ export async function createTokenRouteHandler(
     const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
 
     const cookieOptions : SerializeOptions = {};
-    if (config.env === EnvironmentName.PRODUCTION) {
-        cookieOptions.domain = new URL(config.publicUrl).hostname;
+    if (config.cookieDomain) {
+        cookieOptions.domain = config.cookieDomain;
+    } else {
+        cookieOptions.domain = getRequestHostName(req, {
+            trustProxy: true,
+        });
     }
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, tokenResponse.access_token, {

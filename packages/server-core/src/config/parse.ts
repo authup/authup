@@ -41,6 +41,7 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         host: zod.string().optional(),
         publicUrl: zod.string()
             .url().optional(),
+        cookieDomain: zod.string().optional(),
         authorizeRedirectUrl: zod.string()
             .url().optional(),
         middlewareBody: zod.boolean()

@@ -11,16 +11,17 @@ import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
 import { merge } from 'smob';
+import { EnvironmentName, readConfigFromEnv } from './env';
 import { parseConfig } from './parse';
 import type { Config, ConfigBuildContext, ConfigInput } from './types';
-import { type DatabaseConnectionOptions, readConfigFromEnv } from './utils';
+import { type DatabaseConnectionOptions } from './utils';
 
 export function buildConfig(
     context: ConfigBuildContext = {},
 ): Config {
     const config = dycraft({
         defaults: {
-            env: read('NODE_ENV', 'development'),
+            env: read('NODE_ENV', EnvironmentName.DEVELOPMENT),
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
 

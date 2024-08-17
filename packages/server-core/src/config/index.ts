@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
+export * from './env';
 export * from './services';
 export * from './module';
 export * from './parse';
