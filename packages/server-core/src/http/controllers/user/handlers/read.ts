@@ -78,7 +78,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
             continue;
         }
 
-        const canAbility = await permissionChecker.checkOneOf(
+        const canAbility = await permissionChecker.safeCheckOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
@@ -188,7 +188,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             await repository.findAndAppendExtraAttributesTo(entity);
         }
     } else {
-        const hasAbility = await permissionChecker.checkOneOf(
+        const hasAbility = await permissionChecker.safeCheckOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,

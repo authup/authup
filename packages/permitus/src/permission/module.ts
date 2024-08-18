@@ -6,7 +6,8 @@
  */
 
 import type { PolicyData } from '../policy';
-import { PolicyEngine } from '../policy';
+import { PolicyEngine, PolicyError } from '../policy';
+import { PermissionError } from './error';
 import type { PermissionGetOptions, PermissionProvider } from './provider';
 import { PermissionMemoryProvider } from './provider';
 
@@ -118,15 +119,17 @@ export class PermissionChecker {
     async check(
         input: PermissionGetOptions | string,
         context?: PolicyData
-    ) : Promise<boolean>;
+    ) : Promise<void>;
 
     async check(
         input: (PermissionGetOptions | string)[],
         context?: PolicyData
-    ) : Promise<boolean>;
+    ) : Promise<void>;
 
     /**
-     * Check if the owned abilities, satisfy the conditions for a given ability.
+     * Verify if one or more possible owned permissions satisfy their conditions.
+     *
+     * @throws PermissionError
      *
      * @param input
      * @param data
@@ -134,26 +137,43 @@ export class PermissionChecker {
     async check(
         input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
         data: PolicyData = {},
-    ) : Promise<boolean> {
+    ) : Promise<void> {
         if (!Array.isArray(input)) {
-            return this.check([input], data);
+            await this.check([input], data);
+            return;
         }
 
         for (let i = 0; i < input.length; i++) {
             const entity = await this.get(input[i]);
             if (!entity) {
-                return false;
+                throw PermissionError.notFound(this.toName(input[i]));
             }
 
             if (entity.policy) {
-                const outcome = await this.policyEngine.evaluate(entity.policy, data);
+                let outcome : boolean;
+
+                try {
+                    outcome = await this.policyEngine.evaluate(entity.policy, data);
+                } catch (e) {
+                    if (e instanceof PolicyError) {
+                        throw PermissionError.evaluationFailed({
+                            name: entity.name,
+                            policy: entity.policy,
+                            policyError: e,
+                        });
+                    }
+
+                    outcome = false;
+                }
+
                 if (!outcome) {
-                    return false;
+                    throw PermissionError.evaluationFailed({
+                        name: entity.name,
+                        policy: entity.policy,
+                    });
                 }
             }
         }
-
-        return true;
     }
 
     async safeCheck(
@@ -167,17 +187,21 @@ export class PermissionChecker {
     ) : Promise<boolean>;
 
     /**
-     * Check if the owned abilities, satisfy the conditions for a given ability.
+     * Check if one or more possible owned permissions satisfy their conditions.
      *
      * @param input
      * @param data
+     *
+     * @return boolean
      */
     async safeCheck(
         input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
         try {
-            return await this.check(input as any, data);
+            await this.check(input as any, data);
+
+            return true;
         } catch (e) {
             return false;
         }
@@ -186,7 +210,9 @@ export class PermissionChecker {
     // ----------------------------------------------
 
     /**
-     * Check if one of the permissions evaluates to true.
+     * Verify if one of the permissions evaluates to true.
+     *
+     * @throws PermissionError
      *
      * @param input
      * @param data
@@ -194,34 +220,54 @@ export class PermissionChecker {
     async checkOneOf(
         input: (PermissionGetOptions | string)[],
         data: PolicyData = {},
-    ) : Promise<boolean> {
+    ) : Promise<void> {
+        let error : PermissionError | undefined;
+
         for (let i = 0; i < input.length; i++) {
-            const entity = await this.check(input[i], data);
-            if (entity) {
-                return true;
+            try {
+                await this.check(input[i], data);
+
+                return;
+            } catch (e) {
+                error = e as PermissionError;
             }
         }
 
-        return false;
+        if (error) {
+            throw error;
+        }
+
+        throw PermissionError.deniedAll(input.map((el) => this.toName(el)));
     }
 
     /**
-     * Safe (no throw) check if one of the permissions evaluates to true.
+     * Check if one of the permissions evaluates to true.
      *
      * @param input
      * @param data
+     *
+     * @return boolean
      */
     async safeCheckOneOf(
         input: (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
-        for (let i = 0; i < input.length; i++) {
-            const entity = await this.safeCheck(input[i], data);
-            if (entity) {
-                return true;
-            }
+        try {
+            await this.checkOneOf(input, data);
+
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ----------------------------------------------
+
+    private toName(input: string | PermissionGetOptions) {
+        if (typeof input === 'string') {
+            return input;
         }
 
-        return false;
+        return input.name;
     }
 }

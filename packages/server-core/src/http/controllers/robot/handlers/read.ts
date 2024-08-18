@@ -209,7 +209,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (!isMe) {
-        const hasAbility = await permissionChecker.checkOneOf(
+        const hasAbility = await permissionChecker.safeCheckOneOf(
             [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,

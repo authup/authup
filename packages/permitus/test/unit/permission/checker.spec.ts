@@ -6,7 +6,12 @@
  */
 
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
-import { BuiltInPolicyType, PermissionChecker, PermissionMemoryProvider } from '../../../src';
+import {
+    BuiltInPolicyType,
+
+    PermissionChecker,
+    PermissionError, PermissionErrorCode, PermissionMemoryProvider,
+} from '../../../src';
 
 const abilities : PermissionItem[] = [
     {
@@ -35,7 +40,22 @@ describe('src/ability/manager.ts', () => {
 
     it('should work with policy', async () => {
         expect(await checker.has('user_edit')).toBeTruthy();
-        expect(await checker.check('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
-        expect(await checker.check('user_edit', { attributes: { id: '123' } })).toBeFalsy();
+
+        await checker.check('user_edit', { attributes: { name: 'admin' } });
+    });
+
+    it('should throw with failing evaluation', async () => {
+        expect.assertions(3);
+
+        try {
+            await checker.check('user_edit', { attributes: { id: '123' } });
+        } catch (e) {
+            expect(e).toBeInstanceOf(PermissionError);
+
+            if (e instanceof PermissionError) {
+                expect(e.policy).toBeDefined();
+                expect(e.code).toEqual(PermissionErrorCode.EVALUATION_FAILED);
+            }
+        }
     });
 });
