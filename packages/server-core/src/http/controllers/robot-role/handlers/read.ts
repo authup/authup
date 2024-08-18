@@ -17,13 +17,13 @@ import { RobotRoleEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROBOT_ROLE_READ,
         PermissionName.ROBOT_ROLE_UPDATE,
         PermissionName.ROBOT_ROLE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -53,13 +53,13 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
 }
 
 export async function getOneRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROBOT_ROLE_READ,
         PermissionName.ROBOT_ROLE_UPDATE,
         PermissionName.ROBOT_ROLE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 

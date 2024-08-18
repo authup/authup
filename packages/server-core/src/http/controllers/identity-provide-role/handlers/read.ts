@@ -18,13 +18,13 @@ import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = permissionChecker.hasOneOf([
         PermissionName.IDENTITY_PROVIDER_READ,
         PermissionName.IDENTITY_PROVIDER_UPDATE,
         PermissionName.IDENTITY_PROVIDER_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -60,13 +60,13 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
 // ---------------------------------------------------------------------------------
 
 export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = permissionChecker.hasOneOf([
         PermissionName.IDENTITY_PROVIDER_READ,
         PermissionName.IDENTITY_PROVIDER_UPDATE,
         PermissionName.IDENTITY_PROVIDER_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 

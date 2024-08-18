@@ -16,8 +16,8 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.USER_DELETE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.USER_DELETE)) {
         throw new ForbiddenError('You are not authorized to drop a user.');
     }
 
@@ -33,7 +33,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    if (!await ability.safeCheck(PermissionName.USER_DELETE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.USER_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

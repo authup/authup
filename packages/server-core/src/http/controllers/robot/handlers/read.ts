@@ -25,13 +25,13 @@ import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROBOT_READ,
         PermissionName.ROBOT_UPDATE,
         PermissionName.ROBOT_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -86,7 +86,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             continue;
         }
 
-        const hasAbility = await ability.safeCheckOneOf(
+        const hasAbility = await permissionChecker.safeCheckOneOf(
             [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
@@ -111,13 +111,13 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 }
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROBOT_READ,
         PermissionName.ROBOT_UPDATE,
         PermissionName.ROBOT_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -209,7 +209,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (!isMe) {
-        const hasAbility = await ability.checkOneOf(
+        const hasAbility = await permissionChecker.checkOneOf(
             [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,

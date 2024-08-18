@@ -6,16 +6,15 @@
  */
 
 import type { PolicyWithType } from '../policy';
-import type { PermissionRepository } from './repository';
+import type { PermissionProvider } from './provider';
 
-// todo: move this to store.
 export type PermissionItem = {
     name: string,
     realm_id?: string | null,
     policy?: PolicyWithType,
 };
 
-export type PermissionManagerOptions = {
-    repository?: PermissionRepository,
+export type PermissionCheckerOptions = {
+    provider?: PermissionProvider,
     realmId?: string
 };

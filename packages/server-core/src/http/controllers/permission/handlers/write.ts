@@ -55,15 +55,15 @@ export async function writePermissionRouteHandler(
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await ability.has(PermissionName.PERMISSION_UPDATE)) {
+        if (!await permissionChecker.has(PermissionName.PERMISSION_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.PERMISSION_CREATE)) {
+        if (!await permissionChecker.has(PermissionName.PERMISSION_CREATE)) {
             throw new ForbiddenError();
         }
 
@@ -90,7 +90,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
 
-        if (!await ability.safeCheck(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -103,7 +103,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.safeCheck(PermissionName.PERMISSION_CREATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

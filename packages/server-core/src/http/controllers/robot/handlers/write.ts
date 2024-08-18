@@ -59,15 +59,15 @@ export async function writeRobotRouteHandler(
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await ability.has(PermissionName.ROLE_UPDATE)) {
+        if (!await permissionChecker.has(PermissionName.ROLE_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.ROLE_CREATE)) {
+        if (!await permissionChecker.has(PermissionName.ROLE_CREATE)) {
             throw new ForbiddenError();
         }
 
@@ -90,7 +90,7 @@ export async function writeRobotRouteHandler(
             throw new ForbiddenError();
         }
 
-        if (!await ability.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
 
@@ -131,7 +131,7 @@ export async function writeRobotRouteHandler(
         throw new ForbiddenError();
     }
 
-    if (!await ability.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
+    if (!await permissionChecker.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 

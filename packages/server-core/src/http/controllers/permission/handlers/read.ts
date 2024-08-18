@@ -18,13 +18,13 @@ import { PermissionEntity, resolveRealm } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.PERMISSION_READ,
         PermissionName.PERMISSION_UPDATE,
         PermissionName.PERMISSION_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -57,13 +57,13 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
 }
 
 export async function getOnePermissionRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.PERMISSION_READ,
         PermissionName.PERMISSION_UPDATE,
         PermissionName.PERMISSION_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 

@@ -19,8 +19,8 @@ export async function deleteIdentityProviderRouteHandler(
 ) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.IDENTITY_PROVIDER_DELETE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -32,7 +32,7 @@ export async function deleteIdentityProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_DELETE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

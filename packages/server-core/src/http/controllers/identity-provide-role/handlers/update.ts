@@ -20,8 +20,8 @@ import { RequestHandlerOperation, useRequestEnv, useRequestParamID } from '../..
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -50,7 +50,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     entity = repository.merge(entity, data);
 
-    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

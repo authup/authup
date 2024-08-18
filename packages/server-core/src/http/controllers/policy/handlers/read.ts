@@ -19,13 +19,13 @@ import { PolicyRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = permissionChecker.hasOneOf([
         PermissionName.PERMISSION_READ,
         PermissionName.PERMISSION_UPDATE,
         PermissionName.PERMISSION_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -78,13 +78,13 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 }
 
 export async function getOnePolicyRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = permissionChecker.hasOneOf([
         PermissionName.PERMISSION_READ,
         PermissionName.PERMISSION_UPDATE,
         PermissionName.PERMISSION_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 

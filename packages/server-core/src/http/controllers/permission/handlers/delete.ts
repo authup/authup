@@ -17,8 +17,8 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
 export async function deletePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.PERMISSION_DELETE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.PERMISSION_DELETE)) {
         throw new ForbiddenError('You are not allowed to drop a permission.');
     }
 
@@ -35,7 +35,7 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
         throw new BadRequestError('A built-in permission can not be deleted.');
     }
 
-    if (!await ability.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

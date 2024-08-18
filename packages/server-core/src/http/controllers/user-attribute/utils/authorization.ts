@@ -16,7 +16,7 @@ export async function canRequestManageUserAttribute(
     entity: UserAttributeEntity,
     evaluationData?: PolicyData,
 ) : Promise<boolean> {
-    const abilities = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     const userId = useRequestEnv(req, 'userId');
 
     if (!evaluationData) {
@@ -25,7 +25,7 @@ export async function canRequestManageUserAttribute(
 
     let canAbility : boolean = false;
     if (userId === entity.user_id) {
-        canAbility = await abilities.safeCheck(
+        canAbility = await permissionChecker.safeCheck(
             PermissionName.USER_SELF_MANAGE,
             {
                 ...evaluationData,
@@ -35,7 +35,7 @@ export async function canRequestManageUserAttribute(
     }
 
     if (!canAbility) {
-        canAbility = await abilities.safeCheck(
+        canAbility = await permissionChecker.safeCheck(
             PermissionName.USER_UPDATE,
             {
                 ...evaluationData,

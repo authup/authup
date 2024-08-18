@@ -54,15 +54,15 @@ export async function writeIdentityProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
+        if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.IDENTITY_PROVIDER_CREATE)) {
+        if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_CREATE)) {
             throw new ForbiddenError();
         }
 
@@ -93,7 +93,7 @@ export async function writeIdentityProviderRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -106,7 +106,7 @@ export async function writeIdentityProviderRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_CREATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

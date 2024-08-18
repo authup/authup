@@ -20,8 +20,8 @@ import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
         throw new ForbiddenError();
     }
 
@@ -62,13 +62,13 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
-    if (!await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
+    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 
     const roleRepository = new RoleRepository(dataSource);
     const permissions = await roleRepository.getOwnedPermissions(data.role_id);
-    if (!await ability.hasMany(permissions)) {
+    if (!await permissionChecker.hasMany(permissions)) {
         throw new ForbiddenError('You don\'t own all role permissions.');
     }
 

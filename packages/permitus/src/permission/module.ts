@@ -7,13 +7,13 @@
 
 import type { PolicyData } from '../policy';
 import { PolicyEngine } from '../policy';
-import type { PermissionFindOneOptions, PermissionRepository } from './repository';
-import { PermissionMemoryRepository } from './repository';
+import type { PermissionGetOptions, PermissionProvider } from './provider';
+import { PermissionMemoryProvider } from './provider';
 
-import type { PermissionItem, PermissionManagerOptions } from './types';
+import type { PermissionCheckerOptions, PermissionItem } from './types';
 
-export class PermissionManager {
-    protected repository : PermissionRepository;
+export class PermissionChecker {
+    protected provider : PermissionProvider;
 
     protected policyEngine : PolicyEngine;
 
@@ -21,11 +21,11 @@ export class PermissionManager {
 
     // ----------------------------------------------
 
-    constructor(options: PermissionManagerOptions = {}) {
-        if (options.repository) {
-            this.repository = options.repository;
+    constructor(options: PermissionCheckerOptions = {}) {
+        if (options.provider) {
+            this.provider = options.provider;
         } else {
-            this.repository = new PermissionMemoryRepository();
+            this.provider = new PermissionMemoryProvider();
         }
 
         if (options.realmId) {
@@ -38,11 +38,11 @@ export class PermissionManager {
     // ----------------------------------------------
 
     /**
-     * Check if a permission exists without any restriction.
+     * Check if an ability exists without any restriction.
      *
      * @param name
      */
-    async has(name: string | PermissionFindOneOptions) : Promise<boolean> {
+    async has(name: string | PermissionGetOptions) : Promise<boolean> {
         const entity = await this.get(name);
         return !!entity;
     }
@@ -52,20 +52,29 @@ export class PermissionManager {
     /**
      * Get a permission.
      *
-     * @param name
+     * @param input
      */
-    async get(name: string | PermissionFindOneOptions) : Promise<PermissionItem | undefined> {
-        let options : PermissionFindOneOptions;
-        if (typeof name === 'string') {
-            options = {
-                name,
-                realm_id: this.realmId,
+    async get(input: string | PermissionGetOptions) : Promise<PermissionItem | undefined> {
+        if (typeof input === 'string') {
+            const options : PermissionGetOptions = {
+                name: input,
             };
-        } else {
-            options = name;
+
+            if (typeof this.realmId !== 'undefined') {
+                options.realmId = this.realmId;
+            }
+
+            return this.provider.get(options);
         }
 
-        return this.repository.findOne(options);
+        if (
+            typeof input.realmId === 'undefined' &&
+            typeof this.realmId !== 'undefined'
+        ) {
+            input.realmId = this.realmId;
+        }
+
+        return this.provider.get(input);
     }
 
     // ----------------------------------------------
@@ -75,7 +84,7 @@ export class PermissionManager {
      *
      * @param input
      */
-    async hasOneOf(input: (string | PermissionFindOneOptions)[]) : Promise<boolean> {
+    async hasOneOf(input: (string | PermissionGetOptions)[]) : Promise<boolean> {
         for (let i = 0; i < input.length; i++) {
             const entity = await this.has(input[i]);
             if (entity) {
@@ -93,7 +102,7 @@ export class PermissionManager {
      *
      * @param items
      */
-    async hasMany(items: (PermissionFindOneOptions | string)[]) : Promise<boolean> {
+    async hasMany(items: (PermissionGetOptions | string)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
             const entity = await this.has(items[i]);
             if (!entity) {
@@ -107,12 +116,12 @@ export class PermissionManager {
     // ----------------------------------------------
 
     async check(
-        input: PermissionFindOneOptions | string,
+        input: PermissionGetOptions | string,
         context?: PolicyData
     ) : Promise<boolean>;
 
     async check(
-        input: (PermissionFindOneOptions | string)[],
+        input: (PermissionGetOptions | string)[],
         context?: PolicyData
     ) : Promise<boolean>;
 
@@ -123,7 +132,7 @@ export class PermissionManager {
      * @param data
      */
     async check(
-        input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
+        input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
         if (!Array.isArray(input)) {
@@ -136,13 +145,11 @@ export class PermissionManager {
                 return false;
             }
 
-            if (!entity.policy) {
-                continue;
-            }
-
-            const outcome = await this.policyEngine.evaluate(entity.policy, data);
-            if (!outcome) {
-                return false;
+            if (entity.policy) {
+                const outcome = await this.policyEngine.evaluate(entity.policy, data);
+                if (!outcome) {
+                    return false;
+                }
             }
         }
 
@@ -150,12 +157,12 @@ export class PermissionManager {
     }
 
     async safeCheck(
-        input: PermissionFindOneOptions | string,
+        input: PermissionGetOptions | string,
         context?: PolicyData
     ) : Promise<boolean>;
 
     async safeCheck(
-        input: (PermissionFindOneOptions | string)[],
+        input: (PermissionGetOptions | string)[],
         context?: PolicyData
     ) : Promise<boolean>;
 
@@ -166,7 +173,7 @@ export class PermissionManager {
      * @param data
      */
     async safeCheck(
-        input: PermissionFindOneOptions | string | (PermissionFindOneOptions | string)[],
+        input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
         try {
@@ -185,7 +192,7 @@ export class PermissionManager {
      * @param data
      */
     async checkOneOf(
-        input: (PermissionFindOneOptions | string)[],
+        input: (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
         for (let i = 0; i < input.length; i++) {
@@ -205,7 +212,7 @@ export class PermissionManager {
      * @param data
      */
     async safeCheckOneOf(
-        input: (PermissionFindOneOptions | string)[],
+        input: (PermissionGetOptions | string)[],
         data: PolicyData = {},
     ) : Promise<boolean> {
         for (let i = 0; i < input.length; i++) {

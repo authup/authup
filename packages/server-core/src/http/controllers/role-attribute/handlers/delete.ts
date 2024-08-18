@@ -15,11 +15,11 @@ import { RoleAttributeEntity } from '../../../../domains';
 import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deleteRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const abilities = useRequestEnv(req, 'abilities');
-    const hasAbility = await abilities.has(
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasPermission = await permissionChecker.has(
         PermissionName.ROLE_UPDATE,
     );
-    if (!hasAbility) {
+    if (!hasPermission) {
         throw new ForbiddenError();
     }
 
@@ -34,7 +34,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    const canAbility = await abilities.safeCheck(
+    const canAbility = await permissionChecker.safeCheck(
         PermissionName.ROLE_UPDATE,
         buildPolicyEvaluationDataByRequest(req, {
             attributes: entity,

@@ -26,13 +26,13 @@ import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.CLIENT_READ,
         PermissionName.CLIENT_UPDATE,
         PermissionName.CLIENT_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -61,7 +61,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         ],
     };
 
-    if (hasAbility) {
+    if (hasOneOf) {
         options.allowed = ['secret'];
     }
 
@@ -94,13 +94,13 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 }
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.CLIENT_READ,
         PermissionName.CLIENT_UPDATE,
         PermissionName.CLIENT_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -152,7 +152,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         ],
     };
 
-    if (hasAbility) {
+    if (hasOneOf) {
         options.allowed = ['secret'];
     }
 

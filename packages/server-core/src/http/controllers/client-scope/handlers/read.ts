@@ -17,14 +17,14 @@ import { ClientScopeEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.CLIENT_READ,
         PermissionName.CLIENT_UPDATE,
         PermissionName.CLIENT_DELETE,
     ]);
 
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -57,12 +57,12 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
 }
 
 export async function getOneClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    if (
-        !await ability.has(PermissionName.CLIENT_READ) &&
-        !await ability.has(PermissionName.CLIENT_UPDATE) &&
-        !await ability.has(PermissionName.CLIENT_DELETE)
-    ) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.hasOneOf([
+        PermissionName.CLIENT_READ,
+        PermissionName.CLIENT_UPDATE,
+        PermissionName.CLIENT_DELETE,
+    ])) {
         throw new ForbiddenError();
     }
 

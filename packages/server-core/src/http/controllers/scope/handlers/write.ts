@@ -55,15 +55,15 @@ export async function writeScopeRouteHandler(
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await ability.has(PermissionName.SCOPE_UPDATE)) {
+        if (!await permissionChecker.has(PermissionName.SCOPE_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.SCOPE_CREATE)) {
+        if (!await permissionChecker.has(PermissionName.SCOPE_CREATE)) {
             throw new ForbiddenError();
         }
 
@@ -88,7 +88,7 @@ export async function writeScopeRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.safeCheck(PermissionName.SCOPE_UPDATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.SCOPE_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     } else {
@@ -101,7 +101,7 @@ export async function writeScopeRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await ability.safeCheck(PermissionName.SCOPE_CREATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.SCOPE_CREATE, { attributes: data })) {
             throw new ForbiddenError();
         }
     }

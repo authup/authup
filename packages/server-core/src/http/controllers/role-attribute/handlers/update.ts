@@ -18,11 +18,11 @@ import {
 } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const abilities = useRequestEnv(req, 'abilities');
-    const hasAbility = await abilities.has(
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.has(
         PermissionName.ROLE_UPDATE,
     );
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -49,7 +49,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, data);
 
-    const canAbility = await abilities.safeCheck(
+    const canAbility = await permissionChecker.safeCheck(
         PermissionName.ROLE_UPDATE,
         buildPolicyEvaluationDataByRequest(req, {
             attributes: entity,

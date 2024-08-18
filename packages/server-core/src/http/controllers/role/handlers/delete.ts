@@ -16,8 +16,8 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
 export async function deleteRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.ROLE_DELETE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.ROLE_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -37,7 +37,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     // ----------------------------------------------
 
-    if (!await ability.safeCheck(PermissionName.ROLE_DELETE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.ROLE_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

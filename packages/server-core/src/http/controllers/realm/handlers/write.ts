@@ -42,15 +42,15 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
         }
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await ability.has(PermissionName.REALM_UPDATE)) {
+        if (!await permissionChecker.has(PermissionName.REALM_UPDATE)) {
             throw new ForbiddenError();
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await ability.has(PermissionName.REALM_CREATE)) {
+        if (!await permissionChecker.has(PermissionName.REALM_CREATE)) {
             throw new ForbiddenError();
         }
 
@@ -69,14 +69,14 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
     });
 
     if (entity) {
-        if (!await ability.safeCheck(PermissionName.REALM_UPDATE, { attributes: data })) {
+        if (!await permissionChecker.safeCheck(PermissionName.REALM_UPDATE, { attributes: data })) {
             throw new ForbiddenError();
         }
 
         if (entity.name === REALM_MASTER_NAME && isPropertySet(data, 'name') && entity.name !== data.name) {
             throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
         }
-    } else if (!await ability.safeCheck(PermissionName.REALM_CREATE, { attributes: data })) {
+    } else if (!await permissionChecker.safeCheck(PermissionName.REALM_CREATE, { attributes: data })) {
         throw new ForbiddenError();
     }
 
