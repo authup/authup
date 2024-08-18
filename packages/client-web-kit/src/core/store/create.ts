@@ -6,8 +6,8 @@
  */
 
 import {
-    PermissionManager,
-    PermissionMemoryRepository,
+    PermissionChecker,
+    PermissionMemoryProvider,
 } from '@authup/permitus';
 import { computed, ref } from 'vue';
 import type {
@@ -134,9 +134,9 @@ export function createStore(context: StoreCreateContext = {}) {
         realmManagement.value = entity;
     };
 
-    const permissionRepository = new PermissionMemoryRepository();
-    const permissionManager = new PermissionManager({
-        repository: permissionRepository,
+    const permissionRepository = new PermissionMemoryProvider();
+    const permissionManager = new PermissionChecker({
+        provider: permissionRepository,
     });
 
     const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);

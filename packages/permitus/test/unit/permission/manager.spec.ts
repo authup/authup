@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AttributeNamesPolicy, PermissionItem } from '../../../src';
-import { BuiltInPolicyType, PermissionManager, PermissionMemoryRepository } from '../../../src';
+import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
+import { BuiltInPolicyType, PermissionChecker, PermissionMemoryProvider } from '../../../src';
 
-const testPermissions : PermissionItem[] = [
+const abilities : PermissionItem[] = [
     {
         name: 'user_edit',
         policy: {
             type: BuiltInPolicyType.ATTRIBUTE_NAMES,
             names: ['name'],
-        } satisfies AttributeNamesPolicy,
+        } satisfies PolicyWithType<AttributeNamesPolicy>,
     },
     {
         name: 'user_add',
@@ -24,8 +24,8 @@ const testPermissions : PermissionItem[] = [
     },
 ];
 
-const repository = new PermissionMemoryRepository(testPermissions);
-const manager = new PermissionManager({ repository });
+const provider = new PermissionMemoryProvider(abilities);
+const manager = new PermissionChecker({ provider });
 
 describe('src/ability/manager.ts', () => {
     it('has permission', async () => {

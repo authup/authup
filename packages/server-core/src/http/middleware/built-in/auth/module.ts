@@ -13,7 +13,7 @@ import type {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { PermissionManager } from '@authup/permitus';
+import { PermissionChecker } from '@authup/permitus';
 import { useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
@@ -43,7 +43,7 @@ export function registerAuthMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
-        setRequestEnv(request, 'abilities', new PermissionManager());
+        setRequestEnv(request, 'abilities', new PermissionChecker());
 
         try {
             if (typeof headerValue === 'undefined') {
