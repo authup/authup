@@ -56,11 +56,11 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
 
     const [entities, total] = await query.getManyAndCount();
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_READ)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_READ)) {
         await repository.findAndAppendExtraAttributesToMany(
             entities.filter(
-                (entity) => ability.safeCheck(
+                (entity) => permissionChecker.safeCheck(
                     PermissionName.IDENTITY_PROVIDER_READ,
                     { attributes: entity },
                 ),
@@ -123,8 +123,8 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (await ability.safeCheck(PermissionName.IDENTITY_PROVIDER_READ, { attributes: entity })) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_READ, { attributes: entity })) {
         await repository.findAndAppendExtraAttributesTo(entity);
     }
 

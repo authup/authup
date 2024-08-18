@@ -27,5 +27,5 @@ export type RequestEnv = {
     token?: string,
     scopes?: string[],
 
-    abilities: PermissionChecker
+    permissionChecker: PermissionChecker
 };

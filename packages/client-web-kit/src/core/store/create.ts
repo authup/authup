@@ -135,7 +135,7 @@ export function createStore(context: StoreCreateContext = {}) {
     };
 
     const permissionRepository = new PermissionMemoryProvider();
-    const permissionManager = new PermissionChecker({
+    const permissionChecker = new PermissionChecker({
         provider: permissionRepository,
     });
 
@@ -250,7 +250,7 @@ export function createStore(context: StoreCreateContext = {}) {
         initialized,
         setInitialized,
 
-        permissionManager,
+        permissionChecker,
 
         login,
         logout,

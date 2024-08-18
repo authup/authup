@@ -26,8 +26,8 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
  * @param res
  */
 export async function createUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const abilities = useRequestEnv(req, 'abilities');
-    if (!await abilities.has(PermissionName.USER_PERMISSION_CREATE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.USER_PERMISSION_CREATE)) {
         throw new ForbiddenError();
     }
 
@@ -58,7 +58,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
         data.permission_realm_id = data.permission.realm_id;
         // todo: pass realm id
-        if (!await abilities.safeCheck(data.permission.name, policyEvaluationContext)) {
+        if (!await permissionChecker.safeCheck(data.permission.name, policyEvaluationContext)) {
             throw new ForbiddenError('The target permission is not owned.');
         }
     }
@@ -75,7 +75,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!await abilities.safeCheck(PermissionName.USER_PERMISSION_CREATE, policyEvaluationContext)) {
+    if (!await permissionChecker.safeCheck(PermissionName.USER_PERMISSION_CREATE, policyEvaluationContext)) {
         throw new ForbiddenError();
     }
 

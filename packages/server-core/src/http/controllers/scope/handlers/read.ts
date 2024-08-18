@@ -20,13 +20,13 @@ import { ScopeEntity, resolveRealm } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasPermission = await permissionChecker.hasOneOf([
         PermissionName.SCOPE_READ,
         PermissionName.SCOPE_UPDATE,
         PermissionName.SCOPE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasPermission) {
         throw new ForbiddenError();
     }
 
@@ -71,13 +71,13 @@ export async function getManyScopeRouteHandler(req: Request, res: Response) : Pr
 }
 
 export async function getOneScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasPermission = await permissionChecker.hasOneOf([
         PermissionName.SCOPE_READ,
         PermissionName.SCOPE_UPDATE,
         PermissionName.SCOPE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasPermission) {
         throw new ForbiddenError();
     }
 

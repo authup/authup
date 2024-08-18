@@ -55,9 +55,9 @@ export async function writeUserRouteHandler(
     }
 
     let hasAbility : boolean;
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        hasAbility = await ability.has(PermissionName.USER_UPDATE);
+        hasAbility = await permissionChecker.has(PermissionName.USER_UPDATE);
         if (
             entity.id !== useRequestEnv(req, 'userId') &&
             !hasAbility
@@ -67,7 +67,7 @@ export async function writeUserRouteHandler(
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        hasAbility = await ability.has(PermissionName.USER_CREATE);
+        hasAbility = await permissionChecker.has(PermissionName.USER_CREATE);
         if (!hasAbility) {
             throw new ForbiddenError();
         }

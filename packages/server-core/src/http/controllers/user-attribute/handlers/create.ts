@@ -20,13 +20,13 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const abilities = useRequestEnv(req, 'abilities');
-    const hasAbility = await abilities.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasPermission = await permissionChecker.hasOneOf([
         PermissionName.USER_UPDATE,
         PermissionName.USER_SELF_MANAGE,
     ]);
 
-    if (!hasAbility) {
+    if (!hasPermission) {
         throw new ForbiddenError();
     }
 

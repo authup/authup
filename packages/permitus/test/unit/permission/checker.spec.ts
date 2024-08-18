@@ -25,17 +25,17 @@ const abilities : PermissionItem[] = [
 ];
 
 const provider = new PermissionMemoryProvider(abilities);
-const manager = new PermissionChecker({ provider });
+const checker = new PermissionChecker({ provider });
 
 describe('src/ability/manager.ts', () => {
     it('has permission', async () => {
-        expect(await manager.has('user_add')).toBeTruthy();
-        expect(await manager.has('something_do')).toBeFalsy();
+        expect(await checker.has('user_add')).toBeTruthy();
+        expect(await checker.has('something_do')).toBeFalsy();
     });
 
     it('should work with policy', async () => {
-        expect(await manager.has('user_edit')).toBeTruthy();
-        expect(await manager.check('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
-        expect(await manager.check('user_edit', { attributes: { id: '123' } })).toBeFalsy();
+        expect(await checker.has('user_edit')).toBeTruthy();
+        expect(await checker.check('user_edit', { attributes: { name: 'admin' } })).toBeTruthy();
+        expect(await checker.check('user_edit', { attributes: { id: '123' } })).toBeFalsy();
     });
 });

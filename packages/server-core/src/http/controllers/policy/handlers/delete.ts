@@ -19,8 +19,8 @@ export async function deletePolicyRouteHandler(
 ) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const ability = useRequestEnv(req, 'abilities');
-    if (!await ability.has(PermissionName.PERMISSION_DELETE)) {
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    if (!await permissionChecker.has(PermissionName.PERMISSION_DELETE)) {
         throw new ForbiddenError();
     }
 
@@ -32,7 +32,7 @@ export async function deletePolicyRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await ability.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
+    if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
         throw new ForbiddenError();
     }
 

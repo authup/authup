@@ -82,7 +82,7 @@ async function verifyBearerAuthorizationHeader(
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
     const permissionRepository = new PermissionMemoryProvider(permissions);
-    setRequestEnv(request, 'abilities', new PermissionChecker({
+    setRequestEnv(request, 'permissionChecker', new PermissionChecker({
         provider: permissionRepository,
     }));
 
@@ -123,11 +123,11 @@ async function verifyBasicAuthorizationHeader(
             permissions = await userRepository.getOwnedPermissions(user.id);
 
             const permissionRepository = new PermissionMemoryProvider(permissions);
-            const permissionEngine = new PermissionChecker({
+            const permissionChecker = new PermissionChecker({
                 provider: permissionRepository,
             });
 
-            setRequestEnv(request, 'abilities', permissionEngine);
+            setRequestEnv(request, 'permissionChecker', permissionChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'user', user);
@@ -148,11 +148,11 @@ async function verifyBasicAuthorizationHeader(
         if (robot) {
             permissions = await robotRepository.getOwnedPermissions(robot.id);
             const permissionRepository = new PermissionMemoryProvider(permissions);
-            const permissionEngine = new PermissionChecker({
+            const permissionChecker = new PermissionChecker({
                 provider: permissionRepository,
             });
 
-            setRequestEnv(request, 'abilities', permissionEngine);
+            setRequestEnv(request, 'permissionChecker', permissionChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'robot', robot);
@@ -169,7 +169,7 @@ async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
-            setRequestEnv(request, 'abilities', new PermissionChecker());
+            setRequestEnv(request, 'permissionChecker', new PermissionChecker());
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'client', oauth2Client);

@@ -43,7 +43,7 @@ export function registerAuthMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
-        setRequestEnv(request, 'abilities', new PermissionChecker());
+        setRequestEnv(request, 'permissionChecker', new PermissionChecker());
 
         try {
             if (typeof headerValue === 'undefined') {

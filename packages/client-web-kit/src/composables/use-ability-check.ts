@@ -26,7 +26,7 @@ export function useAbilityCheck(name: string) : Ref<boolean> {
         let outcome : boolean;
 
         try {
-            computePromise = store.permissionManager.has(name);
+            computePromise = store.permissionChecker.has(name);
             outcome = await computePromise;
         } catch (e) {
             outcome = false;

@@ -19,13 +19,13 @@ import {
 import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROLE_READ,
         PermissionName.ROLE_UPDATE,
         PermissionName.ROLE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -56,7 +56,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
     const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
 
     for (let i = 0; i < entities.length; i++) {
-        const canAbility = await ability.checkOneOf(
+        const canAbility = await permissionChecker.checkOneOf(
             [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -84,13 +84,13 @@ export async function getOneRoleAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const abilities = useRequestEnv(req, 'abilities');
-    const hasAbility = await abilities.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasOneOf = await permissionChecker.hasOneOf([
         PermissionName.ROLE_READ,
         PermissionName.ROLE_UPDATE,
         PermissionName.ROLE_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasOneOf) {
         throw new ForbiddenError();
     }
 
@@ -105,7 +105,7 @@ export async function getOneRoleAttributeRouteHandler(
         throw new NotFoundError();
     }
 
-    const canAbility = await abilities.checkOneOf(
+    const canAbility = await permissionChecker.checkOneOf(
         [
             PermissionName.ROLE_READ,
             PermissionName.ROLE_UPDATE,

@@ -23,7 +23,7 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
  * @param res
  */
 export async function getManyRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
+    const ability = useRequestEnv(req, 'permissionChecker');
     const hasAbility = await ability.hasOneOf([
         PermissionName.ROLE_PERMISSION_DELETE,
         PermissionName.ROLE_PERMISSION_READ,
@@ -66,7 +66,7 @@ export async function getManyRolePermissionRouteHandler(req: Request, res: Respo
  * @param res
  */
 export async function getOneRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
+    const ability = useRequestEnv(req, 'permissionChecker');
     const hasAbility = await ability.hasOneOf([
         PermissionName.ROLE_PERMISSION_DELETE,
         PermissionName.ROLE_PERMISSION_READ,

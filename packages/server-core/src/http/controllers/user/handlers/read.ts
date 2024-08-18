@@ -66,7 +66,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const [entities] = queryOutput;
     let [, total] = queryOutput;
 
-    const abilities = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
 
     const userId = useRequestEnv(req, 'userId');
 
@@ -78,7 +78,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
             continue;
         }
 
-        const canAbility = await abilities.checkOneOf(
+        const canAbility = await permissionChecker.checkOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
@@ -105,13 +105,13 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 }
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'abilities');
-    const hasAbility = await ability.hasOneOf([
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const hasPermission = await permissionChecker.hasOneOf([
         PermissionName.USER_READ,
         PermissionName.USER_UPDATE,
         PermissionName.USER_DELETE,
     ]);
-    if (!hasAbility) {
+    if (!hasPermission) {
         throw new ForbiddenError();
     }
 
@@ -188,7 +188,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             await repository.findAndAppendExtraAttributesTo(entity);
         }
     } else {
-        const hasAbility = await ability.checkOneOf(
+        const hasAbility = await permissionChecker.checkOneOf(
             [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,

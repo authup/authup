@@ -28,10 +28,10 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    const ability = useRequestEnv(req, 'abilities');
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     const userId = useRequestEnv(req, 'userId');
     if (!entity.user_id || !userId || entity.user_id !== userId) {
-        if (!await ability.safeCheck(PermissionName.ROBOT_DELETE, { attributes: entity })) {
+        if (!await permissionChecker.safeCheck(PermissionName.ROBOT_DELETE, { attributes: entity })) {
             throw new ForbiddenError();
         }
     }
