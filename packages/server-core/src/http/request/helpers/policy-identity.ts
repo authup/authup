@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyIdentity } from '@authup/permitus';
+import type { PolicyIdentity } from '@authup/kit';
 import type { Request } from 'routup';
 
 import { useRequestEnv } from './env';

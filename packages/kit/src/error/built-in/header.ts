@@ -7,8 +7,8 @@
 
 import type { AuthorizationHeaderType } from 'hapic';
 import { ErrorCode } from '../constants';
-import { AuthupError } from './base';
-import type { AuthupErrorOptionsInput } from './types';
+import { AuthupError } from '../module';
+import type { AuthupErrorOptionsInput } from '../types';
 
 export class HeaderError extends AuthupError {
     constructor(...input: AuthupErrorOptionsInput[]) {

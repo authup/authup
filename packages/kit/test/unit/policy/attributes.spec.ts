@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { deserialize, serialize } from '@authup/kit';
-import type { AttributesPolicy } from '../../../src';
 import {
     AttributesPolicyEvaluator,
     AttributesPolicyValidator,
+    deserialize,
+    serialize,
 } from '../../../src';
+import type { AttributesPolicy } from '../../../src';
 
 type User = {
     name: string,

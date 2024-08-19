@@ -10,7 +10,8 @@ import type {
 } from '../../../src';
 import {
     BuiltInPolicyType,
-    DecisionStrategy, PolicyEngine,
+    DecisionStrategy,
+    PolicyEngine,
 } from '../../../src';
 
 type User = {

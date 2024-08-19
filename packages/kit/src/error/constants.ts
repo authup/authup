@@ -6,8 +6,6 @@
  */
 
 export enum ErrorCode {
-    ABILITY_INVALID = 'invalid_ability',
-
     HEADER_INVALID = 'invalid_header',
     HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
 
@@ -24,4 +22,12 @@ export enum ErrorCode {
     TOKEN_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
     TOKEN_SCOPE_INVALID = 'invalid_scope',
     TOKEN_SUB_KIND_INVALID = 'invalid_token_sub_kind',
+
+    PERMISSION_NOT_FOUND = 'permission_not_found',
+    PERMISSION_DENIED = 'permission_denied',
+    PERMISSION_EVALUATION_FAILED = 'permission_evaluation_failed',
+
+    POLICY_EVALUATOR_NOT_FOUND = 'policy_evaluator_not_found',
+    POLICY_EVALUATOR_NOT_PROCESSABLE = 'policy_evaluator_not_processable',
+    POLICY_EVALUATOR_CONTEXT_INVALID = 'policy_evaluator_context_invalid',
 }

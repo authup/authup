@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { omitRecord } from '@authup/kit';
 import {
     AttributeNamesPolicyValidator,
     AttributesPolicyValidator,
     BuiltInPolicyType,
     DatePolicyValidator,
     TimePolicyValidator,
-} from '@authup/permitus';
+    omitRecord,
+} from '@authup/kit';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 

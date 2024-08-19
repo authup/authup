@@ -6,8 +6,8 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { CompositePolicy, TimePolicy } from '@authup/permitus';
-import { BuiltInPolicyType } from '@authup/permitus';
+import type { CompositePolicy, TimePolicy } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/kit';
 import { createFakeTimePolicy } from '../../../utils/domains/policy';
 import { useSuperTest } from '../../../utils/supertest';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';

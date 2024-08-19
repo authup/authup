@@ -6,11 +6,11 @@
  */
 import type {
     CompositePolicy, PermissionItem, PolicyWithType,
-} from '@authup/permitus';
+} from '@authup/kit';
 import {
     BuiltInPolicyType,
     DecisionStrategy,
-} from '@authup/permitus';
+} from '@authup/kit';
 import type { Policy } from '../policy';
 import type { PermissionRelation } from './entity';
 

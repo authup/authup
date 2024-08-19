@@ -6,4 +6,6 @@
  */
 
 export * from './constants';
-export * from './entities';
+export * from './built-in';
+export * from './module';
+export * from './types';

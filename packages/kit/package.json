@@ -55,9 +55,12 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@ebec/http": "^2.3.0",
+        "@validup/adapter-zod": "^0.1.5",
         "destr": "^2.0.3",
         "nanoid": "^3.3.4",
-        "smob": "^1.5.0"
+        "smob": "^1.5.0",
+        "validup": "^0.1.5",
+        "zod": "^3.23.8"
     },
     "publishConfig": {
         "access": "public"

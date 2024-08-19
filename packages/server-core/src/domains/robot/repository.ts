@@ -17,7 +17,7 @@ import {
     createNanoID,
     isUUID,
 } from '@authup/kit';
-import type { PermissionItem } from '@authup/permitus';
+import type { PermissionItem } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';

@@ -6,7 +6,7 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
-import type { PolicyData } from '@authup/permitus';
+import type { PolicyData } from '@authup/kit';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../domains';
 import { buildPolicyEvaluationDataByRequest, useRequestEnv } from '../../../request';

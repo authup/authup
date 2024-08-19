@@ -8,8 +8,8 @@
 import { OAuth2TokenKind } from '../../oauth2';
 import type { OAuth2SubKind } from '../../oauth2';
 import { ErrorCode } from '../constants';
-import { AuthupError } from './base';
-import type { AuthupErrorOptionsInput } from './types';
+import { AuthupError } from '../module';
+import type { AuthupErrorOptionsInput } from '../types';
 
 export class TokenError extends AuthupError {
     constructor(...input: AuthupErrorOptionsInput[]) {

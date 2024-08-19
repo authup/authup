@@ -2,8 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authup/kit": ["./packages/kit/src"],
-            "@authup/permitus": ["./packages/permitus/src"],
+            "@authup/kit": ["./packages/kit/src"]
         }
     }
 }

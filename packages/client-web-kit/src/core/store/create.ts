@@ -8,7 +8,7 @@
 import {
     PermissionChecker,
     PermissionMemoryProvider,
-} from '@authup/permitus';
+} from '@authup/kit';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,

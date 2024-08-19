@@ -13,7 +13,7 @@ import type {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { PermissionChecker } from '@authup/permitus';
+import { PermissionChecker } from '@authup/kit';
 import { useConfig } from '../../../../config';
 import { setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';

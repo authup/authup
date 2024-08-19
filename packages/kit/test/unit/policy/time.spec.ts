@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -13,7 +13,7 @@ import {
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {
-        const policy : TimePolicy = {
+        const policy: TimePolicy = {
             start: '08:00',
             end: '16:00',
         };
@@ -28,7 +28,8 @@ describe('src/policy/time', () => {
                 dateTime,
             },
         });
-        expect(outcome).toBeTruthy();
+        expect(outcome)
+            .toBeTruthy();
 
         dateTime.setHours(6, 0);
         outcome = await evaluator.evaluate({
@@ -37,7 +38,8 @@ describe('src/policy/time', () => {
                 dateTime,
             },
         });
-        expect(outcome).toBeFalsy();
+        expect(outcome)
+            .toBeFalsy();
     });
 
     it('should parse options', async () => {
@@ -51,12 +53,18 @@ describe('src/policy/time', () => {
             dayOfYear: 1,
         } satisfies TimePolicy);
 
-        expect(output.start).toEqual('08:00');
-        expect(output.end).toEqual('16:00');
-        expect(output.interval).toEqual('daily');
-        expect(output.dayOfWeek).toEqual(0);
-        expect(output.dayOfMonth).toEqual(1);
-        expect(output.dayOfYear).toEqual(1);
+        expect(output.start)
+            .toEqual('08:00');
+        expect(output.end)
+            .toEqual('16:00');
+        expect(output.interval)
+            .toEqual('daily');
+        expect(output.dayOfWeek)
+            .toEqual(0);
+        expect(output.dayOfMonth)
+            .toEqual(1);
+        expect(output.dayOfYear)
+            .toEqual(1);
     });
 
     it('should parse options with unknown', async () => {
@@ -66,7 +74,9 @@ describe('src/policy/time', () => {
             foo: 'bar',
         } satisfies TimePolicy & { foo?: string }) as Partial<TimePolicy> & { foo?: string };
 
-        expect(output.start).toEqual('08:00');
-        expect(output.foo).toBeUndefined();
+        expect(output.start)
+            .toEqual('08:00');
+        expect(output.foo)
+            .toBeUndefined();
     });
 });

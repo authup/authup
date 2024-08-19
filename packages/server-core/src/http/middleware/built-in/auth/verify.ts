@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '@authup/permitus';
-import { PermissionChecker, PermissionMemoryProvider } from '@authup/permitus';
+import type { PermissionItem } from '@authup/kit';
 import {
-    HeaderError,
-    OAuth2SubKind,
+    HeaderError, OAuth2SubKind,
     OAuth2TokenKind,
+    PermissionChecker,
+    PermissionMemoryProvider,
     TokenError,
 } from '@authup/kit';
 import {

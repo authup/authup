@@ -54,8 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.19",
-        "@authup/permitus": "^1.0.0-beta.19"
+        "@authup/kit": "^1.0.0-beta.19"
     },
     "devDependencies": {
         "@hapic/oauth2": "^2.4.2",

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '../../error';
 import type { PolicyError, PolicyWithType } from '../../policy';
-import { PermissionErrorCode } from './constants';
 import type { PermissionErrorOptions, PermissionEvaluationErrorOptions } from './types';
 
 export class PermissionError extends Error {
@@ -25,28 +25,28 @@ export class PermissionError extends Error {
     static notFound(name: string) {
         return new PermissionError({
             message: `The permission ${name} was not found.`,
-            code: PermissionErrorCode.NOT_FOUND,
+            code: ErrorCode.PERMISSION_NOT_FOUND,
         });
     }
 
     static denied(name: string) {
         return new PermissionError({
             message: `The permission ${name} has not been granted.`,
-            code: PermissionErrorCode.DENIED,
+            code: ErrorCode.PERMISSION_DENIED,
         });
     }
 
     static deniedAll(names: string[]) {
         return new PermissionError({
             message: `None of the permissions ${names.join(', ')} has been granted.`,
-            code: PermissionErrorCode.DENIED,
+            code: ErrorCode.PERMISSION_DENIED,
         });
     }
 
     static evaluationFailed(options: PermissionEvaluationErrorOptions) {
         const error = new PermissionError({
             message: `The evaluation of permission ${options.name} failed.`,
-            code: PermissionErrorCode.EVALUATION_FAILED,
+            code: ErrorCode.PERMISSION_EVALUATION_FAILED,
         });
 
         if (options.policy) {

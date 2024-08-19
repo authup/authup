@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,9 +8,10 @@
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
 import {
     BuiltInPolicyType,
-
+    ErrorCode,
     PermissionChecker,
-    PermissionError, PermissionErrorCode, PermissionMemoryProvider,
+    PermissionError,
+    PermissionMemoryProvider,
 } from '../../../src';
 
 const abilities : PermissionItem[] = [
@@ -54,7 +55,7 @@ describe('src/ability/manager.ts', () => {
 
             if (e instanceof PermissionError) {
                 expect(e.policy).toBeDefined();
-                expect(e.code).toEqual(PermissionErrorCode.EVALUATION_FAILED);
+                expect(e.code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
             }
         }
     });
