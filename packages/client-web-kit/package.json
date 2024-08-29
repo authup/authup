@@ -74,7 +74,7 @@
         "socket.io-client": "^4.7.5",
         "universal-cookie": "^7.2.0",
         "vue": "^3.4.31",
-        "vue-tsc": "^2.0.29"
+        "vue-tsc": "^2.1.2"
     },
     "peerDependencies": {
         "@authup/kit": "^1.0.0-beta.18",
