@@ -57,7 +57,7 @@
         "@routup/prometheus": "^2.4.0",
         "@routup/rate-limit": "^2.4.0",
         "@routup/swagger": "^2.4.0",
-        "@validup/adapter-routup": "^0.1.6",
+        "@validup/adapter-routup": "^0.1.7",
         "@validup/adapter-validator": "^0.1.5",
         "@validup/adapter-zod": "^0.1.5",
         "better-sqlite3": "^11.2.1",
