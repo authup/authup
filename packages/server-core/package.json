@@ -59,7 +59,7 @@
         "@routup/swagger": "^2.4.0",
         "@validup/adapter-routup": "^0.1.6",
         "@validup/adapter-validator": "^0.1.5",
-        "@validup/adapter-zod": "^0.1.5",
+        "@validup/adapter-zod": "^0.1.6",
         "better-sqlite3": "^11.2.1",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
