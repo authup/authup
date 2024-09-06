@@ -39,6 +39,11 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * default: true
+     */
+    logger: boolean;
+
+    /**
      * default driver: better-sqlite3
      */
     db: MysqlConnectionOptions |

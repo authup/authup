@@ -27,7 +27,6 @@ export function useSuperTest() : SuperTest<Test> {
     config.robotAdminEnabled = true;
 
     setConfig(config);
-
     applyConfig(config);
 
     const router = createRouter();

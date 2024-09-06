@@ -18,6 +18,7 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         rootPath: zod.string().optional(),
         writableDirectoryPath: zod.string().optional(),
 
+        logger: zod.boolean().optional(),
         db: zod.custom< MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
             (value) => isObject(value),
         ).optional(),

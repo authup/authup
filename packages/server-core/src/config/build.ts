@@ -22,6 +22,7 @@ export function buildConfig(input: ConfigInput = {}): Config {
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
 
+            logger: true,
             redis: false,
             smtp: false,
             vault: false,

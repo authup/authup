@@ -10,7 +10,7 @@ import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useLogger } from '@authup/server-kit';
 import { executeSetupCommand } from '../../commands';
 import {
-    applyConfig, buildConfig, readConfigRaw,
+    applyConfig, buildConfig, readConfigRaw, setConfig,
 } from '../../config';
 
 interface SetupArguments extends Arguments {
@@ -68,7 +68,7 @@ export class SetupCommand implements CommandModule {
             },
         });
         const config = buildConfig(raw);
-
+        setConfig(config);
         applyConfig(config);
 
         try {

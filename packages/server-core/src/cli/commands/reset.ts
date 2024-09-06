@@ -9,7 +9,9 @@ import type { Arguments, Argv, CommandModule } from 'yargs';
 import {
     executeResetCommand,
 } from '../../commands';
-import { applyConfig, buildConfig, readConfigRaw } from '../../config';
+import {
+    applyConfig, buildConfig, readConfigRaw, setConfig,
+} from '../../config';
 
 interface ResetArguments extends Arguments {
     config: string | undefined;
@@ -36,7 +38,7 @@ export class ResetCommand implements CommandModule {
             },
         });
         const config = buildConfig(raw);
-
+        setConfig(config);
         applyConfig(config);
 
         await executeResetCommand();

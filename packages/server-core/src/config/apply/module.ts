@@ -7,9 +7,11 @@
 
 import {
     applyConfigDatabase,
-    applyConfigLogger, applyConfigRedis, applyConfigSMTP, applyConfigVault,
+    applyConfigLogger,
+    applyConfigRedis,
+    applyConfigSMTP,
+    applyConfigVault,
 } from './services';
-import { setConfig } from '../singleton';
 import type { Config } from '../types';
 
 export function applyConfig(config: Config): Config {
@@ -25,14 +27,14 @@ export function applyConfig(config: Config): Config {
         applyConfigVault(config.vault);
     }
 
-    applyConfigLogger({
-        env: config.env,
-        directory: config.writableDirectoryPath,
-    });
+    if (config.logger) {
+        applyConfigLogger({
+            env: config.env,
+            directory: config.writableDirectoryPath,
+        });
+    }
 
     applyConfigDatabase(config.db);
-
-    setConfig(config);
 
     return config;
 }

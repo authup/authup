@@ -10,7 +10,7 @@ import { useDataSourceOptions } from 'typeorm-extension';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
 import {
-    applyConfig, buildConfig, readConfigRaw,
+    applyConfig, buildConfig, readConfigRaw, setConfig,
 } from '../../config';
 
 import { extendDataSourceOptions } from '../../database';
@@ -40,6 +40,7 @@ export class MigrationRevertCommand implements CommandModule {
             },
         });
         const config = buildConfig(raw);
+        setConfig(config);
         applyConfig(config);
 
         const options = await useDataSourceOptions();
