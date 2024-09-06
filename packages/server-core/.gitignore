@@ -3,3 +3,4 @@ authup.*
 dist
 node_modules
 writable
+!test/data/**
