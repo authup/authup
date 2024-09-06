@@ -33,9 +33,8 @@ import {
     UserSubscriber,
 } from '../subscribers';
 
-export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
-    options = {
-        ...options,
+export function extendDataSourceOptionsWithSubscribers<T extends DataSourceOptions>(options: T) : T {
+    return Object.assign(options, {
         subscribers: [
             ClientSubscriber,
             ClientScopeSubscriber,
@@ -67,7 +66,5 @@ export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(
             UserRoleSubscriber,
             ...(options.subscribers ? options.subscribers : []) as string[],
         ],
-    };
-
-    return options;
+    });
 }

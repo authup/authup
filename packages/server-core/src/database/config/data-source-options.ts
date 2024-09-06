@@ -11,8 +11,8 @@ import {
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 import { isDatabaseTypeSupported } from '../helpers';
-import { setEntitiesForDataSourceOptions } from './entities';
-import { setSubscribersForDataSourceOptions } from './subscribers';
+import { extendDataSourceOptionsWithEntities } from './entities';
+import { extendDataSourceOptionsWithSubscribers } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
 
 export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
@@ -43,8 +43,8 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
         } as Partial<DataSourceOptions>);
     }
 
-    options = setEntitiesForDataSourceOptions(options);
-    options = setSubscribersForDataSourceOptions(options);
+    extendDataSourceOptionsWithEntities(options);
+    extendDataSourceOptionsWithSubscribers(options);
 
     if (options.type === 'mysql') {
         Object.assign(options, {

@@ -22,26 +22,42 @@ export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) {
     }
 
     const raw : ConfigInput = container.get('server.core') || {};
-    raw.db = container.get([
+
+    const db = container.get([
         'db',
         'server.db',
         'server.core.db',
     ]);
-    raw.redis = container.get([
+    if (db) {
+        raw.db = db;
+    }
+
+    const redis = container.get([
         'redis',
         'server.redis',
         'server.core.redis',
     ]);
-    raw.smtp = container.get([
+    if (redis) {
+        raw.redis = redis;
+    }
+
+    const smtp = container.get([
         'smtp',
         'server.smtp',
         'server.core.smtp',
     ]);
-    raw.vault = container.get([
+    if (smtp) {
+        raw.smtp = smtp;
+    }
+
+    const vault = container.get([
         'vault',
         'server.vault',
         'server.core.vault',
     ]);
+    if (vault) {
+        raw.vault = vault;
+    }
 
     return raw;
 }

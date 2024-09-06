@@ -35,9 +35,8 @@ import {
     UserRoleEntity,
 } from '../../domains';
 
-export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
-    return {
-        ...options,
+export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>(options: T) : T {
+    return Object.assign(options, {
         entities: [
             KeyEntity,
 
@@ -71,5 +70,5 @@ export function setEntitiesForDataSourceOptions<T extends DataSourceOptions>(opt
             UserRoleEntity,
             ...(options.entities ? options.entities : []) as string[],
         ],
-    };
+    });
 }
