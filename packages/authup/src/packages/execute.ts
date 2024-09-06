@@ -8,19 +8,19 @@ import { buildClientWebShellCommandExecContext } from './client-web';
 import { PackageID } from './constants';
 import { buildServerCoreShellCommandExecContext } from './server-core';
 
-type ServiceCommandExecutionContext = {
+type PackageCommandExecutionContext = {
     command: string,
     package: PackageID,
     configFile?: string,
     configDirectory?: string,
 };
 
-type ServicesCommandExecutionContext = Omit<ServiceCommandExecutionContext, 'package'> & {
+type PackagesCommandExecutionContext = Omit<PackageCommandExecutionContext, 'package'> & {
     packages: (PackageID)[]
 };
 
-async function executeServiceCommand(
-    context: ServiceCommandExecutionContext,
+async function executePackageCommand(
+    context: PackageCommandExecutionContext,
 ) : Promise<ChildProcess> {
     let shellExecContext : ShellCommandExecContext | undefined;
     try {
@@ -63,12 +63,12 @@ async function executeServiceCommand(
     });
 }
 
-export async function executeServicesCommand(
-    context: ServicesCommandExecutionContext,
+export async function executePackagesCommand(
+    context: PackagesCommandExecutionContext,
 ) {
     const promises : Promise<ChildProcess>[] = [];
     for (let i = 0; i < context.packages.length; i++) {
-        promises.push(executeServiceCommand({
+        promises.push(executePackageCommand({
             ...context,
             package: context.packages[i],
         }));

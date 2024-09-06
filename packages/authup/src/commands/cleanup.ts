@@ -9,7 +9,7 @@ import type { CAC } from 'cac';
 import chalk from 'chalk';
 import consola from 'consola';
 import process from 'node:process';
-import { executeServicesCommand } from '../packages/execute';
+import { executePackagesCommand } from '../packages/execute';
 import type { PackageID } from '../packages';
 import { PackageCommand, isPackageValid } from '../packages';
 
@@ -26,7 +26,7 @@ export function buildCleanupCommand(cac: CAC) {
                 }
             }
 
-            await executeServicesCommand({
+            await executePackagesCommand({
                 configFile: ctx.configFile,
                 configDirectory: ctx.configDirectory,
                 command: PackageCommand.CLEANUP,

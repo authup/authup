@@ -34,8 +34,7 @@ export async function executeStartCommand() {
     logger.info(`Public-URL: ${config.publicUrl}`);
     logger.info(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
 
-    const database = config.db;
-    logger.info(`Database: ${database.type}`);
+    logger.info(`Database: ${config.db.type}`);
     logger.info(`Redis: ${isRedisClientUsable() ? 'enabled' : 'disabled'}`);
     logger.info(`Vault: ${isVaultClientUsable() ? 'enabled' : 'disabled'}`);
     logger.info(`Robot: ${config.robotAdminEnabled ? 'enabled' : 'disabled'}`);
