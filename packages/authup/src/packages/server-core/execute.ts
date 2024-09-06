@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import { ServiceCommand, ServicePackageName } from '../constants';
+import { PackageCommand, PackageName } from '../constants';
 import type { ShellCommandExecContext } from '../../utils';
 import { findModulePath } from '../../utils';
 
@@ -14,21 +14,21 @@ export function buildServerCoreShellCommandExecContext(
     ctx: ShellCommandExecContext,
 ) : ShellCommandExecContext {
     let command : string;
-    const modulePath = findModulePath(ServicePackageName.SERVER_CORE);
+    const modulePath = findModulePath(PackageName.SERVER_CORE);
     if (typeof modulePath === 'string') {
         const directory = path.dirname(modulePath);
         const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
         command = `node ${outputPath}`;
     } else {
-        command = `npx ${ServicePackageName.SERVER_CORE}`;
+        command = `npx ${PackageName.SERVER_CORE}`;
     }
 
     switch (ctx.command) {
-        case ServiceCommand.START: {
+        case PackageCommand.START: {
             command += ' start';
             break;
         }
-        case ServiceCommand.CLEANUP: {
+        case PackageCommand.CLEANUP: {
             command += ' reset';
             break;
         }
@@ -37,7 +37,13 @@ export function buildServerCoreShellCommandExecContext(
         }
     }
 
-    // todo: append config directory & file
+    if (ctx.configFile) {
+        command += ` --configFile=${ctx.configFile}`;
+    }
+
+    if (ctx.configDirectory) {
+        command += ` --configDirectory=${ctx.configDirectory}`;
+    }
 
     return {
         ...ctx,

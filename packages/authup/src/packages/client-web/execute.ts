@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import { ServiceCommand, ServicePackageName } from '../constants';
+import { PackageCommand, PackageName } from '../constants';
 import type { ShellCommandExecContext } from '../../utils';
 import { findModulePath } from '../../utils';
 import { buildClientWebConfig, readClientWebConfigRaw } from './config';
@@ -29,7 +29,7 @@ function extendEnv(input: Record<string, string | undefined>) {
 export async function buildClientWebShellCommandExecContext(
     ctx: ShellCommandExecContext,
 ) : Promise<ShellCommandExecContext> {
-    if (ctx.command !== ServiceCommand.START) {
+    if (ctx.command !== PackageCommand.START) {
         throw new Error(`The command ${ctx.command} is not supported`);
     }
 
@@ -61,13 +61,13 @@ export async function buildClientWebShellCommandExecContext(
 
     let command : string;
 
-    const modulePath = findModulePath(ServicePackageName.CLIENT_WEB);
+    const modulePath = findModulePath(PackageName.CLIENT_WEB);
     if (typeof modulePath === 'string') {
         const directory = path.dirname(modulePath);
         const outputPath = path.join(directory, '.output', 'server', 'index.mjs');
         command = `node ${outputPath}`;
     } else {
-        command = `npx ${ServicePackageName.CLIENT_WEB}`;
+        command = `npx ${PackageName.CLIENT_WEB}`;
     }
 
     return {

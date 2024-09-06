@@ -16,7 +16,8 @@ import {
 import { extendDataSourceOptions } from '../../database';
 
 interface MigrationRevertArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
 }
 
 export class MigrationRevertCommand implements CommandModule {
@@ -26,9 +27,13 @@ export class MigrationRevertCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             });
     }
 
@@ -36,7 +41,8 @@ export class MigrationRevertCommand implements CommandModule {
         const raw = await readConfigRaw({
             env: true,
             fs: {
-                file: args.config,
+                cwd: args.configDirectory,
+                file: args.configFile,
             },
         });
         const config = buildConfig(raw);

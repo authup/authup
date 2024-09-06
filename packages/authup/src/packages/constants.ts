@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ServicePackageName {
+export enum PackageName {
     CLIENT_WEB = '@authup/client-web',
     SERVER_CORE = '@authup/server-core',
 }
@@ -15,7 +15,7 @@ export enum PackageID {
     SERVER_CORE = 'server.core',
 }
 
-export enum ServiceCommand {
+export enum PackageCommand {
     START = 'start',
     CLEANUP = 'cleanup',
 }

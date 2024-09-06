@@ -9,15 +9,17 @@ import type { CAC } from 'cac';
 import consola from 'consola';
 import {
     buildClientWebConfig, buildServerCoreConfig, readClientWebConfigRaw, readServerCoreConfig,
-} from '../services';
+} from '../packages';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
-        .option('-c, --config [config]', 'Specify a configuration file')
+        .option('-cF, --configFile [configFile]', 'Specify a configuration file')
+        .option('-cD, --configDirectory [configDirectory]', 'Specify a configuration directory')
         .action(async (ctx: Record<string, any>) => {
             const clientWebRaw = await readClientWebConfigRaw({
                 fs: {
-                    file: ctx.config,
+                    file: ctx.configFile,
+                    cwd: ctx.configDirectory,
                 },
             });
             const clientWeb = buildClientWebConfig(clientWebRaw);
