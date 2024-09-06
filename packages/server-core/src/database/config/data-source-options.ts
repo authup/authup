@@ -5,38 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { DataSourceOptions } from 'typeorm';
-import { adjustFilePath } from 'typeorm-extension';
+import {
+    CodeTransformation, isCodeTransformation, transformFilePath,
+} from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { isRedisClientUsable, useRedisClient } from '@authup/server-kit';
-import { EnvironmentName, isDatabaseTypeSupported, useConfig } from '../../config';
+import { isDatabaseTypeSupported } from '../helpers';
 import { setEntitiesForDataSourceOptions } from './entities';
 import { setSubscribersForDataSourceOptions } from './subscribers';
 import { DatabaseQueryResultCache } from '../cache';
 
-export async function buildDataSourceOptions() : Promise<DataSourceOptions> {
-    const config = useConfig();
-
-    const dataSourceOptions = config.db;
-    if (!isDatabaseTypeSupported(dataSourceOptions.type)) {
-        throw new Error('At the moment only the database types mysql, better-sqlite3 and postgres are supported.');
+export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
+    if (!isDatabaseTypeSupported(options.type)) {
+        throw new Error('Only the database types mysql, better-sqlite3 and postgres are supported.');
     }
 
-    return extendDataSourceOptions(dataSourceOptions);
-}
-
-export async function extendDataSourceOptions(options: DataSourceOptions) {
-    const config = useConfig();
-
-    const migrations : string[] = [];
-    const migration = await adjustFilePath(
-        `src/database/migrations/${options.type}/*.{ts,js}`,
-    );
-
-    migrations.push(migration);
+    let migrationPath = `src/database/migrations/${options.type}/*.{ts,js}`;
+    if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
+        migrationPath = transformFilePath(migrationPath, './dist', './src');
+    }
 
     Object.assign(options, {
         logging: ['error'],
-        migrations,
+        migrations: [migrationPath],
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);
 
@@ -48,7 +39,6 @@ export async function extendDataSourceOptions(options: DataSourceOptions) {
                 provider() {
                     return new DatabaseQueryResultCache(client);
                 },
-                ignoreErrors: config.env === EnvironmentName.PRODUCTION,
             },
         } as Partial<DataSourceOptions>);
     }

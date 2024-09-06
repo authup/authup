@@ -12,20 +12,17 @@ import {
     checkDatabase,
     createDatabase,
     setDataSource,
-    synchronizeDatabaseSchema,
+    synchronizeDatabaseSchema, useDataSourceOptions,
 } from 'typeorm-extension';
 import { isRedisClientUsable, isVaultClientUsable, useLogger } from '@authup/server-kit';
 import { useConfig } from '../config';
-import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
+import { DatabaseSeeder, extendDataSourceOptions } from '../database';
 import { saveRobotCredentialsToVault } from '../domains';
 import {
     createHttpServer, createRouter, generateSwaggerDocumentation, runOAuth2Cleaner,
 } from '../http';
-import type { StartCommandContext } from './type';
 
-export async function startCommand(context?: StartCommandContext) {
-    context = context || {};
-
+export async function executeStartCommand() {
     const config = useConfig();
 
     const logger = useLogger();
@@ -57,7 +54,9 @@ export async function startCommand(context?: StartCommandContext) {
 
     logger.info('Generated documentation.');
 
-    const options = context.dataSourceOptions || await buildDataSourceOptions();
+    const options = await useDataSourceOptions();
+    extendDataSourceOptions(options);
+
     Object.assign(options, {
         logging: ['error'],
     } as DataSourceOptions);
@@ -87,10 +86,7 @@ export async function startCommand(context?: StartCommandContext) {
         logger.info('Applied database schema.');
     }
 
-    const seeder = new DatabaseSeeder({
-        userAdminPasswordReset: context.databaseAdminPasswordReset ?? false,
-        robotAdminSecretReset: context.databaseRobotSecretReset ?? false,
-    });
+    const seeder = new DatabaseSeeder(config);
 
     if (!check.schema) {
         logger.info('Seeding database...');
@@ -108,8 +104,6 @@ export async function startCommand(context?: StartCommandContext) {
         } catch (e) {
             useLogger().warn(`The ${config.robotAdminName} robot credentials could not saved to vault.`);
         }
-
-        await saveSeedResult(config.writableDirectoryPath, seederData);
     }
 
     logger.info('Starting oauth2 cleaner...');

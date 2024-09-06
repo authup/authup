@@ -6,11 +6,14 @@
  */
 
 import { useLogger } from '@authup/server-kit';
+import { useDataSourceOptions } from 'typeorm-extension';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
-import { setupConfig, setupLogger } from '../../config';
+import {
+    applyConfig, buildConfig, readConfigRaw,
+} from '../../config';
 
-import { buildDataSourceOptions } from '../../database';
+import { extendDataSourceOptions } from '../../database';
 
 interface MigrationRevertArguments extends Arguments {
     config: string | undefined;
@@ -30,16 +33,17 @@ export class MigrationRevertCommand implements CommandModule {
     }
 
     async handler(args: MigrationRevertArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
+        const config = buildConfig(raw);
+        applyConfig(config);
 
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
-
-        const options = await buildDataSourceOptions();
+        const options = await useDataSourceOptions();
+        extendDataSourceOptions(options);
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();

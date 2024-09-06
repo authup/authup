@@ -8,11 +8,10 @@
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useLogger } from '@authup/server-kit';
-import { setupCommand } from '../../commands';
+import { executeSetupCommand } from '../../commands';
 import {
-    setupConfig, setupLogger,
+    applyConfig, buildConfig, readConfigRaw,
 } from '../../config';
-import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
     config: string | undefined;
@@ -62,22 +61,18 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
+        const config = buildConfig(raw);
 
-        const dataSourceOptions = await buildDataSourceOptions();
-
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
+        applyConfig(config);
 
         try {
-            await setupCommand({
-                dataSourceOptions,
-                ...args,
-            });
+            await executeSetupCommand(args);
         } catch (e) {
             useLogger().error(e);
 

@@ -32,7 +32,7 @@ export function buildInfoCommand(cac: CAC) {
             consola.info(`Port: ${clientWeb.port}`);
             consola.info('------------');
 
-            const serverCore = await buildServerCoreConfig(container);
+            const serverCore = await buildServerCoreConfig();
             consola.info(`Host: ${serverCore.host}`);
             consola.info(`Port: ${serverCore.port}`);
             consola.info(`Environment: ${serverCore.env}`);

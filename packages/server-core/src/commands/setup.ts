@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createDatabase, synchronizeDatabaseSchema } from 'typeorm-extension';
+import { createDatabase, synchronizeDatabaseSchema, useDataSourceOptions } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { useLogger } from '@authup/server-kit';
 import { useConfig } from '../config';
-import { DatabaseSeeder, buildDataSourceOptions, saveSeedResult } from '../database';
+import { DatabaseSeeder, extendDataSourceOptions } from '../database';
 import { generateSwaggerDocumentation } from '../http';
-import type { SetupCommandContext } from './type';
+import type { SetupCommandContext } from './types';
 
-export async function setupCommand(context?: SetupCommandContext) {
-    context = context || {};
-
+export async function executeSetupCommand(context: SetupCommandContext = {}) {
     if (
         typeof context.database === 'undefined' &&
         typeof context.databaseSeed === 'undefined' &&
@@ -45,7 +43,8 @@ export async function setupCommand(context?: SetupCommandContext) {
         /**
          * Setup database with schema & seeder
          */
-        const options = context.dataSourceOptions || await buildDataSourceOptions();
+        const options = await useDataSourceOptions();
+        extendDataSourceOptions(options);
 
         if (context.database) {
             logger.info('Creating database.');
@@ -76,18 +75,14 @@ export async function setupCommand(context?: SetupCommandContext) {
             if (context.databaseSeed) {
                 logger.info('Seeding database.');
 
-                const seeder = new DatabaseSeeder({
-                    userAdminPasswordReset: true,
-                    robotAdminSecretReset: true,
-                });
+                config.userAdminPasswordReset = true;
+                config.robotAdminSecretReset = true;
 
-                const seederData = await seeder.run(dataSource);
+                const seeder = new DatabaseSeeder(config);
+
+                await seeder.run(dataSource);
 
                 logger.info('Seeded database.');
-
-                if (seederData.robot) {
-                    await saveSeedResult(config.writableDirectoryPath, seederData);
-                }
             }
         } catch (e) {
             logger.error('Seeding the database failed.');

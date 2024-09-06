@@ -5,21 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Robot, RobotRole, UserRole } from '@authup/core-kit';
+import {
+    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName,
+} from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
+import { hash } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
-import type {
-    Robot,
-    RobotRole,
-    UserRole,
-} from '@authup/core-kit';
-import {
-    PermissionName,
-    REALM_MASTER_NAME,
-    ROLE_ADMIN_NAME,
-    ScopeName,
-} from '@authup/core-kit';
-import { hasOwnProperty, hash } from '@authup/server-kit';
 import {
     PermissionEntity,
     RealmEntity,
@@ -31,9 +24,7 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../domains';
-import type { Config } from '../../config';
-import { useConfig } from '../../config';
-import type { DatabaseRootSeederResult } from './type';
+import type { DatabaseRootSeederResult, DatabaseSeederOptions } from './types';
 
 function getPermissions(permissions?: string[]) {
     return Array.from(new Set([
@@ -43,24 +34,18 @@ function getPermissions(permissions?: string[]) {
 }
 
 export class DatabaseSeeder implements Seeder {
-    protected config: Config;
+    protected options: DatabaseSeederOptions;
 
-    protected options: Partial<Config>;
-
-    constructor(options?: Partial<Config>) {
-        this.config = useConfig();
-        this.options = options || {};
-    }
-
-    private getOption<K extends keyof Config>(key: K) : Config[K] {
-        if (
-            hasOwnProperty(this.options, key) &&
-            typeof this.options[key] !== 'undefined'
-        ) {
-            return this.options[key] as Config[K];
-        }
-
-        return this.config[key];
+    constructor(options: Partial<DatabaseSeederOptions>) {
+        this.options = {
+            ...options,
+            userAdminEnabled: options.userAdminEnabled ?? true,
+            userAdminName: options.userAdminName ?? 'admin',
+            userAdminPassword: options.userAdminPassword || 'start123',
+            robotAdminEnabled: options.robotAdminEnabled ?? false,
+            robotAdminName: options.robotAdminName ?? 'system',
+            permissions: options.permissions || [],
+        };
     }
 
     public async run(dataSource: DataSource) : Promise<any> {
@@ -147,27 +132,27 @@ export class DatabaseSeeder implements Seeder {
          */
         const userRepository = new UserRepository(dataSource);
         let user = await userRepository.findOneBy({
-            name: this.getOption('userAdminName'),
+            name: this.options.userAdminName,
             realm_id: realm.id,
         });
 
-        const userPassword = this.getOption('userAdminPassword');
+        const userPassword = this.options.userAdminPassword;
         if (!user) {
             user = userRepository.create({
-                name: this.getOption('userAdminName'),
+                name: this.options.userAdminName,
                 password: await hash(userPassword),
                 email: 'peter.placzek1996@gmail.com',
                 realm_id: realm.id,
-                active: this.getOption('userAdminEnabled'),
+                active: this.options.userAdminEnabled,
             });
 
             response.user = user;
         } else {
-            if (this.getOption('userAdminPasswordReset')) {
+            if (this.options.userAdminPasswordReset) {
                 user.password = await hash(userPassword);
             }
 
-            user.active = this.getOption('userAdminEnabled');
+            user.active = this.options.userAdminEnabled;
         }
 
         await userRepository.save(user);
@@ -197,17 +182,17 @@ export class DatabaseSeeder implements Seeder {
          */
         const robotRepository = dataSource.getRepository<Robot>(RobotEntity);
         let robot = await robotRepository.findOneBy({
-            name: this.getOption('robotAdminName'),
+            name: this.options.robotAdminName,
             realm_id: realm.id,
         });
 
-        const secret = this.getOption('robotAdminSecret') || createNanoID(64);
+        const secret = this.options.robotAdminSecret || createNanoID(64);
         if (!robot) {
             robot = robotRepository.create({
-                name: this.getOption('robotAdminName'),
+                name: this.options.robotAdminName,
                 realm_id: realm.id,
                 secret: await hash(secret),
-                active: this.getOption('robotAdminEnabled'),
+                active: this.options.robotAdminEnabled,
             });
 
             await robotRepository.save(robot);
@@ -215,15 +200,15 @@ export class DatabaseSeeder implements Seeder {
             robot.secret = secret;
             response.robot = robot;
         } else {
-            if (this.getOption('robotAdminSecretReset')) {
+            if (this.options.robotAdminSecretReset) {
                 robot.secret = await hash(secret);
             }
 
-            robot.active = this.getOption('robotAdminEnabled');
+            robot.active = this.options.robotAdminEnabled;
 
             await robotRepository.save(robot);
 
-            if (this.getOption('robotAdminSecretReset')) {
+            if (this.options.robotAdminSecretReset) {
                 robot.secret = secret;
                 response.robot = robot;
             }
@@ -254,7 +239,7 @@ export class DatabaseSeeder implements Seeder {
          * Create all permissions
          */
         let permissionNames : string[];
-        const permissionNamesRaw = this.getOption('permissions');
+        const permissionNamesRaw = this.options.permissions;
         if (Array.isArray(permissionNamesRaw)) {
             permissionNames = getPermissions(permissionNamesRaw);
         } else if (typeof permissionNamesRaw === 'string') {

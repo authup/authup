@@ -7,10 +7,9 @@
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import {
-    resetCommand,
+    executeResetCommand,
 } from '../../commands';
-import { setupConfig } from '../../config';
-import { buildDataSourceOptions } from '../../database';
+import { applyConfig, buildConfig, readConfigRaw } from '../../config';
 
 interface ResetArguments extends Arguments {
     config: string | undefined;
@@ -30,15 +29,17 @@ export class ResetCommand implements CommandModule {
     }
 
     async handler(args: ResetArguments) {
-        await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
+        const config = buildConfig(raw);
 
-        const dataSourceOptions = await buildDataSourceOptions();
+        applyConfig(config);
 
-        await resetCommand({
-            dataSourceOptions,
-        });
+        await executeResetCommand();
 
         process.exit(0);
     }

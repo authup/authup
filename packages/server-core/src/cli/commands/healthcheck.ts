@@ -8,7 +8,7 @@
 import http from 'node:http';
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { setupConfig } from '../../config';
+import { buildConfig, readConfigRaw } from '../../config';
 
 interface HealthCheckArguments extends Arguments {
     config: string | undefined;
@@ -28,9 +28,13 @@ export class HealthCheckCommand implements CommandModule {
     }
 
     async handler(args: HealthCheckArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
+        const config = buildConfig(raw);
 
         const healthCheck = http.request(
             {

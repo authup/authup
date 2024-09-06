@@ -7,7 +7,7 @@
 
 import { createVaultClient, setVaultFactory } from '@authup/server-kit';
 
-export function setupVault(data: string | boolean) {
+export function applyConfigVault(data: string | boolean) {
     if (
         typeof data === 'boolean' ||
         typeof data === 'undefined'

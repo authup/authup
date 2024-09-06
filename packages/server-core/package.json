@@ -45,7 +45,6 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/config": "^1.0.0-beta.19",
         "@authup/kit": "^1.0.0-beta.19",
         "@authup/core-kit": "^1.0.0-beta.19",
         "@authup/core-http-kit": "^1.0.0-beta.19",
@@ -61,6 +60,7 @@
         "@validup/adapter-validator": "^0.1.6",
         "@validup/adapter-zod": "^0.1.6",
         "better-sqlite3": "^11.2.1",
+        "confinity": "^1.0.0-beta.1",
         "cors": "^2.8.5",
         "dotenv": "^16.4.5",
         "dycraft": "^1.1.0",

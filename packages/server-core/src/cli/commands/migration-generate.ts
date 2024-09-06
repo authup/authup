@@ -11,7 +11,9 @@ import { createDatabase, dropDatabase, generateMigration } from 'typeorm-extensi
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
-import { setupConfig, setupLogger } from '../../config';
+import {
+    applyConfig, buildConfig, readConfigRaw,
+} from '../../config';
 import { extendDataSourceOptions } from '../../database';
 
 interface MigrationGenerateArguments extends Arguments {
@@ -32,14 +34,14 @@ export class MigrationGenerateCommand implements CommandModule {
     }
 
     async handler(args: MigrationGenerateArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
-
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
+        const config = buildConfig(raw);
+        applyConfig(config);
 
         const connections : DataSourceOptions[] = [
             {
@@ -68,7 +70,7 @@ export class MigrationGenerateCommand implements CommandModule {
         const timestamp = Date.now();
 
         for (let i = 0; i < connections.length; i++) {
-            const dataSourceOptions = await extendDataSourceOptions(connections[i]);
+            const dataSourceOptions = extendDataSourceOptions(connections[i]);
             const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
             await dropDatabase({ options: dataSourceOptions });

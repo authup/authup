@@ -7,9 +7,10 @@
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useLogger } from '@authup/server-kit';
-import { startCommand } from '../../commands';
-import { setupConfig, setupLogger } from '../../config';
-import { buildDataSourceOptions } from '../../database';
+import { executeStartCommand } from '../../commands';
+import {
+    applyConfig, buildConfig, readConfigRaw,
+} from '../../config';
 
 interface StartArguments extends Arguments {
     config: string | undefined;
@@ -29,20 +30,17 @@ export class StartCommand implements CommandModule {
     }
 
     async handler(args: StartArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                file: args.config,
+            },
         });
-
-        const dataSourceOptions = await buildDataSourceOptions();
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
+        const config = buildConfig(raw);
+        applyConfig(config);
 
         try {
-            await startCommand({
-                dataSourceOptions,
-            });
+            await executeStartCommand();
         } catch (e) {
             useLogger().error(e);
 

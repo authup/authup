@@ -15,7 +15,7 @@ export function isRedisClient(data: unknown) : data is RedisClient {
         typeof data.disconnect === 'function';
 }
 
-export function setupRedis(data: string | boolean | RedisClient | RedisClientOptions): void {
+export function applyConfigRedis(data: string | boolean | RedisClient | RedisClientOptions): void {
     if (typeof data === 'boolean' || !data) {
         if (data) {
             setRedisFactory(() => createRedisClient({

@@ -6,18 +6,16 @@
  */
 
 import {
-    oneOf,
-    read,
-    readArray,
-    readBool,
-    readInt,
+    oneOf, read, readArray, readBool, readInt,
 } from 'envix';
 import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-extension';
-import { EnvironmentVariableName } from './constants';
+import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { EnvironmentVariableName } from '../../env';
 import type { ConfigInput } from '../types';
-import { isDatabaseConnectionConfigurationSupported } from '../utils';
 
-export function readConfigFromEnv() : ConfigInput {
+export function readConfigRawFromEnv() : ConfigInput {
     const options : ConfigInput = {};
 
     const env = read(EnvironmentVariableName.NODE_ENV);
@@ -33,13 +31,10 @@ export function readConfigFromEnv() : ConfigInput {
     // -------------------------------------------------------------
 
     if (hasEnvDataSourceOptions()) {
-        const databaseOptions = readDataSourceOptionsFromEnv();
-        if (
-            databaseOptions &&
-            isDatabaseConnectionConfigurationSupported(databaseOptions)
-        ) {
-            options.db = databaseOptions;
-        }
+        // todo: type casting should be avoided
+        options.db = readDataSourceOptionsFromEnv() as MysqlConnectionOptions |
+        PostgresConnectionOptions |
+        BetterSqlite3ConnectionOptions;
     }
 
     const redis = oneOf([

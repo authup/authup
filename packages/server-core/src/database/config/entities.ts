@@ -8,7 +8,8 @@
 import type { DataSourceOptions } from 'typeorm';
 
 import {
-    ClientEntity, ClientScopeEntity,
+    ClientEntity,
+    ClientScopeEntity,
     IdentityProviderAccountEntity,
     IdentityProviderAttributeEntity,
     IdentityProviderAttributeMappingEntity,

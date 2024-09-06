@@ -18,20 +18,20 @@ import {
     PermissionSubscriber,
     PolicyAttributeSubscriber,
     PolicySubscriber,
+    RealmSubscriber,
     RobotPermissionSubscriber,
     RobotRoleSubscriber,
     RobotSubscriber,
     RoleAttributeSubscriber,
     RolePermissionSubscriber,
     RoleSubscriber,
-    ScopeSubscriber,
 
+    ScopeSubscriber,
     UserAttributeSubscriber,
     UserPermissionSubscriber,
     UserRoleSubscriber,
     UserSubscriber,
 } from '../subscribers';
-import { RealmSubscriber } from '../subscribers/realm';
 
 export function setSubscribersForDataSourceOptions<T extends DataSourceOptions>(options: T) : T {
     options = {

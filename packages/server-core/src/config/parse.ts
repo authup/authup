@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isObject } from '@authup/kit';
+import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import zod from 'zod';
 import type { Config, ConfigInput } from './types';
-import type { DatabaseConnectionOptions } from './utils';
-import { isDatabaseConnectionConfiguration, isDatabaseConnectionConfigurationSupported } from './utils';
 
 export function parseConfig(input: unknown = {}): ConfigInput {
     const schema = zod.object({
@@ -16,9 +18,8 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         rootPath: zod.string().optional(),
         writableDirectoryPath: zod.string().optional(),
 
-        db: zod.custom<DatabaseConnectionOptions>(
-            (value) => isDatabaseConnectionConfiguration(value) &&
-                isDatabaseConnectionConfigurationSupported(value),
+        db: zod.custom< MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
+            (value) => isObject(value),
         ).optional(),
         redis: zod.lazy(() => zod.union([
             zod.string().optional(),

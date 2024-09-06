@@ -20,9 +20,8 @@ import {
     isSMTPClientUsable, useSMTPClient,
 } from '../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../domains';
-import {
-    EnvironmentName, useConfig,
-} from '../../../../../config';
+import { useConfig } from '../../../../../config';
+import { EnvironmentName } from '../../../../../env';
 
 export class AuthPasswordForgotRequestValidator extends Container<User> {
     constructor(options: ContainerOptions<User> = {}) {
