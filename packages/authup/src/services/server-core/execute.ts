@@ -10,7 +10,7 @@ import { ServiceCommand, ServicePackageName } from '../constants';
 import type { ShellCommandExecContext } from '../../utils';
 import { findModulePath } from '../../utils';
 
-export function buildServerCoreExecutionContext(
+export function buildServerCoreShellCommandExecContext(
     ctx: ShellCommandExecContext,
 ) : ShellCommandExecContext {
     let command : string;
@@ -36,6 +36,8 @@ export function buildServerCoreExecutionContext(
             throw new Error(`The command ${ctx.command} is not supported.`);
         }
     }
+
+    // todo: append config directory & file
 
     return {
         ...ctx,

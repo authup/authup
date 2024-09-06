@@ -7,11 +7,7 @@
 
 import { Container } from 'confinity';
 import type { ConfigInput } from '../types';
-
-export type ConfigReadFsOptions = {
-    cwd?: string,
-    file?: string | string[]
-};
+import type { ConfigReadFsOptions } from './types';
 
 export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) {
     const container = new Container({

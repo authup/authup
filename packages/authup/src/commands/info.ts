@@ -5,34 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Container } from '@authup/config';
 import type { CAC } from 'cac';
 import consola from 'consola';
-import { buildClientWebConfig, buildServerCoreConfig } from '../services';
+import {
+    buildClientWebConfig, buildServerCoreConfig, readClientWebConfigRaw, readServerCoreConfig,
+} from '../services';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
         .option('-c, --config [config]', 'Specify a configuration file')
         .action(async (ctx: Record<string, any>) => {
-            const container = new Container({
-                prefix: 'authup',
-                keys: [
-                    'client/web',
-                    'server/core',
-                ],
+            const clientWebRaw = await readClientWebConfigRaw({
+                fs: {
+                    file: ctx.config,
+                },
             });
-            if (ctx.config) {
-                await container.loadFromFilePath(ctx.config);
-            } else {
-                await container.load();
-            }
+            const clientWeb = buildClientWebConfig(clientWebRaw);
 
-            const clientWeb = await buildClientWebConfig(container);
             consola.info(`Host: ${clientWeb.host}`);
             consola.info(`Port: ${clientWeb.port}`);
             consola.info('------------');
 
-            const serverCore = await buildServerCoreConfig();
+            const serverCoreRaw = await readServerCoreConfig({
+                fs: {
+                    file: ctx.config,
+                },
+            });
+            const serverCore = await buildServerCoreConfig(serverCoreRaw);
             consola.info(`Host: ${serverCore.host}`);
             consola.info(`Port: ${serverCore.port}`);
             consola.info(`Environment: ${serverCore.env}`);

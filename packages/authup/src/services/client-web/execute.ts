@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildConfig } from '@authup/client-web-config';
-import type { Container } from '@authup/config';
 import path from 'node:path';
 import { ServiceCommand, ServicePackageName } from '../constants';
 import type { ShellCommandExecContext } from '../../utils';
 import { findModulePath } from '../../utils';
+import { buildClientWebConfig, readClientWebConfigRaw } from './config';
 
 function extendEnv(input: Record<string, string | undefined>) {
     const env : Record<string, any> = {};
@@ -27,24 +26,22 @@ function extendEnv(input: Record<string, string | undefined>) {
     return env;
 }
 
-type WebAppExecutionContext = ShellCommandExecContext & {
-    container: Container
-};
-
-export function buildWebAppExecutionContext(
-    ctx: WebAppExecutionContext,
-) : ShellCommandExecContext {
+export async function buildClientWebShellCommandExecContext(
+    ctx: ShellCommandExecContext,
+) : Promise<ShellCommandExecContext> {
     if (ctx.command !== ServiceCommand.START) {
         throw new Error(`The command ${ctx.command} is not supported`);
     }
 
     const env : Record<string, string | undefined> = ctx.env || {};
 
-    const data = ctx.container.getData('client/web');
-    const config = buildConfig({
-        data,
-        env: true,
+    const configRaw = await readClientWebConfigRaw({
+        fs: {
+            file: ctx.configFile,
+            cwd: ctx.configDirectory,
+        },
     });
+    const config = buildClientWebConfig(configRaw);
 
     if (config.host) {
         env.HOST = config.host;

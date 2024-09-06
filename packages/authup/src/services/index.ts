@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './check';
 export * from './client-web';
 export * from './server-core';
 export * from './constants';

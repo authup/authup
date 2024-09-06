@@ -7,7 +7,7 @@
 
 import type { OutputOptions } from 'dycraft';
 
-export type Config = {
+export type ClientWebConfig = {
     port: number,
 
     host: string,
@@ -17,9 +17,4 @@ export type Config = {
     publicUrl?: string
 } & Partial<OutputOptions>;
 
-export type ConfigInput = Partial<Config>;
-
-export type ConfigBuildContext = {
-    data?: ConfigInput,
-    env?: boolean
-};
+export type ClientWebConfigInput = Partial<ClientWebConfig>;

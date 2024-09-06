@@ -8,13 +8,8 @@
 import { merge } from 'smob';
 import type { ConfigInput } from '../types';
 import { readConfigRawFromEnv } from './env';
-import type { ConfigReadFsOptions } from './fs';
 import { readConfigRawFromFS } from './fs';
-
-type ConfigRawReadOptions = {
-    fs?: boolean | ConfigReadFsOptions,
-    env?: boolean,
-};
+import type { ConfigRawReadOptions } from './types';
 
 export async function readConfigRaw(options: ConfigRawReadOptions = {}) : Promise<ConfigInput> {
     if (options.fs && options.env) {

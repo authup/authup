@@ -10,6 +10,11 @@ export enum ServicePackageName {
     SERVER_CORE = '@authup/server-core',
 }
 
+export enum PackageID {
+    CLIENT_WEB = 'client.web',
+    SERVER_CORE = 'server.core',
+}
+
 export enum ServiceCommand {
     START = 'start',
     CLEANUP = 'cleanup',

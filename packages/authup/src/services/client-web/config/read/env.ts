@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2023-2023.
+ * Copyright (c) 2023-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import { oneOf, read, readInt } from 'envix';
-import type { ConfigInput } from './type';
+import type { ClientWebConfigInput } from '../type';
 
-export function readConfigFromEnv() : ConfigInput {
-    const config : ConfigInput = {};
+export function readClientWebConfigFromEnv() : ClientWebConfigInput {
+    const config : ClientWebConfigInput = {};
 
     const port = oneOf([
         readInt('UI_PORT'),

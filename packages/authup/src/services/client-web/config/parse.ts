@@ -6,9 +6,9 @@
  */
 
 import zod from 'zod';
-import type { ConfigInput } from './type';
+import type { ClientWebConfigInput } from './type';
 
-export function parseConfig(input: unknown = {}) : ConfigInput {
+export function parseClientWebConfig(input: unknown = {}) : ClientWebConfigInput {
     const schema = zod.object({
         port: zod.number().nonnegative().optional(),
         host: zod.string().optional(),

@@ -8,3 +8,4 @@
 export * from './module';
 export * from './env';
 export * from './fs';
+export * from './types';

@@ -6,8 +6,12 @@
  */
 
 import type { CAC } from 'cac';
+import chalk from 'chalk';
+import consola from 'consola';
+import process from 'node:process';
 import { executeServicesCommand } from '../services/execute';
 import {
+    PackageID,
     ServiceCommand,
 } from '../services';
 
@@ -15,21 +19,20 @@ export function buildStartCommand(cac: CAC) {
     cac
         .command('start [...services]', 'Start a service')
         .option('-c, --config [config]', 'Specify a configuration file')
-        .action(async (keysInput: string[], ctx: Record<string, any>) => {
-            const servicesAllowed = [
-                'client/web',
-                'server/core',
-            ];
-
-            if (!keysInput || keysInput.length === 0) {
-                keysInput = servicesAllowed;
+        .action(async (packages: string[], ctx: Record<string, any>) => {
+            const packagesAvailable = Object.values(PackageID) as string[];
+            for (let i = 0; i < packages.length; i++) {
+                const isValid = packagesAvailable.indexOf(packages[i]) !== -1;
+                if (!isValid) {
+                    consola.error(`${chalk.red(`${packages[i]}`)}: The package does not exist.`);
+                    process.exit(1);
+                }
             }
 
             await executeServicesCommand({
-                config: ctx.config,
+                configFile: ctx.config,
                 command: ServiceCommand.START,
-                services: keysInput,
-                servicesAllowed,
+                packages: packages as PackageID[],
             });
         });
 }
