@@ -8,7 +8,10 @@
 import type { CAC } from 'cac';
 import consola from 'consola';
 import {
-    buildClientWebConfig, buildServerCoreConfig, readClientWebConfigRaw, readServerCoreConfig,
+    buildClientWebConfig,
+    buildServerCoreConfig,
+    readClientWebConfigRaw,
+    readServerCoreConfig,
 } from '../packages';
 
 export function buildInfoCommand(cac: CAC) {
@@ -16,6 +19,25 @@ export function buildInfoCommand(cac: CAC) {
         .option('-cF, --configFile [configFile]', 'Specify a configuration file')
         .option('-cD, --configDirectory [configDirectory]', 'Specify a configuration directory')
         .action(async (ctx: Record<string, any>) => {
+            const serverCoreRaw = await readServerCoreConfig({
+                fs: {
+                    file: ctx.configFile,
+                    cwd: ctx.configDirectory,
+                },
+            });
+            const serverCore = await buildServerCoreConfig(serverCoreRaw);
+
+            consola.info(`Environment: ${serverCore.env}`);
+            consola.info(`RootPath: ${serverCore.rootPath}`);
+            consola.info(`WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
+
+            consola.info('-'.repeat(50));
+
+            consola.info(`[server.core] Host: ${serverCore.host}`);
+            consola.info(`[server.core] Port: ${serverCore.port}`);
+
+            consola.info('-'.repeat(50));
+
             const clientWebRaw = await readClientWebConfigRaw({
                 fs: {
                     file: ctx.configFile,
@@ -24,22 +46,10 @@ export function buildInfoCommand(cac: CAC) {
             });
             const clientWeb = buildClientWebConfig(clientWebRaw);
 
-            consola.info(`Host: ${clientWeb.host}`);
-            consola.info(`Port: ${clientWeb.port}`);
-            consola.info('------------');
+            consola.info(`[client.web] Host: ${clientWeb.host}`);
+            consola.info(`[client.web] Port: ${clientWeb.port}`);
 
-            const serverCoreRaw = await readServerCoreConfig({
-                fs: {
-                    file: ctx.config,
-                },
-            });
-            const serverCore = await buildServerCoreConfig(serverCoreRaw);
-            consola.info(`Host: ${serverCore.host}`);
-            consola.info(`Port: ${serverCore.port}`);
-            consola.info(`Environment: ${serverCore.env}`);
-            consola.info(`RootPath: ${serverCore.rootPath}`);
-            consola.info(`WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
-            consola.info('------------');
+            consola.info('-'.repeat(50));
 
             consola.info('Report an issue: https://github.com/authup/authup/issues/new');
             consola.info('Suggest an improvement: https://github.com/authup/authup/discussions/new');
