@@ -6,6 +6,7 @@
  */
 
 import type { CAC } from 'cac';
+import chalk from 'chalk';
 import consola from 'consola';
 import {
     buildClientWebConfig,
@@ -27,14 +28,12 @@ export function buildInfoCommand(cac: CAC) {
             });
             const serverCore = await buildServerCoreConfig(serverCoreRaw);
 
-            consola.info(`Environment: ${serverCore.env}`);
-            consola.info(`RootPath: ${serverCore.rootPath}`);
-            consola.info(`WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
-
-            consola.info('-'.repeat(50));
-
-            consola.info(`[server.core] Host: ${serverCore.host}`);
-            consola.info(`[server.core] Port: ${serverCore.port}`);
+            consola.info(`${chalk.blue('[server.core]')} Environment: ${serverCore.env}`);
+            consola.info(`${chalk.blue('[server.core]')} RootPath: ${serverCore.rootPath}`);
+            consola.info(`${chalk.blue('[server.core]')} WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
+            consola.info(`${chalk.blue('[server.core]')} Host: ${serverCore.host}`);
+            consola.info(`${chalk.blue('[server.core]')} Port: ${serverCore.port}`);
+            consola.info(`${chalk.blue('[server.core]')} PublicURL: ${serverCore.publicUrl}`);
 
             consola.info('-'.repeat(50));
 
@@ -46,8 +45,9 @@ export function buildInfoCommand(cac: CAC) {
             });
             const clientWeb = buildClientWebConfig(clientWebRaw);
 
-            consola.info(`[client.web] Host: ${clientWeb.host}`);
-            consola.info(`[client.web] Port: ${clientWeb.port}`);
+            consola.info(`${chalk.blue('[client.web]')} Host: ${clientWeb.host}`);
+            consola.info(`${chalk.blue('[client.web]')} Port: ${clientWeb.port}`);
+            consola.info(`${chalk.blue('[client.web]')} PublicURL: ${clientWeb.publicUrl}`);
 
             consola.info('-'.repeat(50));
 
