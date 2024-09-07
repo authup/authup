@@ -4,7 +4,8 @@
     "compilerOptions": {
         "outDir": "./dist",
         "lib": ["ESNext"],
-        "module": "CommonJS"
+        "module": "CommonJS",
+        "resolveJsonModule": true
     },
 
     "include": [

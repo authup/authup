@@ -5,50 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Arguments, Argv, CommandModule } from 'yargs';
+import { defineCommand } from 'citty';
+import process from 'node:process';
 import {
     executeResetCommand,
 } from '../../commands';
 import {
-    applyConfig, buildConfig, readConfigRaw, setConfig,
+    applyConfig, useConfig,
 } from '../../config';
 
-interface ResetArguments extends Arguments {
-    configDirectory: string | undefined;
-    configFile: string | undefined;
-}
+export function defineCLIResetCommand() {
+    return defineCommand({
+        meta: {
+            name: 'reset',
+        },
+        async setup() {
+            const config = useConfig();
+            applyConfig(config);
 
-export class ResetCommand implements CommandModule {
-    command = 'reset';
+            await executeResetCommand();
 
-    describe = 'Reset the server.';
-
-    builder(args: Argv) {
-        return args
-            .option('configDirectory', {
-                alias: 'cD',
-                describe: 'Config directory path.',
-            })
-            .option('configFile', {
-                alias: 'cF',
-                describe: 'Name of one or more configuration files.',
-            });
-    }
-
-    async handler(args: ResetArguments) {
-        const raw = await readConfigRaw({
-            env: true,
-            fs: {
-                cwd: args.configDirectory,
-                file: args.configFile,
-            },
-        });
-        const config = buildConfig(raw);
-        setConfig(config);
-        applyConfig(config);
-
-        await executeResetCommand();
-
-        process.exit(0);
-    }
+            process.exit(0);
+        },
+    });
 }
