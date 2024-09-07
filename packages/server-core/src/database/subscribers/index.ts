@@ -17,6 +17,8 @@ export * from './permission';
 export * from './policy';
 export * from './policy-attribute';
 
+export * from './realm';
+
 export * from './robot';
 export * from './robot-permission';
 export * from './robot-role';

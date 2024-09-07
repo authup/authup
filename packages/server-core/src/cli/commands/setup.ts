@@ -8,14 +8,14 @@
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useLogger } from '@authup/server-kit';
-import { setupCommand } from '../../commands';
+import { executeSetupCommand } from '../../commands';
 import {
-    setupConfig, setupLogger,
+    applyConfig, buildConfig, readConfigRaw, setConfig,
 } from '../../config';
-import { buildDataSourceOptions } from '../../database';
 
 interface SetupArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
     database: boolean;
     databaseSchema: boolean;
     databaseSeed: boolean;
@@ -30,9 +30,13 @@ export class SetupCommand implements CommandModule {
     // eslint-disable-next-line class-methods-use-this
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             })
 
             .option('database', {
@@ -62,22 +66,19 @@ export class SetupCommand implements CommandModule {
 
     // eslint-disable-next-line class-methods-use-this
     async handler(args: SetupArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                cwd: args.configDirectory,
+                file: args.configFile,
+            },
         });
-
-        const dataSourceOptions = await buildDataSourceOptions();
-
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
+        const config = buildConfig(raw);
+        setConfig(config);
+        applyConfig(config);
 
         try {
-            await setupCommand({
-                dataSourceOptions,
-                ...args,
-            });
+            await executeSetupCommand(args);
         } catch (e) {
             useLogger().error(e);
 

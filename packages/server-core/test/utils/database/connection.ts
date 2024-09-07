@@ -13,12 +13,14 @@ import {
 } from 'typeorm';
 import {
     DatabaseSeeder,
-    extendDataSourceOptions,
+    extendDataSourceOptions, useConfig,
 } from '../../../src';
 import type { DatabaseRootSeederResult } from '../../../src';
 
 export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
-    const options = await extendDataSourceOptions({
+    const config = useConfig();
+
+    const options = extendDataSourceOptions({
         type: 'better-sqlite3',
         database: ':memory:',
     });
@@ -35,9 +37,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
 
     setDataSource(dataSource);
 
-    const core = new DatabaseSeeder({
-        robotAdminEnabled: true,
-    });
+    const core = new DatabaseSeeder(config);
 
     return core.run(dataSource);
 }

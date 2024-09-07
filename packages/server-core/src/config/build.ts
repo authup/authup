@@ -10,21 +10,19 @@ import { defineGetter, dycraft } from 'dycraft';
 import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
-import { merge } from 'smob';
-import { EnvironmentName, readConfigFromEnv } from './env';
+import type { DataSourceOptions } from 'typeorm';
+import { EnvironmentName } from '../env';
 import { parseConfig } from './parse';
-import type { Config, ConfigBuildContext, ConfigInput } from './types';
-import { type DatabaseConnectionOptions } from './utils';
+import type { Config, ConfigInput } from './types';
 
-export function buildConfig(
-    context: ConfigBuildContext = {},
-): Config {
+export function buildConfig(input: ConfigInput = {}): Config {
     const config = dycraft({
         defaults: {
             env: read('NODE_ENV', EnvironmentName.DEVELOPMENT),
             rootPath: process.cwd(),
             writableDirectoryPath: path.join(process.cwd(), 'writable'),
 
+            logger: true,
             redis: false,
             smtp: false,
             vault: false,
@@ -62,7 +60,7 @@ export function buildConfig(
             permissions: [],
         } satisfies Partial<Config>,
         getters: {
-            db: defineGetter((context) : DatabaseConnectionOptions => ({
+            db: defineGetter((context) : DataSourceOptions => ({
                 type: 'better-sqlite3',
                 database: path.join(context.get('writableDirectoryPath'), 'db.sql'),
             })),
@@ -89,12 +87,5 @@ export function buildConfig(
         },
     }) as Config;
 
-    let raw : ConfigInput;
-    if (context.env) {
-        raw = merge(readConfigFromEnv(), context.data || {});
-    } else {
-        raw = context.data || {};
-    }
-
-    return extendObject(config, parseConfig(raw));
+    return extendObject(config, parseConfig(input));
 }

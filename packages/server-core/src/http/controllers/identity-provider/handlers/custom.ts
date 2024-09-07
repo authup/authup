@@ -24,9 +24,10 @@ import {
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
+import { EnvironmentName } from '../../../../env';
 import { setRequestEnv, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';
-import { EnvironmentName, useConfig } from '../../../../config';
+import { useConfig } from '../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
     const repository = new IdentityProviderRepository(dataSource);

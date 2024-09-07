@@ -7,13 +7,15 @@
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import {
-    resetCommand,
+    executeResetCommand,
 } from '../../commands';
-import { setupConfig } from '../../config';
-import { buildDataSourceOptions } from '../../database';
+import {
+    applyConfig, buildConfig, readConfigRaw, setConfig,
+} from '../../config';
 
 interface ResetArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
 }
 
 export class ResetCommand implements CommandModule {
@@ -23,22 +25,29 @@ export class ResetCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             });
     }
 
     async handler(args: ResetArguments) {
-        await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                cwd: args.configDirectory,
+                file: args.configFile,
+            },
         });
+        const config = buildConfig(raw);
+        setConfig(config);
+        applyConfig(config);
 
-        const dataSourceOptions = await buildDataSourceOptions();
-
-        await resetCommand({
-            dataSourceOptions,
-        });
+        await executeResetCommand();
 
         process.exit(0);
     }

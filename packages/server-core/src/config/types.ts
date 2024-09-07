@@ -13,8 +13,10 @@ import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { Options as BodyOptions } from '@routup/basic/body';
 import type { CorsOptions } from 'cors';
+import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import type { SMTPOptions } from '../core';
-import type { DatabaseConnectionOptions } from './utils';
 
 export type Config = {
     /**
@@ -37,9 +39,16 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * default: true
+     */
+    logger: boolean;
+
+    /**
      * default driver: better-sqlite3
      */
-    db: DatabaseConnectionOptions,
+    db: MysqlConnectionOptions |
+    PostgresConnectionOptions |
+    BetterSqlite3ConnectionOptions,
 
     /**
      * default: true
@@ -214,12 +223,3 @@ export type Config = {
 };
 
 export type ConfigInput = Partial<Config>;
-
-export type ConfigBuildContext = {
-    data?: ConfigInput,
-    env?: boolean
-};
-
-export type ConfigSetupContext = {
-    filePath?: string | string[]
-};

@@ -5,40 +5,51 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Container } from '@authup/config';
 import type { CAC } from 'cac';
+import chalk from 'chalk';
 import consola from 'consola';
-import { buildClientWebConfig, buildServerCoreConfig } from '../services';
+import {
+    buildClientWebConfig,
+    buildServerCoreConfig,
+    readClientWebConfigRaw,
+    readServerCoreConfig,
+} from '../packages';
 
 export function buildInfoCommand(cac: CAC) {
     cac.command('info', 'Get information about the configuration.')
-        .option('-c, --config [config]', 'Specify a configuration file')
+        .option('-cF, --configFile [configFile]', 'Specify a configuration file')
+        .option('-cD, --configDirectory [configDirectory]', 'Specify a configuration directory')
         .action(async (ctx: Record<string, any>) => {
-            const container = new Container({
-                prefix: 'authup',
-                keys: [
-                    'client/web',
-                    'server/core',
-                ],
+            const serverCoreRaw = await readServerCoreConfig({
+                fs: {
+                    file: ctx.configFile,
+                    cwd: ctx.configDirectory,
+                },
             });
-            if (ctx.config) {
-                await container.loadFromFilePath(ctx.config);
-            } else {
-                await container.load();
-            }
+            const serverCore = await buildServerCoreConfig(serverCoreRaw);
 
-            const clientWeb = await buildClientWebConfig(container);
-            consola.info(`Host: ${clientWeb.host}`);
-            consola.info(`Port: ${clientWeb.port}`);
-            consola.info('------------');
+            consola.info(`${chalk.blue('[server.core]')} Environment: ${serverCore.env}`);
+            consola.info(`${chalk.blue('[server.core]')} RootPath: ${serverCore.rootPath}`);
+            consola.info(`${chalk.blue('[server.core]')} WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
+            consola.info(`${chalk.blue('[server.core]')} Host: ${serverCore.host}`);
+            consola.info(`${chalk.blue('[server.core]')} Port: ${serverCore.port}`);
+            consola.info(`${chalk.blue('[server.core]')} PublicURL: ${serverCore.publicUrl}`);
 
-            const serverCore = await buildServerCoreConfig(container);
-            consola.info(`Host: ${serverCore.host}`);
-            consola.info(`Port: ${serverCore.port}`);
-            consola.info(`Environment: ${serverCore.env}`);
-            consola.info(`RootPath: ${serverCore.rootPath}`);
-            consola.info(`WritableDirectoryPath: ${serverCore.writableDirectoryPath}`);
-            consola.info('------------');
+            consola.info('-'.repeat(50));
+
+            const clientWebRaw = await readClientWebConfigRaw({
+                fs: {
+                    file: ctx.configFile,
+                    cwd: ctx.configDirectory,
+                },
+            });
+            const clientWeb = buildClientWebConfig(clientWebRaw);
+
+            consola.info(`${chalk.blue('[client.web]')} Host: ${clientWeb.host}`);
+            consola.info(`${chalk.blue('[client.web]')} Port: ${clientWeb.port}`);
+            consola.info(`${chalk.blue('[client.web]')} PublicURL: ${clientWeb.publicUrl}`);
+
+            consola.info('-'.repeat(50));
 
             consola.info('Report an issue: https://github.com/authup/authup/issues/new');
             consola.info('Suggest an improvement: https://github.com/authup/authup/discussions/new');

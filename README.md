@@ -90,9 +90,7 @@ The repository contains the following packages:
 |-----------------------------------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](packages/authup)                                             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
 | [client-web](packages/client-web)                                     | Application | A web application interface for end users.                                                            |
-| [client-web-config](packages/client-web-config)                       | Library     | A library for creating and managing configurations for the web client application.                    |
 | [client-web-kit](packages/client-web-kit)                             | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
-| [config](packages/config)                                             | Library     | A collection of configuration helpers for the client and server side.                                 |
 | [core-kit](packages/core-kit)                                         | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
 | [core-realtime-kit](packages/core-realtime-kit)                       | Library     | A toolkit for the core socket service.                                                                |
 | [kit](packages/kit)                                                   | Library     | A toolkit for the whole ecosystem.                                                                    |

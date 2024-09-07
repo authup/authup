@@ -8,4 +8,4 @@
 export * from './reset';
 export * from './setup';
 export * from './start';
-export * from './type';
+export * from './types';

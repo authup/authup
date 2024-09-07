@@ -5,19 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { dropDatabase } from 'typeorm-extension';
+import { dropDatabase, useDataSourceOptions } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
-import { buildDataSourceOptions } from '../database';
-import type { ResetCommandContext } from './type';
+import { extendDataSourceOptions } from '../database';
 
-export async function resetCommand(context?: ResetCommandContext) {
-    context = context || {};
-
+export async function executeResetCommand() {
     const logger = useLogger();
 
     logger.info('Executing database reset.');
 
-    const options = context.dataSourceOptions || await buildDataSourceOptions();
+    const options = await useDataSourceOptions();
+    extendDataSourceOptions(options);
+
     await dropDatabase({ options });
 
     logger.info('Executed database reset.');

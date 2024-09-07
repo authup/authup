@@ -8,10 +8,11 @@
 import http from 'node:http';
 import process from 'node:process';
 import type { Arguments, Argv, CommandModule } from 'yargs';
-import { setupConfig } from '../../config';
+import { buildConfig, readConfigRaw } from '../../config';
 
 interface HealthCheckArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
 }
 
 export class HealthCheckCommand implements CommandModule {
@@ -21,16 +22,25 @@ export class HealthCheckCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             });
     }
 
     async handler(args: HealthCheckArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                cwd: args.configDirectory,
+                file: args.configFile,
+            },
         });
+        const config = buildConfig(raw);
 
         const healthCheck = http.request(
             {

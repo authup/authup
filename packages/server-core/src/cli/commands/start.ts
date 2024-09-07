@@ -7,12 +7,14 @@
 
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { useLogger } from '@authup/server-kit';
-import { startCommand } from '../../commands';
-import { setupConfig, setupLogger } from '../../config';
-import { buildDataSourceOptions } from '../../database';
+import { executeStartCommand } from '../../commands';
+import {
+    applyConfig, buildConfig, readConfigRaw, setConfig,
+} from '../../config';
 
 interface StartArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
 }
 
 export class StartCommand implements CommandModule {
@@ -22,27 +24,30 @@ export class StartCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             });
     }
 
     async handler(args: StartArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                cwd: args.configDirectory,
+                file: args.configFile,
+            },
         });
-
-        const dataSourceOptions = await buildDataSourceOptions();
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
+        const config = buildConfig(raw);
+        setConfig(config);
+        applyConfig(config);
 
         try {
-            await startCommand({
-                dataSourceOptions,
-            });
+            await executeStartCommand();
         } catch (e) {
             useLogger().error(e);
 

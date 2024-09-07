@@ -12,6 +12,9 @@ import { parseProcessOutputData } from './process-output';
 import { stringifyObjectArgs } from './stringify-object-args';
 
 export type ShellCommandExecContext = {
+    configFile?: string,
+    configDirectory?: string,
+
     command: string,
     env?: Record<string, string | undefined>,
     envFromProcess?: boolean,

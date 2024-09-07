@@ -7,11 +7,11 @@
 
 import {
     buildConfig,
-    unsetConfig,
+    readConfigRawFromFS,
 } from '../../../src';
 
 describe('src/config/*.ts', () => {
-    it('should set & use config', async () => {
+    it('should build config with defaults', async () => {
         const config = buildConfig();
 
         expect(config).toBeDefined();
@@ -21,7 +21,15 @@ describe('src/config/*.ts', () => {
 
         expect(config).toBeDefined();
         expect(config.middlewareBody).toBeFalsy();
+    });
 
-        unsetConfig();
+    it('should load config form fs', async () => {
+        const config = await readConfigRawFromFS({
+            cwd: 'test/data/config',
+        });
+
+        expect(config.db).toBeDefined();
+        expect(config.db.type).toEqual('mysql');
+        expect(config.db.database).toEqual('core');
     });
 });

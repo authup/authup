@@ -6,14 +6,18 @@
  */
 
 import { useLogger } from '@authup/server-kit';
+import { useDataSourceOptions } from 'typeorm-extension';
 import type { Arguments, Argv, CommandModule } from 'yargs';
 import { DataSource } from 'typeorm';
-import { setupConfig, setupLogger } from '../../config';
+import {
+    applyConfig, buildConfig, readConfigRaw, setConfig,
+} from '../../config';
 
-import { buildDataSourceOptions } from '../../database';
+import { extendDataSourceOptions } from '../../database';
 
 interface MigrationStatusArguments extends Arguments {
-    config: string | undefined;
+    configDirectory: string | undefined;
+    configFile: string | undefined;
 }
 
 export class MigrationStatusCommand implements CommandModule {
@@ -23,23 +27,30 @@ export class MigrationStatusCommand implements CommandModule {
 
     builder(args: Argv) {
         return args
-            .option('config', {
-                alias: 'c',
-                describe: 'Path to one ore more configuration files.',
+            .option('configDirectory', {
+                alias: 'cD',
+                describe: 'Config directory path.',
+            })
+            .option('configFile', {
+                alias: 'cF',
+                describe: 'Name of one or more configuration files.',
             });
     }
 
     async handler(args: MigrationStatusArguments) {
-        const config = await setupConfig({
-            filePath: args.config,
+        const raw = await readConfigRaw({
+            env: true,
+            fs: {
+                cwd: args.configDirectory,
+                file: args.configFile,
+            },
         });
+        const config = buildConfig(raw);
+        setConfig(config);
+        applyConfig(config);
 
-        setupLogger({
-            directory: config.writableDirectoryPath,
-            env: config.env,
-        });
-
-        const options = await buildDataSourceOptions();
+        const options = await useDataSourceOptions();
+        extendDataSourceOptions(options);
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();
