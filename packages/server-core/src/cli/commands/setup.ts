@@ -5,86 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { defineCommand } from 'citty';
 import process from 'node:process';
-import type { Arguments, Argv, CommandModule } from 'yargs';
-import { useLogger } from '@authup/server-kit';
 import { executeSetupCommand } from '../../commands';
 import {
-    applyConfig, buildConfig, readConfigRaw, setConfig,
+    applyConfig, useConfig,
 } from '../../config';
 
-interface SetupArguments extends Arguments {
-    configDirectory: string | undefined;
-    configFile: string | undefined;
-    database: boolean;
-    databaseSchema: boolean;
-    databaseSeed: boolean;
-    documentation: boolean;
-}
+export function defineCLISetupCommand() {
+    return defineCommand({
+        meta: {
+            name: 'setup',
+        },
+        async setup() {
+            const config = useConfig();
+            applyConfig(config);
 
-export class SetupCommand implements CommandModule {
-    command = 'setup';
+            await executeSetupCommand();
 
-    describe = 'Setup the server.';
-
-    // eslint-disable-next-line class-methods-use-this
-    builder(args: Argv) {
-        return args
-            .option('configDirectory', {
-                alias: 'cD',
-                describe: 'Config directory path.',
-            })
-            .option('configFile', {
-                alias: 'cF',
-                describe: 'Name of one or more configuration files.',
-            })
-
-            .option('database', {
-                alias: 'db',
-                describe: 'Create database.',
-                type: 'boolean',
-            })
-
-            .option('databaseSchema', {
-                alias: 'db:schema',
-                describe: 'Setup the schema of database.',
-                type: 'boolean',
-            })
-
-            .option('databaseSeed', {
-                alias: 'db:seed',
-                describe: 'Seed database.',
-                type: 'boolean',
-            })
-
-            .option('documentation', {
-                alias: 'docs',
-                describe: 'Create swagger documentation.',
-                type: 'boolean',
-            });
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async handler(args: SetupArguments) {
-        const raw = await readConfigRaw({
-            env: true,
-            fs: {
-                cwd: args.configDirectory,
-                file: args.configFile,
-            },
-        });
-        const config = buildConfig(raw);
-        setConfig(config);
-        applyConfig(config);
-
-        try {
-            await executeSetupCommand(args);
-        } catch (e) {
-            useLogger().error(e);
-
-            process.exit(1);
-        }
-
-        process.exit(0);
-    }
+            process.exit(0);
+        },
+    });
 }

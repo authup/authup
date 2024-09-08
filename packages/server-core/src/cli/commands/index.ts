@@ -6,9 +6,7 @@
  */
 
 export * from './healthcheck';
-export * from './migration-generate';
-export * from './migration-revert';
-export * from './migration-status';
+export * from './migration';
 export * from './reset';
 export * from './setup';
 export * from './start';

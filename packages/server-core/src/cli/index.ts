@@ -8,35 +8,14 @@
  */
 
 import 'reflect-metadata';
-import yargs from 'yargs';
+import { runMain } from 'citty';
 import dotenv from 'dotenv';
-import {
-    HealthCheckCommand,
-    MigrationGenerateCommand,
-    MigrationRevertCommand,
-    MigrationStatusCommand,
-    ResetCommand,
-    SetupCommand,
-    StartCommand,
-} from './commands';
+import { createCLIEntryPointCommand } from './module';
 
 dotenv.config({
     debug: false,
 });
 
-// eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unused-expressions
-yargs
-    .usage('Usage: $0 <command> [options]')
-    .demandCommand(1)
-    .command(new HealthCheckCommand())
-    .command(new MigrationGenerateCommand())
-    .command(new MigrationRevertCommand())
-    .command(new MigrationStatusCommand())
-    .command(new ResetCommand())
-    .command(new SetupCommand())
-    .command(new StartCommand())
-    .strict()
-    .alias('v', 'version')
-    .help('h')
-    .alias('h', 'help')
-    .argv;
+Promise.resolve()
+    .then(() => createCLIEntryPointCommand())
+    .then((command) => runMain(command));
