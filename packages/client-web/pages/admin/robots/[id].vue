@@ -3,18 +3,18 @@ import { injectHTTPClient, useStore } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
     definePageMeta,
     updateObjectProperties, useToast,
 } from '#imports';
 import {
-    createError, defineNuxtComponent, navigateTo, useRoute,
+    createError, navigateTo, useRoute,
 } from '#app';
 import { LayoutKey, LayoutNavigationID } from '~/config/layout';
 
-export default defineNuxtComponent({
+export default defineComponent({
     async setup() {
         definePageMeta({
             [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
