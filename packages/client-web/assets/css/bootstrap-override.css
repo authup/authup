@@ -22,11 +22,48 @@
     color: inherit;
 }
 
+.nav-pills .nav-link {
+    color: #5b646c;
+    background-color: #ececec;
+    border-color: #171a1d;
+}
+
+.nav-pills .nav-item .nav-link {
+    border-radius: 0;
+}
+
+.nav-pills .nav-item:first-child:not(:last-child) .nav-link {
+    border-radius: var(--bs-border-radius) 0 0 var(--bs-border-radius) !important;
+}
+
+.nav-pills .nav-item:last-child:not(:first-child) .nav-link {
+    border-radius: 0 var(--bs-border-radius) var(--bs-border-radius) 0 !important;
+}
+
+.nav-pills .nav-item:first-child:last-child .nav-link {
+    border-radius: var(--bs-border-radius) !important;
+}
+
+.nav-pills.flex-column .nav-item:first-child:not(:last-child) .nav-link {
+    border-radius: var(--bs-border-radius) var(--bs-border-radius) 0 0 !important;
+}
+
+.nav-pills.flex-column .nav-item:last-child:not(:first-child) .nav-link {
+    border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius) !important;
+}
+
+.nav-pills.flex-column .nav-item:first-child:last-child .nav-link {
+    border-radius: var(--bs-border-radius) !important;
+}
+
 .nav-pills .nav-link.active,
 .nav-pills .nav-link.router-link-exact-active,
 .nav-pills .show>.nav-link {
     color: #fff;
+    /*
     background-color: rgba(29, 33, 36, 0.5);
+     */
+    background-color: #6d7fcc;
     border-color: #171a1d;
 }
 
@@ -118,4 +155,9 @@ a:focus{
 .modal-footer {
     padding: .5rem;
 }
+
+.table > :not(caption) > * > * {
+    --bs-table-bg: none;
+}
+
 
