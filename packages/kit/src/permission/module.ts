@@ -33,7 +33,11 @@ export class PermissionChecker {
             this.realmId = options.realmId;
         }
 
-        this.policyEngine = new PolicyEngine();
+        if (options.policyEngine) {
+            this.policyEngine = options.policyEngine;
+        } else {
+            this.policyEngine = new PolicyEngine();
+        }
     }
 
     // ----------------------------------------------

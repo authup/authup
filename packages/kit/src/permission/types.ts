@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyWithType } from '../policy';
+import type { PolicyEngine, PolicyWithType } from '../policy';
 import type { PermissionProvider } from './provider';
 
 export type PermissionItem = {
@@ -16,5 +16,6 @@ export type PermissionItem = {
 
 export type PermissionCheckerOptions = {
     provider?: PermissionProvider,
+    policyEngine?: PolicyEngine,
     realmId?: string
 };

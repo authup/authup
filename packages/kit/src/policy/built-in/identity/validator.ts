@@ -8,11 +8,11 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { AttributeNamesPolicy } from './types';
+import type { IdentityPolicy } from './types';
 
-export class AttributeNamesPolicyValidator extends Container<AttributeNamesPolicy> {
+export class IdentityPolicyValidator extends Container<IdentityPolicy> {
     protected initialize() {
-        this.mount('names', createValidator(z.array(z.string().min(3).max(128))));
+        this.mount('types', createValidator(z.array(z.string())));
 
         this.mount('invert', createValidator(z.boolean().optional()));
     }

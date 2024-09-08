@@ -18,6 +18,9 @@ export enum BuiltInPolicyType {
      * Time Based Access Control (TBAC)
      */
     TIME = 'time',
+    /**
+     * Attribute Name Based Access Control (ANBAC)
+     */
     ATTRIBUTE_NAMES = 'attributeNames',
     /**
      * Attribute Based Access Control (ABAC)
@@ -27,6 +30,11 @@ export enum BuiltInPolicyType {
      * Realm of Identity is for attribute realm.
      */
     REALM_MATCH = 'realmMatch',
+
+    /**
+     * Restriction based on identity (type, id, ...)
+     */
+    IDENTITY = 'identity',
 
     // Location (LBAC)
     // Device (DBAC)
