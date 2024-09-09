@@ -2,7 +2,7 @@ import {
     RedisWatcher, parseRedisKeyPath, useLogger, useRedisClient,
 } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
-import { CachePrefix, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../../domains';
+import { CachePrefix, OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../domains';
 
 export async function runOAuth2CleanerByEvent() {
     const redis = useRedisClient();

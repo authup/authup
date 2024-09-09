@@ -6,8 +6,8 @@
  */
 
 import { defineCommand } from 'citty';
-import { executeStartCommand } from '../../commands';
 import { applyConfig, useConfig } from '../../config';
+import { Application } from '../../module';
 
 export function defineCLIStartCommand() {
     return defineCommand({
@@ -18,7 +18,8 @@ export function defineCLIStartCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            await executeStartCommand();
+            const app = new Application(config);
+            await app.start();
         },
     });
 }

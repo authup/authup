@@ -10,4 +10,4 @@ export * from './config';
 export * from './domains';
 export * from './database';
 export * from './http';
-export * from './commands';
+export * from './module';

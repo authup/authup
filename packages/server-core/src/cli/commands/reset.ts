@@ -8,11 +8,9 @@
 import { defineCommand } from 'citty';
 import process from 'node:process';
 import {
-    executeResetCommand,
-} from '../../commands';
-import {
     applyConfig, useConfig,
 } from '../../config';
+import { Application } from '../../module';
 
 export function defineCLIResetCommand() {
     return defineCommand({
@@ -23,7 +21,8 @@ export function defineCLIResetCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            await executeResetCommand();
+            const app = new Application(config);
+            await app.reset();
 
             process.exit(0);
         },

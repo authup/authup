@@ -7,7 +7,6 @@
 
 export * from './authorize';
 export * from './cache';
-export * from './cleaner';
 export * from './grant-types';
 export * from './openid';
 export * from './response';

@@ -11,8 +11,9 @@ import path from 'node:path';
 import process from 'node:process';
 import { buildConfig, readConfigRaw, setConfig } from '../config';
 import {
-    defineCLIHealthCheckCommand, defineCLIMigrationCommand, defineCLIResetCommand,
-    defineCLISetupCommand,
+    defineCLIHealthCheckCommand,
+    defineCLIMigrationCommand,
+    defineCLIResetCommand,
     defineCLIStartCommand,
 } from './commands';
 
@@ -33,7 +34,6 @@ export async function createCLIEntryPointCommand() {
             healthcheck: defineCLIHealthCheckCommand(),
             migration: defineCLIMigrationCommand(),
             reset: defineCLIResetCommand(),
-            setup: defineCLISetupCommand(),
             start: defineCLIStartCommand(),
         },
         args: {

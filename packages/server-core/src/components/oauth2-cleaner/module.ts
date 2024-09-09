@@ -6,16 +6,21 @@
  */
 
 import { isRedisClientUsable } from '@authup/server-kit';
+import type { Component } from '../types';
 import { cleanUp } from './utils';
 import { runOAuth2CleanerInInterval } from './interval';
 import { runOAuth2CleanerByEvent } from './event';
 
-export async function runOAuth2Cleaner() {
-    await cleanUp();
+export function createOAuth2Cleaner() : Component {
+    return {
+        async start() {
+            await cleanUp();
 
-    if (isRedisClientUsable()) {
-        await runOAuth2CleanerByEvent();
-    } else {
-        await runOAuth2CleanerInInterval();
-    }
+            if (isRedisClientUsable()) {
+                await runOAuth2CleanerByEvent();
+            } else {
+                await runOAuth2CleanerInInterval();
+            }
+        },
+    };
 }
