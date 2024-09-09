@@ -126,11 +126,10 @@ export class PolicyDefaultService {
         if (entity) {
             return entity;
         }
-        // todo: relational entities should also be covered
-        //  (e.g. robot-permission - robot_realm_id || permission_realm_id )
-        //  attributeNameLazyMatch: boolean
+
         const attributes : RealmMatchPolicy = {
             attributeName: ['realm_id'],
+            attributeNameStrict: false,
             identityMasterMatchAll: true,
         };
 
