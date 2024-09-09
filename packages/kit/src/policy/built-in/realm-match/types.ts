@@ -21,6 +21,11 @@ export interface RealmMatchPolicy extends PolicyBase {
     attributeName?: string | string[],
 
     /**
+     * Only match if the attribute is strict equal to the name.
+     */
+    attributeNameStrict?: boolean,
+
+    /**
      * Determines if resources with null realm-id/name value should match all identity realms.
      * If true, any identity realm can access resources with null realm-id/name values.
      */

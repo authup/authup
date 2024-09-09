@@ -74,7 +74,35 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
                 'realmId',
                 'realmName',
             ];
+
             ctx.policy.decisionStrategy = DecisionStrategy.CONSENSUS;
+        }
+
+        const attributeNameStrict = ctx.policy.attributeNameStrict ?? true;
+        if (!attributeNameStrict) {
+            const resourceKeys = Object.keys(ctx.data.attributes);
+            const keysToAdd : string[] = [];
+            for (let i = 0; i < resourceKeys.length; i++) {
+                let contains : boolean = false;
+
+                for (let j = 0; j < keys.length; j++) {
+                    if (
+                        resourceKeys[i] !== keys[j] &&
+                        resourceKeys[i].includes(keys[j])
+                    ) {
+                        contains = true;
+                        break;
+                    }
+                }
+
+                if (contains) {
+                    keysToAdd.push(resourceKeys[i]);
+                }
+            }
+
+            if (keysToAdd.length > 0) {
+                keys.push(...keysToAdd);
+            }
         }
 
         let count = 0;

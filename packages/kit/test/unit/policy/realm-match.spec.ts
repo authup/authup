@@ -32,6 +32,32 @@ describe('src/policy/attribute-realm', () => {
         expect(outcome).toBeTruthy();
     });
 
+    it('should permit by lazy attribute name matching', async () => {
+        const policy : RealmMatchPolicy = {
+            attributeNameStrict: true,
+            identityMasterMatchAll: true,
+        };
+
+        const evaluator = new RealmMatchPolicyEvaluator();
+
+        const outcome = await evaluator.evaluate({
+            policy,
+            data: {
+                identity: {
+                    type: 'user',
+                    id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
+                    realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
+                    realmName: 'master',
+                },
+                attributes: {
+                    user_realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
+                    permission_realm_id: null,
+                },
+            },
+        });
+        expect(outcome).toBeTruthy();
+    });
+
     it('should permit by matching master realm', async () => {
         const policy : RealmMatchPolicy = {
             identityMasterMatchAll: true,

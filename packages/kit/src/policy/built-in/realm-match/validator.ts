@@ -22,6 +22,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         this.mount('decisionStrategy', createValidator(z.nativeEnum(DecisionStrategy).optional()));
 
         this.mount('attributeName', createValidator(z.string().min(3).or(z.array(z.string().min(3))).optional()));
+        this.mount('attributeNameStrict', createValidator(z.boolean().optional()));
         this.mount('attributeNullMatchAll', createValidator(z.boolean().optional()));
 
         this.mount('identityMasterMatchAll', createValidator(z.boolean().optional()));
