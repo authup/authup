@@ -10,24 +10,12 @@ import { createNodeDispatcher } from 'routup';
 import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
 import {
-    applyConfig, buildConfig, createRouter, readConfigRawFromEnv, setConfig,
+    createRouter,
 } from '../../src';
+import { setupTestConfig } from './config';
 
 export function useSuperTest() : SuperTest<Test> {
-    const raw = readConfigRawFromEnv();
-    const config = buildConfig(raw);
-    config.env = 'test';
-    config.middlewareRateLimit = false;
-    config.middlewarePrometheus = false;
-    config.middlewareSwagger = false;
-
-    config.userAdminEnabled = true;
-    config.userAuthBasic = true;
-
-    config.robotAdminEnabled = true;
-
-    setConfig(config);
-    applyConfig(config);
+    setupTestConfig();
 
     const router = createRouter();
 

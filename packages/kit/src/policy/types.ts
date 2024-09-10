@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionItem } from '../permission';
+
 export interface PolicyBase {
     /**
      * Invert evaluation result of policy (true->false and false->true)
@@ -26,6 +28,11 @@ export type PolicyIdentity = {
 };
 
 export type PolicyData = {
+    /**
+     * Permission for which the policy is evaluated.
+     */
+    permission?: PermissionItem,
+
     /**
      * Identity of the executing party.
      */
