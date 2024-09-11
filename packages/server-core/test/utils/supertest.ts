@@ -6,28 +6,16 @@
  */
 
 import { createNodeDispatcher } from 'routup';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
 import {
-    applyConfig, buildConfig, createRouter, readConfigRawFromEnv, setConfig,
+    createRouter,
 } from '../../src';
+import { setupTestConfig } from './config';
 
-export function useSuperTest() : SuperTest<Test> {
-    const raw = readConfigRawFromEnv();
-    const config = buildConfig(raw);
-    config.env = 'test';
-    config.middlewareRateLimit = false;
-    config.middlewarePrometheus = false;
-    config.middlewareSwagger = false;
+type TestAgent = ReturnType<typeof supertest>;
 
-    config.userAdminEnabled = true;
-    config.userAuthBasic = true;
-
-    config.robotAdminEnabled = true;
-
-    setConfig(config);
-    applyConfig(config);
+export function useSuperTest() : TestAgent {
+    setupTestConfig();
 
     const router = createRouter();
 
