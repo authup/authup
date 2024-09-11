@@ -14,11 +14,11 @@ import {
     RealmMatchPolicyEvaluator,
     TimePolicyEvaluator,
 } from '../built-in';
-import type { PolicyEvaluateContextInput, PolicyEvaluator, PolicyEvaluators } from '../evaluator';
+import type { PolicyEvaluator, PolicyEvaluators } from '../evaluator';
 import {
     evaluatePolicy,
 } from '../evaluator';
-import type { PolicyWithType } from '../types';
+import type { PolicyEngineEvaluateContext } from './types';
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -62,14 +62,11 @@ export class PolicyEngine {
      *
      * @param ctx
      */
-    async evaluate(ctx: PolicyEvaluateContextInput<PolicyWithType>) : Promise<boolean> {
+    async evaluate(ctx: PolicyEngineEvaluateContext) : Promise<boolean> {
         return evaluatePolicy({
             ...ctx,
             options: ctx.options || {},
-            evaluators: {
-                ...this.evaluators,
-                ...(ctx.evaluators ? ctx.evaluators : {}),
-            },
+            evaluators: this.evaluators,
         });
     }
 
@@ -78,7 +75,7 @@ export class PolicyEngine {
      *
      * @param ctx
      */
-    async safeEvaluate(ctx: PolicyEvaluateContextInput<PolicyWithType>) : Promise<boolean> {
+    async safeEvaluate(ctx: PolicyEngineEvaluateContext) : Promise<boolean> {
         try {
             return await this.evaluate(ctx);
         } catch (e) {
