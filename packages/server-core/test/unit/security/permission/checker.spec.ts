@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PermissionName } from '@authup/core-kit';
 import { BuiltInPolicyType, createNanoID } from '@authup/kit';
 import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../../../../src';
 import {
-    PermissionChecker, PermissionEntity, PolicyRepository, UserRepository,
+    PermissionChecker,
+    PermissionEntity, PolicyRepository, UserPermissionEntity, UserRepository,
 } from '../../../../src';
 import { setupTestConfig } from '../../../utils/config';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
@@ -38,9 +38,18 @@ describe('src/security/permission/checker', () => {
         await dropTestDatabase();
     });
 
-    it('should verify with valid identity & permission', async () => {
+    it('should verify with valid permission', async () => {
+        const repository = dataSource.getRepository(PermissionEntity);
+        const name = createNanoID();
+        const entity = repository.create({
+            name,
+            built_in: true,
+        });
+
+        await repository.save(entity);
+
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(PermissionName.USER_CREATE, {
+        const hasPermission = await checker.safeCheck(name, {
             identity: {
                 type: 'user',
                 id: adminUser.id,
@@ -49,7 +58,20 @@ describe('src/security/permission/checker', () => {
         expect(hasPermission).toBeTruthy();
     });
 
-    it('should verify with permission-binding policy', async () => {
+    it('should not verify with invalid permission', async () => {
+        const name = createNanoID();
+
+        const checker = new PermissionChecker();
+        const hasPermission = await checker.safeCheck(name, {
+            identity: {
+                type: 'user',
+                id: adminUser.id,
+            },
+        });
+        expect(hasPermission).toBeFalsy();
+    });
+
+    it('should verify with permission-binding and existing relation', async () => {
         const policyRepository = new PolicyRepository(dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
@@ -60,8 +82,9 @@ describe('src/security/permission/checker', () => {
         await policyRepository.save(policy);
 
         const permissionRepository = dataSource.getRepository(PermissionEntity);
-        const permission = await permissionRepository.findOneBy({
-            name: PermissionName.USER_DELETE,
+        const name = createNanoID();
+        const permission = permissionRepository.create({
+            name,
             built_in: true,
         });
 
@@ -69,8 +92,18 @@ describe('src/security/permission/checker', () => {
 
         await permissionRepository.save(permission);
 
+        const userPermissionRepository = dataSource.getRepository(UserPermissionEntity);
+        const userPermission = userPermissionRepository.create({
+            user_id: adminUser.id,
+            user_realm_id: adminUser.realm_id,
+            permission_id: permission.id,
+            permission_realm_id: permission.realm_id,
+        });
+
+        await userPermissionRepository.save(userPermission);
+
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(PermissionName.USER_DELETE, {
+        const hasPermission = await checker.safeCheck(name, {
             identity: {
                 type: 'user',
                 id: adminUser.id,
@@ -100,17 +133,6 @@ describe('src/security/permission/checker', () => {
 
         const checker = new PermissionChecker();
         const hasPermission = await checker.safeCheck(name, {
-            identity: {
-                type: 'user',
-                id: adminUser.id,
-            },
-        });
-        expect(hasPermission).toBeFalsy();
-    });
-
-    it('should not verify with invalid permission', async () => {
-        const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck('foo', {
             identity: {
                 type: 'user',
                 id: adminUser.id,
