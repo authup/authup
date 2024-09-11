@@ -6,33 +6,44 @@
  */
 
 import { PolicyError } from '../error';
-import type {
-    PolicyData,
-    PolicyWithType,
+import type { PolicyWithType } from '../types';
+import type { PolicyEvaluateContext } from './types';
 
-} from '../types';
-import type { PolicyEvaluatorContext, PolicyEvaluators } from './types';
+export async function evaluatePolicy(ctx: PolicyEvaluateContext<PolicyWithType>) : Promise<boolean> {
+    if (
+        ctx.options.exclude &&
+        ctx.options.exclude.length > 0 &&
+        ctx.options.exclude.indexOf(ctx.spec.type) !== -1
+    ) {
+        // todo: maybe invert outcome based on spec
+        return true;
+    }
 
-export async function evaluatePolicy(
-    policy: PolicyWithType,
-    data: PolicyData,
-    evaluators: PolicyEvaluators,
-) : Promise<boolean> {
-    const evaluator = evaluators[policy.type];
+    if (
+        ctx.options.include &&
+        ctx.options.include.length > 0 &&
+        ctx.options.include.indexOf(ctx.spec.type) === -1
+    ) {
+        // todo: maybe invert outcome based on spec
+        return true;
+    }
+
+    const evaluator = ctx.evaluators[ctx.spec.type];
     if (!evaluator) {
-        throw PolicyError.evaluatorNotFound(policy.type);
+        throw PolicyError.evaluatorNotFound(ctx.spec.type);
     }
 
     try {
-        const executionContext : PolicyEvaluatorContext<PolicyWithType> = {
-            data,
-            policy,
-            evaluators,
-        };
-
-        const canEvaluate = await evaluator.canEvaluate(executionContext);
+        const canEvaluate = await evaluator.can(ctx);
         if (canEvaluate) {
-            return await evaluator.safeEvaluate(executionContext);
+            const spec = await evaluator.validateSpecification(ctx);
+            const data = await evaluator.validateData(ctx);
+
+            return await evaluator.evaluate({
+                ...ctx,
+                data,
+                spec,
+            });
         }
     } catch (e) {
         if (e instanceof PolicyError) {

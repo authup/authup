@@ -10,10 +10,11 @@ import {
     TimePolicyEvaluator,
     TimePolicyValidator,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {
-        const policy: TimePolicy = {
+        const spec: TimePolicy = {
             start: '08:00',
             end: '16:00',
         };
@@ -22,22 +23,22 @@ describe('src/policy/time', () => {
         const dateTime = new Date();
         dateTime.setHours(12, 0);
 
-        let outcome = await evaluator.evaluate({
-            policy,
+        let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 dateTime,
             },
-        });
+        }));
         expect(outcome)
             .toBeTruthy();
 
         dateTime.setHours(6, 0);
-        outcome = await evaluator.evaluate({
-            policy,
+        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 dateTime,
             },
-        });
+        }));
         expect(outcome)
             .toBeFalsy();
     });

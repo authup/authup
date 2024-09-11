@@ -8,7 +8,7 @@
 import { isObject } from 'smob';
 import { flattenObject } from '../../../utils';
 import { PolicyError } from '../../error';
-import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyData, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
@@ -22,24 +22,23 @@ export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeN
         this.validator = new AttributeNamesPolicyValidator();
     }
 
-    async canEvaluate(ctx: PolicyEvaluatorContext<PolicyWithType>) : Promise<boolean> {
-        return ctx.policy.type === BuiltInPolicyType.ATTRIBUTE_NAMES;
+    async can(ctx: PolicyEvaluateContext<PolicyWithType>) : Promise<boolean> {
+        return ctx.spec.type === BuiltInPolicyType.ATTRIBUTE_NAMES;
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext<PolicyWithType>) : Promise<boolean> {
+    async validateSpecification(ctx: PolicyEvaluateContext<PolicyWithType>) : Promise<AttributeNamesPolicy> {
+        return this.validator.run(ctx.spec);
+    }
+
+    async validateData(ctx: PolicyEvaluateContext<AttributeNamesPolicy>) : Promise<PolicyData> {
         if (!isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+        return ctx.data;
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<AttributeNamesPolicy, PolicyData>): Promise<boolean> {
+    async evaluate(ctx: PolicyEvaluateContext<AttributeNamesPolicy, PolicyData>): Promise<boolean> {
         if (!ctx.data.attributes) {
             throw PolicyError.evaluatorContextInvalid();
         }
@@ -47,12 +46,12 @@ export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeN
         const attributes = flattenObject(ctx.data.attributes);
         const keys = Object.keys(attributes);
         for (let i = 0; i < keys.length; i++) {
-            const index = ctx.policy.names.indexOf(keys[i]);
+            const index = ctx.spec.names.indexOf(keys[i]);
             if (index === -1) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.policy.invert);
+        return maybeInvertPolicyOutcome(true, ctx.spec.invert);
     }
 }

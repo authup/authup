@@ -8,9 +8,9 @@
 import { guard } from '@ucast/mongo2js';
 import { isObject } from 'smob';
 import { PolicyError } from '../../error';
-import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyWithType } from '../../types';
+import type { PolicyData, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { AttributesPolicy } from './types';
 import { AttributesPolicyValidator } from './validator';
@@ -24,34 +24,33 @@ export class AttributesPolicyEvaluator<
         this.validator = new AttributesPolicyValidator<T>();
     }
 
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    async can(
+        ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.policy.type === BuiltInPolicyType.ATTRIBUTES;
+        return ctx.spec.type === BuiltInPolicyType.ATTRIBUTES;
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
+    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<AttributesPolicy<T>> {
+        return this.validator.run(ctx.spec);
+    }
+
+    async validateData(ctx: PolicyEvaluateContext<AttributesPolicy<T>>) : Promise<PolicyData> {
         if (!isObject(ctx.data.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+        return ctx.data;
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<AttributesPolicy<T>>): Promise<boolean> {
+    async evaluate(ctx: PolicyEvaluateContext<AttributesPolicy<T>>): Promise<boolean> {
         if (!ctx.data.attributes) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        this.fixQuery(ctx.policy.query);
+        this.fixQuery(ctx.spec.query);
 
-        const testIt = guard<T>(ctx.policy.query);
-        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.policy.invert);
+        const testIt = guard<T>(ctx.spec.query);
+        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.spec.invert);
     }
 
     protected fixQuery(query: Record<string, any>) {

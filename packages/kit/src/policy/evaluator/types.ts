@@ -5,21 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyWithType } from '../types';
+import type { PolicyData, PolicyWithType } from '../types';
 
-export type PolicyEvaluatorContext<
-    POLICY extends Record<string, any> = Record<string, any>,
-    DATA extends Record<string, any> = Record<string, any>,
+export type PolicyEvaluateContext<
+    SPEC extends Record<string, any> = Record<string, any>,
+    DATA extends PolicyData = PolicyData,
 > = {
-    policy: POLICY,
+    spec: SPEC,
     data: DATA,
-    evaluators?: PolicyEvaluators
+    evaluators: PolicyEvaluators
+    options: PolicyEvaluateOptions
+};
+
+export type PolicyEvaluateContextInput<
+    SPEC extends Record<string, any> = Record<string, any>,
+    DATA extends PolicyData = PolicyData,
+> = Omit<PolicyEvaluateContext<SPEC, DATA>, 'evaluators' | 'options'> &
+Partial<Pick<PolicyEvaluateContext<SPEC, DATA>, 'evaluators' | 'options'>>;
+
+export type PolicyEvaluateOptions = {
+    include?: string[],
+    exclude?: string[],
 };
 
 export type PolicyEvaluators = Record<string, PolicyEvaluator>;
 
 export interface PolicyEvaluator<
-    OPTIONS extends Record<string, any> = Record<string, any>,
+    SPEC extends Record<string, any> = Record<string, any>,
     DATA extends Record<string, any> = Record<string, any>,
 > {
     /**
@@ -29,15 +41,26 @@ export interface PolicyEvaluator<
      * @throws PolicyError
      * @param ctx
      */
-    evaluate(ctx: PolicyEvaluatorContext<OPTIONS, DATA>): Promise<boolean>;
+    evaluate(ctx: PolicyEvaluateContext<SPEC, DATA>): Promise<boolean>;
 
     /**
-     * Safe execute the evaluator with an unknown context.
+     * Validate the specification.
      *
      * @throws PolicyError
      * @param ctx
      */
-    safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean>;
+    validateSpecification(
+        ctx: PolicyEvaluateContext<Record<string, any>, DATA>
+    ) : Promise<SPEC>;
+
+    /**
+     * Validate the passed data.
+     *
+     * @param ctx
+     */
+    validateData(
+        ctx: PolicyEvaluateContext<SPEC>
+    ) : Promise<DATA>;
 
     /**
      * Verify if the evaluator (might) can hande the provided
@@ -45,5 +68,5 @@ export interface PolicyEvaluator<
      *
      * @param ctx
      */
-    canEvaluate(ctx: PolicyEvaluatorContext<PolicyWithType>): Promise<boolean>;
+    can(ctx: PolicyEvaluateContext<PolicyWithType>): Promise<boolean>;
 }

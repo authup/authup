@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -13,11 +13,12 @@ import {
     DatePolicyEvaluator, IdentityPolicyEvaluator,
     RealmMatchPolicyEvaluator,
     TimePolicyEvaluator,
-} from './built-in';
-import type { PolicyEvaluator, PolicyEvaluators } from './evaluator';
-import { evaluatePolicy } from './evaluator';
-
-import type { PolicyData, PolicyWithType } from './types';
+} from '../built-in';
+import type { PolicyEvaluator, PolicyEvaluators } from '../evaluator';
+import {
+    evaluatePolicy,
+} from '../evaluator';
+import type { PolicyEngineEvaluateContext } from './types';
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -26,9 +27,10 @@ import type { PolicyData, PolicyWithType } from './types';
 export class PolicyEngine {
     protected evaluators : PolicyEvaluators;
 
-    constructor() {
+    constructor(evaluators: PolicyEvaluators = {}) {
         this.evaluators = {};
         this.registerDefaultEvaluators();
+        this.registerEvaluators(evaluators);
     }
 
     public registerEvaluator(
@@ -36,6 +38,13 @@ export class PolicyEngine {
         evaluator: PolicyEvaluator,
     ) : void {
         this.evaluators[type] = evaluator;
+    }
+
+    public registerEvaluators(evaluators: PolicyEvaluators) {
+        const keys = Object.keys(evaluators);
+        for (let i = 0; i < keys.length; i++) {
+            this.registerEvaluator(keys[i], evaluators[keys[i]]);
+        }
     }
 
     private registerDefaultEvaluators() {
@@ -51,28 +60,24 @@ export class PolicyEngine {
     /**
      * @throws PolicyError
      *
-     * @param policy
-     * @param data
+     * @param ctx
      */
-    async evaluate(
-        policy: PolicyWithType,
-        data: PolicyData,
-    ) : Promise<boolean> {
-        return evaluatePolicy(policy, data, this.evaluators);
+    async evaluate(ctx: PolicyEngineEvaluateContext) : Promise<boolean> {
+        return evaluatePolicy({
+            ...ctx,
+            options: ctx.options || {},
+            evaluators: this.evaluators,
+        });
     }
 
     /**
      * @throws PolicyError
      *
-     * @param policy
-     * @param data
+     * @param ctx
      */
-    async safeEvaluate(
-        policy: PolicyWithType,
-        data: PolicyData,
-    ) : Promise<boolean> {
+    async safeEvaluate(ctx: PolicyEngineEvaluateContext) : Promise<boolean> {
         try {
-            return await this.evaluate(policy, data);
+            return await this.evaluate(ctx);
         } catch (e) {
             return false;
         }
