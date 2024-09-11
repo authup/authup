@@ -12,7 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
-import { buildPolicyDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deleteRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -36,7 +36,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
 
     const canAbility = await permissionChecker.safeCheck(
         PermissionName.ROLE_UPDATE,
-        buildPolicyDataByRequest(req, {
+        buildPolicyDataForRequest(req, {
             attributes: entity,
         }),
     );

@@ -16,7 +16,7 @@ import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
 } from '../../../../domains';
-import { buildPolicyDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -53,7 +53,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     let [, total] = queryOutput;
 
     const data : UserAttributeEntity[] = [];
-    const policyEvaluationData = buildPolicyDataByRequest(req);
+    const policyEvaluationData = buildPolicyDataForRequest(req);
 
     for (let i = 0; i < entities.length; i++) {
         const canAbility = await canRequestManageUserAttribute(req, entities[i], policyEvaluationData);

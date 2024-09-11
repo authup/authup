@@ -11,7 +11,7 @@ import type { Request } from 'routup';
 import { useRequestEnv } from './env';
 import { generatePolicyIdentityByRequest } from './policy-identity';
 
-export function buildPolicyDataByRequest(
+export function buildPolicyDataForRequest(
     req: Request,
     input: Partial<PolicyData> = {},
 ) : PolicyData {

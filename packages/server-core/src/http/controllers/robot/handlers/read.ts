@@ -22,7 +22,7 @@ import {
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { buildPolicyDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -76,7 +76,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const requestRobot = useRequestEnv(req, 'robot');
 
     const data : RobotEntity[] = [];
-    const policyEvaluationData = buildPolicyDataByRequest(req);
+    const policyEvaluationData = buildPolicyDataForRequest(req);
     for (let i = 0; i < queryOutput[0].length; i++) {
         if (
             requestRobot &&
@@ -215,7 +215,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
                 PermissionName.ROBOT_UPDATE,
                 PermissionName.ROBOT_DELETE,
             ],
-            buildPolicyDataByRequest(req, { attributes: entity }),
+            buildPolicyDataForRequest(req, { attributes: entity }),
         );
 
         if (!hasAbility) {

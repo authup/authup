@@ -9,7 +9,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { PolicyData } from '@authup/kit';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../domains';
-import { buildPolicyDataByRequest, useRequestEnv } from '../../../request';
+import { buildPolicyDataForRequest, useRequestEnv } from '../../../request';
 
 export async function canRequestManageUserAttribute(
     req: Request,
@@ -20,7 +20,7 @@ export async function canRequestManageUserAttribute(
     const userId = useRequestEnv(req, 'userId');
 
     if (!evaluationData) {
-        evaluationData = buildPolicyDataByRequest(req);
+        evaluationData = buildPolicyDataForRequest(req);
     }
 
     let canAbility : boolean = false;

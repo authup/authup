@@ -46,6 +46,7 @@ export class PermissionChecker {
      * Check if an ability exists without any restriction.
      *
      * @param name
+     * @deprecated
      */
     async has(name: string | PermissionGetOptions) : Promise<boolean> {
         const entity = await this.get(name);
@@ -59,7 +60,7 @@ export class PermissionChecker {
      *
      * @param input
      */
-    async get(input: string | PermissionGetOptions) : Promise<PermissionItem | undefined> {
+    protected async get(input: string | PermissionGetOptions) : Promise<PermissionItem | undefined> {
         if (typeof input === 'string') {
             const options : PermissionGetOptions = {
                 name: input,
@@ -88,6 +89,7 @@ export class PermissionChecker {
      * Check if one of the following permission exists without any restriction.
      *
      * @param input
+     * @deprecated
      */
     async hasOneOf(input: (string | PermissionGetOptions)[]) : Promise<boolean> {
         for (let i = 0; i < input.length; i++) {
@@ -106,6 +108,7 @@ export class PermissionChecker {
      * Check if all permissions exist without any restriction.
      *
      * @param items
+     * @deprecated
      */
     async hasMany(items: (PermissionGetOptions | string)[]) : Promise<boolean> {
         for (let i = 0; i < items.length; i++) {
