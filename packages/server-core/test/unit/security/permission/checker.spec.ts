@@ -6,14 +6,13 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
-import { createNanoID } from '@authup/kit';
+import { BuiltInPolicyType, createNanoID } from '@authup/kit';
 import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../../../../src';
 import {
     PermissionChecker, PermissionEntity, PolicyRepository, UserRepository,
 } from '../../../../src';
-import { SpecialPolicyType } from '../../../../src/security/policy/constants';
 import { setupTestConfig } from '../../../utils/config';
 import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
@@ -53,8 +52,8 @@ describe('src/security/permission/checker', () => {
     it('should verify with permission-binding policy', async () => {
         const policyRepository = new PolicyRepository(dataSource);
         const policy = policyRepository.create({
-            type: SpecialPolicyType.PERMISSION_BINDING,
-            name: SpecialPolicyType.PERMISSION_BINDING,
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyType.PERMISSION_BINDING,
             built_in: true,
         });
 
@@ -83,8 +82,8 @@ describe('src/security/permission/checker', () => {
     it('should not verify with permission-binding and non existing relation', async () => {
         const policyRepository = new PolicyRepository(dataSource);
         const policy = policyRepository.create({
-            type: SpecialPolicyType.PERMISSION_BINDING,
-            name: SpecialPolicyType.PERMISSION_BINDING,
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyType.PERMISSION_BINDING,
             built_in: true,
         });
 

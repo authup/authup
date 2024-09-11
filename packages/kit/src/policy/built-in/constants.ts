@@ -36,6 +36,11 @@ export enum BuiltInPolicyType {
      */
     IDENTITY = 'identity',
 
+    /**
+     * Restriction based on a binding between identity <-> permission
+     */
+    PERMISSION_BINDING = 'permissionBinding',
+
     // Location (LBAC)
     // Device (DBAC)
 }

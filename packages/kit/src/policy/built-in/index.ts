@@ -10,6 +10,7 @@ export * from './attributes';
 export * from './composite';
 export * from './date';
 export * from './identity';
+export * from './permission-binding';
 export * from './realm-match';
 export * from './time';
 

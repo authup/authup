@@ -6,15 +6,15 @@
  */
 
 import { createNodeDispatcher } from 'routup';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
 import supertest from 'supertest';
 import {
     createRouter,
 } from '../../src';
 import { setupTestConfig } from './config';
 
-export function useSuperTest() : SuperTest<Test> {
+type TestAgent = ReturnType<typeof supertest>;
+
+export function useSuperTest() : TestAgent {
     setupTestConfig();
 
     const router = createRouter();

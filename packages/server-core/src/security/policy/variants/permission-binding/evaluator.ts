@@ -7,16 +7,16 @@
 
 import { isObject } from 'smob';
 import type {
-    CompositePolicy,
+    CompositePolicy, PermissionBindingPolicy,
     PermissionItem,
     PolicyData, PolicyEvaluator, PolicyEvaluatorContext, PolicyIdentity, PolicyWithType,
 } from '@authup/kit';
-import { CompositePolicyEvaluator, PolicyError, maybeInvertPolicyOutcome } from '@authup/kit';
+import {
+    BuiltInPolicyType,
+    CompositePolicyEvaluator, PermissionBindingPolicyValidator, PolicyError, maybeInvertPolicyOutcome,
+} from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { RobotRepository, UserRepository } from '../../../../domains';
-import { SpecialPolicyType } from '../../constants';
-import type { PermissionBindingPolicy } from './types';
-import { PermissionBindingPolicyValidator } from './validator';
 
 export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<PermissionBindingPolicy> {
     protected validator : PermissionBindingPolicyValidator;
@@ -28,7 +28,7 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     async canEvaluate(
         ctx: PolicyEvaluatorContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.policy.type === SpecialPolicyType.PERMISSION_BINDING;
+        return ctx.policy.type === BuiltInPolicyType.PERMISSION_BINDING;
     }
 
     async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {

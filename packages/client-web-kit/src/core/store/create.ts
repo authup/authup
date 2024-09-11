@@ -22,6 +22,7 @@ import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
+import { PolicyEngine } from '../../security';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
 export function createStore(context: StoreCreateContext = {}) {
@@ -137,6 +138,7 @@ export function createStore(context: StoreCreateContext = {}) {
     const permissionRepository = new PermissionMemoryProvider();
     const permissionChecker = new PermissionChecker({
         provider: permissionRepository,
+        policyEngine: new PolicyEngine(),
     });
 
     const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
