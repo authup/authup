@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyWithType } from '../../types';
+import type { PolicyData, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { TimePolicy } from './types';
 import { TimePolicyValidator } from './validator';
@@ -50,22 +50,21 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
         this.validator = new TimePolicyValidator();
     }
 
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    async can(
+        ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.policy.type === BuiltInPolicyType.TIME;
+        return ctx.spec.type === BuiltInPolicyType.TIME;
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<TimePolicy> {
+        return this.validator.run(ctx.spec);
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<TimePolicy>): Promise<boolean> {
+    async validateData(ctx: PolicyEvaluateContext<TimePolicy>) : Promise<PolicyData> {
+        return ctx.data;
+    }
+
+    async evaluate(ctx: PolicyEvaluateContext<TimePolicy>): Promise<boolean> {
         let now : Date;
         if (ctx.data.dateTime) {
             now = toDate(ctx.data.dateTime);
@@ -73,34 +72,34 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
             now = new Date();
         }
 
-        if (ctx.policy.start) {
-            const start = normalizeDate(toDate(ctx.policy.start, now), now);
+        if (ctx.spec.start) {
+            const start = normalizeDate(toDate(ctx.spec.start, now), now);
 
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        if (ctx.policy.end) {
-            const end = normalizeDate(toDate(ctx.policy.end, now), now);
+        if (ctx.spec.end) {
+            const end = normalizeDate(toDate(ctx.spec.end, now), now);
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        if (ctx.policy.dayOfWeek) {
-            if (now.getDay() !== ctx.policy.dayOfWeek) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+        if (ctx.spec.dayOfWeek) {
+            if (now.getDay() !== ctx.spec.dayOfWeek) {
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        if (ctx.policy.dayOfMonth) {
-            if (now.getDate() !== ctx.policy.dayOfMonth) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+        if (ctx.spec.dayOfMonth) {
+            if (now.getDate() !== ctx.spec.dayOfMonth) {
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        if (ctx.policy.dayOfYear) {
+        if (ctx.spec.dayOfYear) {
             const start = new Date(now.getFullYear(), 0, 0);
             const diff = (now.getTime() - start.getTime()) +
                 ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
@@ -108,11 +107,11 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
             const oneDay = 1000 * 60 * 60 * 24;
             const dayOfYear = Math.floor(diff / oneDay);
 
-            if (dayOfYear !== ctx.policy.dayOfYear) {
-                return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+            if (dayOfYear !== ctx.spec.dayOfYear) {
+                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.policy.invert);
+        return maybeInvertPolicyOutcome(true, ctx.spec.invert);
     }
 }

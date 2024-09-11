@@ -9,17 +9,18 @@ import type { IdentityPolicy } from '../../../src';
 import {
     IdentityPolicyEvaluator,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/identity', () => {
     it('should permit due defined identity', async () => {
-        const policy : IdentityPolicy = {
+        const spec : IdentityPolicy = {
             types: [],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -27,19 +28,19 @@ describe('src/policy/identity', () => {
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should permit due matching type', async () => {
-        const policy : IdentityPolicy = {
+        const spec : IdentityPolicy = {
             types: ['user'],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -47,19 +48,19 @@ describe('src/policy/identity', () => {
                     realmName: 'master',
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should not permit due non matching type', async () => {
-        const policy : IdentityPolicy = {
+        const spec : IdentityPolicy = {
             types: ['foo'],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -67,21 +68,21 @@ describe('src/policy/identity', () => {
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 
     it('should not permit due non defined identity', async () => {
-        const policy : IdentityPolicy = {
+        const spec : IdentityPolicy = {
             types: [],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {},
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 });

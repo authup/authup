@@ -6,8 +6,7 @@
  */
 
 import { DecisionStrategy } from '../../../constants';
-import { PolicyError } from '../../error';
-import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { evaluatePolicy } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyData, PolicyWithType } from '../../types';
@@ -22,56 +21,54 @@ export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy
         this.validator = new CompositePolicyValidator();
     }
 
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    async can(
+        ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return isCompositePolicy(ctx.policy);
+        return isCompositePolicy(ctx.spec);
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<CompositePolicy> {
+        return this.validator.run(ctx.spec);
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<CompositePolicy, PolicyData>): Promise<boolean> {
+    async validateData(ctx: PolicyEvaluateContext<CompositePolicy>) : Promise<PolicyData> {
+        return ctx.data;
+    }
+
+    async evaluate(ctx: PolicyEvaluateContext<CompositePolicy>): Promise<boolean> {
         let count = 0;
 
-        for (let i = 0; i < ctx.policy.children.length; i++) {
-            const childPolicy = ctx.policy.children[i];
+        for (let i = 0; i < ctx.spec.children.length; i++) {
+            const childPolicy = ctx.spec.children[i];
             let outcome : boolean;
 
             if (isCompositePolicy(childPolicy)) {
                 outcome = await this.evaluate({
                     ...ctx,
-                    policy: childPolicy,
+                    spec: childPolicy,
                 });
             } else {
-                if (typeof ctx.evaluators === 'undefined') {
-                    throw PolicyError.evaluatorNotFound(childPolicy.type);
-                }
-
-                outcome = await evaluatePolicy(childPolicy, ctx.data, ctx.evaluators);
+                outcome = await evaluatePolicy({
+                    ...ctx,
+                    spec: childPolicy,
+                });
             }
 
             if (outcome) {
-                if (ctx.policy.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.policy.invert);
+                if (ctx.spec.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return maybeInvertPolicyOutcome(true, ctx.spec.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.policy.decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+                if (ctx.spec.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
                 }
 
                 count--;
             }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.policy.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.spec.invert);
     }
 }

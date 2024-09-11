@@ -12,13 +12,14 @@ import {
     serialize,
 } from '../../../src';
 import type { AttributesPolicy } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 type User = {
     name: string,
     age: number
 };
 
-const policy : AttributesPolicy<User> = {
+const spec : AttributesPolicy<User> = {
     invert: false,
     query: {
         name: {
@@ -35,29 +36,29 @@ const evaluator = new AttributesPolicyEvaluator<User>();
 
 describe('src/policy/attributes', () => {
     it('should succeed with successful predicates', async () => {
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     name: 'Peter',
                     age: 15,
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should succeed with serialized/deserialized predicates', async () => {
-        const value = deserialize(serialize(policy));
-        const outcome = await evaluator.evaluate({
-            policy: value,
+        const value = deserialize(serialize(spec));
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec: value,
             data: {
                 attributes: {
                     name: 'Peter',
                     age: 15,
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
@@ -90,19 +91,21 @@ describe('src/policy/attributes', () => {
     });
 
     it('should fail with missing context', async () => {
-        await expect(evaluator.evaluate({ policy, data: {} })).rejects.toThrow();
+        await expect(
+            evaluator.evaluate(buildTestPolicyEvaluateContext({ spec, data: {} })),
+        ).rejects.toThrow();
     });
 
     it('should fail with invalid predicate value', async () => {
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     name: 'Peter',
                     age: 28,
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 });

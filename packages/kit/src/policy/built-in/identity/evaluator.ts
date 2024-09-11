@@ -6,7 +6,7 @@
  */
 
 import { isObject } from 'smob';
-import type { PolicyEvaluator, PolicyEvaluatorContext } from '../../evaluator';
+import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import type { PolicyData, PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { BuiltInPolicyType } from '../constants';
@@ -20,36 +20,34 @@ export class IdentityPolicyEvaluator implements PolicyEvaluator<IdentityPolicy> 
         this.validator = new IdentityPolicyValidator();
     }
 
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    async can(
+        ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.policy.type === BuiltInPolicyType.IDENTITY;
+        return ctx.spec.type === BuiltInPolicyType.IDENTITY;
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<IdentityPolicy> {
+        return this.validator.run(ctx.spec);
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<
-    IdentityPolicy,
-    PolicyData
+    async validateData(ctx: PolicyEvaluateContext<IdentityPolicy>) : Promise<PolicyData> {
+        return ctx.data;
+    }
+
+    async evaluate(ctx: PolicyEvaluateContext<
+    IdentityPolicy
     >): Promise<boolean> {
         if (!isObject(ctx.data.identity)) {
-            return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
         }
 
-        const types = ctx.policy.types || [];
+        const types = ctx.spec.types || [];
         if (types.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.policy.invert);
+            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
         }
 
         const typeAllowed = types.indexOf(ctx.data.identity.type) !== -1;
 
-        return maybeInvertPolicyOutcome(typeAllowed, ctx.policy.invert);
+        return maybeInvertPolicyOutcome(typeAllowed, ctx.spec.invert);
     }
 }

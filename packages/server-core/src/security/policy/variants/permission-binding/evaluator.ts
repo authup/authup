@@ -9,7 +9,7 @@ import { isObject } from 'smob';
 import type {
     CompositePolicy, PermissionBindingPolicy,
     PermissionItem,
-    PolicyData, PolicyEvaluator, PolicyEvaluatorContext, PolicyIdentity, PolicyWithType,
+    PolicyData, PolicyEvaluateContext, PolicyEvaluator, PolicyIdentity, PolicyWithType,
 } from '@authup/kit';
 import {
     BuiltInPolicyType,
@@ -25,26 +25,25 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
         this.validator = new PermissionBindingPolicyValidator();
     }
 
-    async canEvaluate(
-        ctx: PolicyEvaluatorContext<PolicyWithType>,
+    async can(
+        ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.policy.type === BuiltInPolicyType.PERMISSION_BINDING;
+        return ctx.spec.type === BuiltInPolicyType.PERMISSION_BINDING;
     }
 
-    async safeEvaluate(ctx: PolicyEvaluatorContext) : Promise<boolean> {
+    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
+        return this.validator.run(ctx.spec);
+    }
+
+    async validateData(ctx: PolicyEvaluateContext) : Promise<PolicyData> {
         if (!isObject(ctx.data.identity) && !isObject(ctx.data.permission)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        const policy = await this.validator.run(ctx.policy);
-
-        return this.evaluate({
-            ...ctx,
-            policy,
-        });
+        return ctx.data;
     }
 
-    async evaluate(ctx: PolicyEvaluatorContext<
+    async evaluate(ctx: PolicyEvaluateContext<
     PermissionBindingPolicy,
     PolicyData
     >): Promise<boolean> {
@@ -66,7 +65,7 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
         });
 
         if (permissions.length === 0) {
-            return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
         }
 
         const policies = permissions
@@ -74,11 +73,11 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             .map((permission) => permission.policy);
 
         if (policies.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.policy.invert);
+            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
         }
 
         if (!ctx.evaluators) {
-            return maybeInvertPolicyOutcome(false, ctx.policy.invert);
+            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
         }
 
         const compositePolicy : CompositePolicy = {
@@ -89,7 +88,7 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
 
         return compositePolicyEvaluator.evaluate({
             ...ctx,
-            policy: compositePolicy,
+            spec: compositePolicy,
         });
     }
 

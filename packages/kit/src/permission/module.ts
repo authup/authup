@@ -160,9 +160,12 @@ export class PermissionChecker {
                 let outcome : boolean;
 
                 try {
-                    outcome = await this.policyEngine.evaluate(entity.policy, {
-                        ...data,
-                        permission: entity,
+                    outcome = await this.policyEngine.evaluate({
+                        data: {
+                            ...data,
+                            permission: entity,
+                        },
+                        spec: entity.policy,
                     });
                 } catch (e) {
                     if (e instanceof PolicyError) {

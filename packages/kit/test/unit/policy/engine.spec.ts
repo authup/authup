@@ -13,6 +13,7 @@ import {
     DecisionStrategy,
     PolicyEngine,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 type User = {
     id: string,
@@ -46,26 +47,35 @@ describe('src/policy', () => {
             ],
         };
 
-        let outcome = await enforcer.evaluate(compositePolicy, {
-            attributes: {
-                name: 'admin',
+        let outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
+            spec: compositePolicy,
+            data: {
+                attributes: {
+                    name: 'admin',
+                },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
 
-        outcome = await enforcer.evaluate(compositePolicy, {
-            attributes: {
-                id: 'foo',
-                name: 'admin',
+        outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
+            spec: compositePolicy,
+            data: {
+                attributes: {
+                    id: 'foo',
+                    name: 'admin',
+                },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
 
-        outcome = await enforcer.evaluate(compositePolicy, {
-            attributes: {
-                name: 'foo',
+        outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
+            spec: compositePolicy,
+            data: {
+                attributes: {
+                    name: 'foo',
+                },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 });

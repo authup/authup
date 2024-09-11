@@ -10,25 +10,26 @@ import {
     AttributeNamesPolicyEvaluator,
     AttributeNamesPolicyValidator,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 const evaluator = new AttributeNamesPolicyEvaluator();
 
 describe('src/policy/attribute-names', () => {
     it('should succeed with known attributes', async () => {
-        const policy : AttributeNamesPolicy = {
+        const spec : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     foo: 'bar',
                     bar: 'baz',
                 },
             },
-        });
+        }));
         expect(outcome)
             .toBeTruthy();
     });
@@ -54,22 +55,22 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should fail with missing context', async () => {
-        const policy : AttributeNamesPolicy = {
+        const spec : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        await expect(evaluator.evaluate({ policy, data: {} })).rejects.toThrow();
+        await expect(evaluator.evaluate(buildTestPolicyEvaluateContext({ spec, data: {} }))).rejects.toThrow();
     });
 
     it('should fail with unknown attributes', async () => {
-        const policy : AttributeNamesPolicy = {
+        const spec : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     foo: 'bar',
@@ -77,20 +78,20 @@ describe('src/policy/attribute-names', () => {
                     baz: 'boz',
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 
     it('should succeed with known nested attributes', async () => {
-        const policy: AttributeNamesPolicy = {
+        const spec: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     user: {
@@ -98,21 +99,21 @@ describe('src/policy/attribute-names', () => {
                     },
                 },
             },
-        });
+        }));
         expect(outcome)
             .toBeTruthy();
     });
 
     it('should fail with unknown nested attributes', async () => {
-        const policy: AttributeNamesPolicy = {
+        const spec: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     user: {
@@ -120,21 +121,21 @@ describe('src/policy/attribute-names', () => {
                     },
                 },
             },
-        });
+        }));
         expect(outcome)
             .toBeFalsy();
     });
 
     it('should fail with partially known nested attributes', async () => {
-        const policy: AttributeNamesPolicy = {
+        const spec: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 attributes: {
                     user: {
@@ -143,7 +144,7 @@ describe('src/policy/attribute-names', () => {
                     },
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 });

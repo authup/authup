@@ -10,42 +10,43 @@ import {
     DatePolicyEvaluator,
     DatePolicyValidator,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {
-        const policy : DatePolicy = {
+        const spec : DatePolicy = {
             start: '2024-04-01',
             end: '2024-05-01',
         };
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = await evaluator.evaluate({
-            policy,
+        let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 dateTime,
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = await evaluator.evaluate({
-            policy,
+        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 dateTime,
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = await evaluator.evaluate({
-            policy,
+        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 dateTime,
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 

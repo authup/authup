@@ -9,15 +9,16 @@ import type { RealmMatchPolicy } from '../../../src';
 import {
     RealmMatchPolicyEvaluator,
 } from '../../../src';
+import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/attribute-realm', () => {
     it('should permit by matching realm', async () => {
-        const policy : RealmMatchPolicy = {};
+        const spec : RealmMatchPolicy = {};
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -28,20 +29,20 @@ describe('src/policy/attribute-realm', () => {
                     realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should permit by lazy attribute name matching', async () => {
-        const policy : RealmMatchPolicy = {
+        const spec : RealmMatchPolicy = {
             attributeNameStrict: true,
             identityMasterMatchAll: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -54,19 +55,19 @@ describe('src/policy/attribute-realm', () => {
                     permission_realm_id: null,
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should permit by matching master realm', async () => {
-        const policy : RealmMatchPolicy = {
+        const spec : RealmMatchPolicy = {
             identityMasterMatchAll: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -77,17 +78,17 @@ describe('src/policy/attribute-realm', () => {
                     realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
             },
-        });
+        }));
         expect(outcome).toBeTruthy();
     });
 
     it('should restrict due non matching realm', async () => {
-        const policy : RealmMatchPolicy = { };
+        const spec : RealmMatchPolicy = { };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -98,17 +99,17 @@ describe('src/policy/attribute-realm', () => {
                     realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
-        const policy : RealmMatchPolicy = {};
+        const spec : RealmMatchPolicy = {};
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate({
-            policy,
+        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
+            spec,
             data: {
                 identity: {
                     type: 'user',
@@ -119,7 +120,7 @@ describe('src/policy/attribute-realm', () => {
                     realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
                 },
             },
-        });
+        }));
         expect(outcome).toBeFalsy();
     });
 });
