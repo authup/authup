@@ -17,7 +17,7 @@ import type { UserEntity } from '../../../../domains';
 import { UserRepository, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
     return {
@@ -71,7 +71,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const userId = useRequestEnv(req, 'userId');
 
     const data : UserEntity[] = [];
-    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+    const policyEvaluationData = buildPolicyDataByRequest(req);
     for (let i = 0; i < entities.length; i++) {
         if (userId === entities[i].id) {
             data.push(entities[i]);
@@ -194,7 +194,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_DELETE,
             ],
-            buildPolicyEvaluationDataByRequest(req, { attributes: entity }),
+            buildPolicyDataByRequest(req, { attributes: entity }),
         );
 
         if (!hasAbility) {

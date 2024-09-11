@@ -15,7 +15,7 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, buildPolicyEvaluationDataByRequest, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, buildPolicyDataByRequest, useRequestEnv } from '../../../request';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -45,7 +45,7 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
 
     const canAbility = await permissionChecker.safeCheck(
         PermissionName.ROLE_UPDATE,
-        buildPolicyEvaluationDataByRequest(req, {
+        buildPolicyDataByRequest(req, {
             attributes: entity,
         }),
     );

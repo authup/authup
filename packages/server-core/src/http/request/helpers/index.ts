@@ -9,5 +9,5 @@ export * from './body-realm-id';
 export * from './env';
 export * from './param-id';
 export * from './master-realm';
-export * from './policy-evaluation-data';
+export * from './policy-data';
 export * from './policy-identity';

@@ -16,7 +16,7 @@ import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
 } from '../../../../domains';
-import { buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { buildPolicyDataByRequest, useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -53,7 +53,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
     let [, total] = queryOutput;
 
     const data : RoleAttributeEntity[] = [];
-    const policyEvaluationData = buildPolicyEvaluationDataByRequest(req);
+    const policyEvaluationData = buildPolicyDataByRequest(req);
 
     for (let i = 0; i < entities.length; i++) {
         const canAbility = await permissionChecker.safeCheckOneOf(
@@ -111,7 +111,7 @@ export async function getOneRoleAttributeRouteHandler(
             PermissionName.ROLE_UPDATE,
             PermissionName.ROLE_DELETE,
         ],
-        buildPolicyEvaluationDataByRequest(req, {
+        buildPolicyDataByRequest(req, {
             attributes: entity,
         }),
     );

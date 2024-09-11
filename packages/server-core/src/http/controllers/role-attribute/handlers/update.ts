@@ -14,7 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, buildPolicyEvaluationDataByRequest, useRequestEnv, useRequestParamID,
+    RequestHandlerOperation, buildPolicyDataByRequest, useRequestEnv, useRequestParamID,
 } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -51,7 +51,7 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     const canAbility = await permissionChecker.safeCheck(
         PermissionName.ROLE_UPDATE,
-        buildPolicyEvaluationDataByRequest(req, {
+        buildPolicyDataByRequest(req, {
             attributes: entity,
         }),
     );

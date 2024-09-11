@@ -36,7 +36,5 @@ export async function loadOAuth2SubPermissions(
         }
     }
 
-    // todo: reduce permissions based on scope :)
-
     return [];
 }
