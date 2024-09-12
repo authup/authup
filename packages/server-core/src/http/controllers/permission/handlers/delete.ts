@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
@@ -18,9 +17,7 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.PERMISSION_DELETE)) {
-        throw new ForbiddenError('You are not allowed to drop a permission.');
-    }
+    await permissionChecker.preCheck({ name: PermissionName.PERMISSION_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
@@ -35,9 +32,7 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
         throw new BadRequestError('A built-in permission can not be deleted.');
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.PERMISSION_DELETE, data: { attributes: entity } });
 
     const { id: entityId } = entity;
 

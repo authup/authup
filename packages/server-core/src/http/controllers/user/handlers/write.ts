@@ -57,20 +57,19 @@ export async function writeUserRouteHandler(
     let hasAbility : boolean;
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        hasAbility = await permissionChecker.has(PermissionName.USER_UPDATE);
-        if (
-            entity.id !== useRequestEnv(req, 'userId') &&
-            !hasAbility
-        ) {
-            throw new ForbiddenError();
+        try {
+            await permissionChecker.check({ name: PermissionName.USER_UPDATE, data: { attributes: entity } });
+            hasAbility = true;
+        } catch (e) {
+            if (entity.id !== useRequestEnv(req, 'userId')) {
+                throw e;
+            }
         }
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        hasAbility = await permissionChecker.has(PermissionName.USER_CREATE);
-        if (!hasAbility) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.USER_CREATE });
+        hasAbility = true;
 
         group = RequestHandlerOperation.CREATE;
     }

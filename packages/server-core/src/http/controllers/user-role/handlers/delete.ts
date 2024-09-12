@@ -17,9 +17,7 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.USER_ROLE_DELETE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.USER_ROLE_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
@@ -49,9 +47,7 @@ export async function deleteUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    if (!await permissionChecker.safeCheck(PermissionName.USER_ROLE_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.USER_ROLE_DELETE, data: { attributes: entity } });
 
     // ----------------------------------------------
 

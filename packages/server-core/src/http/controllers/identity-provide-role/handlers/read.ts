@@ -13,20 +13,19 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = permissionChecker.hasOneOf([
-        PermissionName.IDENTITY_PROVIDER_READ,
-        PermissionName.IDENTITY_PROVIDER_UPDATE,
-        PermissionName.IDENTITY_PROVIDER_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.IDENTITY_PROVIDER_READ,
+            PermissionName.IDENTITY_PROVIDER_UPDATE,
+            PermissionName.IDENTITY_PROVIDER_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
@@ -61,14 +60,13 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
 
 export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = permissionChecker.hasOneOf([
-        PermissionName.IDENTITY_PROVIDER_READ,
-        PermissionName.IDENTITY_PROVIDER_UPDATE,
-        PermissionName.IDENTITY_PROVIDER_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.IDENTITY_PROVIDER_READ,
+            PermissionName.IDENTITY_PROVIDER_UPDATE,
+            PermissionName.IDENTITY_PROVIDER_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

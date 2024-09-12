@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '../policy';
-import { PolicyEngine, PolicyError } from '../policy';
+import { DecisionStrategy } from '../constants';
+import { BuiltInPolicyType, PolicyEngine, PolicyError } from '../policy';
 import { PermissionError } from './error';
 import type { PermissionGetOptions, PermissionProvider } from './provider';
 import { PermissionMemoryProvider } from './provider';
 
-import type { PermissionCheckerOptions, PermissionItem } from './types';
+import type {
+    PermissionCheckerCheckContext, PermissionCheckerOptions, PermissionItem,
+} from './types';
 
 export class PermissionChecker {
     protected provider : PermissionProvider;
@@ -43,244 +45,167 @@ export class PermissionChecker {
     // ----------------------------------------------
 
     /**
-     * Check if an ability exists without any restriction.
-     *
-     * @param name
-     * @deprecated
-     */
-    async has(name: string | PermissionGetOptions) : Promise<boolean> {
-        const entity = await this.get(name);
-        return !!entity;
-    }
-
-    // ----------------------------------------------
-
-    /**
      * Get a permission.
      *
      * @param input
      */
-    protected async get(input: string | PermissionGetOptions) : Promise<PermissionItem | undefined> {
-        if (typeof input === 'string') {
-            const options : PermissionGetOptions = {
-                name: input,
-            };
+    protected async get(input: string) : Promise<PermissionItem | undefined> {
+        const options : PermissionGetOptions = {
+            name: input,
+        };
 
-            if (typeof this.realmId !== 'undefined') {
-                options.realmId = this.realmId;
-            }
-
-            return this.provider.get(options);
+        if (typeof this.realmId !== 'undefined') {
+            options.realmId = this.realmId;
         }
 
-        if (
-            typeof input.realmId === 'undefined' &&
-            typeof this.realmId !== 'undefined'
-        ) {
-            input.realmId = this.realmId;
-        }
-
-        return this.provider.get(input);
+        return this.provider.get(options);
     }
 
     // ----------------------------------------------
-
-    /**
-     * Check if one of the following permission exists without any restriction.
-     *
-     * @param input
-     * @deprecated
-     */
-    async hasOneOf(input: (string | PermissionGetOptions)[]) : Promise<boolean> {
-        for (let i = 0; i < input.length; i++) {
-            const entity = await this.has(input[i]);
-            if (entity) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // ----------------------------------------------
-
-    /**
-     * Check if all permissions exist without any restriction.
-     *
-     * @param items
-     * @deprecated
-     */
-    async hasMany(items: (PermissionGetOptions | string)[]) : Promise<boolean> {
-        for (let i = 0; i < items.length; i++) {
-            const entity = await this.has(items[i]);
-            if (!entity) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    // ----------------------------------------------
-
-    async check(
-        input: PermissionGetOptions | string,
-        context?: PolicyData
-    ) : Promise<void>;
-
-    async check(
-        input: (PermissionGetOptions | string)[],
-        context?: PolicyData
-    ) : Promise<void>;
 
     /**
      * Verify if one or more possible owned permissions satisfy their conditions.
      *
      * @throws PermissionError
      *
-     * @param input
-     * @param data
+     * @param ctx
      */
-    async check(
-        input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
-        data: PolicyData = {},
-    ) : Promise<void> {
-        if (!Array.isArray(input)) {
-            await this.check([input], data);
+    async check(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        if (!Array.isArray(ctx.name)) {
+            await this.check({
+                ...ctx,
+                name: [ctx.name],
+            });
             return;
         }
 
-        for (let i = 0; i < input.length; i++) {
-            const entity = await this.get(input[i]);
+        const {
+            options = {},
+        } = ctx;
+
+        let lastError : PermissionError | undefined;
+        let count = 0;
+
+        for (let i = 0; i < ctx.name.length; i++) {
+            const entity = await this.get(ctx.name[i]);
             if (!entity) {
-                throw PermissionError.notFound(this.toName(input[i]));
+                throw PermissionError.notFound(ctx.name[i]);
             }
 
-            if (entity.policy) {
-                let outcome : boolean;
-
-                try {
-                    outcome = await this.policyEngine.evaluate({
-                        data: {
-                            ...data,
-                            permission: entity,
-                        },
-                        spec: entity.policy,
-                    });
-                } catch (e) {
-                    if (e instanceof PolicyError) {
-                        throw PermissionError.evaluationFailed({
-                            name: entity.name,
-                            policy: entity.policy,
-                            policyError: e,
-                        });
-                    }
-
-                    outcome = false;
+            if (!entity.policy) {
+                if (options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return;
                 }
 
-                if (!outcome) {
-                    throw PermissionError.evaluationFailed({
+                count++;
+
+                continue;
+            }
+
+            let outcome : boolean;
+
+            try {
+                outcome = await this.policyEngine.evaluate({
+                    data: {
+                        ...ctx.data || {},
+                        permission: entity,
+                    },
+                    spec: entity.policy,
+                    options: {
+                        include: options.policiesIncluded,
+                        exclude: options.policiesExcluded,
+                    },
+                });
+            } catch (e) {
+                if (e instanceof PolicyError) {
+                    lastError = PermissionError.evaluationFailed({
+                        name: entity.name,
+                        policy: entity.policy,
+                        policyError: e,
+                    });
+                } else {
+                    lastError = PermissionError.evaluationFailed({
                         name: entity.name,
                         policy: entity.policy,
                     });
                 }
+
+                outcome = false;
+            }
+
+            if (outcome) {
+                if (options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return;
+                }
+
+                count++;
+            } else {
+                if (!lastError) {
+                    lastError = PermissionError.evaluationFailed({
+                        name: entity.name,
+                        policy: entity.policy,
+                    });
+                }
+
+                if (options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    throw lastError;
+                }
+
+                count--;
             }
         }
-    }
 
-    async safeCheck(
-        input: PermissionGetOptions | string,
-        context?: PolicyData
-    ) : Promise<boolean>;
+        if (count > 0) {
+            return;
+        }
 
-    async safeCheck(
-        input: (PermissionGetOptions | string)[],
-        context?: PolicyData
-    ) : Promise<boolean>;
-
-    /**
-     * Check if one or more possible owned permissions satisfy their conditions.
-     *
-     * @param input
-     * @param data
-     *
-     * @return boolean
-     */
-    async safeCheck(
-        input: PermissionGetOptions | string | (PermissionGetOptions | string)[],
-        data: PolicyData = {},
-    ) : Promise<boolean> {
-        try {
-            await this.check(input as any, data);
-
-            return true;
-        } catch (e) {
-            return false;
+        if (count > 1 || !lastError) {
+            throw PermissionError.deniedAll(ctx.name);
+        } else {
+            throw lastError;
         }
     }
-
-    // ----------------------------------------------
 
     /**
      * Verify if one of the permissions evaluates to true.
      *
      * @throws PermissionError
      *
-     * @param input
-     * @param data
+     * @param ctx
      */
-    async checkOneOf(
-        input: (PermissionGetOptions | string)[],
-        data: PolicyData = {},
-    ) : Promise<void> {
-        let error : PermissionError | undefined;
-
-        for (let i = 0; i < input.length; i++) {
-            try {
-                await this.check(input[i], data);
-
-                return;
-            } catch (e) {
-                error = e as PermissionError;
-            }
-        }
-
-        if (error) {
-            throw error;
-        }
-
-        throw PermissionError.deniedAll(input.map((el) => this.toName(el)));
-    }
-
-    /**
-     * Check if one of the permissions evaluates to true.
-     *
-     * @param input
-     * @param data
-     *
-     * @return boolean
-     */
-    async safeCheckOneOf(
-        input: (PermissionGetOptions | string)[],
-        data: PolicyData = {},
-    ) : Promise<boolean> {
-        try {
-            await this.checkOneOf(input, data);
-
-            return true;
-        } catch (e) {
-            return false;
-        }
+    async checkOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        return this.check({
+            ...ctx,
+            options: {
+                ...(ctx.options || {}),
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+            },
+        });
     }
 
     // ----------------------------------------------
 
-    private toName(input: string | PermissionGetOptions) {
-        if (typeof input === 'string') {
-            return input;
-        }
+    async preCheck(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        return this.check({
+            ...ctx,
+            options: {
+                ...(ctx.options || {}),
+                policiesExcluded: [
+                    BuiltInPolicyType.ATTRIBUTES,
+                    BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    BuiltInPolicyType.REALM_MATCH,
+                ],
+            },
+        });
+    }
 
-        return input.name;
+    async preCheckOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        return this.preCheck({
+            ...ctx,
+            options: {
+                ...(ctx.options || {}),
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+            },
+        });
     }
 }

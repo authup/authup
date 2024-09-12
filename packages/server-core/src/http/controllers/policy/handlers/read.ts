@@ -14,20 +14,19 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { PolicyRepository, resolveRealm } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = permissionChecker.hasOneOf([
-        PermissionName.PERMISSION_READ,
-        PermissionName.PERMISSION_UPDATE,
-        PermissionName.PERMISSION_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
@@ -79,14 +78,13 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
 export async function getOnePolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = permissionChecker.hasOneOf([
-        PermissionName.PERMISSION_READ,
-        PermissionName.PERMISSION_UPDATE,
-        PermissionName.PERMISSION_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.PERMISSION_READ,
+            PermissionName.PERMISSION_UPDATE,
+            PermissionName.PERMISSION_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req, {
         isUUID: false,

@@ -17,9 +17,7 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.CLIENT_UPDATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
@@ -35,9 +33,7 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: entity })) {
-        throw new NotFoundError();
-    }
+    await permissionChecker.check({ name: PermissionName.CLIENT_UPDATE, data: { attributes: entity } });
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.client.realm_id)) {
         throw new ForbiddenError();

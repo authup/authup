@@ -20,9 +20,7 @@ export async function deleteIdentityProviderRouteHandler(
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_DELETE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderEntity);
@@ -32,9 +30,7 @@ export async function deleteIdentityProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_DELETE, data: { attributes: entity } });
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
         throw new ForbiddenError();

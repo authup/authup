@@ -12,7 +12,7 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import {
     OAuth2SubKind, isUUID,
 } from '@authup/kit';
@@ -22,18 +22,17 @@ import {
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROBOT_READ,
-        PermissionName.ROBOT_UPDATE,
-        PermissionName.ROBOT_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROBOT_READ,
+            PermissionName.ROBOT_UPDATE,
+            PermissionName.ROBOT_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
@@ -76,7 +75,6 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const requestRobot = useRequestEnv(req, 'robot');
 
     const data : RobotEntity[] = [];
-    const policyEvaluationData = buildPolicyDataForRequest(req);
     for (let i = 0; i < queryOutput[0].length; i++) {
         if (
             requestRobot &&
@@ -86,17 +84,18 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             continue;
         }
 
-        const hasAbility = await permissionChecker.safeCheckOneOf(
-            [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-            { ...policyEvaluationData, attributes: queryOutput[0][i] },
-        );
-        if (hasAbility) {
+        try {
+            await permissionChecker.checkOneOf({
+                name: [
+                    PermissionName.ROBOT_READ,
+                    PermissionName.ROBOT_UPDATE,
+                    PermissionName.ROBOT_DELETE,
+                ],
+                data: { attributes: queryOutput[0][i] },
+            });
+
             data.push(queryOutput[0][i]);
-        } else {
+        } catch (e) {
             queryOutput[1] -= 1;
         }
     }
@@ -112,14 +111,13 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROBOT_READ,
-        PermissionName.ROBOT_UPDATE,
-        PermissionName.ROBOT_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROBOT_READ,
+            PermissionName.ROBOT_UPDATE,
+            PermissionName.ROBOT_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -209,18 +207,14 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     if (!isMe) {
-        const hasAbility = await permissionChecker.safeCheckOneOf(
-            [
+        await permissionChecker.check({
+            name: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
                 PermissionName.ROBOT_DELETE,
             ],
-            buildPolicyDataForRequest(req, { attributes: entity }),
-        );
-
-        if (!hasAbility) {
-            throw new ForbiddenError();
-        }
+            data: { attributes: entity },
+        });
     }
 
     return send(res, entity);

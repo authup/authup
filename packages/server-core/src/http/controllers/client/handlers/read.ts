@@ -13,7 +13,7 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import {
     PermissionName,
 } from '@authup/core-kit';
@@ -27,14 +27,13 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.CLIENT_READ,
-        PermissionName.CLIENT_UPDATE,
-        PermissionName.CLIENT_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
@@ -59,11 +58,8 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
             'updated_at',
             'created_at',
         ],
+        allowed: ['secret'],
     };
-
-    if (hasOneOf) {
-        options.allowed = ['secret'];
-    }
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
@@ -95,14 +91,13 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.CLIENT_READ,
-        PermissionName.CLIENT_UPDATE,
-        PermissionName.CLIENT_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -150,11 +145,8 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
             'updated_at',
             'created_at',
         ],
+        allowed: ['secret'],
     };
-
-    if (hasOneOf) {
-        options.allowed = ['secret'];
-    }
 
     applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',

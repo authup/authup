@@ -15,20 +15,19 @@ import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { ScopeEntity, resolveRealm } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.SCOPE_READ,
-        PermissionName.SCOPE_UPDATE,
-        PermissionName.SCOPE_DELETE,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.SCOPE_READ,
+            PermissionName.SCOPE_UPDATE,
+            PermissionName.SCOPE_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ScopeEntity);
@@ -72,14 +71,13 @@ export async function getManyScopeRouteHandler(req: Request, res: Response) : Pr
 
 export async function getOneScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.SCOPE_READ,
-        PermissionName.SCOPE_UPDATE,
-        PermissionName.SCOPE_DELETE,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.SCOPE_READ,
+            PermissionName.SCOPE_UPDATE,
+            PermissionName.SCOPE_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req, {
         isUUID: false,

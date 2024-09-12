@@ -61,15 +61,11 @@ export async function writeRobotRouteHandler(
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await permissionChecker.has(PermissionName.ROLE_UPDATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.ROBOT_UPDATE });
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await permissionChecker.has(PermissionName.ROLE_CREATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.ROBOT_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -90,9 +86,7 @@ export async function writeRobotRouteHandler(
             throw new ForbiddenError();
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.ROBOT_UPDATE, data: { attributes: data } });
 
         const config = useConfig();
         if (
@@ -131,9 +125,7 @@ export async function writeRobotRouteHandler(
         throw new ForbiddenError();
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.ROBOT_CREATE, data: { attributes: entity } });
 
     if (!data.secret) {
         data.secret = repository.createSecret();

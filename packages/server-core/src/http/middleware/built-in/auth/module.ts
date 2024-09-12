@@ -15,7 +15,7 @@ import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionChecker } from '@authup/kit';
 import { useConfig } from '../../../../config';
-import { setRequestEnv } from '../../../request';
+import { RequestPermissionChecker, setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
 function parseRequestAccessTokenCookie(request: Request): string | undefined {
@@ -43,7 +43,9 @@ export function registerAuthMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
-        setRequestEnv(request, 'permissionChecker', new PermissionChecker());
+        const checker = new PermissionChecker();
+        const requestChecker = new RequestPermissionChecker(request, checker);
+        setRequestEnv(request, 'permissionChecker', requestChecker);
 
         try {
             if (typeof headerValue === 'undefined') {

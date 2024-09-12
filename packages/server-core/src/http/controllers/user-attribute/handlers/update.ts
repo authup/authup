@@ -20,14 +20,13 @@ import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_UPDATE,
-        PermissionName.USER_SELF_MANAGE,
-    ]);
+    await permissionChecker.checkOneOf({
+        name: [
 
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_SELF_MANAGE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

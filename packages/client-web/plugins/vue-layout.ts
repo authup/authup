@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PolicyIdentity } from '@authup/kit';
 import de from 'date-fns/locale/de';
 import { watch } from 'vue';
 import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
@@ -58,12 +59,29 @@ export default defineNuxtPlugin((ctx) => {
     });
 
     const store = useStore(ctx.$pinia as Pinia);
-    const { loggedIn } = storeToRefs(store);
+    const { loggedIn, userId } = storeToRefs(store);
 
     ctx.vueApp.use(installNavigation, {
         provider: new Navigation({
             isLoggedIn: () => loggedIn.value,
-            hasPermission: (name) => store.permissionChecker.has(name),
+            hasPermission: async (name) => {
+                let identity: PolicyIdentity | undefined;
+                if (userId.value) {
+                    identity = {
+                        type: 'user',
+                        id: userId.value,
+                    };
+                }
+                return store.permissionChecker
+                    .preCheck({
+                        name,
+                        data: {
+                            identity,
+                        },
+                    })
+                    .then(() => true)
+                    .catch(() => false);
+            },
         }),
     });
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { isPropertySet, isUUID } from '@authup/kit';
 import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -57,15 +57,11 @@ export async function writePermissionRouteHandler(
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await permissionChecker.has(PermissionName.PERMISSION_UPDATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await permissionChecker.has(PermissionName.PERMISSION_CREATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.PERMISSION_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -90,9 +86,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_UPDATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.PERMISSION_UPDATE, data: { attributes: data } });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
@@ -103,9 +97,7 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.PERMISSION_CREATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.PERMISSION_CREATE, data: { attributes: data } });
     }
 
     const isUnique = await isEntityUnique({

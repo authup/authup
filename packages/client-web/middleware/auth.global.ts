@@ -6,6 +6,7 @@
  */
 
 import { useStore } from '@authup/client-web-kit';
+import type { PolicyIdentity } from '@authup/kit';
 import { storeToRefs } from 'pinia';
 import type { RouteLocationNormalized } from 'vue-router';
 import {
@@ -94,7 +95,7 @@ export default defineNuxtRouteMiddleware(async (
         return Promise.resolve();
     }
 
-    const { loggedIn } = storeToRefs(store);
+    const { loggedIn, userId } = storeToRefs(store);
 
     if (to.matched.some((matched) => !!matched.meta[LayoutKey.REQUIRED_LOGGED_IN])) {
         if (!loggedIn.value) {
@@ -113,8 +114,26 @@ export default defineNuxtRouteMiddleware(async (
             });
         }
 
+        let identity : PolicyIdentity | undefined;
+        if (userId.value) {
+            identity = {
+                type: 'user',
+                id: userId.value,
+            };
+        }
+
         try {
-            await checkAbilityOrPermission(to, (name) => store.permissionChecker.has(name));
+            await checkAbilityOrPermission(
+                to,
+                (name) => store.permissionChecker
+                    .preCheck({
+                        name,
+                        data: {
+                            identity,
+                        },
+                    }).then(() => true)
+                    .catch(() => false),
+            );
         } catch (e) {
             return navigateTo({
                 path: redirectPath,

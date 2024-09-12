@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import {
     PermissionName,
     isRealmResourceWritable,
@@ -14,16 +14,16 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { IdentityProviderRoleMappingEntity, RoleRepository } from '../../../../domains';
+import {
+    IdentityProviderRoleMappingEntity, RoleRepository,
+} from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -62,15 +62,12 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: data })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: data } });
 
     const roleRepository = new RoleRepository(dataSource);
-    const permissions = await roleRepository.getOwnedPermissions(data.role_id);
-    if (!await permissionChecker.hasMany(permissions)) {
-        throw new ForbiddenError('You don\'t own all role permissions.');
-    }
+
+    const permissionsRequested = await roleRepository.getOwnedPermissions(data.role_id);
+    await permissionChecker.checkOwned(permissionsRequested);
 
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 

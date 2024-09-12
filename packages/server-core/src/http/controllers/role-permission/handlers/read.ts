@@ -12,7 +12,7 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { RolePermissionEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
@@ -23,14 +23,13 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
  * @param res
  */
 export async function getManyRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'permissionChecker');
-    const hasAbility = await ability.hasOneOf([
-        PermissionName.ROLE_PERMISSION_DELETE,
-        PermissionName.ROLE_PERMISSION_READ,
-    ]);
-    if (!hasAbility) {
-        throw new ForbiddenError();
-    }
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROLE_PERMISSION_DELETE,
+            PermissionName.ROLE_PERMISSION_READ,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RolePermissionEntity);
@@ -66,14 +65,13 @@ export async function getManyRolePermissionRouteHandler(req: Request, res: Respo
  * @param res
  */
 export async function getOneRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const ability = useRequestEnv(req, 'permissionChecker');
-    const hasAbility = await ability.hasOneOf([
-        PermissionName.ROLE_PERMISSION_DELETE,
-        PermissionName.ROLE_PERMISSION_READ,
-    ]);
-    if (!hasAbility) {
-        throw new ForbiddenError();
-    }
+    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROLE_PERMISSION_DELETE,
+            PermissionName.ROLE_PERMISSION_READ,
+        ],
+    });
 
     const id = useRequestParamID(req);
 
