@@ -6,43 +6,48 @@
  */
 
 import { PermissionName } from '@authup/core-kit';
-import type { PolicyData } from '@authup/kit';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../domains';
-import { buildPolicyDataForRequest, useRequestEnv } from '../../../request';
+import { useRequestEnv } from '../../../request';
 
 export async function canRequestManageUserAttribute(
     req: Request,
     entity: UserAttributeEntity,
-    evaluationData?: PolicyData,
 ) : Promise<boolean> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     const userId = useRequestEnv(req, 'userId');
 
-    if (!evaluationData) {
-        evaluationData = buildPolicyDataForRequest(req);
+    const isMe : boolean = userId === entity.user_id;
+
+    try {
+        if (isMe) {
+            await permissionChecker.check({
+                name: PermissionName.USER_SELF_MANAGE,
+                data: {
+                    attributes: entity,
+                },
+            });
+
+            return true;
+        }
+    } catch (e) {
+        if (!isMe) {
+            return false;
+        }
     }
 
-    let canAbility : boolean = false;
-    if (userId === entity.user_id) {
-        canAbility = await permissionChecker.safeCheck(
-            PermissionName.USER_SELF_MANAGE,
-            {
-                ...evaluationData,
-                attributes: entity,
-            },
-        );
+    if (!isMe) {
+        try {
+            await permissionChecker.check({
+                name: PermissionName.USER_UPDATE,
+                data: {
+                    attributes: entity,
+                },
+            });
+        } catch (e) {
+            return false;
+        }
     }
 
-    if (!canAbility) {
-        canAbility = await permissionChecker.safeCheck(
-            PermissionName.USER_UPDATE,
-            {
-                ...evaluationData,
-                attributes: entity,
-            },
-        );
-    }
-
-    return canAbility;
+    return true;
 }

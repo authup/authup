@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
+import {
+    BuiltInPolicyType, PermissionError, isObject,
+} from '@authup/kit';
 import type {
     Router,
 } from 'routup';
@@ -27,6 +29,19 @@ export function registerErrorMiddleware(router: Router) {
 
             if (error.cause) {
                 useLogger().error(error.cause);
+            }
+        }
+
+        if (error.cause instanceof PermissionError) {
+            error.expose = true;
+
+            if (
+                error.cause.policy &&
+                error.cause.policy.type === BuiltInPolicyType.IDENTITY
+            ) {
+                error.statusCode = 401;
+            } else {
+                error.statusCode = 403;
             }
         }
 

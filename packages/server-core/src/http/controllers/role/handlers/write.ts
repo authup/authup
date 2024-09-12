@@ -6,7 +6,7 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
     isRealmResourceWritable,
@@ -60,15 +60,11 @@ export async function writeRoleRouteHandler(
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await permissionChecker.has(PermissionName.ROLE_UPDATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await permissionChecker.has(PermissionName.ROLE_CREATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.ROLE_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -91,9 +87,7 @@ export async function writeRoleRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.ROLE_UPDATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.ROLE_UPDATE, data: { attributes: data } });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
@@ -104,9 +98,7 @@ export async function writeRoleRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.ROLE_CREATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.ROLE_CREATE, data: { attributes: data } });
     }
 
     // ----------------------------------------------

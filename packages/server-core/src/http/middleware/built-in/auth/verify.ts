@@ -47,7 +47,7 @@ import {
     loadOAuth2SubPermissions,
     readOAuth2TokenPayload,
 } from '../../../oauth2';
-import { setRequestEnv } from '../../../request';
+import { RequestPermissionChecker, setRequestEnv } from '../../../request';
 
 async function verifyBearerAuthorizationHeader(
     request: Request,
@@ -82,9 +82,12 @@ async function verifyBearerAuthorizationHeader(
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
     const permissionRepository = new PermissionMemoryProvider(permissions);
-    setRequestEnv(request, 'permissionChecker', new PermissionChecker({
+
+    const checker = new PermissionChecker({
         provider: permissionRepository,
-    }));
+    });
+    const requestChecker = new RequestPermissionChecker(request, checker);
+    setRequestEnv(request, 'permissionChecker', requestChecker);
 
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
@@ -123,11 +126,13 @@ async function verifyBasicAuthorizationHeader(
             permissions = await userRepository.getOwnedPermissions(user.id);
 
             const permissionRepository = new PermissionMemoryProvider(permissions);
-            const permissionChecker = new PermissionChecker({
+
+            const checker = new PermissionChecker({
                 provider: permissionRepository,
             });
+            const requestChecker = new RequestPermissionChecker(request, checker);
 
-            setRequestEnv(request, 'permissionChecker', permissionChecker);
+            setRequestEnv(request, 'permissionChecker', requestChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'user', user);
@@ -148,11 +153,12 @@ async function verifyBasicAuthorizationHeader(
         if (robot) {
             permissions = await robotRepository.getOwnedPermissions(robot.id);
             const permissionRepository = new PermissionMemoryProvider(permissions);
-            const permissionChecker = new PermissionChecker({
+            const checker = new PermissionChecker({
                 provider: permissionRepository,
             });
+            const requestChecker = new RequestPermissionChecker(request, checker);
 
-            setRequestEnv(request, 'permissionChecker', permissionChecker);
+            setRequestEnv(request, 'permissionChecker', requestChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'robot', robot);
@@ -169,7 +175,10 @@ async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
-            setRequestEnv(request, 'permissionChecker', new PermissionChecker());
+            setRequestEnv(request, 'permissionChecker', new RequestPermissionChecker(
+                request,
+                new PermissionChecker(),
+            ));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'client', oauth2Client);

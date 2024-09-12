@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -18,9 +18,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.CLIENT_UPDATE)) {
-        throw new NotFoundError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
 
     const validator = new ClientScopeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -47,9 +45,12 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         data.scope_realm_id = data.scope.realm_id;
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: data })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({
+        name: PermissionName.CLIENT_CREATE,
+        data: {
+            attributes: data,
+        },
+    });
 
     const repository = dataSource.getRepository(ClientScopeEntity);
     let entity = repository.create(data);

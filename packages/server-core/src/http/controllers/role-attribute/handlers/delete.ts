@@ -5,23 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-
+import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RoleAttributeEntity } from '../../../../domains';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function deleteRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.has(
-        PermissionName.ROLE_UPDATE,
-    );
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
     const id = useRequestParamID(req);
 
@@ -34,16 +28,7 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    const canAbility = await permissionChecker.safeCheck(
-        PermissionName.ROLE_UPDATE,
-        buildPolicyDataForRequest(req, {
-            attributes: entity,
-        }),
-    );
-
-    if (!canAbility) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.ROLE_UPDATE, data: { attributes: entity } });
 
     const { id: entityId } = entity;
 

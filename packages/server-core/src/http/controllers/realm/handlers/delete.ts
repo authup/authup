@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -18,9 +18,7 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.REALM_DELETE)) {
-        throw new ForbiddenError('You are not allowed to drop a realm.');
-    }
+    await permissionChecker.preCheck({ name: PermissionName.REALM_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
@@ -35,9 +33,7 @@ export async function deleteRealmRouteHandler(req: Request, res: Response) : Pro
         throw new BadRequestError('A built-in realm can not be deleted.');
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.REALM_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.REALM_DELETE, data: { attributes: entity } });
 
     const { id: entityId } = entity;
 

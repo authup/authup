@@ -6,7 +6,7 @@
  */
 
 import type { PolicyData } from '@authup/kit';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import {
     PermissionName, isRealmResourceWritable,
 } from '@authup/core-kit';
@@ -27,9 +27,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
  */
 export async function createUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.USER_PERMISSION_CREATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.USER_PERMISSION_CREATE });
 
     // ----------------------------------------------
 
@@ -57,10 +55,8 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
         }
 
         data.permission_realm_id = data.permission.realm_id;
-        // todo: pass realm id
-        if (!await permissionChecker.safeCheck(data.permission.name, policyEvaluationContext)) {
-            throw new ForbiddenError('The target permission is not owned.');
-        }
+
+        await permissionChecker.check({ name: data.permission.name, data: policyEvaluationContext });
     }
 
     // ----------------------------------------------
@@ -75,9 +71,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!await permissionChecker.safeCheck(PermissionName.USER_PERMISSION_CREATE, policyEvaluationContext)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.USER_PERMISSION_CREATE, data: policyEvaluationContext });
 
     // ----------------------------------------------
 

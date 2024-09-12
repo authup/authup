@@ -57,15 +57,23 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
     const [entities, total] = await query.getManyAndCount();
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_READ)) {
-        await repository.findAndAppendExtraAttributesToMany(
-            entities.filter(
-                (entity) => permissionChecker.safeCheck(
-                    PermissionName.IDENTITY_PROVIDER_READ,
-                    { attributes: entity },
-                ),
-            ),
-        );
+    try {
+        await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_READ });
+
+        for (let i = 0; i < entities.length; i++) {
+            try {
+                await permissionChecker.check({
+                    name: PermissionName.IDENTITY_PROVIDER_READ,
+                    data: { attributes: entities[i] },
+                });
+
+                await repository.findAndAppendExtraAttributesTo(entities[i]);
+            } catch (e) {
+                // do nothing
+            }
+        }
+    } catch (e) {
+        // do nothing
     }
 
     return send(res, {
@@ -124,8 +132,15 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     }
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_READ, { attributes: entity })) {
+
+    try {
+        await permissionChecker.check({
+            name: PermissionName.IDENTITY_PROVIDER_READ,
+            data: { attributes: entity },
+        });
         await repository.findAndAppendExtraAttributesTo(entity);
+    } catch (e) {
+        // do nothing
     }
 
     return send(res, entity);

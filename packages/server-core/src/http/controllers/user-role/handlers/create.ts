@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '@authup/kit';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -19,9 +18,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.USER_ROLE_CREATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.USER_ROLE_CREATE });
 
     const validator = new UserRoleRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -37,12 +34,6 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    const policyEvaluationContext : PolicyData = {
-        attributes: data satisfies Partial<UserRoleEntity>,
-    };
-
-    // ----------------------------------------------
-
     if (data.role) {
         if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
             throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
@@ -51,10 +42,8 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
         data.role_realm_id = data.role.realm_id;
 
         const roleRepository = new RoleRepository(dataSource);
-        const roleAbilities = await roleRepository.getOwnedPermissions(data.role_id);
-        if (!await permissionChecker.safeCheck(roleAbilities, policyEvaluationContext)) {
-            throw new ForbiddenError('The role permissions are not owned.');
-        }
+        const rolePermissions = await roleRepository.getOwnedPermissions(data.role_id);
+        await permissionChecker.checkOwned(rolePermissions);
     }
 
     // ----------------------------------------------
@@ -69,9 +58,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     // ----------------------------------------------
 
-    if (!await permissionChecker.safeCheck(PermissionName.USER_ROLE_CREATE, policyEvaluationContext)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.USER_ROLE_CREATE, data: { attributes: data } });
 
     // ----------------------------------------------
 

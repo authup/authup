@@ -11,23 +11,22 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
 } from '../../../../domains';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROLE_READ,
-        PermissionName.ROLE_UPDATE,
-        PermissionName.ROLE_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleAttributeEntity);
@@ -53,20 +52,21 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
     let [, total] = queryOutput;
 
     const data : RoleAttributeEntity[] = [];
-    const policyEvaluationData = buildPolicyDataForRequest(req);
 
     for (let i = 0; i < entities.length; i++) {
-        const canAbility = await permissionChecker.safeCheckOneOf(
-            [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-            ],
-            { ...policyEvaluationData, attributes: queryOutput[0][i] },
-        );
-        if (canAbility) {
+        try {
+            await permissionChecker.checkOneOf({
+                name: [
+                    PermissionName.ROLE_READ,
+                    PermissionName.ROLE_UPDATE,
+                    PermissionName.ROLE_DELETE,
+                ],
+                data: {
+                    attributes: queryOutput[0][i],
+                },
+            });
             data.push(entities[i]);
-        } else {
+        } catch (e) {
             total--;
         }
     }
@@ -85,14 +85,13 @@ export async function getOneRoleAttributeRouteHandler(
     res: Response,
 ) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROLE_READ,
-        PermissionName.ROLE_UPDATE,
-        PermissionName.ROLE_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROLE_READ,
+            PermissionName.ROLE_UPDATE,
+            PermissionName.ROLE_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 
@@ -105,20 +104,16 @@ export async function getOneRoleAttributeRouteHandler(
         throw new NotFoundError();
     }
 
-    const canAbility = await permissionChecker.safeCheckOneOf(
-        [
+    await permissionChecker.checkOneOf({
+        name: [
             PermissionName.ROLE_READ,
             PermissionName.ROLE_UPDATE,
             PermissionName.ROLE_DELETE,
         ],
-        buildPolicyDataForRequest(req, {
+        data: {
             attributes: entity,
-        }),
-    );
-
-    if (!canAbility) {
-        throw new ForbiddenError();
-    }
+        },
+    });
 
     return send(res, entity);
 }

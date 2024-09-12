@@ -12,20 +12,19 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { RobotRoleEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROBOT_ROLE_READ,
-        PermissionName.ROBOT_ROLE_UPDATE,
-        PermissionName.ROBOT_ROLE_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROBOT_ROLE_READ,
+            PermissionName.ROBOT_ROLE_UPDATE,
+            PermissionName.ROBOT_ROLE_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
@@ -54,14 +53,13 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
 
 export async function getOneRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.ROBOT_ROLE_READ,
-        PermissionName.ROBOT_ROLE_UPDATE,
-        PermissionName.ROBOT_ROLE_DELETE,
-    ]);
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.ROBOT_ROLE_READ,
+            PermissionName.ROBOT_ROLE_UPDATE,
+            PermissionName.ROBOT_ROLE_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

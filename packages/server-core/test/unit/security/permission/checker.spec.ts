@@ -39,6 +39,8 @@ describe('src/security/permission/checker', () => {
     });
 
     it('should verify with valid permission', async () => {
+        expect.assertions(1);
+
         const repository = dataSource.getRepository(PermissionEntity);
         const name = createNanoID();
         const entity = repository.create({
@@ -49,29 +51,47 @@ describe('src/security/permission/checker', () => {
         await repository.save(entity);
 
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(name, {
-            identity: {
-                type: 'user',
-                id: adminUser.id,
-            },
-        });
-        expect(hasPermission).toBeTruthy();
+        try {
+            await checker.check({
+                name,
+                data: {
+                    identity: {
+                        type: 'user',
+                        id: adminUser.id,
+                    },
+                },
+            });
+            expect(true).toBeTruthy();
+        } catch (e) {
+            expect(true).toBeFalsy();
+        }
     });
 
     it('should not verify with invalid permission', async () => {
+        expect.assertions(1);
+
         const name = createNanoID();
 
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(name, {
-            identity: {
-                type: 'user',
-                id: adminUser.id,
-            },
-        });
-        expect(hasPermission).toBeFalsy();
+        try {
+            await checker.check({
+                name,
+                data: {
+                    identity: {
+                        type: 'user',
+                        id: adminUser.id,
+                    },
+                },
+            });
+            expect(true).toBeFalsy();
+        } catch (e) {
+            expect(true).toBeTruthy();
+        }
     });
 
     it('should verify with permission-binding and existing relation', async () => {
+        expect.assertions(1);
+
         const policyRepository = new PolicyRepository(dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
@@ -103,16 +123,25 @@ describe('src/security/permission/checker', () => {
         await userPermissionRepository.save(userPermission);
 
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(name, {
-            identity: {
-                type: 'user',
-                id: adminUser.id,
-            },
-        });
-        expect(hasPermission).toBeTruthy();
+        try {
+            await checker.check({
+                name,
+                data: {
+                    identity: {
+                        type: 'user',
+                        id: adminUser.id,
+                    },
+                },
+            });
+            expect(true).toBeTruthy();
+        } catch (e) {
+            expect(true).toBeFalsy();
+        }
     });
 
     it('should not verify with permission-binding and non existing relation', async () => {
+        expect.assertions(1);
+
         const policyRepository = new PolicyRepository(dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
@@ -132,12 +161,19 @@ describe('src/security/permission/checker', () => {
         await permissionRepository.save(permission);
 
         const checker = new PermissionChecker();
-        const hasPermission = await checker.safeCheck(name, {
-            identity: {
-                type: 'user',
-                id: adminUser.id,
-            },
-        });
-        expect(hasPermission).toBeFalsy();
+        try {
+            await checker.check({
+                name,
+                data: {
+                    identity: {
+                        type: 'user',
+                        id: adminUser.id,
+                    },
+                },
+            });
+            expect(true).toBeFalsy();
+        } catch (e) {
+            expect(true).toBeTruthy();
+        }
     });
 });

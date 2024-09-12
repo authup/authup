@@ -12,20 +12,19 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { UserRoleEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_ROLE_READ,
-        PermissionName.USER_ROLE_CREATE,
-        PermissionName.USER_ROLE_UPDATE,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_ROLE_READ,
+            PermissionName.USER_ROLE_CREATE,
+            PermissionName.USER_ROLE_UPDATE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserRoleEntity);
@@ -54,14 +53,13 @@ export async function getManyUserRoleRouteHandler(req: Request, res: Response) :
 
 export async function getOneUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_ROLE_READ,
-        PermissionName.USER_ROLE_CREATE,
-        PermissionName.USER_ROLE_UPDATE,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_ROLE_READ,
+            PermissionName.USER_ROLE_CREATE,
+            PermissionName.USER_ROLE_UPDATE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

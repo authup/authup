@@ -17,9 +17,7 @@ export async function deleteScopeRouteHandler(req: Request, res: Response) : Pro
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.SCOPE_DELETE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.SCOPE_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ScopeEntity);
@@ -29,9 +27,7 @@ export async function deleteScopeRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.SCOPE_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.SCOPE_DELETE, data: { attributes: entity } });
 
     // ----------------------------------------------
 

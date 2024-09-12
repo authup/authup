@@ -7,7 +7,7 @@
 
 import { PermissionName, ScopeName } from '@authup/core-kit';
 import { OAuth2SubKind, isUUID } from '@authup/kit';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
@@ -17,7 +17,7 @@ import type { UserEntity } from '../../../../domains';
 import { UserRepository, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
     return {
@@ -71,24 +71,26 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const userId = useRequestEnv(req, 'userId');
 
     const data : UserEntity[] = [];
-    const policyEvaluationData = buildPolicyDataForRequest(req);
     for (let i = 0; i < entities.length; i++) {
         if (userId === entities[i].id) {
             data.push(entities[i]);
             continue;
         }
 
-        const canAbility = await permissionChecker.safeCheckOneOf(
-            [
-                PermissionName.USER_READ,
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_DELETE,
-            ],
-            { ...policyEvaluationData, attributes: entities[i] },
-        );
-        if (canAbility) {
+        try {
+            await permissionChecker.checkOneOf({
+                name: [
+                    PermissionName.USER_READ,
+                    PermissionName.USER_UPDATE,
+                    PermissionName.USER_DELETE,
+                ],
+                data: {
+                    attributes: entities[i],
+                },
+            });
+
             data.push(entities[i]);
-        } else {
+        } catch (e) {
             total -= 1;
         }
     }
@@ -106,14 +108,13 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_READ,
-        PermissionName.USER_UPDATE,
-        PermissionName.USER_DELETE,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_READ,
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -188,18 +189,14 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             await repository.findAndAppendExtraAttributesTo(entity);
         }
     } else {
-        const hasAbility = await permissionChecker.safeCheckOneOf(
-            [
+        await permissionChecker.checkOneOf({
+            name: [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_DELETE,
             ],
-            buildPolicyDataForRequest(req, { attributes: entity }),
-        );
-
-        if (!hasAbility) {
-            throw new ForbiddenError();
-        }
+            data: { attributes: entity },
+        });
 
         await repository.findAndAppendExtraAttributesTo(entity);
     }

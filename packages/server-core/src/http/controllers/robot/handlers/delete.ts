@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
     REALM_MASTER_NAME,
@@ -31,9 +31,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     const userId = useRequestEnv(req, 'userId');
     if (!entity.user_id || !userId || entity.user_id !== userId) {
-        if (!await permissionChecker.safeCheck(PermissionName.ROBOT_DELETE, { attributes: entity })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.ROBOT_DELETE, data: { attributes: entity } });
     }
 
     const config = useConfig();

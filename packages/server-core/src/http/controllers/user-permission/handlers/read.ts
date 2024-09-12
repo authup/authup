@@ -12,7 +12,7 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { UserPermissionEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
@@ -24,14 +24,13 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
  */
 export async function getManyUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_PERMISSION_CREATE,
-        PermissionName.USER_PERMISSION_DELETE,
-        PermissionName.USER_PERMISSION_READ,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_PERMISSION_CREATE,
+            PermissionName.USER_PERMISSION_DELETE,
+            PermissionName.USER_PERMISSION_READ,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
@@ -68,14 +67,13 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
  */
 export async function getOneUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_PERMISSION_CREATE,
-        PermissionName.USER_PERMISSION_DELETE,
-        PermissionName.USER_PERMISSION_READ,
-    ]);
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_PERMISSION_CREATE,
+            PermissionName.USER_PERMISSION_DELETE,
+            PermissionName.USER_PERMISSION_READ,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

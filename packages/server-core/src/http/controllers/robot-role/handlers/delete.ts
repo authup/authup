@@ -17,9 +17,7 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.ROBOT_ROLE_DELETE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.ROBOT_ROLE_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
@@ -49,9 +47,7 @@ export async function deleteRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    if (!await permissionChecker.safeCheck(PermissionName.ROBOT_ROLE_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.ROBOT_ROLE_DELETE, data: { attributes: entity } });
 
     // ----------------------------------------------
 

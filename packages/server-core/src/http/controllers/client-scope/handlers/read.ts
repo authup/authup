@@ -12,25 +12,24 @@ import { send } from 'routup';
 import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { ClientScopeEntity } from '../../../../domains';
 import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasOneOf = await permissionChecker.hasOneOf([
-        PermissionName.CLIENT_READ,
-        PermissionName.CLIENT_UPDATE,
-        PermissionName.CLIENT_DELETE,
-    ]);
 
-    if (!hasOneOf) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
-    const query = await repository.createQueryBuilder('clientScope');
+    const query = repository.createQueryBuilder('clientScope');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'clientScope',
@@ -58,13 +57,13 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
 
 export async function getOneClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.hasOneOf([
-        PermissionName.CLIENT_READ,
-        PermissionName.CLIENT_UPDATE,
-        PermissionName.CLIENT_DELETE,
-    ])) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

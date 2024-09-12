@@ -21,9 +21,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.IDENTITY_PROVIDER_UPDATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -50,9 +48,7 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     entity = repository.merge(entity, data);
 
-    if (!await permissionChecker.safeCheck(PermissionName.IDENTITY_PROVIDER_UPDATE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: entity } });
 
     await repository.save(entity);
 

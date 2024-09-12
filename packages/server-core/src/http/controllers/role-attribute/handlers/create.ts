@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
 } from '@authup/core-kit';
@@ -15,16 +14,11 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, buildPolicyDataForRequest, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.has(
-        PermissionName.ROLE_UPDATE,
-    );
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
     const validator = new RoleAttributeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -43,16 +37,12 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
     const repository = dataSource.getRepository(RoleAttributeEntity);
     const entity = repository.create(data);
 
-    const canAbility = await permissionChecker.safeCheck(
-        PermissionName.ROLE_UPDATE,
-        buildPolicyDataForRequest(req, {
+    await permissionChecker.check({
+        name: PermissionName.ROLE_UPDATE,
+        data: {
             attributes: entity,
-        }),
-    );
-
-    if (!canAbility) {
-        throw new ForbiddenError();
-    }
+        },
+    });
 
     await repository.save(entity);
 

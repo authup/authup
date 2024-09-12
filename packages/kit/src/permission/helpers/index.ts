@@ -6,4 +6,5 @@
  */
 
 export * from './aggregate';
+export * from './equal';
 export * from './merge';

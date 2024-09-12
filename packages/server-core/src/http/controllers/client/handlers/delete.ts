@@ -20,9 +20,7 @@ export async function deleteClientRouteHandler(
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.CLIENT_DELETE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.CLIENT_DELETE });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
@@ -32,9 +30,7 @@ export async function deleteClientRouteHandler(
         throw new NotFoundError();
     }
 
-    if (!await permissionChecker.safeCheck(PermissionName.CLIENT_DELETE, { attributes: entity })) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.CLIENT_DELETE, data: { attributes: entity } });
 
     if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
         throw new ForbiddenError();

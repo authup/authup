@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEngine, PolicyWithType } from '../policy';
+import type { DecisionStrategy } from '../constants';
+import type {
+    PolicyData, PolicyEngine, PolicyWithType,
+} from '../policy';
 import type { PermissionProvider } from './provider';
 
 export type PermissionItem = {
@@ -18,4 +21,16 @@ export type PermissionCheckerOptions = {
     provider?: PermissionProvider,
     policyEngine?: PolicyEngine,
     realmId?: string
+};
+
+export type PermissionCheckerCheckOptions = {
+    decisionStrategy?: `${DecisionStrategy}`,
+    policiesIncluded?: string[],
+    policiesExcluded?: string[],
+};
+
+export type PermissionCheckerCheckContext = {
+    name: string | string[],
+    data?: PolicyData,
+    options?: PermissionCheckerCheckOptions
 };

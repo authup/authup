@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PolicyIdentity } from '@authup/kit';
 import type { Ref } from 'vue';
 import {
     onMounted, onUnmounted, ref, watch,
@@ -23,10 +24,27 @@ export function useAbilityCheck(name: string) : Ref<boolean> {
             return computePromise;
         }
 
+        let identity : PolicyIdentity | undefined;
+        if (refs.userId.value) {
+            identity = {
+                type: 'user',
+                id: refs.userId.value,
+            };
+        }
+
         let outcome : boolean;
 
         try {
-            computePromise = store.permissionChecker.has(name);
+            computePromise = store.permissionChecker
+                .preCheck({
+                    name,
+                    data: {
+                        identity,
+                    },
+                })
+                .then(() => true)
+                .catch(() => false);
+
             outcome = await computePromise;
         } catch (e) {
             outcome = false;

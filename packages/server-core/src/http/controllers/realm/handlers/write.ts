@@ -6,7 +6,7 @@
  */
 
 import { isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName, REALM_MASTER_NAME,
 } from '@authup/core-kit';
@@ -44,15 +44,11 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await permissionChecker.has(PermissionName.REALM_UPDATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.REALM_UPDATE });
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await permissionChecker.has(PermissionName.REALM_CREATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.REALM_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -69,15 +65,13 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
     });
 
     if (entity) {
-        if (!await permissionChecker.safeCheck(PermissionName.REALM_UPDATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.REALM_UPDATE, data: { attributes: data } });
 
         if (entity.name === REALM_MASTER_NAME && isPropertySet(data, 'name') && entity.name !== data.name) {
             throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
         }
-    } else if (!await permissionChecker.safeCheck(PermissionName.REALM_CREATE, { attributes: data })) {
-        throw new ForbiddenError();
+    } else {
+        await permissionChecker.check({ name: PermissionName.REALM_CREATE, data: { attributes: data } });
     }
 
     if (entity) {

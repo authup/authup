@@ -6,7 +6,7 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -57,15 +57,11 @@ export async function writeClientRouteHandler(
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
-        if (!await permissionChecker.has(PermissionName.CLIENT_UPDATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        if (!await permissionChecker.has(PermissionName.CLIENT_CREATE)) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.preCheck({ name: PermissionName.CLIENT_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -86,9 +82,7 @@ export async function writeClientRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.CLIENT_UPDATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.CLIENT_UPDATE, data: { attributes: data } });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
@@ -99,9 +93,7 @@ export async function writeClientRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        if (!await permissionChecker.safeCheck(PermissionName.CLIENT_CREATE, { attributes: data })) {
-            throw new ForbiddenError();
-        }
+        await permissionChecker.check({ name: PermissionName.CLIENT_CREATE, data: { attributes: data } });
     }
 
     // ----------------------------------------------

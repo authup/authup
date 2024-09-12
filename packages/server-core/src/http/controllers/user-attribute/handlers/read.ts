@@ -16,19 +16,17 @@ import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
 } from '../../../../domains';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_UPDATE,
-        PermissionName.USER_SELF_MANAGE,
-    ]);
-
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_SELF_MANAGE,
+        ],
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(UserAttributeEntity);
@@ -53,10 +51,8 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     let [, total] = queryOutput;
 
     const data : UserAttributeEntity[] = [];
-    const policyEvaluationData = buildPolicyDataForRequest(req);
-
     for (let i = 0; i < entities.length; i++) {
-        const canAbility = await canRequestManageUserAttribute(req, entities[i], policyEvaluationData);
+        const canAbility = await canRequestManageUserAttribute(req, entities[i]);
 
         if (canAbility) {
             data.push(entities[i]);
@@ -79,14 +75,12 @@ export async function getOneUserAttributeRouteHandler(
     res: Response,
 ) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const hasPermission = await permissionChecker.hasOneOf([
-        PermissionName.USER_UPDATE,
-        PermissionName.USER_SELF_MANAGE,
-    ]);
-
-    if (!hasPermission) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheckOneOf({
+        name: [
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_SELF_MANAGE,
+        ],
+    });
 
     const id = useRequestParamID(req);
 

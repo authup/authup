@@ -6,7 +6,7 @@
  */
 
 import type { PolicyData } from '@authup/kit';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -20,16 +20,14 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 import { RobotPermissionRequestValidator } from '../utils';
 
 /**
- * Add an permission by id to a specific user.
+ * Add a permission by id to a specific user.
  *
  * @param req
  * @param res
  */
 export async function createRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    if (!await permissionChecker.has(PermissionName.ROBOT_PERMISSION_CREATE)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.preCheck({ name: PermissionName.ROBOT_PERMISSION_CREATE });
 
     // ----------------------------------------------
 
@@ -45,7 +43,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         entityTarget: RobotPermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyData = {
+    const policyData : PolicyData = {
         attributes: data satisfies Partial<RobotPermissionEntity>,
     };
 
@@ -58,10 +56,10 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
         data.permission_realm_id = data.permission.realm_id;
 
-        // todo: pass realm id
-        if (!await permissionChecker.safeCheck(data.permission.name, policyEvaluationContext)) {
-            throw new ForbiddenError('The target permission is not owned.');
-        }
+        await permissionChecker.check({
+            name: data.permission.name,
+            data: policyData,
+        });
     }
 
     // ----------------------------------------------
@@ -76,9 +74,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    if (!await permissionChecker.safeCheck(PermissionName.ROBOT_PERMISSION_CREATE, policyEvaluationContext)) {
-        throw new ForbiddenError();
-    }
+    await permissionChecker.check({ name: PermissionName.ROBOT_PERMISSION_CREATE, data: policyData });
 
     // ----------------------------------------------
 
