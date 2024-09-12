@@ -14,10 +14,9 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ClientScopeEntity } from '../../../../domains';
-import { buildPolicyDataForRequest, useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestParamID } from '../../../request';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const policyData = buildPolicyDataForRequest(req);
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
 
     await permissionChecker.preCheckOneOf({
@@ -26,7 +25,6 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
             PermissionName.CLIENT_UPDATE,
             PermissionName.CLIENT_DELETE,
         ],
-        data: policyData,
     });
 
     const dataSource = await useDataSource();
@@ -58,7 +56,6 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
 }
 
 export async function getOneClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const policyData = buildPolicyDataForRequest(req);
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     await permissionChecker.preCheckOneOf({
         name: [
@@ -66,7 +63,6 @@ export async function getOneClientScopeRouteHandler(req: Request, res: Response)
             PermissionName.CLIENT_UPDATE,
             PermissionName.CLIENT_DELETE,
         ],
-        data: policyData,
     });
 
     const id = useRequestParamID(req);
