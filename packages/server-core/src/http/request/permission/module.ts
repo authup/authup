@@ -23,14 +23,21 @@ export class RequestPermissionChecker {
 
     protected identity : PolicyIdentity | undefined;
 
+    protected identityExtracted : boolean;
+
     constructor(req: Request, checker: PermissionChecker) {
         this.req = req;
         this.checker = checker;
-
-        this.extractRequestIdentity();
+        this.identityExtracted = false;
     }
 
     protected extractRequestIdentity() {
+        if (this.identityExtracted) {
+            return;
+        }
+
+        this.identityExtracted = true;
+
         const scopes = useRequestEnv(this.req, 'scopes') || [];
         if (scopes.indexOf(ScopeName.GLOBAL) === -1) {
             return;
@@ -72,20 +79,28 @@ export class RequestPermissionChecker {
     // --------------------------------------------------------------
 
     async check(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        this.extractRequestIdentity();
+
         return this.checker.check(this.extendCheckContext(ctx));
     }
 
     async preCheck(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        this.extractRequestIdentity();
+
         return this.checker.preCheck(this.extendCheckContext(ctx));
     }
 
     // --------------------------------------------------------------
 
     async preCheckOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        this.extractRequestIdentity();
+
         return this.checker.preCheckOneOf(this.extendCheckContext(ctx));
     }
 
     async checkOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
+        this.extractRequestIdentity();
+
         return this.checker.checkOneOf(this.extendCheckContext(ctx));
     }
 
@@ -93,8 +108,10 @@ export class RequestPermissionChecker {
 
     // todo: move to PermissionBindingService
     async checkOwned(input: PermissionItem[]) {
+        this.extractRequestIdentity();
+
         if (!this.identity) {
-            throw new ForbiddenError('You don\'t own the role permissions.');
+            throw new ForbiddenError('You don\'t own the required permissions.');
         }
 
         const dataSource = await useDataSource();
@@ -115,7 +132,7 @@ export class RequestPermissionChecker {
                 (permission) => isPermissionItemEqual(permission, input[i]),
             );
             if (index === -1) {
-                throw new ForbiddenError(`You don't own the role permission ${input[i]}.`);
+                throw new ForbiddenError(`You don't own the required permission ${input[i]}.`);
             }
         }
     }

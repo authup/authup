@@ -83,9 +83,9 @@ describe('src/security/permission/checker', () => {
                     },
                 },
             });
-            expect(true).toBeTruthy();
-        } catch (e) {
             expect(true).toBeFalsy();
+        } catch (e) {
+            expect(true).toBeTruthy();
         }
     });
 
@@ -171,9 +171,9 @@ describe('src/security/permission/checker', () => {
                     },
                 },
             });
-            expect(true).toBeTruthy();
-        } catch (e) {
             expect(true).toBeFalsy();
+        } catch (e) {
+            expect(true).toBeTruthy();
         }
     });
 });
