@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPermission } from '@authup/kit';
+import type { OAuth2SubKind, OAuth2TokenPermission } from '@authup/kit';
 import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
-import { OAuth2SubKind } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, UserRepository } from '../../../domains';
+import { IdentityPermissionService } from '../../../services';
 
 export async function loadOAuth2SubPermissions(
-    kind: `${OAuth2SubKind}`,
+    type: `${OAuth2SubKind}`,
     id: string,
     scope?: string | string[],
 ) : Promise<OAuth2TokenPermission[]> {
@@ -24,17 +23,10 @@ export async function loadOAuth2SubPermissions(
     }
 
     const dataSource = await useDataSource();
+    const identityPermissionService = new IdentityPermissionService(dataSource);
 
-    switch (kind) {
-        case OAuth2SubKind.USER: {
-            const repository = new UserRepository(dataSource);
-            return repository.getBoundPermissions(id);
-        }
-        case OAuth2SubKind.ROBOT: {
-            const repository = new RobotRepository(dataSource);
-            return repository.getBoundPermissions(id);
-        }
-    }
-
-    return [];
+    return identityPermissionService.getFor({
+        type,
+        id,
+    });
 }

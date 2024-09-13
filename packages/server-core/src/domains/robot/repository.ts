@@ -6,22 +6,18 @@
  */
 
 import type {
+    Permission,
     Robot,
     Role,
-} from '@authup/core-kit';
-import {
-    mergePermissionItems,
 } from '@authup/core-kit';
 import {
     createNanoID,
     isUUID,
 } from '@authup/kit';
-import type { PermissionItem } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { CachePrefix } from '../constants';
-import { RoleRepository } from '../role';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
@@ -31,16 +27,15 @@ export class RobotRepository extends Repository<RobotEntity> {
         super(RobotEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
 
-    async getBoundPermissions(
-        id: Robot['id'],
-    ) : Promise<PermissionItem[]> {
-        const permissions = await this.getSelfOwnedPermissions(id);
-
-        const roles = await this.manager
+    async getBoundRoles(id: Robot['id']) : Promise<Role[]> {
+        const entities = await this.manager
             .getRepository(RobotRoleEntity)
             .find({
                 where: {
                     robot_id: id,
+                },
+                relations: {
+                    role: true,
                 },
                 cache: {
                     id: buildRedisKeyPath({
@@ -51,19 +46,12 @@ export class RobotRepository extends Repository<RobotEntity> {
                 },
             });
 
-        const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
-
-        if (roleIds.length === 0) {
-            return permissions;
-        }
-
-        const roleRepository = new RoleRepository(this.manager);
-        permissions.push(...await roleRepository.getBoundPermissionsForMany(roleIds));
-
-        return mergePermissionItems(permissions);
+        return entities.map((entity) => entity.role);
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
+    async getBoundPermissions(
+        id: Robot['id'],
+    ) : Promise<Permission[]> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
@@ -71,9 +59,6 @@ export class RobotRepository extends Repository<RobotEntity> {
                 robot_id: id,
             },
             relations: {
-                policy: {
-                    children: true,
-                },
                 permission: true,
             },
             cache: {
@@ -85,11 +70,7 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        return entities.map((entity) => ({
-            name: entity.permission.name,
-            realm_id: entity.permission.realm_id,
-            policy: entity.policy,
-        }));
+        return entities.map((entity) => entity.permission);
     }
 
     /**

@@ -7,13 +7,9 @@
 
 import { ScopeName } from '@authup/core-kit';
 import type {
-    PermissionChecker, PermissionCheckerCheckContext, PermissionItem, PolicyIdentity,
+    PermissionChecker, PermissionCheckerCheckContext, PolicyIdentity,
 } from '@authup/kit';
-import { isPermissionItemEqual } from '@authup/kit';
-import { ForbiddenError } from '@ebec/http';
 import type { Request } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, UserRepository } from '../../../domains';
 import { useRequestEnv } from '../helpers';
 
 export class RequestPermissionChecker {
@@ -29,6 +25,12 @@ export class RequestPermissionChecker {
         this.req = req;
         this.checker = checker;
         this.identityExtracted = false;
+    }
+
+    getRequestIdentity() : PolicyIdentity | undefined {
+        this.extractRequestIdentity();
+
+        return this.identity;
     }
 
     protected extractRequestIdentity() {
@@ -102,39 +104,6 @@ export class RequestPermissionChecker {
         this.extractRequestIdentity();
 
         return this.checker.checkOneOf(this.extendCheckContext(ctx));
-    }
-
-    // --------------------------------------------------------------
-
-    // todo: move to PermissionBindingService
-    async checkOwned(input: PermissionItem[]) {
-        this.extractRequestIdentity();
-
-        if (!this.identity) {
-            throw new ForbiddenError('You don\'t own the required permissions.');
-        }
-
-        const dataSource = await useDataSource();
-
-        let permissionsOwned : PermissionItem[] = [];
-        if (this.identity.type === 'user') {
-            const userRepository = new UserRepository(dataSource);
-            permissionsOwned = await userRepository.getBoundPermissions(this.identity.id);
-        }
-
-        if (this.identity.type === 'robot') {
-            const robotRepository = new RobotRepository(dataSource);
-            permissionsOwned = await robotRepository.getBoundPermissions(this.identity.id);
-        }
-
-        for (let i = 0; i < input.length; i++) {
-            const index = permissionsOwned.findIndex(
-                (permission) => isPermissionItemEqual(permission, input[i]),
-            );
-            if (index === -1) {
-                throw new ForbiddenError(`You don't own the required permission ${input[i]}.`);
-            }
-        }
     }
 
     // --------------------------------------------------------------
