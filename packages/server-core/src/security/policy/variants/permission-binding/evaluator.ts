@@ -7,16 +7,23 @@
 
 import { isObject } from 'smob';
 import type {
-    CompositePolicy, PermissionBindingPolicy,
-    PermissionItem,
-    PolicyData, PolicyEvaluateContext, PolicyEvaluator, PolicyIdentity, PolicyWithType,
+    CompositePolicy,
+    PermissionBindingPolicy,
+    PolicyData,
+    PolicyEvaluateContext,
+    PolicyEvaluator,
+    PolicyWithType,
 } from '@authup/kit';
 import {
     BuiltInPolicyType,
-    CompositePolicyEvaluator, PermissionBindingPolicyValidator, PolicyError, maybeInvertPolicyOutcome,
+    CompositePolicyEvaluator,
+    PermissionBindingPolicyValidator,
+    PolicyError,
+    maybeInvertPolicyOutcome,
 } from '@authup/kit';
+import { mergePermissionItems } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
-import { RobotRepository, UserRepository } from '../../../../domains';
+import { IdentityPermissionService } from '../../../../services';
 
 export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<PermissionBindingPolicy> {
     protected validator : PermissionBindingPolicyValidator;
@@ -47,22 +54,29 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     PermissionBindingPolicy,
     PolicyData
     >): Promise<boolean> {
-        const permissionsAll = await this.getIdentityPermissions(ctx.data.identity);
+        const dataSource = await useDataSource();
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        const permissionsAll = await identityPermissionService.getFor(ctx.data.identity)
+            .then((permissions) => permissions.filter((item) => {
+                if (item.name !== ctx.data.permission.name) {
+                    return false;
+                }
 
-        const permissions = permissionsAll.filter((item) => {
-            if (item.name !== ctx.data.permission.name) {
-                return false;
-            }
-
-            if (
-                typeof item.realm_id === 'string' ||
+                if (
+                    typeof item.realm_id === 'string' ||
                 typeof ctx.data.permission.realm_id === 'string'
-            ) {
-                return item.realm_id === ctx.data.permission.realm_id;
-            }
+                ) {
+                    return item.realm_id === ctx.data.permission.realm_id;
+                }
 
-            return !!item.realm_id === !!ctx.data.permission.realm_id;
-        });
+                return !!item.realm_id === !!ctx.data.permission.realm_id;
+            }));
+
+        if (permissionsAll.length === 0) {
+            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+        }
+
+        const permissions = mergePermissionItems(permissionsAll);
 
         if (permissions.length === 0) {
             return maybeInvertPolicyOutcome(false, ctx.spec.invert);
@@ -90,32 +104,5 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             ...ctx,
             spec: compositePolicy,
         });
-    }
-
-    protected async getIdentityPermissions(identity: PolicyIdentity) : Promise<PermissionItem[]> {
-        switch (identity.type) {
-            case 'user': {
-                return this.getUserPermissions(identity.id);
-            }
-            case 'robot': {
-                return this.getRobotPermissions(identity.id);
-            }
-        }
-
-        return [];
-    }
-
-    protected async getUserPermissions(id: string) : Promise<PermissionItem[]> {
-        const dataSource = await useDataSource();
-        const repository = new UserRepository(dataSource);
-
-        return repository.getBoundPermissions(id);
-    }
-
-    protected async getRobotPermissions(id: string) : Promise<PermissionItem[]> {
-        const dataSource = await useDataSource();
-        const repository = new RobotRepository(dataSource);
-
-        return repository.getBoundPermissions(id);
     }
 }

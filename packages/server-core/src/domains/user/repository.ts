@@ -5,34 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '@authup/kit';
-import type {
-    DataSource,
-    EntityManager,
-} from 'typeorm';
-import {
-    In,
-} from 'typeorm';
-import type {
-    Role,
-    User,
-} from '@authup/core-kit';
-import {
-    mergePermissionItems,
-} from '@authup/core-kit';
-import {
-    createNanoID,
-    isUUID,
-} from '@authup/kit';
+import type { Permission, Role, User } from '@authup/core-kit';
+import { createNanoID, isUUID } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
+import type { DataSource, EntityManager } from 'typeorm';
+import { In } from 'typeorm';
 import { CachePrefix } from '../constants';
 import { EARepository } from '../core';
-import { RoleRepository } from '../role';
-import { UserRoleEntity } from '../user-role';
+import { UserAttributeEntity } from '../user-attribute';
 import { UserPermissionEntity } from '../user-permission';
+import { UserRoleEntity } from '../user-role';
 import { UserRelationItemSyncOperation } from './constants';
 import { UserEntity } from './entity';
-import { UserAttributeEntity } from '../user-attribute';
 import type { UserRelationItemSyncConfig } from './types';
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
@@ -171,16 +155,22 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     // ------------------------------------------------------------------
 
-    async getBoundPermissions(
-        id: User['id'],
-    ) : Promise<PermissionItem[]> {
-        const permissions = await this.getSelfOwnedPermissions(id);
+    async getBoundRoles(entity: string | User) : Promise<Role[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
 
-        const roles = await this.manager
+        const items = await this.manager
             .getRepository(UserRoleEntity)
             .find({
                 where: {
                     user_id: id,
+                },
+                relations: {
+                    role: true,
                 },
                 cache: {
                     id: buildRedisKeyPath({
@@ -191,19 +181,19 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
                 },
             });
 
-        const roleIds: Role['id'][] = roles.map((userRole) => userRole.role_id);
-
-        if (roleIds.length === 0) {
-            return permissions;
-        }
-
-        const roleRepository = new RoleRepository(this.manager);
-        permissions.push(...await roleRepository.getBoundPermissionsForMany(roleIds));
-
-        return mergePermissionItems(permissions);
+        return items.map((relation) => relation.role);
     }
 
-    async getSelfOwnedPermissions(id: string) : Promise<PermissionItem[]> {
+    async getBoundPermissions(
+        entity: string | User,
+    ) : Promise<Permission[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
@@ -212,9 +202,6 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
             relations: {
                 permission: true,
-                policy: {
-                    children: true,
-                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -225,11 +212,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((entity) => ({
-            name: entity.permission.name,
-            realm_id: entity.permission.realm_id,
-            policy: entity.policy,
-        }));
+        return entities.map((relation) => relation.permission);
     }
 
     // ------------------------------------------------------------------

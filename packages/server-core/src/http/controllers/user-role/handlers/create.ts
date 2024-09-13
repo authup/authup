@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@ebec/http';
+import { BadRequestError, ForbiddenError } from '@ebec/http';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RoleRepository, UserRoleEntity } from '../../../../domains';
+import { UserRoleEntity } from '../../../../domains';
+import { IdentityPermissionService } from '../../../../services';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { UserRoleRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
@@ -41,9 +42,19 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
         data.role_realm_id = data.role.realm_id;
 
-        const roleRepository = new RoleRepository(dataSource);
-        const rolePermissions = await roleRepository.getBoundPermissions(data.role_id);
-        await permissionChecker.checkOwned(rolePermissions);
+        const identity = permissionChecker.getRequestIdentity();
+        if (!identity) {
+            throw new ForbiddenError('You don\'t own the required permissions.');
+        }
+
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        const hasPermissions = await identityPermissionService.hasSuperset(identity, {
+            type: 'role',
+            id: data.role_id,
+        });
+        if (!hasPermissions) {
+            throw new ForbiddenError('You don\'t own the required permissions.');
+        }
     }
 
     // ----------------------------------------------

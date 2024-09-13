@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import type {
+    Permission,
     Role,
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
@@ -35,9 +35,9 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
     }
 
     async getBoundPermissionsForMany(
-        ids: Role['id'][],
-    ) : Promise<PermissionItem[]> {
-        const promises : Promise<PermissionItem[]>[] = [];
+        ids: (string | Role)[],
+    ) : Promise<Permission[]> {
+        const promises : Promise<Permission[]>[] = [];
 
         for (let i = 0; i < ids.length; i++) {
             promises.push(this.getBoundPermissions(ids[i]));
@@ -49,10 +49,16 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
     }
 
     async getBoundPermissions(
-        id: Role['id'],
-    ) : Promise<PermissionItem[]> {
-        const repository = this.manager.getRepository(RolePermissionEntity);
+        entity: string | Role,
+    ) : Promise<Permission[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
 
+        const repository = this.manager.getRepository(RolePermissionEntity);
         const entities = await repository.find({
             where: {
                 role_id: id,
@@ -72,10 +78,6 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             },
         });
 
-        return entities.map((entity) => ({
-            name: entity.permission.name,
-            realm_id: entity.permission.realm_id,
-            policy: entity.policy,
-        }));
+        return entities.map((entity) => entity.permission);
     }
 }
