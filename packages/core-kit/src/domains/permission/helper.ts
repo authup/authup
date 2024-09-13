@@ -11,41 +11,6 @@ import {
     BuiltInPolicyType,
     DecisionStrategy,
 } from '@authup/kit';
-import type { Policy } from '../policy';
-import type { PermissionRelation } from './entity';
-
-type PermissionRelationInput = Pick<PermissionRelation, 'permission'> & Partial<Omit<PermissionRelation, 'permission'>>;
-export function transformPermissionRelationToPermissionItem(entity: PermissionRelationInput): PermissionItem {
-    if (typeof entity.permission === 'undefined') {
-        throw new SyntaxError('The permission relation attribute is required.');
-    }
-
-    let policy : PolicyWithType | undefined;
-
-    if (
-        entity.permission.policy &&
-        entity.policy
-    ) {
-        policy = {
-            type: BuiltInPolicyType.COMPOSITE,
-            decisionStrategy: DecisionStrategy.UNANIMOUS,
-            children: [
-                entity.permission.policy,
-                entity.policy,
-            ],
-        } satisfies PolicyWithType<CompositePolicy>;
-    } else if (entity.policy) {
-        policy = entity.policy;
-    } else if (entity.permission.policy) {
-        policy = entity.policy;
-    }
-
-    return {
-        name: entity.permission.name,
-        realm_id: entity.permission.realm_id,
-        policy: policy as Policy,
-    };
-}
 
 export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[] {
     const grouped : Record<string, PermissionItem[]> = {};

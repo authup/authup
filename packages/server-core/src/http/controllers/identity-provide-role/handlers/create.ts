@@ -66,7 +66,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     const roleRepository = new RoleRepository(dataSource);
 
-    const permissionsRequested = await roleRepository.getOwnedPermissions(data.role_id);
+    const permissionsRequested = await roleRepository.getBoundPermissions(data.role_id);
     await permissionChecker.checkOwned(permissionsRequested);
 
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);

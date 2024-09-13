@@ -60,7 +60,7 @@ export async function writeIdentityProviderRouteHandler(
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
+        await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
 
         group = RequestHandlerOperation.CREATE;
     }
@@ -89,7 +89,10 @@ export async function writeIdentityProviderRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+            data: { attributes: data },
+        });
     } else {
         if (!data.realm_id) {
             const { id } = useRequestEnv(req, 'realm');
@@ -100,7 +103,12 @@ export async function writeIdentityProviderRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_CREATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.IDENTITY_PROVIDER_CREATE,
+            data: {
+                attributes: data,
+            },
+        });
     }
 
     // ----------------------------------------------

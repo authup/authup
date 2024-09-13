@@ -50,8 +50,9 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
             throw PolicyError.evaluatorContextInvalid();
         }
 
+        const identityMasterMatchAll = ctx.spec.identityMasterMatchAll ?? true;
         if (
-            ctx.spec.identityMasterMatchAll &&
+            identityMasterMatchAll &&
             ctx.data.identity.realmName &&
             ctx.data.identity.realmName === 'master'
         ) {

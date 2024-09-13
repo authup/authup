@@ -109,13 +109,13 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
 
-        return repository.getOwnedPermissions(id);
+        return repository.getBoundPermissions(id);
     }
 
     protected async getRobotPermissions(id: string) : Promise<PermissionItem[]> {
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);
 
-        return repository.getOwnedPermissions(id);
+        return repository.getBoundPermissions(id);
     }
 }

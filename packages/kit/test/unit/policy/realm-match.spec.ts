@@ -104,7 +104,9 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
-        const spec : RealmMatchPolicy = {};
+        const spec : RealmMatchPolicy = {
+            identityMasterMatchAll: false,
+        };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 

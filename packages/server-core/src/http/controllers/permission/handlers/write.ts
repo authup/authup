@@ -86,7 +86,15 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
 
-        await permissionChecker.check({ name: PermissionName.PERMISSION_UPDATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.PERMISSION_UPDATE,
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
+        });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
@@ -97,7 +105,12 @@ export async function writePermissionRouteHandler(
             throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
-        await permissionChecker.check({ name: PermissionName.PERMISSION_CREATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.PERMISSION_CREATE,
+            data: {
+                attributes: data,
+            },
+        });
     }
 
     const isUnique = await isEntityUnique({

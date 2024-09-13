@@ -5,31 +5,78 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionGetOptions, PermissionItem, PermissionProvider } from '@authup/kit';
-import { useDataSource } from 'typeorm-extension';
+import type {
+    CompositePolicy,
+    IdentityPolicy,
+    PermissionBindingPolicy,
+    PermissionGetOptions,
+    PermissionItem,
+    PermissionProvider,
+    PolicyWithType,
+    RealmMatchPolicy,
+} from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/kit';
+import type { DataSource, Repository } from 'typeorm';
 import { PermissionEntity } from '../../../domains';
 
 export class PermissionDBProvider implements PermissionProvider {
-    async get(options: PermissionGetOptions) : Promise<PermissionItem | undefined> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(PermissionEntity);
+    protected dataSource: DataSource;
 
-        const entity = await repository.findOne({
+    protected repository : Repository<PermissionEntity>;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+        this.repository = this.dataSource.getRepository(PermissionEntity);
+    }
+
+    async get(options: PermissionGetOptions) : Promise<PermissionItem | undefined> {
+        const entity = await this.repository.findOne({
             where: {
                 name: options.name,
                 ...(options.realmId ? { realm_id: options.realmId } : {}),
             },
-            relations: ['policy'],
+            relations: [
+                'policy',
+                'policy.children',
+            ],
         });
 
         if (entity) {
             return {
                 name: entity.name,
                 ...(entity.realm_id ? { realm_id: entity.realm_id } : {}),
-                policy: entity.policy,
+                policy: entity.policy || this.getFakePolicy(),
             };
         }
 
         return undefined;
+    }
+
+    getFakePolicy() {
+        const children : PolicyWithType[] = [];
+        const identity : PolicyWithType<IdentityPolicy> = {
+            type: BuiltInPolicyType.IDENTITY,
+        };
+        children.push(identity);
+
+        const realmMatch : PolicyWithType<RealmMatchPolicy> = {
+            type: BuiltInPolicyType.REALM_MATCH,
+            attributeName: ['realm_id'],
+            attributeNameStrict: false,
+            identityMasterMatchAll: true,
+        };
+        children.push(realmMatch);
+
+        const permissionBinding : PolicyWithType<PermissionBindingPolicy> = {
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+        };
+        children.push(permissionBinding);
+
+        const composite : PolicyWithType<CompositePolicy> = {
+            type: BuiltInPolicyType.COMPOSITE,
+            children,
+        };
+
+        return composite;
     }
 }

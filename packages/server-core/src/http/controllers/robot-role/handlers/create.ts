@@ -49,7 +49,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
         data.role_realm_id = data.role.realm_id;
 
         const roleRepository = new RoleRepository(dataSource);
-        const rolePermissions = await roleRepository.getOwnedPermissions(data.role_id);
+        const rolePermissions = await roleRepository.getBoundPermissions(data.role_id);
 
         await permissionChecker.checkOwned(rolePermissions);
     }

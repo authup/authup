@@ -119,12 +119,12 @@ export class RequestPermissionChecker {
         let permissionsOwned : PermissionItem[] = [];
         if (this.identity.type === 'user') {
             const userRepository = new UserRepository(dataSource);
-            permissionsOwned = await userRepository.getOwnedPermissions(this.identity.id);
+            permissionsOwned = await userRepository.getBoundPermissions(this.identity.id);
         }
 
         if (this.identity.type === 'robot') {
             const robotRepository = new RobotRepository(dataSource);
-            permissionsOwned = await robotRepository.getOwnedPermissions(this.identity.id);
+            permissionsOwned = await robotRepository.getBoundPermissions(this.identity.id);
         }
 
         for (let i = 0; i < input.length; i++) {

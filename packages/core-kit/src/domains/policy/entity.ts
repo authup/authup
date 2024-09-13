@@ -41,9 +41,9 @@ export interface Policy {
     updated_at: Date;
 }
 
-export type ExtendedPolicy = Policy & {
-    [key: string]: any
-};
+export type ExtendedPolicy<
+    T extends Record<string, any> = Record<string, any>,
+> = Policy & T;
 
 export type PolicyEventContext = EventPayload & {
     type: `${DomainType.POLICY}`,
