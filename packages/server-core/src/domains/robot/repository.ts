@@ -27,7 +27,16 @@ export class RobotRepository extends Repository<RobotEntity> {
         super(RobotEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
 
-    async getBoundRoles(id: Robot['id']) : Promise<Role[]> {
+    async getBoundRoles(
+        entity: string | Robot,
+    ) : Promise<Role[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
         const entities = await this.manager
             .getRepository(RobotRoleEntity)
             .find({
@@ -50,8 +59,15 @@ export class RobotRepository extends Repository<RobotEntity> {
     }
 
     async getBoundPermissions(
-        id: Robot['id'],
+        entity: string | Robot,
     ) : Promise<Permission[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({

@@ -155,7 +155,14 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     // ------------------------------------------------------------------
 
-    async getBoundRoles(id: User['id']) : Promise<Role[]> {
+    async getBoundRoles(entity: string | User) : Promise<Role[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
         const items = await this.manager
             .getRepository(UserRoleEntity)
             .find({
@@ -178,8 +185,15 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
     }
 
     async getBoundPermissions(
-        id: User['id'],
+        entity: string | User,
     ) : Promise<Permission[]> {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
