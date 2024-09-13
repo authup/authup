@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '@authup/kit';
 import {
-    HeaderError, OAuth2SubKind,
+    HeaderError,
+    OAuth2SubKind,
     OAuth2TokenKind,
-    PermissionChecker,
-    PermissionMemoryProvider,
     TokenError,
 } from '@authup/kit';
 import {
@@ -32,7 +30,6 @@ import { useConfig } from '../../../../config';
 import type {
     ClientEntity,
     RobotEntity,
-
     UserEntity,
 } from '../../../../domains';
 import {
@@ -44,10 +41,9 @@ import {
 } from '../../../../domains';
 import {
     loadOAuth2SubEntity,
-    loadOAuth2SubPermissions,
     readOAuth2TokenPayload,
 } from '../../../oauth2';
-import { RequestPermissionChecker, setRequestEnv } from '../../../request';
+import { setRequestEnv } from '../../../request';
 
 async function verifyBearerAuthorizationHeader(
     request: Request,
@@ -80,15 +76,6 @@ async function verifyBearerAuthorizationHeader(
     setRequestEnv(request, 'realmName', realm.name);
 
     const sub = await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope);
-    const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
-    const permissionRepository = new PermissionMemoryProvider(permissions);
-
-    const checker = new PermissionChecker({
-        provider: permissionRepository,
-    });
-    const requestChecker = new RequestPermissionChecker(request, checker);
-    setRequestEnv(request, 'permissionChecker', requestChecker);
-
     switch (payload.sub_kind) {
         case OAuth2SubKind.CLIENT: {
             setRequestEnv(request, 'client', sub as ClientEntity);
@@ -112,27 +99,13 @@ async function verifyBasicAuthorizationHeader(
     request: Request,
     header: BasicAuthorizationHeader,
 ) {
-    let permissions : PermissionItem[] = [];
-
     const config = useConfig();
     const dataSource = await useDataSource();
-
     if (config.userAuthBasic) {
         const userRepository = new UserRepository(dataSource);
         const user = await userRepository.verifyCredentials(header.username, header.password);
         if (user) {
             await userRepository.findAndAppendExtraAttributesTo(user);
-
-            permissions = await userRepository.getOwnedPermissions(user.id);
-
-            const permissionRepository = new PermissionMemoryProvider(permissions);
-
-            const checker = new PermissionChecker({
-                provider: permissionRepository,
-            });
-            const requestChecker = new RequestPermissionChecker(request, checker);
-
-            setRequestEnv(request, 'permissionChecker', requestChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'user', user);
@@ -151,14 +124,6 @@ async function verifyBasicAuthorizationHeader(
         const robotRepository = new RobotRepository(dataSource);
         const robot = await robotRepository.verifyCredentials(header.username, header.password);
         if (robot) {
-            permissions = await robotRepository.getOwnedPermissions(robot.id);
-            const permissionRepository = new PermissionMemoryProvider(permissions);
-            const checker = new PermissionChecker({
-                provider: permissionRepository,
-            });
-            const requestChecker = new RequestPermissionChecker(request, checker);
-
-            setRequestEnv(request, 'permissionChecker', requestChecker);
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'robot', robot);
@@ -175,10 +140,6 @@ async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const oauth2Client = await clientRepository.verifyCredentials(header.username, header.password);
         if (oauth2Client) {
-            setRequestEnv(request, 'permissionChecker', new RequestPermissionChecker(
-                request,
-                new PermissionChecker(),
-            ));
             setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
 
             setRequestEnv(request, 'client', oauth2Client);

@@ -28,11 +28,11 @@ export async function loadOAuth2SubPermissions(
     switch (kind) {
         case OAuth2SubKind.USER: {
             const repository = new UserRepository(dataSource);
-            return repository.getOwnedPermissions(id);
+            return repository.getBoundPermissions(id);
         }
         case OAuth2SubKind.ROBOT: {
             const repository = new RobotRepository(dataSource);
-            return repository.getOwnedPermissions(id);
+            return repository.getBoundPermissions(id);
         }
     }
 

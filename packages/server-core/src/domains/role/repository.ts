@@ -11,9 +11,6 @@ import type { DataSource, EntityManager } from 'typeorm';
 import type {
     Role,
 } from '@authup/core-kit';
-import {
-    transformPermissionRelationToPermissionItem,
-} from '@authup/core-kit';
 import { CachePrefix } from '../constants';
 import { EARepository } from '../core';
 import { RoleAttributeEntity } from '../role-attribute/entity';
@@ -37,13 +34,13 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
         });
     }
 
-    async getOwnedPermissionsByMany(
+    async getBoundPermissionsForMany(
         ids: Role['id'][],
     ) : Promise<PermissionItem[]> {
         const promises : Promise<PermissionItem[]>[] = [];
 
         for (let i = 0; i < ids.length; i++) {
-            promises.push(this.getOwnedPermissions(ids[i]));
+            promises.push(this.getBoundPermissions(ids[i]));
         }
 
         const abilities = await Promise.all(promises);
@@ -51,7 +48,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
         return abilities.flat();
     }
 
-    async getOwnedPermissions(
+    async getBoundPermissions(
         id: Role['id'],
     ) : Promise<PermissionItem[]> {
         const repository = this.manager.getRepository(RolePermissionEntity);
@@ -61,10 +58,10 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
                 role_id: id,
             },
             relations: {
-                policy: true,
-                permission: {
-                    policy: true,
+                policy: {
+                    children: true,
                 },
+                permission: true,
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -75,6 +72,10 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
+        return entities.map((entity) => ({
+            name: entity.permission.name,
+            realm_id: entity.permission.realm_id,
+            policy: entity.policy,
+        }));
     }
 }

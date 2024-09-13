@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum SpecialPolicyType {
+export enum BuiltInPolicyName {
+    IDENTITY = 'identity',
+    REALM_MATCH = 'realmMatch',
     PERMISSION_BINDING = 'permissionBinding',
 }

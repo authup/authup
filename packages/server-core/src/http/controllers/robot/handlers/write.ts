@@ -86,7 +86,15 @@ export async function writeRobotRouteHandler(
             throw new ForbiddenError();
         }
 
-        await permissionChecker.check({ name: PermissionName.ROBOT_UPDATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.ROBOT_UPDATE,
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
+        });
 
         const config = useConfig();
         if (
@@ -125,7 +133,12 @@ export async function writeRobotRouteHandler(
         throw new ForbiddenError();
     }
 
-    await permissionChecker.check({ name: PermissionName.ROBOT_CREATE, data: { attributes: entity } });
+    await permissionChecker.check({
+        name: PermissionName.ROBOT_CREATE,
+        data: {
+            attributes: data,
+        },
+    });
 
     if (!data.secret) {
         data.secret = repository.createSecret();

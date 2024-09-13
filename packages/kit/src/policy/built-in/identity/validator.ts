@@ -12,7 +12,7 @@ import type { IdentityPolicy } from './types';
 
 export class IdentityPolicyValidator extends Container<IdentityPolicy> {
     protected initialize() {
-        this.mount('types', createValidator(z.array(z.string())));
+        this.mount('types', createValidator(z.array(z.string()).optional()));
 
         this.mount('invert', createValidator(z.boolean().optional()));
     }

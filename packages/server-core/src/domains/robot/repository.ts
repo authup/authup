@@ -11,7 +11,6 @@ import type {
 } from '@authup/core-kit';
 import {
     mergePermissionItems,
-    transformPermissionRelationToPermissionItem,
 } from '@authup/core-kit';
 import {
     createNanoID,
@@ -32,7 +31,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         super(RobotEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
     }
 
-    async getOwnedPermissions(
+    async getBoundPermissions(
         id: Robot['id'],
     ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
@@ -59,7 +58,7 @@ export class RobotRepository extends Repository<RobotEntity> {
         }
 
         const roleRepository = new RoleRepository(this.manager);
-        permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
+        permissions.push(...await roleRepository.getBoundPermissionsForMany(roleIds));
 
         return mergePermissionItems(permissions);
     }
@@ -72,10 +71,10 @@ export class RobotRepository extends Repository<RobotEntity> {
                 robot_id: id,
             },
             relations: {
-                policy: true,
-                permission: {
-                    policy: true,
+                policy: {
+                    children: true,
                 },
+                permission: true,
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -86,7 +85,11 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
+        return entities.map((entity) => ({
+            name: entity.permission.name,
+            realm_id: entity.permission.realm_id,
+            policy: entity.policy,
+        }));
     }
 
     /**

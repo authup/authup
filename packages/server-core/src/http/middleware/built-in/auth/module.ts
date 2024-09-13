@@ -14,7 +14,9 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionChecker } from '@authup/kit';
+import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
+import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { RequestPermissionChecker, setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
@@ -43,10 +45,6 @@ export function registerAuthMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
-        const checker = new PermissionChecker();
-        const requestChecker = new RequestPermissionChecker(request, checker);
-        setRequestEnv(request, 'permissionChecker', requestChecker);
-
         try {
             if (typeof headerValue === 'undefined') {
                 const cookie = parseRequestAccessTokenCookie(request);
@@ -64,8 +62,16 @@ export function registerAuthMiddleware(router: Router) {
             }
 
             const header = parseAuthorizationHeader(headerValue);
-
             await verifyAuthorizationHeader(request, header);
+
+            const dataSource = await useDataSource();
+            const permissionProvider = new PermissionDBProvider(dataSource);
+            const permissionChecker = new PermissionChecker({
+                provider: permissionProvider,
+                policyEngine: new PolicyEngine(),
+            });
+            const requestPermissionChecker = new RequestPermissionChecker(request, permissionChecker);
+            setRequestEnv(request, 'permissionChecker', requestPermissionChecker);
 
             next();
         } catch (e) {

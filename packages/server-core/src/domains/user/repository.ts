@@ -19,7 +19,6 @@ import type {
 } from '@authup/core-kit';
 import {
     mergePermissionItems,
-    transformPermissionRelationToPermissionItem,
 } from '@authup/core-kit';
 import {
     createNanoID,
@@ -172,7 +171,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     // ------------------------------------------------------------------
 
-    async getOwnedPermissions(
+    async getBoundPermissions(
         id: User['id'],
     ) : Promise<PermissionItem[]> {
         const permissions = await this.getSelfOwnedPermissions(id);
@@ -199,7 +198,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         }
 
         const roleRepository = new RoleRepository(this.manager);
-        permissions.push(...await roleRepository.getOwnedPermissionsByMany(roleIds));
+        permissions.push(...await roleRepository.getBoundPermissionsForMany(roleIds));
 
         return mergePermissionItems(permissions);
     }
@@ -212,9 +211,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
                 user_id: id,
             },
             relations: {
-                policy: true,
-                permission: {
-                    policy: true,
+                permission: true,
+                policy: {
+                    children: true,
                 },
             },
             cache: {
@@ -226,7 +225,11 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((entity) => transformPermissionRelationToPermissionItem(entity));
+        return entities.map((entity) => ({
+            name: entity.permission.name,
+            realm_id: entity.permission.realm_id,
+            policy: entity.policy,
+        }));
     }
 
     // ------------------------------------------------------------------

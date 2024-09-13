@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicy, RealmMatchPolicy } from '@authup/kit';
+import type { RealmMatchPolicy } from '@authup/kit';
 import {
     BuiltInPolicyType,
 } from '@authup/kit';
 import type { DataSource } from 'typeorm';
 import type { PolicyEntity } from '../../domains';
 import { PolicyRepository } from '../../domains';
+import { BuiltInPolicyName } from '../../security/policy/constants';
 
 export class PolicyDefaultService {
     protected dataSource: DataSource;
@@ -43,85 +44,94 @@ export class PolicyDefaultService {
     }
 
     protected async getComposite(repository: PolicyRepository) : Promise<PolicyEntity> {
-        let entity = await repository.findOneBy({
+        const criteria : Partial<PolicyEntity> = {
             built_in: true,
             type: BuiltInPolicyType.COMPOSITE,
             name: BuiltInPolicyType.COMPOSITE,
+        };
+        let entity = await repository.findOne({
+            where: criteria,
+            relations: ['children'],
         });
+        if (!entity) {
+            entity = repository.create(criteria);
+            await repository.save(entity);
+        }
 
         let children : PolicyEntity[];
         if (entity) {
-            children = entity.children;
+            children = entity.children || [];
         } else {
             children = [];
         }
 
         let index = children.findIndex(
             (el) => el.type === BuiltInPolicyType.REALM_MATCH &&
-                el.name === BuiltInPolicyType.REALM_MATCH &&
+                el.name === BuiltInPolicyName.REALM_MATCH &&
                 !!el.built_in,
         );
 
         if (index === -1) {
-            const realmMatch = await this.getRealmMatch(repository);
+            const realmMatch = await this.getRealmMatch(repository, entity);
             children.push(realmMatch);
         }
 
         index = children.findIndex(
-            (el) => el.type === BuiltInPolicyType.REALM_MATCH &&
-                el.name === BuiltInPolicyType.REALM_MATCH &&
+            (el) => el.type === BuiltInPolicyType.IDENTITY &&
+                el.name === BuiltInPolicyName.IDENTITY &&
                 !!el.built_in,
         );
         if (index === -1) {
-            const identity = await this.getIdentity(repository);
+            const identity = await this.getIdentity(repository, entity);
             children.push(identity);
         }
 
-        // todo: member policy is missing...
-
-        if (!entity) {
-            entity = repository.create({
-                children,
-            });
+        index = children.findIndex(
+            (el) => el.type === BuiltInPolicyType.PERMISSION_BINDING &&
+                el.name === BuiltInPolicyName.PERMISSION_BINDING &&
+                !!el.built_in,
+        );
+        if (index === -1) {
+            const identity = await this.getPermissionBinding(repository, entity);
+            children.push(identity);
         }
+
+        return entity;
+    }
+
+    protected async getIdentity(
+        repository: PolicyRepository,
+        parent: PolicyEntity,
+    ) : Promise<PolicyEntity> {
+        const criteria : Partial<PolicyEntity> = {
+            built_in: true,
+            type: BuiltInPolicyType.REALM_MATCH,
+            name: BuiltInPolicyType.REALM_MATCH,
+        };
+        let entity = await repository.findOneBy(criteria);
+
+        if (entity) {
+            return entity;
+        }
+
+        entity = repository.create(criteria);
+        entity.parent = parent;
 
         await repository.save(entity);
 
         return entity;
     }
 
-    protected async getIdentity(repository: PolicyRepository) : Promise<PolicyEntity> {
-        let entity = await repository.findOneBy({
+    protected async getRealmMatch(
+        repository: PolicyRepository,
+        parent: PolicyEntity,
+    ) : Promise<PolicyEntity> {
+        const criteria : Partial<PolicyEntity> = {
             built_in: true,
             type: BuiltInPolicyType.REALM_MATCH,
-            name: BuiltInPolicyType.REALM_MATCH,
-        });
-
-        if (entity) {
-            return entity;
-        }
-
-        entity = repository.create({
-            built_in: true,
-            type: BuiltInPolicyType.IDENTITY,
-            name: BuiltInPolicyType.IDENTITY,
-        });
-
-        const attributes : IdentityPolicy = {
-
+            name: BuiltInPolicyName.REALM_MATCH,
         };
-
-        await repository.saveWithAttributes(entity, attributes);
-
-        return entity;
-    }
-
-    protected async getRealmMatch(repository: PolicyRepository) : Promise<PolicyEntity> {
-        let entity = await repository.findOneBy({
-            built_in: true,
-            type: BuiltInPolicyType.REALM_MATCH,
-            name: BuiltInPolicyType.REALM_MATCH,
-        });
+        let entity = await repository.findOneBy(criteria);
 
         if (entity) {
             return entity;
@@ -133,13 +143,33 @@ export class PolicyDefaultService {
             identityMasterMatchAll: true,
         };
 
-        entity = repository.create({
-            built_in: true,
-            type: BuiltInPolicyType.REALM_MATCH,
-            name: BuiltInPolicyType.REALM_MATCH,
-        });
+        entity = repository.create(criteria);
+        entity.parent = parent;
 
         await repository.saveWithAttributes(entity, attributes);
+
+        return entity;
+    }
+
+    protected async getPermissionBinding(
+        repository: PolicyRepository,
+        parent: PolicyEntity,
+    ) : Promise<PolicyEntity> {
+        const criteria : Partial<PolicyEntity> = {
+            built_in: true,
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyName.PERMISSION_BINDING,
+        };
+        let entity = await repository.findOneBy(criteria);
+
+        if (entity) {
+            return entity;
+        }
+
+        entity = repository.create(criteria);
+        entity.parent = parent;
+
+        await repository.saveWithAttributes(entity);
 
         return entity;
     }
