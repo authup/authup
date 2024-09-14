@@ -10,45 +10,44 @@ import type { CompositePolicy, PolicyWithType } from '../../policy';
 import { BuiltInPolicyType } from '../../policy';
 import type { PermissionItem } from '../types';
 
-/**
- * Merge one or more abilities together.
- * It will merge the policies to a composite policy.
- *
- * @param items
- */
-export function mergePermissionItems(items: PermissionItem[]) : PermissionItem {
-    if (items.length === 0) {
-        throw new SyntaxError('At least one ability entry must be provided.');
-    }
+export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[] {
+    const grouped : Record<string, PermissionItem[]> = input
+        .reduce((previous, current) => {
+            const key = current.realm_id || `/${current.name}`;
+            if (!previous[key]) {
+                previous[key] = [];
+            }
 
-    if (items.length === 1) {
-        return items[0];
-    }
+            previous[key].push(current);
 
-    const policy : PolicyWithType<CompositePolicy> = {
-        type: BuiltInPolicyType.COMPOSITE,
-        decisionStrategy: DecisionStrategy.AFFIRMATIVE,
-        children: [],
-    };
+            return previous;
+        }, {} as Record<string, PermissionItem[]>);
 
-    for (let j = 0; j < items.length; j++) {
-        const item = items[j];
-        if (item.policy) {
-            policy.children.push(item.policy);
+    const output : PermissionItem[] = [];
+    const keys = Object.keys(grouped);
+    for (let i = 0; i < keys.length; i++) {
+        const [permission, ...permissions] = grouped[keys[i]];
+
+        if (permissions.length > 0) {
+            const policy: PolicyWithType<CompositePolicy> = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                children: permissions
+                    .map((el) => el.policy)
+                    .filter((el) => typeof el !== 'undefined'),
+            };
+
+            if (permission.policy) {
+                policy.children.push(permission.policy);
+            }
+
+            if (policy.children.length > 0) {
+                permission.policy = policy;
+            }
         }
+
+        output.push(permission);
     }
 
-    const entry : PermissionItem = {
-        name: items[0].name,
-    };
-
-    if (typeof items[0].realm_id !== 'undefined') {
-        entry.realm_id = items[0].realm_id;
-    }
-
-    if (policy.children.length > 0) {
-        entry.policy = policy;
-    }
-
-    return entry;
+    return output;
 }

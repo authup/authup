@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { aggregatePermissionItems, buildPermissionItemAggregationKey } from '../helpers';
+import { mergePermissionItems } from '../helpers';
 import type { PermissionItem } from '../types';
 import type { PermissionGetOptions, PermissionProvider } from './types';
 
@@ -19,15 +19,14 @@ export class PermissionMemoryProvider implements PermissionProvider {
     async get(
         options: PermissionGetOptions,
     ): Promise<PermissionItem | undefined> {
-        const key = buildPermissionItemAggregationKey({
-            realm_id: options.realmId,
-            name: options.name,
-        });
-
-        return this.items[key];
+        return this.items[`${options.realmId || '/'}:${options.name}`];
     }
 
-    setMany(items: PermissionItem[]) {
-        this.items = aggregatePermissionItems(items);
+    setMany(input: PermissionItem[]) {
+        this.items = mergePermissionItems(input)
+            .reduce((prev, current) => {
+                prev[`${current.realm_id || '/'}:${current.name}`] = current;
+                return prev;
+            }, {} as Record<string, PermissionItem>);
     }
 }

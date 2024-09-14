@@ -20,8 +20,8 @@ import {
     PermissionBindingPolicyValidator,
     PolicyError,
     maybeInvertPolicyOutcome,
+    mergePermissionItems,
 } from '@authup/kit';
-import { mergePermissionItems } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityPermissionService } from '../../../../services';
 
