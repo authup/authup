@@ -17,7 +17,9 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
+    await permissionChecker.preCheck({
+        name: PermissionName.CLIENT_SCOPE_DELETE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
@@ -33,9 +35,8 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    // todo: should be dedicated permission
     await permissionChecker.check({
-        name: PermissionName.CLIENT_UPDATE,
+        name: PermissionName.CLIENT_SCOPE_DELETE,
         data: {
             attributes: entity,
         },

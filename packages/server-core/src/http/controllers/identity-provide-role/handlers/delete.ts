@@ -20,7 +20,9 @@ export async function deleteOauth2ProvideRoleRouteHandler(
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+    await permissionChecker.preCheck({
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
+    });
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
@@ -29,10 +31,8 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
-    // todo: introduce identity_provider_role permission
-    // todo: this should only consider identity_provider_realm_id
     await permissionChecker.check({
-        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
         data: {
             attributes: entity,
         },

@@ -21,7 +21,9 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const id = useRequestParamID(req);
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+    await permissionChecker.preCheck({
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
+    });
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -44,10 +46,8 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     entity = repository.merge(entity, data);
 
-    // todo: introduce identity_provider_role permission
-    // todo: this should only consider identity_provider_realm_id
     await permissionChecker.check({
-        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
         data: {
             attributes: entity,
         },

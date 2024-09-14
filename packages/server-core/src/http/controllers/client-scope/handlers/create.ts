@@ -17,7 +17,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     await permissionChecker.preCheck({
-        name: PermissionName.CLIENT_UPDATE,
+        name: PermissionName.CLIENT_SCOPE_CREATE,
     });
 
     const validator = new ClientScopeRequestValidator();
@@ -41,9 +41,8 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         data.scope_realm_id = data.scope.realm_id;
     }
 
-    // todo: should be dedicated permission
     await permissionChecker.check({
-        name: PermissionName.CLIENT_CREATE,
+        name: PermissionName.CLIENT_SCOPE_CREATE,
         data: {
             attributes: data,
         },

@@ -43,7 +43,6 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    // todo: should only consider role_realm_id
     await permissionChecker.check({
         name: PermissionName.ROLE_PERMISSION_DELETE,
         data: {

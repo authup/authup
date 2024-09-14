@@ -22,7 +22,9 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+    await permissionChecker.preCheck({
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
+    });
 
     const validator = new IdentityProviderRoleMappingRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -53,9 +55,8 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
-    // todo: introduce identity_provider_role permission
     await permissionChecker.check({
-        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
         data: {
             attributes: data,
         },

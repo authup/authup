@@ -45,7 +45,6 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
 
     // ----------------------------------------------
 
-    // todo: should only consider robot_realm_id
     await permissionChecker.check({
         name: PermissionName.ROBOT_PERMISSION_DELETE,
         data: {

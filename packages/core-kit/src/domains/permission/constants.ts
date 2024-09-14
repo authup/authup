@@ -12,10 +12,17 @@ export enum PermissionName {
     CLIENT_READ = 'client_read',
     CLIENT_SELF_MANAGE = 'client_self_manage',
 
-    IDENTITY_PROVIDER_CREATE = 'provider_create',
-    IDENTITY_PROVIDER_DELETE = 'provider_delete',
-    IDENTITY_PROVIDER_UPDATE = 'provider_update',
+    CLIENT_SCOPE_CREATE = 'client_scope_create',
+    CLIENT_SCOPE_DELETE = 'client_scope_delete',
+
+    IDENTITY_PROVIDER_CREATE = 'identity_provider_create',
+    IDENTITY_PROVIDER_DELETE = 'identity_provider_delete',
+    IDENTITY_PROVIDER_UPDATE = 'identity_provider_update',
     IDENTITY_PROVIDER_READ = 'identity_provider_read',
+
+    IDENTITY_PROVIDER_ROLE_CREATE = 'identity_provider_role_create',
+    IDENTITY_PROVIDER_ROLE_DELETE = 'identity_provider_role_delete',
+    IDENTITY_PROVIDER_ROLE_UPDATE = 'identity_provider_role_update',
 
     PERMISSION_CREATE = 'permission_create',
     PERMISSION_DELETE = 'permission_delete',
