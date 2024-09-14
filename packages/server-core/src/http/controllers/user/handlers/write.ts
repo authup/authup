@@ -6,8 +6,8 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { BadRequestError, NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -58,7 +58,9 @@ export async function writeUserRouteHandler(
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     if (entity) {
         try {
-            await permissionChecker.check({ name: PermissionName.USER_UPDATE, data: { attributes: entity } });
+            await permissionChecker.preCheck({
+                name: PermissionName.USER_UPDATE,
+            });
             hasAbility = true;
         } catch (e) {
             if (entity.id !== useRequestEnv(req, 'userId')) {
@@ -68,7 +70,9 @@ export async function writeUserRouteHandler(
 
         group = RequestHandlerOperation.UPDATE;
     } else {
-        await permissionChecker.preCheck({ name: PermissionName.USER_CREATE });
+        await permissionChecker.preCheck({
+            name: PermissionName.USER_CREATE,
+        });
         hasAbility = true;
 
         group = RequestHandlerOperation.CREATE;
@@ -95,14 +99,6 @@ export async function writeUserRouteHandler(
     if (entity) {
         entity = repository.merge(entity, data);
 
-        if (data.password) {
-            entity.password = await repository.hashPassword(data.password);
-        }
-
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new ForbiddenError();
-        }
-
         if (
             data.name &&
             data.name !== entity.name
@@ -121,6 +117,22 @@ export async function writeUserRouteHandler(
             }
         }
 
+        if (hasAbility) {
+            await permissionChecker.check({
+                name: PermissionName.USER_UPDATE,
+                data: {
+                    attributes: {
+                        ...entity,
+                        ...data,
+                    },
+                },
+            });
+        }
+
+        if (data.password) {
+            entity.password = await repository.hashPassword(data.password);
+        }
+
         await repository.save(entity);
 
         if (data.password) {
@@ -135,11 +147,20 @@ export async function writeUserRouteHandler(
         data.realm_id = id;
     }
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new ForbiddenError();
+    entity = repository.create(data);
+
+    if (hasAbility) {
+        await permissionChecker.check({
+            name: PermissionName.USER_CREATE,
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
+        });
     }
 
-    entity = repository.create(data);
     if (data.password) {
         entity.password = await repository.hashPassword(data.password);
     }

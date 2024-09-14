@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -29,11 +29,14 @@ export async function deleteOauth2ProvideRoleRouteHandler(
         throw new NotFoundError();
     }
 
-    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: entity } });
-
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id)) {
-        throw new ForbiddenError();
-    }
+    // todo: introduce identity_provider_role permission
+    // todo: this should only consider identity_provider_realm_id
+    await permissionChecker.check({
+        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        data: {
+            attributes: entity,
+        },
+    });
 
     const { id: entityId } = entity;
 

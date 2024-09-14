@@ -5,10 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '@authup/kit';
-import { BadRequestError } from '@ebec/http';
 import {
-    PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable,
+    PermissionName, ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -17,7 +15,6 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     RolePermissionEntity,
 } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RolePermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
@@ -45,37 +42,32 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
         entityTarget: RolePermissionEntity,
     });
 
-    const policyEvaluationContext : PolicyData = {
-        attributes: data satisfies Partial<RolePermissionEntity>,
-    };
-
     // ----------------------------------------------
 
     if (data.permission) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('permission_id'));
-        }
-
         data.permission_realm_id = data.permission.realm_id;
 
         if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
-            await permissionChecker.check({ name: data.permission.name, data: policyEvaluationContext });
+            await permissionChecker.preCheck({
+                name: data.permission.name,
+            });
         }
     }
 
     // ----------------------------------------------
 
     if (data.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
-        }
-
         data.role_realm_id = data.role.realm_id;
     }
 
     // ----------------------------------------------
 
-    await permissionChecker.check({ name: PermissionName.ROLE_PERMISSION_CREATE, data: { attributes: data } });
+    await permissionChecker.check({
+        name: PermissionName.ROLE_PERMISSION_CREATE,
+        data: {
+            attributes: data,
+        },
+    });
 
     // ----------------------------------------------
 

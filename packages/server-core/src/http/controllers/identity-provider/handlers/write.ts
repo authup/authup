@@ -6,15 +6,14 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
@@ -85,22 +84,19 @@ export async function writeIdentityProviderRouteHandler(
     // ----------------------------------------------
 
     if (entity) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-            data: { attributes: data },
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
         });
     } else {
         if (!data.realm_id) {
             const { id } = useRequestEnv(req, 'realm');
             data.realm_id = id;
-        }
-
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
         await permissionChecker.check({

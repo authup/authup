@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -19,7 +19,6 @@ import { DatabaseConflictError } from '../../../../database';
 import {
     PolicyEntity, PolicyRepository,
 } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { PolicyAttributesValidator, PolicyValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm, useRequestEnv,
@@ -104,22 +103,27 @@ export async function writePolicyRouteHandler(
 
     // ----------------------------------------------
     if (entity) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        await permissionChecker.check({ name: PermissionName.PERMISSION_UPDATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.PERMISSION_UPDATE,
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
+        });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
             data.realm_id = id;
         }
 
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        await permissionChecker.check({ name: PermissionName.PERMISSION_CREATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.PERMISSION_CREATE,
+            data: {
+                attributes: data,
+            },
+        });
     }
 
     if (isPropertySet(data, 'parent_id')) {

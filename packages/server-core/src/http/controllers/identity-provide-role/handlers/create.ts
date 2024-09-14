@@ -8,7 +8,6 @@
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
-    isRealmResourceWritable,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -18,7 +17,6 @@ import {
     IdentityProviderRoleMappingEntity,
 } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
@@ -40,18 +38,10 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     });
 
     if (data.provider) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.provider.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('provider_id'));
-        }
-
         data.provider_realm_id = data.provider.realm_id;
     }
 
     if (data.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
-        }
-
         data.role_realm_id = data.role.realm_id;
     }
 
@@ -63,7 +53,13 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
     }
 
-    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: data } });
+    // todo: introduce identity_provider_role permission
+    await permissionChecker.check({
+        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        data: {
+            attributes: data,
+        },
+    });
 
     const identity = permissionChecker.getRequestIdentity();
     if (!identity) {

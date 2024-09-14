@@ -6,8 +6,7 @@
  */
 
 import type { PolicyData } from '@authup/kit';
-import { BadRequestError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
@@ -15,7 +14,6 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 import { RobotPermissionRequestValidator } from '../utils';
 
@@ -50,31 +48,25 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
     // ----------------------------------------------
 
     if (data.permission) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.permission.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('permission_id'));
-        }
-
         data.permission_realm_id = data.permission.realm_id;
 
-        await permissionChecker.check({
+        await permissionChecker.preCheck({
             name: data.permission.name,
-            data: policyData,
         });
     }
 
     // ----------------------------------------------
 
     if (data.robot) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.robot.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
-        }
-
         data.robot_realm_id = data.robot.realm_id;
     }
 
     // ----------------------------------------------
 
-    await permissionChecker.check({ name: PermissionName.ROBOT_PERMISSION_CREATE, data: policyData });
+    await permissionChecker.check({
+        name: PermissionName.ROBOT_PERMISSION_CREATE,
+        data: policyData,
+    });
 
     // ----------------------------------------------
 

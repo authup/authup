@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { ForbiddenError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserRoleEntity } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { UserRoleRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
@@ -36,10 +35,6 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
     // ----------------------------------------------
 
     if (data.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
-        }
-
         data.role_realm_id = data.role.realm_id;
 
         const identity = permissionChecker.getRequestIdentity();
@@ -60,16 +55,17 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
     // ----------------------------------------------
 
     if (data.user) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.user.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
-        }
-
         data.user_realm_id = data.user.realm_id;
     }
 
     // ----------------------------------------------
 
-    await permissionChecker.check({ name: PermissionName.USER_ROLE_CREATE, data: { attributes: data } });
+    await permissionChecker.check({
+        name: PermissionName.USER_ROLE_CREATE,
+        data: {
+            attributes: data,
+        },
+    });
 
     // ----------------------------------------------
 

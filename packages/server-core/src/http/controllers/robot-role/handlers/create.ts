@@ -6,15 +6,14 @@
  */
 
 import type { PolicyData } from '@authup/kit';
-import { BadRequestError, ForbiddenError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { ForbiddenError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RobotRoleEntity } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RobotRoleRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
@@ -36,17 +35,13 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    const policyEvaluationContext : PolicyData = {
+    const policyData : PolicyData = {
         attributes: data satisfies Partial<RobotRoleEntity>,
     };
 
     // ----------------------------------------------
 
     if (data.role) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.role.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('role_id'));
-        }
-
         data.role_realm_id = data.role.realm_id;
 
         const identity = permissionChecker.getRequestIdentity();
@@ -67,16 +62,15 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
     // ----------------------------------------------
 
     if (data.robot) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.robot.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('robot_id'));
-        }
-
         data.robot_realm_id = data.robot.realm_id;
     }
 
     // ----------------------------------------------
 
-    await permissionChecker.check({ name: PermissionName.ROBOT_ROLE_CREATE, data: policyEvaluationContext });
+    await permissionChecker.check({
+        name: PermissionName.ROBOT_ROLE_CREATE,
+        data: policyData,
+    });
 
     // ----------------------------------------------
 

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -43,13 +43,13 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     // ----------------------------------------------
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.role_realm_id)) {
-        throw new ForbiddenError();
-    }
-
-    // ----------------------------------------------
-
-    await permissionChecker.check({ name: PermissionName.ROLE_PERMISSION_DELETE, data: { attributes: entity } });
+    // todo: should only consider role_realm_id
+    await permissionChecker.check({
+        name: PermissionName.ROLE_PERMISSION_DELETE,
+        data: {
+            attributes: entity,
+        },
+    });
 
     // ----------------------------------------------
 

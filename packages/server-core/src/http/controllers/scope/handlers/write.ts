@@ -6,8 +6,8 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -15,10 +15,13 @@ import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeor
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
 import { ScopeEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { ScopeRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm, useRequestEnv,
+    RequestHandlerOperation,
+    getRequestBodyRealmID,
+    getRequestParamID,
+    isRequestMasterRealm,
+    useRequestEnv,
 } from '../../../request';
 
 export async function writeScopeRouteHandler(
@@ -80,22 +83,27 @@ export async function writeScopeRouteHandler(
     // ----------------------------------------------
 
     if (entity) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        await permissionChecker.check({ name: PermissionName.SCOPE_UPDATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.SCOPE_UPDATE,
+            data: {
+                attributes: {
+                    ...entity,
+                    ...data,
+                },
+            },
+        });
     } else {
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
             data.realm_id = id;
         }
 
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        await permissionChecker.check({ name: PermissionName.SCOPE_CREATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.SCOPE_CREATE,
+            data: {
+                attributes: data,
+            },
+        });
     }
 
     // ----------------------------------------------

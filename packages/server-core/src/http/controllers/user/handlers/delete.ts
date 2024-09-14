@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { BadRequestError, NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -31,11 +31,12 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
         throw new NotFoundError();
     }
 
-    await permissionChecker.check({ name: PermissionName.USER_DELETE, data: { attributes: entity } });
-
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-        throw new ForbiddenError(`You are not authorized to drop a user fo the realm ${entity.realm_id}`);
-    }
+    await permissionChecker.check({
+        name: PermissionName.USER_DELETE,
+        data: {
+            attributes: entity,
+        },
+    });
 
     const { id: entityId } = entity;
 

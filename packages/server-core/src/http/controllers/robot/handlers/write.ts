@@ -6,10 +6,10 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
-    REALM_MASTER_NAME, isRealmResourceWritable,
+    REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -82,10 +82,6 @@ export async function writeRobotRouteHandler(
     });
 
     if (entity) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new ForbiddenError();
-        }
-
         await permissionChecker.check({
             name: PermissionName.ROBOT_UPDATE,
             data: {
@@ -127,10 +123,6 @@ export async function writeRobotRouteHandler(
     if (!data.realm_id) {
         const { id } = useRequestEnv(req, 'realm');
         data.realm_id = id;
-    }
-
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-        throw new ForbiddenError();
     }
 
     await permissionChecker.check({

@@ -7,7 +7,7 @@
 
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { PermissionName, ROLE_ADMIN_NAME, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -15,7 +15,6 @@ import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeor
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
 import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { PermissionRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm, useRequestEnv,
@@ -78,11 +77,11 @@ export async function writePermissionRouteHandler(
     });
 
     if (entity) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
-        }
-
-        if (entity.built_in && isPropertySet(data, 'name') && entity.name !== data.name) {
+        if (
+            entity.built_in &&
+            isPropertySet(data, 'name') &&
+            entity.name !== data.name
+        ) {
             throw new BadRequestError('The name of a built-in permission can not be changed.');
         }
 
@@ -99,10 +98,6 @@ export async function writePermissionRouteHandler(
         if (!data.realm_id && !isRequestMasterRealm(req)) {
             const { id } = useRequestEnv(req, 'realm');
             data.realm_id = id;
-        }
-
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('realm_id'));
         }
 
         await permissionChecker.check({

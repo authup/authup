@@ -5,20 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ClientScopeEntity } from '../../../../domains';
-import { buildErrorMessageForAttribute } from '../../../../utils';
 import { ClientScopeRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestEnv } from '../../../request';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
+    await permissionChecker.preCheck({
+        name: PermissionName.CLIENT_UPDATE,
+    });
 
     const validator = new ClientScopeRequestValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
@@ -34,10 +34,6 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
     });
 
     if (data.client) {
-        if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), data.client.realm_id)) {
-            throw new BadRequestError(buildErrorMessageForAttribute('client_id'));
-        }
-
         data.client_realm_id = data.client.realm_id;
     }
 
@@ -45,6 +41,7 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
         data.scope_realm_id = data.scope.realm_id;
     }
 
+    // todo: should be dedicated permission
     await permissionChecker.check({
         name: PermissionName.CLIENT_CREATE,
         data: {

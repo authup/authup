@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import {
-    PermissionName, isRealmResourceWritable,
+    PermissionName,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
@@ -42,13 +42,16 @@ export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Re
         throw new NotFoundError();
     }
 
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.provider_realm_id)) {
-        throw new ForbiddenError();
-    }
-
     entity = repository.merge(entity, data);
 
-    await permissionChecker.check({ name: PermissionName.IDENTITY_PROVIDER_UPDATE, data: { attributes: entity } });
+    // todo: introduce identity_provider_role permission
+    // todo: this should only consider identity_provider_realm_id
+    await permissionChecker.check({
+        name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+        data: {
+            attributes: entity,
+        },
+    });
 
     await repository.save(entity);
 

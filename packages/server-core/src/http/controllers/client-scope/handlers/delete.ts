@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { NotFoundError } from '@ebec/http';
+import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -33,11 +33,13 @@ export async function deleteClientScopeRouteHandler(req: Request, res: Response)
         throw new NotFoundError();
     }
 
-    await permissionChecker.check({ name: PermissionName.CLIENT_UPDATE, data: { attributes: entity } });
-
-    if (!isRealmResourceWritable(useRequestEnv(req, 'realm'), entity.client.realm_id)) {
-        throw new ForbiddenError();
-    }
+    // todo: should be dedicated permission
+    await permissionChecker.check({
+        name: PermissionName.CLIENT_UPDATE,
+        data: {
+            attributes: entity,
+        },
+    });
 
     const { id: entityId } = entity;
 
