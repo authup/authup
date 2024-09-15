@@ -20,8 +20,9 @@ import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
     getRequestParamID,
-    isRequestMasterRealm,
+    isRequestIdentityMasterRealmMember,
     useRequestEnv,
+    useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writeScopeRouteHandler(
@@ -93,9 +94,11 @@ export async function writeScopeRouteHandler(
             },
         });
     } else {
-        if (!data.realm_id && !isRequestMasterRealm(req)) {
-            const { id } = useRequestEnv(req, 'realm');
-            data.realm_id = id;
+        if (!data.realm_id) {
+            const identity = useRequestIdentityOrFail(req);
+            if (!isRequestIdentityMasterRealmMember(identity)) {
+                data.realm_id = identity.realmId;
+            }
         }
 
         await permissionChecker.check({

@@ -25,7 +25,7 @@ import {
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
 import { EnvironmentName } from '../../../../env';
-import { setRequestEnv, useRequestParamID } from '../../../request';
+import { setRequestIdentity, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../../config';
 
@@ -93,12 +93,13 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const account = await manager.save(identity);
     const grant = new InternalGrantType();
 
-    setRequestEnv(req, 'userId', account.user_id);
-    setRequestEnv(req, 'realm', entity.realm);
-    if (entity.realm) {
-        setRequestEnv(req, 'realmId', entity.realm.id);
-        setRequestEnv(req, 'realmName', entity.realm.name);
-    }
+    setRequestIdentity(req, {
+        type: 'user',
+        id: account.user_id,
+        realmId: entity.realm.id,
+        realmName: entity.realm.name,
+    });
+
     const token = await grant.run(req);
     const config = useConfig();
 

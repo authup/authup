@@ -16,7 +16,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writeIdentityProviderRouteHandler(
@@ -95,8 +95,8 @@ export async function writeIdentityProviderRouteHandler(
         });
     } else {
         if (!data.realm_id) {
-            const { id } = useRequestEnv(req, 'realm');
-            data.realm_id = id;
+            const identity = useRequestIdentityOrFail(req);
+            data.realm_id = identity.realmId;
         }
 
         await permissionChecker.check({

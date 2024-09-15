@@ -7,11 +7,8 @@
 
 import { parseAuthorizationHeader, stringifyAuthorizationHeader } from 'hapic';
 import { coreHandler, getRequestHostName } from 'routup';
-import type {
-    Request, Response, Router,
-} from 'routup';
-import type { SerializeOptions } from '@routup/basic/cookie';
-import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
+import type { Router } from 'routup';
+import { type SerializeOptions, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionChecker } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
@@ -20,34 +17,13 @@ import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { RequestPermissionChecker, setRequestEnv } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
-function parseRequestAccessTokenCookie(request: Request): string | undefined {
-    return useRequestCookie(request, CookieName.ACCESS_TOKEN);
-}
-
-function unsetCookies(res: Response) {
-    const config = useConfig();
-    const cookieOptions : SerializeOptions = {};
-
-    if (config.cookieDomain) {
-        cookieOptions.domain = config.cookieDomain;
-    } else {
-        cookieOptions.domain = getRequestHostName(res.req, {
-            trustProxy: true,
-        });
-    }
-
-    unsetResponseCookie(res, CookieName.ACCESS_TOKEN, cookieOptions);
-    unsetResponseCookie(res, CookieName.REFRESH_TOKEN, cookieOptions);
-    unsetResponseCookie(res, CookieName.ACCESS_TOKEN_EXPIRE_DATE, cookieOptions);
-}
-
-export function registerAuthMiddleware(router: Router) {
+export function registerAuthorizationMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
         let { authorization: headerValue } = request.headers;
 
         try {
             if (typeof headerValue === 'undefined') {
-                const cookie = parseRequestAccessTokenCookie(request);
+                const cookie = useRequestCookie(request, CookieName.ACCESS_TOKEN);
                 if (cookie) {
                     headerValue = stringifyAuthorizationHeader({
                         type: 'Bearer',
@@ -75,7 +51,21 @@ export function registerAuthMiddleware(router: Router) {
 
             next();
         } catch (e) {
-            unsetCookies(response);
+            const config = useConfig();
+            const cookieOptions : SerializeOptions = {};
+
+            if (config.cookieDomain) {
+                cookieOptions.domain = config.cookieDomain;
+            } else {
+                cookieOptions.domain = getRequestHostName(response.req, {
+                    trustProxy: true,
+                });
+            }
+
+            unsetResponseCookie(response, CookieName.ACCESS_TOKEN, cookieOptions);
+            unsetResponseCookie(response, CookieName.REFRESH_TOKEN, cookieOptions);
+            unsetResponseCookie(response, CookieName.ACCESS_TOKEN_EXPIRE_DATE, cookieOptions);
+
             next(e);
         }
     }));

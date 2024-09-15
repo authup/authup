@@ -11,33 +11,26 @@ import { rateLimit } from '@routup/rate-limit';
 import type { Request, Router } from 'routup';
 import { merge } from 'smob';
 import { useConfig } from '../../../config';
-import { useRequestEnv } from '../../request';
+import { useRequestIdentity } from '../../request';
 
 export function registerRateLimitMiddleware(router: Router, input?: OptionsInput) {
     const config = useConfig();
     let options : OptionsInput = {
         skip(req: Request) {
-            const robot = useRequestEnv(req, 'robot');
-            if (robot) {
-                const { name } = useRequestEnv(req, 'realm');
+            const identity = useRequestIdentity(req);
 
-                if (
-                    name === REALM_MASTER_NAME &&
-                    robot.name === config.robotAdminName
-                ) {
-                    return true;
-                }
-            }
-
-            return false;
+            return identity.type === 'robot' &&
+                identity.realmName === REALM_MASTER_NAME &&
+                !!identity.attributes &&
+                identity.attributes.name === config.robotAdminName;
         },
         max(req: Request) {
-            if (useRequestEnv(req, 'userId')) {
+            const identity = useRequestIdentity(req);
+            if (identity.type === 'user') {
                 return 60 * 100; // 100 req p. sec
             }
 
-            const robot = useRequestEnv(req, 'robot');
-            if (robot) {
+            if (identity.type === 'robot' || identity.type === 'client') {
                 return 60 * 1000; // 1000 req p. sec
             }
 

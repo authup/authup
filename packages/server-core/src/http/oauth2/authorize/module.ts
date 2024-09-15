@@ -6,9 +6,9 @@
  */
 
 import { randomBytes } from 'node:crypto';
+import type { OAuth2SubKind } from '@authup/kit';
 import {
     OAuth2AuthorizationResponseType,
-    OAuth2SubKind,
 } from '@authup/kit';
 import {
     hasOAuth2OpenIDScope,
@@ -17,7 +17,7 @@ import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
-import { useRequestEnv } from '../../request';
+import { useRequestIdentityOrFail } from '../../request';
 import type {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
@@ -49,7 +49,7 @@ export async function runOAuth2Authorization(
         ...(data.state ? { state: data.state } : {}),
     };
 
-    const { id: realmId, name: realmName } = useRequestEnv(req, 'realm');
+    const identity = useRequestIdentityOrFail(req);
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);
@@ -59,20 +59,29 @@ export async function runOAuth2Authorization(
         expires: new Date(Date.now() + (1000 * authorizationCodeMaxAge)).toISOString(),
         redirect_uri: data.redirect_uri,
         client_id: data.client_id,
-        user_id: useRequestEnv(req, 'userId'),
-        realm_id: realmId,
+        realm_id: identity.realmId,
         scope: data.scope,
     });
 
-    const key = await useKey({ realm_id: realmId });
+    if (identity.type === 'user') {
+        entity.user_id = identity.id;
+    }
+
+    if (identity.type === 'robot') {
+        entity.robot_id = identity.id;
+    }
+
+    const key = await useKey({
+        realm_id: identity.realmId,
+    });
 
     const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
         issuer: options.issuer,
         remoteAddress: getRequestIP(req, { trustProxy: true }),
-        sub: useRequestEnv(req, 'userId'),
-        subKind: OAuth2SubKind.USER,
-        realmId,
-        realmName,
+        sub: identity.id,
+        subKind: identity.type as `${OAuth2SubKind}`,
+        realmId: identity.realmId,
+        realmName: identity.realmName,
         clientId: data.client_id,
         ...(data.scope ? { scope: data.scope } : {}),
     };

@@ -9,7 +9,8 @@ import path from 'node:path';
 import type { Router } from 'routup';
 import { useConfig } from '../../config';
 import {
-    registerAuthMiddleware, registerBasicMiddleware,
+    registerAuthorizationMiddleware,
+    registerBasicMiddleware,
     registerCorsMiddleware,
     registerLoggerMiddleware,
     registerPrometheusMiddleware,
@@ -54,5 +55,5 @@ export function registerMiddlewares(router: Router) {
         });
     }
 
-    registerAuthMiddleware(router);
+    registerAuthorizationMiddleware(router);
 }

@@ -17,7 +17,12 @@ import { DatabaseConflictError } from '../../../../database';
 import { ClientEntity } from '../../../../domains';
 import { ClientRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm, useRequestEnv,
+    RequestHandlerOperation,
+    getRequestBodyRealmID,
+    getRequestParamID,
+    isRequestIdentityMasterRealmMember,
+    useRequestEnv,
+    useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writeClientRouteHandler(
@@ -87,12 +92,19 @@ export async function writeClientRouteHandler(
             },
         });
     } else {
-        if (!data.realm_id && !isRequestMasterRealm(req)) {
-            const { id } = useRequestEnv(req, 'realm');
-            data.realm_id = id;
+        if (!data.realm_id) {
+            const identity = useRequestIdentityOrFail(req);
+            if (!isRequestIdentityMasterRealmMember(identity)) {
+                data.realm_id = identity.realmId;
+            }
         }
 
-        await permissionChecker.check({ name: PermissionName.CLIENT_CREATE, data: { attributes: data } });
+        await permissionChecker.check({
+            name: PermissionName.CLIENT_CREATE,
+            data: {
+                attributes: data,
+            },
+        });
     }
 
     // ----------------------------------------------

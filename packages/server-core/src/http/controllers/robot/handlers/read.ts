@@ -22,7 +22,7 @@ import {
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -72,13 +72,14 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 
     const queryOutput = await query.getManyAndCount();
 
-    const requestRobot = useRequestEnv(req, 'robot');
+    const identity = useRequestIdentity(req);
 
     const data : RobotEntity[] = [];
     for (let i = 0; i < queryOutput[0].length; i++) {
         if (
-            requestRobot &&
-            requestRobot.id === queryOutput[0][i].id
+            identity &&
+            identity.type === 'robot' &&
+            identity.id === queryOutput[0][i].id
         ) {
             data.push(queryOutput[0][i]);
             continue;
@@ -127,21 +128,21 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
 
-    const requestRobot = useRequestEnv(req, 'robot');
-    const requestRealm = useRequestEnv(req, 'realm');
-
+    const identity = useRequestIdentity(req);
     let isMe = false;
 
     if (
         isSelfId(id) &&
-        requestRobot
+        identity &&
+        identity.type === 'robot'
     ) {
         isMe = true;
-        query.where('robot.id = :id', { id: requestRobot.id });
+        query.where('robot.id = :id', { id: identity.id });
     } else if (isUUID(id)) {
         if (
-            requestRobot &&
-            id === requestRobot.id
+            identity &&
+            identity.type === 'robot' &&
+            id === identity.id
         ) {
             isMe = true;
         }
@@ -154,10 +155,11 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
 
         if (
-            requestRobot &&
-            requestRealm &&
-            id === requestRobot.name &&
-            realm.id === requestRealm.id
+            identity &&
+            identity.type === 'robot' &&
+            identity.realmId === realm.id &&
+            identity.attributes &&
+            identity.attributes.name === id
         ) {
             isMe = true;
         }

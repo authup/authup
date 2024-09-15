@@ -8,4 +8,4 @@
 export * from './constants';
 export * from './helpers';
 export * from './permission';
-export * from './type';
+export * from './types';

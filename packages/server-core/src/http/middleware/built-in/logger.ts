@@ -13,7 +13,7 @@ import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import { useConfig } from '../../../config';
 import { EnvironmentName } from '../../../env';
-import { useRequestEnv } from '../../request';
+import { useRequestIdentity } from '../../request';
 
 export function registerLoggerMiddleware(router: Router) {
     router.use(coreHandler((
@@ -29,18 +29,9 @@ export function registerLoggerMiddleware(router: Router) {
                     getRequestIP(req, { trustProxy: true }),
                 ];
 
-                const userId = useRequestEnv(req, 'userId');
-                const robotId = useRequestEnv(req, 'robotId');
-                const clientId = useRequestEnv(req, 'clientId');
-
-                if (userId || robotId || clientId) {
-                    if (userId) {
-                        parts.push(`user#${userId}`);
-                    } else if (robotId) {
-                        parts.push(`robot#${robotId}`);
-                    } else {
-                        parts.push(`client#${clientId}`);
-                    }
+                const identity = useRequestIdentity(req);
+                if (identity) {
+                    parts.push(`${identity.type}#${identity.id}`);
                 }
 
                 return [
