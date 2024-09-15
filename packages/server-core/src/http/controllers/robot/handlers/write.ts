@@ -22,7 +22,7 @@ import {
 } from '../../../../domains';
 import { RobotRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writeRobotRouteHandler(
@@ -121,8 +121,8 @@ export async function writeRobotRouteHandler(
     }
 
     if (!data.realm_id) {
-        const { id } = useRequestEnv(req, 'realm');
-        data.realm_id = id;
+        const identity = useRequestIdentityOrFail(req);
+        data.realm_id = identity.realmId;
     }
 
     await permissionChecker.check({

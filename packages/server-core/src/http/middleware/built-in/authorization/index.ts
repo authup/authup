@@ -7,3 +7,5 @@
 
 export * from './module';
 export * from './verify';
+export { verifyBasicAuthorizationHeader } from './basic';
+export { verifyBearerAuthorizationHeader } from './bearer';

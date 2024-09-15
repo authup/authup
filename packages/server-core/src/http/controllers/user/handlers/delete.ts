@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
 
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
@@ -19,7 +19,11 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
     await permissionChecker.preCheck({ name: PermissionName.USER_DELETE });
 
-    if (useRequestEnv(req, 'userId') === id) {
+    const identity = useRequestIdentity(req);
+    if (
+        identity.type === 'user' &&
+        identity.id === id
+    ) {
         throw new BadRequestError('The own user can not be deleted.');
     }
 

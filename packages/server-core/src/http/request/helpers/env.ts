@@ -7,7 +7,7 @@
 
 import type { Request } from 'routup';
 import { setRequestEnv as setEnv, useRequestEnv as useEnv } from 'routup';
-import type { RequestEnv } from '../type';
+import type { RequestEnv } from '../types';
 
 export function useRequestEnv(req: Request): RequestEnv;
 export function useRequestEnv<T extends keyof RequestEnv>(req: Request, key: T): RequestEnv[T];

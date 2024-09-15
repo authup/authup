@@ -17,7 +17,7 @@ import { useConfig } from '../../../../config';
 import { UserEntity, UserRepository } from '../../../../domains';
 import { UserRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writeUserRouteHandler(
@@ -63,7 +63,8 @@ export async function writeUserRouteHandler(
             });
             hasAbility = true;
         } catch (e) {
-            if (entity.id !== useRequestEnv(req, 'userId')) {
+            const identity = useRequestIdentityOrFail(req);
+            if (identity.type !== 'user' || identity.id !== entity.id) {
                 throw e;
             }
         }
@@ -143,8 +144,8 @@ export async function writeUserRouteHandler(
     }
 
     if (!data.realm_id) {
-        const { id } = useRequestEnv(req, 'realm');
-        data.realm_id = id;
+        const { realmId } = useRequestIdentityOrFail(req);
+        data.realm_id = realmId;
     }
 
     entity = repository.create(data);

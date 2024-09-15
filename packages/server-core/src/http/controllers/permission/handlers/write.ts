@@ -17,7 +17,7 @@ import { DatabaseConflictError } from '../../../../database';
 import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
 import { PermissionRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestMasterRealm, useRequestEnv,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestIdentityMasterRealmMember, useRequestEnv, useRequestIdentityOrFail,
 } from '../../../request';
 
 export async function writePermissionRouteHandler(
@@ -95,9 +95,11 @@ export async function writePermissionRouteHandler(
             },
         });
     } else {
-        if (!data.realm_id && !isRequestMasterRealm(req)) {
-            const { id } = useRequestEnv(req, 'realm');
-            data.realm_id = id;
+        if (!data.realm_id) {
+            const identity = useRequestIdentityOrFail(req);
+            if (!isRequestIdentityMasterRealmMember(identity)) {
+                data.realm_id = identity.realmId;
+            }
         }
 
         await permissionChecker.check({

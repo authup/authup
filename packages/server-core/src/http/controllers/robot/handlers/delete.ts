@@ -15,7 +15,7 @@ import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
@@ -29,9 +29,19 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    const userId = useRequestEnv(req, 'userId');
-    if (!entity.user_id || !userId || entity.user_id !== userId) {
-        await permissionChecker.check({ name: PermissionName.ROBOT_DELETE, data: { attributes: entity } });
+    const identity = useRequestIdentity(req);
+    if (
+        !entity.user_id ||
+        !identity ||
+        identity.type !== 'user' ||
+        entity.user_id !== identity.id
+    ) {
+        await permissionChecker.check({
+            name: PermissionName.ROBOT_DELETE,
+            data: {
+                attributes: entity,
+            },
+        });
     }
 
     const config = useConfig();

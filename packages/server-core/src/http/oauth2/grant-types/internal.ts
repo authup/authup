@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/kit';
-import type { User } from '@authup/core-kit';
-import { OAuth2SubKind } from '@authup/kit';
+import type { OAuth2SubKind, OAuth2TokenGrantResponse } from '@authup/kit';
 import { ScopeName } from '@authup/core-kit';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { useRequestEnv } from '../../request';
+import { useRequestIdentityOrFail } from '../../request';
 import { AbstractGrant } from './abstract';
 import type {
     Grant,
@@ -20,14 +18,15 @@ import { buildOAuth2BearerTokenResponse } from '../response';
 
 export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
-        const realm = useRequestEnv(request, 'realm');
+        const identity = useRequestIdentityOrFail(request);
+
         const accessToken = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
-            realmId: realm.id,
-            realmName: realm.name,
-            sub: useRequestEnv(request, 'userId') as User['id'],
-            subKind: OAuth2SubKind.USER,
+            realmId: identity.realmId,
+            realmName: identity.realmName,
+            sub: identity.id,
+            subKind: identity.type as `${OAuth2SubKind}`,
         });
 
         const refreshToken = await this.issueRefreshToken(accessToken);

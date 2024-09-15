@@ -23,7 +23,7 @@ import {
 import { ClientEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -108,9 +108,11 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
 
     const query = repository.createQueryBuilder('client');
 
+    const identity = useRequestIdentity(req);
     if (
         isSelfId(id) &&
-        useRequestEnv(req, 'clientId')
+        identity &&
+        identity.type === 'client'
     ) {
         const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, useRequestEnv(req, 'scopes'));
         for (let i = 0; i < attributes.length; i++) {

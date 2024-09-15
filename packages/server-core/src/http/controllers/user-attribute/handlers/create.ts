@@ -16,7 +16,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv, useRequestIdentity } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -41,17 +41,17 @@ export async function createUserAttributeRouteHandler(req: Request, res: Respons
         entityTarget: UserAttributeEntity,
     });
 
-    const userId = useRequestEnv(req, 'userId');
+    const identity = useRequestIdentity(req);
     if (data.user) {
         data.realm_id = data.user.realm_id;
+    } else if (
+        identity &&
+        identity.type === 'user'
+    ) {
+        data.user_id = identity.id;
+        data.realm_id = identity.realmId;
     } else {
-        const realmId = useRequestEnv(req, 'realmId');
-        if (userId) {
-            data.user_id = userId;
-            data.realm_id = realmId;
-        } else {
-            throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
-        }
+        throw new BadRequestError(buildErrorMessageForAttribute('user_id'));
     }
 
     const repository = dataSource.getRepository(UserAttributeEntity);

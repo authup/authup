@@ -17,7 +17,9 @@ import type { UserEntity } from '../../../../domains';
 import { UserRepository, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import {
+    useRequestEnv, useRequestIdentity, useRequestParamID,
+} from '../../../request';
 
 function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
     return {
@@ -68,11 +70,15 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
 
-    const userId = useRequestEnv(req, 'userId');
+    const identity = useRequestIdentity(req);
 
     const data : UserEntity[] = [];
     for (let i = 0; i < entities.length; i++) {
-        if (userId === entities[i].id) {
+        if (
+            identity &&
+            identity.type === 'user' &&
+            identity.id === entities[i].id
+        ) {
             data.push(entities[i]);
             continue;
         }
@@ -124,19 +130,19 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     const repository = new UserRepository(dataSource);
     const query = repository.createQueryBuilder('user');
 
-    const requestUser = useRequestEnv(req, 'user');
-    const requestRealm = useRequestEnv(req, 'realm');
+    const identity = useRequestIdentity(req);
 
     let isMe = false;
 
     if (
         isSelfId(id) &&
-        requestUser
+        !!identity &&
+        identity.type === 'user'
     ) {
         isMe = true;
-        query.where('user.id = :id', { id: requestUser.id });
+        query.where('user.id = :id', { id: identity.id });
     } else if (isUUID(id)) {
-        if (requestUser && id === requestUser.id) {
+        if (!!identity && identity.type === 'user' && id === identity.id) {
             isMe = true;
         }
         query.where('user.id = :id', { id });
@@ -147,10 +153,11 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         query.andWhere('user.realm_id = :realmId', { realmId: realm.id });
 
         if (
-            requestUser &&
-            requestRealm &&
-            id === requestUser.name &&
-            realm.id === requestRealm.id
+            !!identity &&
+            identity.type === 'user' &&
+            identity.realmId === realm.id &&
+            identity.attributes &&
+            identity.attributes.name === id
         ) {
             isMe = true;
         }

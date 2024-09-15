@@ -14,7 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserRoleEntity } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
 import { UserRoleRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestEnv, useRequestIdentityOrFail } from '../../../request';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
@@ -37,11 +37,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
     if (data.role) {
         data.role_realm_id = data.role.realm_id;
 
-        const identity = permissionChecker.getRequestIdentity();
-        if (!identity) {
-            throw new ForbiddenError('You don\'t own the required permissions.');
-        }
-
+        const identity = useRequestIdentityOrFail(req);
         const identityPermissionService = new IdentityPermissionService(dataSource);
         const hasPermissions = await identityPermissionService.hasSuperset(identity, {
             type: 'role',

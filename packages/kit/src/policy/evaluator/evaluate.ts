@@ -6,6 +6,7 @@
  */
 
 import { PolicyError } from '../error';
+import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyWithType } from '../types';
 import type { PolicyEvaluateContext } from './types';
 
@@ -15,7 +16,10 @@ export async function evaluatePolicy(ctx: PolicyEvaluateContext<PolicyWithType>)
         ctx.options.exclude.length > 0 &&
         ctx.options.exclude.indexOf(ctx.spec.type) !== -1
     ) {
-        // todo: maybe invert outcome based on spec
+        if (typeof ctx.spec.invert === 'boolean') {
+            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        }
+
         return true;
     }
 
@@ -24,7 +28,10 @@ export async function evaluatePolicy(ctx: PolicyEvaluateContext<PolicyWithType>)
         ctx.options.include.length > 0 &&
         ctx.options.include.indexOf(ctx.spec.type) === -1
     ) {
-        // todo: maybe invert outcome based on spec
+        if (typeof ctx.spec.invert === 'boolean') {
+            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        }
+
         return true;
     }
 
