@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
 import type { PermissionCheckerCheckContext } from '@authup/kit';
 import { PermissionChecker, PolicyDataValidator, isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
@@ -60,7 +61,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
         policyEngine: new PolicyEngine(),
     });
 
-    let output : { status: 'success' | 'error', data?: Record<string, any> };
+    let output : PermissionAPICheckResponse;
     try {
         if (ctx.data.attributes) {
             await permissionChecker.check(ctx);

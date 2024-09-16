@@ -7,5 +7,5 @@
 
 export type PermissionAPICheckResponse = {
     status: 'success' | 'error',
-    data: Record<string, any>
+    data?: Record<string, any>
 };
