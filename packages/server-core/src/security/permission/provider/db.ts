@@ -45,6 +45,7 @@ export class PermissionDBProvider implements PermissionProvider {
             return {
                 name: entity.name,
                 ...(entity.realm_id ? { realm_id: entity.realm_id } : {}),
+                // todo: fake policy should only be enabled for built_in
                 policy: entity.policy || this.getFakePolicy(),
             };
         }

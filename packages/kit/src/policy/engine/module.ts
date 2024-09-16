@@ -69,17 +69,4 @@ export class PolicyEngine {
             evaluators: this.evaluators,
         });
     }
-
-    /**
-     * @throws PolicyError
-     *
-     * @param ctx
-     */
-    async safeEvaluate(ctx: PolicyEngineEvaluateContext) : Promise<boolean> {
-        try {
-            return await this.evaluate(ctx);
-        } catch (e) {
-            return false;
-        }
-    }
 }

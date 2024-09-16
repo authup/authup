@@ -5,12 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PermissionAPICheckResponse } from '@authup/core-http-kit';
+import { PolicyData } from '@authup/kit';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Permission } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../middleware';
 import {
+    checkPermissionRouteHandler,
     deletePermissionRouteHandler,
     getManyPermissionRouteHandler,
     getOnePermissionRouteHandler,
@@ -28,15 +31,6 @@ export class PermissionController {
         return getManyPermissionRouteHandler(req, res);
     }
 
-    @DGet('/:id', [ForceLoggedInMiddleware])
-    async getPermission(
-        @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<Permission> {
-        return getOnePermissionRouteHandler(req, res);
-    }
-
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() user: NonNullable<Permission>,
@@ -44,6 +38,24 @@ export class PermissionController {
             @DResponse() res: any,
     ): Promise<Permission[]> {
         return writePermissionRouteHandler(req, res);
+    }
+
+    @DPost('/:id/check', [ForceLoggedInMiddleware])
+    async check(
+        @DBody() data: NonNullable<PolicyData>,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<PermissionAPICheckResponse> {
+        return checkPermissionRouteHandler(req, res);
+    }
+
+    @DGet('/:id', [ForceLoggedInMiddleware])
+    async getPermission(
+        @DPath('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<Permission> {
+        return getOnePermissionRouteHandler(req, res);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
