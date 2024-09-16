@@ -9,9 +9,9 @@ import { createValidator } from '@validup/adapter-zod';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { PolicyIdentity } from '../types';
+import type { PolicyIdentity } from '../../../types';
 
-export class PolicyIdentityValidator extends Container<PolicyIdentity> {
+export class PolicyDataIdentityValidator extends Container<PolicyIdentity> {
     constructor(options: ContainerOptions<PolicyIdentity> = {}) {
         super(options);
 

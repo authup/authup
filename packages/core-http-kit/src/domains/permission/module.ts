@@ -11,6 +11,7 @@ import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { BaseAPI } from '../base';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
+import type { PermissionAPICheckResponse } from './types';
 
 export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
     async getMany(data?: BuildInput<Permission>): Promise<CollectionResourceResponse<Permission>> {
@@ -47,6 +48,18 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
         data: Partial<Permission>,
     ): Promise<SingleResourceResponse<Permission>> {
         const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async check(
+        idOrName: string,
+        data: Record<string, any>,
+    ) : Promise<PermissionAPICheckResponse> {
+        const response = await this.client.put(
+            `permissions/${idOrName}/check`,
+            nullifyEmptyObjectProperties(data),
+        );
 
         return response.data;
     }

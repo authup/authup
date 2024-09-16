@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './data';
-export * from './evaluate';
-export * from './types';
+export type PermissionAPICheckResponse = {
+    status: 'success' | 'error',
+    data: Record<string, any>
+};
