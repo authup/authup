@@ -11,6 +11,7 @@ import type { ExtendedPolicy, Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { BaseAPI } from '../base';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
+import type { PolicyAPICheckResponse } from './types';
 
 export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     async getMany(data?: BuildInput<Policy>): Promise<CollectionResourceResponse<ExtendedPolicy>> {
@@ -47,6 +48,18 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
         data: Partial<ExtendedPolicy>,
     ): Promise<SingleResourceResponse<ExtendedPolicy>> {
         const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async check(
+        idOrName: string,
+        data: Record<string, any>,
+    ) : Promise<PolicyAPICheckResponse> {
+        const response = await this.client.put(
+            `policies/${idOrName}/check`,
+            nullifyEmptyObjectProperties(data),
+        );
 
         return response.data;
     }

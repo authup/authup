@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PolicyAPICheckResponse } from '@authup/core-http-kit';
+import { Policy } from '@authup/core-kit';
+import { PolicyData } from '@authup/kit';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { IdentityProvider } from '@authup/core-kit';
 import {
     deletePolicyRouteHandler,
     getManyPolicyRouteHandler,
@@ -16,6 +18,7 @@ import {
     writePolicyRouteHandler,
 } from './handlers';
 import { ForceLoggedInMiddleware } from '../../middleware';
+import { checkPolicyRouteHandler } from './handlers/check';
 
 @DTags('policy')
 @DController('/policies')
@@ -24,7 +27,7 @@ export class PolicyController {
     async getProviders(
         @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<IdentityProvider[]> {
+    ): Promise<Policy[]> {
         return getManyPolicyRouteHandler(req, res);
     }
 
@@ -33,17 +36,27 @@ export class PolicyController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<IdentityProvider> {
+    ): Promise<Policy> {
         return getOnePolicyRouteHandler(req, res);
+    }
+
+    @DPost('/:id/check', [ForceLoggedInMiddleware])
+    async check(
+        @DPath('id') id: string,
+            @DBody() data: PolicyData,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ) : Promise<PolicyAPICheckResponse> {
+        return checkPolicyRouteHandler(req, res);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProvider>,
+            @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<Policy> {
         return writePolicyRouteHandler(req, res, {
             updateOnly: true,
         });
@@ -52,10 +65,10 @@ export class PolicyController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProvider>,
+            @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<Policy> {
         return writePolicyRouteHandler(req, res);
     }
 
@@ -64,16 +77,16 @@ export class PolicyController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<Policy> {
         return deletePolicyRouteHandler(req, res);
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
-        @DBody() user: NonNullable<IdentityProvider>,
+        @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
+    ) : Promise<Policy> {
         return writePolicyRouteHandler(req, res);
     }
 }
