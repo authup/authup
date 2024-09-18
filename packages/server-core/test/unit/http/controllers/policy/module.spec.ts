@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022.
+ * Copyright (c) 2021-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,9 +8,9 @@
 import type { Policy } from '@authup/core-kit';
 import type { CompositePolicy, TimePolicy } from '@authup/kit';
 import { BuiltInPolicyType } from '@authup/kit';
-import { createFakeTimePolicy } from '../../../utils/domains/policy';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { createFakeTimePolicy } from '../../../../utils/domains/policy';
+import { useSuperTest } from '../../../../utils/supertest';
+import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
 
 describe('src/http/controllers/policy', () => {
     let superTest = useSuperTest();

@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './engine';
-export * from './evaluator';
-export * from './error';
-export * from './helpers';
-export * from './built-in';
-export * from './types';
+export type PolicyAPICheckResponse = {
+    status: 'success' | 'error',
+    data?: Record<string, any>
+};
