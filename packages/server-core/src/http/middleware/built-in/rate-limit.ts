@@ -19,18 +19,22 @@ export function registerRateLimitMiddleware(router: Router, input?: OptionsInput
         skip(req: Request) {
             const identity = useRequestIdentity(req);
 
-            return identity.type === 'robot' &&
+            return identity &&
+                identity.type === 'robot' &&
                 identity.realmName === REALM_MASTER_NAME &&
                 !!identity.attributes &&
                 identity.attributes.name === config.robotAdminName;
         },
         max(req: Request) {
             const identity = useRequestIdentity(req);
-            if (identity.type === 'user') {
+            if (identity && identity.type === 'user') {
                 return 60 * 100; // 100 req p. sec
             }
 
-            if (identity.type === 'robot' || identity.type === 'client') {
+            if (
+                identity &&
+                (identity.type === 'robot' || identity.type === 'client')
+            ) {
                 return 60 * 1000; // 1000 req p. sec
             }
 

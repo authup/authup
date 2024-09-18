@@ -15,7 +15,7 @@ import type {
     PolicyWithType,
     RealmMatchPolicy,
 } from '@authup/kit';
-import { BuiltInPolicyType } from '@authup/kit';
+import { BuiltInPolicyType, DecisionStrategy } from '@authup/kit';
 import type { DataSource, Repository } from 'typeorm';
 import { PermissionEntity } from '../../../domains';
 
@@ -76,6 +76,7 @@ export class PermissionDBProvider implements PermissionProvider {
         const composite : PolicyWithType<CompositePolicy> = {
             type: BuiltInPolicyType.COMPOSITE,
             children,
+            decisionStrategy: DecisionStrategy.UNANIMOUS,
         };
 
         return composite;
