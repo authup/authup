@@ -38,6 +38,9 @@ export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy
     async evaluate(ctx: PolicyEvaluateContext<CompositePolicy>): Promise<boolean> {
         let count = 0;
 
+        const decisionStrategy = ctx.spec.decisionStrategy ??
+            DecisionStrategy.UNANIMOUS;
+
         for (let i = 0; i < ctx.spec.children.length; i++) {
             const childPolicy = ctx.spec.children[i];
             let outcome : boolean;
@@ -55,13 +58,13 @@ export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy
             }
 
             if (outcome) {
-                if (ctx.spec.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return maybeInvertPolicyOutcome(true, ctx.spec.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.spec.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return maybeInvertPolicyOutcome(false, ctx.spec.invert);
                 }
 

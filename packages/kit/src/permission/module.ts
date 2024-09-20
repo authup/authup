@@ -83,6 +83,9 @@ export class PermissionChecker {
             options = {},
         } = ctx;
 
+        const decisionStrategy = options.decisionStrategy ??
+            DecisionStrategy.UNANIMOUS;
+
         let lastError : PermissionError | undefined;
         let count = 0;
 
@@ -93,7 +96,7 @@ export class PermissionChecker {
             }
 
             if (!entity.policy) {
-                if (options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -134,7 +137,7 @@ export class PermissionChecker {
             }
 
             if (outcome) {
-                if (options.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -147,7 +150,7 @@ export class PermissionChecker {
                     });
                 }
 
-                if (options.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     throw lastError;
                 }
 
