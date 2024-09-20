@@ -92,7 +92,7 @@
         "@faker-js/faker": "^9.0.1",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.0.0",
-        "testcontainers": "^10.13.0",
+        "testcontainers": "^10.13.1",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {
