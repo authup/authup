@@ -11,11 +11,10 @@ import process from 'node:process';
 import { parseProcessOutputData } from './process-output';
 import { stringifyObjectArgs } from './stringify-object-args';
 
-export type ShellCommandExecContext = {
+export type ShellCommandExecOptions = {
     configFile?: string,
     configDirectory?: string,
 
-    command: string,
     env?: Record<string, string | undefined>,
     envFromProcess?: boolean,
     args?: Record<string, any>,
@@ -24,17 +23,15 @@ export type ShellCommandExecContext = {
 };
 
 export async function execShellCommand(
-    ctx: ShellCommandExecContext,
+    command: string,
+    ctx: ShellCommandExecOptions = {},
 ) {
-    ctx.env = ctx.env || {};
-    ctx.args = ctx.args || {};
-
     return new Promise<ChildProcess>((resolve, reject) => {
-        const childProcess = exec(`${ctx.command} ${stringifyObjectArgs(ctx.args)}`, {
+        const childProcess = exec(`${command} ${stringifyObjectArgs(ctx.args || {})}`, {
             env: {
                 PATH: process.env.PATH,
                 ...(ctx.envFromProcess ? process.env : {}),
-                ...ctx.env,
+                ...(ctx.env ? ctx.env : {}),
             },
         });
 
