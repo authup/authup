@@ -9,3 +9,4 @@ export * from './client-web';
 export * from './server-core';
 export * from './constants';
 export * from './execute';
+export * from './normalize';
