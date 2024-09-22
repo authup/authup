@@ -12,9 +12,6 @@
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
         "packages/kit": {"component": "kit"},
         "packages/server-core": {"component": "server-core"},
-        "packages/server-core-plugin-http": {"component": "server-core-plugin-http"},
-        "packages/server-core-plugin-kit": {"component": "server-core-plugin-kit"},
-        "packages/server-core-plugin-socket-io": {"component": "server-core-plugin-socket-io"},
         "packages/server-kit": {"component": "server-kit"}
     },
     "plugins": [
@@ -37,9 +34,6 @@
                 "core-realtime-kit",
                 "kit",
                 "server-core",
-                "server-core-plugin-http",
-                "server-core-plugin-kit",
-                "server-core-plugin-socket-io",
                 "server-kit"
             ]
         }
