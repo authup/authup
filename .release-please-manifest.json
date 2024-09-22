@@ -8,8 +8,5 @@
     "packages/core-realtime-kit": "1.0.0-beta.19",
     "packages/kit": "1.0.0-beta.19",
     "packages/server-core": "1.0.0-beta.19",
-    "packages/server-core-plugin-http": "1.0.0-beta.19",
-    "packages/server-core-plugin-kit": "1.0.0-beta.19",
-    "packages/server-core-plugin-socket-io": "1.0.0-beta.19",
     "packages/server-kit": "1.0.0-beta.19"
 }
