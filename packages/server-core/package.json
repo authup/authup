@@ -52,7 +52,7 @@
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.3",
         "@routup/basic": "^1.4.0",
-        "@routup/decorators": "^3.4.0",
+        "@routup/decorators": "^3.4.1",
         "@routup/prometheus": "^2.4.0",
         "@routup/rate-limit": "^2.4.0",
         "@routup/swagger": "^2.4.1",
