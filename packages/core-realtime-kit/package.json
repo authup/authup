@@ -43,7 +43,7 @@
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.19",
         "@authup/core-kit": "^1.0.0-beta.19",
-        "socket.io": "^4.7.5",
+        "socket.io": "^4.8.0",
         "socket.io-client": "^4.7.5"
     },
     "peerDependencies": {
