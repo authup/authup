@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* refactored db-cache, aggregators & bump redis-extension ([#2198](https://github.com/authup/authup/issues/2198)) ([5736d5a](https://github.com/authup/authup/commit/5736d5ab0d52332ced1b92e60f7b109c706ca920))
+* write handlers for controllers ([#2185](https://github.com/authup/authup/issues/2185)) ([ae8997a](https://github.com/authup/authup/commit/ae8997aae542ccb75dff03f7656c74d20f128e33))
+
+
+### Bug Fixes
+
+* **deps:** bump locter from 2.1.0 to 2.1.1 ([#2252](https://github.com/authup/authup/issues/2252)) ([1b5b413](https://github.com/authup/authup/commit/1b5b4138a36337442f8246fe0f887bc7e761c01f))
+* **deps:** bump locter from 2.1.1 to 2.1.2 ([#2362](https://github.com/authup/authup/issues/2362)) ([a439d1c](https://github.com/authup/authup/commit/a439d1c4fee377c908805e790b538078a5de73cd))
+* **deps:** bump nodemailer and @types/nodemailer ([#2344](https://github.com/authup/authup/issues/2344)) ([6dd1adb](https://github.com/authup/authup/commit/6dd1adba8e87f857636eaeeab40012a4b501a6b2))
+* **deps:** bump winston from 3.13.0 to 3.14.1 ([#2213](https://github.com/authup/authup/issues/2213)) ([c0a1120](https://github.com/authup/authup/commit/c0a112014f3b583c5a58bc8cfd9df8002ed8577a))
+* **deps:** bump winston from 3.14.1 to 3.14.2 ([#2224](https://github.com/authup/authup/issues/2224)) ([6110ad2](https://github.com/authup/authup/commit/6110ad2185ce314da8f8a7c0e826e8c8811a755d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 

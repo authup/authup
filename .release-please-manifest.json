@@ -1,12 +1,12 @@
 {
-    ".": "1.0.0-beta.19",
-    "packages/authup": "1.0.0-beta.19",
-    "packages/client-web": "1.0.0-beta.19",
-    "packages/client-web-kit": "1.0.0-beta.19",
-    "packages/core-http-kit": "1.0.0-beta.19",
-    "packages/core-kit": "1.0.0-beta.19",
-    "packages/core-realtime-kit": "1.0.0-beta.19",
-    "packages/kit": "1.0.0-beta.19",
-    "packages/server-core": "1.0.0-beta.19",
-    "packages/server-kit": "1.0.0-beta.19"
+    ".": "1.0.0-beta.20",
+    "packages/authup": "1.0.0-beta.20",
+    "packages/client-web": "1.0.0-beta.20",
+    "packages/client-web-kit": "1.0.0-beta.20",
+    "packages/core-http-kit": "1.0.0-beta.20",
+    "packages/core-kit": "1.0.0-beta.20",
+    "packages/core-realtime-kit": "1.0.0-beta.20",
+    "packages/kit": "1.0.0-beta.20",
+    "packages/server-core": "1.0.0-beta.20",
+    "packages/server-kit": "1.0.0-beta.20"
 }

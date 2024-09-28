@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* permit async fn for client manager token option ([076912a](https://github.com/authup/authup/commit/076912a55135bce32e731cdefb62c76a0ab5070c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 
