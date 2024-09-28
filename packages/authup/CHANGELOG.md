@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* reogranised cli package ([#2343](https://github.com/authup/authup/issues/2343)) ([89acd59](https://github.com/authup/authup/commit/89acd59c6accfda1ece80af50e93f52a332c97c8))
+* support multiple packages via start command ([817c253](https://github.com/authup/authup/commit/817c253f80744616ce69b90173477aead6f69b4a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/server-core bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+
 ## [1.0.1-beta.18](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.1-beta.18) (2024-06-30)
 
 

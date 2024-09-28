@@ -1,5 +1,71 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* add built_in & display_name attribute to few entities ([#2193](https://github.com/authup/authup/issues/2193)) ([42d062f](https://github.com/authup/authup/commit/42d062f3e600aed43f69164b2f6297851d402070))
+* add cookieDomain option ([32e933c](https://github.com/authup/authup/commit/32e933c8839a8592af4c937adc33a51bd3ba1da7))
+* clean up user-, role- & robot-repository ([#2313](https://github.com/authup/authup/issues/2313)) ([b74ab1a](https://github.com/authup/authup/commit/b74ab1a1b172f2428299c18df7b379905fb54ed1))
+* different errors for permission-checker check fn(s) ([a040838](https://github.com/authup/authup/commit/a0408389c847f1bd9b70bcd770ff2569f784c6fc))
+* don't build policy identity for req if oauth2 scope is not global ([0b04d93](https://github.com/authup/authup/commit/0b04d93f7f179176479cc17d1e40b388f776be81))
+* fix policy parserFn names + strict mode ([120bdea](https://github.com/authup/authup/commit/120bdea866fcadb45c8096c9f0b855d73b7603c9))
+* initial realm-match policy & remove explicit resource realm restriction ([#2210](https://github.com/authup/authup/issues/2210)) ([1f51863](https://github.com/authup/authup/commit/1f51863b6a46d6a116877b0734876502de7eb669))
+* introduce identity_provider_role- & client_scope permissions ([ada3183](https://github.com/authup/authup/commit/ada31831c0ce72358cf87ba25b5c9162a3f9e3a1))
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+* merge commands to application class ([0f52e0c](https://github.com/authup/authup/commit/0f52e0c1b1cb6edd67d2b2e985e79ddb67d3b3b5))
+* move permission & policy logic to new package ([#2128](https://github.com/authup/authup/issues/2128)) ([53f9b33](https://github.com/authup/authup/commit/53f9b33b15e08d6a2def0f7d4659129a03a51252))
+* moved built-in policy parser, attributes query fixer, ... ([0599b54](https://github.com/authup/authup/commit/0599b5423d203583845782c74cd1755ef06bd7c6))
+* permisison-binding policy & policy-engine + permission-checker override ([#2298](https://github.com/authup/authup/issues/2298)) ([5871d72](https://github.com/authup/authup/commit/5871d72e0404e71c372b3d70875c4b84c56f02e4))
+* permission check api endpoint ([#2319](https://github.com/authup/authup/issues/2319)) ([9e57f84](https://github.com/authup/authup/commit/9e57f8479f98bf96d99632a0d1a52b9df6f740aa))
+* permission repository for permission manager ([#2129](https://github.com/authup/authup/issues/2129)) ([afe3700](https://github.com/authup/authup/commit/afe3700e9822e3983b8867cad927ea74b9747133))
+* permit non owned permissions to be checked ([#2294](https://github.com/authup/authup/issues/2294)) ([2c44a8d](https://github.com/authup/authup/commit/2c44a8daa9e50903dee146cb548500972287f209))
+* policy check api endpoint ([#2330](https://github.com/authup/authup/issues/2330)) ([37e5389](https://github.com/authup/authup/commit/37e53891641b388d93d7eb23e9f55924ec245cce))
+* refactor http controller validation ([#2177](https://github.com/authup/authup/issues/2177)) ([bea9db9](https://github.com/authup/authup/commit/bea9db902b7f1ed8f8b01e7342198d454cd6917c))
+* refactored db-cache, aggregators & bump redis-extension ([#2198](https://github.com/authup/authup/issues/2198)) ([5736d5a](https://github.com/authup/authup/commit/5736d5ab0d52332ced1b92e60f7b109c706ca920))
+* relocate subject & subject-kind helper fns ([e7a6ee0](https://github.com/authup/authup/commit/e7a6ee070728a37de6393b78e8d60acfec972072))
+* remove isRealmResourceWritable checks where possible ([f1172f0](https://github.com/authup/authup/commit/f1172f082e43aafef4dbe22451bec0eeaab8b0af))
+* simplify permission manager & merge permissions of same realm ([#2133](https://github.com/authup/authup/issues/2133)) ([08c5cf7](https://github.com/authup/authup/commit/08c5cf7697f140663b6ffc396ec8028a3057c2e2))
+* use citty instead of yargs for server-core package ([#2293](https://github.com/authup/authup/issues/2293)) ([cade65d](https://github.com/authup/authup/commit/cade65d137f346fadc18b9ac0063ca635245bcf6))
+* write handlers for controllers ([#2185](https://github.com/authup/authup/issues/2185)) ([ae8997a](https://github.com/authup/authup/commit/ae8997aae542ccb75dff03f7656c74d20f128e33))
+
+
+### Bug Fixes
+
+* auto generate robot secret if not defined via payload ([7bf3135](https://github.com/authup/authup/commit/7bf31354be4ea3a8ccb1312dcc40f4480678503b))
+* **deps:** bump @routup/decorators from 3.4.0 to 3.4.1 ([#2337](https://github.com/authup/authup/issues/2337)) ([bf2ae8d](https://github.com/authup/authup/commit/bf2ae8d73b26b9b44a81bb037e68dc4488b34155))
+* **deps:** bump @routup/swagger from 2.4.0 to 2.4.1 ([#2322](https://github.com/authup/authup/issues/2322)) ([ca6873e](https://github.com/authup/authup/commit/ca6873e23a2d39ab7a5d8286ff78358275866839))
+* **deps:** bump @validup/adapter-routup from 0.1.6 to 0.1.7 ([#2272](https://github.com/authup/authup/issues/2272)) ([b08fac1](https://github.com/authup/authup/commit/b08fac14b45f9aa097ec066e39f95b66cad7ec37))
+* **deps:** bump @validup/adapter-validator from 0.1.5 to 0.1.6 ([#2274](https://github.com/authup/authup/issues/2274)) ([5f6ca59](https://github.com/authup/authup/commit/5f6ca5930cec46bbf0cc6b341d61af1c2d86f159))
+* **deps:** bump @validup/adapter-zod from 0.1.5 to 0.1.6 ([#2273](https://github.com/authup/authup/issues/2273)) ([eac473c](https://github.com/authup/authup/commit/eac473c49cb81b52cc5ae609ccd36957ed228c20))
+* **deps:** bump better-sqlite3 from 11.1.2 to 11.2.1 ([#2246](https://github.com/authup/authup/issues/2246)) ([b63fcc4](https://github.com/authup/authup/commit/b63fcc411ee4bed68f99abfb320d1174a76b5c42))
+* **deps:** bump better-sqlite3 from 11.2.1 to 11.3.0 ([#2302](https://github.com/authup/authup/issues/2302)) ([7072746](https://github.com/authup/authup/commit/7072746499f10f3c8b9759a349a8bb14b809a0df))
+* **deps:** bump locter from 2.1.0 to 2.1.1 ([#2252](https://github.com/authup/authup/issues/2252)) ([1b5b413](https://github.com/authup/authup/commit/1b5b4138a36337442f8246fe0f887bc7e761c01f))
+* **deps:** bump locter from 2.1.1 to 2.1.2 ([#2362](https://github.com/authup/authup/issues/2362)) ([a439d1c](https://github.com/authup/authup/commit/a439d1c4fee377c908805e790b538078a5de73cd))
+* **deps:** bump mysql2 from 3.10.0 to 3.10.1 ([#2065](https://github.com/authup/authup/issues/2065)) ([a9c7d44](https://github.com/authup/authup/commit/a9c7d44c8f3d4119f763d97ab5b59318923565df))
+* **deps:** bump mysql2 from 3.10.2 to 3.11.0 ([#2184](https://github.com/authup/authup/issues/2184)) ([c6ea31e](https://github.com/authup/authup/commit/c6ea31e7be3de6c51a2d929e529d855a164b4290))
+* **deps:** bump mysql2 from 3.11.0 to 3.11.3 ([#2328](https://github.com/authup/authup/issues/2328)) ([c710f04](https://github.com/authup/authup/commit/c710f04583df4b91c6ddfad3c62e531deaf9df94))
+* **deps:** bump nodemailer and @types/nodemailer ([#2344](https://github.com/authup/authup/issues/2344)) ([6dd1adb](https://github.com/authup/authup/commit/6dd1adba8e87f857636eaeeab40012a4b501a6b2))
+* **deps:** bump pg from 8.12.0 to 8.13.0 ([#2340](https://github.com/authup/authup/issues/2340)) ([997a0af](https://github.com/authup/authup/commit/997a0afae7624711b53ecb8e64354c5fdb6c35b6))
+* **deps:** bump typeorm-extension from 3.6.0 to 3.6.1 ([#2219](https://github.com/authup/authup/issues/2219)) ([381e722](https://github.com/authup/authup/commit/381e72221a1099fcf19e7c41b5840e1bd212f903))
+* **deps:** bump validup from 0.1.5 to 0.1.6 ([#2275](https://github.com/authup/authup/issues/2275)) ([8aac82f](https://github.com/authup/authup/commit/8aac82f8edcc955046ea42f410c937686390911d))
+* enforce uniqueness for all database types ([48cd4a7](https://github.com/authup/authup/commit/48cd4a70b62993ee99864aa68babbc29eacfa0a1))
+* fallback to authorization header in token introspect endpoint handler ([4d08cc5](https://github.com/authup/authup/commit/4d08cc57c038cd5fccf5af482911f6b29ebffb52))
+* rate-limit middleware & fix permission db provider ([66e43f3](https://github.com/authup/authup/commit/66e43f39d45cd1f6e0139d00bf9d16984c2b2b5a))
+* remove permission-item aggregate fn helper ([66a1d92](https://github.com/authup/authup/commit/66a1d92fea12805e7fbb3dc386bf069e90fbeb94))
+* renamed helper buildPolicyDataForRequest ([6810bc3](https://github.com/authup/authup/commit/6810bc3a65947e614be23ca0d68fd8daaabf1243))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/server-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 

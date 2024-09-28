@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* add built_in & display_name attribute to few entities ([#2193](https://github.com/authup/authup/issues/2193)) ([42d062f](https://github.com/authup/authup/commit/42d062f3e600aed43f69164b2f6297851d402070))
+* enhance nav-tabs and table styling ([afd4f35](https://github.com/authup/authup/commit/afd4f35feb3b2e8b068186ee62b5163c878bcc3c))
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+* moved built-in policy parser, attributes query fixer, ... ([0599b54](https://github.com/authup/authup/commit/0599b5423d203583845782c74cd1755ef06bd7c6))
+* permission repository for permission manager ([#2129](https://github.com/authup/authup/issues/2129)) ([afe3700](https://github.com/authup/authup/commit/afe3700e9822e3983b8867cad927ea74b9747133))
+
+
+### Bug Fixes
+
+* enforce uniqueness for all database types ([48cd4a7](https://github.com/authup/authup/commit/48cd4a70b62993ee99864aa68babbc29eacfa0a1))
+* route access in page components ([1648b1d](https://github.com/authup/authup/commit/1648b1d7cb44933f742d8ad450d1fadbd9e4bab9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 

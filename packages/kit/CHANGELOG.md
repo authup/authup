@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* add built-in identity-policy ([e858d05](https://github.com/authup/authup/commit/e858d058c32a14233a9a5d87c35a0535a770c334))
+* fix policy parserFn names + strict mode ([120bdea](https://github.com/authup/authup/commit/120bdea866fcadb45c8096c9f0b855d73b7603c9))
+* introduce attributeNameStrict option of realm-match policy ([b416d51](https://github.com/authup/authup/commit/b416d514d968d32e25671944c740cc17e3a4da88))
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+* move permission & policy logic to new package ([#2128](https://github.com/authup/authup/issues/2128)) ([53f9b33](https://github.com/authup/authup/commit/53f9b33b15e08d6a2def0f7d4659129a03a51252))
+* moved built-in policy parser, attributes query fixer, ... ([0599b54](https://github.com/authup/authup/commit/0599b5423d203583845782c74cd1755ef06bd7c6))
+* permisison-binding policy & policy-engine + permission-checker override ([#2298](https://github.com/authup/authup/issues/2298)) ([5871d72](https://github.com/authup/authup/commit/5871d72e0404e71c372b3d70875c4b84c56f02e4))
+* permission check api endpoint ([#2319](https://github.com/authup/authup/issues/2319)) ([9e57f84](https://github.com/authup/authup/commit/9e57f8479f98bf96d99632a0d1a52b9df6f740aa))
+* permit non owned permissions to be checked ([#2294](https://github.com/authup/authup/issues/2294)) ([2c44a8d](https://github.com/authup/authup/commit/2c44a8daa9e50903dee146cb548500972287f209))
+* policy check api endpoint ([#2330](https://github.com/authup/authup/issues/2330)) ([37e5389](https://github.com/authup/authup/commit/37e53891641b388d93d7eb23e9f55924ec245cce))
+* relocate subject & subject-kind helper fns ([e7a6ee0](https://github.com/authup/authup/commit/e7a6ee070728a37de6393b78e8d60acfec972072))
+* set default policy-/decision-strategy to unanimous ([d6448ab](https://github.com/authup/authup/commit/d6448ab606294e255431ca283fc08bcefb9cafa4))
+
+
+### Bug Fixes
+
+* add missing @ucast/mongojs dependency ([3a462fa](https://github.com/authup/authup/commit/3a462fae7b7f541e1edfaaa446b50ca604633f9d))
+* **deps:** bump @validup/adapter-zod from 0.1.5 to 0.1.6 ([#2273](https://github.com/authup/authup/issues/2273)) ([eac473c](https://github.com/authup/authup/commit/eac473c49cb81b52cc5ae609ccd36957ed228c20))
+* **deps:** bump validup from 0.1.5 to 0.1.6 ([#2275](https://github.com/authup/authup/issues/2275)) ([8aac82f](https://github.com/authup/authup/commit/8aac82f8edcc955046ea42f410c937686390911d))
+* remove permission-item aggregate fn helper ([66a1d92](https://github.com/authup/authup/commit/66a1d92fea12805e7fbb3dc386bf069e90fbeb94))
+* renamed helper buildPolicyDataForRequest ([6810bc3](https://github.com/authup/authup/commit/6810bc3a65947e614be23ca0d68fd8daaabf1243))
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 

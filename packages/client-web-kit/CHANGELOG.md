@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
+
+
+### Features
+
+* add built_in & display_name attribute to few entities ([#2193](https://github.com/authup/authup/issues/2193)) ([42d062f](https://github.com/authup/authup/commit/42d062f3e600aed43f69164b2f6297851d402070))
+* make permission/ability fns async ([#2116](https://github.com/authup/authup/issues/2116)) ([c0491c1](https://github.com/authup/authup/commit/c0491c1ea3fdec651c7ad83d60b929c42cca715a))
+* move permission & policy logic to new package ([#2128](https://github.com/authup/authup/issues/2128)) ([53f9b33](https://github.com/authup/authup/commit/53f9b33b15e08d6a2def0f7d4659129a03a51252))
+* permisison-binding policy & policy-engine + permission-checker override ([#2298](https://github.com/authup/authup/issues/2298)) ([5871d72](https://github.com/authup/authup/commit/5871d72e0404e71c372b3d70875c4b84c56f02e4))
+* permission repository for permission manager ([#2129](https://github.com/authup/authup/issues/2129)) ([afe3700](https://github.com/authup/authup/commit/afe3700e9822e3983b8867cad927ea74b9747133))
+* simplify permission manager & merge permissions of same realm ([#2133](https://github.com/authup/authup/issues/2133)) ([08c5cf7](https://github.com/authup/authup/commit/08c5cf7697f140663b6ffc396ec8028a3057c2e2))
+
+
+### Bug Fixes
+
+* **deps:** bump @vueuse/integrations from 10.11.0 to 11.0.0 ([#2227](https://github.com/authup/authup/issues/2227)) ([3430a53](https://github.com/authup/authup/commit/3430a538f1d6e0d56ec8c70efbc63e22d6a2e25f))
+* **deps:** bump @vueuse/integrations from 11.0.0 to 11.1.0 ([#2320](https://github.com/authup/authup/issues/2320)) ([9fc1d0b](https://github.com/authup/authup/commit/9fc1d0b24c4afd2210ad71be3223a8a37c7c9cd9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.19 to ^1.0.0-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.18 to ^1.0.0-beta.20
+
 ## [1.0.0-beta.19](https://github.com/authup/authup/compare/v1.0.0-beta.18...v1.0.0-beta.19) (2024-06-30)
 
 
