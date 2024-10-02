@@ -41,5 +41,6 @@ export default defineNuxtPlugin((ctx) => {
 
             return null;
         },
+        isServer: import.meta.server,
     });
 });

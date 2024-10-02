@@ -35,10 +35,3 @@ export type ClientResponseErrorTokenHookOptions = {
      */
     tokenFailed?: TokenCreatorFailedHook,
 };
-
-type RefreshTokenFn = () => string | undefined;
-
-export type ClientResponseErrorHookTimerOptions = {
-    refresh_token?: string | RefreshTokenFn,
-    expires_in: number
-};

@@ -16,7 +16,7 @@ import {
 import { Client } from '../client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import type { ClientResponseErrorHookTimerOptions, ClientResponseErrorTokenHookOptions } from './type';
+import type { ClientResponseErrorTokenHookOptions } from './type';
 import { getRequestRetryState, isClientTokenExpiredError } from './utils';
 
 const hookSymbol = Symbol.for('ClientResponseErrorTokenHook');
@@ -84,10 +84,8 @@ export class ClientResponseErrorTokenHook {
 
             currentState.retryCount += 1;
 
-            return this.create(this.creator)
+            return this.refresh()
                 .then((response) => {
-                    this.setTimer(response);
-
                     if (request.headers) {
                         setHeader(
                             request.headers,
@@ -117,47 +115,25 @@ export class ClientResponseErrorTokenHook {
         this.clearTimer();
     }
 
-    setTimer(options: ClientResponseErrorHookTimerOptions) {
-        if (
-            !this.hookId ||
-            !this.options.timer ||
-            !options.expires_in ||
-            !options.refresh_token ||
-            this.createPromise
-        ) {
-            return;
-        }
-
-        const refreshInMs = (options.expires_in - 60) * 1000;
-        if (refreshInMs <= 0) {
+    setTimer(
+        expiresIn: number,
+        refreshToken?: string | (() => string | undefined),
+    ) {
+        if (!this.hookId || !this.options.timer) {
             return;
         }
 
         this.clearTimer();
 
-        this.timer = setTimeout(async () => {
-            let refreshToken : string | undefined;
-            if (typeof options.refresh_token === 'function') {
-                refreshToken = options.refresh_token();
-            } else {
-                refreshToken = options.refresh_token;
-            }
+        const refreshInMs = (expiresIn - 60) * 1000;
+        if (refreshInMs <= 0) {
+            Promise.resolve()
+                .then(() => this.refresh());
 
-            if (!refreshToken) {
-                return;
-            }
+            return;
+        }
 
-            const myCreator : TokenCreator = () => this.creatorClient.token.createWithRefreshToken({
-                refresh_token: refreshToken,
-            });
-
-            await this.create(myCreator)
-                .then((response) => {
-                    this.setTimer(response);
-
-                    return response;
-                });
-        }, refreshInMs);
+        this.timer = setTimeout(async () => this.refresh(refreshToken), refreshInMs);
     }
 
     clearTimer() {
@@ -166,14 +142,47 @@ export class ClientResponseErrorTokenHook {
         }
     }
 
-    async create(creator: TokenCreator) {
+    protected async refresh(
+        refreshToken?: string | (() => string | undefined),
+    ) : Promise<TokenGrantResponse> {
+        let creator : TokenCreator | undefined;
+
+        let token : string | undefined;
+        if (typeof refreshToken === 'function') {
+            token = refreshToken();
+        } else {
+            token = refreshToken;
+        }
+
+        if (token) {
+            creator = () => this.creatorClient.token.createWithRefreshToken({
+                refresh_token: token,
+            });
+        } else {
+            creator = this.creator;
+        }
+
+        return this.executeCreator(creator)
+            .then((response) => {
+                this.setTimer(response.expires_in, response.refresh_token);
+
+                return response;
+            })
+            .catch((e) => {
+                if (token) {
+                    return this.refresh();
+                }
+
+                return Promise.reject(e);
+            });
+    }
+
+    protected async executeCreator(creator: TokenCreator) {
         if (this.createPromise) {
             return this.createPromise;
         }
 
         this.createPromise = creator();
-
-        this.clearTimer();
 
         return this.createPromise
             .then((response) => {

@@ -9,5 +9,6 @@ import type { Pinia } from 'pinia';
 
 export type HTTPClientInstallOptions = {
     baseURL?: string,
-    pinia?: Pinia
+    pinia?: Pinia,
+    isServer?: boolean
 };

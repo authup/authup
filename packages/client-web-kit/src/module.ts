@@ -57,6 +57,7 @@ export function install(app: App, options: Options): void {
     installHTTPClient(app, {
         pinia: options.pinia,
         baseURL: options.baseURL,
+        isServer: options.isServer,
     });
 
     installTranslator(app, {

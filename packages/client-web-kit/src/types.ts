@@ -79,7 +79,8 @@ export type Options = {
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn,
 
-    pinia?: Pinia
+    pinia?: Pinia,
+    isServer?: boolean
 };
 
 declare module '@vue/runtime-core' {
