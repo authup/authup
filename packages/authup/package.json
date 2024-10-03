@@ -1,6 +1,6 @@
 {
     "name": "authup",
-    "version": "1.0.0-beta.20",
+    "version": "1.0.1-beta.20",
     "description": "This is the CLI for the authup ecosystem.",
     "exports": {
         "./package.json": "./package.json",
@@ -44,9 +44,9 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/client-web": "^1.0.0-beta.20",
-        "@authup/kit": "^1.0.0-beta.20",
-        "@authup/core-kit": "^1.0.0-beta.20",
-        "@authup/server-core": "^1.0.0-beta.20",
+        "@authup/kit": "^1.0.1-beta.20",
+        "@authup/core-kit": "^1.0.1-beta.20",
+        "@authup/server-core": "^1.0.1-beta.20",
         "citty": "^0.1.6",
         "chalk": "^4.1.2",
         "confinity": "^1.0.0-beta.1",

@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.20) (2024-10-03)
+
+
+### Features
+
+* extended use-permisison-check api & created permission-check component ([50df06a](https://github.com/authup/authup/commit/50df06a0fd098eb62b543c67ae1c834bf7814f0d))
+
+
+### Bug Fixes
+
+* execution of client response error token hook ([2b5d20a](https://github.com/authup/authup/commit/2b5d20a9fe40ff6b240977bacfd06597ecaf61c9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 
