@@ -6,5 +6,6 @@
  */
 
 export { APermission } from './APermission';
+export { APermissionCheck } from './APermissionCheck';
 export { APermissionForm } from './APermissionForm';
 export { APermissions } from './APermissions';

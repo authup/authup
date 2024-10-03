@@ -3,7 +3,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import {
-    AEntityDelete, APagination, APermissions, ASearch, ATitle, useAbilityCheck, useStore,
+    AEntityDelete, APagination, APermissions, ASearch, ATitle, usePermissionCheck, useStore,
 } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
@@ -40,8 +40,8 @@ export default defineNuxtComponent({
             resource: Permission,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = useAbilityCheck(PermissionName.PERMISSION_UPDATE);
-        const hasDropPermission = useAbilityCheck(PermissionName.PERMISSION_DELETE);
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
 
         const fields = [
             {

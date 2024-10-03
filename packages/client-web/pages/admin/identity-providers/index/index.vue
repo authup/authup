@@ -5,7 +5,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AEntityDelete, AIdentityProviders, APagination, ASearch, ATitle, useAbilityCheck, useStore,
+    AEntityDelete, AIdentityProviders, APagination, ASearch, ATitle, usePermissionCheck, useStore,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -40,8 +40,8 @@ export default defineNuxtComponent({
             resource: IdentityProvider,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = useAbilityCheck(PermissionName.IDENTITY_PROVIDER_UPDATE);
-        const hasDropPermission = useAbilityCheck(PermissionName.IDENTITY_PROVIDER_DELETE);
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
         const fields = [
             {

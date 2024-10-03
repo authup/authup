@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ARobots, ASearch, ATitle, useAbilityCheck, useStore,
+    AEntityDelete, APagination, ARobots, ASearch, ATitle, usePermissionCheck, useStore,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -41,8 +41,8 @@ export default defineNuxtComponent({
             resource: Robot,
         ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
-        const hasEditPermission = useAbilityCheck(PermissionName.ROBOT_UPDATE);
-        const hasDropPermission = useAbilityCheck(PermissionName.ROBOT_DELETE);
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.ROBOT_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.ROBOT_DELETE });
 
         const fields = [
             {
