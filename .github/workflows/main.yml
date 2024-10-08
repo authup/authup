@@ -10,7 +10,7 @@ on:
         types: [ opened, synchronize ]
 
 env:
-    NODE_VERSION: 18
+    NODE_VERSION: 20
     NODE_REGISTRY: 'https://registry.npmjs.org'
 
 permissions:
