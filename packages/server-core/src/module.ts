@@ -49,7 +49,7 @@ export class Application {
         logger.info(`Public-URL: ${this.config.publicUrl}`);
         logger.info(`Docs-URL: ${new URL('docs', this.config.publicUrl).href}`);
 
-        logger.info(`Database: ${this.config.db.type}`);
+        logger.info(`Database: ${this.config.db.database} (${this.config.db.type})`);
         logger.info(`Redis: ${isRedisClientUsable() ? 'enabled' : 'disabled'}`);
         logger.info(`Vault: ${isVaultClientUsable() ? 'enabled' : 'disabled'}`);
         logger.info(`Robot: ${this.config.robotAdminEnabled ? 'enabled' : 'disabled'}`);
@@ -97,16 +97,7 @@ export class Application {
         }
 
         const seeder = new DatabaseSeeder(this.config);
-
-        if (!check.schema) {
-            logger.info('Seeding database...');
-        }
-
         const seederData = await seeder.run(dataSource);
-
-        if (!check.schema) {
-            logger.info('Seeded database');
-        }
 
         if (seederData.robot) {
             try {
