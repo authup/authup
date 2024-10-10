@@ -1,11 +1,11 @@
 <script lang="ts">
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { defineComponent } from 'vue';
 import { definePageMeta, useToast } from '#imports';
-import { defineNuxtComponent } from '#app';
 import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
 
-export default defineNuxtComponent({
+export default defineComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,

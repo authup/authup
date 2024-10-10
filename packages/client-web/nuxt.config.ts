@@ -1,5 +1,6 @@
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 
+import type { ModuleOptions } from '@authup/client-web-nuxt';
 import path from 'node:path';
 import { defineNuxtConfig } from 'nuxt/config';
 
@@ -8,6 +9,9 @@ export default defineNuxtConfig({
         transpile: [
             'vue-toastification',
         ],
+    },
+    devtools: {
+        componentInspector: false,
     },
     experimental: {
         // todo: enable after v3.12.4
@@ -39,11 +43,19 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: {
-            apiUrl: process.env.API_URL || 'http://localhost:3001',
+            apiUrl: process.env.API_URL || 'http://localhost:3010',
+            apiUrlServer: process.env.API_URL_SERVER,
             publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
         },
     },
     modules: [
+        [
+            // ../client-web-nuxt/src/module
+            '@authup/client-web-nuxt', {
+                apiURLRuntimeKey: 'apiUrl',
+                apiURLServerRuntimeKey: 'apiUrlServer',
+            } satisfies ModuleOptions,
+        ],
         [
             '@nuxtjs/google-fonts', {
                 families: {
@@ -53,6 +65,5 @@ export default defineNuxtConfig({
                 download: true,
             },
         ],
-        '@pinia/nuxt',
     ],
 });

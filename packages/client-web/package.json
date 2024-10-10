@@ -28,7 +28,7 @@
         "@authup/client-web-kit": "^1.0.0-beta.20",
         "@authup/kit": "^1.0.0-beta.20",
         "@authup/core-kit": "^1.0.0-beta.20",
-        "@authup/client-web-config": "^1.0.0-beta.19",
+        "@authup/client-web-nuxt": "^1.0.0-beta.20",
         "@ilingo/vuelidate": "^5.0.3",
         "@fortawesome/fontawesome-free": "^6.6.0",
         "@hapic/oauth2": "^2.4.2",

@@ -1,0 +1,46 @@
+{
+    "name": "@authup/client-web-nuxt",
+    "type": "module",
+    "version": "1.0.0-beta.20",
+    "description": "Nuxt module for the authup ecosystem",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/client-web-nuxt"
+    },
+    "license": "Apache-2.0",
+    "exports": {
+        ".": {
+            "types": "./dist/types.d.ts",
+            "import": "./dist/module.mjs",
+            "require": "./dist/module.cjs"
+        }
+    },
+    "main": "./dist/module.cjs",
+    "module": "./dist/module.mjs",
+    "types": "./dist/types.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "nuxt-module-build prepare && nuxt-module-build build",
+        "prepack": "nuxt-module-build build",
+        "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+        "lint": "eslint ."
+    },
+    "dependencies": {
+        "@authup/kit": "^1.0.0-beta.20",
+        "@authup/client-web-kit": "^1.0.0-beta.20",
+        "@nuxt/kit": "^3.13.2",
+        "pathtrace": "^1.1.0",
+        "smob": "^1.5.0"
+    },
+    "devDependencies": {
+        "@nuxt/module-builder": "^0.8.4",
+        "nuxt": "^3.13.2",
+        "pinia": "^2.2.4"
+    },
+    "peerDependencies": {
+        "pinia": "^2.2.4"
+    }
+}

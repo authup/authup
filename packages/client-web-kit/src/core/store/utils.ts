@@ -10,7 +10,7 @@ import {
     isReactive, isRef, toRaw, toRef,
 } from 'vue';
 
-type StoreToRefs<T extends StoreGeneric> = ReturnType<typeof _storeToRefs<T>>;
+export type StoreToRefs<T extends StoreGeneric> = ReturnType<typeof _storeToRefs<T>>;
 
 export function storeToRefs<SS extends StoreGeneric>(
     store: SS,
