@@ -1,0 +1,4 @@
+imports.autoImport=false
+typescript.includeWorkspace=true
+alias.@authup/client-web-kit=../../client-web-kit/src
+alias.@authup/kit=../../kit/src

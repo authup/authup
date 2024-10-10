@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyIdentity } from '@authup/kit';
-import de from 'date-fns/locale/de';
+import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
@@ -20,7 +19,7 @@ import installPagination from '@vuecs/pagination';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
 import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
 
-import { type Pinia, storeToRefs } from 'pinia';
+import { type Pinia } from 'pinia';
 import { defineNuxtPlugin } from '#imports';
 import { Navigation } from '../config/layout';
 
@@ -59,30 +58,8 @@ export default defineNuxtPlugin((ctx) => {
     });
 
     const store = useStore(ctx.$pinia as Pinia);
-    const { loggedIn, userId } = storeToRefs(store);
-
     ctx.vueApp.use(installNavigation, {
-        provider: new Navigation({
-            isLoggedIn: () => loggedIn.value,
-            hasPermission: async (name) => {
-                let identity: PolicyIdentity | undefined;
-                if (userId.value) {
-                    identity = {
-                        type: 'user',
-                        id: userId.value,
-                    };
-                }
-                return store.permissionChecker
-                    .preCheck({
-                        name,
-                        data: {
-                            identity,
-                        },
-                    })
-                    .then(() => true)
-                    .catch(() => false);
-            },
-        }),
+        provider: new Navigation(store),
     });
 
     ctx.vueApp.use(installPagination);

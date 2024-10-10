@@ -25,6 +25,37 @@ import {
 import { PolicyEngine } from '../../security';
 import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
 
+type InputFn = (...args: any[]) => Promise<any>;
+type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
+
+function createPromiseShareWrapperFn<F extends InputFn>(
+    fn: F,
+) : OutputFn<F> {
+    let promise : Promise<Awaited<ReturnType<F>>> | undefined;
+
+    return (...args: Parameters<F>) => {
+        if (promise) {
+            return promise;
+        }
+
+        promise = new Promise<Awaited<ReturnType<F>>>(
+            (resolve, reject) => {
+                fn(...args)
+                    .then((r) => resolve(r))
+                    .catch((e) => reject(e));
+            },
+        );
+
+        promise.finally(() => {
+            setTimeout(() => {
+                promise = undefined;
+            }, 0);
+        });
+
+        return promise;
+    };
+}
+
 export function createStore(context: StoreCreateContext = {}) {
     const client = new Client({
         baseURL: context.baseURL,
@@ -73,31 +104,21 @@ export function createStore(context: StoreCreateContext = {}) {
 
     // --------------------------------------------------------------------
 
-    let refreshTokenPromise : Promise<OAuth2TokenGrantResponse> | undefined;
+    const refresh = createPromiseShareWrapperFn(
+        async (): Promise<OAuth2TokenGrantResponse> => {
+            if (!refreshToken.value) {
+                throw new Error('No refresh token is present.');
+            }
 
-    const attemptRefreshToken = () : Promise<OAuth2TokenGrantResponse> => {
-        if (!refreshToken.value) {
-            return Promise.reject(new Error('No refresh token is present.'));
-        }
-
-        if (refreshTokenPromise) {
-            return refreshTokenPromise;
-        }
-
-        refreshTokenPromise = client.token.createWithRefreshToken({
-            refresh_token: refreshToken.value,
-        })
-            .then((r) => {
-                handleTokenGrantResponse(r);
-
-                return r;
-            })
-            .finally(() => {
-                refreshTokenPromise = undefined;
+            const r = await client.token.createWithRefreshToken({
+                refresh_token: refreshToken.value,
             });
 
-        return refreshTokenPromise;
-    };
+            handleTokenGrantResponse(r);
+
+            return r;
+        },
+    );
 
     // --------------------------------------------------------------------
 
@@ -181,8 +202,13 @@ export function createStore(context: StoreCreateContext = {}) {
 
     // --------------------------------------------------------------------
 
-    const resolve = async (ctx: StoreResolveContext = {}) => {
-        if (!accessToken.value || (ctx.attempts && ctx.attempts > 3)) return;
+    const resolveInternal = async (
+        ctx: StoreResolveContext = {},
+    ) => {
+        if (
+            !accessToken.value ||
+            (ctx.attempts && ctx.attempts > 3)
+        ) return;
 
         try {
             if (!tokenResolved.value || ctx.refresh) {
@@ -207,9 +233,9 @@ export function createStore(context: StoreCreateContext = {}) {
             }
         } catch (e) {
             if (isClientTokenExpiredError(e)) {
-                await attemptRefreshToken();
+                await refresh();
 
-                await resolve({
+                await resolveInternal({
                     refresh: true,
                     attempts: ctx.attempts ? ctx.attempts++ : 1,
                 });
@@ -220,6 +246,8 @@ export function createStore(context: StoreCreateContext = {}) {
             throw e;
         }
     };
+
+    const resolve = createPromiseShareWrapperFn(resolveInternal);
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
     const login = async (ctx: StoreLoginContext) => {
