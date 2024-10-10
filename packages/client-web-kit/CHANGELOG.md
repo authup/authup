@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-10)
+
+
+### Features
+
+* extended use-permisison-check api & created permission-check component ([50df06a](https://github.com/authup/authup/commit/50df06a0fd098eb62b543c67ae1c834bf7814f0d))
+* initial nuxt package impplementation ([#2389](https://github.com/authup/authup/issues/2389)) ([3787402](https://github.com/authup/authup/commit/378740224cac1b21c47fb9ef7e016f45e581bef6))
+
+
+### Bug Fixes
+
+* execution of client response error token hook ([2b5d20a](https://github.com/authup/authup/commit/2b5d20a9fe40ff6b240977bacfd06597ecaf61c9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+    * @authup/core-http-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 
