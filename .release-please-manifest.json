@@ -3,6 +3,7 @@
     "packages/authup": "1.0.0-beta.20",
     "packages/client-web": "1.0.0-beta.20",
     "packages/client-web-kit": "1.0.0-beta.20",
+    "packages/client-web-nuxt": "1.0.0-beta.20",
     "packages/core-http-kit": "1.0.0-beta.20",
     "packages/core-kit": "1.0.0-beta.20",
     "packages/core-realtime-kit": "1.0.0-beta.20",
