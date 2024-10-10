@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-10)
+
+
+### Bug Fixes
+
+* **deps:** bump winston from 3.14.2 to 3.15.0 ([#2380](https://github.com/authup/authup/issues/2380)) ([6467e06](https://github.com/authup/authup/commit/6467e06e70938084f5adaa448e383476a83976e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.1-beta.20
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 
