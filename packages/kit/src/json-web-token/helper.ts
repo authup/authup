@@ -5,87 +5,58 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { clone, isEqual, isObject } from 'smob';
+import { expandPath, getPathInfo } from 'pathtrace';
+import { isEqual } from 'smob';
 import type { JWTClaims } from './types';
 
 /**
- * Get jwt claim by certain conditions.
+ * Return all matching claim values by certain conditions.
+ * Always returns an array.
  *
  * @param claims
- * @param key
- * @param value
- * @param valueIsRegex
+ * @param pattern
+ * @param equalTo
+ * @param equalToIsRegex
  */
-export function getJWTClaim(
+export function getJWTClaimByPattern(
     claims: JWTClaims,
-    key: string,
-    value?: unknown,
-    valueIsRegex?: boolean,
-) : unknown | unknown[] | undefined {
-    const path = key.split('\\.');
-    let raw = clone(claims);
-    for (let i = 0; i < path.length; i++) {
-        if (!isObject(raw)) {
-            return undefined;
+    pattern: string,
+    equalTo?: unknown,
+    equalToIsRegex?: boolean,
+) : unknown[] {
+    const output : unknown[] = [];
+
+    const keys = expandPath(claims, pattern);
+    for (let i = 0; i < keys.length; i++) {
+        const info = getPathInfo(claims, keys[i]);
+        if (!info.exists) {
+            continue;
         }
 
-        raw = raw[path[i]];
-    }
+        if (typeof equalTo === 'undefined' || equalTo === null) {
+            output.push(info.value);
+            continue;
+        }
 
-    if (typeof raw === 'undefined') {
-        return undefined;
-    }
+        let regex : RegExp | undefined;
+        if (equalToIsRegex && typeof equalTo === 'string') {
+            regex = new RegExp(equalTo, 'gi');
+        } else if (equalTo instanceof RegExp) {
+            regex = equalTo;
+        }
 
-    if (typeof value === 'undefined') {
-        return raw;
-    }
-
-    let regex : RegExp | undefined;
-    if (valueIsRegex && typeof value === 'string') {
-        regex = new RegExp(value, 'gi');
-    } else if (value instanceof RegExp) {
-        regex = value;
-    }
-
-    if (regex) {
-        if (Array.isArray(raw)) {
-            const output = raw
-                .filter((el) => typeof el === 'string' && regex.test(el));
-            if (output.length > 0) {
-                return raw;
+        if (regex) {
+            if (regex.test(`${info.value}`)) {
+                output.push(info.value);
             }
 
-            return undefined;
+            continue;
         }
 
-        if (
-            typeof raw === 'string' &&
-            regex.test(raw)
-        ) {
-            return raw;
+        if (isEqual(equalTo, info.value)) {
+            output.push(info.value);
         }
-
-        return undefined;
     }
 
-    if (Array.isArray(raw)) {
-        if (Array.isArray(value)) {
-            return isEqual(raw, value) ?
-                raw :
-                undefined;
-        }
-
-        const output = raw.filter((r) => isEqual(r, value));
-        if (output.length > 0) {
-            return raw;
-        }
-
-        return undefined;
-    }
-
-    if (isEqual(raw, value)) {
-        return raw;
-    }
-
-    return undefined;
+    return output;
 }

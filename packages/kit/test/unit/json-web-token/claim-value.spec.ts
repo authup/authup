@@ -6,7 +6,7 @@
  */
 
 import type { JWTClaims } from '../../../src';
-import { getJWTClaim } from '../../../src';
+import { getJWTClaimByPattern } from '../../../src';
 
 const claims : JWTClaims = {
     iss: 'https://google.de',
@@ -21,51 +21,51 @@ const claims : JWTClaims = {
 
 describe('src/json-web-token', () => {
     it('should get claim value', () => {
-        let value = getJWTClaim(claims, 'iss');
-        expect(value).toEqual('https://google.de');
+        let value = getJWTClaimByPattern(claims, 'iss');
+        expect(value).toEqual(['https://google.de']);
 
-        value = getJWTClaim(claims, 'iss', /google/);
-        expect(value).toEqual('https://google.de');
+        value = getJWTClaimByPattern(claims, 'iss', /google/);
+        expect(value).toEqual(['https://google.de']);
 
-        value = getJWTClaim(claims, 'iss', 'google', true);
-        expect(value).toEqual('https://google.de');
+        value = getJWTClaimByPattern(claims, 'iss', 'google', true);
+        expect(value).toEqual(['https://google.de']);
 
-        value = getJWTClaim(claims, 'bool');
-        expect(value).toEqual(true);
+        value = getJWTClaimByPattern(claims, 'bool');
+        expect(value).toEqual([true]);
 
-        value = getJWTClaim(claims, 'num');
-        expect(value).toEqual(5);
+        value = getJWTClaimByPattern(claims, 'num');
+        expect(value).toEqual([5]);
 
-        value = getJWTClaim(claims, 'foo');
-        expect(value).toBeUndefined();
+        value = getJWTClaimByPattern(claims, 'foo');
+        expect(value).toEqual([]);
 
-        value = getJWTClaim(claims, 'empty');
-        expect(value).toEqual('');
+        value = getJWTClaimByPattern(claims, 'empty');
+        expect(value).toEqual(['']);
 
-        value = getJWTClaim(claims, 'empty', '');
-        expect(value).toEqual('');
+        value = getJWTClaimByPattern(claims, 'empty', '');
+        expect(value).toEqual(['']);
 
-        value = getJWTClaim(claims, 'nu');
-        expect(value).toEqual(null);
+        value = getJWTClaimByPattern(claims, 'nu');
+        expect(value).toEqual([null]);
 
-        value = getJWTClaim(claims, 'nu', null);
-        expect(value).toEqual(null);
+        value = getJWTClaimByPattern(claims, 'nu', null);
+        expect(value).toEqual([null]);
 
-        value = getJWTClaim(claims, 'nu', undefined);
-        expect(value).toEqual(null);
+        value = getJWTClaimByPattern(claims, 'nu', undefined);
+        expect(value).toEqual([null]);
 
-        value = getJWTClaim(claims, 'nu', '');
-        expect(value).toEqual(undefined);
+        value = getJWTClaimByPattern(claims, 'nu', '');
+        expect(value).toEqual([]);
     });
 
     it('should get nested claim value', () => {
-        let value = getJWTClaim(claims, 'realm_access\\.roles');
-        expect(value).toEqual(claims.realm_access.roles);
+        let value = getJWTClaimByPattern(claims, 'realm_access.roles');
+        expect(value).toEqual([claims.realm_access.roles]);
 
-        value = getJWTClaim(claims, 'realm_access\\.roles', 'foo');
-        expect(value).toEqual(claims.realm_access.roles);
+        value = getJWTClaimByPattern(claims, 'realm_access.roles.*', 'foo');
+        expect(value).toEqual(['foo']);
 
-        value = getJWTClaim(claims, 'realm_access\\.roles', /b/);
-        expect(value).toEqual(claims.realm_access.roles);
+        value = getJWTClaimByPattern(claims, 'realm_access.roles.*', /b/);
+        expect(value).toEqual(['bar', 'baz']);
     });
 });

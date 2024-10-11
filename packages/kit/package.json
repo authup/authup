@@ -59,6 +59,7 @@
         "@validup/adapter-zod": "^0.1.7",
         "destr": "^2.0.3",
         "nanoid": "^3.3.4",
+        "pathtrace": "^1.1.0",
         "smob": "^1.5.0",
         "validup": "^0.1.7",
         "zod": "^3.23.8"

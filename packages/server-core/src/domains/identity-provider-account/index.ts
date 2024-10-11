@@ -6,4 +6,3 @@
  */
 
 export * from './entity';
-export * from './manager';

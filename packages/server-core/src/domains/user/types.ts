@@ -7,8 +7,14 @@
 
 import type { UserRelationItemSyncOperation } from './constants';
 
-export type UserRelationItemSyncConfig = {
+export type UserRelationSyncItem = {
     id: string,
     realmId?: string | null,
     operation?: `${UserRelationItemSyncOperation}`
+};
+
+export type UserRelationSyncOptions = {
+    id: string,
+    realmId: string,
+    items: (string | UserRelationSyncItem)[]
 };
