@@ -1,0 +1,22 @@
+{
+    "exp": 1712829933,
+    "iat": 1712829633,
+    "jti": "c2f9f862-e7e8-4a71-8e74-73b423ebb4b6",
+    "iss": "http://127.0.0.1:8080/realms/plt",
+    "aud": "account",
+    "sub": "5b39b8fe-47e8-4ff3-829b-c8cbcc5f69b1",
+    "typ": "Bearer",
+    "azp": "keycloak-jwt",
+    "acr": "1",
+    "allowed-origins": [
+        "/*"
+    ],
+    "realm_access": {
+        "roles": [
+            "movies:read",
+            "default-roles-plt",
+            "offline_access",
+            "uma_authorization"
+        ]
+    }
+}

@@ -1,15 +1,24 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, User } from '@authup/core-kit';
-import { IdentityProviderMappingSyncMode, isValidUserEmail, isValidUserName } from '@authup/core-kit';
+import type {
+    IdentityProvider,
+    IdentityProviderPermissionMapping,
+    IdentityProviderRoleMapping,
+    User,
+} from '@authup/core-kit';
+import {
+    IdentityProviderMappingSyncMode,
+    isValidUserEmail,
+    isValidUserName,
+} from '@authup/core-kit';
 import {
     createNanoID,
-    getJWTClaim,
+    getJWTClaimByPattern,
     isScalar,
     toArray,
     toArrayElement,
@@ -17,13 +26,19 @@ import {
 } from '@authup/kit';
 import { BadRequestError } from '@ebec/http';
 import type { DataSource, Repository } from 'typeorm';
-import type { IdentityProviderFlowIdentity } from '../identity-provider';
-import { IdentityProviderAttributeMappingEntity } from '../identity-provider-attribute-mapping';
-import { IdentityProviderPermissionMappingEntity } from '../identity-provider-permission-mapping';
-import { IdentityProviderRoleMappingEntity } from '../identity-provider-role-mapping';
-import type { UserEntity, UserRelationItemSyncConfig } from '../user';
-import { UserRelationItemSyncOperation, UserRepository } from '../user';
-import { IdentityProviderAccountEntity } from './entity';
+import type {
+    IdentityProviderIdentity,
+    UserEntity,
+    UserRelationSyncItem,
+} from '../../domains';
+import {
+    IdentityProviderAccountEntity,
+    IdentityProviderAttributeMappingEntity,
+    IdentityProviderPermissionMappingEntity,
+    IdentityProviderRoleMappingEntity,
+    UserRelationItemSyncOperation,
+    UserRepository,
+} from '../../domains';
 
 type UserCreateContext = {
     attempts: number,
@@ -34,11 +49,11 @@ type UserCreateContext = {
 };
 
 type ClaimAttribute = {
-    value: unknown[] | unknown,
+    value: unknown[],
     mode?: `${IdentityProviderMappingSyncMode}` | null
 };
 
-export class IdentityProviderAccountManger {
+export class IDPAccountService {
     protected dataSource : DataSource;
 
     protected provider : IdentityProvider;
@@ -66,7 +81,16 @@ export class IdentityProviderAccountManger {
         this.providerAccountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
     }
 
-    async save(identity: IdentityProviderFlowIdentity) : Promise<IdentityProviderAccountEntity> {
+    async save(identity: IdentityProviderIdentity) : Promise<IdentityProviderAccountEntity> {
+        const account = await this.saveAccount(identity);
+
+        await this.saveRoles(identity, account);
+        await this.savePermissions(identity, account);
+
+        return account;
+    }
+
+    protected async saveAccount(identity: IdentityProviderIdentity) : Promise<IdentityProviderAccountEntity> {
         let account = await this.providerAccountRepository.findOne({
             where: {
                 provider_user_id: identity.id,
@@ -75,15 +99,12 @@ export class IdentityProviderAccountManger {
             relations: ['user'],
         });
 
-        let user : UserEntity;
-        let userExisted : boolean;
-
         if (account) {
-            user = await this.updateUser(identity, account.user);
-            userExisted = true;
+            account.user = await this.updateUser(identity, account.user);
+
+            identity.status = 'updated';
         } else {
-            user = await this.createUser(identity);
-            userExisted = false;
+            const user = await this.createUser(identity);
 
             account = this.providerAccountRepository.create({
                 provider_id: this.provider.id,
@@ -94,108 +115,100 @@ export class IdentityProviderAccountManger {
                 user_id: user.id,
                 user_realm_id: user.realm_id,
             });
+
+            identity.status = 'created';
         }
 
-        await this.saveRoles(identity, user, userExisted);
-        await this.savePermissions(identity, user, userExisted);
+        await this.providerAccountRepository.save(account);
 
         return account;
     }
 
     protected async saveRoles(
-        identity: IdentityProviderFlowIdentity,
-        user: User,
-        userExisted: boolean,
+        identity: IdentityProviderIdentity,
+        account: IdentityProviderAccountEntity,
     ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const entities = await providerRoleRepository.findBy({
             provider_id: this.provider.id,
         });
 
-        const roles : UserRelationItemSyncConfig[] = [];
+        const items : UserRelationSyncItem[] = [];
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            if (!entity.name || !entity.value) {
-                roles.push({
-                    id: entity.role_id,
-                    realmId: entity.role_realm_id,
-                    operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
-                        UserRelationItemSyncOperation.NONE :
-                        undefined,
-                });
-                continue;
-            }
-
-            const value = getJWTClaim(
-                identity.claims,
-                entity.name,
-                entity.value,
-                entity.value_is_regex,
-            );
-
-            roles.push({
+            items.push({
                 id: entity.role_id,
                 realmId: entity.role_realm_id,
-                operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
-                    UserRelationItemSyncOperation.NONE :
-                    undefined,
+                operation: this.getSyncOperationForMapping(identity, entity),
             });
         }
 
-        await this.userRepository.syncRoles(
-            user,
-            roles,
-        );
+        await this.userRepository.syncRoles({
+            items,
+            id: account.user_id,
+            realmId: account.user_realm_id,
+        });
     }
 
     protected async savePermissions(
-        identity: IdentityProviderFlowIdentity,
-        user: User,
-        userExisted: boolean,
+        identity: IdentityProviderIdentity,
+        account: IdentityProviderAccountEntity,
     ) {
         const providerRoleRepository = this.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
         const entities = await providerRoleRepository.findBy({
             provider_id: this.provider.id,
         });
 
-        const permissions : UserRelationItemSyncConfig[] = [];
+        const items : UserRelationSyncItem[] = [];
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
-            if (!entity.name || !entity.value) {
-                permissions.push({
-                    id: entity.permission_id,
-                    realmId: entity.permission_realm_id,
-                    operation: entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted ?
-                        UserRelationItemSyncOperation.NONE :
-                        undefined,
-                });
-                continue;
-            }
 
-            const value = getJWTClaim(
-                identity.claims,
-                entity.name,
-                entity.value,
-                entity.value_is_regex,
-            );
-
-            permissions.push({
+            items.push({
                 id: entity.permission_id,
                 realmId: entity.permission_realm_id,
-                operation: (entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE && userExisted) || typeof value === 'undefined' ?
-                    UserRelationItemSyncOperation.NONE :
-                    undefined,
+                operation: this.getSyncOperationForMapping(identity, entity),
             });
         }
 
-        await this.userRepository.syncPermissions(
-            user,
-            permissions,
-        );
+        await this.userRepository.syncPermissions({
+            items,
+            id: account.user_id,
+            realmId: account.user_realm_id,
+        });
     }
 
-    protected async getClaimAttributes(identity: IdentityProviderFlowIdentity) : Promise<Record<string, ClaimAttribute>> {
+    protected getSyncOperationForMapping(
+        identity: IdentityProviderIdentity,
+        mapping: IdentityProviderPermissionMapping | IdentityProviderRoleMapping,
+    ) {
+        let operation : UserRelationItemSyncOperation;
+        if (
+            mapping.synchronization_mode === IdentityProviderMappingSyncMode.ONCE &&
+            identity.status === 'updated'
+        ) {
+            operation = UserRelationItemSyncOperation.NONE;
+        } else if (!mapping.name || !mapping.value) {
+            operation = UserRelationItemSyncOperation.CREATE;
+        } else {
+            const value = getJWTClaimByPattern(
+                identity.data,
+                mapping.name,
+                mapping.value,
+                mapping.value_is_regex,
+            );
+
+            if (value.length === 0) {
+                operation = UserRelationItemSyncOperation.DELETE;
+            } else {
+                operation = UserRelationItemSyncOperation.CREATE;
+            }
+        }
+
+        return operation;
+    }
+
+    protected async getClaimAttributes(identity: IdentityProviderIdentity) : Promise<Record<string, ClaimAttribute>> {
         const repository = this.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
         const entities = await repository.findBy({
             provider_id: this.provider.id,
@@ -206,14 +219,14 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            const value = getJWTClaim(
-                identity.claims,
+            const value = getJWTClaimByPattern(
+                identity.data,
                 entity.source_name,
                 entity.source_value,
                 entity.source_value_is_regex,
             );
 
-            if (typeof value === 'undefined') {
+            if (value.length === 0) {
                 continue;
             }
 
@@ -234,7 +247,7 @@ export class IdentityProviderAccountManger {
     }
 
     protected async updateUser(
-        identity: IdentityProviderFlowIdentity,
+        identity: IdentityProviderIdentity,
         user: UserEntity,
     ) : Promise<UserEntity> {
         const claimAttributes = await this.getClaimAttributes(identity);
@@ -247,16 +260,16 @@ export class IdentityProviderAccountManger {
         for (let i = 0; i < claimAttributeKeys.length; i++) {
             const attributeKey = claimAttributeKeys[i];
 
+            let index : number = relationPropertyNames.indexOf(attributeKey);
+            if (index !== -1) {
+                continue;
+            }
+
             const mode = claimAttributes[attributeKey].mode ||
                 IdentityProviderMappingSyncMode.ALWAYS;
 
             const value = toArrayElement(claimAttributes[attributeKey].value);
             if (!isScalar(value) || typeof value === 'undefined') {
-                continue;
-            }
-
-            let index : number = relationPropertyNames.indexOf(attributeKey);
-            if (index !== -1) {
                 continue;
             }
 
@@ -293,16 +306,15 @@ export class IdentityProviderAccountManger {
     }
 
     protected async createUser(
-        identity: IdentityProviderFlowIdentity,
+        identity: IdentityProviderIdentity,
     ) : Promise<UserEntity> {
         const claimAttributes = await this.getClaimAttributes(identity);
 
         const names = toArray(identity.name);
         const emails = toArray(identity.email);
 
-        const columnNames = this.userRepository.metadata.columns.map(
-            (column) => column.propertyName,
-        );
+        const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
+        const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
 
         const user = this.userRepository.create({});
         const extra : Record<string, any> = {};
@@ -310,9 +322,14 @@ export class IdentityProviderAccountManger {
         const claimAttributeKeys = Object.keys(claimAttributes);
         for (let i = 0; i < claimAttributeKeys.length; i++) {
             const attributeKey = claimAttributeKeys[i];
+            let index : number = relationPropertyNames.indexOf(attributeKey);
+            if (index !== -1) {
+                continue;
+            }
+
             const attribute = claimAttributes[attributeKey];
 
-            const index = columnNames.indexOf(attributeKey);
+            index = columnPropertyNames.indexOf(attributeKey);
             if (index === -1) {
                 const value = toArrayElement(attribute.value);
                 if (!isScalar(value) || typeof value === 'undefined') {

@@ -20,11 +20,11 @@ import { sendRedirect } from 'routup';
 import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import {
-    IdentityProviderAccountManger,
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
 import { EnvironmentName } from '../../../../env';
+import { IDPAccountService } from '../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';
 import { useConfig } from '../../../../config';
@@ -88,7 +88,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const flow = createOAuth2IdentityProviderFlow(entity);
 
     const identity = await flow.getIdentityForRequest(req);
-    const manager = new IdentityProviderAccountManger(dataSource, entity);
+    const manager = new IDPAccountService(dataSource, entity);
 
     const account = await manager.save(identity);
     const grant = new InternalGrantType();

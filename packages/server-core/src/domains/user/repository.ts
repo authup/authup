@@ -17,7 +17,7 @@ import { UserPermissionEntity } from '../user-permission';
 import { UserRoleEntity } from '../user-role';
 import { UserRelationItemSyncOperation } from './constants';
 import { UserEntity } from './entity';
-import type { UserRelationItemSyncConfig } from './types';
+import type { UserRelationSyncItem, UserRelationSyncOptions } from './types';
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -36,33 +36,35 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         });
     }
 
-    async syncPermissions(
-        user: User,
-        ids: (string | UserRelationItemSyncConfig)[],
-    ) {
-        const options = ids.map((id) => {
+    async syncPermissions(options: UserRelationSyncOptions) {
+        const items = options.items.map((id) => {
             if (typeof id === 'string') {
                 return {
                     id,
-                } satisfies UserRelationItemSyncConfig;
+                } satisfies UserRelationSyncItem;
             }
 
             return id;
         });
-        const repository = this.manager.getRepository(UserPermissionEntity);
 
+        const repository = this.manager.getRepository(UserPermissionEntity);
         const entities = await repository.findBy({
-            user_id: user.id,
+            user_id: options.id,
         });
 
         const idsToDrop = entities
             .filter((entity) => {
-                const index = options.findIndex((o) => o.id === entity.permission_id);
+                const index = items.findIndex((o) => o.id === entity.permission_id);
                 if (index === -1) {
                     return true;
                 }
 
-                return options[index].operation === UserRelationItemSyncOperation.DELETE;
+                if (items[index].operation === UserRelationItemSyncOperation.DELETE) {
+                    items.splice(index, 1);
+                    return true;
+                }
+
+                return false;
             })
             .map((entity) => entity.id);
 
@@ -72,19 +74,21 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             });
         }
 
-        const toAdd = options
+        const toAdd = items
             .filter((o) => {
-                if (!o.operation || o.operation === UserRelationItemSyncOperation.CREATE) {
-                    return true;
+                const index = entities.findIndex((userRole) => userRole.permission_id === o.id);
+                if (index !== -1) {
+                    return false;
                 }
 
-                return entities.findIndex((userRole) => userRole.permission_id === o.id) === -1;
+                return o.operation !== UserRelationItemSyncOperation.NONE &&
+                    o.operation !== UserRelationItemSyncOperation.DELETE;
             })
             .map((o) => repository.create({
                 permission_id: o.id,
                 permission_realm_id: o.realmId,
-                user_id: user.id,
-                user_realm_id: user.realm_id,
+                user_id: options.id,
+                user_realm_id: options.realmId,
             }));
 
         if (toAdd.length > 0) {
@@ -92,34 +96,38 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         }
     }
 
-    async syncRoles(
-        user: User,
-        ids: (string | UserRelationItemSyncConfig)[],
-    ) {
-        const options = ids.map((id) => {
-            if (typeof id === 'string') {
-                return {
-                    id,
-                } satisfies UserRelationItemSyncConfig;
-            }
+    async syncRoles(options: UserRelationSyncOptions) {
+        const items = options.items.map(
+            (id) => {
+                if (typeof id === 'string') {
+                    return {
+                        id,
+                    } satisfies UserRelationSyncItem;
+                }
 
-            return id;
-        });
+                return id;
+            },
+        );
 
         const repository = this.manager.getRepository(UserRoleEntity);
 
         const entities = await repository.findBy({
-            user_id: user.id,
+            user_id: options.id,
         });
 
         const idsToDrop = entities
             .filter((entity) => {
-                const index = options.findIndex((o) => o.id === entity.role_id);
+                const index = items.findIndex((o) => o.id === entity.role_id);
                 if (index === -1) {
                     return true;
                 }
 
-                return options[index].operation === UserRelationItemSyncOperation.DELETE;
+                if (items[index].operation === UserRelationItemSyncOperation.DELETE) {
+                    items.splice(index, 1);
+                    return true;
+                }
+
+                return false;
             })
             .map((entity) => entity.id);
 
@@ -129,23 +137,21 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             });
         }
 
-        const toAdd = options
+        const toAdd = items
             .filter((o) => {
-                if (!o.operation || o.operation === UserRelationItemSyncOperation.CREATE) {
-                    return true;
-                }
-
-                if (o.operation === UserRelationItemSyncOperation.NONE) {
+                const index = entities.findIndex((userRole) => userRole.role_id === o.id);
+                if (index !== -1) {
                     return false;
                 }
 
-                return entities.findIndex((userRole) => userRole.role_id === o.id) === -1;
+                return o.operation !== UserRelationItemSyncOperation.NONE &&
+                    o.operation !== UserRelationItemSyncOperation.DELETE;
             })
             .map((o) => repository.create({
                 role_id: o.id,
                 role_realm_id: o.realmId,
-                user_id: user.id,
-                user_realm_id: user.realm_id,
+                user_id: options.id,
+                user_realm_id: options.realmId,
             }));
 
         if (toAdd.length > 0) {

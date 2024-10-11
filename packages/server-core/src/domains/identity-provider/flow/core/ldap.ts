@@ -11,7 +11,7 @@ import {
 } from 'ldapjs';
 import type { Filter } from 'ldapjs';
 import { LdapClient } from '../../../../core';
-import type { ILdapIdentityProviderFlow, IdentityProviderFlowIdentity, LdapIdentityProviderFlowOptions } from '../types';
+import type { ILdapIdentityProviderFlow, IdentityProviderIdentity, LdapIdentityProviderFlowOptions } from '../types';
 
 export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     protected options : LdapIdentityProviderFlowOptions;
@@ -32,7 +32,7 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         });
     }
 
-    async getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderFlowIdentity> {
+    async getIdentityForCredentials(user: string, password: string) : Promise<IdentityProviderIdentity> {
         const identity = await this.getIdentity(user);
 
         await this.bind(identity.id, password);
@@ -40,15 +40,15 @@ export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
         return identity;
     }
 
-    async getIdentity(input: string): Promise<IdentityProviderFlowIdentity> {
+    async getIdentity(input: string): Promise<IdentityProviderIdentity> {
         await this.bind();
 
         const user = await this.findUser(input);
-        const identity : IdentityProviderFlowIdentity = {
+        const identity : IdentityProviderIdentity = {
             id: user.dn,
             name: user[this.options.user_name_attribute || 'cn'] || user.dn,
             email: user[this.options.user_mail_attribute || 'mail'],
-            claims: {},
+            data: {},
         };
 
         try {

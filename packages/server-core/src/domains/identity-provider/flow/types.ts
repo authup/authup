@@ -9,24 +9,26 @@ import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase
 import type { JWTClaims } from '@authup/kit';
 import type { Request } from 'routup';
 
-export type IdentityProviderFlowIdentity = {
+export type IdentityProviderIdentityStatus = 'created' | 'updated';
+export type IdentityProviderIdentity = {
     id: string,
     name: string | string[],
     email?: string | string[],
     roles?: string[],
     first_name?: string,
     last_name?: string,
-    claims: JWTClaims
+    data: JWTClaims,
+    status?: IdentityProviderIdentityStatus,
 };
 
 export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;
 export interface ILdapIdentityProviderFlow {
-    getIdentity(user: string, password: string) : Promise<IdentityProviderFlowIdentity>;
+    getIdentity(user: string, password: string) : Promise<IdentityProviderIdentity>;
 }
 
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
 
 export interface IOAuth2IdentityProviderFlow {
     buildAuthorizeURL() : string;
-    getIdentityForRequest(request: Request) : Promise<IdentityProviderFlowIdentity>;
+    getIdentityForRequest(request: Request) : Promise<IdentityProviderIdentity>;
 }

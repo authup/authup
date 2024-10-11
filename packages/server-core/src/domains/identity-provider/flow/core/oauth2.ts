@@ -10,7 +10,7 @@ import type { Options } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
 import type { Request } from 'routup';
 import { useConfig } from '../../../../config';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 
 export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     protected client : OAuth2Client;
@@ -35,5 +35,5 @@ export abstract class OAuth2IdentityProviderFlow implements IOAuth2IdentityProvi
         return this.client.authorize.buildURL();
     }
 
-    abstract getIdentityForRequest(request: Request) : Promise<IdentityProviderFlowIdentity>;
+    abstract getIdentityForRequest(request: Request) : Promise<IdentityProviderIdentity>;
 }

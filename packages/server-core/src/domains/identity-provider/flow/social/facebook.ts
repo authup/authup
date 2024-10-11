@@ -9,7 +9,7 @@ import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { OAuth2IdentityProviderFlow } from '../core';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderFlowIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 
 export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     constructor(options: OAuth2IdentityProviderFlowOptions) {
@@ -21,7 +21,7 @@ export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow imp
         super(options);
     }
 
-    async getIdentityForRequest(request: Request): Promise<IdentityProviderFlowIdentity> {
+    async getIdentityForRequest(request: Request): Promise<IdentityProviderIdentity> {
         const { code, state } = useRequestQuery(request);
 
         const token = await this.client.token.createWithAuthorizeGrant({
@@ -42,7 +42,7 @@ export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow imp
             email: userInfo.email,
             first_name: userInfo.first_name,
             last_name: userInfo.last_name,
-            claims: payload,
+            data: payload,
         };
     }
 }

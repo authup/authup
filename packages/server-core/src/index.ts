@@ -12,3 +12,4 @@ export * from './database';
 export * from './http';
 export * from './module';
 export * from './security';
+export * from './services';
