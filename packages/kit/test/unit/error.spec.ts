@@ -11,6 +11,6 @@ describe('src/error', () => {
     it('should throw error', () => {
         const error = TokenError.expired();
         expect(error.statusCode).toEqual(400);
-        expect(error.message).toEqual('The token has been expired.');
+        expect(error.message).toEqual('The token has expired.');
     });
 });
