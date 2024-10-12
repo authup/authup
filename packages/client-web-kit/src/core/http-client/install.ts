@@ -8,7 +8,7 @@
 import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
-import { STORE_ID, injectStore } from '../store';
+import { STORE_ID, injectStoreFactory } from '../store';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
 
@@ -19,8 +19,8 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
 
     const client = new Client({ baseURL: options.baseURL });
 
-    const storeCreator = injectStore(app);
-    const store = storeCreator(options.pinia);
+    const storeFactory = injectStoreFactory(app);
+    const store = storeFactory(options.pinia);
 
     const { refreshToken } = storeToRefs(store);
 

@@ -23,53 +23,56 @@ import { type Pinia } from 'pinia';
 import { defineNuxtPlugin } from '#imports';
 import { Navigation } from '../config/layout';
 
-export default defineNuxtPlugin((ctx) => {
-    const storeManagerOptions : StoreManagerOptions = {
-        presets: {
-            bootstrap,
-            fontAwesome,
-        },
-        defaults: {
-            list: {
-                class: 'list',
+export default defineNuxtPlugin({
+    dependsOn: ['authup'],
+    setup(ctx) {
+        const storeManagerOptions: StoreManagerOptions = {
+            presets: {
+                bootstrap,
+                fontAwesome,
             },
-            listBody: {
-                class: 'list-body',
+            defaults: {
+                list: {
+                    class: 'list',
+                },
+                listBody: {
+                    class: 'list-body',
+                },
+                listItem: {
+                    class: 'list-item',
+                },
+                pagination: {
+                    class: 'pagination',
+                    itemClass: 'page-item',
+                },
             },
-            listItem: {
-                class: 'list-item',
+        };
+
+        const storeManager = installStoreManager(ctx.vueApp);
+        applyStoreManagerOptions(storeManager, storeManagerOptions);
+
+        ctx.vueApp.use(installCountdown);
+        ctx.vueApp.use(installFormControl);
+        ctx.vueApp.use(installTimeago, {
+            locales: {
+                de,
             },
-            pagination: {
-                class: 'pagination',
-                itemClass: 'page-item',
-            },
-        },
-    };
+        });
 
-    const storeManager = installStoreManager(ctx.vueApp);
-    applyStoreManagerOptions(storeManager, storeManagerOptions);
+        const store = useStore(ctx.$pinia as Pinia);
+        ctx.vueApp.use(installNavigation, {
+            provider: new Navigation(store),
+        });
 
-    ctx.vueApp.use(installCountdown);
-    ctx.vueApp.use(installFormControl);
-    ctx.vueApp.use(installTimeago, {
-        locales: {
-            de,
-        },
-    });
+        ctx.vueApp.use(installPagination);
 
-    const store = useStore(ctx.$pinia as Pinia);
-    ctx.vueApp.use(installNavigation, {
-        provider: new Navigation(store),
-    });
+        // preset missing ...
 
-    ctx.vueApp.use(installPagination);
-
-    // preset missing ...
-
-    const locale = injectTranslatorLocale();
-    const timeagoLocale = injectTimeagoLocale();
-    timeagoLocale.value = locale.value;
-    watch(locale, (val) => {
-        timeagoLocale.value = val;
-    });
+        const locale = injectTranslatorLocale();
+        const timeagoLocale = injectTimeagoLocale();
+        timeagoLocale.value = locale.value;
+        watch(locale, (val) => {
+            timeagoLocale.value = val;
+        });
+    },
 });

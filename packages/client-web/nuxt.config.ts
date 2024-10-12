@@ -42,18 +42,20 @@ export default defineNuxtConfig({
         '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
     },
     runtimeConfig: {
+        apiUrl: process.env.API_URL_SERVER,
         public: {
             apiUrl: process.env.API_URL || 'http://localhost:3010',
-            apiUrlServer: process.env.API_URL_SERVER,
             publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
+            cookieDomain: process.env.COOKIE_DOMAIN,
         },
     },
     modules: [
+        '@pinia/nuxt',
         [
             // ../client-web-nuxt/src/module
             '@authup/client-web-nuxt', {
                 apiURLRuntimeKey: 'apiUrl',
-                apiURLServerRuntimeKey: 'apiUrlServer',
+                cookieDomainRuntimeKey: 'cookieDomain',
             } satisfies ModuleOptions,
         ],
         [

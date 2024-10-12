@@ -6,7 +6,7 @@
  */
 
 import {
-    addPlugin, addRouteMiddleware, defineNuxtModule,
+    addPlugin, addRouteMiddleware, defineNuxtModule, installModule,
 } from '@nuxt/kit';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,15 +21,14 @@ export default defineNuxtModule<ModuleOptions>({
     },
     defaults: {},
     async setup(options, nuxt) {
+        await installModule('@pinia/nuxt');
+
         const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url));
         nuxt.options.build.transpile.push(runtimeDir);
 
         const runtimeOptions : AuthupRuntimeOptions = {
             apiURL: options.apiURL,
             apiURLRuntimeKey: options.apiURLRuntimeKey,
-
-            apiURLServer: options.apiURLServer,
-            apiURLServerRuntimeKey: options.apiURLServerRuntimeKey,
 
             cookieDomain: options.cookieDomain,
             cookieDomainRuntimeKey: options.cookieDomainRuntimeKey,
@@ -51,8 +50,8 @@ export default defineNuxtModule<ModuleOptions>({
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
         }
 
-        addPlugin(path.resolve(runtimeDir, 'plugins/00.pinia'));
-        addPlugin(path.resolve(runtimeDir, 'plugins/01.kit'));
+        addPlugin(path.resolve(runtimeDir, 'plugins/kit'));
+        addPlugin(path.resolve(runtimeDir, 'plugins/root'));
 
         addRouteMiddleware({
             name: 'loggedIn',

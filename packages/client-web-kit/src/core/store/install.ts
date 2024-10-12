@@ -9,22 +9,24 @@ import { CookieName } from '@authup/core-http-kit';
 import { useCookies } from '@vueuse/integrations/useCookies';
 import { defineStore } from 'pinia';
 import type { App } from 'vue';
-import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
+import type {
+    CookieGetFn, CookieOptions, CookieSetFn, CookieUnsetFn,
+} from '../../types';
 import { STORE_ID } from './constants';
 import { createStore } from './create';
-import { hasStore, provideStore } from './singleton';
+import { hasStoreFactory, provideStoreFactory } from './singleton';
 import type { StoreInstallOptions } from './types';
 
 export function installStore(app: App, options: StoreInstallOptions = {}) {
-    if (hasStore(app)) {
+    if (hasStoreFactory(app)) {
         return;
     }
 
-    const storeCreator = defineStore(
+    const storeFactory = defineStore(
         STORE_ID,
         () => createStore({ baseURL: options.baseURL }),
     );
-    const store = storeCreator(options.pinia);
+    const store = storeFactory(options.pinia);
 
     let cookieGet : CookieGetFn;
     if (options.cookieGet) {
@@ -46,8 +48,8 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
     if (options.cookieUnset) {
         cookieUnset = options.cookieUnset;
     } else if (options.cookieSet) {
-        cookieUnset = (key: string) => {
-            (options.cookieSet as CookieSetFn)(key, null);
+        cookieUnset = (key: string, opts: CookieOptions) => {
+            (options.cookieSet as CookieSetFn)(key, null, opts);
         };
     } else {
         const cookies = useCookies();
@@ -111,12 +113,12 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         }
 
         if (action.name === 'logout') {
-            cookieUnset(CookieName.ACCESS_TOKEN);
-            cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE);
-            cookieUnset(CookieName.REFRESH_TOKEN);
-            cookieUnset(CookieName.USER);
-            cookieUnset(CookieName.REALM);
-            cookieUnset(CookieName.REALM_MANAGEMENT);
+            cookieUnset(CookieName.ACCESS_TOKEN, {});
+            cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, {});
+            cookieUnset(CookieName.REFRESH_TOKEN, {});
+            cookieUnset(CookieName.USER, {});
+            cookieUnset(CookieName.REALM, {});
+            cookieUnset(CookieName.REALM_MANAGEMENT, {});
         }
     });
 
@@ -130,30 +132,43 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
             return;
         }
 
+        let maxAge: number | undefined;
+
+        if (state.accessTokenExpireDate) {
+            maxAge = Math.floor(
+                Math.max(1000, new Date(`${state.accessTokenExpireDate}`).getTime() - Date.now()) /
+                1000,
+            );
+        }
+
         if (state.accessToken) {
-            cookieSet(CookieName.ACCESS_TOKEN, state.accessToken);
+            cookieSet(CookieName.ACCESS_TOKEN, state.accessToken, {
+                maxAge,
+            });
         }
 
         if (state.accessTokenExpireDate) {
-            cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, state.accessTokenExpireDate);
+            cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, state.accessTokenExpireDate, {
+                maxAge,
+            });
         }
 
         if (state.refreshToken) {
-            cookieSet(CookieName.REFRESH_TOKEN, state.refreshToken);
+            cookieSet(CookieName.REFRESH_TOKEN, state.refreshToken, {});
         }
 
         if (state.user) {
-            cookieSet(CookieName.USER, state.user);
+            cookieSet(CookieName.USER, state.user, {});
         }
 
         if (state.realm) {
-            cookieSet(CookieName.REALM, state.realm);
+            cookieSet(CookieName.REALM, state.realm, {});
         }
 
         if (state.realmManagement) {
-            cookieSet(CookieName.REALM_MANAGEMENT, state.realmManagement);
+            cookieSet(CookieName.REALM_MANAGEMENT, state.realmManagement, {});
         }
     });
 
-    provideStore(storeCreator, app);
+    provideStoreFactory(storeFactory, app);
 }

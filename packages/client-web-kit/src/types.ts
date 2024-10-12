@@ -62,9 +62,30 @@ import type {
     AUsers,
 } from './components';
 
-export type CookieSetFn = (key: string, value?: any) => void;
-export type CookieUnsetFn = (key: string) => void;
-export type CookieGetFn = (key: string) => any;
+export interface CookieOptions {
+    path?: string;
+    expires?: Date;
+    maxAge?: number;
+    domain?: string;
+    secure?: boolean;
+    httpOnly?: boolean;
+    sameSite?: boolean | 'none' | 'lax' | 'strict';
+    partitioned?: boolean;
+}
+export type CookieSetFn = (
+    key: string,
+    value: any,
+    options: CookieOptions
+) => void;
+
+export type CookieUnsetFn = (
+    key: string,
+    options: CookieOptions
+) => void;
+
+export type CookieGetFn = (
+    key: string
+) => any;
 
 export type Options = {
     baseURL: string,

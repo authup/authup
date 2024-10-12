@@ -14,7 +14,7 @@ import type { Store, StoreDefinition } from './types';
 export const StoreSymbol = Symbol.for('AuthupStore');
 
 export function useStore(pinia?: Pinia, app?: App) : Store {
-    const instance = injectStore(app);
+    const instance = injectStoreFactory(app);
     if (!instance) {
         throw new Error('The store has not been injected in the app context.');
     }
@@ -22,19 +22,19 @@ export function useStore(pinia?: Pinia, app?: App) : Store {
     return instance(pinia);
 }
 
-export function injectStore(app?: App) : StoreDefinition {
+export function injectStoreFactory(app?: App) : StoreDefinition {
     const instance = inject<StoreDefinition>(StoreSymbol, app);
     if (!instance) {
-        throw new Error('The store has not been injected in the app context.');
+        throw new Error('The store factory has not been injected in the app context.');
     }
 
     return instance;
 }
 
-export function hasStore(app?: App) : boolean {
+export function hasStoreFactory(app?: App) : boolean {
     return !!inject(StoreSymbol, app);
 }
 
-export function provideStore(store: StoreDefinition, app?: App) {
+export function provideStoreFactory(store: StoreDefinition, app?: App) {
     provide(StoreSymbol, store, app);
 }

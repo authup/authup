@@ -9,7 +9,7 @@ import { ClientManager } from '@authup/core-realtime-kit';
 import type { Pinia } from 'pinia';
 import type { App } from 'vue';
 import { ref } from 'vue';
-import { injectStore, storeToRefs } from '../store';
+import { injectStoreFactory, storeToRefs } from '../store';
 import { provideSocketManager } from './singleton';
 
 export type SocketManagerInstallOptions = {
@@ -18,7 +18,7 @@ export type SocketManagerInstallOptions = {
 };
 
 export function installSocketManager(app: App, options : SocketManagerInstallOptions) {
-    const storeCreator = injectStore(app);
+    const storeCreator = injectStoreFactory(app);
     const store = storeCreator(options.pinia);
     const { accessToken } = storeToRefs(store);
 

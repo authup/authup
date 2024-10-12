@@ -9,15 +9,6 @@ export type AuthupRuntimeOptions = {
     apiURL?: string,
     apiURLRuntimeKey?: string,
 
-    /**
-     * Separate apiURL for server side rendering.
-     */
-    apiURLServer?: string,
-    /**
-     * Separate extraction of apiURL for server side rendering.
-     */
-    apiURLServerRuntimeKey?: string,
-
     cookieDomain?: string,
     cookieDomainRuntimeKey?: string,
 

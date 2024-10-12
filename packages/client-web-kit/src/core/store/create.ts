@@ -104,24 +104,6 @@ export function createStore(context: StoreCreateContext = {}) {
 
     // --------------------------------------------------------------------
 
-    const refresh = createPromiseShareWrapperFn(
-        async (): Promise<OAuth2TokenGrantResponse> => {
-            if (!refreshToken.value) {
-                throw new Error('No refresh token is present.');
-            }
-
-            const r = await client.token.createWithRefreshToken({
-                refresh_token: refreshToken.value,
-            });
-
-            handleTokenGrantResponse(r);
-
-            return r;
-        },
-    );
-
-    // --------------------------------------------------------------------
-
     const user = ref<User | undefined>(undefined);
     const userId = computed<string | undefined>(() => (user.value ? user.value.id : undefined));
     const userResolved = ref(false);
@@ -163,80 +145,101 @@ export function createStore(context: StoreCreateContext = {}) {
     });
 
     const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
-    const tokenResolved = ref(false);
-    const setTokenInfo = (entity?: OAuth2TokenIntrospectionResponse) => {
-        tokenResolved.value = !!entity;
+    const tokenInfoResolved = ref(false);
+    const setTokenInfo = (data?: OAuth2TokenIntrospectionResponse) => {
+        tokenInfoResolved.value = !!data;
 
-        tokenInfo.value = entity;
+        tokenInfo.value = data;
 
-        if (!entity) {
+        if (!data) {
             setRealm(undefined);
             setRealmManagement(undefined);
             permissionRepository.setMany([]);
             return;
         }
 
-        if (entity.exp) {
-            const expireDate = new Date(entity.exp * 1000);
+        if (data.exp) {
+            const expireDate = new Date(data.exp * 1000);
             setAccessTokenExpireDate(expireDate);
         }
 
         if (
-            entity.realm_id &&
-            entity.realm_name
+            data.realm_id &&
+            data.realm_name
         ) {
             realm.value = {
-                id: entity.realm_id,
-                name: entity.realm_name,
+                id: data.realm_id,
+                name: data.realm_name,
             };
 
-            if (typeof realmManagement.value === 'undefined') {
+            if (!realmManagement.value) {
                 setRealmManagement(realm.value);
             }
         }
 
-        if (entity.permissions) {
-            permissionRepository.setMany(entity.permissions);
+        if (data.permissions) {
+            permissionRepository.setMany(data.permissions);
         }
     };
+
+    // --------------------------------------------------------------------
+
+    const refreshSession = createPromiseShareWrapperFn(
+        async (): Promise<OAuth2TokenGrantResponse> => {
+            if (!refreshToken.value) {
+                throw new Error('No refresh token is present.');
+            }
+
+            const r = await client.token.createWithRefreshToken({
+                refresh_token: refreshToken.value,
+            });
+
+            handleTokenGrantResponse(r);
+
+            tokenInfoResolved.value = false;
+            userResolved.value = false;
+
+            return r;
+        },
+    );
 
     // --------------------------------------------------------------------
 
     const resolveInternal = async (
         ctx: StoreResolveContext = {},
     ) => {
-        if (
-            !accessToken.value ||
-            (ctx.attempts && ctx.attempts > 3)
-        ) return;
+        if (ctx.attempts && ctx.attempts > 3) return;
 
         try {
-            if (!tokenResolved.value || ctx.refresh) {
-                const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
-                    token: accessToken.value,
-                }, {
-                    authorizationHeader: {
-                        type: 'Bearer',
-                        token: accessToken.value,
-                    },
-                });
-                setTokenInfo(token);
-
-                tokenResolved.value = true;
+            if (!accessToken.value && refreshToken.value) {
+                await refreshSession();
             }
 
-            if (!userResolved.value || ctx.refresh) {
-                const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
-                setUser(entity);
+            if (accessToken.value) {
+                if (!tokenInfoResolved.value) {
+                    const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
+                        token: accessToken.value,
+                    }, {
+                        authorizationHeader: {
+                            type: 'Bearer',
+                            token: accessToken.value,
+                        },
+                    });
+                    setTokenInfo(token);
+                }
 
-                userResolved.value = true;
+                if (!userResolved.value) {
+                    const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
+                    setUser(entity);
+
+                    userResolved.value = true;
+                }
             }
         } catch (e) {
             if (isClientTokenExpiredError(e)) {
-                await refresh();
+                await refreshSession();
 
                 await resolveInternal({
-                    refresh: true,
                     attempts: ctx.attempts ? ctx.attempts++ : 1,
                 });
 
