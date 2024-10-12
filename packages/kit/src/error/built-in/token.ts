@@ -32,7 +32,7 @@ export class TokenError extends AuthupError {
     static expired(kind?: `${OAuth2TokenKind}`) {
         return new TokenError({
             code: ErrorCode.TOKEN_EXPIRED,
-            message: `The ${kind || 'token'} has been expired.`,
+            message: `The ${kind || 'token'} has expired.`,
         });
     }
 

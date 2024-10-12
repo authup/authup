@@ -7,7 +7,7 @@
 
 import {
     PermissionChecker,
-    PermissionMemoryProvider,
+    PermissionMemoryProvider, TokenError,
 } from '@authup/kit';
 import { computed, ref } from 'vue';
 import type {
@@ -23,7 +23,7 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import { PolicyEngine } from '../../security';
-import type { StoreCreateContext, StoreLoginContext, StoreResolveContext } from './types';
+import type { StoreCreateContext, StoreLoginContext } from './types';
 
 type InputFn = (...args: any[]) => Promise<any>;
 type OutputFn<F extends InputFn> = (...args: Parameters<F>) => Promise<Awaited<ReturnType<F>>>;
@@ -94,23 +94,11 @@ export function createStore(context: StoreCreateContext = {}) {
 
     // --------------------------------------------------------------------
 
-    const handleTokenGrantResponse = (response: OAuth2TokenGrantResponse) => {
-        const expireDate = new Date(Date.now() + response.expires_in * 1000);
-
-        setAccessTokenExpireDate(expireDate);
-        setAccessToken(response.access_token);
-        setRefreshToken(response.refresh_token);
-    };
-
-    // --------------------------------------------------------------------
-
     const user = ref<User | undefined>(undefined);
     const userId = computed<string | undefined>(() => (user.value ? user.value.id : undefined));
-    const userResolved = ref(false);
 
     const setUser = (entity?: User) => {
         user.value = entity;
-        userResolved.value = !!entity;
     };
 
     // --------------------------------------------------------------------
@@ -138,116 +126,139 @@ export function createStore(context: StoreCreateContext = {}) {
         realmManagement.value = entity;
     };
 
+    // --------------------------------------------------------------------
+
     const permissionRepository = new PermissionMemoryProvider();
     const permissionChecker = new PermissionChecker({
         provider: permissionRepository,
         policyEngine: new PolicyEngine(),
     });
 
-    const tokenInfo = ref<undefined | OAuth2TokenIntrospectionResponse>(undefined);
-    const tokenInfoResolved = ref(false);
-    const setTokenInfo = (data?: OAuth2TokenIntrospectionResponse) => {
-        tokenInfoResolved.value = !!data;
+    // --------------------------------------------------------------------
 
-        tokenInfo.value = data;
-
-        if (!data) {
-            setRealm(undefined);
-            setRealmManagement(undefined);
-            permissionRepository.setMany([]);
-            return;
+    const userResolved = ref(false);
+    const resolveUser = async () : Promise<void> => {
+        if (!accessToken.value || userResolved.value) {
+            return Promise.resolve();
         }
 
-        if (data.exp) {
-            const expireDate = new Date(data.exp * 1000);
-            setAccessTokenExpireDate(expireDate);
+        userResolved.value = true;
+
+        return client.userInfo.get(`Bearer ${accessToken.value}`)
+            .then((response) => {
+                setUser(response as User);
+            });
+    };
+
+    // --------------------------------------------------------------------
+
+    const tokenResolved = ref(false);
+    const resolveToken = async () : Promise<void> => {
+        if (!accessToken.value || tokenResolved.value) {
+            return Promise.resolve();
         }
 
-        if (
-            data.realm_id &&
-            data.realm_name
-        ) {
-            realm.value = {
-                id: data.realm_id,
-                name: data.realm_name,
-            };
+        tokenResolved.value = true;
 
-            if (!realmManagement.value) {
-                setRealmManagement(realm.value);
-            }
-        }
+        return client.token.introspect<OAuth2TokenIntrospectionResponse>({
+            token: accessToken.value,
+        }, {
+            authorizationHeader: {
+                type: 'Bearer',
+                token: accessToken.value,
+            },
+        })
+            .then((response) => {
+                if (response.exp) {
+                    const expireDate = new Date(response.exp * 1000);
+                    setAccessTokenExpireDate(expireDate);
+                }
 
-        if (data.permissions) {
-            permissionRepository.setMany(data.permissions);
-        }
+                if (
+                    response.realm_id &&
+                    response.realm_name
+                ) {
+                    realm.value = {
+                        id: response.realm_id,
+                        name: response.realm_name,
+                    };
+
+                    if (!realmManagement.value) {
+                        setRealmManagement(realm.value);
+                    }
+                }
+
+                if (response.permissions) {
+                    permissionRepository.setMany(response.permissions);
+                }
+            });
+    };
+
+    // --------------------------------------------------------------------
+
+    const handleTokenGrantResponse = (response: OAuth2TokenGrantResponse) => {
+        const expireDate = new Date(Date.now() + response.expires_in * 1000);
+
+        setAccessTokenExpireDate(expireDate);
+        setAccessToken(response.access_token);
+        setRefreshToken(response.refresh_token);
     };
 
     // --------------------------------------------------------------------
 
     const refreshSession = createPromiseShareWrapperFn(
-        async (): Promise<OAuth2TokenGrantResponse> => {
+        async (): Promise<void> => {
             if (!refreshToken.value) {
-                throw new Error('No refresh token is present.');
+                throw new TokenError('The access token can not be renewed.');
             }
 
-            const r = await client.token.createWithRefreshToken({
+            return client.token.createWithRefreshToken({
                 refresh_token: refreshToken.value,
-            });
+            })
+                .then((r) => handleTokenGrantResponse(r))
+                .catch((e) => {
+                    logout();
 
-            handleTokenGrantResponse(r);
-
-            tokenInfoResolved.value = false;
-            userResolved.value = false;
-
-            return r;
+                    return Promise.reject(e);
+                })
+                .finally(() => {
+                    tokenResolved.value = false;
+                    userResolved.value = false;
+                });
         },
     );
 
     // --------------------------------------------------------------------
 
-    const resolveInternal = async (
-        ctx: StoreResolveContext = {},
-    ) => {
-        if (ctx.attempts && ctx.attempts > 3) return;
-
+    const resolveInternal = async () : Promise<void> => {
         try {
-            if (!accessToken.value && refreshToken.value) {
+            if (
+                !accessToken.value &&
+                refreshToken.value
+            ) {
                 await refreshSession();
             }
 
             if (accessToken.value) {
-                if (!tokenInfoResolved.value) {
-                    const token = await client.token.introspect<OAuth2TokenIntrospectionResponse>({
-                        token: accessToken.value,
-                    }, {
-                        authorizationHeader: {
-                            type: 'Bearer',
-                            token: accessToken.value,
-                        },
-                    });
-                    setTokenInfo(token);
-                }
+                await resolveToken();
 
-                if (!userResolved.value) {
-                    const entity = await client.userInfo.get(`Bearer ${accessToken.value}`) as User;
-                    setUser(entity);
-
-                    userResolved.value = true;
+                if (!user.value) {
+                    await resolveUser();
                 }
             }
         } catch (e) {
-            if (isClientTokenExpiredError(e)) {
+            if (
+                isClientTokenExpiredError(e) &&
+                refreshToken.value
+            ) {
                 await refreshSession();
-
-                await resolveInternal({
-                    attempts: ctx.attempts ? ctx.attempts++ : 1,
-                });
-
-                return;
+                return resolveInternal();
             }
 
             throw e;
         }
+
+        return Promise.resolve();
     };
 
     const resolve = createPromiseShareWrapperFn(resolveInternal);
@@ -265,7 +276,7 @@ export function createStore(context: StoreCreateContext = {}) {
 
             await resolve();
         } catch (e) {
-            setUser(undefined);
+            logout();
 
             throw e;
         }
@@ -276,7 +287,11 @@ export function createStore(context: StoreCreateContext = {}) {
         setAccessTokenExpireDate(undefined);
         setRefreshToken(undefined);
         setUser(undefined);
-        setTokenInfo(undefined);
+        setRealm(undefined);
+        setRealmManagement(undefined);
+
+        tokenResolved.value = false;
+        userResolved.value = false;
     };
 
     return {
@@ -297,9 +312,6 @@ export function createStore(context: StoreCreateContext = {}) {
         setAccessTokenExpireDate,
         refreshToken,
         setRefreshToken,
-
-        tokenInfo,
-        setTokenInfo,
 
         realm,
         realmId,

@@ -24,9 +24,7 @@ export default defineNuxtComponent({
         });
 
         const api = injectHTTPClient();
-        const docsUrl = computed(() => {
-            return new URL('docs/', api.getBaseURL()).href;
-        });
+        const docsUrl = computed(() => new URL('docs/', api.getBaseURL()).href);
 
         return {
             loggedIn,
@@ -62,7 +60,7 @@ export default defineNuxtComponent({
                     <small>
                         <VCCountdown :time="tokenExpiresIn">
                             <template #default="props">
-                                <i class="fa fa-clock pr-1" /> The session expires in
+                                <i class="fa fa-clock pe-1" /> The session will be renewed in
                                 <span class="text-success">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
                             </template>
                         </VCCountdown>
