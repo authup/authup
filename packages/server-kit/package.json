@@ -52,7 +52,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@hapic/vault": "^2.3.3",
-        "@node-rs/bcrypt": "^1.10.4",
+        "@node-rs/bcrypt": "^1.10.5",
         "@node-rs/jsonwebtoken": "^0.5.7",
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.16",
