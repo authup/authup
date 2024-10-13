@@ -14,8 +14,3 @@ export enum PackageID {
     CLIENT_WEB = 'client.web',
     SERVER_CORE = 'server.core',
 }
-
-export enum PackageCommand {
-    START = 'start',
-    CLEANUP = 'cleanup',
-}
