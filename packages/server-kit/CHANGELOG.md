@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump @node-rs/bcrypt from 1.10.4 to 1.10.5 ([#2381](https://github.com/authup/authup/issues/2381)) ([581b303](https://github.com/authup/authup/commit/581b30374a07b6274c0659a2ac35e21c8ddad777))
+* **deps:** bump @node-rs/jsonwebtoken from 0.5.6 to 0.5.7 ([#2383](https://github.com/authup/authup/issues/2383)) ([44609c9](https://github.com/authup/authup/commit/44609c93375377c289b608b0429d1ee8edb3998c))
+* **deps:** bump locter from 2.1.3 to 2.1.4 ([#2392](https://github.com/authup/authup/issues/2392)) ([d1dce83](https://github.com/authup/authup/commit/d1dce831f021029c9f370adcd7323c2fba0a47a2))
+* **deps:** bump winston from 3.14.2 to 3.15.0 ([#2380](https://github.com/authup/authup/issues/2380)) ([6467e06](https://github.com/authup/authup/commit/6467e06e70938084f5adaa448e383476a83976e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

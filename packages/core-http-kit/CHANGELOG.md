@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* execution of client response error token hook ([2b5d20a](https://github.com/authup/authup/commit/2b5d20a9fe40ff6b240977bacfd06597ecaf61c9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

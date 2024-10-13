@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Features
+
+* some optimizations for web kit store ([e81882c](https://github.com/authup/authup/commit/e81882c90b951028dc28fc0bf3a414b7c52441de))
+
+
+### Bug Fixes
+
+* creating user (+ roles & permissions) by idp identity ([#2391](https://github.com/authup/authup/issues/2391)) ([7362886](https://github.com/authup/authup/commit/7362886c5aede960c7005df2655f859dd9d48e1d))
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

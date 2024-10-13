@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* creating user (+ roles & permissions) by idp identity ([#2391](https://github.com/authup/authup/issues/2391)) ([7362886](https://github.com/authup/authup/commit/7362886c5aede960c7005df2655f859dd9d48e1d))
+* **deps:** bump docker node image to v20.x & typeorm-extension ([36c4f57](https://github.com/authup/authup/commit/36c4f57d743795fb191daa939c5a7a88b9910cc3))
+* **deps:** bump locter from 2.1.3 to 2.1.4 ([#2392](https://github.com/authup/authup/issues/2392)) ([d1dce83](https://github.com/authup/authup/commit/d1dce831f021029c9f370adcd7323c2fba0a47a2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-http-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/server-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

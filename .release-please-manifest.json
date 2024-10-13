@@ -1,13 +1,13 @@
 {
-    ".": "1.0.0-beta.20",
-    "packages/authup": "1.0.0-beta.20",
-    "packages/client-web": "1.0.0-beta.20",
-    "packages/client-web-kit": "1.0.0-beta.20",
-    "packages/client-web-nuxt": "1.0.0-beta.20",
-    "packages/core-http-kit": "1.0.0-beta.20",
-    "packages/core-kit": "1.0.0-beta.20",
-    "packages/core-realtime-kit": "1.0.0-beta.20",
-    "packages/kit": "1.0.0-beta.20",
-    "packages/server-core": "1.0.0-beta.20",
-    "packages/server-kit": "1.0.0-beta.20"
+    ".": "1.0.0-beta.21",
+    "packages/authup": "1.0.0-beta.21",
+    "packages/client-web": "1.0.0-beta.21",
+    "packages/client-web-kit": "1.0.0-beta.21",
+    "packages/client-web-nuxt": "1.0.0-beta.21",
+    "packages/core-http-kit": "1.0.0-beta.21",
+    "packages/core-kit": "1.0.0-beta.21",
+    "packages/core-realtime-kit": "1.0.0-beta.21",
+    "packages/kit": "1.0.0-beta.21",
+    "packages/server-core": "1.0.0-beta.21",
+    "packages/server-kit": "1.0.0-beta.21"
 }
