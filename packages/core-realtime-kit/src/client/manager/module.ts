@@ -26,7 +26,6 @@ export class ClientManager<
 
         this.manager = new Manager(ctx.url, {
             autoConnect: false,
-            reconnectionAttempts: 10,
             ...ctx.options,
         });
 
