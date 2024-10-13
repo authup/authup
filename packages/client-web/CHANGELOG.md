@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Features
+
+* cleaup and simplified nuxt package & enhanced cookie handling ([c744200](https://github.com/authup/authup/commit/c744200f7501d44d2515b4221a6c23076db23f9b))
+* extended use-permisison-check api & created permission-check component ([50df06a](https://github.com/authup/authup/commit/50df06a0fd098eb62b543c67ae1c834bf7814f0d))
+* initial nuxt package impplementation ([#2389](https://github.com/authup/authup/issues/2389)) ([3787402](https://github.com/authup/authup/commit/378740224cac1b21c47fb9ef7e016f45e581bef6))
+* some optimizations for web kit store ([e81882c](https://github.com/authup/authup/commit/e81882c90b951028dc28fc0bf3a414b7c52441de))
+
+
+### Bug Fixes
+
+* execution of client response error token hook ([2b5d20a](https://github.com/authup/authup/commit/2b5d20a9fe40ff6b240977bacfd06597ecaf61c9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

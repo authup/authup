@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* remove unused parse connection helper ([b37d2bb](https://github.com/authup/authup/commit/b37d2bb409fe00e198547daef0f0499516020ed9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

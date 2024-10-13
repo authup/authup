@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Features
+
+* cleaup and simplified nuxt package & enhanced cookie handling ([c744200](https://github.com/authup/authup/commit/c744200f7501d44d2515b4221a6c23076db23f9b))
+* extended use-permisison-check api & created permission-check component ([50df06a](https://github.com/authup/authup/commit/50df06a0fd098eb62b543c67ae1c834bf7814f0d))
+* initial nuxt package impplementation ([#2389](https://github.com/authup/authup/issues/2389)) ([3787402](https://github.com/authup/authup/commit/378740224cac1b21c47fb9ef7e016f45e581bef6))
+* some optimizations for web kit store ([e81882c](https://github.com/authup/authup/commit/e81882c90b951028dc28fc0bf3a414b7c52441de))
+
+
+### Bug Fixes
+
+* creating user (+ roles & permissions) by idp identity ([#2391](https://github.com/authup/authup/issues/2391)) ([7362886](https://github.com/authup/authup/commit/7362886c5aede960c7005df2655f859dd9d48e1d))
+* **deps:** bump @node-rs/bcrypt from 1.10.4 to 1.10.5 ([#2381](https://github.com/authup/authup/issues/2381)) ([581b303](https://github.com/authup/authup/commit/581b30374a07b6274c0659a2ac35e21c8ddad777))
+* **deps:** bump @node-rs/jsonwebtoken from 0.5.6 to 0.5.7 ([#2383](https://github.com/authup/authup/issues/2383)) ([44609c9](https://github.com/authup/authup/commit/44609c93375377c289b608b0429d1ee8edb3998c))
+* **deps:** bump docker node image to v20.x & typeorm-extension ([36c4f57](https://github.com/authup/authup/commit/36c4f57d743795fb191daa939c5a7a88b9910cc3))
+* **deps:** bump locter from 2.1.3 to 2.1.4 ([#2392](https://github.com/authup/authup/issues/2392)) ([d1dce83](https://github.com/authup/authup/commit/d1dce831f021029c9f370adcd7323c2fba0a47a2))
+* **deps:** bump winston from 3.14.2 to 3.15.0 ([#2380](https://github.com/authup/authup/issues/2380)) ([6467e06](https://github.com/authup/authup/commit/6467e06e70938084f5adaa448e383476a83976e4))
+* do not set limit on socket reconnect attempts ([8e28aaf](https://github.com/authup/authup/commit/8e28aaf18f95ed7a6969e1583061b77fd4afb45c))
+* execution of client response error token hook ([2b5d20a](https://github.com/authup/authup/commit/2b5d20a9fe40ff6b240977bacfd06597ecaf61c9))
+* remove unused enum for package-command ([8ecd6cb](https://github.com/authup/authup/commit/8ecd6cbbedacaa48bd497757fb082c7e1f64b464))
+* remove unused parse connection helper ([b37d2bb](https://github.com/authup/authup/commit/b37d2bb409fe00e198547daef0f0499516020ed9))
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

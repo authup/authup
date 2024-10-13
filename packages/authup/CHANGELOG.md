@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* remove unused enum for package-command ([8ecd6cb](https://github.com/authup/authup/commit/8ecd6cbbedacaa48bd497757fb082c7e1f64b464))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/server-core bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 

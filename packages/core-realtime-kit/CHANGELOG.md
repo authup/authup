@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
+
+
+### Bug Fixes
+
+* do not set limit on socket reconnect attempts ([8e28aaf](https://github.com/authup/authup/commit/8e28aaf18f95ed7a6969e1583061b77fd4afb45c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+    * @authup/core-kit bumped from ^1.0.0-beta.20 to ^1.0.0-beta.21
+
 ## [1.0.0-beta.20](https://github.com/authup/authup/compare/v1.0.0-beta.19...v1.0.0-beta.20) (2024-09-28)
 
 
