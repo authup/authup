@@ -13,7 +13,7 @@ export type UserRelationSyncItem = {
     operation?: `${UserRelationItemSyncOperation}`
 };
 
-export type UserRelationSyncOptions = {
+export type UserRelationSaveContext = {
     id: string,
     realmId: string,
     items: (string | UserRelationSyncItem)[]

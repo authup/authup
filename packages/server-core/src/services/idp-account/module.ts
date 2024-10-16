@@ -144,7 +144,7 @@ export class IDPAccountService {
             });
         }
 
-        await this.userRepository.syncRoles({
+        await this.userRepository.saveRoles({
             items,
             id: account.user_id,
             realmId: account.user_realm_id,
@@ -171,7 +171,7 @@ export class IDPAccountService {
             });
         }
 
-        await this.userRepository.syncPermissions({
+        await this.userRepository.savePermissions({
             items,
             id: account.user_id,
             realmId: account.user_realm_id,

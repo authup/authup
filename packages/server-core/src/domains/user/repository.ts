@@ -8,8 +8,11 @@
 import type { Permission, Role, User } from '@authup/core-kit';
 import { createNanoID, isUUID } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
-import type { DataSource, EntityManager } from 'typeorm';
+import type {
+    DataSource, EntityManager, FindOptionsWhere,
+} from 'typeorm';
 import { In } from 'typeorm';
+import type { EntityTarget } from 'typeorm/common/EntityTarget';
 import { CachePrefix } from '../constants';
 import { EARepository } from '../core';
 import { UserAttributeEntity } from '../user-attribute';
@@ -17,7 +20,18 @@ import { UserPermissionEntity } from '../user-permission';
 import { UserRoleEntity } from '../user-role';
 import { UserRelationItemSyncOperation } from './constants';
 import { UserEntity } from './entity';
-import type { UserRelationSyncItem, UserRelationSyncOptions } from './types';
+import type { UserRelationSaveContext } from './types';
+
+type UserRelationType = {
+    user_id: string,
+    user_realm_id: string | null,
+    [key: string]: any
+};
+type UserRelationSyncContext<T> = {
+    entity: EntityTarget<T>,
+    idKey: keyof T,
+    realmIdKey: keyof T
+} & UserRelationSaveContext;
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -36,126 +50,92 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         });
     }
 
-    async syncPermissions(options: UserRelationSyncOptions) {
-        const items = options.items.map((id) => {
-            if (typeof id === 'string') {
-                return {
-                    id,
-                } satisfies UserRelationSyncItem;
-            }
-
-            return id;
+    async savePermissions(ctx: UserRelationSaveContext) {
+        return this.saveRelationItems({
+            ...ctx,
+            entity: UserPermissionEntity,
+            idKey: 'permission_id',
+            realmIdKey: 'permission_realm_id',
         });
-
-        const repository = this.manager.getRepository(UserPermissionEntity);
-        const entities = await repository.findBy({
-            user_id: options.id,
-        });
-
-        const idsToDrop = entities
-            .filter((entity) => {
-                const index = items.findIndex((o) => o.id === entity.permission_id);
-                if (index === -1) {
-                    return true;
-                }
-
-                if (items[index].operation === UserRelationItemSyncOperation.DELETE) {
-                    items.splice(index, 1);
-                    return true;
-                }
-
-                return false;
-            })
-            .map((entity) => entity.id);
-
-        if (idsToDrop.length > 0) {
-            await repository.delete({
-                id: In(idsToDrop),
-            });
-        }
-
-        const toAdd = items
-            .filter((o) => {
-                const index = entities.findIndex((userRole) => userRole.permission_id === o.id);
-                if (index !== -1) {
-                    return false;
-                }
-
-                return o.operation !== UserRelationItemSyncOperation.NONE &&
-                    o.operation !== UserRelationItemSyncOperation.DELETE;
-            })
-            .map((o) => repository.create({
-                permission_id: o.id,
-                permission_realm_id: o.realmId,
-                user_id: options.id,
-                user_realm_id: options.realmId,
-            }));
-
-        if (toAdd.length > 0) {
-            await repository.insert(toAdd);
-        }
     }
 
-    async syncRoles(options: UserRelationSyncOptions) {
-        const items = options.items.map(
-            (id) => {
-                if (typeof id === 'string') {
-                    return {
-                        id,
-                    } satisfies UserRelationSyncItem;
-                }
-
-                return id;
-            },
-        );
-
-        const repository = this.manager.getRepository(UserRoleEntity);
-
-        const entities = await repository.findBy({
-            user_id: options.id,
+    async saveRoles(ctx: UserRelationSaveContext) {
+        return this.saveRelationItems({
+            ...ctx,
+            entity: UserRoleEntity,
+            idKey: 'role_id',
+            realmIdKey: 'role_realm_id',
         });
+    }
 
-        const idsToDrop = entities
-            .filter((entity) => {
-                const index = items.findIndex((o) => o.id === entity.role_id);
-                if (index === -1) {
-                    return true;
-                }
+    protected async saveRelationItems<T extends UserRelationType>(
+        ctx: UserRelationSyncContext<T>,
+    ) {
+        const itemMap : Record<string, {
+            operation: `${UserRelationItemSyncOperation}`,
+            realmId?: string | null
+        }> = {};
 
-                if (items[index].operation === UserRelationItemSyncOperation.DELETE) {
-                    items.splice(index, 1);
-                    return true;
-                }
+        for (let i = 0; i < ctx.items.length; i++) {
+            const item = ctx.items[i];
 
-                return false;
-            })
-            .map((entity) => entity.id);
-
-        if (idsToDrop.length > 0) {
-            await repository.delete({
-                id: In(idsToDrop),
-            });
+            if (typeof item === 'string') {
+                itemMap[item] = {
+                    operation: UserRelationItemSyncOperation.NONE,
+                };
+            } else {
+                itemMap[item.id] = {
+                    realmId: item.realmId,
+                    operation: item.operation,
+                };
+            }
         }
 
-        const toAdd = items
-            .filter((o) => {
-                const index = entities.findIndex((userRole) => userRole.role_id === o.id);
-                if (index !== -1) {
-                    return false;
-                }
+        const repository = this.manager.getRepository(ctx.entity);
+        const where : FindOptionsWhere<T> = {
+            user_id: ctx.id as T[keyof T],
+            [ctx.idKey as keyof T]: In(Object.keys(itemMap)) as T[keyof T],
+        };
+        const entities = await repository.findBy(where);
 
-                return o.operation !== UserRelationItemSyncOperation.NONE &&
-                    o.operation !== UserRelationItemSyncOperation.DELETE;
-            })
-            .map((o) => repository.create({
-                role_id: o.id,
-                role_realm_id: o.realmId,
-                user_id: options.id,
-                user_realm_id: options.realmId,
+        const entitiesToDelete = entities
+            .filter(
+                (entity) => !!itemMap[entity[ctx.idKey]] &&
+                    itemMap[entity[ctx.idKey]].operation === UserRelationItemSyncOperation.DELETE,
+            );
+
+        if (entitiesToDelete.length > 0) {
+            await repository.remove(entitiesToDelete);
+        }
+
+        const entitiesToAdd : T[] = [];
+
+        const keys = Object.keys(itemMap);
+        for (let i = 0; i < keys.length; i++) {
+            const entityIndex = entities.findIndex((entity) => entity[ctx.idKey] === keys[i]);
+            if (entityIndex !== -1) {
+                continue;
+            }
+
+            if (
+                itemMap[keys[i]].operation === UserRelationItemSyncOperation.NONE ||
+                itemMap[keys[i]].operation === UserRelationItemSyncOperation.DELETE
+            ) {
+                continue;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            entitiesToAdd.push(repository.create({
+                [ctx.idKey]: keys[i],
+                [ctx.realmIdKey]: itemMap[keys[i]].realmId,
+                user_id: ctx.id as T[keyof T],
+                user_realm_id: ctx.realmId as T[keyof T],
             }));
+        }
 
-        if (toAdd.length > 0) {
-            await repository.insert(toAdd);
+        if (entitiesToAdd.length > 0) {
+            await repository.insert(entitiesToAdd);
         }
     }
 

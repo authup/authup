@@ -125,7 +125,7 @@ describe('idp-manager-service', () => {
         expect(account).toBeDefined();
 
         const userRoleRepository = dataSource.getRepository(UserRoleEntity);
-        const userRole = await userRoleRepository.findOne({
+        const userRole = await userRoleRepository.find({
             where: {
                 role_id: role.id,
                 user_id: account.user_id,
