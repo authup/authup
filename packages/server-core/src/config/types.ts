@@ -73,12 +73,12 @@ export type Config = {
     port: number,
 
     /**
-     * default: 0.0.0.0
+     * default: localhost
      */
     host: string,
 
     /**
-     * default: http://127.0.0.1:3001
+     * default: http://localhost:3001
      */
     publicUrl: string,
 
@@ -88,7 +88,7 @@ export type Config = {
     cookieDomain?: string,
 
     /**
-     * default: http://127.0.0.1:3000
+     * default: http://localhost:3000
      */
     authorizeRedirectUrl: string,
 

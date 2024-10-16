@@ -6,12 +6,12 @@
  */
 
 import {
-    applyConfig, buildConfig, readConfigRawFromEnv, setConfig,
+    applyConfig, normalizeConfig, readConfigRawFromEnv, setConfig,
 } from '../../src';
 
 export function setupTestConfig() {
     const raw = readConfigRawFromEnv();
-    const config = buildConfig(raw);
+    const config = normalizeConfig(raw);
     config.env = 'test';
     config.middlewareRateLimit = false;
     config.middlewarePrometheus = false;

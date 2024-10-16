@@ -15,18 +15,17 @@ import {
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
-import { sendRedirect } from 'routup';
+import { getRequestHostName, sendRedirect } from 'routup';
 import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import {
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
 } from '../../../../domains';
-import { EnvironmentName } from '../../../../env';
 import { IDPAccountService } from '../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';
-import { useConfig } from '../../../../config';
+import { ConfigDefaults, useConfig } from '../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
     const repository = new IdentityProviderRepository(dataSource);
@@ -103,8 +102,14 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const config = useConfig();
 
     const cookieOptions : SerializeOptions = {};
-    if (config.env === EnvironmentName.PRODUCTION) {
+    if (config.cookieDomain) {
+        cookieOptions.domain = config.cookieDomain;
+    } else if (config.authorizeRedirectUrl !== ConfigDefaults.AUTHORIZE_REDIRECT_URL) {
         cookieOptions.domain = new URL(config.publicUrl).hostname;
+    } else {
+        cookieOptions.domain = getRequestHostName(req, {
+            trustProxy: true,
+        });
     }
 
     setResponseCookie(res, CookieName.ACCESS_TOKEN, token.access_token, {

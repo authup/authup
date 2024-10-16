@@ -13,7 +13,7 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, send } from 'routup';
-import { useConfig } from '../../../../../config';
+import { ConfigDefaults, useConfig } from '../../../../../config';
 import type { Grant } from '../../../../oauth2';
 import {
     AuthorizeGrantType,
@@ -72,6 +72,8 @@ export async function createTokenRouteHandler(
     const cookieOptions : SerializeOptions = {};
     if (config.cookieDomain) {
         cookieOptions.domain = config.cookieDomain;
+    } else if (config.authorizeRedirectUrl !== ConfigDefaults.AUTHORIZE_REDIRECT_URL) {
+        cookieOptions.domain = new URL(config.publicUrl).hostname;
     } else {
         cookieOptions.domain = getRequestHostName(req, {
             trustProxy: true,

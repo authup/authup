@@ -6,13 +6,13 @@
  */
 
 import {
-    buildConfig,
+    normalizeConfig,
     readConfigRawFromFS,
 } from '../../../src';
 
 describe('src/config/*.ts', () => {
     it('should build config with defaults', async () => {
-        const config = buildConfig();
+        const config = normalizeConfig();
 
         expect(config).toBeDefined();
         expect(config.middlewareBody).toBeTruthy();
