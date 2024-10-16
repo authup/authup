@@ -114,14 +114,6 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheckOneOf({
-        name: [
-            PermissionName.USER_READ,
-            PermissionName.USER_UPDATE,
-            PermissionName.USER_DELETE,
-        ],
-    });
-
     const id = useRequestParamID(req, {
         isUUID: false,
     });
@@ -176,6 +168,14 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
                 query.addSelect(`user.${attributes[i]}`);
             }
         }
+    } else {
+        await permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+        });
     }
 
     applyQuery(query, useRequestQuery(req), {

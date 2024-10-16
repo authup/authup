@@ -112,13 +112,6 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestEnv(req, 'permissionChecker');
-    await permissionChecker.preCheckOneOf({
-        name: [
-            PermissionName.ROBOT_READ,
-            PermissionName.ROBOT_UPDATE,
-            PermissionName.ROBOT_DELETE,
-        ],
-    });
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -178,6 +171,14 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
                 query.addSelect(`robot.${attributes[i]}`);
             }
         }
+    } else {
+        await permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.ROBOT_READ,
+                PermissionName.ROBOT_UPDATE,
+                PermissionName.ROBOT_DELETE,
+            ],
+        });
     }
 
     applyQuery(query, useRequestQuery(req), {
