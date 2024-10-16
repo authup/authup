@@ -38,7 +38,7 @@
         "@vuecs/form-controls": "^2.3.0",
         "@vuecs/list-controls": "^1.1.1",
         "@vuecs/navigation": "^1.1.1",
-        "@vuecs/pagination": "^1.1.1",
+        "@vuecs/pagination": "^1.2.0",
         "@vuecs/preset-bootstrap-v5": "^1.0.0",
         "@vuecs/preset-font-awesome": "^1.0.0",
         "@vuecs/timeago": "^1.1.0",
