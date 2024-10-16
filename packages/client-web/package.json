@@ -35,7 +35,7 @@
         "@nuxtjs/google-fonts": "^3.2.0",
         "@pinia/nuxt": "^0.5.4",
         "@vuecs/countdown": "^1.0.0",
-        "@vuecs/form-controls": "^2.3.0",
+        "@vuecs/form-controls": "^2.3.1",
         "@vuecs/list-controls": "^1.1.1",
         "@vuecs/navigation": "^1.1.1",
         "@vuecs/pagination": "^1.1.1",
