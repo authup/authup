@@ -5,76 +5,70 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-.nav-items,
-.nav-sub-items {
-    padding-left: 0;
-    list-style: none;
-}
-
-.nav-items .nav-link-text {
-    padding-left: 4px;
-}
-
-.nav-items .nav-link,
-.nav-items .nav-item .nav-sub-title {
-    cursor: pointer;
+.vc-nav-items .vc-nav-link {
     color: #aeb2b7;
-    padding: 18px 15px 18px 15px;
-    display: block;
-    font-size: 13px;
-    text-align: left;
-    text-decoration: none;
 }
 
-/* for now */
-.nav-items .nav-item:hover .nav-sub-title,
-.nav-items .nav-item:active .nav-sub-title,
-.nav-items .nav-item.active .nav-sub-title {
+.vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
+.vc-nav-items .vc-nav-item.vc-nav-item-nested:active > .vc-nav-link,
+.vc-nav-items .vc-nav-item.vc-nav-item-nested.active > .vc-nav-link {
     background: #c8b98d;
     color: #fff;
 }
 
-/* for now */
-.nav-items .nav-item .nav-link,
-.nav-items .nav-item:hover .nav-link,
-.nav-items .nav-item.active .nav-link {
+.vc-nav-items .vc-nav-item .vc-nav-link.dropdown-toggle {
+    background: none;
+    display: block;
+    border: none;
+}
+
+.vc-nav-items .vc-nav-item .vc-nav-link,
+.vc-nav-items .vc-nav-item:hover .vc-nav-link,
+.vc-nav-items .vc-nav-item.active .vc-nav-link {
     border-left-color: #c8b98d !important;
 }
 
-.nav-items .nav-link.active,
+.vc-nav-items .vc-nav-link.active:not(.vc-nav-link-root),
 
-.nav-items .nav-link:active,
-.nav-items .nav-link:hover,
+.vc-nav-items .vc-nav-link:active,
+.vc-nav-items .vc-nav-link:hover,
 
-.nav-items .nav-link.router-link-active:not(.root-link),
-.nav-items .nav-link.nuxt-link-active:not(.root-link),
+.vc-nav-items .vc-nav-link.router-link-active:not(.vc-nav-link-root),
+.vc-nav-items .vc-nav-link.nuxt-link-active:not(.vc-nav-link-root),
 
-.nav-items .nav-link.router-link-exact-active:not(.root-link),
-.nav-items .nav-link.nuxt-link-exact-active:not(.root-link) {
+.vc-nav-items .vc-nav-link.router-link-exact-active,
+.vc-nav-items .vc-nav-link.nuxt-link-exact-active {
     cursor: pointer;
     color: #fff;
-    background: #6d7fcc;
+    background: #6d7fcc !important;
 }
 
-.nav-items .nav-separator {
-    display: flex;
-    text-align: center;
-    align-items: center;
-    font-size:14px;
-    font-weight: bold;
-    padding:5px 0;
-}
-
-.nav-items .nav-separator:before,
-.nav-items .nav-separator:after {
+.vc-nav-items .vc-nav-separator:before,
+.vc-nav-items .vc-nav-separator:after {
     content: '';
     flex: 1;
     height:3px;
     background: #32333B;
 }
 
-.nav-items .nav-sub-items .nav-link {
+.vc-nav-item-nested .vc-nav-items .vc-nav-link {
     border-left-width: 6px;
     border-left-style: solid;
     border-left-color: rgb(64,67,78);
+}
+
+@media (max-width: 768px) {
+    .page-sidebar .vc-nav-link-text {
+        display: none;
+    }
+
+    .page-sidebar .vc-nav-separator {
+        display: none;
+    }
+
+    .vc-nav-items .vc-nav-link {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+    }
 }

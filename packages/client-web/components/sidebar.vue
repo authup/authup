@@ -49,13 +49,13 @@ export default defineNuxtComponent({
 
             <VCNavItems
                 class="sidebar-menu navbar-nav"
-                :tier="1"
+                :level="1"
             />
 
             <div class="mt-auto">
                 <div
                     v-if="loggedIn"
-                    class="font-weight-light d-flex flex-column ms-3 me-3 mb-1 mt-auto"
+                    class="session-info font-weight-light flex-column ms-3 me-3 mb-1 mt-auto"
                 >
                     <small>
                         <VCCountdown :time="tokenExpiresIn">
@@ -67,10 +67,10 @@ export default defineNuxtComponent({
                     </small>
                 </div>
 
-                <ul class="sidebar-menu nav-items navbar-nav">
-                    <li class="nav-item">
+                <ul class="sidebar-menu vc-nav-items navbar-nav">
+                    <li class="vc-nav-item">
                         <a
-                            class="nav-link"
+                            class="vc-nav-link"
                             :href="docsUrl"
                             target="_blank"
                         >
@@ -82,3 +82,14 @@ export default defineNuxtComponent({
         </div>
     </div>
 </template>
+<style scoped>
+.session-info {
+    display: flex;
+}
+
+@media (max-width: 768px) {
+    .session-info {
+        display: none;
+    }
+}
+</style>

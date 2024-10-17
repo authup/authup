@@ -7,14 +7,14 @@
 
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
-import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
+import { injectTranslatorLocale, storeToRefs, useStore } from '@authup/client-web-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
 
 import installCountdown from '@vuecs/countdown';
 import installFormControl from '@vuecs/form-controls';
-import installNavigation from '@vuecs/navigation';
+import { injectNavigationManager, install as installNavigation } from '@vuecs/navigation';
 import installPagination from '@vuecs/pagination';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
 import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
@@ -41,10 +41,6 @@ export default defineNuxtPlugin({
                 listItem: {
                     class: 'list-item',
                 },
-                pagination: {
-                    class: 'pagination',
-                    itemClass: 'page-item',
-                },
             },
         };
 
@@ -60,8 +56,21 @@ export default defineNuxtPlugin({
         });
 
         const store = useStore(ctx.$pinia as Pinia);
+        const { loggedIn } = storeToRefs(store);
+        const navigation = new Navigation(store);
+
         ctx.vueApp.use(installNavigation, {
-            provider: new Navigation(store),
+            items: ({ level, parent }) => navigation.getItems(level, parent),
+        });
+
+        const navigationManager = injectNavigationManager(ctx.vueApp);
+        watch(loggedIn, async (val, oldValue) => {
+            if (val !== oldValue) {
+                await navigationManager.build({
+                    reset: true,
+                    path: ctx._route.fullPath,
+                });
+            }
         });
 
         ctx.vueApp.use(installPagination);

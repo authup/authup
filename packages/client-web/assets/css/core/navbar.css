@@ -11,8 +11,8 @@
 
 .page-navbar {
     border-radius: 0px;
-    margin: 0px auto;
-    padding:0px;
+    margin: 0 auto;
+    padding:0;
     border: none;
     width:100%;
     text-align: right;
@@ -39,22 +39,6 @@
     background:#fff;
 }
 
-.page-navbar > .navbar-content {
-    padding: 0 20px 0 20px;
-}
-
-
-.page-navbar .navbar-content li:not(:last-child) .nav-item {
-    padding-right: 0.25rem;
-}
-
-.page-navbar .navbar-content .nav-link {
-    padding: 0.25rem 0.5rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    border-radius: 4px;
-}
-
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:hover,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:active,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:focus,
@@ -68,18 +52,30 @@
     margin-left: auto;
 }
 
-.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link {
+
+.page-navbar .navbar-content li:not(:last-child) .vc-nav-item {
+    padding-right: 0.25rem;
+}
+
+.page-navbar .navbar-content .vc-nav-link {
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    border-radius: 4px;
+}
+
+.page-navbar .navbar-content .navbar-gadgets > li > a.vc-nav-link.user-link {
     text-transform: none;
     position: relative;
 }
 
-.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link img {
+.page-navbar .navbar-content .navbar-gadgets > li > a.vc-nav-link.user-link img {
     border-radius: 50%;
     height: 1.25rem;
     width: 1.25rem;
 }
 
-.page-navbar .navbar-content .navbar-gadgets > li > a.nav-link.user-link span {
+.page-navbar .navbar-content .navbar-gadgets > li > a.vc-nav-link.user-link span {
     padding-left:6px;
 }
 
@@ -121,7 +117,7 @@
 
 @media (max-width: 768px) {
     .page-navbar > .navbar-content {
-        padding: 0px;
+        padding: 0;
     }
 
     .page-navbar .navbar-content > ul:not(:last-child) {
@@ -132,17 +128,22 @@
         width: 100%;
     }
 
-    .nav-items .nav-link,
-    .nav-items .nav-item .nav-sub-title {
-        text-align: center;
-    }
-
-    .page-navbar .navbar-content .nav-link {
+    .page-navbar .navbar-content .vc-nav-link {
         padding: 1rem 0.75rem;
     }
 
     .page-navbar .navbar-content .navbar-gadgets {
         flex-direction: row;
+    }
+
+    .page-navbar .navbar-content .navbar-gadgets li {
+        flex: 1 1 auto;
+    }
+
+    .page-navbar .navbar-content .navbar-gadgets .vc-nav-link {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
     }
 
     .page-header {

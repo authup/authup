@@ -172,12 +172,13 @@ export function createList<
     }
 
     const handleCreated = buildListCreatedHandler(data, (cbEntity) => {
-        total.value--;
+        total.value++;
 
         if (context.onCreated) {
             context.onCreated(cbEntity, meta.value);
         }
     });
+
     const handleDeleted = buildListDeletedHandler(data, () => {
         total.value--;
     });
@@ -210,7 +211,7 @@ export function createList<
             noMore: renderOptions.noMore,
             body: renderOptions.body,
             loading: renderOptions.loading,
-            total,
+            total: total.value,
             load,
             busy: busy.value,
             data: data.value as Entity<T>[],
@@ -219,16 +220,22 @@ export function createList<
                 if (context.setup.emit) {
                     context.setup.emit('created', value);
                 }
+
+                handleCreated(value);
             },
             onDeleted: (value: T) => {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
                 }
+
+                handleDeleted(value);
             },
             onUpdated: (value: T) => {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
                 }
+
+                handleUpdated(value);
             },
             slotItems: context.setup.slots || {},
         });

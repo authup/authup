@@ -19,6 +19,8 @@ export default defineNuxtConfig({
     },
     css: [
         '@authup/client-web-kit/../dist/index.css',
+        '@vuecs/navigation/dist/index.css',
+        '@vuecs/pagination/dist/index.css',
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',
         '@/assets/css/vue-layout-navigation.css',

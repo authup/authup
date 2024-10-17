@@ -9,37 +9,21 @@ import { type Store } from '@authup/client-web-kit';
 import type { PolicyIdentity } from '@authup/kit';
 import type {
     NavigationItem,
-    NavigationProvider,
+    NavigationItemNormalized,
 } from '@vuecs/navigation';
-import {
-    flattenNestedNavigationItems,
-} from '@vuecs/navigation';
-import type { RouteLocationNormalized } from 'vue-router';
 
 import {
-    LayoutKey,
     LayoutSideAdminNavigation,
     LayoutSideDefaultNavigation,
     LayoutTopNavigation,
 } from './contants';
 
-export class Navigation implements NavigationProvider {
-    protected sideElements : Record<string, NavigationItem[]>;
-
-    protected topElements : NavigationItem[];
-
+export class Navigation {
     protected initialized : boolean;
 
     protected store: Store;
 
     constructor(store: Store) {
-        this.sideElements = {
-            default: LayoutSideDefaultNavigation,
-            admin: LayoutSideAdminNavigation,
-        };
-
-        this.topElements = LayoutTopNavigation;
-
         this.initialized = false;
         this.store = store;
     }
@@ -58,88 +42,19 @@ export class Navigation implements NavigationProvider {
         }
     }
 
-    async getItems(tier: number, items: NavigationItem[]): Promise<NavigationItem[] | undefined> {
-        if (tier > 1) {
-            return undefined;
+    async getItems(level: number, parent?: NavigationItemNormalized): Promise<NavigationItem[]> {
+        if (level === 0) {
+            return this.reduce(LayoutTopNavigation);
         }
 
-        if (tier === 0) {
-            return this.reduce(this.topElements);
-        }
+        if (parent) {
+            if (level === 1) {
+                if (parent.name === 'Admin') {
+                    return this.reduce(LayoutSideAdminNavigation);
+                }
 
-        let component : NavigationItem;
-        if (items.length > 0) {
-            [component] = items;
-        } else {
-            component = { id: 'default' };
-        }
-
-        return this.reduce(this.sideElements[component.id || 'default'] || []);
-    }
-
-    async getItemsActiveByRoute(route: RouteLocationNormalized): Promise<NavigationItem[]> {
-        const {
-            [LayoutKey.NAVIGATION_ID]: topId,
-            [LayoutKey.NAVIGATION_SIDE_ID]: sideId,
-        } = route.meta;
-
-        const url = route.fullPath;
-
-        const keys = Object.keys(this.sideElements);
-        for (let i = 0; i < keys.length; i++) {
-            const items = flattenNestedNavigationItems(this.sideElements[keys[i]])
-                .sort((a: NavigationItem, b: NavigationItem) => {
-                    if (a.root && !b.root) {
-                        return 1;
-                    }
-
-                    if (!a.root && b.root) {
-                        return -1;
-                    }
-
-                    return (b.url?.length ?? 0) - (a.url?.length ?? 0);
-                })
-                .filter((item) => {
-                    if (sideId) {
-                        if (item.id === sideId) {
-                            return true;
-                        }
-                    }
-
-                    if (!item.url) return false;
-
-                    if (item.rootLink) {
-                        return url === item.url;
-                    }
-
-                    return url === item.url || url.startsWith(item.url);
-                });
-
-            if (items.length === 0) {
-                continue;
+                return this.reduce(LayoutSideDefaultNavigation);
             }
-
-            const topIndex = this.topElements.findIndex(
-                (el) => (topId && topId === el.id) || el.id === keys[i],
-            );
-
-            if (topIndex === -1) {
-                continue;
-            }
-
-            return [
-                this.topElements[topIndex],
-                items[0],
-            ];
-        }
-
-        const topIndex = this.topElements.findIndex(
-            (el) => topId && topId === el.id,
-        );
-        if (topIndex !== -1) {
-            return [
-                this.topElements[topIndex],
-            ];
         }
 
         return [];
@@ -158,6 +73,10 @@ export class Navigation implements NavigationProvider {
     }
 
     protected async reduceItem(item: NavigationItem) : Promise<NavigationItem | undefined> {
+        if (!item.meta) {
+            return item;
+        }
+
         const { loggedIn } = this.store;
         let identity: PolicyIdentity | undefined;
         if (this.store.userId) {
@@ -168,16 +87,16 @@ export class Navigation implements NavigationProvider {
         }
 
         if (
-            typeof item.requireLoggedIn !== 'undefined' &&
-                item.requireLoggedIn &&
+            typeof item.meta.requireLoggedIn !== 'undefined' &&
+                item.meta.requireLoggedIn &&
                 !loggedIn
         ) {
             return undefined;
         }
 
         if (
-            typeof item.requireLoggedOut !== 'undefined' &&
-                item.requireLoggedOut &&
+            typeof item.meta.requireLoggedOut !== 'undefined' &&
+                item.meta.requireLoggedOut &&
                 loggedIn
         ) {
             return undefined;
@@ -185,12 +104,12 @@ export class Navigation implements NavigationProvider {
 
         let canPass = true;
 
-        if (item.requirePermissions) {
+        if (item.meta.requirePermissions) {
             let permissions : string[] = [];
-            if (Array.isArray(item.requirePermissions)) {
-                permissions = item.requirePermissions.filter((item) => item);
-            } else if (typeof item.requirePermissions === 'string') {
-                permissions = [item.requirePermissions];
+            if (Array.isArray(item.meta.requirePermissions)) {
+                permissions = item.meta.requirePermissions.filter((item) => item);
+            } else if (typeof item.meta.requirePermissions === 'string') {
+                permissions = [item.meta.requirePermissions];
             }
 
             if (permissions.length > 0) {
