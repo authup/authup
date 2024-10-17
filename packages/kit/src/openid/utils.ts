@@ -25,7 +25,7 @@ export function isOAuth2OpenIDProviderMetadata(input: unknown) : input is OAuth2
         return false;
     }
 
-    if (!Array.isArray(input.response_type_supported)) {
+    if (!Array.isArray(input.response_types_supported)) {
         return false;
     }
 

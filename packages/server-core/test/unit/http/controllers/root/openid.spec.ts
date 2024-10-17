@@ -36,7 +36,7 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
         expect(data.issuer).toEqual(config.publicUrl);
         expect(data.authorization_endpoint).toEqual(new URL('authorize', config.publicUrl).href);
         expect(data.jwks_uri).toEqual(new URL('jwks', config.publicUrl).href);
-        expect(data.response_type_supported).toEqual([
+        expect(data.response_types_supported).toEqual([
             OAuth2AuthorizationResponseType.CODE,
             OAuth2AuthorizationResponseType.TOKEN,
             OAuth2AuthorizationResponseType.NONE,

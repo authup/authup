@@ -23,7 +23,7 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
 
         jwks_uri: new URL('jwks', config.publicUrl).href,
 
-        response_type_supported: [
+        response_types_supported: [
             OAuth2AuthorizationResponseType.CODE,
             OAuth2AuthorizationResponseType.TOKEN,
             OAuth2AuthorizationResponseType.NONE,

@@ -18,6 +18,7 @@ export default defineNuxtConfig({
         scanPageMeta: false,
     },
     css: [
+        '@authup/client-web-kit/../dist/index.css',
         '@fortawesome/fontawesome-free/css/all.css',
         'bootstrap/dist/css/bootstrap.css',
         '@/assets/css/vue-layout-navigation.css',

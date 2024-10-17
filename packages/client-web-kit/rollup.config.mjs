@@ -5,16 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import vue from '@vitejs/plugin-vue';
-
 import fs from 'node:fs';
 
 import { createConfig } from '../../rollup.config.mjs';
 
 export default createConfig({
     defaultExport: true,
-    pkg: JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), {encoding: 'utf-8'})),
-    pluginsPost: [
-        vue(),
-    ]
+    pkg: JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), { encoding: 'utf-8' })),
 });

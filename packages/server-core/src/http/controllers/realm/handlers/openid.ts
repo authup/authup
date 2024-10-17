@@ -36,7 +36,7 @@ export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res:
 
         jwks_uri: new URL(`realms/${entity.id}/jwks`, config.publicUrl).href,
 
-        response_type_supported: [
+        response_types_supported: [
             OAuth2AuthorizationResponseType.CODE,
             OAuth2AuthorizationResponseType.TOKEN,
             OAuth2AuthorizationResponseType.NONE,

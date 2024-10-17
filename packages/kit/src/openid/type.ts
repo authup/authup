@@ -26,7 +26,7 @@ export type OAuth2OpenIDProviderMetadata = {
     /**
      * List of the supported OAuth 2.0 response_type values.
      */
-    response_type_supported: `${OAuth2AuthorizationResponseType}`[],
+    response_types_supported: `${OAuth2AuthorizationResponseType}`[],
 
     /**
      * List of the supported subject (end-user) identifier types.

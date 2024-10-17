@@ -8,12 +8,12 @@
 import {
     defineComponent, h, ref, toRef,
 } from 'vue';
-import { IdentityProviderProtocol } from '@authup/core-kit';
+import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core-kit';
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
 import type { PropType, VNodeChild } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
 import { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';
-import { AIdentityProviderPicker } from './AIdentityProviderPicker';
+import AIdentityProviderPicker from './AIdentityProviderPicker.vue';
 import { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
 
 export const AIdentityProviderForm = defineComponent({
@@ -53,21 +53,23 @@ export const AIdentityProviderForm = defineComponent({
 
         onChange(updatedAt, () => set());
 
-        const renderPicker = () : VNodeChild => h(AIdentityProviderPicker, {
-            onPick(value: { protocol?: `${IdentityProviderProtocol}`, preset?: `${IdentityProviderPreset}` }) {
-                if (value.protocol) {
-                    protocol.value = value.protocol;
-                } else {
-                    protocol.value = null;
-                }
+        const renderPicker = () : VNodeChild => h(
+            AIdentityProviderPicker,
+            {
+                protocol: protocol.value,
+                preset: preset.value,
+                onPick(type: 'protocol' | 'preset', value: string) {
+                    if (type === 'preset') {
+                        preset.value = value;
+                        protocol.value = `${getIdentityProviderProtocolForPreset(value as IdentityProviderPreset)}`;
+                        return;
+                    }
 
-                if (value.preset) {
-                    preset.value = value.preset;
-                } else {
+                    protocol.value = value;
                     preset.value = null;
-                }
+                },
             },
-        });
+        );
 
         const render = (node: VNodeChild) : VNodeChild => {
             if (!entity.value) {
