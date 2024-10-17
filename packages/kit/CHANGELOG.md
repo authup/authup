@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.21) (2024-10-17)
+
+
+### Features
+
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-http-kit",
-    "version": "1.0.0-beta.21",
+    "version": "1.0.1-beta.21",
     "description": "Package containing global constants, types & interfaces.",
     "exports": {
         "./package.json": "./package.json",
@@ -61,11 +61,11 @@
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.21",
-        "@authup/core-kit": "^1.0.0-beta.21"
+        "@authup/core-kit": "^1.0.1-beta.21"
     },
     "peerDependencies": {
         "@authup/kit": "^1.0.0-beta.21",
-        "@authup/core-kit": "^1.0.0-beta.21"
+        "@authup/core-kit": "^1.0.1-beta.21"
     },
     "publishConfig": {
         "access": "public"
