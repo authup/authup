@@ -6,10 +6,9 @@
  */
 
 import { faker } from '@faker-js/faker';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
 import type { Client } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
+import type { TestAgent } from '../supertest';
 
 export function createFakeClient(data: Partial<Client> = {}) {
     return {
@@ -22,7 +21,7 @@ export function createFakeClient(data: Partial<Client> = {}) {
     } satisfies Partial<Client>;
 }
 
-export async function createSuperTestClient(superTest: SuperTest<Test>, entity?: Partial<Client>) {
+export async function createSuperTestClient(superTest: TestAgent, entity?: Partial<Client>) {
     return superTest
         .post('/clients')
         .send(createFakeClient(entity))
@@ -30,7 +29,7 @@ export async function createSuperTestClient(superTest: SuperTest<Test>, entity?:
 }
 
 export async function createSuperTestClientWithScope(
-    superTest: SuperTest<Test>,
+    superTest: TestAgent,
     entity?: Partial<Client>,
 ) {
     const client = await createSuperTestClient(superTest, entity);

@@ -6,9 +6,14 @@
  */
 
 import type {
-    OAuth2SubKind, OAuth2TokenGrantResponse,
+    OAuth2SubKind, OAuth2TokenGrantResponse, OAuth2TokenPayload,
 } from '@authup/kit';
 import type { Request } from 'routup';
+
+export type TokenIssueResult = {
+    token: string,
+    payload: OAuth2TokenPayload
+};
 
 export type AccessTokenIssueContext = {
     remoteAddress: string,

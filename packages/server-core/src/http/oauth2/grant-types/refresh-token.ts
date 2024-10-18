@@ -24,7 +24,10 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         const subKind = this.getSubjectKind(token);
         const sub = this.getSubject(token);
 
-        const accessToken = await this.issueAccessToken({
+        const {
+            token: accessToken,
+            payload: accessTokenPayload,
+        } = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: token.scope,
             sub,
@@ -33,13 +36,16 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
             realmName: token.realm.name,
         });
 
-        const refreshToken = await this.issueRefreshToken(accessToken);
+        const {
+            token: refreshToken,
+            payload: refreshTokenPayload,
+        } = await this.issueRefreshToken(accessTokenPayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenAccessMaxAge,
+            accessTokenPayload,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
+            refreshTokenPayload,
         });
     }
 

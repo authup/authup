@@ -8,16 +8,13 @@
 import type { OAuth2TokenPayload } from '@authup/kit';
 
 export type OAuth2BearerResponseBuildContext = {
-    accessToken: Partial<OAuth2TokenPayload> | string,
-    accessTokenMaxAge?: number,
+    accessToken: string,
+    accessTokenPayload?: OAuth2TokenPayload,
 
-    refreshToken?: Partial<OAuth2TokenPayload> | string,
-    refreshTokenMaxAge?: number,
+    refreshToken?: string,
+    refreshTokenPayload?: OAuth2TokenPayload,
 
-    idToken?: Partial<OAuth2TokenPayload> | string,
-    idTokenMaxAge?: number,
-
-    realmId?: string,
+    idToken?: string,
 
     scope?: string
 };

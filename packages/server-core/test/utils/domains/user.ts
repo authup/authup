@@ -7,9 +7,8 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { faker } from '@faker-js/faker';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
 import type { User } from '@authup/core-kit';
+import type { TestAgent } from '../supertest';
 
 export function createFakeUser(data: Partial<User> = {}) {
     return {
@@ -26,7 +25,7 @@ export function createFakeUser(data: Partial<User> = {}) {
 }
 
 export async function createSuperTestUser(
-    superTest: SuperTest<Test>,
+    superTest: TestAgent,
     entity?: Partial<User>,
 ) {
     return superTest
@@ -35,7 +34,7 @@ export async function createSuperTestUser(
         .auth('admin', 'start123');
 }
 
-export async function updateSuperTestUser(superTest: SuperTest<Test>, id: User['id'], entity?: Partial<User>) {
+export async function updateSuperTestUser(superTest: TestAgent, id: User['id'], entity?: Partial<User>) {
     return superTest
         .post(`/users/${id}`)
         .send({
