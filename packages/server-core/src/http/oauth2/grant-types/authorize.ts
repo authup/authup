@@ -27,7 +27,10 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const authorizationCode = await this.validate(request);
 
-        const accessToken = await this.issueAccessToken({
+        const {
+            payload: accessTokenPayload,
+            token: accessToken,
+        } = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             sub: authorizationCode.user_id,
             subKind: OAuth2SubKind.USER,
@@ -37,12 +40,16 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             clientId: authorizationCode.client_id,
         });
 
-        const refreshToken = await this.issueRefreshToken(accessToken);
+        const {
+            token: refreshToken,
+            payload: refreshTokenPayload,
+        } = await this.issueRefreshToken(accessTokenPayload);
+
         const buildContext : OAuth2BearerResponseBuildContext = {
             accessToken,
-            accessTokenMaxAge: this.config.tokenAccessMaxAge,
+            accessTokenPayload,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
+            refreshTokenPayload,
         };
 
         if (hasOAuth2OpenIDScope(authorizationCode.scope)) {

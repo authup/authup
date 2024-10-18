@@ -7,4 +7,6 @@
 
 export * from './abstract';
 export * from './authorization-code';
+export * from './module';
+export * from './singleton';
 export * from './refresh-token';

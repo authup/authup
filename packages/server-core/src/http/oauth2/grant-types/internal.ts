@@ -20,7 +20,10 @@ export class InternalGrantType extends AbstractGrant implements Grant {
     async run(request: Request): Promise<OAuth2TokenGrantResponse> {
         const identity = useRequestIdentityOrFail(request);
 
-        const accessToken = await this.issueAccessToken({
+        const {
+            token: accessToken,
+            payload: accessTokenPayload,
+        } = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             realmId: identity.realmId,
@@ -29,13 +32,16 @@ export class InternalGrantType extends AbstractGrant implements Grant {
             subKind: identity.type as `${OAuth2SubKind}`,
         });
 
-        const refreshToken = await this.issueRefreshToken(accessToken);
+        const {
+            token: refreshToken,
+            payload: refreshTokenPayload,
+        } = await this.issueRefreshToken(accessTokenPayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenAccessMaxAge,
+            accessTokenPayload,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
+            refreshTokenPayload,
         });
     }
 }

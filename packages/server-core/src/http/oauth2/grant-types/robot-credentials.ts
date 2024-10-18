@@ -25,7 +25,10 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const entity = await this.validate(request);
 
-        const accessToken = await this.issueAccessToken({
+        const {
+            token: accessToken,
+            payload: accessTokenPayload,
+        } = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             subKind: OAuth2SubKind.ROBOT,
@@ -36,8 +39,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenAccessMaxAge,
-            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
+            accessTokenPayload,
         });
     }
 

@@ -9,7 +9,7 @@ import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { createTokenRouteHandler, introspectTokenRouteHandler } from './handlers';
+import { createTokenRouteHandler, introspectTokenRouteHandler, revokeTokenRouteHandler } from './handlers';
 
 @DTags('auth')
 @DController('/token')
@@ -28,6 +28,16 @@ export class AuthTokenController {
             @DResponse() res: any,
     ): Promise<Record<string, any>> {
         return introspectTokenRouteHandler(req, res);
+    }
+
+    // ----------------------------------------------------------
+
+    @DPost('/revoke', [])
+    async revokeToken(
+    @DRequest() req: any,
+        @DResponse() res: any,
+    ) {
+        return revokeTokenRouteHandler(req, res);
     }
 
     // ----------------------------------------------------------

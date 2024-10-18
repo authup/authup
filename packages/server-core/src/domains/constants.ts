@@ -12,6 +12,8 @@ export enum CachePrefix {
     IDENTITY_PROVIDER_ROLE = 'identity_provider_role',
 
     OAUTH2_AUTHORIZATION_CODE = 'oauth2_authorization_code',
+    OAUTH2_ACCESS_TOKEN = 'oauth2_access_token',
+    OAUTH2_ACCESS_TOKEN_DENIED = 'oauth2_access_token_denied',
     OAUTH2_REFRESH_TOKEN = 'oauth2_refresh_token',
 
     CLIENT = 'client',

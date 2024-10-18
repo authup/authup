@@ -27,7 +27,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
         const client = await this.validate(request);
 
-        const accessToken = await this.issueAccessToken({
+        const {
+            token: accessToken,
+            payload: accessTokenPayload,
+        } = await this.issueAccessToken({
             remoteAddress: getRequestIP(request, { trustProxy: true }),
             scope: ScopeName.GLOBAL,
             sub: client.id,
@@ -37,13 +40,16 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             clientId: client.id,
         });
 
-        const refreshToken = await this.issueRefreshToken(accessToken);
+        const {
+            token: refreshToken,
+            payload: refreshTokenPayload,
+        } = await this.issueRefreshToken(accessTokenPayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
-            accessTokenMaxAge: this.config.tokenAccessMaxAge,
+            accessTokenPayload,
             refreshToken,
-            refreshTokenMaxAge: this.config.tokenRefreshMaxAge,
+            refreshTokenPayload,
         });
     }
 

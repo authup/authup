@@ -12,7 +12,7 @@ import {
 } from '../../src';
 import { setupTestConfig } from './config';
 
-type TestAgent = ReturnType<typeof supertest>;
+export type TestAgent = ReturnType<typeof supertest>;
 
 export function useSuperTest() : TestAgent {
     setupTestConfig();
