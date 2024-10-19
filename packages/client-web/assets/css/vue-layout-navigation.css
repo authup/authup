@@ -7,6 +7,7 @@
 
 .vc-nav-items .vc-nav-link {
     color: #aeb2b7;
+    line-height: 1rem;
 }
 
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
