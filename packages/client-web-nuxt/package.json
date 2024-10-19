@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-nuxt",
     "type": "module",
-    "version": "1.0.0-beta.21",
+    "version": "1.0.1-beta.21",
     "description": "Nuxt module for the authup ecosystem",
     "repository": {
         "type": "git",

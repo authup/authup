@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.21) (2024-10-19)
+
+
+### Features
+
+* refactor oauth2 module & initial (oauth2-) cache implementation ([#2413](https://github.com/authup/authup/issues/2413)) ([88fc07d](https://github.com/authup/authup/commit/88fc07de1cb795f659a8d6d02572da1e77a4004f))
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

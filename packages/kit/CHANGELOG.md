@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.21) (2024-10-19)
+
+
+### Features
+
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+* refactor oauth2 module & initial (oauth2-) cache implementation ([#2413](https://github.com/authup/authup/issues/2413)) ([88fc07d](https://github.com/authup/authup/commit/88fc07de1cb795f659a8d6d02572da1e77a4004f))
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

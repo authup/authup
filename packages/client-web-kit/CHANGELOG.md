@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.21) (2024-10-19)
+
+
+### Features
+
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+* enhance sidenav & topnav ([0150250](https://github.com/authup/authup/commit/0150250f534ab6a6e9c471f0192e15db33aa76ad))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+    * @authup/core-http-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+  * peerDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+    * @authup/core-http-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.21 to ^1.0.1-beta.21
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

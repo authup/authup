@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.21) (2024-10-19)
+
+
+### Features
+
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+* enhance sidenav & topnav ([0150250](https://github.com/authup/authup/commit/0150250f534ab6a6e9c471f0192e15db33aa76ad))
+* refactor oauth2 module & initial (oauth2-) cache implementation ([#2413](https://github.com/authup/authup/issues/2413)) ([88fc07d](https://github.com/authup/authup/commit/88fc07de1cb795f659a8d6d02572da1e77a4004f))
+* token revoke endpoint & oauth2 grant flow refactor ([#2409](https://github.com/authup/authup/issues/2409)) ([d287ddc](https://github.com/authup/authup/commit/d287ddc0b5d177fa015c3892baf052a999de6686))
+
+
+### Bug Fixes
+
+* align setting response cookies ([86fce96](https://github.com/authup/authup/commit/86fce964626732c90ff721f8084493c54eca4e3b))
+* reading own identity without permisisons ([c62ac57](https://github.com/authup/authup/commit/c62ac578cf3eb8cfd941c805091e066155696c3d))
+* saving user-roles & user-permissions via identity-provider ([25e836f](https://github.com/authup/authup/commit/25e836f2aa66ddced4e6dceb945eb6fb13bea277))
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 
