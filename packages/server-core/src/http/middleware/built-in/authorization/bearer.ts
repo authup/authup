@@ -15,14 +15,15 @@ import { useDataSource } from 'typeorm-extension';
 import {
     CachePrefix, RealmEntity,
 } from '../../../../domains';
-import { loadOAuth2SubEntity, readOAuth2TokenPayload } from '../../../oauth2';
+import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
 import { setRequestEnv, setRequestIdentity } from '../../../request';
 
 export async function verifyBearerAuthorizationHeader(
     request: Request,
     header: BearerAuthorizationHeader,
 ) {
-    const payload = await readOAuth2TokenPayload(header.token);
+    const tokenManager = new OAuth2TokenManager();
+    const payload = await tokenManager.verify(header.token);
     if (payload.kind !== OAuth2TokenKind.ACCESS) {
         throw TokenError.accessTokenRequired();
     }

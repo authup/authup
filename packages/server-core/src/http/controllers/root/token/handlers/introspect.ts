@@ -9,9 +9,9 @@ import type { OAuth2TokenIntrospectionResponse } from '@authup/kit';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import {
+    OAuth2TokenManager,
     loadOAuth2SubEntity,
     loadOAuth2SubPermissions,
-    readOAuth2TokenPayload,
     resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
@@ -21,14 +21,16 @@ export async function introspectTokenRouteHandler(
     res: Response,
 ) : Promise<any> {
     const token = await extractTokenFromRequest(req);
+    const tokenManager = new OAuth2TokenManager();
 
-    const payload = await readOAuth2TokenPayload(token);
+    const payload = await tokenManager.verify(token, {
+        skipActiveCheck: true,
+    });
+
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
-    // todo: check if access token is blocked
-
     const output : OAuth2TokenIntrospectionResponse = {
-        active: true,
+        active: await tokenManager.isInactive(token),
         permissions,
         ...payload,
         ...resolveOpenIdClaimsFromSubEntity(

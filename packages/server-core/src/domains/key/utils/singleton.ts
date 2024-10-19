@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
 import {
     createKeyPair,
     unwrapPrivateKeyPem,
@@ -18,8 +17,8 @@ import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';
 
 export async function useKey(
-    where: FindOptionsWhere<KeyEntity> & { realm_id: Realm['id']},
-) : Promise<KeyEntity> {
+    where: FindOptionsWhere<KeyEntity>,
+) : Promise<KeyEntity | undefined> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
 
@@ -32,10 +31,13 @@ export async function useKey(
             decryption_key: true,
         },
         where,
-        cache: 60.000,
     });
 
     if (!entity) {
+        if (typeof where.realm_id !== 'string') {
+            return undefined;
+        }
+
         const keyPair = await createKeyPair({
             type: 'rsa',
         });

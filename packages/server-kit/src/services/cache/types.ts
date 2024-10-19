@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export interface Cache {
-    set(key: string, value: any, options: CacheSetOptions) : Promise<void>;
-
-    get(key: string) : Promise<any | undefined>;
-
-    drop(key: string) : Promise<void>;
-}
+export type CacheKeyBuildOptions = {
+    key: string,
+    prefix?: string,
+    suffix?: string
+};
 
 export type CacheSetOptions = {
     /**

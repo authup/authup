@@ -33,7 +33,7 @@ export async function runOAuth2CleanerByEvent() {
     const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
     const tokenWatcher = new RedisWatcher(redis, {
-        pattern: `${OAuth2CachePrefix.ID_TO_CLAIMS}*`,
+        pattern: `${OAuth2CachePrefix.TOKEN_CLAIMS}*`,
     });
     tokenWatcher.on('set', async (input) => {
         const keyPath = parseRedisKeyPath(input);

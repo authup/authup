@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../../../domains';
-import { readOAuth2TokenPayload, useOAuth2Cache } from '../../../../oauth2';
+import { OAuth2TokenManager } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
 
 export async function revokeTokenRouteHandler(
@@ -21,17 +21,11 @@ export async function revokeTokenRouteHandler(
     const token = await extractTokenFromRequest(req);
     const dataSource = await useDataSource();
 
-    const payload = await readOAuth2TokenPayload(token, {
-        skipCacheSet: true,
-    });
-
+    const tokenManager = new OAuth2TokenManager();
+    const payload = await tokenManager.verify(token);
     if (!payload.jti) {
-        throw new BadRequestError('The token identitifer (jti) could not be read.');
+        throw new BadRequestError('The json token identifier (jti) is not valid.');
     }
-
-    const oauth2Cache = useOAuth2Cache();
-    await oauth2Cache.dropClaimsById(payload.jti);
-    await oauth2Cache.dropIdByToken(payload.jti);
 
     if (payload.kind === OAuth2TokenKind.REFRESH) {
         const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
@@ -44,12 +38,15 @@ export async function revokeTokenRouteHandler(
         }
 
         await refreshTokenRepository.remove(refreshToken);
+        await tokenManager.setInactive(token);
 
         return send(res);
     }
 
     if (payload.kind === OAuth2TokenKind.ACCESS) {
-        // todo: revoke access token
+        await tokenManager.setInactive(token);
+
+        return send(res);
     }
 
     throw new BadRequestError(`The token type ${payload.kind} is not supported.`);

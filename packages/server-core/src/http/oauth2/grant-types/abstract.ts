@@ -6,16 +6,12 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import { OAuth2TokenKind } from '@authup/kit';
-import { extractTokenPayload } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
+import { OAuth2RefreshTokenEntity } from '../../../domains';
 import type { Config } from '../../../config';
 import { useConfig } from '../../../config';
-import type { OAuth2Cache } from '../cache';
-import { useOAuth2Cache } from '../cache';
 import {
-    buildOAuth2AccessTokenPayload,
+    OAuth2TokenManager, buildOAuth2AccessTokenPayload,
     transformToRefreshTokenEntity,
     transformToRefreshTokenPayload,
 } from '../token';
@@ -24,14 +20,14 @@ import type { AccessTokenIssueContext, TokenIssueResult } from './type';
 export abstract class AbstractGrant {
     protected config : Config;
 
-    protected cache : OAuth2Cache;
+    protected tokenManager : OAuth2TokenManager;
 
     // -----------------------------------------------------
 
     constructor() {
         this.config = useConfig();
 
-        this.cache = useOAuth2Cache();
+        this.tokenManager = new OAuth2TokenManager();
     }
 
     // -----------------------------------------------------
@@ -50,7 +46,7 @@ export abstract class AbstractGrant {
             clientId: context.clientId,
         });
 
-        return this.issueToken(raw);
+        return this.tokenManager.sign(raw);
     }
 
     protected async issueRefreshToken(
@@ -72,41 +68,6 @@ export abstract class AbstractGrant {
             id: entity.id,
         });
 
-        return this.issueToken(raw);
-    }
-
-    // -----------------------------------------------------
-
-    private async issueToken(raw: Partial<OAuth2TokenPayload>) : Promise<TokenIssueResult> {
-        const key = await useKey({
-            realm_id: raw.realm_id,
-        });
-
-        let maxAge : number;
-        if (raw.kind === OAuth2TokenKind.REFRESH) {
-            maxAge = this.config.tokenRefreshMaxAge;
-        } else {
-            maxAge = this.config.tokenAccessMaxAge;
-        }
-
-        if (!raw.exp) {
-            raw.exp = Math.floor(new Date().getTime() / 1000) + maxAge;
-        }
-
-        const token = await signOAuth2TokenWithKey(raw, key, { keyId: key.id });
-        const payload = extractTokenPayload(token) as OAuth2TokenPayload;
-
-        await this.cache.setIdByToken(token, payload.jti, {
-            ttl: maxAge * 1000,
-        });
-
-        await this.cache.setClaims(payload, {
-            ttl: maxAge * 1000,
-        });
-
-        return {
-            token,
-            payload,
-        };
+        return this.tokenManager.sign(raw);
     }
 }

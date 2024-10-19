@@ -16,13 +16,14 @@ import {
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity } from '../../../domains';
 import { useRequestIdentityOrFail } from '../../request';
 import type {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
 } from '../token';
 import {
+    OAuth2TokenManager,
     buildOAuth2AccessTokenPayload,
     buildOpenIdTokenPayload,
     extendOpenIdTokenPayload,
@@ -70,10 +71,7 @@ export async function runOAuth2Authorization(
         entity.robot_id = identity.id;
     }
 
-    const key = await useKey({
-        realm_id: identity.realmId,
-    });
-
+    const tokenManager = new OAuth2TokenManager();
     const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
         issuer: options.issuer,
         remoteAddress: getRequestIP(req, { trustProxy: true }),
@@ -91,13 +89,10 @@ export async function runOAuth2Authorization(
     ) {
         tokenBuildContext.expiresIn = idTokenMaxAge;
 
-        entity.id_token = await signOAuth2TokenWithKey(
+        const signingResult = await tokenManager.sign(
             await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
-            key,
-            {
-                keyId: key.id,
-            },
         );
+        entity.id_token = signingResult.token;
 
         if (responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
             output.idToken = entity.id_token;
@@ -107,13 +102,11 @@ export async function runOAuth2Authorization(
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
         tokenBuildContext.expiresIn = accessTokenMaxAge;
 
-        output.accessToken = await signOAuth2TokenWithKey(
+        const signingResult = await tokenManager.sign(
             buildOAuth2AccessTokenPayload(tokenBuildContext),
-            key,
-            {
-                keyId: key.id,
-            },
         );
+
+        output.accessToken = signingResult.token;
     }
 
     await repository.save(entity);

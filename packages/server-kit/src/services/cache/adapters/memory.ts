@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import TTLCache from '@isaacs/ttlcache';
-import type { Cache, CacheSetOptions } from './types';
+import type { CacheSetOptions } from '../types';
+import type { CacheAdapter } from './types';
 
-export class MemoryCache implements Cache {
+export class MemoryCacheAdapter implements CacheAdapter {
     protected instance : TTLCache<string, any>;
 
     constructor() {

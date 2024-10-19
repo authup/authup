@@ -5,5 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './adapters';
+export * from './helper';
 export * from './singleton';
+export * from './module';
 export * from './types';

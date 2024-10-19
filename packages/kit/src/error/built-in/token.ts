@@ -149,6 +149,12 @@ export class TokenError extends AuthupError {
         });
     }
 
+    static inactive() {
+        return new TokenError({
+            message: 'The  token is not active.',
+        });
+    }
+
     static targetInactive(kind: `${OAuth2SubKind}`) {
         return new TokenError({
             message: `The target token ${kind} is not active.`,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,10 +7,11 @@
 
 import type { Client } from 'redis-extension';
 import { JsonAdapter } from 'redis-extension';
-import { useRedisClient } from '../redis';
-import type { Cache, CacheSetOptions } from './types';
+import { useRedisClient } from '../../redis';
+import type { CacheSetOptions } from '../types';
+import type { CacheAdapter } from './types';
 
-export class RedisCache implements Cache {
+export class RedisCacheAdapter implements CacheAdapter {
     protected client : Client;
 
     protected instance : JsonAdapter;
