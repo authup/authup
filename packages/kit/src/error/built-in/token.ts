@@ -151,6 +151,7 @@ export class TokenError extends AuthupError {
 
     static inactive() {
         return new TokenError({
+            code: ErrorCode.TOKEN_INACTIVE,
             message: 'The  token is not active.',
         });
     }

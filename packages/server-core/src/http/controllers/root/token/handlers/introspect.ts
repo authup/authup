@@ -30,7 +30,7 @@ export async function introspectTokenRouteHandler(
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 
     const output : OAuth2TokenIntrospectionResponse = {
-        active: await tokenManager.isInactive(token),
+        active: await tokenManager.isActive(token),
         permissions,
         ...payload,
         ...resolveOpenIdClaimsFromSubEntity(

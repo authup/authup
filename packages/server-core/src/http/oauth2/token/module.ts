@@ -52,8 +52,8 @@ export class OAuth2TokenManager {
         }
 
         if (!options.skipActiveCheck) {
-            const isBlocked = await this.isInactive(token);
-            if (isBlocked) {
+            const isActive = await this.isActive(token);
+            if (!isActive) {
                 throw TokenError.inactive();
             }
         }
@@ -137,7 +137,7 @@ export class OAuth2TokenManager {
         );
     }
 
-    async isInactive(token: string) : Promise<boolean> {
+    async isActive(token: string) : Promise<boolean> {
         const response = await this.cache.get(
             buildCacheKey({
                 prefix: OAuth2CachePrefix.TOKEN_INACTIVE,
@@ -145,7 +145,7 @@ export class OAuth2TokenManager {
             }),
         );
 
-        return !!response;
+        return !response;
     }
 
     // -----------------------------------------------------
