@@ -6,29 +6,29 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import { extractTokenPayload } from '@authup/server-kit';
+import { OAuth2SubKind } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
+import { OAuth2RefreshTokenEntity } from '../../../domains';
 import type { Config } from '../../../config';
 import { useConfig } from '../../../config';
 import {
+    OAuth2TokenManager,
     buildOAuth2AccessTokenPayload,
-    transformToRefreshTokenEntity,
-    transformToRefreshTokenPayload,
+    buildOAuth2RefreshTokenPayload,
 } from '../token';
 import type { AccessTokenIssueContext, TokenIssueResult } from './type';
 
 export abstract class AbstractGrant {
     protected config : Config;
 
-    // protected cache : OAuth2Cache;
+    protected tokenManager : OAuth2TokenManager;
 
     // -----------------------------------------------------
 
     constructor() {
         this.config = useConfig();
 
-        // this.cache = useOAuth2Cache();
+        this.tokenManager = new OAuth2TokenManager();
     }
 
     // -----------------------------------------------------
@@ -45,12 +45,10 @@ export abstract class AbstractGrant {
             remoteAddress: context.remoteAddress,
             scope: context.scope,
             clientId: context.clientId,
+            maxAge: this.config.tokenAccessMaxAge,
         });
-        if (raw.exp) {
-            raw.exp = Math.floor(new Date().getTime() / 1000) + this.config.tokenAccessMaxAge;
-        }
 
-        return this.issueToken(raw);
+        return this.tokenManager.sign(raw);
     }
 
     protected async issueRefreshToken(
@@ -59,41 +57,32 @@ export abstract class AbstractGrant {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
-        const entity = repository.create(
-            transformToRefreshTokenEntity(
-                accessToken,
-                this.config.tokenRefreshMaxAge,
-            ),
-        );
+        const entity = repository.create({
+            client_id: accessToken.client_id,
+            expires: new Date(Date.now() + (1000 * this.config.tokenRefreshMaxAge)).toISOString(),
+            scope: accessToken.scope,
+            access_token: accessToken.jti,
+            realm_id: accessToken.realm_id,
+            ...(accessToken.sub_kind === OAuth2SubKind.USER ? { user_id: accessToken.sub } : {}),
+            ...(accessToken.sub_kind === OAuth2SubKind.ROBOT ? { robot_id: accessToken.sub } : {}),
+        });
 
         await repository.insert(entity);
 
-        const raw = transformToRefreshTokenPayload(accessToken, {
-            id: entity.id,
-        });
-        if (raw.exp) {
-            raw.exp = Math.floor(new Date().getTime() / 1000) + this.config.tokenRefreshMaxAge;
-        }
-
-        return this.issueToken(raw);
-    }
-
-    // -----------------------------------------------------
-
-    private async issueToken(raw: Partial<OAuth2TokenPayload>) : Promise<TokenIssueResult> {
-        const key = await useKey({
-            realm_id: raw.realm_id,
+        const payload = buildOAuth2RefreshTokenPayload({
+            issuer: accessToken.iss,
+            remoteAddress: accessToken.remote_address,
+            sub: accessToken.sub,
+            subKind: accessToken.sub_kind,
+            clientId: accessToken.client_id,
+            realmId: accessToken.realm_id,
+            realmName: accessToken.realm_name,
+            scope: accessToken.scope,
+            maxAge: this.config.tokenRefreshMaxAge,
         });
 
-        const token = await signOAuth2TokenWithKey(raw, key, { keyId: key.id });
-        const payload = extractTokenPayload(token) as OAuth2TokenPayload;
+        payload.jti = entity.id;
 
-        // await this.cache.setTokenID(token, payload.jti);
-        // await this.cache.setTokenPayload(payload);
-
-        return {
-            token,
-            payload,
-        };
+        return this.tokenManager.sign(payload);
     }
 }

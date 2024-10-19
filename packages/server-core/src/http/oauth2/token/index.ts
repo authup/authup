@@ -6,6 +6,6 @@
  */
 
 export * from './builder';
-export * from './payload';
 export * from './permissions';
 export * from './sub';
+export * from './module';

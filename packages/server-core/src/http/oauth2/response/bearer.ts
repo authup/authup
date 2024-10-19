@@ -12,9 +12,11 @@ export function buildOAuth2BearerTokenResponse(
     context: OAuth2BearerResponseBuildContext,
 ) : OAuth2TokenGrantResponse {
     let accessTokenMaxAge : number;
-    if (context.accessTokenPayload) {
-        accessTokenMaxAge = Math.floor(new Date().getTime() / 1000) -
-            context.accessTokenPayload.exp;
+    if (
+        context.accessTokenPayload &&
+        context.accessTokenPayload.exp
+    ) {
+        accessTokenMaxAge = Math.max(3600, context.accessTokenPayload.exp - Math.floor(new Date().getTime() / 1000));
     } else {
         accessTokenMaxAge = 3600;
     }

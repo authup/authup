@@ -33,12 +33,19 @@ describe('refresh-token', () => {
         superTest = undefined;
     });
 
-    it('should grant token with robot-credentials', async () => {
+    it('should grant token with robot credentials', async () => {
         const response = await superTest
             .post('/token')
-            .send(robotCredentials);
+            .send({
+                id: seederResponse.robot.id,
+                secret: seederResponse.robot.secret,
+            });
 
         expect(response.status).toEqual(200);
+        expect(response.body).toBeDefined();
+        expect(response.body.access_token).toBeDefined();
+        expect(response.body.expires_in).toBeDefined();
+        expect(response.body.refresh_token).toBeUndefined();
     });
 
     it('should not grant with robot-credentials (inactive)', async () => {

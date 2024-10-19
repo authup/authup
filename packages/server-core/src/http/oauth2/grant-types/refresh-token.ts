@@ -13,7 +13,6 @@ import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import { readOAuth2TokenPayload } from '../token';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 
@@ -52,7 +51,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<OAuth2RefreshTokenEntity> {
         const refreshToken = useRequestBody(request, 'refresh_token');
 
-        const payload = await readOAuth2TokenPayload(refreshToken);
+        const payload = await this.tokenManager.verify(refreshToken);
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
@@ -73,6 +72,7 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         }
 
         await repository.remove(entity);
+        await this.tokenManager.setInactive(refreshToken);
 
         return entity;
     }

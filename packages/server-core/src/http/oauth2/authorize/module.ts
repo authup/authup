@@ -16,18 +16,18 @@ import {
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity, signOAuth2TokenWithKey, useKey } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity } from '../../../domains';
 import { useRequestIdentityOrFail } from '../../request';
 import type {
     OAuth2AccessTokenBuildContext,
     OAuth2OpenIdTokenBuildContext,
 } from '../token';
 import {
+    OAuth2TokenManager,
     buildOAuth2AccessTokenPayload,
     buildOpenIdTokenPayload,
     extendOpenIdTokenPayload,
 } from '../token';
-import { OAuth2AuthorizationCodeCache } from '../cache';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
 import { validateAuthorizeRequest } from './validation';
@@ -71,10 +71,7 @@ export async function runOAuth2Authorization(
         entity.robot_id = identity.id;
     }
 
-    const key = await useKey({
-        realm_id: identity.realmId,
-    });
-
+    const tokenManager = new OAuth2TokenManager();
     const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
         issuer: options.issuer,
         remoteAddress: getRequestIP(req, { trustProxy: true }),
@@ -90,15 +87,12 @@ export async function runOAuth2Authorization(
         responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
         hasOAuth2OpenIDScope(entity.scope)
     ) {
-        tokenBuildContext.expiresIn = idTokenMaxAge;
+        tokenBuildContext.maxAge = idTokenMaxAge;
 
-        entity.id_token = await signOAuth2TokenWithKey(
+        const signingResult = await tokenManager.sign(
             await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
-            key,
-            {
-                keyId: key.id,
-            },
         );
+        entity.id_token = signingResult.token;
 
         if (responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
             output.idToken = entity.id_token;
@@ -106,21 +100,16 @@ export async function runOAuth2Authorization(
     }
 
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-        tokenBuildContext.expiresIn = accessTokenMaxAge;
+        tokenBuildContext.maxAge = accessTokenMaxAge;
 
-        output.accessToken = await signOAuth2TokenWithKey(
+        const signingResult = await tokenManager.sign(
             buildOAuth2AccessTokenPayload(tokenBuildContext),
-            key,
-            {
-                keyId: key.id,
-            },
         );
+
+        output.accessToken = signingResult.token;
     }
 
     await repository.save(entity);
-
-    const cache = new OAuth2AuthorizationCodeCache();
-    await cache.set(entity);
 
     if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
         output.authorizationCode = entity.content;

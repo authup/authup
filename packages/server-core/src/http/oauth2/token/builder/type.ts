@@ -22,15 +22,9 @@ export type OAuth2AccessTokenBuildContext = {
 
     remoteAddress: string,
 
-    expiresIn?: number
+    maxAge?: number
 };
 
 export type OAuth2OpenIdTokenBuildContext = OAuth2AccessTokenBuildContext;
 
-// ------------------------------------------------------------------
-
-export type OAuth2RefreshTokenBuildContext = Omit<
-OAuth2AccessTokenBuildContext, 'remoteAddress' | 'issuer'
-> & {
-    id?: string
-};
+export type OAuth2RefreshTokenBuildContext = OAuth2AccessTokenBuildContext;

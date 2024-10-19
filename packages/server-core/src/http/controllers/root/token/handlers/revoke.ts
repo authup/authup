@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../../../domains';
-import { OAuth2RefreshTokenCache, readOAuth2TokenPayload } from '../../../../oauth2';
+import { OAuth2TokenManager } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
 
 export async function revokeTokenRouteHandler(
@@ -21,32 +21,33 @@ export async function revokeTokenRouteHandler(
     const token = await extractTokenFromRequest(req);
     const dataSource = await useDataSource();
 
-    const tokenPayload = await readOAuth2TokenPayload(token);
-    if (!tokenPayload.jti) {
-        throw new BadRequestError('The token identitifer (jti) could not be read.');
+    const tokenManager = new OAuth2TokenManager();
+    const payload = await tokenManager.verify(token);
+    if (!payload.jti) {
+        throw new BadRequestError('The json token identifier (jti) is not valid.');
     }
 
-    if (tokenPayload.kind === OAuth2TokenKind.REFRESH) {
+    if (payload.kind === OAuth2TokenKind.REFRESH) {
         const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
         const refreshToken = await refreshTokenRepository.findOneBy({
-            id: tokenPayload.jti,
+            id: payload.jti,
         });
 
         if (!refreshToken) {
             throw new BadRequestError('The refresh token does not exist.');
         }
 
-        const refreshTokenCache = new OAuth2RefreshTokenCache();
-        await refreshTokenCache.drop(refreshToken.id);
-
         await refreshTokenRepository.remove(refreshToken);
+        await tokenManager.setInactive(token);
 
         return send(res);
     }
 
-    if (tokenPayload.kind === OAuth2TokenKind.ACCESS) {
-        // todo: revoke access token
+    if (payload.kind === OAuth2TokenKind.ACCESS) {
+        await tokenManager.setInactive(token);
+
+        return send(res);
     }
 
-    throw new BadRequestError(`The token type ${tokenPayload.kind} is not supported.`);
+    throw new BadRequestError(`The token type ${payload.kind} is not supported.`);
 }

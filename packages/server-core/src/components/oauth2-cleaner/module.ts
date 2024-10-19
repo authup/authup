@@ -5,22 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isRedisClientUsable } from '@authup/server-kit';
+import cron from 'node-cron';
+import { LessThan } from 'typeorm';
+import { useDataSource } from 'typeorm-extension';
+import { OAuth2AuthorizationCodeEntity, OAuth2RefreshTokenEntity } from '../../domains';
 import type { Component } from '../types';
-import { cleanUp } from './utils';
-import { runOAuth2CleanerInInterval } from './interval';
-import { runOAuth2CleanerByEvent } from './event';
 
 export function createOAuth2Cleaner() : Component {
     return {
         async start() {
-            await cleanUp();
+            const dataSource = await useDataSource();
+            const authorizationCodeRepository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);
+            const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
-            if (isRedisClientUsable()) {
-                await runOAuth2CleanerByEvent();
-            } else {
-                await runOAuth2CleanerInInterval();
-            }
+            const execute = async () => {
+                const isoDate = new Date().toISOString();
+
+                await authorizationCodeRepository
+                    .delete({
+                        expires: LessThan(isoDate),
+                    });
+
+                await refreshTokenRepository
+                    .delete({
+                        expires: LessThan(isoDate),
+                    });
+            };
+
+            await execute();
+
+            cron.schedule('* * * * *', async () => {
+                await execute();
+            });
         },
     };
 }
