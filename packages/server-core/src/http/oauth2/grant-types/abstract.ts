@@ -6,14 +6,15 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
+import { OAuth2SubKind } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
 import type { Config } from '../../../config';
 import { useConfig } from '../../../config';
 import {
-    OAuth2TokenManager, buildOAuth2AccessTokenPayload,
-    transformToRefreshTokenEntity,
-    transformToRefreshTokenPayload,
+    OAuth2TokenManager,
+    buildOAuth2AccessTokenPayload,
+    buildOAuth2RefreshTokenPayload,
 } from '../token';
 import type { AccessTokenIssueContext, TokenIssueResult } from './type';
 
@@ -44,6 +45,7 @@ export abstract class AbstractGrant {
             remoteAddress: context.remoteAddress,
             scope: context.scope,
             clientId: context.clientId,
+            maxAge: this.config.tokenAccessMaxAge,
         });
 
         return this.tokenManager.sign(raw);
@@ -55,19 +57,32 @@ export abstract class AbstractGrant {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
-        const entity = repository.create(
-            transformToRefreshTokenEntity(
-                accessToken,
-                this.config.tokenRefreshMaxAge,
-            ),
-        );
+        const entity = repository.create({
+            client_id: accessToken.client_id,
+            expires: new Date(Date.now() + (1000 * this.config.tokenRefreshMaxAge)).toISOString(),
+            scope: accessToken.scope,
+            access_token: accessToken.jti,
+            realm_id: accessToken.realm_id,
+            ...(accessToken.sub_kind === OAuth2SubKind.USER ? { user_id: accessToken.sub } : {}),
+            ...(accessToken.sub_kind === OAuth2SubKind.ROBOT ? { robot_id: accessToken.sub } : {}),
+        });
 
         await repository.insert(entity);
 
-        const raw = transformToRefreshTokenPayload(accessToken, {
-            id: entity.id,
+        const payload = buildOAuth2RefreshTokenPayload({
+            issuer: accessToken.iss,
+            remoteAddress: accessToken.remote_address,
+            sub: accessToken.sub,
+            subKind: accessToken.sub_kind,
+            clientId: accessToken.client_id,
+            realmId: accessToken.realm_id,
+            realmName: accessToken.realm_name,
+            scope: accessToken.scope,
+            maxAge: this.config.tokenRefreshMaxAge,
         });
 
-        return this.tokenManager.sign(raw);
+        payload.jti = entity.id;
+
+        return this.tokenManager.sign(payload);
     }
 }

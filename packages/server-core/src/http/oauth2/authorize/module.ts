@@ -87,7 +87,7 @@ export async function runOAuth2Authorization(
         responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
         hasOAuth2OpenIDScope(entity.scope)
     ) {
-        tokenBuildContext.expiresIn = idTokenMaxAge;
+        tokenBuildContext.maxAge = idTokenMaxAge;
 
         const signingResult = await tokenManager.sign(
             await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
@@ -100,7 +100,7 @@ export async function runOAuth2Authorization(
     }
 
     if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-        tokenBuildContext.expiresIn = accessTokenMaxAge;
+        tokenBuildContext.maxAge = accessTokenMaxAge;
 
         const signingResult = await tokenManager.sign(
             buildOAuth2AccessTokenPayload(tokenBuildContext),

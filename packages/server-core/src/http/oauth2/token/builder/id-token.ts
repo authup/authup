@@ -5,36 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { randomUUID } from 'node:crypto';
 import type { OAuth2OpenIdTokenPayload } from '@authup/kit';
 import { OAuth2TokenKind } from '@authup/kit';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
+import { buildOAuth2AccessTokenPayload } from './access-token';
 import type { OAuth2OpenIdTokenBuildContext } from './type';
 
 export function buildOpenIdTokenPayload(
     context: OAuth2OpenIdTokenBuildContext,
-) : Partial<OAuth2OpenIdTokenPayload> {
+) : OAuth2OpenIdTokenPayload {
+    const utc = Math.floor(new Date().getTime() / 1000);
+
     return {
+        ...buildOAuth2AccessTokenPayload(context),
         kind: OAuth2TokenKind.ID_TOKEN,
-        jti: randomUUID(),
-        iss: context.issuer,
-        sub: context.sub,
-        sub_kind: context.subKind,
-        remote_address: context.remoteAddress,
-        aud: context.clientId,
-        client_id: context.clientId,
-        realm_id: context.realmId,
-        realm_name: context.realmName,
-        auth_time: Math.floor(new Date().getTime() / 1000),
-        ...(context.expiresIn ? { exp: Math.floor(new Date().getTime() / 1000) + context.expiresIn } : {}),
-        ...(context.scope ? { scope: context.scope } : {}),
+        auth_time: utc,
+        exp: utc + (context.maxAge || 3600),
+        updated_at: utc,
     };
 }
 
 export async function extendOpenIdTokenPayload(
-    payload: Partial<OAuth2OpenIdTokenPayload>,
-) : Promise<Partial<OAuth2OpenIdTokenPayload>> {
+    payload: OAuth2OpenIdTokenPayload,
+) : Promise<OAuth2OpenIdTokenPayload> {
     if (!payload.sub_kind || !payload.sub) {
         return payload;
     }

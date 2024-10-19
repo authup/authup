@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import { OAuth2TokenKind, TokenError } from '@authup/kit';
+import { TokenError } from '@authup/kit';
 import type {
     Cache,
     CacheSetOptions,
@@ -14,7 +14,6 @@ import type {
 import {
     buildCacheKey,
     extractTokenHeader,
-    extractTokenPayload,
     useCache,
 } from '@authup/server-kit';
 import type { Config } from '../../../config';
@@ -83,29 +82,21 @@ export class OAuth2TokenManager {
     }
 
     async sign<T extends OAuth2TokenPayload>(
-        raw: Partial<T>,
+        payload: T,
     ) : Promise<OAuth2TokenManagerSingResult<T>> {
         const key = await useKey({
-            realm_id: raw.realm_id,
+            realm_id: payload.realm_id,
         });
 
         if (!key) {
             throw TokenError.payloadInvalid('No jwk found to sign the token.');
         }
 
-        if (!raw.exp) {
-            let maxAge : number;
-            if (raw.kind === OAuth2TokenKind.REFRESH) {
-                maxAge = this.config.tokenRefreshMaxAge;
-            } else {
-                maxAge = this.config.tokenAccessMaxAge;
-            }
-
-            raw.exp = Math.floor(new Date().getTime() / 1000) + maxAge;
+        if (!payload.exp) {
+            payload.exp = Math.floor(new Date().getTime() / 1000) + 3600;
         }
 
-        const token = await signOAuth2TokenWithKey(raw, key, { keyId: key.id });
-        const payload = extractTokenPayload(token) as T;
+        const token = await signOAuth2TokenWithKey(payload, key, { keyId: key.id });
 
         await this.addPayloadToCache(token, payload);
 
