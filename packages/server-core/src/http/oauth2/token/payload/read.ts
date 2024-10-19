@@ -10,10 +10,25 @@ import { TokenError } from '@authup/kit';
 import { buildRedisKeyPath, extractTokenHeader } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity, verifyOAuth2TokenWithKey } from '../../../../domains';
+import { useOAuth2Cache } from '../../cache';
+import type { OAuth2TokenReadOptions } from './types';
 
-export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2TokenPayload> {
-    if (typeof token === 'undefined' || token === null) {
+export async function readOAuth2TokenPayload(
+    token: string,
+    options: OAuth2TokenReadOptions = {},
+) : Promise<OAuth2TokenPayload> {
+    if (!token) {
         throw TokenError.requestInvalid('The token is not defined.');
+    }
+
+    const oauth2Cache = useOAuth2Cache();
+    let payload : OAuth2TokenPayload | undefined;
+    if (!options.skipCacheGet) {
+        payload = await oauth2Cache.getClaimsByToken(token);
+    }
+
+    if (payload) {
+        return payload;
     }
 
     const header = extractTokenHeader(token);
@@ -42,7 +57,16 @@ export async function readOAuth2TokenPayload(token: string) : Promise<OAuth2Toke
         });
 
         if (entity) {
-            return verifyOAuth2TokenWithKey(token, entity);
+            payload = await verifyOAuth2TokenWithKey(token, entity);
+
+            if (!options.skipCacheSet) {
+                await oauth2Cache.setClaims(payload);
+                await oauth2Cache.setIdByToken(token, payload.jti, {
+                    ttl: oauth2Cache.transformExpToTTL(payload.exp),
+                });
+            }
+
+            return payload;
         }
     }
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useRedisClient } from '@authup/server-kit';
+import { useCache } from '@authup/server-kit';
 import { singa } from 'singa';
 import { OAuth2Cache } from './module';
 
@@ -13,9 +13,9 @@ const instance = singa<OAuth2Cache>({
     name: 'oauth2Cache',
 });
 instance.setFactory(() => {
-    const redis = useRedisClient();
+    const cache = useCache();
 
-    return new OAuth2Cache(redis);
+    return new OAuth2Cache(cache);
 });
 
 export function useOAuth2Cache() {

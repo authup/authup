@@ -9,8 +9,10 @@ import type { OAuth2TokenIntrospectionResponse } from '@authup/kit';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import {
-    loadOAuth2SubEntity, loadOAuth2SubPermissions,
-    readOAuth2TokenPayload, resolveOpenIdClaimsFromSubEntity,
+    loadOAuth2SubEntity,
+    loadOAuth2SubPermissions,
+    readOAuth2TokenPayload,
+    resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
 
@@ -19,6 +21,7 @@ export async function introspectTokenRouteHandler(
     res: Response,
 ) : Promise<any> {
     const token = await extractTokenFromRequest(req);
+
     const payload = await readOAuth2TokenPayload(token);
     const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
 

@@ -6,40 +6,76 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import type { RedisClient } from '@authup/server-kit';
-import { RedisJsonAdapter, buildRedisKeyPath } from '@authup/server-kit';
-import { CachePrefix } from '../../../domains';
+import type { Cache, CacheSetOptions } from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
+import { OAuth2CachePrefix } from './constants';
 
 export class OAuth2Cache {
-    protected client : RedisClient | undefined;
-
-    protected clientJsonAdapter : RedisJsonAdapter | undefined;
+    protected instance : Cache;
 
     // -----------------------------------------------------
 
-    constructor(client: RedisClient) {
-        this.client = client;
-        this.clientJsonAdapter = new RedisJsonAdapter(client);
+    constructor(cache: Cache) {
+        this.instance = cache;
     }
 
     // -----------------------------------------------------
 
-    async setTokenPayload(
+    /**
+     * Cache token payload by JTI.
+     *
+     * @param data
+     * @param options
+     */
+    async setClaims(
         data: OAuth2TokenPayload,
+        options: CacheSetOptions = {},
     ): Promise<void> {
-        const date = this.toDate(data.exp);
+        if (
+            data.exp &&
+            !options.ttl
+        ) {
+            options.ttl = this.transformExpToTTL(data.exp);
+        }
 
-        await this.clientJsonAdapter.set(
-            this.buildKeyPath(CachePrefix.OAUTH2_ACCESS_TOKEN, data.jti),
+        await this.instance.set(
+            this.buildKey(OAuth2CachePrefix.ID_TO_CLAIMS, data.jti),
             data,
-            { milliseconds: date.getTime() - Date.now() },
+            options,
         );
     }
 
-    async getTokenPayload(id: string) : Promise<OAuth2TokenPayload | undefined> {
-        return this.clientJsonAdapter.get(
-            this.buildKeyPath(CachePrefix.OAUTH2_ACCESS_TOKEN, id),
+    /**
+     * Get token payload by JTI.
+     *
+     * @param id
+     */
+    async getClaimsById(id: string) : Promise<OAuth2TokenPayload | undefined> {
+        return this.instance.get(
+            this.buildKey(OAuth2CachePrefix.ID_TO_CLAIMS, id),
         );
+    }
+
+    /**
+     * Get token payload by JWT.
+     *
+     * @param jwt
+     */
+    async getClaimsByToken(jwt: string) : Promise<OAuth2TokenPayload | undefined> {
+        const id = await this.getIdByToken(jwt);
+        if (!id) {
+            return undefined;
+        }
+
+        return this.getClaimsById(id);
+    }
+
+    /**
+     * Drop token payload by JTI.
+     * @param id
+     */
+    async dropClaimsById(id: string) : Promise<void> {
+        await this.instance.drop(this.buildKey(OAuth2CachePrefix.ID_TO_CLAIMS, id));
     }
 
     // -----------------------------------------------------
@@ -49,17 +85,17 @@ export class OAuth2Cache {
      *
      * @param token
      * @param id
-     * @param milliseconds
+     * @param options
      */
-    async setTokenID(
+    async setIdByToken(
         token: string,
         id: string,
-        milliseconds?: number,
+        options: CacheSetOptions = {},
     ): Promise<void> {
-        await this.clientJsonAdapter.set(
-            this.buildKeyPath('id-to-jti', token),
+        await this.instance.set(
+            this.buildKey(OAuth2CachePrefix.TOKEN_TO_ID, token),
             id,
-            { milliseconds },
+            options,
         );
     }
 
@@ -68,26 +104,29 @@ export class OAuth2Cache {
      *
      * @param token
      */
-    async getTokenID(token: string) : Promise<string | undefined> {
-        return this.clientJsonAdapter.get(
-            this.buildKeyPath('id-to-jti', token),
-        );
+    async getIdByToken(token: string) : Promise<string | undefined> {
+        return this.instance.get(this.buildKey(OAuth2CachePrefix.TOKEN_TO_ID, token));
+    }
+
+    /**
+     * Drop a jti for a given jwt.
+     *
+     * @param token
+     */
+    async dropIdByToken(token: string) : Promise<void> {
+        await this.instance.drop(this.buildKey(OAuth2CachePrefix.TOKEN_TO_ID, token));
     }
 
     // -----------------------------------------------------
 
-    protected buildKeyPath(prefix: string, key: string) {
+    transformExpToTTL(exp: number) {
+        return (exp * 1000) - Date.now();
+    }
+
+    protected buildKey(prefix: string, key: string) {
         return buildRedisKeyPath({
             key,
             prefix,
         });
-    }
-
-    protected toDate(input: string | number | Date) : Date {
-        if (input instanceof Date) {
-            return input;
-        }
-
-        return new Date(input);
     }
 }

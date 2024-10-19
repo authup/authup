@@ -52,7 +52,9 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<OAuth2RefreshTokenEntity> {
         const refreshToken = useRequestBody(request, 'refresh_token');
 
-        const payload = await readOAuth2TokenPayload(refreshToken);
+        const payload = await readOAuth2TokenPayload(refreshToken, {
+            skipCacheSet: true,
+        });
 
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);

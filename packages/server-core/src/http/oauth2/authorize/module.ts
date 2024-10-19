@@ -27,7 +27,6 @@ import {
     buildOpenIdTokenPayload,
     extendOpenIdTokenPayload,
 } from '../token';
-import { OAuth2AuthorizationCodeCache } from '../cache';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
 import { validateAuthorizeRequest } from './validation';
@@ -118,9 +117,6 @@ export async function runOAuth2Authorization(
     }
 
     await repository.save(entity);
-
-    const cache = new OAuth2AuthorizationCodeCache();
-    await cache.set(entity);
 
     if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
         output.authorizationCode = entity.content;
