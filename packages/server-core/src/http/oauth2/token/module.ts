@@ -16,8 +16,6 @@ import {
     extractTokenHeader,
     useCache,
 } from '@authup/server-kit';
-import type { Config } from '../../../config';
-import { useConfig } from '../../../config';
 import { signOAuth2TokenWithKey, useKey, verifyOAuth2TokenWithKey } from '../../../domains';
 import { OAuth2CachePrefix } from '../constants';
 
@@ -31,12 +29,9 @@ type OAuth2TokenManagerSingResult<T> = {
 };
 
 export class OAuth2TokenManager {
-    protected config : Config;
-
     protected cache : Cache;
 
     constructor() {
-        this.config = useConfig();
         this.cache = useCache();
     }
 
