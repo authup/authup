@@ -62,7 +62,7 @@
         "@authup/core-realtime-kit": "^1.0.0-beta.21",
         "@ilingo/vuelidate": "^5.0.3",
         "@posva/event-emitter": "^1.0.2",
-        "@types/node": "^22.5.0",
+        "@types/node": "^22.7.7",
         "@vitejs/plugin-vue": "^5.1.4",
         "@vuecs/form-controls": "^2.3.1",
         "@vuecs/list-controls": "^2.0.0",
