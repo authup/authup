@@ -9,7 +9,6 @@ import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import { isRedisClientUsable, useRedisClient } from '@authup/server-kit';
 import { isDatabaseTypeSupported } from '../helpers';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
@@ -31,17 +30,13 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);
 
-    if (isRedisClientUsable()) {
-        const client = useRedisClient();
-
-        Object.assign(options, {
-            cache: {
-                provider() {
-                    return new DatabaseQueryResultCache(client);
-                },
+    Object.assign(options, {
+        cache: {
+            provider() {
+                return new DatabaseQueryResultCache();
             },
-        } as Partial<DataSourceOptions>);
-    }
+        },
+    } as Partial<DataSourceOptions>);
 
     extendDataSourceOptionsWithEntities(options);
     extendDataSourceOptionsWithSubscribers(options);

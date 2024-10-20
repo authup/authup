@@ -147,6 +147,8 @@ export async function writePermissionRouteHandler(
             permission_id: entity.id,
             permission_realm_id: entity.realm_id,
         });
+
+        await roleRepository.clearBoundPermissionsCache(role);
     });
 
     return sendCreated(res, entity);

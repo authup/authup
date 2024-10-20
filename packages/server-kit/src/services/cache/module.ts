@@ -6,7 +6,7 @@
  */
 
 import type { CacheAdapter } from './adapters';
-import type { CacheSetOptions } from './types';
+import type { CacheClearOptions, CacheSetOptions } from './types';
 
 export class Cache {
     protected adapter : CacheAdapter;
@@ -25,5 +25,13 @@ export class Cache {
 
     async drop(key: string) : Promise<void> {
         return this.adapter.drop(key);
+    }
+
+    async dropMany(keys: string[]) : Promise<void> {
+        return this.adapter.dropMany(keys);
+    }
+
+    async clear(options: CacheClearOptions = {}) : Promise<void> {
+        return this.adapter.clear(options);
     }
 }

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CacheSetOptions } from '../types';
+import type { CacheClearOptions, CacheSetOptions } from '../types';
 
 export interface CacheAdapter {
     set(key: string, value: any, options: CacheSetOptions): Promise<void>;
@@ -13,4 +13,8 @@ export interface CacheAdapter {
     get(key: string): Promise<any | undefined>;
 
     drop(key: string): Promise<void>;
+
+    dropMany(keys: string[]) : Promise<void>;
+
+    clear(options: CacheClearOptions) : Promise<void>;
 }
