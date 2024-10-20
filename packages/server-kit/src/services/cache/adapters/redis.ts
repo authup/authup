@@ -8,7 +8,7 @@
 import type { Client } from 'redis-extension';
 import { JsonAdapter } from 'redis-extension';
 import { useRedisClient } from '../../redis';
-import type { CacheSetOptions } from '../types';
+import type { CacheClearOptions, CacheSetOptions } from '../types';
 import type { CacheAdapter } from './types';
 
 export class RedisCacheAdapter implements CacheAdapter {
@@ -33,5 +33,31 @@ export class RedisCacheAdapter implements CacheAdapter {
 
     async drop(key: string): Promise<void> {
         await this.instance.drop(key);
+    }
+
+    async dropMany(keys: string[]) : Promise<void> {
+        const pipeline = this.client.pipeline();
+
+        for (let i = 0; i < keys.length; i++) {
+            pipeline.del(keys[i]);
+        }
+
+        await pipeline.exec();
+    }
+
+    async clear(options: CacheClearOptions = {}) : Promise<void> {
+        if (options.prefix) {
+            const pipeline = this.client.pipeline();
+
+            const keys = await this.client.keys(`${options.prefix}*`);
+            for (let i = 0; i < keys.length; i++) {
+                pipeline.del(keys[i]);
+            }
+
+            await pipeline.exec();
+
+            return;
+        }
+        await this.client.flushdb();
     }
 }

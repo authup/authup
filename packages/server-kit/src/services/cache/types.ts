@@ -17,3 +17,8 @@ export type CacheSetOptions = {
      */
     ttl?: number
 };
+
+export type CacheClearOptions = {
+    prefix?: string,
+    suffix?: string
+};

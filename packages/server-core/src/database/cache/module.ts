@@ -5,47 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RedisClient } from '@authup/server-kit';
-import { RedisJsonAdapter, escapeRedisKey } from '@authup/server-kit';
+import type { Cache } from '@authup/server-kit';
+import { escapeRedisKey, useCache } from '@authup/server-kit';
 import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
 
-type DatabaseQueryResultCacheOptions = {
-    prefix: string
-};
-
-type DatabaseQueryResultCacheOptionsInput = Partial<DatabaseQueryResultCacheOptions>;
-
 export class DatabaseQueryResultCache implements QueryResultCache {
-    protected client : RedisClient;
+    protected instance : Cache;
 
-    protected clientJsonAdapter : RedisJsonAdapter;
-
-    protected options: DatabaseQueryResultCacheOptions;
-
-    constructor(client: RedisClient, options: DatabaseQueryResultCacheOptionsInput = {}) {
-        this.client = client;
-        this.clientJsonAdapter = new RedisJsonAdapter(this.client);
-
-        this.options = {
-            ...options,
-            prefix: options.prefix || 'database',
-        };
+    constructor() {
+        this.instance = useCache();
     }
 
     protected buildKey(id: string) {
-        return escapeRedisKey(`${this.options.prefix}:${id}`);
+        return escapeRedisKey(`db:${id}`);
     }
 
     async clear(): Promise<void> {
-        const pipeline = this.client.pipeline();
-
-        const keys = await this.client.keys(`${this.buildKey('')}*`);
-        for (let i = 0; i < keys.length; i++) {
-            pipeline.del(keys[i]);
-        }
-
-        await pipeline.exec();
+        await this.instance.clear({
+            prefix: this.buildKey(''),
+        });
     }
 
     async connect(): Promise<void> {
@@ -58,10 +37,10 @@ export class DatabaseQueryResultCache implements QueryResultCache {
 
     async getFromCache(options: QueryResultCacheOptions): Promise<QueryResultCacheOptions | undefined> {
         if (options.identifier) {
-            return this.clientJsonAdapter.get(this.buildKey(options.identifier));
+            return this.instance.get(this.buildKey(options.identifier));
         }
 
-        return this.clientJsonAdapter.get(this.buildKey(encodeURIComponent(options.query)));
+        return this.instance.get(this.buildKey(encodeURIComponent(options.query)));
     }
 
     isExpired(savedCache: QueryResultCacheOptions): boolean {
@@ -73,33 +52,28 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async remove(identifiers: string[]): Promise<void> {
-        const pipeline = this.client.pipeline();
-
-        for (let i = 0; i < identifiers.length; i++) {
-            pipeline.del(this.buildKey(identifiers[i]));
-        }
-
-        await pipeline.exec();
+        const keys = identifiers.map((identifier) => this.buildKey(identifier));
+        await this.instance.dropMany(keys);
     }
 
     async storeInCache(options: QueryResultCacheOptions): Promise<void> {
         if (options.identifier) {
-            await this.clientJsonAdapter.set(
+            await this.instance.set(
                 this.buildKey(options.identifier),
                 options,
                 {
-                    milliseconds: options.duration,
+                    ttl: options.duration,
                 },
             );
 
             return;
         }
 
-        await this.clientJsonAdapter.set(
+        await this.instance.set(
             this.buildKey(encodeURIComponent(options.query)),
             options,
             {
-                milliseconds: options.duration,
+                ttl: options.duration,
             },
         );
     }

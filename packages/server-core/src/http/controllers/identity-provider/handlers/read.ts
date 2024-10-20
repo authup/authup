@@ -23,6 +23,7 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
     const repository = new IdentityProviderRepository(dataSource);
 
     const query = repository.createQueryBuilder('provider');
+    query.cache(true);
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',
