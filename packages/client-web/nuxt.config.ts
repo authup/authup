@@ -55,7 +55,7 @@ export default defineNuxtConfig({
     modules: [
         '@pinia/nuxt',
         [
-            // ../client-web-nuxt/src/module
+            // '../client-web-nuxt/src/module', {
             '@authup/client-web-nuxt', {
                 apiURLRuntimeKey: 'apiUrl',
                 cookieDomainRuntimeKey: 'cookieDomain',

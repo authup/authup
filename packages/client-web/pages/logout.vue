@@ -1,7 +1,7 @@
 <script lang="ts">
+import { useStore } from '@authup/client-web-kit';
 import { defineNuxtComponent, useRouter } from '#app';
 import { definePageMeta } from '#imports';
-import { useStore } from '@authup/client-web-kit';
 import { LayoutKey, LayoutNavigationID } from '../config/layout';
 
 export default defineNuxtComponent({
@@ -13,9 +13,7 @@ export default defineNuxtComponent({
 
         const router = useRouter();
 
-        const query = {
-            redirect: '',
-        };
+        const query : Record<string, any> = {};
 
         const { redirect } = router.currentRoute.value.query;
 
