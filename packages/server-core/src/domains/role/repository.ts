@@ -48,6 +48,24 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
         return abilities.flat();
     }
 
+    async clearBoundPermissionsCache(entity: string | Role) {
+        let id : string;
+        if (typeof entity === 'string') {
+            id = entity;
+        } else {
+            id = entity.id;
+        }
+
+        if (!this.manager.connection.queryResultCache) {
+            return;
+        }
+
+        await this.manager.connection.queryResultCache.remove([buildRedisKeyPath({
+            prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+            key: id,
+        })]);
+    }
+
     async getBoundPermissions(
         entity: string | Role,
     ) : Promise<Permission[]> {
