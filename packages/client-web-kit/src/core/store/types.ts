@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EventEmitter } from '@posva/event-emitter';
 import type {
     Store as BaseStore,
     StoreDefinition as BaseStoreDefinition,
@@ -13,6 +14,7 @@ import type {
 } from 'pinia';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
+import type { StoreEventBusEvents } from './event-bus';
 
 type StoreData = ReturnType<typeof createStore>;
 export type Store = BaseStore<
@@ -30,12 +32,8 @@ _ExtractActionsFromSetupStore<StoreData>
 >;
 
 export type StoreCreateContext = {
-    baseURL?: string
-};
-
-export type StoreResolveContext = {
-    refresh?: boolean,
-    attempts?: number
+    baseURL?: string,
+    eventBus: EventEmitter<StoreEventBusEvents>
 };
 
 export type StoreLoginContext = {

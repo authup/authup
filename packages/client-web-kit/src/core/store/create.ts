@@ -56,54 +56,63 @@ function createPromiseShareWrapperFn<F extends InputFn>(
     };
 }
 
-export function createStore(context: StoreCreateContext = {}) {
+type RealmMinimal = Pick<Realm, 'id' | 'name'>;
+
+export function createStore(context: StoreCreateContext) {
     const client = new Client({
         baseURL: context.baseURL,
     });
 
-    const initialized = ref<boolean>(false);
-    const setInitialized = (value: boolean) => {
-        initialized.value = value;
+    const cookiesRead = ref<boolean>(false);
+    const setCookiesRead = (value: boolean) => {
+        cookiesRead.value = value;
     };
 
     // --------------------------------------------------------------------
 
-    const accessToken = ref<string | undefined>(undefined);
-    const setAccessToken = (input?: string) => {
+    const accessToken = ref<string | null>(null);
+    const setAccessToken = (input: string | null) => {
         accessToken.value = input;
+
+        context.eventBus.emit('accessTokenUpdated', input);
     };
 
     // --------------------------------------------------------------------
 
-    const accessTokenExpireDate = ref<Date | undefined>(undefined);
-    const setAccessTokenExpireDate = (input?: Date | number | string) => {
+    const accessTokenExpireDate = ref<Date | null>(null);
+    const setAccessTokenExpireDate = (input: Date | number | string | null) => {
         if (typeof input === 'number' || typeof input === 'string') {
             accessTokenExpireDate.value = new Date(input); // verify microseconds or seconds
-            return;
+        } else {
+            accessTokenExpireDate.value = input;
         }
 
-        accessTokenExpireDate.value = input;
+        context.eventBus.emit('accessTokenExpireDateUpdated', accessTokenExpireDate.value);
     };
 
     // --------------------------------------------------------------------
 
-    const refreshToken = ref<string | undefined>(undefined);
-    const setRefreshToken = (input?: string) => {
+    const refreshToken = ref<string | null>(null);
+    const setRefreshToken = (input: string | null) => {
         refreshToken.value = input;
+
+        context.eventBus.emit('refreshTokenUpdated', input);
     };
 
     // --------------------------------------------------------------------
 
-    const user = ref<User | undefined>(undefined);
-    const userId = computed<string | undefined>(() => (user.value ? user.value.id : undefined));
+    const user = ref<User | null>(null);
+    const userId = computed<string | null>(() => (user.value ? user.value.id : null));
 
-    const setUser = (entity?: User) => {
-        user.value = entity;
+    const setUser = (input: User | null) => {
+        user.value = input;
+
+        context.eventBus.emit('userUpdated', input);
     };
 
     // --------------------------------------------------------------------
 
-    const realm = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
+    const realm = ref<RealmMinimal | null>(null);
     const realmId = computed<string | undefined>(() => (realm.value ? realm.value.id : undefined));
     const realmName = computed<string | undefined>(() => (realm.value ? realm.value.name : undefined));
     const realmIsRoot = computed<boolean>(() => {
@@ -114,16 +123,20 @@ export function createStore(context: StoreCreateContext = {}) {
         return false;
     });
 
-    const setRealm = (entity?: Pick<Realm, 'id' | 'name'>) => {
-        realm.value = entity;
+    const setRealm = (input: RealmMinimal | null) => {
+        realm.value = input;
+
+        context.eventBus.emit('realmUpdated', input);
     };
 
-    const realmManagement = ref<undefined | Pick<Realm, 'id' | 'name'>>(undefined);
+    const realmManagement = ref<RealmMinimal | null>(null);
     const realmManagementId = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.id : realmId.value));
     const realmManagementName = computed<string | undefined>(() => (realmManagement.value ? realmManagement.value.name : realmName.value));
 
-    const setRealmManagement = (entity?: Pick<Realm, 'id' | 'name'>) => {
-        realmManagement.value = entity;
+    const setRealmManagement = (input: RealmMinimal | null) => {
+        realmManagement.value = input;
+
+        context.eventBus.emit('realmManagementUpdated', input);
     };
 
     // --------------------------------------------------------------------
@@ -196,12 +209,19 @@ export function createStore(context: StoreCreateContext = {}) {
 
     // --------------------------------------------------------------------
 
-    const handleTokenGrantResponse = (response: OAuth2TokenGrantResponse) => {
+    const applyTokenGrantResponse = (
+        response: OAuth2TokenGrantResponse,
+    ) => {
         const expireDate = new Date(Date.now() + response.expires_in * 1000);
 
         setAccessTokenExpireDate(expireDate);
         setAccessToken(response.access_token);
-        setRefreshToken(response.refresh_token);
+
+        if (response.refresh_token) {
+            setRefreshToken(response.refresh_token);
+        } else {
+            setRefreshToken(null);
+        }
     };
 
     // --------------------------------------------------------------------
@@ -215,9 +235,9 @@ export function createStore(context: StoreCreateContext = {}) {
             return client.token.createWithRefreshToken({
                 refresh_token: refreshToken.value,
             })
-                .then((r) => handleTokenGrantResponse(r))
+                .then((r) => applyTokenGrantResponse(r))
                 .catch((e) => {
-                    logout();
+                    reset();
 
                     return Promise.reject(e);
                 })
@@ -231,6 +251,8 @@ export function createStore(context: StoreCreateContext = {}) {
     // --------------------------------------------------------------------
 
     const resolveInternal = async () : Promise<void> => {
+        context.eventBus.emit('resolving');
+
         try {
             if (
                 !accessToken.value &&
@@ -258,6 +280,8 @@ export function createStore(context: StoreCreateContext = {}) {
             throw e;
         }
 
+        context.eventBus.emit('resolved');
+
         return Promise.resolve();
     };
 
@@ -265,38 +289,72 @@ export function createStore(context: StoreCreateContext = {}) {
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
     const login = async (ctx: StoreLoginContext) => {
+        context.eventBus.emit('loggingIn');
+
+        const response = await client.token.createWithPasswordGrant({
+            username: ctx.name,
+            password: ctx.password,
+            ...(realmId.value ? { realm_id: ctx.realmId } : {}),
+        });
+
+        applyTokenGrantResponse(response);
+
         try {
-            const response = await client.token.createWithPasswordGrant({
-                username: ctx.name,
-                password: ctx.password,
-                ...(realmId.value ? { realm_id: ctx.realmId } : {}),
-            });
-
-            handleTokenGrantResponse(response);
-
             await resolve();
         } catch (e) {
-            logout();
+            await logout();
 
             throw e;
         }
+
+        context.eventBus.emit('loggedIn');
     };
 
-    const logout = () => {
-        setAccessToken(undefined);
-        setAccessTokenExpireDate(undefined);
-        setRefreshToken(undefined);
-        setUser(undefined);
-        setRealm(undefined);
-        setRealmManagement(undefined);
+    const reset = () => {
+        setAccessToken(null);
+        setAccessTokenExpireDate(null);
+        setRefreshToken(null);
+        setUser(null);
+        setRealm(null);
+        setRealmManagement(null);
+
+        permissionRepository.setMany([]);
 
         tokenResolved.value = false;
         userResolved.value = false;
     };
 
+    const logout = async () => {
+        context.eventBus.emit('loggingOut');
+
+        try {
+            if (accessToken.value) {
+                await client.token.revoke({
+                    token: accessToken.value,
+                });
+            }
+        } catch (e) {
+            // ...
+        }
+
+        try {
+            if (refreshToken.value) {
+                await client.token.revoke({
+                    token: refreshToken.value,
+                });
+            }
+        } catch (e) {
+            // ...
+        }
+
+        reset();
+
+        context.eventBus.emit('loggedOut');
+    };
+
     return {
-        initialized,
-        setInitialized,
+        cookiesRead,
+        setCookiesRead,
 
         permissionChecker,
 
@@ -305,7 +363,7 @@ export function createStore(context: StoreCreateContext = {}) {
         loggedIn,
         resolve,
 
-        handleTokenGrantResponse,
+        applyTokenGrantResponse,
         accessToken,
         setAccessToken,
         accessTokenExpireDate,

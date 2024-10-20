@@ -11,7 +11,7 @@ import { inject } from '../inject';
 import { provide } from '../provide';
 import type { Store, StoreDefinition } from './types';
 
-export const StoreSymbol = Symbol.for('AuthupStore');
+const sym = Symbol.for('AuthupStore');
 
 export function useStore(pinia?: Pinia, app?: App) : Store {
     const instance = injectStoreFactory(app);
@@ -23,7 +23,7 @@ export function useStore(pinia?: Pinia, app?: App) : Store {
 }
 
 export function injectStoreFactory(app?: App) : StoreDefinition {
-    const instance = inject<StoreDefinition>(StoreSymbol, app);
+    const instance = inject<StoreDefinition>(sym, app);
     if (!instance) {
         throw new Error('The store factory has not been injected in the app context.');
     }
@@ -32,9 +32,9 @@ export function injectStoreFactory(app?: App) : StoreDefinition {
 }
 
 export function hasStoreFactory(app?: App) : boolean {
-    return !!inject(StoreSymbol, app);
+    return !!inject(sym, app);
 }
 
 export function provideStoreFactory(store: StoreDefinition, app?: App) {
-    provide(StoreSymbol, store, app);
+    provide(sym, store, app);
 }

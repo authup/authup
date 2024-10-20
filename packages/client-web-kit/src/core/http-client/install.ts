@@ -8,7 +8,8 @@
 import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
-import { STORE_ID, injectStoreFactory } from '../store';
+import { injectStoreFactory } from '../store';
+import { injectStoreEventBus } from '../store/event-bus';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
 
@@ -36,42 +37,46 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
             });
         },
         tokenCreated: (response) => {
-            store.handleTokenGrantResponse(response);
+            store.applyTokenGrantResponse(response);
         },
         tokenFailed: () => {
-            store.logout();
+            Promise.resolve()
+                .then(() => store.logout());
         },
         timer: !options.isServer,
     });
 
-    store.$subscribe((
-        mutation,
-        state,
-    ) => {
-        if (mutation.storeId !== STORE_ID) return;
-
-        if (state.accessToken) {
+    const storeEventBus = injectStoreEventBus(app);
+    const handleAccessTokenEvent = () => {
+        if (store.accessToken) {
             client.setAuthorizationHeader({
                 type: 'Bearer',
-                token: state.accessToken,
+                token: store.accessToken,
             });
 
             tokenHook.mount();
         } else {
             client.unsetAuthorizationHeader();
-
             tokenHook.unmount();
         }
+    };
 
-        if (
-            state.refreshToken &&
-            state.accessTokenExpireDate
-        ) {
-            const expiresIn = Math.floor((state.accessTokenExpireDate.getTime() - Date.now()) / 1000);
+    storeEventBus.on('resolved', () => handleAccessTokenEvent());
+    storeEventBus.on('accessTokenUpdated', () => handleAccessTokenEvent());
 
-            tokenHook.setTimer(expiresIn, () => refreshToken.value);
+    const handleAccessTokenExpireDateEvent = () => {
+        if (store.accessTokenExpireDate) {
+            const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
+
+            tokenHook.setTimer(
+                expiresIn,
+                () => refreshToken.value || undefined,
+            );
         }
-    });
+    };
+
+    storeEventBus.on('resolved', () => handleAccessTokenExpireDateEvent());
+    storeEventBus.on('accessTokenExpireDateUpdated', () => handleAccessTokenExpireDateEvent());
 
     provideHTTPClient(client, app);
 }

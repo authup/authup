@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { injectStoreEventBus } from '@authup/client-web-kit/core/store/event-bus';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
-import { injectTranslatorLocale, storeToRefs, useStore } from '@authup/client-web-kit';
+import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
@@ -56,22 +57,25 @@ export default defineNuxtPlugin({
         });
 
         const store = useStore(ctx.$pinia as Pinia);
-        const { loggedIn } = storeToRefs(store);
         const navigation = new Navigation(store);
 
         ctx.vueApp.use(installNavigation, {
-            items: ({ level, parent }) => navigation.getItems(level, parent),
+            items: ({
+                level,
+                parent,
+            }) => navigation.getItems(level, parent),
         });
 
         const navigationManager = injectNavigationManager(ctx.vueApp);
-        watch(loggedIn, async (val, oldValue) => {
-            if (val !== oldValue) {
-                await navigationManager.build({
-                    reset: true,
-                    path: ctx._route.fullPath,
-                });
-            }
-        });
+        const storeEventBus = injectStoreEventBus(ctx.vueApp);
+        storeEventBus.on('loggedIn', () => navigationManager.build({
+            reset: true,
+            path: ctx._route.fullPath,
+        }));
+        storeEventBus.on('loggedOut', () => navigationManager.build({
+            reset: true,
+            path: ctx._route.fullPath,
+        }));
 
         ctx.vueApp.use(installPagination);
 
