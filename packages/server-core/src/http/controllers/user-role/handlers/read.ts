@@ -14,10 +14,10 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { UserRoleEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_ROLE_READ,
@@ -52,7 +52,7 @@ export async function getManyUserRoleRouteHandler(req: Request, res: Response) :
 }
 
 export async function getOneUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_ROLE_READ,

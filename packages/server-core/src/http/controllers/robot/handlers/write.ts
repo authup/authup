@@ -22,7 +22,7 @@ import {
 } from '../../../../domains';
 import { RobotRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writeRobotRouteHandler(
@@ -59,7 +59,7 @@ export async function writeRobotRouteHandler(
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.ROBOT_UPDATE });
 

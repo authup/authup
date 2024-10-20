@@ -14,11 +14,20 @@ import { PermissionChecker } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
-import { RequestPermissionChecker, setRequestEnv } from '../../../request';
+import { RequestPermissionChecker, setRequestPermissionChecker } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
 export function registerAuthorizationMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
+        const dataSource = await useDataSource();
+        const permissionProvider = new PermissionDBProvider(dataSource);
+        const permissionChecker = new PermissionChecker({
+            provider: permissionProvider,
+            policyEngine: new PolicyEngine(),
+        });
+        const requestPermissionChecker = new RequestPermissionChecker(request, permissionChecker);
+        setRequestPermissionChecker(request, requestPermissionChecker);
+
         let { authorization: headerValue } = request.headers;
 
         try {
@@ -39,15 +48,6 @@ export function registerAuthorizationMiddleware(router: Router) {
 
             const header = parseAuthorizationHeader(headerValue);
             await verifyAuthorizationHeader(request, header);
-
-            const dataSource = await useDataSource();
-            const permissionProvider = new PermissionDBProvider(dataSource);
-            const permissionChecker = new PermissionChecker({
-                provider: permissionProvider,
-                policyEngine: new PolicyEngine(),
-            });
-            const requestPermissionChecker = new RequestPermissionChecker(request, permissionChecker);
-            setRequestEnv(request, 'permissionChecker', requestPermissionChecker);
 
             next();
         } catch (e) {

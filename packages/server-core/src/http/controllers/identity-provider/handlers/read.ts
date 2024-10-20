@@ -16,7 +16,7 @@ import {
 import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import { IdentityProviderRepository, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyIdentityProviderRouteHandler(req: Request, res: Response): Promise<any> {
     const dataSource = await useDataSource();
@@ -56,8 +56,8 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
 
     const [entities, total] = await query.getManyAndCount();
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
     try {
+        const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_READ });
 
         for (let i = 0; i < entities.length; i++) {
@@ -131,9 +131,8 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
-
     try {
+        const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_READ,
             data: { attributes: entity },

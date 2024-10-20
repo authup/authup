@@ -11,12 +11,14 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '../../../../domains';
-import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
+import {
+    useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.USER_DELETE });
 
     const identity = useRequestIdentity(req);

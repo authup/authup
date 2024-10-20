@@ -11,11 +11,11 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserAttributeEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function deleteUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_UPDATE,

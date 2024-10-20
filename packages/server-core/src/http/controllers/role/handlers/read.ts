@@ -17,10 +17,10 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { RoleEntity, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.ROLE_READ,
@@ -70,7 +70,7 @@ export async function getManyRoleRouteHandler(req: Request, res: Response) : Pro
 }
 
 export async function getOneRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.ROLE_READ,

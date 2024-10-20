@@ -22,10 +22,15 @@ import {
 import { RobotEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
+import {
+    useRequestIdentity,
+    useRequestParamID,
+    useRequestPermissionChecker,
+    useRequestScopes,
+} from '../../../request';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.ROBOT_READ,
@@ -111,7 +116,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
 }
 
 export async function getOneRobotRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -158,7 +163,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
-    const scopes = useRequestEnv(req, 'scopes');
+    const scopes = useRequestScopes(req);
     if (isMe) {
         const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, scopes);
 

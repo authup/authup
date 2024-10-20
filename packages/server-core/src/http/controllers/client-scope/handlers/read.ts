@@ -14,10 +14,10 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ClientScopeEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
 
     await permissionChecker.preCheckOneOf({
         name: [
@@ -56,7 +56,7 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
 }
 
 export async function getOneClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.CLIENT_READ,

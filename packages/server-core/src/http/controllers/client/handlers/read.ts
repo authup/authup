@@ -23,10 +23,12 @@ import {
 import { ClientEntity, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
-import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
+import {
+    useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
+} from '../../../request';
 
 export async function getManyClientRouteHandler(req: Request, res: Response): Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.CLIENT_READ,
@@ -90,7 +92,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 }
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.CLIENT_READ,
@@ -114,7 +116,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         identity &&
         identity.type === 'client'
     ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, useRequestEnv(req, 'scopes'));
+        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, useRequestScopes(req));
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`client.${attributes[i]}`);
         }

@@ -17,7 +17,11 @@ import { useConfig } from '../../../../config';
 import { UserEntity, UserRepository } from '../../../../domains';
 import { UserRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
+    RequestHandlerOperation,
+    getRequestBodyRealmID,
+    getRequestParamID,
+    useRequestIdentityOrFail,
+    useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writeUserRouteHandler(
@@ -55,7 +59,7 @@ export async function writeUserRouteHandler(
     }
 
     let hasAbility : boolean;
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         try {
             await permissionChecker.preCheck({

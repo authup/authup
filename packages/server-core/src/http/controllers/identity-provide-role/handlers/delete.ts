@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function deleteOauth2ProvideRoleRouteHandler(
     req: Request,
@@ -19,7 +19,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
 ) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
     });

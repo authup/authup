@@ -14,7 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     RobotPermissionEntity,
 } from '../../../../domains';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 import { RobotPermissionRequestValidator } from '../utils';
 
 /**
@@ -24,7 +24,7 @@ import { RobotPermissionRequestValidator } from '../utils';
  * @param res
  */
 export async function createRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROBOT_PERMISSION_CREATE });
 
     // ----------------------------------------------

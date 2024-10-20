@@ -15,10 +15,12 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RobotRoleEntity } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
 import { RobotRoleRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestIdentityOrFail } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestIdentityOrFail, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROBOT_ROLE_CREATE });
 
     const validator = new RobotRoleRequestValidator();

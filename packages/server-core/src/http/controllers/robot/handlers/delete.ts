@@ -15,7 +15,9 @@ import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestIdentity, useRequestParamID } from '../../../request';
+import {
+    useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
@@ -28,7 +30,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
     if (
         !entity.user_id ||

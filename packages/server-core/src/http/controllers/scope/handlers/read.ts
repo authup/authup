@@ -17,10 +17,10 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { ScopeEntity, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.SCOPE_READ,
@@ -70,7 +70,7 @@ export async function getManyScopeRouteHandler(req: Request, res: Response) : Pr
 }
 
 export async function getOneScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.SCOPE_READ,

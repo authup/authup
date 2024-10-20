@@ -8,15 +8,17 @@
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { UnauthorizedError } from '@ebec/http';
 import type { Request } from 'routup';
+import { setRequestEnv, useRequestEnv } from 'routup';
 import type { RequestIdentity } from '../types';
-import { setRequestEnv, useRequestEnv } from './env';
+
+const sym = Symbol('Identity');
 
 export function useRequestIdentity(req: Request) : RequestIdentity | undefined {
-    return useRequestEnv(req, 'identity');
+    return useRequestEnv(req, sym) as RequestIdentity | undefined;
 }
 
 export function setRequestIdentity(req: Request, identity: RequestIdentity) : void {
-    setRequestEnv(req, 'identity', identity);
+    setRequestEnv(req, sym, identity);
 }
 
 export function useRequestIdentityOrFail(req: Request) : RequestIdentity {

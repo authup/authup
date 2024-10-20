@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { RobotPermissionEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 /**
  * Drop a permission by id of a specific user.
@@ -24,7 +24,7 @@ export async function deleteRobotPermissionRouteHandler(req: Request, res: Respo
         isUUID: false,
     });
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROBOT_PERMISSION_DELETE });
 
     const dataSource = await useDataSource();

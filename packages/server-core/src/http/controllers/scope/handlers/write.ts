@@ -21,8 +21,8 @@ import {
     getRequestBodyRealmID,
     getRequestParamID,
     isRequestIdentityMasterRealmMember,
-    useRequestEnv,
     useRequestIdentityOrFail,
+    useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writeScopeRouteHandler(
@@ -59,7 +59,7 @@ export async function writeScopeRouteHandler(
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.SCOPE_UPDATE });
 

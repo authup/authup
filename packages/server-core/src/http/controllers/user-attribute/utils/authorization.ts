@@ -8,13 +8,13 @@
 import { PermissionName } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../domains';
-import { useRequestEnv, useRequestIdentity } from '../../../request';
+import { useRequestIdentity, useRequestPermissionChecker } from '../../../request';
 
 export async function canRequestManageUserAttribute(
     req: Request,
     entity: UserAttributeEntity,
 ) : Promise<boolean> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
 
     const isMe = identity &&

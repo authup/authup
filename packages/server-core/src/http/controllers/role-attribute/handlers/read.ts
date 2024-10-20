@@ -16,10 +16,10 @@ import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
 } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.ROLE_READ,
@@ -84,7 +84,7 @@ export async function getOneRoleAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.ROLE_READ,

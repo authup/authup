@@ -14,10 +14,10 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 
 export async function createRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
     const validator = new RoleAttributeRequestValidator();

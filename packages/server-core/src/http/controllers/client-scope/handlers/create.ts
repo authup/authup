@@ -12,10 +12,10 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ClientScopeEntity } from '../../../../domains';
 import { ClientScopeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 
 export async function createClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({
         name: PermissionName.CLIENT_SCOPE_CREATE,
     });

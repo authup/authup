@@ -14,7 +14,7 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { UserPermissionEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 /**
  * Receive user permissions of a specific user.
@@ -23,7 +23,7 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
  * @param res
  */
 export async function getManyUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_PERMISSION_CREATE,
@@ -66,7 +66,7 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
  * @param res
  */
 export async function getOneUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_PERMISSION_CREATE,

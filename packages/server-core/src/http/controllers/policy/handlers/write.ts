@@ -21,7 +21,12 @@ import {
 } from '../../../../domains';
 import { PolicyAttributesValidator, PolicyValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestIdentityMasterRealmMember, useRequestEnv, useRequestIdentityOrFail,
+    RequestHandlerOperation,
+    getRequestBodyRealmID,
+    getRequestParamID,
+    isRequestIdentityMasterRealmMember,
+    useRequestIdentityOrFail,
+    useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writePolicyRouteHandler(
@@ -58,7 +63,7 @@ export async function writePolicyRouteHandler(
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
 

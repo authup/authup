@@ -16,10 +16,10 @@ import {
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
 import { PolicyRepository, resolveRealm } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.PERMISSION_READ,
@@ -77,7 +77,7 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 }
 
 export async function getOnePolicyRouteHandler(req: Request, res: Response): Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.PERMISSION_READ,

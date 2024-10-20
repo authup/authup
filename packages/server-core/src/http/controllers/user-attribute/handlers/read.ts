@@ -16,11 +16,11 @@ import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
 } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_UPDATE,
@@ -74,7 +74,7 @@ export async function getOneUserAttributeRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_UPDATE,

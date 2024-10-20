@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserPermissionEntity } from '../../../../domains';
-import { useRequestEnv, useRequestParamID } from '../../../request';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 /**
  * Drop a permission by id of a specific user.
@@ -22,7 +22,7 @@ import { useRequestEnv, useRequestParamID } from '../../../request';
 export async function deleteUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.USER_PERMISSION_DELETE });
 
     const dataSource = await useDataSource();

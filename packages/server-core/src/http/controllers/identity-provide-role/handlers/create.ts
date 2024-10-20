@@ -18,10 +18,12 @@ import {
 } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestIdentityOrFail } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestIdentityOrFail, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
     });

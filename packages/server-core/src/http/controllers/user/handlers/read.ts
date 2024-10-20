@@ -18,7 +18,7 @@ import { UserRepository, resolveRealm } from '../../../../domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import {
-    useRequestEnv, useRequestIdentity, useRequestParamID,
+    useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
 } from '../../../request';
 
 function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
@@ -68,7 +68,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const [entities] = queryOutput;
     let [, total] = queryOutput;
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
 
     const identity = useRequestIdentity(req);
 
@@ -113,7 +113,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
 }
 
 export async function getOneUserRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     const id = useRequestParamID(req, {
         isUUID: false,
     });
@@ -155,7 +155,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         }
     }
 
-    const scopes = useRequestEnv(req, 'scopes');
+    const scopes = useRequestScopes(req);
     if (isMe) {
         const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
 

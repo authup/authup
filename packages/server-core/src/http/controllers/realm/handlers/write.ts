@@ -17,7 +17,9 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../domains';
 import { RealmRequestValidator } from '../utils';
-import { RequestHandlerOperation, getRequestParamID, useRequestEnv } from '../../../request';
+import {
+    RequestHandlerOperation, getRequestParamID, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function writeRealmRouteHandler(req: Request, res: Response, options: {
     updateOnly?: boolean
@@ -42,7 +44,7 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
         }
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.REALM_UPDATE });
 

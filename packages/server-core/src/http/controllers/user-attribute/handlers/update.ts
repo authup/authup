@@ -14,12 +14,12 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { UserAttributeRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, useRequestEnv, useRequestParamID,
+    RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,
 } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function updateUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.checkOneOf({
         name: [
 

@@ -16,7 +16,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../domains';
 import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestEnv, useRequestIdentityOrFail,
+    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writeIdentityProviderRouteHandler(
@@ -53,7 +53,7 @@ export async function writeIdentityProviderRouteHandler(
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 

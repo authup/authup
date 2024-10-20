@@ -15,12 +15,14 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderRoleMappingEntity } from '../../../../domains';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestParamID } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
     });

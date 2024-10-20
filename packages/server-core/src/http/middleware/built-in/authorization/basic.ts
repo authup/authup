@@ -11,7 +11,7 @@ import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
 import { ClientRepository, RobotRepository, UserRepository } from '../../../../domains';
-import { setRequestEnv, setRequestIdentity } from '../../../request';
+import { setRequestIdentity, setRequestScopes } from '../../../request';
 
 export async function verifyBasicAuthorizationHeader(
     request: Request,
@@ -25,7 +25,7 @@ export async function verifyBasicAuthorizationHeader(
         const user = await userRepository.verifyCredentials(header.username, header.password);
         if (user) {
             await userRepository.findAndAppendExtraAttributesTo(user);
-            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+            setRequestScopes(request, [ScopeName.GLOBAL]);
             setRequestIdentity(request, {
                 type: 'user',
                 id: user.id,
@@ -42,7 +42,7 @@ export async function verifyBasicAuthorizationHeader(
         const robotRepository = new RobotRepository(dataSource);
         const robot = await robotRepository.verifyCredentials(header.username, header.password);
         if (robot) {
-            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+            setRequestScopes(request, [ScopeName.GLOBAL]);
             setRequestIdentity(request, {
                 type: 'robot',
                 id: robot.id,
@@ -57,7 +57,7 @@ export async function verifyBasicAuthorizationHeader(
         const clientRepository = new ClientRepository(dataSource);
         const client = await clientRepository.verifyCredentials(header.username, header.password);
         if (client) {
-            setRequestEnv(request, 'scopes', [ScopeName.GLOBAL]);
+            setRequestScopes(request, [ScopeName.GLOBAL]);
             setRequestIdentity(request, {
                 type: 'client',
                 id: client.id,

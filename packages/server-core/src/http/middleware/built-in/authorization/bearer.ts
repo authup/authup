@@ -16,7 +16,11 @@ import {
     CachePrefix, RealmEntity,
 } from '../../../../domains';
 import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
-import { setRequestEnv, setRequestIdentity } from '../../../request';
+import {
+    setRequestIdentity,
+    setRequestScopes,
+    setRequestToken,
+} from '../../../request';
 
 export async function verifyBearerAuthorizationHeader(
     request: Request,
@@ -28,8 +32,8 @@ export async function verifyBearerAuthorizationHeader(
         throw TokenError.accessTokenRequired();
     }
 
-    setRequestEnv(request, 'token', header.token);
-    setRequestEnv(request, 'scopes', transformOAuth2ScopeToArray(payload.scope));
+    setRequestToken(request, header.token);
+    setRequestScopes(request, transformOAuth2ScopeToArray(payload.scope));
 
     const sub = await loadOAuth2SubEntity(
         payload.sub_kind,

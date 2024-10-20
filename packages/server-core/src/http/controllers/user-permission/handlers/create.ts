@@ -14,7 +14,7 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserPermissionEntity } from '../../../../domains';
 import { UserPermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 
 /**
  * Add a permission by id to a specific user.
@@ -23,7 +23,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
  * @param res
  */
 export async function createUserPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.USER_PERMISSION_CREATE });
 
     // ----------------------------------------------

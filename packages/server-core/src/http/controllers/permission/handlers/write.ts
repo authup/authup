@@ -17,7 +17,12 @@ import { DatabaseConflictError } from '../../../../database';
 import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
 import { PermissionRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, isRequestIdentityMasterRealmMember, useRequestEnv, useRequestIdentityOrFail,
+    RequestHandlerOperation,
+    getRequestBodyRealmID,
+    getRequestParamID,
+    isRequestIdentityMasterRealmMember,
+    useRequestIdentityOrFail,
+    useRequestPermissionChecker,
 } from '../../../request';
 
 export async function writePermissionRouteHandler(
@@ -54,7 +59,7 @@ export async function writePermissionRouteHandler(
         throw new NotFoundError();
     }
 
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
 

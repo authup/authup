@@ -14,11 +14,11 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RoleAttributeEntity } from '../../../../domains';
 import { RoleAttributeRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation, useRequestEnv, useRequestParamID,
+    RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,
 } from '../../../request';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
     const id = useRequestParamID(req);

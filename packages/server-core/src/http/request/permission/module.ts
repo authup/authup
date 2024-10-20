@@ -11,7 +11,7 @@ import type {
     PermissionCheckerCheckContext,
 } from '@authup/kit';
 import type { Request } from 'routup';
-import { useRequestEnv, useRequestIdentity } from '../helpers';
+import { useRequestIdentity, useRequestScopes } from '../helpers';
 
 export class RequestPermissionChecker {
     protected req: Request;
@@ -46,7 +46,7 @@ export class RequestPermissionChecker {
     // --------------------------------------------------------------
 
     protected extendCheckContext(ctx: PermissionCheckerCheckContext) {
-        const scopes = useRequestEnv(this.req, 'scopes') || [];
+        const scopes = useRequestScopes(this.req);
         if (scopes.indexOf(ScopeName.GLOBAL) !== -1) {
             ctx.data = {
                 ...ctx.data || {},

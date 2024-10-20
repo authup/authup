@@ -16,7 +16,7 @@ import {
     RolePermissionEntity,
 } from '../../../../domains';
 import { RolePermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv } from '../../../request';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 
 /**
  * Add an permission by id to a specific user.
@@ -25,7 +25,7 @@ import { RequestHandlerOperation, useRequestEnv } from '../../../request';
  * @param res
  */
 export async function createRolePermissionRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.ROLE_PERMISSION_CREATE });
 
     // ----------------------------------------------

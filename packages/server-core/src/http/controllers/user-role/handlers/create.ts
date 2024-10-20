@@ -14,10 +14,12 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserRoleEntity } from '../../../../domains';
 import { IdentityPermissionService } from '../../../../services';
 import { UserRoleRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestIdentityOrFail } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestIdentityOrFail, useRequestPermissionChecker,
+} from '../../../request';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.USER_ROLE_CREATE });
 
     const validator = new UserRoleRequestValidator();

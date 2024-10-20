@@ -16,11 +16,13 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserAttributeEntity } from '../../../../domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestEnv, useRequestIdentity } from '../../../request';
+import {
+    RequestHandlerOperation, useRequestIdentity, useRequestPermissionChecker,
+} from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 
 export async function createUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
-    const permissionChecker = useRequestEnv(req, 'permissionChecker');
+    const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
             PermissionName.USER_UPDATE,
