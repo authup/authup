@@ -10,29 +10,22 @@ import { buildQuery } from 'rapiq';
 import type { UserPermission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { BaseAPI } from '../base';
-import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
+import type { DomainAPISlim, ResourceCollectionResponse, ResourceResponse } from '../types-base';
 
 export class UserPermissionAPI extends BaseAPI implements DomainAPISlim<UserPermission> {
-    async getMany(data?: BuildInput<UserPermission>) : Promise<CollectionResourceResponse<UserPermission>> {
-        const response = await this.client.get(`user-permissions${buildQuery(data)}`);
-        return response.data;
+    async getMany(data?: BuildInput<UserPermission>) : Promise<ResourceCollectionResponse<UserPermission>> {
+        return this.client.get(`user-permissions${buildQuery(data)}`);
     }
 
-    async getOne(id: UserPermission['id']) : Promise<SingleResourceResponse<UserPermission>> {
-        const response = await this.client.get(`user-permissions/${id}`);
-
-        return response.data;
+    async getOne(id: UserPermission['id']) : Promise<ResourceResponse<UserPermission>> {
+        return this.client.get(`user-permissions/${id}`);
     }
 
-    async delete(id: UserPermission['id']) : Promise<SingleResourceResponse<UserPermission>> {
-        const response = await this.client.delete(`user-permissions/${id}`);
-
-        return response.data;
+    async delete(id: UserPermission['id']) : Promise<ResourceResponse<UserPermission>> {
+        return this.client.delete(`user-permissions/${id}`);
     }
 
-    async create(data: Partial<UserPermission>) : Promise<SingleResourceResponse<UserPermission>> {
-        const response = await this.client.post('user-permissions', nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    async create(data: Partial<UserPermission>) : Promise<ResourceResponse<UserPermission>> {
+        return this.client.post('user-permissions', nullifyEmptyObjectProperties(data));
     }
 }

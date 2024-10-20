@@ -62,7 +62,9 @@ export const AUserPasswordForm = defineComponent({
                     password_repeat: form.password_repeat,
                 });
 
-                ctx.emit('updated', user);
+                user
+
+                    .ctx.emit('updated', user);
             } catch (e) {
                 if (e instanceof Error) {
                     ctx.emit('failed', e);
