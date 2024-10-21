@@ -12,6 +12,7 @@ import {
 export function setupTestConfig() {
     const raw = readConfigRawFromEnv();
     const config = normalizeConfig(raw);
+
     config.env = 'test';
     config.middlewareRateLimit = false;
     config.middlewarePrometheus = false;

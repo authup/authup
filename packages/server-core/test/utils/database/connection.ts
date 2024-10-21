@@ -6,14 +6,18 @@
  */
 
 import {
-    createDatabase, dropDatabase, setDataSource, unsetDataSource, useDataSource,
+    createDatabase,
+    dropDatabase,
+    setDataSource,
+    unsetDataSource,
+    useDataSource,
 } from 'typeorm-extension';
 import {
     DataSource,
 } from 'typeorm';
 import {
     DatabaseSeeder,
-    extendDataSourceOptions, useConfig,
+    extendDataSourceOptions, setDataSourceSync, useConfig,
 } from '../../../src';
 import type { DatabaseRootSeederResult } from '../../../src';
 
@@ -36,6 +40,7 @@ export async function useTestDatabase() : Promise<DatabaseRootSeederResult> {
     await dataSource.synchronize();
 
     setDataSource(dataSource);
+    setDataSourceSync(dataSource);
 
     const core = new DatabaseSeeder(config);
 

@@ -17,7 +17,7 @@ import {
 } from 'typeorm-extension';
 import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
-import { DatabaseSeeder, extendDataSourceOptions } from './database';
+import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
 import { saveRobotCredentialsToVault } from './domains';
 import {
     createHttpServer,
@@ -85,6 +85,7 @@ export class Application {
         await dataSource.initialize();
 
         setDataSource(dataSource);
+        setDataSourceSync(dataSource);
 
         logger.info('Established database connection.');
 

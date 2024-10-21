@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+
 import type { DataSourceOptions } from 'typeorm';
 import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import { isDatabaseTypeSupported } from '../helpers';
+import { isDatabaseTypeSupported } from '../../helpers';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
-import { DatabaseQueryResultCache } from '../cache';
+import { DatabaseQueryResultCache } from '../../cache';
 
 export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
     if (!isDatabaseTypeSupported(options.type)) {

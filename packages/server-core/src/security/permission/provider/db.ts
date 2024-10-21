@@ -16,8 +16,9 @@ import type {
     RealmMatchPolicy,
 } from '@authup/kit';
 import { BuiltInPolicyType, DecisionStrategy } from '@authup/kit';
+import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
-import { PermissionEntity } from '../../../domains';
+import { CachePrefix, PermissionEntity } from '../../../domains';
 
 export class PermissionDBProvider implements PermissionProvider {
     protected dataSource: DataSource;
@@ -39,6 +40,13 @@ export class PermissionDBProvider implements PermissionProvider {
                 'policy',
                 'policy.children',
             ],
+            cache: {
+                id: buildCacheKey({
+                    prefix: CachePrefix.PERMISSION,
+                    key: options.name,
+                }),
+                milliseconds: 60_000,
+            },
         });
 
         if (entity) {
@@ -46,14 +54,15 @@ export class PermissionDBProvider implements PermissionProvider {
                 name: entity.name,
                 ...(entity.realm_id ? { realm_id: entity.realm_id } : {}),
                 // todo: fake policy should only be enabled for built_in
-                policy: entity.policy || this.getFakePolicy(),
+                // todo: entity.policy and children need to be transformed
+                policy: entity.policy || this.getDefaultPolicy(),
             };
         }
 
         return undefined;
     }
 
-    getFakePolicy() {
+    getDefaultPolicy() {
         const children : PolicyWithType[] = [];
         const identity : PolicyWithType<IdentityPolicy> = {
             type: BuiltInPolicyType.IDENTITY,

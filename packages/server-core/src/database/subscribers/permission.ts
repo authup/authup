@@ -66,8 +66,12 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.REALM,
+                    prefix: CachePrefix.PERMISSION,
                     key: event.entity.id,
+                }),
+                buildRedisKeyPath({
+                    prefix: CachePrefix.PERMISSION,
+                    key: event.entity.name,
                 }),
             ]);
         }
@@ -85,6 +89,10 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                 buildRedisKeyPath({
                     prefix: CachePrefix.PERMISSION,
                     key: event.entity.id,
+                }),
+                buildRedisKeyPath({
+                    prefix: CachePrefix.PERMISSION,
+                    key: event.entity.name,
                 }),
             ]);
         }

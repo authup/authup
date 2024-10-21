@@ -11,20 +11,21 @@ import type { Router } from 'routup';
 import { type SerializeOptions, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { PermissionChecker } from '@authup/kit';
-import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
+import { useDataSourceSync } from '../../../../database';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { RequestPermissionChecker, setRequestPermissionChecker } from '../../../request';
 import { verifyAuthorizationHeader } from './verify';
 
 export function registerAuthorizationMiddleware(router: Router) {
     router.use(coreHandler(async (request, response, next) => {
-        const dataSource = await useDataSource();
+        const dataSource = useDataSourceSync();
         const permissionProvider = new PermissionDBProvider(dataSource);
         const permissionChecker = new PermissionChecker({
             provider: permissionProvider,
             policyEngine: new PolicyEngine(),
         });
+
         const requestPermissionChecker = new RequestPermissionChecker(request, permissionChecker);
         setRequestPermissionChecker(request, requestPermissionChecker);
 
