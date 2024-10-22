@@ -12,7 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RoleAttributeEntity } from '../../../../domains';
+import { RoleAttributeEntity } from '../../../../database/domains';
 import { RoleAttributeRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 

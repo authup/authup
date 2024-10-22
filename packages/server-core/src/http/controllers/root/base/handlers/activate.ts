@@ -12,7 +12,7 @@ import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { Container } from 'validup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserRepository } from '../../../../../domains';
+import { UserRepository } from '../../../../../database/domains';
 
 export class AuthActiveRequestValidator extends Container<{ token: string}> {
     constructor() {

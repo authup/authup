@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { RobotPermissionEntity } from '../../../../domains';
+import { RobotPermissionEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyRobotPermissionRouteHandler(req: Request, res: Response) : Promise<any> {

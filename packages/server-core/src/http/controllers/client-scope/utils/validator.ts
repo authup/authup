@@ -10,7 +10,7 @@ import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import type {
     ClientScopeEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {

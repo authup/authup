@@ -23,7 +23,7 @@ import {
     findRobotCredentialsInVault,
     resolveRealm,
     saveRobotCredentialsToVault,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { useRequestParamID } from '../../../request';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {

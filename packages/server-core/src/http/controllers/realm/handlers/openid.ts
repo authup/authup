@@ -11,7 +11,7 @@ import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../database/domains';
 import { useConfig } from '../../../../config';
 import { useRequestParamID } from '../../../request';
 

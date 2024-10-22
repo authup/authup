@@ -13,7 +13,7 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     RobotPermissionEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 import { RobotPermissionRequestValidator } from '../utils';
 

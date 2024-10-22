@@ -19,7 +19,7 @@ import { Container } from 'validup';
 import {
     isSMTPClientUsable, useSMTPClient,
 } from '../../../../../core';
-import { UserRepository, resolveRealm } from '../../../../../domains';
+import { UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 

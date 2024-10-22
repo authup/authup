@@ -30,7 +30,7 @@ import type {
     IdentityProviderIdentity,
     UserEntity,
     UserRelationSyncItem,
-} from '../../domains';
+} from '../../database/domains';
 import {
     IdentityProviderAccountEntity,
     IdentityProviderAttributeMappingEntity,
@@ -38,7 +38,7 @@ import {
     IdentityProviderRoleMappingEntity,
     UserRelationItemSyncOperation,
     UserRepository,
-} from '../../domains';
+} from '../../database/domains';
 
 type UserCreateContext = {
     attempts: number,

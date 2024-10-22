@@ -19,7 +19,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
 import {
     RobotEntity, RobotRepository, resolveRealm, saveRobotCredentialsToVault,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { RobotRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,

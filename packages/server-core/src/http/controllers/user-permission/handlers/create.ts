@@ -12,7 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserPermissionEntity } from '../../../../domains';
+import { UserPermissionEntity } from '../../../../database/domains';
 import { UserPermissionRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 

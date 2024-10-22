@@ -14,7 +14,7 @@ import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
-import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../domains';
+import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../database/domains';
 import { PermissionRequestValidator } from '../utils';
 import {
     RequestHandlerOperation,

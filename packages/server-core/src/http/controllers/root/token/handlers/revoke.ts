@@ -10,7 +10,7 @@ import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../../../domains';
+import { OAuth2RefreshTokenEntity } from '../../../../../database/domains';
 import { OAuth2TokenManager } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
 

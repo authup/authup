@@ -16,7 +16,7 @@ import {
     extractTokenHeader,
     useCache,
 } from '@authup/server-kit';
-import { signOAuth2TokenWithKey, useKey, verifyOAuth2TokenWithKey } from '../../../domains';
+import { signOAuth2TokenWithKey, useKey, verifyOAuth2TokenWithKey } from '../../../database/domains';
 import { OAuth2CachePrefix } from '../constants';
 
 type OAuth2TokenManagerVerifyOptions = {

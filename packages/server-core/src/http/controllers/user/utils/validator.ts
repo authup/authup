@@ -12,7 +12,7 @@ import { BadRequestError } from '@ebec/http';
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { UserEntity } from '../../../../domains';
+import type { UserEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class UserRequestValidator extends Container<

@@ -18,7 +18,7 @@ import {
 import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
 import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
-import { saveRobotCredentialsToVault } from './domains';
+import { saveRobotCredentialsToVault } from './database/domains';
 import {
     createHttpServer,
     createRouter,

@@ -10,7 +10,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityProviderRoleMappingEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function deleteOauth2ProvideRoleRouteHandler(

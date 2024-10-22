@@ -14,7 +14,7 @@ import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
-import { ScopeEntity } from '../../../../domains';
+import { ScopeEntity } from '../../../../database/domains';
 import { ScopeRequestValidator } from '../utils';
 import {
     RequestHandlerOperation,

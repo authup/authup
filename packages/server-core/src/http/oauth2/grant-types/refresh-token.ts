@@ -11,7 +11,7 @@ import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../domains';
+import { OAuth2RefreshTokenEntity } from '../../../database/domains';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';

@@ -13,7 +13,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ClientScopeEntity } from '../../../../domains';
+import { ClientScopeEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyClientScopeRouteHandler(req: Request, res: Response) : Promise<any> {

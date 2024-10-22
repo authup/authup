@@ -20,7 +20,7 @@ import {
 import {
     OAuth2SubKind, isUUID,
 } from '@authup/kit';
-import { ClientEntity, resolveRealm } from '../../../../domains';
+import { ClientEntity, resolveRealm } from '../../../../database/domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import {

@@ -16,7 +16,7 @@ import {
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity } from '../../../database/domains';
 import { useRequestIdentityOrFail } from '../../request';
 import type {
     OAuth2AccessTokenBuildContext,

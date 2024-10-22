@@ -14,7 +14,7 @@ import { In } from 'typeorm';
 import { wrapPublicKeyPem } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../domains';
+import { KeyEntity } from '../../../../../database/domains';
 import { useRequestParamID } from '../../../../request';
 
 export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {

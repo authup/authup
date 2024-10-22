@@ -10,7 +10,7 @@ import type { BasicAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
-import { ClientRepository, RobotRepository, UserRepository } from '../../../../domains';
+import { ClientRepository, RobotRepository, UserRepository } from '../../../../database/domains';
 import { setRequestIdentity, setRequestScopes } from '../../../request';
 
 export async function verifyBasicAuthorizationHeader(

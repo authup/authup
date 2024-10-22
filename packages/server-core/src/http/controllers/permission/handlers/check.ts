@@ -13,7 +13,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity, resolveRealm } from '../../../../domains';
+import { PermissionEntity, resolveRealm } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { useRequestIdentity } from '../../../request';
 

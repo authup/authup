@@ -10,7 +10,7 @@ import { BadRequestError } from '@ebec/http';
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { RealmEntity } from '../../../../domains';
+import type { RealmEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RealmRequestValidator extends Container<

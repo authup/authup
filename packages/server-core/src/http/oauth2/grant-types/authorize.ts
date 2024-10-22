@@ -17,7 +17,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import { useDataSource } from 'typeorm-extension';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { OAuth2AuthorizationCodeEntity } from '../../../domains';
+import { OAuth2AuthorizationCodeEntity } from '../../../database/domains';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import type { OAuth2BearerResponseBuildContext } from '../response';

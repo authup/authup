@@ -20,14 +20,14 @@ import type {
     IdentityProviderEntity,
     IdentityProviderIdentity,
     LdapIdentityProviderFlowOptions,
-} from '../../../domains';
+} from '../../../database/domains';
 import {
     IdentityProviderRepository,
     LdapIdentityProviderFlow,
     UserEntity,
     UserRepository,
     resolveRealm,
-} from '../../../domains';
+} from '../../../database/domains';
 import { IDPAccountService } from '../../../services';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import { AbstractGrant } from './abstract';

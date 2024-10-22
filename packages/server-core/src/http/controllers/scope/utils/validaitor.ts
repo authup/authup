@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { ScopeEntity } from '../../../../domains';
+import type { ScopeEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class ScopeRequestValidator extends Container<

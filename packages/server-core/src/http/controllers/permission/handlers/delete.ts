@@ -10,7 +10,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity } from '../../../../domains';
+import { PermissionEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function deletePermissionRouteHandler(req: Request, res: Response) : Promise<any> {

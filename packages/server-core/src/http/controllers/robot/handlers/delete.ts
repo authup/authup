@@ -14,7 +14,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
-import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../domains';
+import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../database/domains';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
 } from '../../../request';

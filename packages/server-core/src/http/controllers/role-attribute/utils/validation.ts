@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { RoleAttributeEntity } from '../../../../domains';
+import type { RoleAttributeEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RoleAttributeRequestValidator extends Container<

@@ -19,7 +19,7 @@ import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { Container } from 'validup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ClientEntity, ClientScopeEntity } from '../../../domains';
+import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
 
 type AuthorizeValidationResult = OAuth2AuthorizationCodeRequest & {
     client_id: string

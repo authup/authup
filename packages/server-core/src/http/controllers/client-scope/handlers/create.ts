@@ -10,7 +10,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ClientScopeEntity } from '../../../../domains';
+import { ClientScopeEntity } from '../../../../database/domains';
 import { ClientScopeRequestValidator } from '../utils';
 import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../request';
 

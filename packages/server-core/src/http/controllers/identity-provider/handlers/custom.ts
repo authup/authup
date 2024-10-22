@@ -21,7 +21,7 @@ import { useDataSource } from 'typeorm-extension';
 import {
     IdentityProviderRepository,
     createOAuth2IdentityProviderFlow,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { IDPAccountService } from '../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';

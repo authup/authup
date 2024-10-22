@@ -14,7 +14,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionEntity, resolveRealm } from '../../../../domains';
+import { PermissionEntity, resolveRealm } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
