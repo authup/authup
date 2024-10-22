@@ -11,37 +11,27 @@ import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../utils';
 import { BaseAPI } from '../base';
 import type {
-    CollectionResourceResponse, DomainAPI, SingleResourceResponse,
+    DomainAPI, ResourceCollectionResponse, ResourceResponse,
 } from '../types-base';
 
 export class UserAttributeAPI extends BaseAPI implements DomainAPI<UserAttribute> {
-    async getMany(data?: BuildInput<UserAttribute>): Promise<CollectionResourceResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes${buildQuery(data)}`);
-
-        return response.data;
+    async getMany(data?: BuildInput<UserAttribute>): Promise<ResourceCollectionResponse<UserAttribute>> {
+        return this.client.get(`user-attributes${buildQuery(data)}`);
     }
 
-    async getOne(roleId: UserAttribute['id']): Promise<SingleResourceResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes/${roleId}`);
-
-        return response.data;
+    async getOne(roleId: UserAttribute['id']): Promise<ResourceResponse<UserAttribute>> {
+        return this.client.get(`user-attributes/${roleId}`);
     }
 
-    async delete(roleId: UserAttribute['id']): Promise<SingleResourceResponse<UserAttribute>> {
-        const response = await this.client.delete(`user-attributes/${roleId}`);
-
-        return response.data;
+    async delete(roleId: UserAttribute['id']): Promise<ResourceResponse<UserAttribute>> {
+        return this.client.delete(`user-attributes/${roleId}`);
     }
 
-    async create(data: Partial<UserAttribute>): Promise<SingleResourceResponse<UserAttribute>> {
-        const response = await this.client.post('user-attributes', nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    async create(data: Partial<UserAttribute>): Promise<ResourceResponse<UserAttribute>> {
+        return this.client.post('user-attributes', nullifyEmptyObjectProperties(data));
     }
 
-    async update(id: UserAttribute['id'], data: Partial<UserAttribute>): Promise<SingleResourceResponse<UserAttribute>> {
-        const response = await this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    async update(id: UserAttribute['id'], data: Partial<UserAttribute>): Promise<ResourceResponse<UserAttribute>> {
+        return this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data));
     }
 }
