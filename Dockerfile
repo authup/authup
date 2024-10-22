@@ -18,6 +18,7 @@ RUN chmod +x ./entrypoint.sh
 
 RUN mkdir -p ./writable
 
+ENV PORT=3000
 ENV NODE_ENV=production
 ENV WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
 

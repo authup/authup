@@ -6,11 +6,9 @@
  */
 
 export enum ConfigDefaults {
-    ENV = 'production',
-    PORT = 3010,
-    HOST = 'localhost',
+    PORT = 3001,
+    HOST = '0.0.0.0',
 
-    PUBLIC_URL = 'http://localhost:3010',
     AUTHORIZE_REDIRECT_URL = 'http://localhost:3000',
 
     TOKEN_REFRESH_MAG_AGE = 259_200,

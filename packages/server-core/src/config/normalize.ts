@@ -9,6 +9,7 @@ import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
 import { EnvironmentName } from '../env';
+import { toPublicHost } from '../utils/host';
 import { ConfigDefaults } from './constants';
 import { parseConfig } from './parse';
 import type { Config, ConfigInput } from './types';
@@ -19,8 +20,25 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
     const writableDirectoryPath = parsed.writableDirectoryPath ||
         path.join(process.cwd(), 'writable');
 
+    const port = parsed.port || ConfigDefaults.PORT;
+    let host = parsed.host || ConfigDefaults.HOST;
+
+    let publicUrl : string;
+    if (parsed.publicUrl) {
+        publicUrl = parsed.publicUrl;
+    } else {
+        const regex = /^([^:]+)(?::(\d+))?$/;
+        const match = host.match(regex);
+        if (match) {
+            [, host] = match;
+            publicUrl = `http://${toPublicHost(host)}:${match[2] || port}`;
+        } else {
+            publicUrl = `http://${toPublicHost(host)}:${port}`;
+        }
+    }
+
     return {
-        env: read('NODE_ENV', EnvironmentName.DEVELOPMENT),
+        env: read('NODE_ENV', EnvironmentName.PRODUCTION),
         rootPath: process.cwd(),
         writableDirectoryPath,
 
@@ -29,9 +47,9 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         smtp: false,
         vault: false,
 
-        port: Number(ConfigDefaults.PORT),
-        host: `${ConfigDefaults.HOST}`,
-        publicUrl: `${ConfigDefaults.PUBLIC_URL}`,
+        port,
+        host,
+        publicUrl,
         authorizeRedirectUrl: `${ConfigDefaults.AUTHORIZE_REDIRECT_URL}`,
 
         db: {
