@@ -2,13 +2,12 @@
 import { useStore } from '@authup/client-web-kit';
 import { defineNuxtComponent, useRouter } from '#app';
 import { definePageMeta } from '#imports';
-import { LayoutKey, LayoutNavigationID } from '../config/layout';
+import { LayoutKey } from '../config/layout';
 
 export default defineNuxtComponent({
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
         const router = useRouter();

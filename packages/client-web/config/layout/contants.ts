@@ -7,24 +7,16 @@
 
 import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
+import type { NavigationItemMeta } from './types';
 
 export enum LayoutKey {
-    // todo: rename to NAVIGATION_TOP_ID
-    NAVIGATION_ID = 'navigationTopId',
-    NAVIGATION_SIDE_ID = 'navigationSideId',
-
     REQUIRED_LOGGED_IN = 'requireLoggedIn',
     REQUIRED_LOGGED_OUT = 'requireLoggedOut',
 
     REQUIRED_PERMISSIONS = 'requirePermissions',
 }
 
-export enum LayoutNavigationID {
-    ADMIN = 'admin',
-    DEFAULT = 'default',
-}
-
-export const LayoutTopNavigation : NavigationItem[] = [
+export const LayoutTopNavigation : NavigationItem<NavigationItemMeta>[] = [
     {
         name: 'General',
         icon: 'fa fa-home',
@@ -40,7 +32,7 @@ export const LayoutTopNavigation : NavigationItem[] = [
     },
 ];
 
-export const LayoutSideDefaultNavigation : NavigationItem[] = [
+export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] = [
     {
         name: 'General',
         type: 'separator',
@@ -84,7 +76,7 @@ export const LayoutSideDefaultNavigation : NavigationItem[] = [
     },
 ];
 
-export const LayoutSideAdminNavigation : NavigationItem[] = [
+export const LayoutSideAdminNavigation : NavigationItem<NavigationItemMeta>[] = [
     {
         name: 'Realms',
         type: 'link',

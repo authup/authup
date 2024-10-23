@@ -1,16 +1,14 @@
 <script lang="ts">
-
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { defineNuxtComponent } from '#app';
 import { definePageMeta, useToast } from '#imports';
-import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
+import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,

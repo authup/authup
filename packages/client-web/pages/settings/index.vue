@@ -3,14 +3,13 @@ import { defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
 import DomainEntityNav from '../../components/DomainEntityNav';
 import AccountSVG from '../../components/svg/AccountSVG';
-import { LayoutKey, LayoutNavigationID } from '../../config/layout';
+import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
     components: { DomainEntityNav, AccountSVG },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
         const items = [

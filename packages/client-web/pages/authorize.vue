@@ -10,13 +10,11 @@ import { isGlobMatch } from '../utils';
 import {
     createError, defineNuxtComponent, navigateTo, useRoute,
 } from '#app';
-import { LayoutKey, LayoutNavigationID } from '../config/layout';
 import { extractOAuth2QueryParameters } from '../domains';
 
 export default defineNuxtComponent({
     async setup() {
         definePageMeta({
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
             layout: 'oauth2',
         });
 

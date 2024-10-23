@@ -26,7 +26,7 @@ import {
 } from '#app';
 import RealmSelectAction from '../components/RealmSelectAction';
 import LoginSVG from '../components/svg/LoginSVG';
-import { LayoutKey, LayoutNavigationID } from '../config/layout';
+import { LayoutKey } from '../config/layout';
 
 export default defineNuxtComponent({
     components: {
@@ -43,7 +43,6 @@ export default defineNuxtComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_OUT]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.DEFAULT,
         });
 
         const apiClient = injectHTTPClient();

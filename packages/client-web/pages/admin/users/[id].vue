@@ -11,14 +11,13 @@ import {
 import {
     createError, navigateTo, useRoute,
 } from '#app';
-import { LayoutKey, LayoutNavigationID } from '~/config/layout';
+import { LayoutKey } from '~/config/layout';
 import DomainEntityNav from '../../../components/DomainEntityNav';
 
 export default defineComponent({
     components: { DomainEntityNav },
     async setup() {
         definePageMeta({
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.USER_UPDATE,

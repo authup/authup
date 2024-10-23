@@ -3,13 +3,12 @@ import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import { definePageMeta, useToast } from '#imports';
-import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
+import { LayoutKey } from '../../../config/layout';
 
 export default defineComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,

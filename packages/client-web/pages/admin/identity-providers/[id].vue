@@ -13,13 +13,12 @@ import {
     useRoute,
     useToast,
 } from '#imports';
-import { LayoutKey, LayoutNavigationID } from '~/config/layout';
+import { LayoutKey } from '~/config/layout';
 import { updateObjectProperties } from '../../../utils';
 
 export default defineComponent({
     async setup() {
         definePageMeta({
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.IDENTITY_PROVIDER_UPDATE,

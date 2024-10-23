@@ -17,6 +17,7 @@ import {
     LayoutSideDefaultNavigation,
     LayoutTopNavigation,
 } from './contants';
+import type { NavigationItemMeta } from './types';
 
 export class Navigation {
     protected initialized : boolean;
@@ -72,7 +73,7 @@ export class Navigation {
         return output.filter((item) => !!item);
     }
 
-    protected async reduceItem(item: NavigationItem) : Promise<NavigationItem | undefined> {
+    protected async reduceItem(item: NavigationItem<NavigationItemMeta>) : Promise<NavigationItem | undefined> {
         if (!item.meta) {
             return item;
         }
@@ -108,7 +109,7 @@ export class Navigation {
             let permissions : string[] = [];
             if (Array.isArray(item.meta.requirePermissions)) {
                 permissions = item.meta.requirePermissions.filter((item) => item);
-            } else if (typeof item.meta.requirePermissions === 'string') {
+            } else {
                 permissions = [item.meta.requirePermissions];
             }
 

@@ -4,13 +4,12 @@ import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
-import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
+import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.SCOPE_READ,
                 PermissionName.SCOPE_UPDATE,

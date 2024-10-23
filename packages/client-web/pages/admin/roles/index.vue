@@ -4,7 +4,7 @@ import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
 import DomainEntityNav from '../../../components/DomainEntityNav';
-import { LayoutKey, LayoutNavigationID } from '../../../config/layout';
+import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
     components: {
@@ -13,7 +13,6 @@ export default defineNuxtComponent({
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,

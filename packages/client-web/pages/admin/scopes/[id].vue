@@ -15,12 +15,11 @@ import {
 import {
     createError, navigateTo, useRoute,
 } from '#app';
-import { LayoutKey, LayoutNavigationID } from '~/config/layout';
+import { LayoutKey } from '~/config/layout';
 
 export default defineComponent({
     async setup() {
         definePageMeta({
-            [LayoutKey.NAVIGATION_ID]: LayoutNavigationID.ADMIN,
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.SCOPE_UPDATE,
