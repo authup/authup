@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web-kit",
-    "version": "1.0.0-beta.21",
+    "version": "1.0.0-beta.22",
     "description": "This package contains vue components.",
     "license": "Apache-2.0",
     "main": "dist/index.cjs",
@@ -56,10 +56,10 @@
         "@vueuse/integrations": "^11.1.0"
     },
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.21",
-        "@authup/core-kit": "^1.0.0-beta.21",
-        "@authup/core-http-kit": "^1.0.0-beta.21",
-        "@authup/core-realtime-kit": "^1.0.0-beta.21",
+        "@authup/kit": "^1.0.0-beta.22",
+        "@authup/core-kit": "^1.0.0-beta.22",
+        "@authup/core-http-kit": "^1.0.0-beta.22",
+        "@authup/core-realtime-kit": "^1.0.0-beta.22",
         "@ilingo/vuelidate": "^5.0.3",
         "@posva/event-emitter": "^1.0.2",
         "@types/node": "^22.5.0",
@@ -79,10 +79,10 @@
         "vue-tsc": "^2.0.29"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.21",
-        "@authup/core-kit": "^1.0.0-beta.21",
-        "@authup/core-http-kit": "^1.0.0-beta.21",
-        "@authup/core-realtime-kit": "^1.0.0-beta.21",
+        "@authup/kit": "^1.0.0-beta.22",
+        "@authup/core-kit": "^1.0.0-beta.22",
+        "@authup/core-http-kit": "^1.0.0-beta.22",
+        "@authup/core-realtime-kit": "^1.0.0-beta.22",
         "@vuecs/form-controls": "^2.3.1",
         "@vuecs/list-controls": "^2.0.0",
         "@vuecs/pagination": "^1.3.0",

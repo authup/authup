@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-kit",
-    "version": "1.0.0-beta.21",
+    "version": "1.0.0-beta.22",
     "description": "Package containing global constants, types & interfaces.",
     "license": "Apache-2.0",
     "exports": {
@@ -54,7 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.21"
+        "@authup/kit": "^1.0.0-beta.22"
     },
     "devDependencies": {
         "@hapic/oauth2": "^2.4.2",

@@ -1,6 +1,6 @@
 {
     "name": "@authup/server-core",
-    "version": "1.0.0-beta.21",
+    "version": "1.0.0-beta.22",
     "description": "This is a standalone application.",
     "license": "Apache-2.0",
     "main": "dist/index.js",
@@ -45,10 +45,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.21",
-        "@authup/core-kit": "^1.0.0-beta.21",
-        "@authup/core-http-kit": "^1.0.0-beta.21",
-        "@authup/server-kit": "^1.0.0-beta.21",
+        "@authup/kit": "^1.0.0-beta.22",
+        "@authup/core-kit": "^1.0.0-beta.22",
+        "@authup/core-http-kit": "^1.0.0-beta.22",
+        "@authup/server-kit": "^1.0.0-beta.22",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^2.3.3",
         "@routup/basic": "^1.4.0",
