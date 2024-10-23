@@ -23,6 +23,7 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import { PolicyEngine } from '../../security';
+import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 
 type InputFn = (...args: any[]) => Promise<any>;
@@ -74,7 +75,10 @@ export function createStore(context: StoreCreateContext) {
     const setAccessToken = (input: string | null) => {
         accessToken.value = input;
 
-        context.eventBus.emit('accessTokenUpdated', input);
+        context.dispatcher.emit(
+            StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
+            input,
+        );
     };
 
     // --------------------------------------------------------------------
@@ -87,7 +91,10 @@ export function createStore(context: StoreCreateContext) {
             accessTokenExpireDate.value = input;
         }
 
-        context.eventBus.emit('accessTokenExpireDateUpdated', accessTokenExpireDate.value);
+        context.dispatcher.emit(
+            StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
+            accessTokenExpireDate.value,
+        );
     };
 
     // --------------------------------------------------------------------
@@ -96,7 +103,10 @@ export function createStore(context: StoreCreateContext) {
     const setRefreshToken = (input: string | null) => {
         refreshToken.value = input;
 
-        context.eventBus.emit('refreshTokenUpdated', input);
+        context.dispatcher.emit(
+            StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
+            input,
+        );
     };
 
     // --------------------------------------------------------------------
@@ -107,7 +117,7 @@ export function createStore(context: StoreCreateContext) {
     const setUser = (input: User | null) => {
         user.value = input;
 
-        context.eventBus.emit('userUpdated', input);
+        context.dispatcher.emit(StoreDispatcherEventName.USER_UPDATED, input);
     };
 
     // --------------------------------------------------------------------
@@ -126,7 +136,7 @@ export function createStore(context: StoreCreateContext) {
     const setRealm = (input: RealmMinimal | null) => {
         realm.value = input;
 
-        context.eventBus.emit('realmUpdated', input);
+        context.dispatcher.emit(StoreDispatcherEventName.REALM_UPDATED, input);
     };
 
     const realmManagement = ref<RealmMinimal | null>(null);
@@ -136,7 +146,7 @@ export function createStore(context: StoreCreateContext) {
     const setRealmManagement = (input: RealmMinimal | null) => {
         realmManagement.value = input;
 
-        context.eventBus.emit('realmManagementUpdated', input);
+        context.dispatcher.emit(StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED, input);
     };
 
     // --------------------------------------------------------------------
@@ -251,7 +261,7 @@ export function createStore(context: StoreCreateContext) {
     // --------------------------------------------------------------------
 
     const resolveInternal = async () : Promise<void> => {
-        context.eventBus.emit('resolving');
+        context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
 
         try {
             if (
@@ -280,7 +290,7 @@ export function createStore(context: StoreCreateContext) {
             throw e;
         }
 
-        context.eventBus.emit('resolved');
+        context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
 
         return Promise.resolve();
     };
@@ -289,7 +299,7 @@ export function createStore(context: StoreCreateContext) {
 
     const loggedIn = computed<boolean>(() => !!accessToken.value);
     const login = async (ctx: StoreLoginContext) => {
-        context.eventBus.emit('loggingIn');
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
 
         const response = await client.token.createWithPasswordGrant({
             username: ctx.name,
@@ -307,7 +317,7 @@ export function createStore(context: StoreCreateContext) {
             throw e;
         }
 
-        context.eventBus.emit('loggedIn');
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
     const reset = () => {
@@ -325,7 +335,7 @@ export function createStore(context: StoreCreateContext) {
     };
 
     const logout = async () => {
-        context.eventBus.emit('loggingOut');
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
 
         try {
             if (accessToken.value) {
@@ -349,7 +359,7 @@ export function createStore(context: StoreCreateContext) {
 
         reset();
 
-        context.eventBus.emit('loggedOut');
+        context.dispatcher.emit(StoreDispatcherEventName.LOGGED_OUT);
     };
 
     return {

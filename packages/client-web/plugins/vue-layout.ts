@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectStoreEventBus } from '@authup/client-web-kit/core/store/event-bus';
+import {
+    StoreDispatcherEventName, injectStoreDispatcher, injectTranslatorLocale, useStore,
+} from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
-import { injectTranslatorLocale, useStore } from '@authup/client-web-kit';
 import type { StoreManagerOptions } from '@vuecs/core';
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
@@ -67,15 +68,21 @@ export default defineNuxtPlugin({
         });
 
         const navigationManager = injectNavigationManager(ctx.vueApp);
-        const storeEventBus = injectStoreEventBus(ctx.vueApp);
-        storeEventBus.on('loggedIn', () => navigationManager.build({
-            reset: true,
-            path: ctx._route.fullPath,
-        }));
-        storeEventBus.on('loggedOut', () => navigationManager.build({
-            reset: true,
-            path: ctx._route.fullPath,
-        }));
+        const storeDispatcher = injectStoreDispatcher(ctx.vueApp);
+        storeDispatcher.on(
+            StoreDispatcherEventName.LOGGED_IN,
+            () => navigationManager.build({
+                reset: true,
+                path: ctx._route.fullPath,
+            }),
+        );
+        storeDispatcher.on(
+            StoreDispatcherEventName.LOGGED_OUT,
+            () => navigationManager.build({
+                reset: true,
+                path: ctx._route.fullPath,
+            }),
+        );
 
         ctx.vueApp.use(installPagination);
 

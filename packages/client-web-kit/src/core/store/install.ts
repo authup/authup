@@ -14,7 +14,7 @@ import type {
 } from '../../types';
 import { STORE_ID } from './constants';
 import { createStore } from './create';
-import { createStoreEventBus, provideStoreEventBus } from './event-bus';
+import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher';
 import { hasStoreFactory, provideStoreFactory } from './singleton';
 import type { StoreInstallOptions } from './types';
 
@@ -23,14 +23,14 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         return;
     }
 
-    const eventBus = createStoreEventBus();
-    provideStoreEventBus(eventBus, app);
+    const storeDispatcher = createStoreDispatcher();
+    provideStoreDispatcher(storeDispatcher, app);
 
     const storeFactory = defineStore(
         STORE_ID,
         () => createStore({
             baseURL: options.baseURL,
-            eventBus,
+            dispatcher: storeDispatcher,
         }),
     );
     const store = storeFactory(options.pinia);
@@ -125,58 +125,76 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         );
     };
 
-    eventBus.on('accessTokenExpireDateUpdated', (input) => {
-        if (input) {
-            cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
-                maxAge: maxAgeFn(),
-            });
-        } else {
-            cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
+                    maxAge: maxAgeFn(),
+                });
+            } else {
+                cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, {});
+            }
+        },
+    );
 
-    eventBus.on('accessTokenUpdated', (input) => {
-        if (input) {
-            const maxAge = maxAgeFn();
-            cookieSet(CookieName.ACCESS_TOKEN, input, {
-                maxAge,
-            });
-        } else {
-            cookieUnset(CookieName.ACCESS_TOKEN, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
+        (input) => {
+            if (input) {
+                const maxAge = maxAgeFn();
+                cookieSet(CookieName.ACCESS_TOKEN, input, {
+                    maxAge,
+                });
+            } else {
+                cookieUnset(CookieName.ACCESS_TOKEN, {});
+            }
+        },
+    );
 
-    eventBus.on('refreshTokenUpdated', (input) => {
-        if (input) {
-            cookieSet(CookieName.REFRESH_TOKEN, input, {});
-        } else {
-            cookieUnset(CookieName.REFRESH_TOKEN, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.REFRESH_TOKEN_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.REFRESH_TOKEN, input, {});
+            } else {
+                cookieUnset(CookieName.REFRESH_TOKEN, {});
+            }
+        },
+    );
 
-    eventBus.on('userUpdated', (input) => {
-        if (input) {
-            cookieSet(CookieName.USER, input, {});
-        } else {
-            cookieUnset(CookieName.USER, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.USER_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.USER, input, {});
+            } else {
+                cookieUnset(CookieName.USER, {});
+            }
+        },
+    );
 
-    eventBus.on('realmUpdated', (input) => {
-        if (input) {
-            cookieSet(CookieName.REALM, input, {});
-        } else {
-            cookieUnset(CookieName.REALM, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.REALM_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.REALM, input, {});
+            } else {
+                cookieUnset(CookieName.REALM, {});
+            }
+        },
+    );
 
-    eventBus.on('realmManagementUpdated', (input) => {
-        if (input) {
-            cookieSet(CookieName.REALM_MANAGEMENT, input, {});
-        } else {
-            cookieUnset(CookieName.REALM_MANAGEMENT, {});
-        }
-    });
+    storeDispatcher.on(
+        StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED,
+        (input) => {
+            if (input) {
+                cookieSet(CookieName.REALM_MANAGEMENT, input, {});
+            } else {
+                cookieUnset(CookieName.REALM_MANAGEMENT, {});
+            }
+        },
+    );
 
     readCookies();
 
