@@ -15,7 +15,7 @@ const sym = Symbol.for('AuthupStoreEventBus');
 export function injectStoreDispatcher(app?: App) : StoreDispatcher {
     const instance = inject<StoreDispatcher>(sym, app);
     if (!instance) {
-        throw new Error('The store event bus has not been injected in the app context.');
+        throw new Error('The store dispatcher has not been injected in the app context.');
     }
 
     return instance;

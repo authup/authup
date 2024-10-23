@@ -13,7 +13,7 @@ import type {
 } from 'pinia';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
-import type { StoreDispatcher } from './event-bus';
+import type { StoreDispatcher } from './dispatcher';
 
 type StoreData = ReturnType<typeof createStore>;
 export type Store = BaseStore<

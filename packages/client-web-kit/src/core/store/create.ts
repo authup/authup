@@ -23,7 +23,7 @@ import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
 import { PolicyEngine } from '../../security';
-import { StoreDispatcherEventName } from './event-bus';
+import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 
 type InputFn = (...args: any[]) => Promise<any>;

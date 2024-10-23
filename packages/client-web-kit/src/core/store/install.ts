@@ -14,7 +14,7 @@ import type {
 } from '../../types';
 import { STORE_ID } from './constants';
 import { createStore } from './create';
-import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './event-bus';
+import { StoreDispatcherEventName, createStoreDispatcher, provideStoreDispatcher } from './dispatcher';
 import { hasStoreFactory, provideStoreFactory } from './singleton';
 import type { StoreInstallOptions } from './types';
 
