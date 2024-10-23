@@ -8,8 +8,7 @@
 import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
-import { injectStoreFactory } from '../store';
-import { injectStoreEventBus } from '../store/event-bus';
+import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../store';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
 
@@ -46,7 +45,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         timer: !options.isServer,
     });
 
-    const storeEventBus = injectStoreEventBus(app);
+    const storeDispatcher = injectStoreDispatcher(app);
     const handleAccessTokenEvent = () => {
         if (store.accessToken) {
             client.setAuthorizationHeader({
@@ -61,9 +60,6 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         }
     };
 
-    storeEventBus.on('resolved', () => handleAccessTokenEvent());
-    storeEventBus.on('accessTokenUpdated', () => handleAccessTokenEvent());
-
     const handleAccessTokenExpireDateEvent = () => {
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
@@ -75,8 +71,18 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         }
     };
 
-    storeEventBus.on('resolved', () => handleAccessTokenExpireDateEvent());
-    storeEventBus.on('accessTokenExpireDateUpdated', () => handleAccessTokenExpireDateEvent());
+    storeDispatcher.on(
+        StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
+        () => handleAccessTokenEvent(),
+    );
+
+    storeDispatcher.on(
+        StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
+        () => handleAccessTokenExpireDateEvent(),
+    );
+
+    handleAccessTokenEvent();
+    handleAccessTokenExpireDateEvent();
 
     provideHTTPClient(client, app);
 }

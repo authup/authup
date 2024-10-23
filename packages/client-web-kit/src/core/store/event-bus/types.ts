@@ -7,23 +7,27 @@
 
 import type { Realm, User } from '@authup/core-kit';
 import type { EventEmitter } from '@posva/event-emitter';
+import type { StoreDispatcherEventName } from './constants';
 
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
 
-export type StoreEventBusEvents = {
-    loggingIn: [],
-    loggedIn: [],
-    loggingOut: [],
-    loggedOut: [],
-    resolving: [],
-    resolved: [],
+export type StoreDispatcherEvents = {
+    [StoreDispatcherEventName.LOGGING_IN]: [],
+    [StoreDispatcherEventName.LOGGED_IN]: [],
+    [StoreDispatcherEventName.LOGGING_OUT]: [],
+    [StoreDispatcherEventName.LOGGED_OUT]: [],
+    [StoreDispatcherEventName.RESOLVING]: [],
+    [StoreDispatcherEventName.RESOLVED]: [],
 
-    accessTokenUpdated: string | null,
-    accessTokenExpireDateUpdated: Date | null,
-    refreshTokenUpdated: string | null,
-    userUpdated: User | null,
-    realmUpdated: RealmMinimal | null,
-    realmManagementUpdated: RealmMinimal | null
+    [StoreDispatcherEventName.ACCESS_TOKEN_UPDATED]: string | null,
+    [StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED]: Date | null,
+
+    [StoreDispatcherEventName.REFRESH_TOKEN_UPDATED]: string | null,
+    [StoreDispatcherEventName.USER_UPDATED]: User | null,
+    [StoreDispatcherEventName.REALM_UPDATED]: RealmMinimal | null,
+    [StoreDispatcherEventName.REALM_MANAGEMENT_UPDATED]: RealmMinimal | null,
 };
 
-export type StoreEventBus = EventEmitter<StoreEventBusEvents>;
+export type StoreDispatcher = EventEmitter<{
+    [K in keyof StoreDispatcherEvents as `${K}`]: StoreDispatcherEvents[K]
+}>;

@@ -8,12 +8,12 @@
 import type { App } from 'vue';
 import { inject } from '../../inject';
 import { provide } from '../../provide';
-import type { StoreEventBus } from './types';
+import type { StoreDispatcher } from './types';
 
 const sym = Symbol.for('AuthupStoreEventBus');
 
-export function injectStoreEventBus(app?: App) : StoreEventBus {
-    const instance = inject<StoreEventBus>(sym, app);
+export function injectStoreDispatcher(app?: App) : StoreDispatcher {
+    const instance = inject<StoreDispatcher>(sym, app);
     if (!instance) {
         throw new Error('The store event bus has not been injected in the app context.');
     }
@@ -21,6 +21,6 @@ export function injectStoreEventBus(app?: App) : StoreEventBus {
     return instance;
 }
 
-export function provideStoreEventBus(eventBus: StoreEventBus, app?: App) {
+export function provideStoreDispatcher(eventBus: StoreDispatcher, app?: App) {
     provide(sym, eventBus, app);
 }

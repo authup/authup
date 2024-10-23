@@ -7,6 +7,7 @@
 
 export * from './constants';
 export * from './create';
+export * from './event-bus';
 export * from './install';
 export * from './types';
 export * from './singleton';
