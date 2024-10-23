@@ -23,7 +23,7 @@ import {
     ScopeEntity,
     UserRepository,
     UserRoleEntity,
-} from '../../domains';
+} from '../domains';
 import type { DatabaseRootSeederResult, DatabaseSeederOptions } from './types';
 
 function getPermissions(permissions?: string[]) {

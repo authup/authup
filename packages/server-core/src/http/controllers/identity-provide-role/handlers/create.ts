@@ -15,7 +15,7 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     IdentityProviderRoleMappingEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { IdentityPermissionService } from '../../../../services';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import {

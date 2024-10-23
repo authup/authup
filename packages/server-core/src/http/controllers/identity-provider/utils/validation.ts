@@ -14,7 +14,7 @@ import { BadRequestError } from '@ebec/http';
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { IdentityProviderEntity } from '../../../../domains';
+import type { IdentityProviderEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class IdentityProviderValidator extends Container<IdentityProviderEntity> {

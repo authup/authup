@@ -15,7 +15,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PolicyRepository, resolveRealm } from '../../../../domains';
+import { PolicyRepository, resolveRealm } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {

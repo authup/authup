@@ -10,7 +10,7 @@ import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RoleEntity } from '../../../../domains';
+import { RoleEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function deleteRoleRouteHandler(req: Request, res: Response) : Promise<any> {

@@ -14,7 +14,7 @@ import type {
 import { In } from 'typeorm';
 import type { EntityTarget } from 'typeorm/common/EntityTarget';
 import { CachePrefix } from '../constants';
-import { EARepository } from '../core';
+import { EARepository } from '../../extra-attribute-repository';
 import { UserAttributeEntity } from '../user-attribute';
 import { UserPermissionEntity } from '../user-permission';
 import { UserRoleEntity } from '../user-role';

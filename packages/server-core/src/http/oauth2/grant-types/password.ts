@@ -18,17 +18,21 @@ import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type {
     IdentityProviderEntity,
+} from '../../../database/domains';
+import type {
     IdentityProviderIdentity,
     LdapIdentityProviderFlowOptions,
 } from '../../../domains';
 import {
     IdentityProviderRepository,
-    LdapIdentityProviderFlow,
     UserEntity,
     UserRepository,
     resolveRealm,
+} from '../../../database/domains';
+import {
+    LdapIdentityProviderFlow,
 } from '../../../domains';
-import { IDPAccountService } from '../../../services';
+import { IdentityProviderAccountService } from '../../../services';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
@@ -115,7 +119,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             },
         );
 
-        let manager : IDPAccountService | undefined;
+        let manager : IdentityProviderAccountService | undefined;
         let account : IdentityProviderAccount | undefined;
         let identity: IdentityProviderIdentity | undefined;
 
@@ -136,7 +140,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
                 continue;
             }
 
-            manager = new IDPAccountService(dataSource, entity);
+            manager = new IdentityProviderAccountService(dataSource, entity);
             account = await manager.save(identity);
             break;
         }

@@ -14,7 +14,7 @@ import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
-import { UserEntity, UserRepository } from '../../../../domains';
+import { UserEntity, UserRepository } from '../../../../database/domains';
 import { UserRequestValidator } from '../utils';
 import {
     RequestHandlerOperation,

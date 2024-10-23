@@ -2,6 +2,7 @@
     "name": "@authup/client-web-kit",
     "version": "1.0.0-beta.21",
     "description": "This package contains vue components.",
+    "license": "Apache-2.0",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
@@ -15,7 +16,7 @@
         "./index.css": "./dist/index.css"
     },
     "files": [
-        "dist/"
+        "dist"
     ],
     "scripts": {
         "build:types": "vue-tsc --declaration --emitDeclarationOnly -p tsconfig.build.json",
@@ -42,7 +43,6 @@
         "email": "contact@tada5hi.net",
         "url": "https://github.com/tada5hi"
     },
-    "license": "Apache-2.0",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",

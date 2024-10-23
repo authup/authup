@@ -13,8 +13,8 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import type { PolicyEntity } from '../../../../domains';
-import { PolicyRepository, resolveRealm } from '../../../../domains';
+import type { PolicyEntity } from '../../../../database/domains';
+import { PolicyRepository, resolveRealm } from '../../../../database/domains';
 import { PolicyEngine } from '../../../../security';
 import { useRequestIdentity } from '../../../request';
 

@@ -18,8 +18,9 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../config';
 import {
-    RobotEntity, RobotRepository, resolveRealm, saveRobotCredentialsToVault,
-} from '../../../../domains';
+    RobotEntity, RobotRepository, resolveRealm,
+} from '../../../../database/domains';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../services';
 import { RobotRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
@@ -113,8 +114,12 @@ export async function writeRobotRouteHandler(
 
         if (data.secret) {
             entity.secret = data.secret;
+
             // todo: this should be executed through a message broker
-            await saveRobotCredentialsToVault(entity);
+            if (isRobotSynchronizationServiceUsable()) {
+                const robotSynchronizationService = useRobotSynchronizationService();
+                await robotSynchronizationService.save(entity);
+            }
         }
 
         return sendAccepted(res, entity);
@@ -142,8 +147,12 @@ export async function writeRobotRouteHandler(
     await repository.save(entity);
 
     entity.secret = data.secret;
+
     // todo: this should be executed through a message broker
-    await saveRobotCredentialsToVault(entity);
+    if (isRobotSynchronizationServiceUsable()) {
+        const robotSynchronizationService = useRobotSynchronizationService();
+        await robotSynchronizationService.save(entity);
+    }
 
     return sendCreated(res, entity);
 }

@@ -13,7 +13,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { IdentityProviderRoleMappingEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../database/domains';
 import { IdentityProviderRoleMappingRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,

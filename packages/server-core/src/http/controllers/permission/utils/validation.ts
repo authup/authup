@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions, Validator } from 'validup';
 import { Container } from 'validup';
-import type { PermissionEntity } from '../../../../domains';
+import type { PermissionEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class PermissionRequestValidator extends Container<

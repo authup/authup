@@ -23,7 +23,7 @@ import {
     EventSubscriber,
 } from 'typeorm';
 import { publishDomainEvent } from '../../core';
-import { CachePrefix, PermissionEntity } from '../../domains';
+import { CachePrefix, PermissionEntity } from '../domains';
 
 async function publishEvent(
     event: `${DomainEventName}`,

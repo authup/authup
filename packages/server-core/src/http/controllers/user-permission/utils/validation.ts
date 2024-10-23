@@ -10,7 +10,7 @@ import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import type {
     UserPermissionEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class UserPermissionRequestValidator extends Container<

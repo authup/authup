@@ -15,7 +15,7 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 import { canRequestManageUserAttribute } from '../utils/authorization';
 

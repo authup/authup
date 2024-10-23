@@ -10,7 +10,7 @@ import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import type {
     RolePermissionEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RolePermissionRequestValidator extends Container<

@@ -11,7 +11,7 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../../../../domains';
+import { RealmEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function deleteRealmRouteHandler(req: Request, res: Response) : Promise<any> {

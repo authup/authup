@@ -18,7 +18,7 @@ import type {
 import { BuiltInPolicyType, DecisionStrategy } from '@authup/kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
-import { CachePrefix, PermissionEntity } from '../../../domains';
+import { CachePrefix, PermissionEntity } from '../../../database/domains';
 
 export class PermissionDBProvider implements PermissionProvider {
     protected dataSource: DataSource;

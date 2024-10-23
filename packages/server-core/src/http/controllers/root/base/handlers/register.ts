@@ -16,7 +16,7 @@ import { useLogger } from '@authup/server-kit';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
-import { UserEntity, UserRepository, resolveRealm } from '../../../../../domains';
+import { UserEntity, UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 import { UserRequestValidator } from '../../../user';

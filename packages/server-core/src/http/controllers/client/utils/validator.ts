@@ -10,7 +10,7 @@ import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import zod from 'zod';
-import type { ClientEntity } from '../../../../domains';
+import type { ClientEntity } from '../../../../database/domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 

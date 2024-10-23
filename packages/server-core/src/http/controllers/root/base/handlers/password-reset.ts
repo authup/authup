@@ -14,7 +14,7 @@ import { NotFoundError } from '@ebec/http';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { Container } from 'validup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserEntity, UserRepository, resolveRealm } from '../../../../../domains';
+import { UserEntity, UserRepository, resolveRealm } from '../../../../../database/domains';
 
 export class AuthPasswordResetRequestValidator extends Container<User & { token: string }> {
     constructor() {

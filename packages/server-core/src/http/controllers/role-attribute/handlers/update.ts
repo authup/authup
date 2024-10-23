@@ -11,7 +11,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RoleAttributeEntity } from '../../../../domains';
+import { RoleAttributeEntity } from '../../../../database/domains';
 import { RoleAttributeRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,

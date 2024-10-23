@@ -14,7 +14,7 @@ import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import {
     CachePrefix, RealmEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
 import {
     setRequestIdentity,

@@ -13,8 +13,8 @@ import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import type { QueryFieldsApplyOptions } from 'typeorm-extension';
 import { applyQuery, useDataSource } from 'typeorm-extension';
-import type { UserEntity } from '../../../../domains';
-import { UserRepository, resolveRealm } from '../../../../domains';
+import type { UserEntity } from '../../../../database/domains';
+import { UserRepository, resolveRealm } from '../../../../database/domains';
 import { isSelfId } from '../../../../utils';
 import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import {

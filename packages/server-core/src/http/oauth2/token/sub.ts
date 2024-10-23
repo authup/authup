@@ -16,13 +16,13 @@ import { useDataSource } from 'typeorm-extension';
 import type {
     RobotEntity,
     UserEntity,
-} from '../../../domains';
+} from '../../../database/domains';
 import {
     CachePrefix,
     ClientEntity,
     RobotRepository,
     UserRepository,
-} from '../../../domains';
+} from '../../../database/domains';
 import { resolveOAuth2SubAttributesForScope } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =

@@ -10,8 +10,8 @@ import {
     BuiltInPolicyType,
 } from '@authup/kit';
 import type { DataSource } from 'typeorm';
-import type { PolicyEntity } from '../../domains';
-import { PolicyRepository } from '../../domains';
+import type { PolicyEntity } from '../../database/domains';
+import { PolicyRepository } from '../../database/domains';
 import { BuiltInPolicyName } from '../../security/policy/constants';
 
 export class PolicyDefaultService {

@@ -15,7 +15,7 @@ import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {

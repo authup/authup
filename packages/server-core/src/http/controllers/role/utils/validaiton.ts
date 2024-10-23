@@ -12,7 +12,7 @@ import { BadRequestError } from '@ebec/http';
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { RoleEntity } from '../../../../domains';
+import type { RoleEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RoleRequestValidator extends Container<

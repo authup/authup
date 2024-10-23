@@ -14,7 +14,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { IdentityProviderRoleMappingEntity } from '../../../../domains';
+import { IdentityProviderRoleMappingEntity } from '../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../request';
 
 export async function getManyIdentityProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {

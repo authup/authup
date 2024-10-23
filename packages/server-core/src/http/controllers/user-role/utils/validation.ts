@@ -10,7 +10,7 @@ import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import type {
     UserRoleEntity,
-} from '../../../../domains';
+} from '../../../../database/domains';
 
 import { RequestHandlerOperation } from '../../../request';
 

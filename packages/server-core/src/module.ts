@@ -18,13 +18,13 @@ import {
 import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
 import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
-import { saveRobotCredentialsToVault } from './domains';
 import {
     createHttpServer,
     createRouter,
     generateSwaggerDocumentation,
 } from './http';
 import type { Component } from './components';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
 
 export class Application {
     protected config : Config;
@@ -101,10 +101,14 @@ export class Application {
         const seederData = await seeder.run(dataSource);
 
         if (seederData.robot) {
-            try {
-                await saveRobotCredentialsToVault(seederData.robot);
-            } catch (e) {
-                useLogger().warn(`The ${this.config.robotAdminName} robot credentials could not saved to vault.`);
+            if (isRobotSynchronizationServiceUsable()) {
+                try {
+                    const robotSynchronizationService = useRobotSynchronizationService();
+                    await robotSynchronizationService.save(seederData.robot);
+                } catch (e) {
+                    useLogger()
+                        .warn(`The ${this.config.robotAdminName} robot credentials could not saved to vault.`);
+                }
             }
         }
 

@@ -19,7 +19,7 @@ import {
 import {
     PermissionName,
 } from '@authup/core-kit';
-import { RobotEntity, resolveRealm } from '../../../../domains';
+import { RobotEntity, resolveRealm } from '../../../../database/domains';
 import { isSelfId } from '../../../../utils';
 import { resolveOAuth2SubAttributesForScope } from '../../../oauth2';
 import {

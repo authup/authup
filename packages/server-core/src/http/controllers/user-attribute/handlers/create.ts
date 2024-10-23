@@ -13,7 +13,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserAttributeEntity } from '../../../../domains';
+import { UserAttributeEntity } from '../../../../database/domains';
 import { buildErrorMessageForAttribute } from '../../../../utils';
 import { UserAttributeRequestValidator } from '../utils';
 import {

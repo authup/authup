@@ -18,7 +18,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../database';
 import {
     PolicyEntity, PolicyRepository,
-} from '../../../../domains';
+} from '../../../../database/domains';
 import { PolicyAttributesValidator, PolicyValidator } from '../utils';
 import {
     RequestHandlerOperation,

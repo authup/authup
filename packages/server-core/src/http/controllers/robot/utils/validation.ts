@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { RobotEntity } from '../../../../domains';
+import type { RobotEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
 
 export class RobotRequestValidator extends Container<
