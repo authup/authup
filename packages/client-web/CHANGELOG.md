@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
+
+
+### Features
+
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+* enhance sidenav & topnav ([0150250](https://github.com/authup/authup/commit/0150250f534ab6a6e9c471f0192e15db33aa76ad))
+* refactored client store & introduce event-bus for store ([#2415](https://github.com/authup/authup/issues/2415)) ([e9a6eac](https://github.com/authup/authup/commit/e9a6eacf43a42c48493e32501e5b89b3c9888a40))
+* renamed & optimized store-event-bus ([#2426](https://github.com/authup/authup/issues/2426)) ([8e9d2d2](https://github.com/authup/authup/commit/8e9d2d253326f880cc73d1cde3cb122fc8e64223))
+
+
+### Bug Fixes
+
+* bump vuecs packages & cleaned up layout config ([3e5cbdb](https://github.com/authup/authup/commit/3e5cbdbccfc723b72a9d69c21c181a6685d1c6e7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/core-kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

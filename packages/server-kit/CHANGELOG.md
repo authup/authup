@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
+
+
+### Features
+
+* moved and seperated domains directory ([#2424](https://github.com/authup/authup/issues/2424)) ([fde5757](https://github.com/authup/authup/commit/fde5757243868cc1a5af0d2c9f75ab82dd2af8a2))
+* refactor oauth2 module & initial (oauth2-) cache implementation ([#2413](https://github.com/authup/authup/issues/2413)) ([88fc07d](https://github.com/authup/authup/commit/88fc07de1cb795f659a8d6d02572da1e77a4004f))
+* support in-memory cache for db ([#2417](https://github.com/authup/authup/issues/2417)) ([c8e4cc6](https://github.com/authup/authup/commit/c8e4cc6a73c7b25ca52e740047c3f4e49c384684))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 

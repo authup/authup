@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
+
+
+### Features
+
+* cache access of permission-db-provider ([a0ee2f7](https://github.com/authup/authup/commit/a0ee2f7455f2bc2a9f71cf67af0a49a885fc7174))
+* enhance identity provider picker view ([6e44be9](https://github.com/authup/authup/commit/6e44be986dd59d124cf91d88e9b9fdfe5ed5c0ac))
+* moved and seperated domains directory ([#2424](https://github.com/authup/authup/issues/2424)) ([fde5757](https://github.com/authup/authup/commit/fde5757243868cc1a5af0d2c9f75ab82dd2af8a2))
+* refactor oauth2 module & initial (oauth2-) cache implementation ([#2413](https://github.com/authup/authup/issues/2413)) ([88fc07d](https://github.com/authup/authup/commit/88fc07de1cb795f659a8d6d02572da1e77a4004f))
+* support in-memory cache for db ([#2417](https://github.com/authup/authup/issues/2417)) ([c8e4cc6](https://github.com/authup/authup/commit/c8e4cc6a73c7b25ca52e740047c3f4e49c384684))
+* token revoke endpoint & oauth2 grant flow refactor ([#2409](https://github.com/authup/authup/issues/2409)) ([d287ddc](https://github.com/authup/authup/commit/d287ddc0b5d177fa015c3892baf052a999de6686))
+
+
+### Bug Fixes
+
+* align setting response cookies ([86fce96](https://github.com/authup/authup/commit/86fce964626732c90ff721f8084493c54eca4e3b))
+* bump vuecs packages & cleaned up layout config ([3e5cbdb](https://github.com/authup/authup/commit/3e5cbdbccfc723b72a9d69c21c181a6685d1c6e7))
+* enhance strategy to normalize config ([0b87f8e](https://github.com/authup/authup/commit/0b87f8e571acb22e65a4facfb565cbd08da93b5c))
+* reading own identity without permisisons ([c62ac57](https://github.com/authup/authup/commit/c62ac578cf3eb8cfd941c805091e066155696c3d))
+* saving user-roles & user-permissions via identity-provider ([25e836f](https://github.com/authup/authup/commit/25e836f2aa66ddced4e6dceb945eb6fb13bea277))
+* simplify request env key access ([12a5011](https://github.com/authup/authup/commit/12a5011fb703b105671cb259e15e94fa419996a9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/core-kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/core-http-kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+    * @authup/server-kit bumped from ^1.0.0-beta.21 to ^1.0.0-beta.22
+
 ## [1.0.0-beta.21](https://github.com/authup/authup/compare/v1.0.0-beta.20...v1.0.0-beta.21) (2024-10-13)
 
 
