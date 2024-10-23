@@ -7,7 +7,7 @@
 
 import type { DataSource, EntityManager } from 'typeorm';
 import { CachePrefix } from '../constants';
-import { EATreeRepository } from '../core';
+import { EATreeRepository } from '../../extra-attribute-repository';
 import { PolicyAttributeEntity } from '../policy-attribute';
 import { PolicyEntity } from './entity';
 

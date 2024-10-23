@@ -20,9 +20,9 @@ import type { DataSource } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import {
     IdentityProviderRepository,
-    createOAuth2IdentityProviderFlow,
 } from '../../../../database/domains';
-import { IDPAccountService } from '../../../../services';
+import { createOAuth2IdentityProviderFlow } from '../../../../domains';
+import { IdentityProviderAccountService } from '../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../request';
 import { InternalGrantType } from '../../../oauth2';
 import { ConfigDefaults, useConfig } from '../../../../config';
@@ -86,7 +86,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const flow = createOAuth2IdentityProviderFlow(entity);
 
     const identity = await flow.getIdentityForRequest(req);
-    const manager = new IDPAccountService(dataSource, entity);
+    const manager = new IdentityProviderAccountService(dataSource, entity);
 
     const account = await manager.save(identity);
     const grant = new InternalGrantType();

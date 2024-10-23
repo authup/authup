@@ -27,10 +27,9 @@ import {
 import { BadRequestError } from '@ebec/http';
 import type { DataSource, Repository } from 'typeorm';
 import type {
-    IdentityProviderIdentity,
     UserEntity,
     UserRelationSyncItem,
-} from '../../database/domains';
+} from '../../../database/domains';
 import {
     IdentityProviderAccountEntity,
     IdentityProviderAttributeMappingEntity,
@@ -38,7 +37,8 @@ import {
     IdentityProviderRoleMappingEntity,
     UserRelationItemSyncOperation,
     UserRepository,
-} from '../../database/domains';
+} from '../../../database/domains';
+import type { IdentityProviderIdentity } from '../flow';
 
 type UserCreateContext = {
     attempts: number,
@@ -53,7 +53,7 @@ type ClaimAttribute = {
     mode?: `${IdentityProviderMappingSyncMode}` | null
 };
 
-export class IDPAccountService {
+export class IdentityProviderAccountService {
     protected dataSource : DataSource;
 
     protected provider : IdentityProvider;

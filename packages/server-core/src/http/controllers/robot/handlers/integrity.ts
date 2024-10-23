@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
+import type { Realm, Robot } from '@authup/core-kit';
 import {
     REALM_MASTER_NAME,
 } from '@authup/core-kit';
@@ -20,10 +20,10 @@ import { useDataSource } from 'typeorm-extension';
 import { isVaultClientUsable } from '@authup/server-kit';
 import {
     RobotRepository,
-    findRobotCredentialsInVault,
     resolveRealm,
-    saveRobotCredentialsToVault,
+
 } from '../../../../database/domains';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../services';
 import { useRequestParamID } from '../../../request';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -72,9 +72,11 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
 
     let refreshCredentials : boolean = false;
     if (entity.secret) {
-        const credentials = await findRobotCredentialsInVault({
-            name: entity.name,
-        });
+        let credentials : Pick<Robot, 'id' | 'secret' | 'name'> | undefined;
+        if (isRobotSynchronizationServiceUsable()) {
+            const robotSynchronizationService = useRobotSynchronizationService();
+            credentials = await robotSynchronizationService.find({ name: entity.name });
+        }
 
         if (credentials) {
             const secretHashedEqual = await repository.verifySecret(credentials.secret, entity.secret);
@@ -94,10 +96,13 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         entity.secret = await repository.hashSecret(secret);
         await repository.save(entity);
 
-        await saveRobotCredentialsToVault({
-            ...entity,
-            secret,
-        });
+        if (isRobotSynchronizationServiceUsable()) {
+            const robotSynchronizationService = useRobotSynchronizationService();
+            await robotSynchronizationService.save({
+                ...entity,
+                secret,
+            });
+        }
     }
 
     return sendAccepted(res);

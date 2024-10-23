@@ -14,7 +14,8 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { useConfig } from '../../../../config';
-import { RobotEntity, removeRobotCredentialsFromVault, resolveRealm } from '../../../../database/domains';
+import { RobotEntity, resolveRealm } from '../../../../database/domains';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../services';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
 } from '../../../request';
@@ -65,7 +66,10 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     // ----------------------------------------------
 
     // todo: this should be executed through a message broker
-    await removeRobotCredentialsFromVault(entity);
+    if (isRobotSynchronizationServiceUsable()) {
+        const robotSynchronizationService = useRobotSynchronizationService();
+        await robotSynchronizationService.remove(entity);
+    }
 
     // ----------------------------------------------
 

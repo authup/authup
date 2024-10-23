@@ -12,7 +12,7 @@ import type {
     Role,
 } from '@authup/core-kit';
 import { CachePrefix } from '../constants';
-import { EARepository } from '../core';
+import { EARepository } from '../../extra-attribute-repository';
 import { RoleAttributeEntity } from '../role-attribute/entity';
 import { RoleEntity } from './entity';
 import { RolePermissionEntity } from '../role-permission';

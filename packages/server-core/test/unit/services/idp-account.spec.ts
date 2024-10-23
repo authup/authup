@@ -14,7 +14,7 @@ import { undefined } from 'zod';
 import claims from '../../data/jwt.json';
 import type { IdentityProviderIdentity } from '../../../src';
 import {
-    IDPAccountService,
+    IdentityProviderAccountService,
     IdentityProviderPermissionMappingEntity,
     IdentityProviderRepository,
     IdentityProviderRoleMappingEntity,
@@ -34,7 +34,7 @@ describe('idp-manager-service', () => {
 
     let idp : OAuth2IdentityProvider;
 
-    let idpAccountService : IDPAccountService;
+    let idpAccountService : IdentityProviderAccountService;
 
     const identity : IdentityProviderIdentity = {
         data: claims,
@@ -66,7 +66,7 @@ describe('idp-manager-service', () => {
 
         await repository.save(idp);
 
-        idpAccountService = new IDPAccountService(dataSource, idp as IdentityProvider);
+        idpAccountService = new IdentityProviderAccountService(dataSource, idp as IdentityProvider);
     });
 
     afterAll(async () => {

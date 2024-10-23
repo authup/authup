@@ -10,7 +10,7 @@ import type {
 } from 'typeorm';
 import { InstanceChecker } from 'typeorm';
 import { CachePrefix } from '../constants';
-import { EARepository } from '../core';
+import { EARepository } from '../../extra-attribute-repository';
 import { IdentityProviderEntity } from './entity';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute';
 

@@ -2,6 +2,7 @@
     "name": "@authup/server-core",
     "version": "1.0.0-beta.21",
     "description": "This is a standalone application.",
+    "license": "Apache-2.0",
     "main": "dist/index.js",
     "scripts": {
         "debug": "node --inspect dist/cli/index.js start",
@@ -12,7 +13,7 @@
         "test:coverage": "npm run test -- --coverage"
     },
     "files": [
-        "dist/"
+        "dist"
     ],
     "bin": {
         "authup-server": "dist/cli/index.js"
@@ -34,7 +35,6 @@
         "email": "contact@tada5hi.net",
         "url": "https://github.com/tada5hi"
     },
-    "license": "Apache-2.0",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",

@@ -33,30 +33,27 @@ export async function useKey(
         where,
     });
 
-    if (!entity) {
-        if (typeof where.realm_id !== 'string') {
-            return undefined;
-        }
-
-        const keyPair = await createKeyPair({
-            type: 'rsa',
-        });
-
-        entity = repository.create({
-            type: JWKType.RSA,
-            decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
-            encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
-            realm_id: where.realm_id,
-            signature_algorithm: 'RS256',
-        });
-
-        await repository.save(entity);
-    } else {
-        entity.decryption_key = unwrapPrivateKeyPem(entity.decryption_key);
-        entity.encryption_key = unwrapPublicKeyPem(entity.encryption_key);
-
-        await repository.save(entity);
+    if (entity) {
+        return entity;
     }
+
+    if (typeof where.realm_id !== 'string') {
+        return undefined;
+    }
+
+    const keyPair = await createKeyPair({
+        type: 'rsa',
+    });
+
+    entity = repository.create({
+        type: JWKType.RSA,
+        decryption_key: unwrapPrivateKeyPem(keyPair.privateKey),
+        encryption_key: unwrapPublicKeyPem(keyPair.publicKey),
+        realm_id: where.realm_id,
+        signature_algorithm: 'RS256',
+    });
+
+    await repository.save(entity);
 
     return entity;
 }

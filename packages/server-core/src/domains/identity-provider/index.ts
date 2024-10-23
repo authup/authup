@@ -5,4 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './vault';
+export * from '../../services/identity-provider/flow';
+export * from '../../services/identity-provider/protocol';

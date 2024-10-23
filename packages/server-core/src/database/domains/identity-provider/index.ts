@@ -5,7 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './flow';
-export * from './protocol';
 export * from './entity';
 export * from './repository';

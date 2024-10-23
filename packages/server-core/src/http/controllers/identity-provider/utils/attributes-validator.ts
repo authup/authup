@@ -16,7 +16,7 @@ import { ZodError } from 'zod';
 import {
     validateLdapIdentityProviderProtocol,
     validateOAuth2IdentityProviderProtocol,
-} from '../../../../database/domains';
+} from '../../../../domains';
 
 export class IdentityProviderAttributesValidator extends Container {
     override async run(

@@ -2,6 +2,7 @@
     "name": "@authup/core-realtime-kit",
     "version": "1.0.0-beta.21",
     "description": "Package containing a toolkit for the core realtime service.",
+    "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -14,7 +15,7 @@
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "files": [
-        "dist/"
+        "dist"
     ],
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
@@ -30,7 +31,6 @@
         "email": "contact@tada5hi.net",
         "url": "https://github.com/tada5hi"
     },
-    "license": "Apache-2.0",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",

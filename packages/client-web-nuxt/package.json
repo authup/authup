@@ -3,12 +3,12 @@
     "type": "module",
     "version": "1.0.0-beta.21",
     "description": "Nuxt module for the authup ecosystem",
+    "license": "Apache-2.0",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
         "directory": "packages/client-web-nuxt"
     },
-    "license": "Apache-2.0",
     "exports": {
         ".": {
             "types": "./dist/types.d.ts",
