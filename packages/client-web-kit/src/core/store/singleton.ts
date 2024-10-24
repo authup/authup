@@ -13,7 +13,7 @@ import type { Store, StoreDefinition } from './types';
 
 const sym = Symbol.for('AuthupStore');
 
-export function useStore(pinia?: Pinia, app?: App) : Store {
+export function injectStore(pinia?: Pinia, app?: App) : Store {
     const instance = injectStoreFactory(app);
     if (!instance) {
         throw new Error('The store has not been injected in the app context.');

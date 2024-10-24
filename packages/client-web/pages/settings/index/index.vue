@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { AUserForm, useStore } from '@authup/client-web-kit';
+import { AUserForm, injectStore } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { definePageMeta, useToast } from '#imports';
@@ -18,7 +18,7 @@ export default defineNuxtComponent({
 
         const toast = useToast();
 
-        const store = useStore();
+        const store = injectStore();
 
         const { user, userId } = storeToRefs(store);
 

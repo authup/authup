@@ -1,5 +1,5 @@
 <script lang="ts">
-import { AIdentityProviderForm, useStore } from '@authup/client-web-kit';
+import { AIdentityProviderForm, injectStore } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
@@ -28,7 +28,7 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const store = useStore();
+        const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
         return {

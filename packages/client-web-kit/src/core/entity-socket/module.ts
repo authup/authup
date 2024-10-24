@@ -21,7 +21,7 @@ import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
 import type { STCEventContext } from '@authup/core-realtime-kit';
-import { storeToRefs, useStore } from '../store';
+import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
 import { injectSocketManager, isSocketManagerUsable } from '../socket-manager';
 
@@ -45,7 +45,7 @@ export function createEntitySocket<
     }
 
     const socketManager = injectSocketManager();
-    const store = useStore();
+    const store = injectStore();
     const storeRefs = storeToRefs(store);
 
     const realmId = computed(() => {

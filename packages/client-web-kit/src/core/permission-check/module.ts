@@ -11,7 +11,7 @@ import {
     onMounted, onUnmounted, ref, watch,
 } from 'vue';
 import type { Store } from '../store';
-import { storeToRefs, useStore } from '../store';
+import { injectStore, storeToRefs } from '../store';
 import type { PermissionCheckerReactiveFn, PermissionCheckerReactiveFnCreateContext } from './types';
 
 export function createPermissionCheckerReactiveFn(
@@ -21,7 +21,7 @@ export function createPermissionCheckerReactiveFn(
     if (ctx.store) {
         store = ctx.store;
     } else {
-        store = useStore(ctx.pinia, ctx.app);
+        store = injectStore(ctx.pinia, ctx.app);
     }
 
     const storeRefs = storeToRefs(store);

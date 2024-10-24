@@ -1,5 +1,5 @@
 <script lang="ts">
-import { injectHTTPClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -22,7 +22,7 @@ export default defineNuxtComponent({
 
         const route = useRoute();
 
-        const store = useStore();
+        const store = injectStore();
         const { loggedIn } = storeToRefs(store);
         if (!loggedIn.value) {
             await navigateTo({

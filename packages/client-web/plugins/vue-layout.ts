@@ -6,7 +6,7 @@
  */
 
 import {
-    StoreDispatcherEventName, injectStoreDispatcher, injectTranslatorLocale, useStore,
+    StoreDispatcherEventName, injectStore, injectStoreDispatcher, injectTranslatorLocale,
 } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
@@ -57,7 +57,7 @@ export default defineNuxtPlugin({
             },
         });
 
-        const store = useStore(ctx.$pinia as Pinia);
+        const store = injectStore(ctx.$pinia as Pinia);
         const navigation = new Navigation(store);
 
         ctx.vueApp.use(installNavigation, {
@@ -70,14 +70,7 @@ export default defineNuxtPlugin({
         const navigationManager = injectNavigationManager(ctx.vueApp);
         const storeDispatcher = injectStoreDispatcher(ctx.vueApp);
         storeDispatcher.on(
-            StoreDispatcherEventName.LOGGED_IN,
-            () => navigationManager.build({
-                reset: true,
-                path: ctx._route.fullPath,
-            }),
-        );
-        storeDispatcher.on(
-            StoreDispatcherEventName.LOGGED_OUT,
+            StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
             () => navigationManager.build({
                 reset: true,
                 path: ctx._route.fullPath,

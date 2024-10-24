@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { storeToRefs, useStore } from '@authup/client-web-kit';
+import { injectStore, storeToRefs } from '@authup/client-web-kit';
 import { defineNuxtRouteMiddleware, navigateTo, useRuntimeConfig } from '#imports';
 import { RouteMetaKey } from '../constants';
 import { buildRoutePath, checkRoutePermissions } from '../helpers';
@@ -13,7 +13,7 @@ import type { AuthupRuntimeOptions } from '../types';
 
 export default defineNuxtRouteMiddleware(
     async (to, from) => {
-        const store = useStore();
+        const store = injectStore();
         const storeRefs = storeToRefs(store);
         const runtimeConfig = useRuntimeConfig();
 
@@ -26,7 +26,7 @@ export default defineNuxtRouteMiddleware(
         try {
             await store.resolve();
         } catch (e) {
-            store.logout();
+            await store.logout();
 
             const redirect = buildRoutePath({
                 location: to,

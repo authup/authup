@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ARobots, ASearch, ATitle, usePermissionCheck, useStore,
+    AEntityDelete, APagination, ARobots, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -25,7 +25,7 @@ export default defineNuxtComponent({
             emit('deleted', e);
         };
 
-        const store = useStore();
+        const store = injectStore();
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Robot> = {

@@ -9,7 +9,7 @@ import {
     ARealms,
     ASearch,
     ATitle,
-    injectHTTPClient, useStore,
+    injectHTTPClient, injectStore,
 } from '@authup/client-web-kit';
 import { type IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
@@ -70,7 +70,7 @@ export default defineNuxtComponent({
             },
         }, form);
 
-        const store = useStore();
+        const store = injectStore();
         const runtimeConfig = useRuntimeConfig();
 
         const busy = ref(false);

@@ -108,7 +108,7 @@ export class Navigation {
         if (item.meta.requirePermissions) {
             let permissions : string[] = [];
             if (Array.isArray(item.meta.requirePermissions)) {
-                permissions = item.meta.requirePermissions.filter((item) => item);
+                permissions = item.meta.requirePermissions;
             } else {
                 permissions = [item.meta.requirePermissions];
             }

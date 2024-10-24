@@ -1,5 +1,5 @@
 <script lang="ts">
-import { AScopeForm, useStore } from '@authup/client-web-kit';
+import { AScopeForm, injectStore } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
@@ -27,7 +27,7 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const store = useStore();
+        const store = injectStore();
         const { realmManagementId } = storeToRefs(store);
 
         return {

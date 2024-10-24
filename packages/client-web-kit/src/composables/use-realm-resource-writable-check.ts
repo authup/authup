@@ -9,10 +9,10 @@ import { isRealmResourceWritable } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { MaybeRef, Ref } from 'vue';
 import { computed, unref } from 'vue';
-import { useStore } from '../core';
+import { injectStore } from '../core';
 
 export function useRealmResourceWritableCheck(realmId?: MaybeRef<string>) : Ref<boolean> {
-    const store = useStore();
+    const store = injectStore();
     const { realm } = storeToRefs(store);
 
     return computed(() => {

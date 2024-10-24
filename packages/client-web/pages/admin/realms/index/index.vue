@@ -4,7 +4,7 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ARealms, ASearch, ATitle, usePermissionCheck, useStore,
+    AEntityDelete, APagination, ARealms, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent } from '#imports';
@@ -21,7 +21,7 @@ export default defineNuxtComponent({
     },
     emits: ['deleted'],
     setup(props, { emit }) {
-        const store = useStore();
+        const store = injectStore();
         const {
             realm,
             realmManagementId,

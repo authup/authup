@@ -13,7 +13,7 @@
             "import": "./dist/index.mjs",
             "require": "./dist/index.cjs"
         },
-        "./index.css": "./dist/index.css"
+        "./dist/index.css": "./dist/index.css"
     },
     "files": [
         "dist"

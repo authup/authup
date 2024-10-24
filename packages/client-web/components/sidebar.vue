@@ -6,13 +6,13 @@
   -->
 <script lang="ts">
 
-import { injectHTTPClient, useStore } from '@authup/client-web-kit';
+import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     setup() {
-        const store = useStore();
+        const store = injectStore();
         const { loggedIn, accessTokenExpireDate: tokenExpireDate, realmManagement } = storeToRefs(store);
 
         const tokenExpiresIn = computed(() => {
