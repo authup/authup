@@ -29,7 +29,7 @@
         "lint": "eslint ."
     },
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.22",
+        "@authup/kit": "^1.0.1-beta.22",
         "@authup/client-web-kit": "^1.0.0-beta.22",
         "@nuxt/kit": "^3.13.2",
         "pathtrace": "^1.1.0",
