@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { Role } from '../role';
 import type { Robot } from '../robot';
 import type { Realm } from '../realm';
@@ -38,8 +36,3 @@ export interface RobotRole {
 
     updated_at: string;
 }
-
-export type RobotRoleEventContext = EventPayload & {
-    type: `${DomainType.ROBOT_ROLE}`,
-    data: RobotRole
-};

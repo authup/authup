@@ -14,6 +14,7 @@ import type { IdentityProviderAttribute } from './identity-provider-attribute';
 import type { IdentityProviderRoleMapping } from './identity-provider-role-mapping';
 import type { Permission } from './permission';
 import type { Policy } from './policy';
+import type { PolicyAttribute } from './policy-attribute';
 import type { Realm } from './realm';
 import type { Robot } from './robot';
 import type { RobotPermission } from './robot-permission';
@@ -35,6 +36,7 @@ type DomainTypeMapRaw = {
     [DomainType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
     [DomainType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
     [DomainType.POLICY]: Policy,
+    [DomainType.POLICY_ATTRIBUTE]: PolicyAttribute,
     [DomainType.PERMISSION]: Permission,
     [DomainType.REALM]: Realm,
     [DomainType.ROBOT]: Robot,

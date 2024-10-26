@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { User } from '../user';
 import type { Realm } from '../realm';
 
@@ -58,8 +56,3 @@ export interface Client {
 
     user: User | null
 }
-
-export type ClientEventContext = EventPayload & {
-    type: `${DomainType.CLIENT}`,
-    data: Client,
-};

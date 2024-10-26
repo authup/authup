@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { PermissionRelation } from '../permission';
 import type { Robot } from '../robot';
 import type { Realm } from '../realm';
@@ -30,8 +28,3 @@ export interface RobotPermission extends PermissionRelation {
 
     robot_realm: Realm | null;
 }
-
-export type RobotPermissionEventContext = EventPayload & {
-    type: `${DomainType.ROBOT_PERMISSION}`,
-    data: RobotPermission
-};

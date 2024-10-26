@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
 import type { Client } from '../client';
-import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 import type { Scope } from '../scope';
 
@@ -28,8 +26,3 @@ export interface ClientScope {
     scope_realm_id: Realm['id'] | null;
     scope_realm: Realm | null;
 }
-
-export type ClientScopeEventContext = EventPayload & {
-    type: `${DomainType.CLIENT_SCOPE}`,
-    data: ClientScope
-};

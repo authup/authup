@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 
 export interface Scope {
@@ -28,8 +26,3 @@ export interface Scope {
 
     updated_at: Date | string;
 }
-
-export type ScopeEventContext = EventPayload & {
-    type: `${DomainType.SCOPE}`,
-    data: Scope
-};

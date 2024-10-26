@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { IdentityProvider } from '../identity-provider';
 import type { Realm } from '../realm';
 
@@ -35,8 +33,3 @@ export interface IdentityProviderAttribute {
 
     updated_at: string;
 }
-
-export type IdentityProviderAttributeEventContext = EventPayload & {
-    type: `${DomainType.IDENTITY_PROVIDER_ATTRIBUTE}`,
-    data: IdentityProviderAttribute
-};

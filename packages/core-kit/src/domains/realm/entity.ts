@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
-
 export interface Realm {
     id: string;
 
@@ -23,8 +20,3 @@ export interface Realm {
 
     updated_at: string;
 }
-
-export type RealmEventContext = EventPayload & {
-    type: `${DomainType.REALM}`,
-    data: Realm
-};

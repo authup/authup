@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { Realm } from '../realm';
 import type { Role } from '../role';
 
@@ -33,8 +31,3 @@ export interface RoleAttribute {
 
     updated_at: string;
 }
-
-export type RoleAttributeEventContext = EventPayload & {
-    type: `${DomainType.ROLE_ATTRIBUTE}`,
-    data: RoleAttribute
-};

@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
 import type { User } from '../user';
 import type { PermissionRelation } from '../permission';
 import type { Realm } from '../realm';
@@ -30,8 +28,3 @@ export interface UserPermission extends PermissionRelation {
 
     user_realm: Realm | null;
 }
-
-export type UserPermissionEventContext = EventPayload & {
-    type: `${DomainType.USER_PERMISSION}`,
-    data: UserPermission
-};

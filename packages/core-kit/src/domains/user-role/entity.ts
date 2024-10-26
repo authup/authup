@@ -4,8 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { EventPayload } from '@authup/kit';
-import type { DomainType } from '../contstants';
+
 import type { Role } from '../role';
 import type { User } from '../user';
 import type { Realm } from '../realm';
@@ -37,8 +36,3 @@ export interface UserRole {
 
     updated_at: string;
 }
-
-export type UserRoleEventContext = EventPayload & {
-    type: `${DomainType.USER_ROLE}`,
-    data: UserRole
-};
