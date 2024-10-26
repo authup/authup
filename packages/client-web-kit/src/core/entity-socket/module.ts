@@ -6,14 +6,12 @@
  */
 
 import {
-    DomainEventName,
-    REALM_MASTER_NAME,
-    buildDomainChannelName,
+    DomainEventName, REALM_MASTER_NAME, buildDomainChannelName,
 } from '@authup/core-kit';
 import type {
-    DomainEntity,
-    DomainEventContext,
     DomainType,
+    DomainTypeEventMap,
+    DomainTypeMap,
 } from '@authup/core-kit';
 import type { EventFullName } from '@authup/kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/kit';
@@ -25,11 +23,9 @@ import { injectStore, storeToRefs } from '../store';
 import type { EntitySocket, EntitySocketContext } from './type';
 import { injectSocketManager, isSocketManagerUsable } from '../socket-manager';
 
-type DT<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
-
 export function createEntitySocket<
-    A extends DT<DomainEntity<any>>,
-    T = DomainEntity<A>,
+    A extends keyof DomainTypeMap,
+    T = DomainTypeMap[A],
 >(
     ctx: EntitySocketContext<A, T>,
 ) : EntitySocket {
@@ -68,7 +64,9 @@ export function createEntitySocket<
 
     const lockId = computed(() => (isRef(ctx.lockId) ? ctx.lockId.value : ctx.lockId));
 
-    const processEvent = (event: STCEventContext<DomainEventContext<A>>) : boolean => {
+    const processEvent = (
+        event: STCEventContext<DomainTypeEventMap[A]>,
+    ) : boolean => {
         if (
             ctx.processEvent &&
             !ctx.processEvent(event, realmId.value)
@@ -91,7 +89,9 @@ export function createEntitySocket<
         return event.data.id !== lockId.value;
     };
 
-    const handleCreated = (event: STCEventContext<DomainEventContext<A>>) => {
+    const handleCreated = (
+        event: STCEventContext<DomainTypeEventMap[A]>,
+    ) => {
         if (!processEvent(event)) {
             return;
         }
@@ -101,7 +101,9 @@ export function createEntitySocket<
         }
     };
 
-    const handleUpdated = (event: STCEventContext<DomainEventContext<A>>) => {
+    const handleUpdated = (
+        event: STCEventContext<DomainTypeEventMap[A]>,
+    ) => {
         if (!processEvent(event)) {
             return;
         }
@@ -110,7 +112,9 @@ export function createEntitySocket<
             ctx.onUpdated(event.data as T);
         }
     };
-    const handleDeleted = (event: STCEventContext<DomainEventContext<A>>) => {
+    const handleDeleted = (
+        event: STCEventContext<DomainTypeEventMap[A]>,
+    ) => {
         if (!processEvent(event)) {
             return;
         }
@@ -218,8 +222,9 @@ export function createEntitySocket<
 
     watch(targetId, (val, oldValue) => {
         if (val !== oldValue) {
-            unmount();
-            mount();
+            Promise.resolve()
+                .then(() => unmount())
+                .then(() => mount());
         }
     });
 

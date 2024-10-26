@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEntity, DomainType } from '@authup/core-kit';
+import type { DomainTypeMap } from '@authup/core-kit';
 import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
 import type {
     MaybeRef, Ref, SetupContext, SlotsType,
@@ -74,13 +74,15 @@ export type EntityManagerEventsType<T> = {
     resolved: (_item?: T) => true
 };
 
-type SocketContext<A extends `${DomainType}`, T> = Omit<EntitySocketContext<A, T>, 'type'>;
 export type EntityManagerContext<
-    A extends `${DomainType}`,
-    T = DomainEntity<A>,
+    A extends keyof DomainTypeMap,
+    T = DomainTypeMap[A],
 > = {
     type: A,
-    setup?: Partial<SetupContext<EntityManagerEventsType<T>, SlotsType<EntityManagerSlotsType<T>>>>,
+    setup?: Partial<SetupContext<
+    EntityManagerEventsType<T>,
+    SlotsType<EntityManagerSlotsType<T>>
+    >>,
     props?: EntityManagerProps<T>,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
@@ -88,5 +90,5 @@ export type EntityManagerContext<
     onUpdated?(entity: Partial<T>): any,
     onDeleted?(entity: T): any,
     onFailed?(e: Error): any,
-    socket?: SocketContext<A, T> | boolean;
+    socket?: Omit<EntitySocketContext<A, T>, 'type'> | boolean;
 };

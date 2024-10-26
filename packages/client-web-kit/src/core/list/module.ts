@@ -7,7 +7,7 @@
 
 import { hasOwnProperty } from '@authup/kit';
 import type { DomainAPI } from '@authup/core-http-kit';
-import type { DomainEntity, DomainType } from '@authup/core-kit';
+import type { DomainTypeMap } from '@authup/core-kit';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
 } from '@vuecs/list-controls';
@@ -39,18 +39,17 @@ import {
     mergeListOptions,
 } from './utils';
 
-type Entity<T> = T extends Record<string, any> ? T : never;
-type DomainTypeInfer<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
-
 const merger = createMerger({
     array: false,
     inPlace: false,
     priority: 'left',
 });
 
+type Entity<A> = A extends Record<string, any> ? A : never;
+
 export function createList<
-    A extends DomainTypeInfer<DomainEntity<any>>,
-    T = DomainEntity<A>,
+    A extends keyof DomainTypeMap,
+    T = DomainTypeMap,
 >(
     context: ListCreateContext<A, T>,
 ) : List<T> {

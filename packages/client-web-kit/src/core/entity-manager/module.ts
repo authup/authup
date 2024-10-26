@@ -6,9 +6,7 @@
  */
 
 import type { DomainAPI } from '@authup/core-http-kit';
-import type {
-    DomainEntity, DomainType,
-} from '@authup/core-kit';
+import type { DomainTypeMap } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
@@ -31,10 +29,9 @@ import type {
 } from './type';
 import { buildEntityManagerSlotProps } from './utils';
 
-type DomainTypeInfer<T> = T extends DomainEntity<infer U> ? U extends `${DomainType}` ? U : never : never;
 export function createEntityManager<
-    A extends DomainTypeInfer<DomainEntity<any>>,
-    T = DomainEntity<A>,
+    A extends keyof DomainTypeMap,
+    T = DomainTypeMap[A],
 >(
     ctx: EntityManagerContext<A, T>,
 ) : EntityManager<T> {

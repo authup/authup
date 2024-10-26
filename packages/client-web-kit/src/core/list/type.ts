@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainEntity, DomainType } from '@authup/core-kit';
+import type { DomainTypeMap } from '@authup/core-kit';
 import type {
     ListBodyBuildOptionsInput,
     ListBodySlotProps,
@@ -109,8 +109,8 @@ export type ListEventsType<T> = {
 };
 
 export type ListCreateContext<
-    A extends `${DomainType}`,
-    T = DomainEntity<A>,
+    A extends keyof DomainTypeMap,
+    T = DomainTypeMap[A],
 > = {
     type: A,
     realmId?: MaybeRef<string>,
