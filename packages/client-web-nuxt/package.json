@@ -37,7 +37,7 @@
     },
     "devDependencies": {
         "@nuxt/module-builder": "^0.8.4",
-        "@pinia/nuxt": "^0.5.5",
+        "@pinia/nuxt": "^0.6.0",
         "nuxt": "^3.13.2",
         "pinia": "^2.2.4"
     },
