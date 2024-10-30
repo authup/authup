@@ -9,23 +9,23 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
-    defineListEvents,
-    defineListProps,
+    createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const ARoles = defineComponent({
-    props: defineListProps<Role>(),
-    slots: Object as SlotsType<ListSlotsType<Role>>,
-    emits: defineListEvents<Role>(),
+    props: defineResourceCollectionVProps<Role>(),
+    slots: Object as SlotsType<ResourceCollectionVSlots<Role>>,
+    emits: defineResourceCollectionVEmitOptions<Role>(),
     setup(props, ctx) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.ROLE}`,
             props,
             setup: ctx,

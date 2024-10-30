@@ -38,9 +38,9 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents,
+    createResourceManager,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
@@ -61,7 +61,7 @@ export const ARobotForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Robot>(),
+    emits: defineResourceVEmitOptions<Robot>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -92,7 +92,7 @@ export const ARobotForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROBOT}`,
             setup: ctx,
             props,

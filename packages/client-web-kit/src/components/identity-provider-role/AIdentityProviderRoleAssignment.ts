@@ -17,8 +17,8 @@ import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/f
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    createEntityManager,
-    defineEntityManagerEvents,
+    createResourceManager,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     useTranslationsForGroup,
@@ -36,7 +36,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProviderRoleMapping>(),
+    emits: defineResourceVEmitOptions<IdentityProviderRoleMapping>(),
     async setup(props, setup) {
         const display = ref(false);
         const toggleDisplay = () => {
@@ -71,7 +71,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             ],
         );
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {

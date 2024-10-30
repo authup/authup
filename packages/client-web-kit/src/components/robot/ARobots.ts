@@ -9,19 +9,19 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createList,
-    defineListEvents, defineListProps, useTranslation,
+    TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions, defineResourceCollectionVProps, useTranslation,
 } from '../../core';
 
 export const ARobots = defineComponent({
-    props: defineListProps<Robot>(),
-    slots: Object as SlotsType<ListSlotsType<Robot>>,
-    emits: defineListEvents<Robot>(),
+    props: defineResourceCollectionVProps<Robot>(),
+    slots: Object as SlotsType<ResourceCollectionVSlots<Robot>>,
+    emits: defineResourceCollectionVEmitOptions<Robot>(),
     setup(props, ctx) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.ROBOT}`,
             props,
             setup: ctx,

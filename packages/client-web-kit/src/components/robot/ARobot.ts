@@ -9,19 +9,19 @@ import { DomainType } from '@authup/core-kit';
 import type { Robot } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core';
+import type { ResourceVSlots } from '../../core';
 import {
-    createEntityManager,
-    defineEntityManagerEvents,
-    defineEntityManagerProps,
+    createResourceManager,
+    defineResourceVEmitOptions,
+    defineResourceVProps,
 } from '../../core';
 
 export const ARobot = defineComponent({
-    props: defineEntityManagerProps<Robot>(),
-    emits: defineEntityManagerEvents<Robot>(),
-    slots: Object as SlotsType<EntityManagerSlotsType<Robot>>,
+    props: defineResourceVProps<Robot>(),
+    emits: defineResourceVEmitOptions<Robot>(),
+    slots: Object as SlotsType<ResourceVSlots<Robot>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROBOT}`,
             props,
             setup,

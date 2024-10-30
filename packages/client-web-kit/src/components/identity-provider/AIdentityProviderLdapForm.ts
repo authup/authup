@@ -14,9 +14,9 @@ import {
 import { useIsEditing } from '../../composables';
 import {
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents,
+    createResourceManager,
+    defineResourceVEmitOptions,
     extractVuelidateResultsFromChild,
 } from '../../core';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
@@ -39,9 +39,9 @@ export const AIdentityProviderLdapForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProvider>(),
+    emits: defineResourceVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,

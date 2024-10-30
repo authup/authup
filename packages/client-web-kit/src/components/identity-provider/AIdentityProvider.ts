@@ -9,19 +9,19 @@ import { DomainType } from '@authup/core-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core';
+import type { ResourceVSlots } from '../../core';
 import {
-    createEntityManager,
-    defineEntityManagerEvents,
-    defineEntityManagerProps,
+    createResourceManager,
+    defineResourceVEmitOptions,
+    defineResourceVProps,
 } from '../../core';
 
 export const AIdentityProvider = defineComponent({
-    props: defineEntityManagerProps<IdentityProvider>(),
-    emits: defineEntityManagerEvents<IdentityProvider>(),
-    slots: Object as SlotsType<EntityManagerSlotsType<IdentityProvider>>,
+    props: defineResourceVProps<IdentityProvider>(),
+    emits: defineResourceVEmitOptions<IdentityProvider>(),
+    slots: Object as SlotsType<ResourceVSlots<IdentityProvider>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             props,
             setup,

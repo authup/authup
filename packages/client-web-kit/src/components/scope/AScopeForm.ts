@@ -37,9 +37,9 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents,
+    createResourceManager,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     injectStore,
@@ -59,7 +59,7 @@ export const AScopeForm = defineComponent({
             type: Object as PropType<Scope>,
         },
     },
-    emits: defineEntityManagerEvents<Scope>(),
+    emits: defineResourceVEmitOptions<Scope>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -94,7 +94,7 @@ export const AScopeForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.SCOPE}`,
             setup: ctx,
             props,

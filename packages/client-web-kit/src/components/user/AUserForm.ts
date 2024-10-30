@@ -23,9 +23,9 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
+    createResourceManager,
+    defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
@@ -45,7 +45,7 @@ export const AUserForm = defineComponent({
             default: true,
         },
     },
-    emits: defineEntityManagerEvents<User>(),
+    emits: defineResourceVEmitOptions<User>(),
     async setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -83,7 +83,7 @@ export const AUserForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.USER}`,
             setup: ctx,
             props,

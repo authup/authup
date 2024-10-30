@@ -9,25 +9,25 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
-    defineListEvents,
-    defineListProps,
+    createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const AClientScopes = defineComponent({
-    props: defineListProps<ClientScope>(),
-    slots: Object as SlotsType<ListSlotsType<ClientScope>>,
-    emits: defineListEvents<ClientScope>(),
+    props: defineResourceCollectionVProps<ClientScope>(),
+    slots: Object as SlotsType<ResourceCollectionVSlots<ClientScope>>,
+    emits: defineResourceCollectionVEmitOptions<ClientScope>(),
     setup(props, ctx) {
         const {
             render,
-        } = createList({
+        } = createResourceCollectionManager({
             type: `${DomainType.CLIENT_SCOPE}`,
             props,
             setup: ctx,

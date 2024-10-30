@@ -8,23 +8,23 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
-    defineListEvents,
-    defineListProps,
+    createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const APermissions = defineComponent({
-    props: defineListProps<Permission>(),
-    slots: Object as SlotsType<ListSlotsType<Permission>>,
-    emits: defineListEvents<Permission>(),
+    props: defineResourceCollectionVProps<Permission>(),
+    slots: Object as SlotsType<ResourceCollectionVSlots<Permission>>,
+    emits: defineResourceCollectionVEmitOptions<Permission>(),
     setup(props, setup) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.PERMISSION}`,
             props,
             setup,

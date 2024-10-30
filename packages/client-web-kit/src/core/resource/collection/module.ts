@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -21,17 +21,17 @@ import {
     ref, unref,
 } from 'vue';
 import { createMerger, isObject } from 'smob';
-import { boolableToObject } from '../../utils';
-import { injectHTTPClient } from '../http-client';
-import { createEntitySocket } from '../entity-socket';
-import type { EntitySocketContext } from '../entity-socket';
-import { isQuerySortedDescByDate } from '../query';
+import { boolableToObject } from '../../../utils';
+import { injectHTTPClient } from '../../http-client';
+import { createResourceSocketManager } from '../socket';
+import type { ResourceSocketManagerCreateContext } from '../socket';
+import { isQuerySortedDescByDate } from '../../query';
 import type {
-    List,
-    ListCreateContext,
     ListMeta,
-    ListRenderOptions,
-} from './type';
+    ResourceCollectionManager,
+    ResourceCollectionManagerCreateContext,
+    ResourceCollectionRenderOptions,
+} from './types';
 import {
     buildListCreatedHandler,
     buildListDeletedHandler,
@@ -47,20 +47,20 @@ const merger = createMerger({
 
 type Entity<A> = A extends Record<string, any> ? A : never;
 
-export function createList<
-    A extends keyof DomainTypeMap,
-    T = DomainTypeMap,
+function create<
+    TYPE extends keyof DomainTypeMap,
+    RECORD extends DomainTypeMap[TYPE],
 >(
-    context: ListCreateContext<A, T>,
-) : List<T> {
-    const data : Ref<T[]> = ref([]);
+    context: ResourceCollectionManagerCreateContext<TYPE, RECORD>,
+) : ResourceCollectionManager<RECORD> {
+    const data : Ref<RECORD[]> = ref([]);
     const busy = ref(false);
     const total = ref(0);
-    const meta = ref({
+    const meta = ref<ListMeta<RECORD>>({
         pagination: {
             limit: 10,
         },
-    }) as Ref<ListMeta<T>>;
+    }) as Ref<ListMeta<RECORD>>;
 
     const realmId = computed<string | undefined>(
         () => {
@@ -78,21 +78,21 @@ export function createList<
 
     const client = injectHTTPClient();
 
-    let domainAPI : DomainAPI<Entity<T>> | undefined;
+    let domainAPI : DomainAPI<Entity<RECORD>> | undefined;
     if (hasOwnProperty(client, context.type)) {
         domainAPI = client[context.type] as any;
     }
 
-    let query : BuildInput<Entity<T>> | undefined;
+    let query : BuildInput<Entity<RECORD>> | undefined;
 
-    async function load(input: ListMeta<T> = {}) {
+    async function load(input: ListMeta<RECORD> = {}) {
         if (!domainAPI || busy.value) return;
 
         busy.value = true;
         meta.value.busy = true;
 
         try {
-            let filters : FiltersBuildInput<Entity<T>> | undefined;
+            let filters : FiltersBuildInput<Entity<RECORD>> | undefined;
             if (
                 context.queryFilters &&
                 input.filters &&
@@ -100,7 +100,7 @@ export function createList<
                 typeof input.filters.name === 'string'
             ) {
                 // todo: queryFilters should customize full filters object!
-                filters = context.queryFilters(input.filters.name) as FiltersBuildInput<Entity<T>>;
+                filters = context.queryFilters(input.filters.name) as FiltersBuildInput<Entity<RECORD>>;
             }
 
             query = undefined;
@@ -120,7 +120,7 @@ export function createList<
                 }
             }
 
-            const nextQuery : ListMeta<T> = merger(
+            const nextQuery : ListMeta<RECORD> = merger(
                 (filters ? { filters } : {}),
                 input || {},
                 {
@@ -133,15 +133,15 @@ export function createList<
             );
 
             const response = await domainAPI.getMany(
-                nextQuery as BuildInput<Entity<T>>,
+                nextQuery as BuildInput<Entity<RECORD>>,
             );
 
             meta.value = nextQuery;
 
             if (context.loadAll) {
-                data.value.push(...response.data as T[]);
+                data.value.push(...response.data as RECORD[]);
             } else {
-                data.value = response.data as T[];
+                data.value = response.data as RECORD[];
             }
 
             total.value = response.meta.total;
@@ -183,15 +183,15 @@ export function createList<
     });
     const handleUpdated = buildListUpdatedHandler(data);
 
-    function render(defaults?: ListRenderOptions<T>) : VNodeChild {
-        let renderOptions : ListRenderOptions<T>;
+    function render(defaults?: ResourceCollectionRenderOptions<RECORD>) : VNodeChild {
+        let renderOptions : ResourceCollectionRenderOptions<RECORD>;
         if (defaults) {
             renderOptions = mergeListOptions(context.props, defaults);
         } else {
             renderOptions = context.props;
         }
-        const header : ListHeaderBuildOptionsInput<T> = boolableToObject(renderOptions.header || {});
-        const footer : ListFooterBuildOptionsInput<T> = boolableToObject(renderOptions.footer || {});
+        const header : ListHeaderBuildOptionsInput<RECORD> = boolableToObject(renderOptions.header || {});
+        const footer : ListFooterBuildOptionsInput<RECORD> = boolableToObject(renderOptions.footer || {});
 
         if (renderOptions.item) {
             if (
@@ -204,7 +204,7 @@ export function createList<
             }
         }
 
-        return buildList<T, ListMeta<T>>({
+        return buildList<RECORD, ListMeta<RECORD>>({
             footer,
             header,
             noMore: renderOptions.noMore,
@@ -213,23 +213,23 @@ export function createList<
             total: total.value,
             load,
             busy: busy.value,
-            data: data.value as Entity<T>[],
+            data: data.value as Entity<RECORD>[],
             meta: meta.value,
-            onCreated: (value: T) => {
+            onCreated: (value: RECORD) => {
                 if (context.setup.emit) {
                     context.setup.emit('created', value);
                 }
 
                 handleCreated(value);
             },
-            onDeleted: (value: T) => {
+            onDeleted: (value: RECORD) => {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
                 }
 
                 handleDeleted(value);
             },
-            onUpdated: (value: T) => {
+            onUpdated: (value: RECORD) => {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
                 }
@@ -264,7 +264,7 @@ export function createList<
         typeof context.socket === 'undefined' ||
         context.socket
     ) {
-        const socketContext : EntitySocketContext<A, T> = {
+        const socketContext : ResourceSocketManagerCreateContext<TYPE, RECORD> = {
             type: context.type,
             ...(isObject(context.socket) ? context.socket : {}),
         };
@@ -279,15 +279,15 @@ export function createList<
                 handleCreated(entity);
             }
         };
-        socketContext.onDeleted = (entity: T) => {
+        socketContext.onDeleted = (entity: RECORD) => {
             handleDeleted(entity);
         };
-        socketContext.onUpdated = (entity: T) => {
+        socketContext.onUpdated = (entity: RECORD) => {
             handleDeleted(entity);
         };
         socketContext.realmId = realmId;
 
-        createEntitySocket(socketContext);
+        createResourceSocketManager(socketContext);
     }
 
     return {
@@ -303,4 +303,12 @@ export function createList<
         render,
         load,
     };
+}
+
+export function createResourceCollectionManager<
+    A extends keyof DomainTypeMap,
+>(
+    context: ResourceCollectionManagerCreateContext<A, DomainTypeMap[A]>,
+) : ResourceCollectionManager<DomainTypeMap[A]> {
+    return create(context);
 }

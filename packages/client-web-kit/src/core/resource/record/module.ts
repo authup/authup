@@ -14,35 +14,35 @@ import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef, ref, toRef, watch,
 } from 'vue';
-import { injectHTTPClient } from '../http-client';
-import type { EntitySocket, EntitySocketContext } from '../entity-socket';
-import { createEntitySocket } from '../entity-socket';
-import { extendObjectProperties } from '../object';
-import { hasNormalizedSlot, normalizeSlot } from '../slot';
-import { EntityManagerError } from './error';
+import { injectHTTPClient } from '../../http-client';
+import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from '../socket';
+import { createResourceSocketManager } from '../socket';
+import { extendObjectProperties } from '../../object';
+import { hasNormalizedSlot, normalizeSlot } from '../../slot';
+import { ResourceRecordError } from './error';
 import type {
     EntityID,
-    EntityManager,
-    EntityManagerContext,
-    EntityManagerRenderFn,
-    EntityManagerResolveContext,
-} from './type';
-import { buildEntityManagerSlotProps } from './utils';
+    ResourceManager,
+    ResourceManagerCreateContext,
+    ResourceManagerRenderFn,
+    ResourceManagerResolveContext,
+} from './types';
+import { buildResourceVSlotProps } from './utils';
 
-export function createEntityManager<
-    A extends keyof DomainTypeMap,
-    T = DomainTypeMap[A],
+function create<
+    TYPE extends keyof DomainTypeMap,
+    RECORD extends DomainTypeMap[TYPE],
 >(
-    ctx: EntityManagerContext<A, T>,
-) : EntityManager<T> {
+    ctx: ResourceManagerCreateContext<TYPE, RECORD>,
+) : ResourceManager<RECORD> {
     const client = injectHTTPClient();
-    let domainAPI : DomainAPI<T> | undefined;
+    let domainAPI : DomainAPI<RECORD> | undefined;
     if (hasOwnProperty(client, ctx.type)) {
         domainAPI = client[ctx.type] as any;
     }
 
-    const entity : Ref<T | undefined> = ref(undefined);
-    const entityId = computed<EntityID<T> | undefined>(
+    const entity : Ref<RECORD | undefined> = ref(undefined);
+    const entityId = computed<EntityID<RECORD> | undefined>(
         () => (
             entity.value ? (entity.value as any).id : undefined),
     );
@@ -72,13 +72,13 @@ export function createEntityManager<
         },
     );
 
-    const lockId = ref(undefined) as Ref<EntityID<T> | undefined>;
+    const lockId = ref(undefined) as Ref<EntityID<RECORD> | undefined>;
 
     if (ctx.props && ctx.props.entity) {
         entity.value = ctx.props.entity;
     }
 
-    const created = (value: T) => {
+    const created = (value: RECORD) => {
         if (ctx.setup && ctx.setup.emit) {
             ctx.setup.emit('created', value);
         }
@@ -88,23 +88,23 @@ export function createEntityManager<
         }
     };
 
-    const deleted = (value: T) => {
+    const deleted = (value: RECORD) => {
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('deleted', (value || entity.value) as T);
+            ctx.setup.emit('deleted', (value || entity.value) as RECORD);
         }
 
         if (ctx.onDeleted) {
-            ctx.onDeleted((value || entity.value) as T);
+            ctx.onDeleted((value || entity.value) as RECORD);
         }
     };
 
-    const updated = (value: Partial<T>) => {
+    const updated = (value: Partial<RECORD>) => {
         if (entity.value) {
             extendObjectProperties(entity.value, value);
         }
 
         if (ctx.setup && ctx.setup.emit) {
-            ctx.setup.emit('updated', (entity.value || value) as T);
+            ctx.setup.emit('updated', (entity.value || value) as RECORD);
         }
 
         if (ctx.onUpdated) {
@@ -112,7 +112,7 @@ export function createEntityManager<
         }
     };
 
-    const resolved = (value?: T) => {
+    const resolved = (value?: RECORD) => {
         if (ctx.setup && ctx.setup.emit) {
             ctx.setup.emit('resolved', value);
         }
@@ -134,7 +134,7 @@ export function createEntityManager<
 
     const busy = ref(false);
 
-    const update = async (data: Partial<T>) => {
+    const update = async (data: Partial<RECORD>) => {
         if (!domainAPI || busy.value || !entityId.value) {
             return;
         }
@@ -187,7 +187,7 @@ export function createEntityManager<
         }
     };
 
-    const create = async (data: Partial<T>) : Promise<void> => {
+    const create = async (data: Partial<RECORD>) : Promise<void> => {
         if (!domainAPI || busy.value) {
             return;
         }
@@ -212,7 +212,7 @@ export function createEntityManager<
         }
     };
 
-    const createOrUpdate = async (data: Partial<T>) : Promise<void> => {
+    const createOrUpdate = async (data: Partial<RECORD>) : Promise<void> => {
         if (entity.value) {
             await update(data);
         } else {
@@ -220,7 +220,7 @@ export function createEntityManager<
         }
     };
 
-    let socket : EntitySocket | undefined;
+    let socket : ResourceSocketManager | undefined;
 
     if (
         typeof ctx.socket !== 'boolean' ||
@@ -228,7 +228,7 @@ export function createEntityManager<
         typeof ctx.socket === 'function' ||
         ctx.socket
     ) {
-        let socketContext : EntitySocketContext<A, T> = {
+        let socketContext : ResourceSocketManagerCreateContext<TYPE, RECORD> = {
             type: ctx.type,
         };
 
@@ -246,7 +246,7 @@ export function createEntityManager<
         socketContext.target = true;
         socketContext.targetId = entityId;
 
-        socket = createEntitySocket(socketContext);
+        socket = createResourceSocketManager(socketContext);
     }
 
     const error = ref<Error | undefined>(undefined);
@@ -289,12 +289,12 @@ export function createEntityManager<
 
     resolveByProps();
 
-    const resolve = async (rctx: EntityManagerResolveContext<T> = {}) => {
+    const resolve = async (rctx: ResourceManagerResolveContext<RECORD> = {}) => {
         if (entity.value) {
             return;
         }
 
-        let query : (T extends Record<string, any> ? BuildInput<T> : never) | undefined;
+        let query : (RECORD extends Record<string, any> ? BuildInput<RECORD> : never) | undefined;
         if (rctx.query) {
             query = rctx.query;
         }
@@ -386,12 +386,12 @@ export function createEntityManager<
         }
     };
 
-    const resolveOrFail = async (resolveContext: EntityManagerResolveContext<T> = {}) => {
+    const resolveOrFail = async (resolveContext: ResourceManagerResolveContext<RECORD> = {}) => {
         await resolve(resolveContext);
 
         if (typeof entity.value === 'undefined') {
             if (!error.value) {
-                throw EntityManagerError.unresolvable();
+                throw ResourceRecordError.unresolvable();
             }
 
             // eslint-disable-next-line no-throw-literal
@@ -399,7 +399,7 @@ export function createEntityManager<
         }
     };
 
-    const manager : EntityManager<T> = {
+    const manager : ResourceManager<RECORD> = {
         resolve,
         resolveOrFail,
         lockId,
@@ -423,7 +423,7 @@ export function createEntityManager<
         renderError: () => undefined,
     };
 
-    manager.render = (content?: VNodeChild | EntityManagerRenderFn): VNodeChild => {
+    manager.render = (content?: VNodeChild | ResourceManagerRenderFn): VNodeChild => {
         if (!ctx.setup || !ctx.setup.slots) {
             return typeof content === 'function' ?
                 content() :
@@ -433,7 +433,7 @@ export function createEntityManager<
         if (hasNormalizedSlot('default', ctx.setup.slots)) {
             return normalizeSlot(
                 'default',
-                buildEntityManagerSlotProps(manager),
+                buildResourceVSlotProps(manager),
                 ctx.setup.slots,
             );
         }
@@ -459,4 +459,12 @@ export function createEntityManager<
     };
 
     return manager;
+}
+
+export function createResourceManager<
+    TYPE extends keyof DomainTypeMap,
+>(
+    ctx: ResourceManagerCreateContext<TYPE, DomainTypeMap[TYPE]>,
+) : ResourceManager<DomainTypeMap[TYPE]> {
+    return create<TYPE, DomainTypeMap[TYPE]>(ctx);
 }

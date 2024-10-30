@@ -9,23 +9,23 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
-    defineListEvents,
-    defineListProps,
+    createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const ARealms = defineComponent({
-    props: defineListProps<Realm>(),
-    slots: Object as SlotsType<ListSlotsType<Realm>>,
-    emits: defineListEvents<Realm>(),
+    props: defineResourceCollectionVProps<Realm>(),
+    slots: Object as SlotsType<ResourceCollectionVSlots<Realm>>,
+    emits: defineResourceCollectionVEmitOptions<Realm>(),
     setup(props, ctx) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.REALM}`,
             props,
             setup: ctx,

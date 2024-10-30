@@ -38,9 +38,9 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
-    defineEntityManagerEvents,
+    createResourceManager,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     renderEntityAssignAction,
@@ -66,7 +66,7 @@ export const AClientForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Client>(),
+    emits: defineResourceVEmitOptions<Client>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -114,7 +114,7 @@ export const AClientForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.CLIENT}`,
             setup: ctx,
             props,
